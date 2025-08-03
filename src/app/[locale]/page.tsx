@@ -1,22 +1,22 @@
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import HeroSection from '@/components/sections/HeroSection'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Users, Calendar, MessageCircle, Award, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <div>
       <HeroSection />
-      <HowItWorksSection />
+      {await HowItWorksSection()}
       <FeaturesSection />
-      <CTASection />
+      {await CTASection()}
     </div>
   )
 }
 
-function HowItWorksSection() {
-  const t = useTranslations('home')
+async function HowItWorksSection() {
+  const t = await getTranslations('home')
   
   return (
     <section className="py-20 bg-white">
@@ -114,9 +114,9 @@ function FeaturesSection() {
   )
 }
 
-function CTASection() {
-  const tCommon = useTranslations('common')
-  const t = useTranslations('home')
+async function CTASection() {
+  const tCommon = await getTranslations('common')
+  const t = await getTranslations('home')
   
   return (
     <section className="py-20 bg-gray-900 text-white">
