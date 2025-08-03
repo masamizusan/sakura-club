@@ -3,20 +3,16 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key"
-    }
-  },
   "functions": {
     "app/api/**/*.ts": {
       "runtime": "nodejs18.x"
     }
   },
-  "regions": ["nrt1"]
+  "regions": ["nrt1"],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/ja"
+    }
+  ]
 }
