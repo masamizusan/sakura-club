@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAKURA CLUB - テスト</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f8a5c2, #f093fb);
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1 { color: #e91e63; margin-bottom: 1rem; }
+        .status { color: #4caf50; margin: 0.5rem 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 SAKURA CLUB</h1>
+        <p>アプリケーションテストページ</p>
+        <div class="status">✅ サーバー起動成功</div>
+        <div class="status">✅ 静的ファイル配信正常</div>
+        <div class="status">✅ ネットワーク接続OK</div>
+        <p>現在時刻: <span id="time"></span></p>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString('ja-JP');
+    </script>
+</body>
+</html>

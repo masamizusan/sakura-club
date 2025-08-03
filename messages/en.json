@@ -1,0 +1,293 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "age": "Age",
+    "gender": "Gender",
+    "nationality": "Nationality",
+    "location": "Location",
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "matches": "Matches",
+    "messages": "Messages",
+    "experiences": "Cultural Experiences",
+    "about": "About Us",
+    "howItWorks": "How It Works",
+    "safety": "Safety",
+    "language": "Language"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "signInToAccount": "Please sign in to your account",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "forgotPassword": "Forgot password?",
+    "createAccount": "Create account",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "emailRequired": "Please enter your email address",
+    "passwordRequired": "Please enter your password",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "firstNameRequired": "Please enter your first name",
+    "lastNameRequired": "Please enter your last name",
+    "signUpSuccess": "Account created successfully",
+    "signInSuccess": "Signed in successfully",
+    "signOutSuccess": "Signed out successfully",
+    "invalidCredentials": "Invalid email or password",
+    "emailAlreadyExists": "This email address is already in use"
+  },
+  "profile": {
+    "editProfile": "Edit Profile",
+    "basicInfo": "Basic Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "male": "Male",
+    "female": "Female",
+    "prefecture": "Prefecture",
+    "city": "City",
+    "hobbies": "Hobbies & Interests",
+    "selfIntroduction": "Self Introduction",
+    "profileImage": "Profile Image",
+    "selectImage": "Select Image",
+    "uploadImage": "Upload Image",
+    "removeImage": "Remove Image",
+    "hobbyLimit": "You can select up to 5 hobbies",
+    "selfIntroductionMinLength": "Self introduction must be at least 50 characters",
+    "profileUpdated": "Profile updated successfully"
+  },
+  "matching": {
+    "title": "Recommended Matches",
+    "subtitle": "Find your perfect match and enjoy wonderful cultural experiences together.",
+    "like": "Like",
+    "pass": "Pass",
+    "viewProfile": "View Profile",
+    "matchPercentage": "{percentage}% Match",
+    "commonInterests": "Common Interests",
+    "distance": "{distance}km",
+    "lastActive": "Last Active",
+    "online": "Online",
+    "noMatches": "No matches found",
+    "noMatchesDescription": "Try changing your search criteria or wait for new matches",
+    "newMatch": "New Match!",
+    "matchSuccess": "You matched with {name}! Start a conversation.",
+    "findMoreMatches": "Find more matches"
+  },
+  "messages": {
+    "title": "Messages",
+    "noConversations": "No messages",
+    "selectConversation": "Select a conversation",
+    "selectConversationDescription": "Choose a conversation from the left to start messaging",
+    "typeMessage": "Type a message...",
+    "send": "Send",
+    "you": "You",
+    "newMessage": "New Message",
+    "matchedOn": "Matched on {date}",
+    "searchConversations": "Search conversations..."
+  },
+  "experiences": {
+    "title": "Cultural Experiences",
+    "subtitle": "Experience Japanese traditional culture and enjoy new encounters",
+    "createExperience": "Create New Experience",
+    "joinExperience": "Join",
+    "viewDetails": "View Details",
+    "category": "Category",
+    "date": "Date",
+    "time": "Time",
+    "price": "Price",
+    "participants": "Participants",
+    "maxParticipants": "Max Participants",
+    "location": "Location",
+    "organizer": "Organizer",
+    "description": "Description",
+    "included": "What's Included",
+    "toBring": "What to Bring",
+    "requirements": "Requirements",
+    "upcoming": "Upcoming",
+    "available": "Available",
+    "full": "Full",
+    "completed": "Completed",
+    "noExperiences": "No experiences found",
+    "experienceCreated": "Experience created successfully",
+    "joinSuccess": "Successfully joined the experience",
+    "categories": {
+      "tea-ceremony": "Tea Ceremony",
+      "calligraphy": "Calligraphy",
+      "cooking": "Cooking",
+      "flower-arrangement": "Ikebana",
+      "martial-arts": "Martial Arts",
+      "traditional-crafts": "Traditional Crafts",
+      "music": "Music",
+      "dance": "Dance",
+      "festival": "Festival",
+      "other": "Other"
+    }
+  },
+  "reviews": {
+    "title": "Reviews",
+    "writeReview": "Write Review",
+    "rating": "Rating",
+    "reviewText": "Review",
+    "anonymous": "Post anonymously",
+    "postReview": "Post Review",
+    "editReview": "Edit Review",
+    "deleteReview": "Delete Review",
+    "noReviews": "No reviews yet",
+    "averageRating": "Average Rating",
+    "reviewCount": "{count} reviews",
+    "ratingLabels": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very Good",
+      "5": "Excellent"
+    },
+    "reviewPosted": "Review posted successfully",
+    "reviewUpdated": "Review updated successfully",
+    "reviewDeleted": "Review deleted successfully"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark All Read",
+    "noNotifications": "No new notifications",
+    "viewAll": "View All Notifications",
+    "types": {
+      "match": "New Match",
+      "message": "New Message",
+      "experience_invitation": "Experience Invitation",
+      "experience_reminder": "Experience Reminder",
+      "review_request": "Review Request",
+      "system": "System Notification"
+    },
+    "settings": {
+      "title": "Push Notifications",
+      "description": "Receive real-time notifications for new matches, messages, experience invitations, and other important updates.",
+      "enable": "Enable Notifications",
+      "disable": "Disable Notifications",
+      "test": "Test Notification",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "denied": "Denied",
+      "notSupported": "Push notifications are not supported",
+      "notSupportedDescription": "Your browser doesn't support push notifications. Please use a modern browser like Chrome, Firefox, or Safari.",
+      "deniedDescription": "Notifications are blocked. Please allow notifications for Sakura Club in your browser settings.",
+      "testSent": "Test notification sent!",
+      "enableSuccess": "Push notifications enabled successfully!",
+      "disableSuccess": "Push notifications disabled."
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "Welcome back, {name}",
+    "subtitle": "Let's enjoy wonderful cultural experiences today",
+    "stats": {
+      "matches": "Matches",
+      "upcomingExperiences": "Upcoming",
+      "completedExperiences": "Completed",
+      "newMessages": "New Messages"
+    },
+    "quickActions": {
+      "findMatches": "Find Matches",
+      "findMatchesDescription": "Discover new people",
+      "messages": "Messages",
+      "messagesDescription": "Continue conversations",
+      "experiences": "Cultural Experiences",
+      "experiencesDescription": "Find new experiences",
+      "editProfile": "Edit Profile",
+      "editProfileDescription": "Update your information"
+    },
+    "tabs": {
+      "matches": "Matches",
+      "experiences": "Experiences",
+      "messages": "Messages"
+    }
+  },
+  "pwa": {
+    "installPrompt": {
+      "title": "Install App",
+      "description": "Install Sakura Club for a better experience.",
+      "install": "Install",
+      "later": "Later",
+      "addToHomeScreen": "Add to Home Screen",
+      "addToHomeScreenDescription": "Add Sakura Club to your home screen to use it like an app.",
+      "iosInstructions": {
+        "step1": "1. Tap the share button □ at the bottom",
+        "step2": "2. Select 'Add to Home Screen'",
+        "step3": "3. Tap 'Add'"
+      },
+      "understood": "Got it"
+    },
+    "offline": {
+      "indicator": "Offline Mode",
+      "connecting": "Connecting...",
+      "reconnected": "Back online"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "True Connections Through Cultural Experiences",
+      "subtitle": "A safe and secure platform where foreign men visiting Japan and Japanese women can enjoy natural encounters through cultural experiences like tea ceremony, calligraphy, and cooking classes.",
+      "cta": "Get Started",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "title": "Sakura Club Features",
+      "cultural": {
+        "title": "Culture-Centered",
+        "description": "Natural encounters while experiencing Japanese traditions like tea ceremony and calligraphy together"
+      },
+      "safe": {
+        "title": "Safe & Secure",
+        "description": "Verified users only, experiences in public places ensure safety"
+      },
+      "international": {
+        "title": "International Exchange",
+        "description": "True international exchange with visitors from around the world"
+      }
+    }
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Network error occurred. Please check your connection.",
+    "unauthorized": "Authentication required. Please log in.",
+    "forbidden": "You don't have permission to perform this action.",
+    "notFound": "The page you're looking for was not found.",
+    "validation": "There's an issue with your input. Please check and try again.",
+    "server": "Server error occurred. Please try again later."
+  },
+  "validation": {
+    "required": "{field} is required",
+    "email": "Please enter a valid email address",
+    "minLength": "{field} must be at least {min} characters",
+    "maxLength": "{field} must be {max} characters or less",
+    "min": "{field} must be {min} or more",
+    "max": "{field} must be {max} or less",
+    "pattern": "{field} format is incorrect"
+  }
+}

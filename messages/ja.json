@@ -1,0 +1,293 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "success": "成功しました",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "submit": "送信",
+    "search": "検索",
+    "filter": "フィルター",
+    "reset": "リセット",
+    "settings": "設定",
+    "profile": "プロフィール",
+    "logout": "ログアウト",
+    "login": "ログイン",
+    "signup": "新規登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "name": "名前",
+    "age": "年齢",
+    "gender": "性別",
+    "nationality": "国籍",
+    "location": "場所",
+    "required": "必須",
+    "optional": "任意",
+    "yes": "はい",
+    "no": "いいえ",
+    "or": "または"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "dashboard": "ダッシュボード",
+    "matches": "マッチング",
+    "messages": "メッセージ",
+    "experiences": "文化体験",
+    "about": "私たちについて",
+    "howItWorks": "仕組み",
+    "safety": "安全性",
+    "language": "言語"
+  },
+  "auth": {
+    "welcomeBack": "おかえりなさい",
+    "signInToAccount": "アカウントにサインインしてください",
+    "dontHaveAccount": "アカウントをお持ちでない方",
+    "alreadyHaveAccount": "既にアカウントをお持ちの方",
+    "forgotPassword": "パスワードを忘れた方",
+    "createAccount": "アカウントを作成",
+    "signUp": "新規登録",
+    "signIn": "ログイン",
+    "emailRequired": "メールアドレスを入力してください",
+    "passwordRequired": "パスワードを入力してください",
+    "passwordMinLength": "パスワードは8文字以上で入力してください",
+    "firstNameRequired": "名を入力してください",
+    "lastNameRequired": "姓を入力してください",
+    "signUpSuccess": "アカウントが作成されました",
+    "signInSuccess": "ログインしました",
+    "signOutSuccess": "ログアウトしました",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+    "emailAlreadyExists": "このメールアドレスは既に使用されています"
+  },
+  "profile": {
+    "editProfile": "プロフィール編集",
+    "basicInfo": "基本情報",
+    "firstName": "名",
+    "lastName": "姓",
+    "male": "男性",
+    "female": "女性",
+    "prefecture": "都道府県",
+    "city": "市区町村",
+    "hobbies": "趣味・興味",
+    "selfIntroduction": "自己紹介",
+    "profileImage": "プロフィール画像",
+    "selectImage": "画像を選択",
+    "uploadImage": "画像をアップロード",
+    "removeImage": "画像を削除",
+    "hobbyLimit": "趣味は最大5つまで選択できます",
+    "selfIntroductionMinLength": "自己紹介は50文字以上で入力してください",
+    "profileUpdated": "プロフィールが更新されました"
+  },
+  "matching": {
+    "title": "おすすめのお相手",
+    "subtitle": "あなたにぴったりのお相手を見つけて、素敵な文化体験を一緒に楽しみませんか？",
+    "like": "いいね",
+    "pass": "パス",
+    "viewProfile": "プロフィールを見る",
+    "matchPercentage": "{percentage}% マッチ",
+    "commonInterests": "共通の興味",
+    "distance": "{distance}km",
+    "lastActive": "最終ログイン",
+    "online": "オンライン中",
+    "noMatches": "条件に合うお相手が見つかりませんでした",
+    "noMatchesDescription": "検索条件を変更するか、新しいお相手をお待ちください",
+    "newMatch": "新しいマッチ！",
+    "matchSuccess": "{name}さんとマッチしました！メッセージを送ってみましょう。",
+    "findMoreMatches": "もっと新しいお相手を探す"
+  },
+  "messages": {
+    "title": "メッセージ",
+    "noConversations": "メッセージがありません",
+    "selectConversation": "会話を選択してください",
+    "selectConversationDescription": "左側から会話を選んでメッセージを開始しましょう",
+    "typeMessage": "メッセージを入力...",
+    "send": "送信",
+    "you": "あなた",
+    "newMessage": "新しいメッセージ",
+    "matchedOn": "{date}にマッチしました",
+    "searchConversations": "会話を検索..."
+  },
+  "experiences": {
+    "title": "文化体験",
+    "subtitle": "日本の伝統文化を体験して、新しい出会いを楽しみましょう",
+    "createExperience": "新しい体験を作成",
+    "joinExperience": "参加する",
+    "viewDetails": "詳細を見る",
+    "category": "カテゴリ",
+    "date": "開催日",
+    "time": "時間",
+    "price": "料金",
+    "participants": "参加者",
+    "maxParticipants": "定員",
+    "location": "開催場所",
+    "organizer": "主催者",
+    "description": "説明",
+    "included": "体験に含まれるもの",
+    "toBring": "持参物",
+    "requirements": "参加条件",
+    "upcoming": "参加予定",
+    "available": "参加可能",
+    "full": "満員",
+    "completed": "完了",
+    "noExperiences": "体験が見つかりませんでした",
+    "experienceCreated": "体験が作成されました",
+    "joinSuccess": "体験に参加しました",
+    "categories": {
+      "tea-ceremony": "茶道",
+      "calligraphy": "書道",
+      "cooking": "料理",
+      "flower-arrangement": "華道",
+      "martial-arts": "武道",
+      "traditional-crafts": "伝統工芸",
+      "music": "音楽",
+      "dance": "踊り",
+      "festival": "祭り",
+      "other": "その他"
+    }
+  },
+  "reviews": {
+    "title": "レビュー",
+    "writeReview": "レビューを書く",
+    "rating": "評価",
+    "reviewText": "レビュー",
+    "anonymous": "匿名で投稿",
+    "postReview": "レビューを投稿",
+    "editReview": "レビューを編集",
+    "deleteReview": "レビューを削除",
+    "noReviews": "レビューがありません",
+    "averageRating": "平均評価",
+    "reviewCount": "{count}件のレビュー",
+    "ratingLabels": {
+      "1": "期待外れ",
+      "2": "いまいち",
+      "3": "普通",
+      "4": "良い",
+      "5": "素晴らしい"
+    },
+    "reviewPosted": "レビューを投稿しました",
+    "reviewUpdated": "レビューを更新しました",
+    "reviewDeleted": "レビューを削除しました"
+  },
+  "notifications": {
+    "title": "通知",
+    "markAllRead": "全て既読",
+    "noNotifications": "新しい通知はありません",
+    "viewAll": "全ての通知を表示",
+    "types": {
+      "match": "新しいマッチ",
+      "message": "新しいメッセージ",
+      "experience_invitation": "体験への招待",
+      "experience_reminder": "体験のリマインダー",
+      "review_request": "レビューの依頼",
+      "system": "システム通知"
+    },
+    "settings": {
+      "title": "プッシュ通知",
+      "description": "新しいマッチやメッセージ、体験の招待などの重要な通知をリアルタイムで受け取れます。",
+      "enable": "通知を有効にする",
+      "disable": "通知を無効にする",
+      "test": "テスト通知",
+      "enabled": "有効",
+      "disabled": "無効",
+      "denied": "拒否",
+      "notSupported": "プッシュ通知は利用できません",
+      "notSupportedDescription": "お使いのブラウザはプッシュ通知をサポートしていません。Chrome、Firefox、Safari などの最新ブラウザをご利用ください。",
+      "deniedDescription": "通知が拒否されています。ブラウザの設定から Sakura Club の通知を許可してください。",
+      "testSent": "テスト通知を送信しました！",
+      "enableSuccess": "プッシュ通知が有効になりました！",
+      "disableSuccess": "プッシュ通知を無効にしました。"
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "おかえりなさい、{name}さん",
+    "subtitle": "今日も素敵な文化体験を楽しみましょう",
+    "stats": {
+      "matches": "マッチ数",
+      "upcomingExperiences": "体験予定",
+      "completedExperiences": "完了体験",
+      "newMessages": "新着メッセージ"
+    },
+    "quickActions": {
+      "findMatches": "マッチングを探す",
+      "findMatchesDescription": "新しいお相手を見つけましょう",
+      "messages": "メッセージ",
+      "messagesDescription": "会話を続けましょう",
+      "experiences": "文化体験",
+      "experiencesDescription": "新しい体験を見つけましょう",
+      "editProfile": "プロフィール編集",
+      "editProfileDescription": "情報を更新しましょう"
+    },
+    "tabs": {
+      "matches": "マッチ",
+      "experiences": "文化体験",
+      "messages": "メッセージ"
+    }
+  },
+  "pwa": {
+    "installPrompt": {
+      "title": "アプリをインストール",
+      "description": "Sakura Clubをインストールして、より快適にご利用いただけます。",
+      "install": "インストール",
+      "later": "後で",
+      "addToHomeScreen": "アプリとして追加",
+      "addToHomeScreenDescription": "Sakura Clubをホーム画面に追加して、アプリのように使用できます。",
+      "iosInstructions": {
+        "step1": "1. 画面下部の共有ボタン □ をタップ",
+        "step2": "2. 「ホーム画面に追加」を選択",
+        "step3": "3. 「追加」をタップ"
+      },
+      "understood": "わかりました"
+    },
+    "offline": {
+      "indicator": "オフラインモード",
+      "connecting": "接続中...",
+      "reconnected": "オンラインに復旧しました"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "文化体験を通じた真の出会い",
+      "subtitle": "訪日外国人男性と日本人女性が、茶道・書道・料理教室などの文化体験を通じて自然な出会いを楽しめる、安心・安全なプラットフォームです。",
+      "cta": "今すぐ始める",
+      "learnMore": "詳しく見る"
+    },
+    "features": {
+      "title": "Sakura Clubの特徴",
+      "cultural": {
+        "title": "文化体験中心",
+        "description": "茶道や書道など、日本の伝統文化を一緒に体験しながら自然な出会いを"
+      },
+      "safe": {
+        "title": "安心・安全",
+        "description": "本人確認済みのユーザーのみ、公共の場での体験で安全性を確保"
+      },
+      "international": {
+        "title": "国際交流",
+        "description": "世界各国からの訪日外国人との真の国際交流を実現"
+      }
+    }
+  },
+  "errors": {
+    "general": "エラーが発生しました。もう一度お試しください。",
+    "network": "ネットワークエラーが発生しました。接続を確認してください。",
+    "unauthorized": "認証が必要です。ログインしてください。",
+    "forbidden": "この操作を実行する権限がありません。",
+    "notFound": "お探しのページが見つかりません。",
+    "validation": "入力内容に問題があります。確認してください。",
+    "server": "サーバーエラーが発生しました。しばらく後でお試しください。"
+  },
+  "validation": {
+    "required": "{field}は必須です",
+    "email": "有効なメールアドレスを入力してください",
+    "minLength": "{field}は{min}文字以上で入力してください",
+    "maxLength": "{field}は{max}文字以下で入力してください",
+    "min": "{field}は{min}以上で入力してください",
+    "max": "{field}は{max}以下で入力してください",
+    "pattern": "{field}の形式が正しくありません"
+  }
+}

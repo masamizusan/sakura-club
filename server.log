@@ -1,0 +1,806 @@
+
+> sakura-club@0.1.0 dev
+> next dev
+
+   ▲ Next.js 14.0.3
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ✓ Ready in 2.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 4.4s (921 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 605ms (435 modules)
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 1329ms (912 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 3.2s (1101 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ Compiling /login ...
+ ✓ Compiled /login in 868ms (1111 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 2.4s (1125 modules)
+ ✓ Compiled in 1081ms (1125 modules)
+ ✓ Compiled in 1566ms (1125 modules)
+ ✓ Compiled in 1365ms (1125 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 1300ms (1125 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 1463ms (1125 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 996ms (1116 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 2.8s (1130 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ✓ Compiled in 1247ms (1130 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 2s (1141 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 634ms (1146 modules)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 14.0.3
+   - Local:        http://localhost:3000
+   - Environments: .env.local
+
+ ✓ Ready in 3.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 5.6s (921 modules)
+ ✓ Compiled in 1090ms (435 modules)
+ ✓ Compiled in 2.1s (921 modules)
+ ○ Compiling /profile/edit ...
+ ✓ Compiled /profile/edit in 1985ms (1057 modules)
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 3.4s (1062 modules)
+ ✓ Compiled / in 482ms (585 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1176ms (1134 modules)
+ ✓ Compiled in 2.5s (1143 modules)
+ ✓ Compiled in 1253ms (1143 modules)
+ ✓ Compiled in 1299ms (1143 modules)
+ ✓ Compiled in 1155ms (1143 modules)
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 1189ms (1134 modules)
+ ✓ Compiled in 2s (1143 modules)
+ ✓ Compiled /not-found in 364ms (1134 modules)
+ ✓ Compiled in 4.3s (1129 modules)
+ ✓ Compiled /not-found in 376ms (1134 modules)
+ ✓ Compiled in 2.2s (1143 modules)
+ ✓ Compiled in 3.8s (1129 modules)
+ ✓ Compiled in 1984ms (1143 modules)
+ ✓ Compiled in 2.5s (1143 modules)
+ ✓ Compiled in 3.1s (1143 modules)
+ ✓ Compiled in 2.2s (1143 modules)
+ ✓ Compiled in 1244ms (1143 modules)
+ ✓ Compiled in 1516ms (1143 modules)
+ ○ Compiling /experiences ...
+ ✓ Compiled /experiences in 2.2s (1139 modules)
+ ○ Compiling /experiences/[id] ...
+ ✓ Compiled /experiences/[id] in 1319ms (1157 modules)
+ ○ Compiling /experiences/create ...
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+ ⚠ ./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+
+./src/app/experiences/create/page.tsx
+Attempted import error: 'Yen' is not exported from '__barrel_optimize__?names=AlertCircle,ArrowLeft,Calendar,CheckCircle,FileText,Loader2,MapPin,Save,Users,Yen!=!lucide-react' (imported as 'Yen').
+
+Import trace for requested module:
+./src/app/experiences/create/page.tsx
+Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at page.tsx:385.
+    at ExperienceCreatePage (webpack-internal:///(ssr)/./src/app/experiences/create/page.tsx:70:86)
+    at StaticGenerationSearchParamsBailoutProvider (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/static-generation-searchparams-bailout-provider.js:15:11)
+    at Lazy
+    at InnerLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:239:11)
+    at RedirectErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:71:9)
+    at RedirectBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:79:11)
+    at NotFoundBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:343:11)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:128:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:151:9)
+    at ScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:226:11)
+    at RenderFromTemplateContext (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at Lazy
+    at OuterLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:352:11)
+    at Lazy
+    at InnerLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:239:11)
+    at RedirectErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:71:9)
+    at RedirectBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:79:11)
+    at NotFoundBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:343:11)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:128:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:151:9)
+    at ScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:226:11)
+    at RenderFromTemplateContext (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at Lazy
+    at OuterLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:352:11)
+    at Lazy
+    at InnerLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:239:11)
+    at RedirectErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:71:9)
+    at RedirectBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:79:11)
+    at NotFoundErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/not-found-boundary.js:54:9)
+    at NotFoundBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/not-found-boundary.js:62:11)
+    at LoadingBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:343:11)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:128:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:151:9)
+    at ScrollAndFocusHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:226:11)
+    at RenderFromTemplateContext (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/render-from-template-context.js:15:44)
+    at Lazy
+    at OuterLayoutRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/layout-router.js:352:11)
+    at Lazy
+    at main
+    at div
+    at AuthProvider (webpack-internal:///(ssr)/./src/components/providers/AuthProvider.tsx:13:25)
+    at Lazy
+    at body
+    at html
+    at RedirectErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:71:9)
+    at RedirectBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/redirect-boundary.js:79:11)
+    at ReactDevOverlay (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/react-dev-overlay/internal/ReactDevOverlay.js:66:9)
+    at HotReload (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:296:11)
+    at Router (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/app-router.js:165:11)
+    at ErrorBoundaryHandler (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:99:9)
+    at ErrorBoundary (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/error-boundary.js:128:11)
+    at AppRouter (webpack-internal:///(ssr)/./node_modules/next/dist/client/components/app-router.js:436:13)
+    at Lazy
+    at Lazy
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:380095
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:380095
+    at ServerInsertedHTMLProvider (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:38:17348)
+ ⨯ Internal error: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:43345)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46647)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:38901
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:39374)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46647)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:38901
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:39374)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46647)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:38901
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:39374)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46647)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:38901
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:39374)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46647)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at /Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:38901
+    at aw (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:39374)
+    at e (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46298)
+    at ak (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:48276)
+    at aC (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:50165)
+    at a_ (/Users/mizunomasafumi/sakura-club/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:49406)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled /messages in 3.7s (1151 modules)
+ ⨯ src/app/experiences/create/page.tsx (385:21) @ Yen
+ ⨯ ReferenceError: Yen is not defined
+    at ExperienceCreatePage (./src/app/experiences/create/page.tsx:1015:141)
+[0m [90m 383 |[39m                   [33m<[39m[33m/[39m[33mlabel[39m[33m>[39m[0m
+[0m [90m 384 |[39m                   [33m<[39m[33mdiv[39m className[33m=[39m[32m"relative"[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 385 |[39m                     [33m<[39m[33mYen[39m className[33m=[39m[32m"absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"[39m [33m/[39m[33m>[39m[0m
+[0m [90m     |[39m                     [31m[1m^[22m[39m[0m
+[0m [90m 386 |[39m                     [33m<[39m[33mInput[39m[0m
+[0m [90m 387 |[39m                       type[33m=[39m[32m"number"[39m[0m
+[0m [90m 388 |[39m                       min[33m=[39m[32m"0"[39m[0m
+ ⨯ src/app/experiences/create/page.tsx (385:21) @ Yen
+ ⨯ ReferenceError: Yen is not defined
+    at ExperienceCreatePage (./src/app/experiences/create/page.tsx:1015:141)
+[0m [90m 383 |[39m                   [33m<[39m[33m/[39m[33mlabel[39m[33m>[39m[0m
+[0m [90m 384 |[39m                   [33m<[39m[33mdiv[39m className[33m=[39m[32m"relative"[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 385 |[39m                     [33m<[39m[33mYen[39m className[33m=[39m[32m"absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"[39m [33m/[39m[33m>[39m[0m
+[0m [90m     |[39m                     [31m[1m^[22m[39m[0m
+[0m [90m 386 |[39m                     [33m<[39m[33mInput[39m[0m
+[0m [90m 387 |[39m                       type[33m=[39m[32m"number"[39m[0m
+[0m [90m 388 |[39m                       min[33m=[39m[32m"0"[39m[0m
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 2.5s (1153 modules)
+ ✓ Compiled in 3s (1153 modules)
+ ✓ Compiled in 543ms (571 modules)
+ ✓ Compiled in 273ms (582 modules)
+ ✓ Compiled in 3.4s (1153 modules)
+ ✓ Compiled in 2.8s (1153 modules)
+ ✓ Compiled in 745ms (571 modules)
+ ✓ Compiled in 1562ms (571 modules)
+ ✓ Compiled in 7.6s (1153 modules)
+ ✓ Compiled in 632ms (571 modules)
+ ✓ Compiled in 3.1s (1153 modules)
+ ✓ Compiled in 4.4s (1153 modules)
+ ✓ Compiled in 1370ms (1153 modules)
+ ✓ Compiled in 2.4s (1153 modules)
+ ✓ Compiled in 2.5s (1153 modules)
+ ✓ Compiled in 1838ms (1153 modules)
+ ✓ Compiled in 1832ms (1153 modules)
+ ✓ Compiled in 5s (1153 modules)
+ ✓ Compiled in 3.2s (1153 modules)
+ ✓ Compiled in 1844ms (1153 modules)
+ ✓ Compiled in 1606ms (1153 modules)
+ ✓ Compiled in 2.1s (1153 modules)
+ ✓ Compiled in 2.6s (1153 modules)
+ ✓ Compiled in 1676ms (1153 modules)
+ ✓ Compiled in 2.2s (1153 modules)
+ ✓ Compiled in 3.8s (1153 modules)
+ ✓ Compiled in 3.4s (1153 modules)
+ ✓ Compiled in 5.5s (1153 modules)
+ ✓ Compiled in 5.3s (1153 modules)
+ ⨯ ./src/app/messages/page.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4m/Users/mizunomasafumi/sakura-club/src/app/messages/page.tsx[0m:329:1]
+ [2m329[0m |   }
+ [2m330[0m | 
+ [2m331[0m |   return (
+ [2m332[0m |     <div className="min-h-screen bg-gray-50">
+     : [31;1m     ^^^[0m
+ [2m333[0m |       <div className="max-w-7xl mx-auto">
+ [2m334[0m |         <div className="grid grid-cols-1 lg:grid-cols-3 h-screen">
+ [2m335[0m |           {/* 会話リスト */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/messages/page.tsx
+ ○ Compiling /_error ...
+ ⨯ ./src/app/messages/page.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4m/Users/mizunomasafumi/sakura-club/src/app/messages/page.tsx[0m:329:1]
+ [2m329[0m |   }
+ [2m330[0m | 
+ [2m331[0m |   return (
+ [2m332[0m |     <div className="min-h-screen bg-gray-50">
+     : [31;1m     ^^^[0m
+ [2m333[0m |       <div className="max-w-7xl mx-auto">
+ [2m334[0m |         <div className="grid grid-cols-1 lg:grid-cols-3 h-screen">
+ [2m335[0m |           {/* 会話リスト */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/app/messages/page.tsx
+ ✓ Compiled /not-found in 11.6s (1318 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ✓ Compiled (1304 modules)
+ ✓ Compiled in 1194ms (694 modules)
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 1702ms (662 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 729ms (700 modules)
+ ✓ Compiled in 1350ms (691 modules)
+ ✓ Compiled in 542ms (691 modules)
+ ✓ Compiled in 1084ms (1343 modules)
+ ✓ Compiled in 2.1s (1343 modules)
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 1611ms (128 modules)
+ ✓ Compiled /api/auth/me in 239ms (694 modules)
+Auth me debug: {
+  user: null,
+  authError: 'Auth session missing!',
+  cookies: null,
+  authorization: null
+}
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (116kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2.3s (1385 modules)
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 697ms (1345 modules)
+ ✓ Compiled in 2.7s (1347 modules)
+ ✓ Compiled in 2s (1347 modules)
+ ✓ Compiled in 1762ms (1347 modules)
+ ○ Compiling /api/auth/me ...
+ ✓ Compiled /api/auth/me in 1507ms (688 modules)
+Auth me debug: {
+  user: null,
+  authError: 'Auth session missing!',
+  cookies: null,
+  authorization: null
+}
+ ✓ Compiled in 2.5s (1245 modules)
+ ✓ Compiled in 1801ms (1245 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1682ms (583 modules)
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 1533ms (619 modules)
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EQXlOVFF3TENKcFlYUWlPakUzTlRNNU9UZzVOREFzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLi04XzBwQjZXVFZJZ2RCR0s1MmlISWF5SWs4eEI4dUM1dmFTbDFqNzdjS0kiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDAwMjU0MCwicmVmcmVzaF90b2tlbiI6InZ2bTU1a3JmaWUycSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNy0zMVQyMTo1NTo0MC4zMDQzNTNaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Conversations fetch error: {
+  code: 'PGRST200',
+  details: "Searched for a foreign key relationship between 'conversations' and 'messages' in the schema 'public', but no matches were found.",
+  hint: null,
+  message: "Could not find a relationship between 'conversations' and 'messages' in the schema cache"
+}
+ ✓ Compiled /api/auth/me in 340ms (621 modules)
+Auth me debug: {
+  user: null,
+  authError: 'Auth session missing!',
+  cookies: null,
+  authorization: null
+}
+ ✓ Compiled in 1420ms (1251 modules)
+ ✓ Compiled in 3.6s (632 modules)
+ ✓ Compiled in 1035ms (632 modules)
+ ✓ Compiled /api/messages in 490ms (619 modules)
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EQXlOVFF3TENKcFlYUWlPakUzTlRNNU9UZzVOREFzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLi04XzBwQjZXVFZJZ2RCR0s1MmlISWF5SWs4eEI4dUM1dmFTbDFqNzdjS0kiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDAwMjU0MCwicmVmcmVzaF90b2tlbiI6InZ2bTU1a3JmaWUycSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNy0zMVQyMTo1NTo0MC4zMDQzNTNaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Conversations fetch error: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.conversations" does not exist'
+}
+Conversations table does not exist, returning empty array
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EQXlOVFF3TENKcFlYUWlPakUzTlRNNU9UZzVOREFzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLi04XzBwQjZXVFZJZ2RCR0s1MmlISWF5SWs4eEI4dUM1dmFTbDFqNzdjS0kiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDAwMjU0MCwicmVmcmVzaF90b2tlbiI6InZ2bTU1a3JmaWUycSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNy0zMVQyMTo1NTo0MC4zMDQzNTNaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Conversations fetch error: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.conversations" does not exist'
+}
+Conversations table does not exist, returning empty array
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EQXlOVFF3TENKcFlYUWlPakUzTlRNNU9UZzVOREFzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLi04XzBwQjZXVFZJZ2RCR0s1MmlISWF5SWs4eEI4dUM1dmFTbDFqNzdjS0kiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDAwMjU0MCwicmVmcmVzaF90b2tlbiI6InZ2bTU1a3JmaWUycSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNy0zMVQyMTo1NTo0MC4zMDQzNTNaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Conversations fetch error: {
+  code: '42P01',
+  details: null,
+  hint: null,
+  message: 'relation "public.conversations" does not exist'
+}
+Conversations table does not exist, returning empty array
+ ✓ Compiled in 3.1s (1379 modules)
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EQXlOVFF3TENKcFlYUWlPakUzTlRNNU9UZzVOREFzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLi04XzBwQjZXVFZJZ2RCR0s1MmlISWF5SWs4eEI4dUM1dmFTbDFqNzdjS0kiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDAwMjU0MCwicmVmcmVzaF90b2tlbiI6InZ2bTU1a3JmaWUycSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wNy0zMVQyMTo1NTo0MC4zMDQzNTNaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19;'
+}
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+ ✓ Compiled in 1412ms (1209 modules)
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 726ms (619 modules)
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+ ○ Compiling /api/auth/me ...
+ ✓ Compiled /api/auth/me in 589ms (621 modules)
+Auth me debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19',
+  authorization: null
+}
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+ ○ Compiling /not-found ...
+ ✓ Compiled /not-found in 3s (1256 modules)
+ ✓ Compiled in 2.1s (1209 modules)
+ ✓ Compiled in 600ms (632 modules)
+ ○ Compiling /api/messages ...
+ ✓ Compiled /api/messages in 569ms (619 modules)
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTBOamczTENKcFlYUWlPakUzTlRRd05URXdPRGNzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLkEwTXRvU1VjdFNfcmpJT0tRZVhWV0tXMXhQTEk1elllSkZNN0IzZlk4aUkiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1NDY4NywicmVmcmVzaF90b2tlbiI6Im92cDVndnc1ZXRxaSIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMjoyNDo0Ny41NzA1NDlaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+ ✓ Compiled in 1894ms (1251 modules)
+=== Messages API called ===
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+=== Messages API called ===
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+=== Messages API called ===
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+=== Messages API called ===
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c
+=== Messages API called ===
+Auth debug: {
+  user: {
+    id: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+    email: 'masamizusan0304@gmail.com'
+  },
+  authError: undefined,
+  cookies: 'sb-zrdzyzphrubeaafbkjtr-auth-token=base64-eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0ltdHBaQ0k2SWxSVE5VaE9VVUZDZEhCM1dtNVlNa3NpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNweVpIcDVlbkJvY25WaVpXRmhabUpyYW5SeUxuTjFjR0ZpWVhObExtTnZMMkYxZEdndmRqRWlMQ0p6ZFdJaU9pSXdNR0V6WmpNMlpTMHpPV0k0TFRRM05HWXRZamc1TUMwM01HWTROalkyWm1FeE4yTWlMQ0poZFdRaU9pSmhkWFJvWlc1MGFXTmhkR1ZrSWl3aVpYaHdJam94TnpVME1EVTRNekk1TENKcFlYUWlPakUzTlRRd05UUTNNamtzSW1WdFlXbHNJam9pYldGellXMXBlblZ6WVc0d016QTBRR2R0WVdsc0xtTnZiU0lzSW5Cb2IyNWxJam9pSWl3aVlYQndYMjFsZEdGa1lYUmhJanA3SW5CeWIzWnBaR1Z5SWpvaVpXMWhhV3dpTENKd2NtOTJhV1JsY25NaU9sc2laVzFoYVd3aVhYMHNJblZ6WlhKZmJXVjBZV1JoZEdFaU9uc2laVzFoYVd3aU9pSnRZWE5oYldsNmRYTmhiakF6TURSQVoyMWhhV3d1WTI5dElpd2laVzFoYVd4ZmRtVnlhV1pwWldRaU9uUnlkV1VzSW1acGNuTjBYMjVoYldVaU9pTHBtNFhtbG9jaUxDSnNZWE4wWDI1aGJXVWlPaUxtc0xUcGg0NGlMQ0p3YUc5dVpWOTJaWEpwWm1sbFpDSTZabUZzYzJVc0luTjFZaUk2SWpBd1lUTm1NelpsTFRNNVlqZ3RORGMwWmkxaU9Ea3dMVGN3WmpnMk5qWm1ZVEUzWXlKOUxDSnliMnhsSWpvaVlYVjBhR1Z1ZEdsallYUmxaQ0lzSW1GaGJDSTZJbUZoYkRFaUxDSmhiWElpT2x0N0ltMWxkR2h2WkNJNkluQmhjM04zYjNKa0lpd2lkR2x0WlhOMFlXMXdJam94TnpVek9UWTVNekE1ZlYwc0luTmxjM05wYjI1ZmFXUWlPaUprTm1ZeE9UZGtZUzFpTmpZNUxUUTRZalV0T0dabFpDMDNOalEwWmpBeU9UVTNNRGtpTENKcGMxOWhibTl1ZVcxdmRYTWlPbVpoYkhObGZRLlU2dlpPamFQX3FTUGVEdnlPbjVfYno1VFk3eG53OFBiS1RLVktjYzRQR0UiLCJ0b2tlbl90eXBlIjoiYmVhcmVyIiwiZXhwaXJlc19pbiI6MzYwMCwiZXhwaXJlc19hdCI6MTc1NDA1ODMyOSwicmVmcmVzaF90b2tlbiI6IjVtMmZzaXBrZnF4ZCIsInVzZXIiOnsiaWQiOiIwMGEzZjM2ZS0zOWI4LTQ3NGYtYjg5MC03MGY4NjY2ZmExN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20iLCJlbWFpbF9jb25maXJtZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMzOjA4LjcxNzQ1M1oiLCJwaG9uZSI6IiIsImNvbmZpcm1hdGlvbl9zZW50X2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43OTQyOThaIiwiY29uZmlybWVkX2F0IjoiMjAyNS0wNy0zMVQxMzozMzowOC43MTc0NTNaIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzo0MTo0OS44OTI5MDdaIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJpZGVudGl0aWVzIjpbeyJpZGVudGl0eV9pZCI6IjMwYTA3YjdlLTliOTItNGUxYy1hZWMxLTRiMmYxMmE5NTkwNiIsImlkIjoiMDBhM2YzNmUtMzliOC00NzRmLWI4OTAtNzBmODY2NmZhMTdjIiwidXNlcl9pZCI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyIsImlkZW50aXR5X2RhdGEiOnsiZW1haWwiOiJtYXNhbWl6dXNhbjAzMDRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcnN0X25hbWUiOiLpm4XmlociLCJsYXN0X25hbWUiOiLmsLTph44iLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjAwYTNmMzZlLTM5YjgtNDc0Zi1iODkwLTcwZjg2NjZmYTE3YyJ9LCJwcm92aWRlciI6ImVtYWlsIiwibGFzdF9zaWduX2luX2F0IjoiMjAyNS0wNy0zMVQxMzozMjozNS43NjgzNzJaIiwiY3JlYXRlZF9hdCI6IjIwMjUtMDctMzFUMTM6MzI6MzUuNzY4NDM1WiIsInVwZGF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1Ljc2ODQzNVoiLCJlbWFpbCI6Im1hc2FtaXp1c2FuMDMwNEBnbWFpbC5jb20ifV0sImNyZWF0ZWRfYXQiOiIyMDI1LTA3LTMxVDEzOjMyOjM1LjcwMzkzN1oiLCJ1cGRhdGVkX2F0IjoiMjAyNS0wOC0wMVQxMzoyNToyOS4yNDY5NjdaIiwiaXNfYW5vbnltb3VzIjpmYWxzZX19'
+}
+Found conversations: 1
+Processing conversation: {
+  convId: '22222222-2222-2222-2222-222222222222',
+  user1: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  user2: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  currentUser: '00a3f36e-39b8-474f-b890-70f8666fa17c',
+  partnerId: '00a3f36e-39b8-474f-b890-70f8666fa17c'
+}
+Partner profile: null
+No partner found for ID: 00a3f36e-39b8-474f-b890-70f8666fa17c

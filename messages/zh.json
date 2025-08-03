@@ -1,0 +1,293 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "success": "成功",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一个",
+    "previous": "上一个",
+    "submit": "提交",
+    "search": "搜索",
+    "filter": "筛选",
+    "reset": "重置",
+    "settings": "设置",
+    "profile": "个人资料",
+    "logout": "退出登录",
+    "login": "登录",
+    "signup": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "name": "姓名",
+    "age": "年龄",
+    "gender": "性别",
+    "nationality": "国籍",
+    "location": "位置",
+    "required": "必填",
+    "optional": "可选",
+    "yes": "是",
+    "no": "否",
+    "or": "或"
+  },
+  "navigation": {
+    "home": "首页",
+    "dashboard": "仪表盘",
+    "matches": "配对",
+    "messages": "消息",
+    "experiences": "文化体验",
+    "about": "关于我们",
+    "howItWorks": "使用方法",
+    "safety": "安全性",
+    "language": "语言"
+  },
+  "auth": {
+    "welcomeBack": "欢迎回来",
+    "signInToAccount": "请登录您的账户",
+    "dontHaveAccount": "还没有账户？",
+    "alreadyHaveAccount": "已有账户？",
+    "forgotPassword": "忘记密码？",
+    "createAccount": "创建账户",
+    "signUp": "注册",
+    "signIn": "登录",
+    "emailRequired": "请输入邮箱地址",
+    "passwordRequired": "请输入密码",
+    "passwordMinLength": "密码至少需要8个字符",
+    "firstNameRequired": "请输入名字",
+    "lastNameRequired": "请输入姓氏",
+    "signUpSuccess": "账户创建成功",
+    "signInSuccess": "登录成功",
+    "signOutSuccess": "退出登录成功",
+    "invalidCredentials": "邮箱或密码错误",
+    "emailAlreadyExists": "此邮箱已被使用"
+  },
+  "profile": {
+    "editProfile": "编辑个人资料",
+    "basicInfo": "基本信息",
+    "firstName": "名字",
+    "lastName": "姓氏",
+    "male": "男性",
+    "female": "女性",
+    "prefecture": "都道府县",
+    "city": "市区町村",
+    "hobbies": "兴趣爱好",
+    "selfIntroduction": "自我介绍",
+    "profileImage": "头像",
+    "selectImage": "选择图片",
+    "uploadImage": "上传图片",
+    "removeImage": "删除图片",
+    "hobbyLimit": "最多可选择5个兴趣爱好",
+    "selfIntroductionMinLength": "自我介绍至少需要50个字符",
+    "profileUpdated": "个人资料更新成功"
+  },
+  "matching": {
+    "title": "推荐匹配",
+    "subtitle": "找到您的完美匹配，一起享受美妙的文化体验。",
+    "like": "喜欢",
+    "pass": "跳过",
+    "viewProfile": "查看资料",
+    "matchPercentage": "{percentage}% 匹配",
+    "commonInterests": "共同兴趣",
+    "distance": "{distance}公里",
+    "lastActive": "最后活跃",
+    "online": "在线",
+    "noMatches": "未找到匹配",
+    "noMatchesDescription": "请尝试更改搜索条件或等待新的匹配",
+    "newMatch": "新匹配！",
+    "matchSuccess": "您与{name}匹配成功！开始聊天吧。",
+    "findMoreMatches": "寻找更多匹配"
+  },
+  "messages": {
+    "title": "消息",
+    "noConversations": "暂无消息",
+    "selectConversation": "选择对话",
+    "selectConversationDescription": "从左侧选择一个对话开始聊天",
+    "typeMessage": "输入消息...",
+    "send": "发送",
+    "you": "您",
+    "newMessage": "新消息",
+    "matchedOn": "匹配于{date}",
+    "searchConversations": "搜索对话..."
+  },
+  "experiences": {
+    "title": "文化体验",
+    "subtitle": "体验日本传统文化，享受新的邂逅",
+    "createExperience": "创建新体验",
+    "joinExperience": "参加",
+    "viewDetails": "查看详情",
+    "category": "类别",
+    "date": "日期",
+    "time": "时间",
+    "price": "价格",
+    "participants": "参与者",
+    "maxParticipants": "最大参与人数",
+    "location": "地点",
+    "organizer": "组织者",
+    "description": "描述",
+    "included": "包含内容",
+    "toBring": "需要携带",
+    "requirements": "参与要求",
+    "upcoming": "即将进行",
+    "available": "可参加",
+    "full": "已满",
+    "completed": "已完成",
+    "noExperiences": "未找到体验",
+    "experienceCreated": "体验创建成功",
+    "joinSuccess": "成功参与体验",
+    "categories": {
+      "tea-ceremony": "茶道",
+      "calligraphy": "书道",
+      "cooking": "料理",
+      "flower-arrangement": "花道",
+      "martial-arts": "武道",
+      "traditional-crafts": "传统工艺",
+      "music": "音乐",
+      "dance": "舞蹈",
+      "festival": "节庆",
+      "other": "其他"
+    }
+  },
+  "reviews": {
+    "title": "评价",
+    "writeReview": "写评价",
+    "rating": "评分",
+    "reviewText": "评价内容",
+    "anonymous": "匿名发布",
+    "postReview": "发布评价",
+    "editReview": "编辑评价",
+    "deleteReview": "删除评价",
+    "noReviews": "暂无评价",
+    "averageRating": "平均评分",
+    "reviewCount": "{count}条评价",
+    "ratingLabels": {
+      "1": "很差",
+      "2": "一般",
+      "3": "不错",
+      "4": "很好",
+      "5": "优秀"
+    },
+    "reviewPosted": "评价发布成功",
+    "reviewUpdated": "评价更新成功",
+    "reviewDeleted": "评价删除成功"
+  },
+  "notifications": {
+    "title": "通知",
+    "markAllRead": "全部标记为已读",
+    "noNotifications": "暂无新通知",
+    "viewAll": "查看所有通知",
+    "types": {
+      "match": "新匹配",
+      "message": "新消息",
+      "experience_invitation": "体验邀请",
+      "experience_reminder": "体验提醒",
+      "review_request": "评价请求",
+      "system": "系统通知"
+    },
+    "settings": {
+      "title": "推送通知",
+      "description": "实时接收新匹配、消息、体验邀请等重要通知。",
+      "enable": "启用通知",
+      "disable": "禁用通知",
+      "test": "测试通知",
+      "enabled": "已启用",
+      "disabled": "已禁用",
+      "denied": "已拒绝",
+      "notSupported": "不支持推送通知",
+      "notSupportedDescription": "您的浏览器不支持推送通知。请使用Chrome、Firefox或Safari等现代浏览器。",
+      "deniedDescription": "通知已被阻止。请在浏览器设置中允许Sakura Club的通知。",
+      "testSent": "测试通知已发送！",
+      "enableSuccess": "推送通知启用成功！",
+      "disableSuccess": "推送通知已禁用。"
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "欢迎回来，{name}",
+    "subtitle": "今天也来享受美妙的文化体验吧",
+    "stats": {
+      "matches": "匹配数",
+      "upcomingExperiences": "即将参与",
+      "completedExperiences": "已完成",
+      "newMessages": "新消息"
+    },
+    "quickActions": {
+      "findMatches": "寻找匹配",
+      "findMatchesDescription": "发现新朋友",
+      "messages": "消息",
+      "messagesDescription": "继续对话",
+      "experiences": "文化体验",
+      "experiencesDescription": "寻找新体验",
+      "editProfile": "编辑资料",
+      "editProfileDescription": "更新您的信息"
+    },
+    "tabs": {
+      "matches": "匹配",
+      "experiences": "体验",
+      "messages": "消息"
+    }
+  },
+  "pwa": {
+    "installPrompt": {
+      "title": "安装应用",
+      "description": "安装Sakura Club以获得更好的体验。",
+      "install": "安装",
+      "later": "稍后",
+      "addToHomeScreen": "添加到主屏幕",
+      "addToHomeScreenDescription": "将Sakura Club添加到主屏幕，像应用一样使用。",
+      "iosInstructions": {
+        "step1": "1. 点击底部的分享按钮 □",
+        "step2": "2. 选择「添加到主屏幕」",
+        "step3": "3. 点击「添加」"
+      },
+      "understood": "明白了"
+    },
+    "offline": {
+      "indicator": "离线模式",
+      "connecting": "连接中...",
+      "reconnected": "已重新连接"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "通过文化体验实现真正的邂逅",
+      "subtitle": "为访日外国男性和日本女性提供的安全可靠平台，通过茶道、书道、料理教室等文化体验享受自然的邂逅。",
+      "cta": "立即开始",
+      "learnMore": "了解更多"
+    },
+    "features": {
+      "title": "Sakura Club的特色",
+      "cultural": {
+        "title": "以文化为中心",
+        "description": "在一起体验茶道、书道等日本传统文化的同时实现自然的邂逅"
+      },
+      "safe": {
+        "title": "安全可靠",
+        "description": "仅限已验证用户，在公共场所进行体验确保安全性"
+      },
+      "international": {
+        "title": "国际交流",
+        "description": "与来自世界各国的访日游客实现真正的国际交流"
+      }
+    }
+  },
+  "errors": {
+    "general": "发生错误。请重试。",
+    "network": "发生网络错误。请检查连接。",
+    "unauthorized": "需要身份验证。请登录。",
+    "forbidden": "您没有执行此操作的权限。",
+    "notFound": "未找到您要查找的页面。",
+    "validation": "输入内容有问题。请检查后重试。",
+    "server": "发生服务器错误。请稍后重试。"
+  },
+  "validation": {
+    "required": "{field}是必填项",
+    "email": "请输入有效的邮箱地址",
+    "minLength": "{field}至少需要{min}个字符",
+    "maxLength": "{field}不能超过{max}个字符",
+    "min": "{field}必须大于等于{min}",
+    "max": "{field}必须小于等于{max}",
+    "pattern": "{field}格式不正确"
+  }
+}
