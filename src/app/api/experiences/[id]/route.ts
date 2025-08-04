@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const experienceId = params.id
 
     // 体験の詳細情報を取得
@@ -117,7 +117,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const experienceId = params.id
     
     // 認証ユーザーの取得
@@ -213,7 +213,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const experienceId = params.id
     
     // 認証ユーザーの取得

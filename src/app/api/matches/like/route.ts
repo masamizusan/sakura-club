@@ -12,7 +12,7 @@ const likeSchema = z.object({
 // POST: いいね・パスの処理
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -179,14 +179,16 @@ export async function POST(request: NextRequest) {
           await notificationService.createMatchNotification(
             likedUserId,
             `${currentUserProfile.first_name} ${currentUserProfile.last_name}`,
-            user.id
+            user.id,
+            request
           )
 
           // 自分に通知
           await notificationService.createMatchNotification(
             user.id,
             `${targetUser.first_name} ${targetUser.last_name}`,
-            likedUserId
+            likedUserId,
+            request
           )
         }
       }

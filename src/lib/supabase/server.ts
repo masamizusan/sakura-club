@@ -2,7 +2,27 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-export function createClient() {
+export function createClient(request?: NextRequest) {
+  if (request) {
+    // API Routes用: NextRequestから直接cookiesを取得
+    return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // API Routesでは実際のcookie設定は不要
+            // レスポンスヘッダーで設定される
+          },
+        },
+      }
+    )
+  }
+
+  // Server Components用: cookies()を使用
   const cookieStore = cookies()
 
   return createServerClient(

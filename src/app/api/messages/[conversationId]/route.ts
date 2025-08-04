@@ -16,7 +16,7 @@ interface Params {
 // GET: 会話のメッセージ一覧取得
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const conversationId = params.conversationId
     
     // 認証ユーザーの取得
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 // POST: メッセージ送信
 export async function POST(request: NextRequest, { params }: Params) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const conversationId = params.conversationId
     
     // 認証ユーザーの取得

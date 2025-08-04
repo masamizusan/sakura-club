@@ -21,7 +21,7 @@ const createNotificationSchema = z.object({
 // GET: 通知一覧取得
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const { searchParams } = new URL(request.url)
     
     // 認証ユーザーの取得
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 // POST: 新しい通知作成（システム内部用）
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得（管理者権限チェックは省略）
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
 // PUT: 通知の既読状態を更新
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()

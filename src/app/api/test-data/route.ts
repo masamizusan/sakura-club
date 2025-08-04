@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // テストデータ作成用のAPIエンドポイント
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()

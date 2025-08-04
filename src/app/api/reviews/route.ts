@@ -20,7 +20,7 @@ const updateReviewSchema = z.object({
 // GET: レビュー一覧取得
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     const { searchParams } = new URL(request.url)
     
     // クエリパラメータの取得
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 // POST: 新しいレビュー作成
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()

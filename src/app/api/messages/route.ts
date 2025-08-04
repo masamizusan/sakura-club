@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // GET: 会話一覧の取得
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     console.log('=== Messages API called ===')
     

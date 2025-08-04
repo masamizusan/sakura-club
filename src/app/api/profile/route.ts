@@ -18,7 +18,7 @@ const updateProfileSchema = z.object({
 // GET: プロフィール取得
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 // PUT: プロフィール更新
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createClient(request)
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()

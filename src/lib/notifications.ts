@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { NextRequest } from 'next/server'
 
 export type NotificationType = 'match' | 'message' | 'experience_invitation' | 'experience_reminder' | 'review_request' | 'system'
 
@@ -11,7 +12,9 @@ export interface CreateNotificationParams {
 }
 
 export class NotificationService {
-  private supabase = createClient()
+  private getSupabase(request?: NextRequest) {
+    return createClient(request)
+  }
 
   async createNotification({
     userId,
@@ -19,9 +22,10 @@ export class NotificationService {
     title,
     message,
     data = {}
-  }: CreateNotificationParams) {
+  }: CreateNotificationParams, request?: NextRequest) {
     try {
-      const { data: notification, error } = await this.supabase
+      const supabase = this.getSupabase(request)
+      const { data: notification, error } = await supabase
         .from('notifications')
         .insert({
           user_id: userId,
@@ -49,7 +53,7 @@ export class NotificationService {
   }
 
   // マッチ通知を作成
-  async createMatchNotification(userId: string, matchedUserName: string, matchedUserId: string) {
+  async createMatchNotification(userId: string, matchedUserName: string, matchedUserId: string, request?: NextRequest) {
     return this.createNotification({
       userId,
       type: 'match',
@@ -59,7 +63,7 @@ export class NotificationService {
         matched_user_id: matchedUserId,
         matched_user_name: matchedUserName
       }
-    })
+    }, request)
   }
 
   // メッセージ通知を作成
@@ -68,7 +72,8 @@ export class NotificationService {
     senderName: string, 
     senderId: string, 
     conversationId: string,
-    messagePreview: string
+    messagePreview: string,
+    request?: NextRequest
   ) {
     return this.createNotification({
       userId,
@@ -81,7 +86,7 @@ export class NotificationService {
         conversation_id: conversationId,
         message_preview: messagePreview
       }
-    })
+    }, request)
   }
 
   // 体験招待通知を作成
@@ -89,7 +94,8 @@ export class NotificationService {
     userId: string, 
     experienceTitle: string, 
     experienceId: string,
-    inviterName: string
+    inviterName: string,
+    request?: NextRequest
   ) {
     return this.createNotification({
       userId,
@@ -101,7 +107,7 @@ export class NotificationService {
         experience_title: experienceTitle,
         inviter_name: inviterName
       }
-    })
+    }, request)
   }
 
   // 体験リマインダー通知を作成
@@ -109,7 +115,8 @@ export class NotificationService {
     userId: string, 
     experienceTitle: string, 
     experienceId: string,
-    experienceDate: string
+    experienceDate: string,
+    request?: NextRequest
   ) {
     return this.createNotification({
       userId,
@@ -121,14 +128,15 @@ export class NotificationService {
         experience_title: experienceTitle,
         experience_date: experienceDate
       }
-    })
+    }, request)
   }
 
   // レビュー依頼通知を作成
   async createReviewRequestNotification(
     userId: string, 
     experienceTitle: string, 
-    experienceId: string
+    experienceId: string,
+    request?: NextRequest
   ) {
     return this.createNotification({
       userId,
@@ -139,7 +147,7 @@ export class NotificationService {
         experience_id: experienceId,
         experience_title: experienceTitle
       }
-    })
+    }, request)
   }
 
   // システム通知を作成
@@ -147,7 +155,8 @@ export class NotificationService {
     userId: string, 
     title: string, 
     message: string, 
-    data: Record<string, any> = {}
+    data: Record<string, any> = {},
+    request?: NextRequest
   ) {
     return this.createNotification({
       userId,
@@ -155,13 +164,14 @@ export class NotificationService {
       title,
       message,
       data
-    })
+    }, request)
   }
 
   // 複数ユーザーに同じ通知を送信
   async createBulkNotifications(
     userIds: string[],
-    params: Omit<CreateNotificationParams, 'userId'>
+    params: Omit<CreateNotificationParams, 'userId'>,
+    request?: NextRequest
   ) {
     const notifications = userIds.map(userId => ({
       user_id: userId,
@@ -175,7 +185,8 @@ export class NotificationService {
     }))
 
     try {
-      const { data, error } = await this.supabase
+      const supabase = this.getSupabase(request)
+      const { data, error } = await supabase
         .from('notifications')
         .insert(notifications)
         .select()
