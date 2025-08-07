@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 // プロフィール更新のスキーマ
 const updateProfileSchema = z.object({
   firstName: z.string().min(1, '名を入力してください').max(50, '名は50文字以内で入力してください'),
