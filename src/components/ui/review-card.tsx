@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Star, User, Edit, Trash2, Save, X } from 'lucide-react'
@@ -151,10 +152,12 @@ export function ReviewCard({
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
             {review.reviewerImage ? (
-              <img
+              <Image
                 src={review.reviewerImage}
                 alt={review.reviewerName}
                 className="w-full h-full rounded-full object-cover"
+                width={40}
+                height={40}
               />
             ) : (
               <User className="w-5 h-5 text-sakura-600" />

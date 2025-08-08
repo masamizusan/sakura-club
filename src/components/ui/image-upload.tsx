@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { Upload, X, Camera, User } from 'lucide-react'
@@ -151,10 +152,12 @@ export function ImageUpload({
       <div className="relative">
         <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
           {currentImageUrl ? (
-            <img
+            <Image
               src={currentImageUrl}
               alt="プロフィール画像"
               className="w-full h-full object-cover"
+              width={128}
+              height={128}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
