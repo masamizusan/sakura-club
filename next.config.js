@@ -1,7 +1,13 @@
 const withNextIntl = require('next-intl/plugin')('./src/i18n.ts')
+// Vercel Build Cache Buster
+require('./vercel-build-cache-buster.js')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Vercel用の設定
+  output: 'standalone',
+  outputFileTracing: true,
+  
   // PWA対応のための設定
   async headers() {
     return [
