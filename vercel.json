@@ -1,10 +1,3 @@
 {
-  "framework": "nextjs",
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/ja",
-      "permanent": false
-    }
-  ]
+  "framework": "nextjs"
 }

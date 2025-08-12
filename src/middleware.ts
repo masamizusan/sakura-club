@@ -17,6 +17,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // ルートパスの場合は日本語ページにリダイレクト
+  if (request.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/ja', request.url))
+  }
+
   // 国際化処理を適用
   return intlMiddleware(request)
 }
