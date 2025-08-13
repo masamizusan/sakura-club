@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import createIntlMiddleware from 'next-intl/middleware'
 import { locales, defaultLocale } from './i18n'
 
-// 国際化ミドルウェアの作成
+// 国際化ミドルウェアの作成（localePrefix: 'never'でURLパスに言語プレフィックスを追加しない）
 const intlMiddleware = createIntlMiddleware({
   locales,
   defaultLocale,
@@ -10,14 +10,20 @@ const intlMiddleware = createIntlMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
-  // 静的ファイルとAPIは処理をスキップ
+  // 静的ファイル、API、特殊パスは処理をスキップ
   if (request.nextUrl.pathname.startsWith('/_next') || 
       request.nextUrl.pathname.startsWith('/api') ||
-      request.nextUrl.pathname.includes('.')) {
+      request.nextUrl.pathname.includes('.') ||
+      request.nextUrl.pathname === '/favicon.ico') {
     return NextResponse.next()
   }
 
-  // 国際化処理を適用
+  // ルートパス（/）への直接アクセスを許可
+  if (request.nextUrl.pathname === '/') {
+    return intlMiddleware(request)
+  }
+
+  // その他のパスも国際化処理を適用
   return intlMiddleware(request)
 }
 
