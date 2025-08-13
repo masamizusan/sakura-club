@@ -6,7 +6,7 @@ import { locales, defaultLocale } from './i18n'
 const intlMiddleware = createIntlMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed'
+  localePrefix: 'never'
 })
 
 export async function middleware(request: NextRequest) {
@@ -15,11 +15,6 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/api') ||
       request.nextUrl.pathname.includes('.')) {
     return NextResponse.next()
-  }
-
-  // ルートパスの場合は日本語ページにリダイレクト
-  if (request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/ja', request.url))
   }
 
   // 国際化処理を適用
