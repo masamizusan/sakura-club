@@ -48,17 +48,13 @@ export default function SignupPage() {
       const result = await authService.signUp(data)
       console.log('Signup result:', result)
       
-      // Force OTP flow for testing
-      setUserEmail(data.email)
-      setShowOtpInput(true)
-      
-      // if (result.needsEmailConfirmation) {
-      //   setUserEmail(data.email)
-      //   setShowOtpInput(true)
-      // } else {
-      //   // Direct login successful
-      //   router.push('/dashboard')
-      // }
+      if (result.needsEmailConfirmation) {
+        setUserEmail(data.email)
+        setShowOtpInput(true)
+      } else {
+        // Direct login successful
+        router.push('/dashboard')
+      }
     } catch (error) {
       console.error('Signup error:', error)
       if (error instanceof AuthError) {
@@ -192,6 +188,9 @@ export default function SignupPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   メールが届かない場合は、迷惑メールフォルダをご確認ください。
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  ※ テスト用：メールが届かない場合は「123456」を入力してください
                 </p>
               </div>
             </div>
