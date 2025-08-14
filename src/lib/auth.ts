@@ -167,7 +167,7 @@ export const authService = {
           city: '',
           hobbies: [],
           selfIntroduction: '',
-          avatarUrl: null,
+          avatarUrl: undefined,
           isVerified: false,
           membershipType: 'free' as const,
         }
