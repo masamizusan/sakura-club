@@ -25,7 +25,6 @@ export default function RootLayout({
     <html lang="ja" className={`${inter.className} ${notoSansJP.variable}`}>
       <body className="antialiased">
         <AuthProvider>
-          <SimpleHeader />
           {children}
         </AuthProvider>
       </body>
