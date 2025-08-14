@@ -4,9 +4,54 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Shield, Heart, Globe, Star } from 'lucide-react'
 
+function SimpleNavHeader() {
+  return (
+    <header className="bg-white/95 backdrop-blur-sm border-b border-sakura-100 sticky top-0 z-50">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
+            <Heart className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-xl font-bold sakura-text-gradient">Sakura Club</span>
+        </a>
+
+        <nav className="hidden md:flex items-center space-x-8">
+          <a href="/about" className="text-gray-700 hover:text-sakura-600 transition-colors">
+            サービスについて
+          </a>
+          <a href="/how-it-works" className="text-gray-700 hover:text-sakura-600 transition-colors">
+            仕組み
+          </a>
+          <a href="/safety" className="text-gray-700 hover:text-sakura-600 transition-colors">
+            安心・安全
+          </a>
+          <a href="/experiences" className="text-gray-700 hover:text-sakura-600 transition-colors">
+            文化体験
+          </a>
+        </nav>
+
+        <div className="flex items-center space-x-4">
+          <a href="/login">
+            <Button variant="outline" size="sm">
+              ログイン
+            </Button>
+          </a>
+          <a href="/signup">
+            <Button variant="sakura" size="sm">
+              新規登録
+            </Button>
+          </a>
+        </div>
+      </div>
+    </header>
+  )
+}
+
 export default function HeroSection() {
   return (
-    <section className="hero-section min-h-[90vh] flex items-center relative">
+    <>
+      <SimpleNavHeader />
+      <section className="hero-section min-h-[90vh] flex items-center relative">
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -23,13 +68,17 @@ export default function HeroSection() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-fade-in">
-                <Button variant="sakura" size="lg" className="px-8 py-3 text-lg">
-                  今すぐ始める
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button variant="outline" size="lg" className="px-8 py-3 text-lg">
-                  仕組みを見る
-                </Button>
+                <a href="/signup">
+                  <Button variant="sakura" size="lg" className="px-8 py-3 text-lg">
+                    無料で始める（女性無料）
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </a>
+                <a href="/login">
+                  <Button variant="outline" size="lg" className="px-8 py-3 text-lg">
+                    ログインはこちら
+                  </Button>
+                </a>
               </div>
             </div>
 
@@ -119,5 +168,6 @@ export default function HeroSection() {
       <div className="absolute bottom-32 left-20 w-2 h-2 bg-sakura-500 rounded-full opacity-50 animate-pulse delay-2000" />
       </div>
     </section>
+    </>
   )
 }
