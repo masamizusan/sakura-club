@@ -145,28 +145,47 @@ export const authService = {
         return null
       }
 
+      // Try to get profile, but don't fail if it doesn't exist
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
 
+      // If profile doesn't exist, return basic user info from auth
       if (profileError || !profile) {
-        return null
+        console.log('No profile found for user, returning basic auth info:', user.id)
+        return {
+          id: user.id,
+          email: user.email || '',
+          firstName: 'ユーザー',
+          lastName: '',
+          gender: 'female' as const,
+          age: 0,
+          nationality: '',
+          prefecture: '',
+          city: '',
+          hobbies: [],
+          selfIntroduction: '',
+          avatarUrl: null,
+          isVerified: false,
+          membershipType: 'free' as const,
+        }
       }
 
+      // Return profile data if it exists
       return {
         id: profile.id,
         email: profile.email,
-        firstName: profile.name,
+        firstName: profile.first_name,
         lastName: profile.last_name || '',
         gender: profile.gender,
         age: profile.age,
         nationality: profile.nationality,
-        prefecture: profile.residence,
+        prefecture: profile.prefecture,
         city: profile.city || '',
-        hobbies: profile.interests || [],
-        selfIntroduction: profile.bio,
+        hobbies: profile.hobbies || [],
+        selfIntroduction: profile.self_introduction,
         avatarUrl: profile.avatar_url,
         isVerified: profile.is_verified || false,
         membershipType: profile.membership_type || 'free',
