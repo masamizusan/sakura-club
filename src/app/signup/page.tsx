@@ -20,6 +20,11 @@ export default function SignupPage() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [signupError, setSignupError] = useState('')
   const [signupSuccess, setSignupSuccess] = useState(false)
+  const [showOtpInput, setShowOtpInput] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpError, setOtpError] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
   const router = useRouter()
 
   const {
@@ -41,13 +46,19 @@ export default function SignupPage() {
     
     try {
       const result = await authService.signUp(data)
+      console.log('Signup result:', result)
       
-      if (result.needsEmailConfirmation) {
-        setSignupSuccess(true)
-      } else {
-        // Direct login successful
-        router.push('/dashboard')
-      }
+      // Force OTP flow for testing
+      setUserEmail(data.email)
+      setShowOtpInput(true)
+      
+      // if (result.needsEmailConfirmation) {
+      //   setUserEmail(data.email)
+      //   setShowOtpInput(true)
+      // } else {
+      //   // Direct login successful
+      //   router.push('/dashboard')
+      // }
     } catch (error) {
       console.error('Signup error:', error)
       if (error instanceof AuthError) {
@@ -71,6 +82,31 @@ export default function SignupPage() {
     }
   }
 
+  const verifyOtp = async () => {
+    setIsVerifying(true)
+    setOtpError('')
+
+    try {
+      const { data, error } = await authService.verifyOtp({
+        email: userEmail,
+        token: otpCode,
+        type: 'signup'
+      })
+
+      if (error) {
+        setOtpError('確認コードが正しくありません。もう一度お試しください。')
+        return
+      }
+
+      setSignupSuccess(true)
+    } catch (error) {
+      console.error('OTP verification error:', error)
+      setOtpError('確認に失敗しました。もう一度お試しください。')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
   // Success screen
   if (signupSuccess) {
     return (
@@ -82,9 +118,9 @@ export default function SignupPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">登録完了</h2>
             <p className="text-gray-600 mb-6">
-              会員登録が完了しました！<br />
-              ご登録いただいたメールアドレスに確認メールをお送りしました。<br />
-              メール内のリンクをクリックしてアカウントを有効化してください。
+              メールアドレスの確認が完了しました！<br />
+              アカウントが有効化されました。<br />
+              ログインしてSakura Clubをお楽しみください。
             </p>
             <div className="space-y-3">
               <Button variant="sakura" className="w-full" onClick={() => router.push('/login')}>
@@ -93,6 +129,71 @@ export default function SignupPage() {
               <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
                 トップページへ
               </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // OTP Input screen
+  if (showOtpInput) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-sakura-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">メール確認</h2>
+              <p className="text-gray-600">
+                {userEmail} に確認コードを送信しました。<br />
+                メール内の6桁のコードを入力してください。
+              </p>
+            </div>
+
+            {otpError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                <XCircle className="w-5 h-5 text-red-500 mr-2" />
+                <p className="text-red-700 text-sm">{otpError}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  確認コード（6桁）
+                </label>
+                <Input
+                  type="text"
+                  placeholder="123456"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  maxLength={6}
+                  className="text-center text-2xl tracking-widest"
+                />
+              </div>
+              
+              <Button
+                onClick={verifyOtp}
+                variant="sakura"
+                className="w-full"
+                disabled={isVerifying || otpCode.length !== 6}
+              >
+                {isVerifying ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                {isVerifying ? '確認中...' : 'アカウントを有効化'}
+              </Button>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  メールが届かない場合は、迷惑メールフォルダをご確認ください。
+                </p>
+              </div>
             </div>
           </div>
         </div>

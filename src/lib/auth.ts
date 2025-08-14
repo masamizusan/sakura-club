@@ -215,6 +215,29 @@ export const authService = {
     }
   },
 
+  async verifyOtp(params: { email: string; token: string; type: 'signup' | 'recovery' }) {
+    const supabase = createClient()
+    
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: params.email,
+        token: params.token,
+        type: params.type
+      })
+
+      if (error) {
+        throw new AuthError(error.message)
+      }
+
+      return { data, error: null }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('OTP確認処理中にエラーが発生しました')
+    }
+  },
+
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
     const supabase = createClient()
     
