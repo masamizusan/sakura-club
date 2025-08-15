@@ -29,37 +29,34 @@ function DashboardContent() {
       id: 1,
       name: 'Michael',
       age: 29,
-      location: 'アメリカ（東京在住）',
+      location: 'アメリカ',
       image: '/api/placeholder/400/500',
       isOnline: true,
       lastActive: '24時間以内',
       bio: 'こんにちは！アメリカから来たMichaelです🇺🇸 日本の文化が大好きで、特に茶道と書道に興味があります。日本語を勉強中で、お互いの言語を教え合いながら素敵な時間を過ごせたらと思います😊',
-      interests: ['茶道', '書道', '日本語学習'],
-      matchScore: 95
+      interests: ['茶道', '書道', '日本語学習']
     },
     {
       id: 2,
       name: 'David',
       age: 32,
-      location: 'イギリス（大阪在住）',
+      location: 'イギリス',
       image: '/api/placeholder/400/500',
       isOnline: false,
       lastActive: '1時間以内',
-      bio: 'Hello! イギリス出身のDavidです🇬🇧 日本の料理と文化に魅了されて3年前に来日しました。和食作りを学びたいと思っています。一緒に日本の素晴らしい文化を体験しませんか？',
-      interests: ['和食料理', '日本酒', '旅行'],
-      matchScore: 87
+      bio: 'Hello! イギリス出身のDavidです🇬🇧 日本の料理と文化に魅了されています。和食作りを学びたいと思っています。一緒に日本の素晴らしい文化を体験しませんか？',
+      interests: ['和食料理', '日本酒', '旅行']
     },
     {
       id: 3,
       name: 'Marco',
       age: 26,
-      location: 'イタリア（東京在住）',
+      location: 'イタリア',
       image: '/api/placeholder/400/500',
       isOnline: true,
       lastActive: '30分以内',
       bio: 'Ciao! イタリアから来ましたMarcoです🇮🇹 日本のアートと伝統工芸に深い関心があります。華道や陶芸を学びながら、日本の心を理解したいです。文化交流を通じて素敵な出会いがあれば嬉しいです✨',
-      interests: ['華道', '陶芸', '美術'],
-      matchScore: 92
+      interests: ['華道', '陶芸', '美術']
     }
   ]
 
@@ -91,15 +88,9 @@ function DashboardContent() {
 
               {/* Profile Info */}
               <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mr-3">{match.name}</h3>
-                    <span className="text-xl text-gray-600">{match.age}歳</span>
-                  </div>
-                  <div className="flex items-center bg-yellow-100 px-2 py-1 rounded-full">
-                    <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                    <span className="text-sm font-medium text-yellow-700">{match.matchScore}%</span>
-                  </div>
+                <div className="flex items-center mb-3">
+                  <h3 className="text-2xl font-bold text-gray-900 mr-3">{match.name}</h3>
+                  <span className="text-xl text-gray-600">{match.age}歳</span>
                 </div>
 
                 <div className="flex items-center text-gray-600 mb-4">
