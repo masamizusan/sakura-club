@@ -111,10 +111,12 @@ function DashboardContent() {
                 </div>
 
                 <div className="flex space-x-3">
-                  <Button variant="outline" size="lg" className="flex-1">
-                    <User className="w-4 h-4 mr-2" />
-                    プロフィール
-                  </Button>
+                  <Link href={`/profile/${match.id}`} className="flex-1">
+                    <Button variant="outline" size="lg" className="w-full">
+                      <User className="w-4 h-4 mr-2" />
+                      プロフィール
+                    </Button>
+                  </Link>
                   <Button variant="sakura" size="lg" className="flex-1">
                     <Heart className="w-4 h-4 mr-2" />
                     いいね
