@@ -29,18 +29,18 @@ function ProfileDetailContent() {
       name: 'Michael',
       age: 29,
       location: 'アメリカ',
+      occupation: 'IT',
+      height: '178cm',
+      bodyType: 'ややぽっちゃり',
       images: [
         '/api/placeholder/400/500',
         '/api/placeholder/400/500', 
         '/api/placeholder/400/500'
       ],
-      isOnline: true,
-      lastActive: '24時間以内',
       bio: 'こんにちは！アメリカから来たMichaelです🇺🇸 日本の文化が大好きで、特に茶道と書道に興味があります。日本語を勉強中で、お互いの言語を教え合いながら素敵な時間を過ごせたらと思います😊\n\n仕事はソフトウェアエンジニアをしていて、リモートワークで世界中を旅しながら働いています。日本の四季の美しさと、おもてなしの心に感動しています。\n\n週末は新しい場所を探索したり、現地の人々と交流するのが好きです。一緒に日本の文化を体験しながら、お互いの国の文化も共有できたら嬉しいです！',
       interests: ['茶道', '書道', '日本語学習', 'プログラミング', '旅行', '写真'],
       languages: ['英語（ネイティブ）', '日本語（初級）', 'スペイン語（中級）'],
-      occupation: 'ソフトウェアエンジニア',
-      education: 'カリフォルニア大学 コンピューターサイエンス学部',
+      maritalStatus: '未婚',
       visitPurpose: '文化体験・言語交換',
       stayDuration: '3ヶ月',
       previousExperiences: [
@@ -53,17 +53,17 @@ function ProfileDetailContent() {
       name: 'David',
       age: 32,
       location: 'イギリス',
+      occupation: '自営業',
+      height: '182cm',
+      bodyType: '普通',
       images: [
         '/api/placeholder/400/500',
         '/api/placeholder/400/500'
       ],
-      isOnline: false,
-      lastActive: '1時間以内',
       bio: 'Hello! イギリス出身のDavidです🇬🇧 日本の料理と文化に魅了されています。和食作りを学びたいと思っています。一緒に日本の素晴らしい文化を体験しませんか？\n\n建築家として働いており、日本の伝統建築と現代建築の融合に興味があります。京都の古い寺院から東京の最新建築まで、すべてが学びになります。\n\n料理が趣味で、特に和食の奥深さに感動しています。一緒に料理を作りながら、文化交流ができれば最高ですね！',
       interests: ['和食料理', '日本酒', '旅行', '建築', 'デザイン', '歴史'],
       languages: ['英語（ネイティブ）', '日本語（中級）', 'フランス語（初級）'],
-      occupation: '建築家',
-      education: 'ケンブリッジ大学 建築学部',
+      maritalStatus: '未婚',
       visitPurpose: '文化研究・料理学習',
       stayDuration: '6ヶ月',
       previousExperiences: [
@@ -75,19 +75,19 @@ function ProfileDetailContent() {
       name: 'Marco',
       age: 26,
       location: 'イタリア',
+      occupation: '芸能・エンタメ',
+      height: '175cm',
+      bodyType: 'スリム',
       images: [
         '/api/placeholder/400/500',
         '/api/placeholder/400/500',
         '/api/placeholder/400/500',
         '/api/placeholder/400/500'
       ],
-      isOnline: true,
-      lastActive: '30分以内',
       bio: 'Ciao! イタリアから来ましたMarcoです🇮🇹 日本のアートと伝統工芸に深い関心があります。華道や陶芸を学びながら、日本の心を理解したいです。文化交流を通じて素敵な出会いがあれば嬉しいです✨\n\nアーティストとして活動しており、日本の美意識を自分の作品に取り入れたいと考えています。特に「わび・さび」の概念に魅力を感じています。\n\n音楽も大好きで、ギターを弾きます。日本の伝統音楽と西洋音楽の融合にも興味があります。一緒に芸術について語り合いましょう！',
       interests: ['華道', '陶芸', '美術', '音楽', 'ギター', '哲学'],
       languages: ['イタリア語（ネイティブ）', '英語（上級）', '日本語（初級）'],
-      occupation: 'アーティスト',
-      education: 'フィレンツェ美術学院',
+      maritalStatus: '未婚',
       visitPurpose: '芸術研究・文化体験',
       stayDuration: '4ヶ月',
       previousExperiences: [
@@ -135,12 +135,6 @@ function ProfileDetailContent() {
               {/* Main Image */}
               <div className="relative h-96 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
                 <Users className="w-24 h-24 text-sakura-400" />
-                {profile.isOnline && (
-                  <div className="absolute top-4 left-4 flex items-center bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                    <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
-                    オンライン
-                  </div>
-                )}
               </div>
 
               {/* Image Thumbnails */}
@@ -184,17 +178,25 @@ function ProfileDetailContent() {
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">{profile.name}</h2>
-                  <p className="text-xl text-gray-600">{profile.age}歳</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center text-gray-600 mb-1">
+              <div className="mb-4">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">{profile.name}</h2>
+                <div className="grid grid-cols-2 gap-4 text-gray-600">
+                  <div>
+                    <span className="text-xl">{profile.age}歳</span>
+                  </div>
+                  <div className="flex items-center">
                     <MapPin className="w-4 h-4 mr-1" />
                     <span>{profile.location}</span>
                   </div>
-                  <p className="text-sm text-gray-500">{profile.lastActive}</p>
+                  <div>
+                    <span>{profile.occupation}</span>
+                  </div>
+                  <div>
+                    <span>{profile.height}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span>{profile.bodyType}</span>
+                  </div>
                 </div>
               </div>
 
@@ -224,18 +226,14 @@ function ProfileDetailContent() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">詳細情報</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">職業</h4>
-                  <p className="text-gray-700">{profile.occupation}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">学歴</h4>
-                  <p className="text-gray-700">{profile.education}</p>
+                  <h4 className="font-semibold text-gray-900 mb-1">結婚状況</h4>
+                  <p className="text-gray-700">{profile.maritalStatus}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">訪日目的</h4>
                   <p className="text-gray-700">{profile.visitPurpose}</p>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <h4 className="font-semibold text-gray-900 mb-1">滞在予定</h4>
                   <p className="text-gray-700">{profile.stayDuration}</p>
                 </div>
