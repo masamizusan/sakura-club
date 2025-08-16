@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import AuthGuard from '@/components/auth/AuthGuard'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuth } from '@/store/authStore'
 import Link from 'next/link'
 import { 
@@ -257,8 +258,10 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <AuthGuard>
-      <DashboardContent />
-    </AuthGuard>
+    <ErrorBoundary>
+      <AuthGuard>
+        <DashboardContent />
+      </AuthGuard>
+    </ErrorBoundary>
   )
 }
