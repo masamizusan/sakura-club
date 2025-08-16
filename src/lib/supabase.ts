@@ -1,24 +1,43 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export const createClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+  console.log('Supabase環境変数チェック:', { 
+    hasUrl: !!url, 
+    hasKey: !!key,
+    url: url ? `${url.slice(0, 30)}...` : 'undefined',
+    keyPrefix: key ? `${key.slice(0, 10)}...` : 'undefined'
+  })
+
   if (!url || !key) {
-    console.error('Supabase環境変数が設定されていません:', { 
-      hasUrl: !!url, 
-      hasKey: !!key,
-      url: url ? `${url.slice(0, 20)}...` : 'undefined'
-    })
-    throw new Error('Supabase環境変数が設定されていません')
+    const error = new Error('Supabase環境変数が設定されていません')
+    console.error('Supabase環境変数エラー:', error)
+    throw error
   }
 
   if (!url.startsWith('https://')) {
-    console.error('無効なSupabase URL:', url)
-    throw new Error('無効なSupabase URL')
+    const error = new Error(`無効なSupabase URL: ${url}`)
+    console.error('Supabase URLエラー:', error)
+    throw error
   }
 
-  return createBrowserClient(url, key)
+  try {
+    console.log('Supabaseクライアント作成中...')
+    const client = createSupabaseClient(url, key, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+    console.log('Supabaseクライアント作成成功')
+    return client
+  } catch (error) {
+    console.error('Supabaseクライアント作成エラー:', error)
+    throw error
+  }
 }
 
 export type Database = {
