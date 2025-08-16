@@ -1,6 +1,15 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
+
+// シングルトンクライアント
+let supabaseInstance: SupabaseClient | null = null
 
 export const createClient = () => {
+  // 既にインスタンスが存在する場合は再利用
+  if (supabaseInstance) {
+    console.log('既存のSupabaseクライアントを再利用')
+    return supabaseInstance
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -24,16 +33,16 @@ export const createClient = () => {
   }
 
   try {
-    console.log('Supabaseクライアント作成中...')
-    const client = createSupabaseClient(url, key, {
+    console.log('新しいSupabaseクライアント作成中...')
+    supabaseInstance = createSupabaseClient(url, key, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: false // URL検出を無効化
       }
     })
     console.log('Supabaseクライアント作成成功')
-    return client
+    return supabaseInstance
   } catch (error) {
     console.error('Supabaseクライアント作成エラー:', error)
     throw error

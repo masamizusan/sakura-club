@@ -92,12 +92,21 @@ export const authService = {
   },
 
   async signIn(data: LoginFormData) {
-    const supabase = createClient()
-    
     try {
+      console.log('サインイン開始:', { email: data.email })
+      const supabase = createClient()
+      console.log('Supabaseクライアント取得完了')
+      
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
+      })
+
+      console.log('サインイン結果:', { 
+        success: !error, 
+        hasUser: !!authData?.user,
+        hasSession: !!authData?.session,
+        error: error?.message 
       })
 
       if (error) {
@@ -112,6 +121,7 @@ export const authService = {
         session: authData.session,
       }
     } catch (error) {
+      console.error('サインインエラー:', error)
       if (error instanceof AuthError) {
         throw error
       }
