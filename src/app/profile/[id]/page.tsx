@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { 
   Heart, 
@@ -13,7 +15,9 @@ import {
   Calendar,
   Camera,
   Gift,
-  Star
+  Star,
+  X,
+  Sparkles
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -99,6 +103,102 @@ function ProfileDetailContent() {
 
   const profile = mockProfiles[profileId as keyof typeof mockProfiles]
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [specialMessage, setSpecialMessage] = useState('')
+  const [isSpecialApproachOpen, setIsSpecialApproachOpen] = useState(false)
+
+  const handleSpecialApproach = () => {
+    // スペシャルアプローチ送信処理
+    console.log('スペシャルアプローチ送信:', specialMessage)
+    setIsSpecialApproachOpen(false)
+    setSpecialMessage('')
+    // 成功メッセージ表示など
+  }
+
+  const SpecialApproachModal = () => (
+    <Dialog open={isSpecialApproachOpen} onOpenChange={setIsSpecialApproachOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-center text-center">
+            <Sparkles className="w-5 h-5 mr-2 text-sakura-600" />
+            スペシャルアプローチ
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-full flex items-center justify-center mx-auto">
+              <Users className="w-8 h-8 text-sakura-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900">気になるお相手に、</h3>
+            <p className="text-sm text-gray-600">
+              「いいね」と合わせて、<br />
+              お誘いのメッセージを添えて<br />
+              アピールしましょう！
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">簡単</span>
+              <span className="text-sm text-gray-500">一緒にやりたいことを伝える</span>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full bg-blue-100 border-blue-200 text-blue-700 hover:bg-blue-200"
+              onClick={() => setSpecialMessage('一緒に文化体験を楽しみませんか？お互いの文化を学び合いながら、素敵な時間を過ごしましょう！')}
+            >
+              アクティビティへのお誘い
+            </Button>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">簡単</span>
+              <span className="text-sm text-gray-500">一緒に話したい内容を伝える</span>
+            </div>
+            <Button 
+              variant="outline" 
+              className="w-full bg-green-100 border-green-200 text-green-700 hover:bg-green-200"
+              onClick={() => setSpecialMessage('あなたのプロフィールを拝見して、とても興味深く感じました。ぜひお話しさせていただけませんか？')}
+            >
+              相談・雑談へのお誘い
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">ゼロからメッセージを考える</label>
+            <Textarea
+              placeholder="メッセージを入力してください（最大200文字）"
+              value={specialMessage}
+              onChange={(e) => setSpecialMessage(e.target.value)}
+              maxLength={200}
+              rows={4}
+              className="resize-none"
+            />
+            <div className="text-xs text-gray-500 text-right">
+              {specialMessage.length}/200文字
+            </div>
+          </div>
+
+          <div className="bg-orange-50 rounded-lg p-4">
+            <Button 
+              onClick={handleSpecialApproach}
+              disabled={!specialMessage.trim()}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              メッセージ付きいいね
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-center text-xs text-gray-500">
+            <span className="flex items-center">
+              ⚠️ スペシャルアプローチ送信時にKCポイントを4pt消費します。
+            </span>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 
   if (!profile) {
     return (
@@ -166,9 +266,14 @@ function ProfileDetailContent() {
                   <MessageCircle className="w-4 h-4 mr-2" />
                   メッセージ
                 </Button>
-                <Button variant="outline" className="w-full" size="lg">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => setIsSpecialApproachOpen(true)}
+                >
                   <Gift className="w-4 h-4 mr-2" />
-                  ギフトを送る
+                  スペシャルアプローチ
                 </Button>
               </div>
             </div>
@@ -180,23 +285,9 @@ function ProfileDetailContent() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <div className="mb-4">
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">{profile.name}</h2>
-                <div className="grid grid-cols-2 gap-4 text-gray-600">
-                  <div>
-                    <span className="text-xl">{profile.age}歳</span>
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span>{profile.location}</span>
-                  </div>
-                  <div>
-                    <span>{profile.occupation}</span>
-                  </div>
-                  <div>
-                    <span>{profile.height}</span>
-                  </div>
-                  <div className="col-span-2">
-                    <span>{profile.bodyType}</span>
-                  </div>
+                <div className="text-gray-600 space-y-1">
+                  <p className="text-lg">{profile.age}歳, {profile.location}</p>
+                  <p className="text-base">{profile.occupation}, {profile.height}, {profile.bodyType}</p>
                 </div>
               </div>
 
@@ -282,6 +373,9 @@ function ProfileDetailContent() {
           </div>
         </div>
       </div>
+
+      {/* スペシャルアプローチモーダル */}
+      <SpecialApproachModal />
     </div>
   )
 }
