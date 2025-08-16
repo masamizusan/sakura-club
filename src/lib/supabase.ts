@@ -10,14 +10,18 @@ export const createClient = () => {
     return supabaseInstance
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
   console.log('Supabase環境変数チェック:', { 
     hasUrl: !!url, 
     hasKey: !!key,
     url: url ? `${url.slice(0, 30)}...` : 'undefined',
-    keyPrefix: key ? `${key.slice(0, 10)}...` : 'undefined'
+    keyPrefix: key ? `${key.slice(0, 10)}...` : 'undefined',
+    urlLength: url?.length,
+    keyLength: key?.length,
+    urlTrimmed: url?.trim() === url,
+    keyTrimmed: key?.trim() === key
   })
 
   if (!url || !key) {
@@ -34,19 +38,10 @@ export const createClient = () => {
 
   try {
     console.log('新しいSupabaseクライアント作成中...')
-    supabaseInstance = createSupabaseClient(url, key, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-        flowType: 'pkce'
-      },
-      global: {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    })
+    console.log('使用するURL:', url)
+    console.log('使用するキー:', key?.substring(0, 20) + '...')
+    
+    supabaseInstance = createSupabaseClient(url, key)
     console.log('Supabaseクライアント作成成功')
     return supabaseInstance
   } catch (error) {
