@@ -15,10 +15,12 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const router = useRouter()
 
   useEffect(() => {
+    console.log('AuthGuard state:', { user: !!user, isLoading, isInitialized })
     if (isInitialized && !user) {
+      console.log('Redirecting to login - no user found')
       router.push('/login')
     }
-  }, [user, isInitialized, router])
+  }, [user, isLoading, isInitialized, router])
 
   if (isLoading || !isInitialized) {
     return (
