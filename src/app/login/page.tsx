@@ -53,8 +53,15 @@ function LoginForm() {
       }
     } catch (error) {
       console.error('Login error:', error)
+      
       if (error instanceof AuthError) {
         setLoginError(error.message)
+      } else if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('Invalid value')) {
+          setLoginError('サーバー接続エラーです。環境設定を確認してください。')
+        } else {
+          setLoginError(`エラー: ${error.message}`)
+        }
       } else {
         setLoginError('ログインに失敗しました。もう一度お試しください。')
       }

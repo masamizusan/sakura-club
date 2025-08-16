@@ -1,10 +1,25 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-export const createClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+export const createClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    console.error('Supabase環境変数が設定されていません:', { 
+      hasUrl: !!url, 
+      hasKey: !!key,
+      url: url ? `${url.slice(0, 20)}...` : 'undefined'
+    })
+    throw new Error('Supabase環境変数が設定されていません')
+  }
+
+  if (!url.startsWith('https://')) {
+    console.error('無効なSupabase URL:', url)
+    throw new Error('無効なSupabase URL')
+  }
+
+  return createBrowserClient(url, key)
+}
 
 export type Database = {
   public: {
