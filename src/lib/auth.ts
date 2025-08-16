@@ -97,6 +97,16 @@ export const authService = {
       const supabase = createClient()
       console.log('Supabaseクライアント取得完了')
       
+      // 基本的な接続テスト
+      try {
+        console.log('Supabase接続テスト中...')
+        const { data: testData, error: testError } = await supabase.from('profiles').select('count').limit(1)
+        console.log('接続テスト結果:', { testData, testError })
+      } catch (testErr) {
+        console.error('接続テストエラー:', testErr)
+      }
+      
+      console.log('認証リクエスト送信中...')
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -125,7 +135,7 @@ export const authService = {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('ログイン処理中にエラーが発生しました')
+      throw new AuthError(`ログイン処理中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   },
 

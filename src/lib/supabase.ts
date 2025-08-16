@@ -36,9 +36,15 @@ export const createClient = () => {
     console.log('新しいSupabaseクライアント作成中...')
     supabaseInstance = createSupabaseClient(url, key, {
       auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false // URL検出を無効化
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
+        flowType: 'pkce'
+      },
+      global: {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
     })
     console.log('Supabaseクライアント作成成功')
