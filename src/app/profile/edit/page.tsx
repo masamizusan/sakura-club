@@ -19,12 +19,15 @@ const profileEditSchema = z.object({
   first_name: z.string().min(1, '名前を入力してください').max(50, '名前は50文字以内で入力してください'),
   last_name: z.string().min(1, '姓を入力してください').max(50, '姓は50文字以内で入力してください'),
   gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
+  birth_date: z.string().min(1, '生年月日を入力してください'),
   age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
-  nationality: z.string().min(1, '国籍を入力してください'),
+  nationality: z.string().min(1, '国籍を選択してください'),
   prefecture: z.string().min(1, '都道府県を入力してください'),
   city: z.string().min(1, '市区町村を入力してください'),
   occupation: z.string().optional(),
   height: z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional().or(z.literal('')),
+  body_type: z.string().optional(),
+  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional(),
   education: z.string().optional(),
   hobbies: z.array(z.string()).min(1, '趣味を1つ以上選択してください').max(8, '趣味は8つまで選択できます'),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -91,12 +94,15 @@ function ProfileEditContent() {
           first_name: profile.first_name || '',
           last_name: profile.last_name || '',
           gender: profile.gender || 'female',
+          birth_date: profile.birth_date || '',
           age: profile.age || 18,
           nationality: profile.nationality || '',
           prefecture: profile.prefecture || '',
           city: profile.city || '',
           occupation: profile.occupation || '',
           height: profile.height || '',
+          body_type: profile.body_type || '',
+          marital_status: profile.marital_status || '',
           education: profile.education || '',
           hobbies: profile.hobbies || [],
           personality: profile.personality || [],
@@ -132,15 +138,47 @@ function ProfileEditContent() {
     loadUserData()
   }, [user, reset, router, setValue, supabase])
 
+  // 生年月日から年齢を計算
+  const calculateAge = useCallback((birthDate: string): number => {
+    const today = new Date()
+    const birth = new Date(birthDate)
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    
+    return age
+  }, [])
+
+  // 生年月日変更時の年齢自動更新
+  const handleBirthDateChange = useCallback((birthDate: string) => {
+    if (birthDate) {
+      const age = calculateAge(birthDate)
+      setValue('age', age)
+      setValue('birth_date', birthDate)
+      
+      // リアルタイム完成度更新
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        birth_date: birthDate,
+        age: age,
+        avatar_url: profileImage
+      })
+    }
+  }, [calculateAge, setValue, watch, profileImage])
+
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
-      'first_name', 'last_name', 'gender', 'age', 'nationality', 
+      'first_name', 'last_name', 'gender', 'birth_date', 'age', 'nationality', 
       'prefecture', 'city', 'hobbies', 'self_introduction'
     ]
     
     const optionalFields = [
-      'avatar_url', 'occupation', 'height', 'education', 'personality', 
-      'dating_purpose', 'ideal_relationship', 'cultural_interests'
+      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'education', 'personality', 'dating_purpose', 'ideal_relationship', 'cultural_interests'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -193,12 +231,15 @@ function ProfileEditContent() {
           first_name: data.first_name,
           last_name: data.last_name,
           gender: data.gender,
+          birth_date: data.birth_date,
           age: data.age,
           nationality: data.nationality,
           prefecture: data.prefecture,
           city: data.city,
           occupation: data.occupation || null,
           height: data.height || null,
+          body_type: data.body_type || null,
+          marital_status: data.marital_status || null,
           education: data.education || null,
           hobbies: data.hobbies,
           personality: data.personality || [],
@@ -356,8 +397,9 @@ function ProfileEditContent() {
     }
   }
 
-  // 国籍オプション
+  // 国籍オプション（日本を追加）
   const NATIONALITIES = [
+    { value: '日本', label: '日本' },
     { value: 'アメリカ', label: 'アメリカ' },
     { value: 'イギリス', label: 'イギリス' },
     { value: 'カナダ', label: 'カナダ' },
@@ -393,6 +435,19 @@ function ProfileEditContent() {
   const EDUCATION_OPTIONS = [
     '高校卒業', '専門学校卒業', '短期大学卒業', '大学卒業',
     '大学院修士課程修了', '大学院博士課程修了', 'その他'
+  ]
+
+  // 体型オプション
+  const BODY_TYPE_OPTIONS = [
+    'スリム', '普通', 'ぽっちゃり', 'グラマー', 'アスリート体型'
+  ]
+
+  // 結婚状況オプション
+  const MARITAL_STATUS_OPTIONS = [
+    { value: 'single', label: '未婚' },
+    { value: 'married', label: '既婚' },
+    { value: 'divorced', label: '離婚' },
+    { value: 'widowed', label: '死別' }
   ]
 
   // 趣味オプション（拡張）
@@ -635,6 +690,44 @@ function ProfileEditContent() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    結婚状況
+                  </label>
+                  <Select 
+                    value={watch('marital_status') || ''} 
+                    onValueChange={(value) => setValue('marital_status', value as 'single' | 'married' | 'divorced' | 'widowed')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="結婚状況を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MARITAL_STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    生年月日 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    {...register('birth_date')}
+                    onChange={(e) => handleBirthDateChange(e.target.value)}
+                    className={errors.birth_date ? 'border-red-500' : ''}
+                  />
+                  {errors.birth_date && (
+                    <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     年齢 <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -643,11 +736,13 @@ function ProfileEditContent() {
                     max="99"
                     placeholder="25"
                     {...register('age', { valueAsNumber: true })}
-                    className={errors.age ? 'border-red-500' : ''}
+                    className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
+                    readOnly
                   />
                   {errors.age && (
                     <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">生年月日から自動計算されます</p>
                 </div>
               </div>
 
@@ -716,10 +811,101 @@ function ProfileEditContent() {
               </div>
             </div>
 
+            {/* 詳細情報 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                詳細情報
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    職業
+                  </label>
+                  <Select 
+                    value={watch('occupation') || ''} 
+                    onValueChange={(value) => setValue('occupation', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="職業を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OCCUPATION_OPTIONS.map((occupation) => (
+                        <SelectItem key={occupation} value={occupation}>
+                          {occupation}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    学歴
+                  </label>
+                  <Select 
+                    value={watch('education') || ''} 
+                    onValueChange={(value) => setValue('education', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="学歴を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EDUCATION_OPTIONS.map((education) => (
+                        <SelectItem key={education} value={education}>
+                          {education}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    身長 (cm)
+                  </label>
+                  <Input
+                    type="number"
+                    min="120"
+                    max="250"
+                    placeholder="160"
+                    {...register('height', { valueAsNumber: true })}
+                    className={errors.height ? 'border-red-500' : ''}
+                  />
+                  {errors.height && (
+                    <p className="text-red-500 text-sm mt-1">{errors.height.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    体型
+                  </label>
+                  <Select 
+                    value={watch('body_type') || ''} 
+                    onValueChange={(value) => setValue('body_type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="体型を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BODY_TYPE_OPTIONS.map((bodyType) => (
+                        <SelectItem key={bodyType} value={bodyType}>
+                          {bodyType}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             {/* 趣味・興味 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                趣味・興味（最大5つまで）
+                趣味・興味（最大8つまで）
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {HOBBY_OPTIONS.map((hobby) => (
@@ -741,7 +927,7 @@ function ProfileEditContent() {
                 <p className="text-red-500 text-sm">{errors.hobbies.message}</p>
               )}
               <p className="text-sm text-gray-500">
-                選択済み: {selectedHobbies.length}/5
+                選択済み: {selectedHobbies.length}/8
               </p>
             </div>
 
