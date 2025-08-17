@@ -227,12 +227,12 @@ function ProfileEditContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
       
       {/* Main Content */}
-      <div className="flex-1 py-12 px-4">
+      <div className="md:ml-64 py-12 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center mb-8">
             <Button

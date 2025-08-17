@@ -19,7 +19,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
   
   const sidebarItems = [
-    { id: 'search', icon: Search, label: '検索', href: '/dashboard' },
+    { id: 'search', icon: Search, label: 'さがす', href: '/dashboard' },
     { id: 'messages', icon: MessageCircle, label: 'メッセージ', href: '/messages' },
     { id: 'liked', icon: Heart, label: 'お相手から', href: '/matches' },
     { id: 'footprints', icon: History, label: '足跡', href: '/footprints' },
@@ -28,7 +28,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   ]
 
   return (
-    <div className={`bg-white shadow-lg ${className}`}>
+    <div className={`bg-white shadow-lg fixed left-0 top-0 h-full z-50 ${className}`}>
       <div className="p-6">
         <div className="flex items-center mb-8">
           <div className="w-8 h-8 bg-gradient-to-r from-sakura-500 to-sakura-600 rounded-lg flex items-center justify-center mr-3">
@@ -37,7 +37,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           <h1 className="text-xl font-bold sakura-text-gradient">Sakura Club</h1>
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 sticky top-8">
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href === '/dashboard' && pathname === '/') ||

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import AuthGuard from '@/components/auth/AuthGuard'
+import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
@@ -92,8 +93,11 @@ function MyPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* Sidebar */}
+      <Sidebar className="w-64 hidden md:block" />
+      
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white shadow-sm md:ml-64">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center">
             <button onClick={() => router.back()} className="mr-4">
@@ -104,7 +108,7 @@ function MyPageContent() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="container mx-auto px-4 py-6 max-w-2xl md:ml-64">
         {/* Profile Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center mb-6">

@@ -62,7 +62,7 @@ function DashboardContent() {
   ]
 
   const sidebarItems = [
-    { id: 'search', icon: Search, label: '検索', isPage: false, href: undefined },
+    { id: 'search', icon: Search, label: 'さがす', isPage: false, href: undefined },
     { id: 'messages', icon: MessageCircle, label: 'メッセージ', isPage: false, href: undefined },
     { id: 'liked', icon: Heart, label: 'お相手から', isPage: false, href: undefined },
     { id: 'footprints', icon: History, label: '足跡', isPage: false, href: undefined },
@@ -141,7 +141,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
         {/* Sidebar - Desktop */}
-        <div className="hidden md:block w-64 bg-white shadow-sm min-h-screen">
+        <div className="hidden md:block w-64 bg-white shadow-sm min-h-screen fixed left-0 top-0 z-50">
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-8">
               <div className="w-10 h-10 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
@@ -150,7 +150,7 @@ function DashboardContent() {
               <h1 className="text-xl font-bold sakura-text-gradient">Sakura Club</h1>
             </div>
 
-            <nav className="space-y-2">
+            <nav className="space-y-2 sticky top-8">
               {sidebarItems.map((item) => {
                 if (item.isPage && item.href) {
                   return (
@@ -185,7 +185,7 @@ function DashboardContent() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 md:ml-64">
           {/* Header */}
           <div className="bg-white shadow-sm px-6 py-4">
             <div className="flex items-center justify-between">
