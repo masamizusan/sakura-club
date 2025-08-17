@@ -412,39 +412,6 @@ function MyPageContent() {
           </button>
         </div>
 
-        {/* Bottom Navigation Dock */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-4">
-          <div className="grid grid-cols-4 gap-4">
-            <Link href="/dashboard" className="text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <span className="text-xs text-gray-700">さがす</span>
-            </Link>
-            <Link href="/messages" className="text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </div>
-              <span className="text-xs text-gray-700">メッセージ</span>
-            </Link>
-            <Link href="/matches" className="text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
-                <Heart className="w-6 h-6 text-gray-600" />
-              </div>
-              <span className="text-xs text-gray-700">お相手から</span>
-            </Link>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <User className="w-6 h-6 text-sakura-600" />
-              </div>
-              <span className="text-xs text-sakura-700 font-semibold">マイページ</span>
-            </div>
-          </div>
-        </div>
         </div>
       </div>
     </div>
