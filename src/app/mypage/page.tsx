@@ -98,7 +98,7 @@ function MyPageContent() {
       
       {/* Header */}
       <div className="bg-white shadow-sm md:ml-64">
-        <div className="container mx-auto px-4 py-4">
+        <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center">
             <button onClick={() => router.back()} className="mr-4">
               <ArrowLeft className="w-6 h-6 text-gray-600" />
@@ -108,7 +108,8 @@ function MyPageContent() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-2xl md:ml-64">
+      <div className="md:ml-64 px-4 py-6">
+        <div className="max-w-2xl mx-auto">
         {/* Profile Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center mb-6">
@@ -404,6 +405,7 @@ function MyPageContent() {
               <span className="text-xs text-sakura-700 font-semibold">マイページ</span>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
