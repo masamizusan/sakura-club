@@ -1,61 +1,108 @@
-import HeroSection from '@/components/sections/HeroSection'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Users, Calendar, MessageCircle, Award, CheckCircle } from 'lucide-react'
+import { ArrowRight, Heart, Shield, Globe } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="min-h-screen">
+      <Header />
       <HeroSection />
-      <HowItWorksSection />
       <FeaturesSection />
-      <CTASection />
     </div>
   )
 }
 
-function HowItWorksSection() {
+function Header() {
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            簡単3ステップで始められます
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            面倒な手続きは一切なし。今すぐ文化体験を通じた素敵な出会いを始めましょう。
-          </p>
+    <header className="bg-white shadow-sm">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-red-500">Sakura Club</span>
+          </div>
+
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <a href="#" className="text-gray-600 hover:text-gray-900">サービスについて</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">仕組み</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">安心・安全</a>
+            <a href="#" className="text-gray-600 hover:text-gray-900">文化体験</a>
+          </nav>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center space-x-4">
+            <Link href="/login">
+              <Button variant="outline">ログイン</Button>
+            </Link>
+            <Link href="/signup">
+              <Button variant="sakura">新規登録</Button>
+            </Link>
+          </div>
         </div>
+      </div>
+    </header>
+  )
+}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-              <Users className="w-8 h-8 text-sakura-600" />
+function HeroSection() {
+  return (
+    <section className="bg-gradient-to-br from-pink-50 via-white to-sakura-50 py-20">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Content */}
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+                文化体験を通じた
+                <br />
+                <span className="text-red-500">真の出会い</span>
+              </h1>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                訪日外国人男性と日本人女性が、茶道・書道・料理教室
+                <br />
+                などの文化体験を通じて自然な出会いを楽しめる、安
+                <br />
+                心・安全なプラットフォームです。
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">1. 会員登録</h3>
-            <p className="text-gray-600">
-              本人確認を含む簡単な登録プロセスで、安全な環境を構築します。
-            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/signup">
+                <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white px-8 py-3">
+                  無料で始める（女性無料）
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="outline" size="lg" className="px-8 py-3">
+                  ログインはこちら
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-              <Calendar className="w-8 h-8 text-sakura-600" />
+          {/* Right Image */}
+          <div className="relative">
+            <div className="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-2xl overflow-hidden">
+              {/* Placeholder for image */}
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Heart className="w-12 h-12 text-sakura-500" />
+                  </div>
+                  <p className="text-gray-600">文化体験を通じた出会い</p>
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">2. 体験を選択</h3>
-            <p className="text-gray-600">
-              茶道、書道、料理教室など、興味のある日本文化体験を選択します。
-            </p>
-          </div>
-
-          <div className="text-center space-y-4">
-            <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-              <MessageCircle className="w-8 h-8 text-sakura-600" />
+            
+            {/* Heart icon overlay */}
+            <div className="absolute top-4 right-4 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <Heart className="w-6 h-6 text-red-500" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">3. 交流開始</h3>
-            <p className="text-gray-600">
-              文化体験を通じて自然なコミュニケーションと出会いを楽しみます。
-            </p>
           </div>
         </div>
       </div>
@@ -65,74 +112,47 @@ function HowItWorksSection() {
 
 function FeaturesSection() {
   return (
-    <section className="py-20 sakura-gradient">
+    <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            なぜSakura Clubが選ばれるのか
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center space-y-3">
-            <Award className="w-8 h-8 text-sakura-600 mx-auto" />
-            <h3 className="font-semibold text-gray-900">厳格な審査制</h3>
-            <p className="text-gray-600 text-sm">
-              すべての会員に本人確認と審査を実施
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+          {/* 安心・安全 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+              <Shield className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">安心・安全</h3>
+            <p className="text-gray-600">
+              本人確認と審査制で
+              <br />
+              安全な出会いを保証
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center space-y-3">
-            <CheckCircle className="w-8 h-8 text-sakura-600 mx-auto" />
-            <h3 className="font-semibold text-gray-900">金銭取引禁止</h3>
-            <p className="text-gray-600 text-sm">
-              健全な文化交流のみを目的とした環境
+          {/* 文化交流 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto">
+              <Heart className="w-8 h-8 text-pink-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">文化交流</h3>
+            <p className="text-gray-600">
+              茶道・書道・料理など
+              <br />
+              本物の日本文化を体験
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center space-y-3">
-            <Users className="w-8 h-8 text-sakura-600 mx-auto" />
-            <h3 className="font-semibold text-gray-900">24時間サポート</h3>
-            <p className="text-gray-600 text-sm">
-              専門スタッフによる安心のサポート体制
+          {/* 国際交流 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+              <Globe className="w-8 h-8 text-blue-500" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">国際交流</h3>
+            <p className="text-gray-600">
+              言語を学び合い
+              <br />
+              国境を越えたつながり
             </p>
           </div>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 text-center space-y-3">
-            <MessageCircle className="w-8 h-8 text-sakura-600 mx-auto" />
-            <h3 className="font-semibold text-gray-900">多言語対応</h3>
-            <p className="text-gray-600 text-sm">
-              日本語・英語での完全サポート
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function CTASection() {
-  return (
-    <section className="py-20 bg-gray-900 text-white">
-      <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl font-bold mb-4">
-          今すぐ文化体験を通じた出会いを始めませんか？
-        </h2>
-        <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-          Sakura Clubで、安心・安全な環境で素敵な文化交流と出会いを体験してください。
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/signup">
-            <Button variant="sakura" size="lg" className="px-8 py-3 text-lg">
-              無料で始める
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
-          <Link href="/about">
-            <Button variant="outline" size="lg" className="px-8 py-3 text-lg border-white text-white hover:bg-white hover:text-gray-900">
-              詳しく見る
-            </Button>
-          </Link>
         </div>
       </div>
     </section>
