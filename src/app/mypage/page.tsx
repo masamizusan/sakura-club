@@ -36,14 +36,22 @@ function MyPageContent() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!user) return
+      console.log('MyPage loadProfile called, user:', !!user, user?.id)
+      
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
 
       try {
+        setIsLoading(true)
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single()
+
+        console.log('Profile data loaded:', !!profileData, error?.message)
 
         if (profileData) {
           setProfile(profileData)
@@ -57,7 +65,7 @@ function MyPageContent() {
     }
 
     loadProfile()
-  }, [user, supabase])
+  }, [user?.id, supabase])
 
   const calculateProfileCompletion = (profileData: any) => {
     const requiredFields = [

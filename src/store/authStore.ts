@@ -56,9 +56,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Set up auth state listener only once
       if (!state.listenerSetup) {
         console.log('Setting up auth state listener')
-        authService.onAuthStateChange((user) => {
-          console.log('Auth state changed, user:', !!user)
-          set({ user })
+        authService.onAuthStateChange((newUser) => {
+          const currentState = get()
+          const currentUserId = currentState.user?.id
+          const newUserId = newUser?.id
+          
+          console.log('Auth state listener triggered:', { 
+            hasNewUser: !!newUser, 
+            currentUserId, 
+            newUserId,
+            shouldUpdate: currentUserId !== newUserId
+          })
+          
+          // ユーザーが実際に変わった場合のみ状態を更新
+          if (currentUserId !== newUserId) {
+            console.log('Updating user state')
+            set({ user: newUser })
+          }
         })
         set({ listenerSetup: true })
       }
