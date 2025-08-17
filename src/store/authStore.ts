@@ -5,6 +5,8 @@ interface AuthState {
   user: AuthUser | null
   isLoading: boolean
   isInitialized: boolean
+  isInitializing: boolean
+  listenerSetup: boolean
   setUser: (user: AuthUser | null) => void
   setLoading: (loading: boolean) => void
   initialize: () => Promise<void>
@@ -15,27 +17,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isInitialized: false,
+  isInitializing: false,
+  listenerSetup: false,
 
   setUser: (user) => set({ user }),
   
   setLoading: (loading) => set({ isLoading: loading }),
 
   initialize: async () => {
+    const state = get()
+    
+    // 既に初期化済みまたは初期化中の場合は何もしない
+    if (state.isInitialized || state.isInitializing) {
+      return
+    }
+
     try {
-      set({ isLoading: true })
+      set({ isLoading: true, isInitializing: true })
       
       const user = await authService.getCurrentUser()
       set({ user, isInitialized: true })
 
-      // Set up auth state listener
-      authService.onAuthStateChange((user) => {
-        set({ user })
-      })
+      // Set up auth state listener only once
+      if (!state.listenerSetup) {
+        authService.onAuthStateChange((user) => {
+          set({ user })
+        })
+        set({ listenerSetup: true })
+      }
     } catch (error) {
       console.error('Auth initialization error:', error)
       set({ user: null, isInitialized: true })
     } finally {
-      set({ isLoading: false })
+      set({ isLoading: false, isInitializing: false })
     }
   },
 

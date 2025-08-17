@@ -17,7 +17,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
 
   useEffect(() => {
     console.log('AuthGuard state:', { user: !!user, isLoading, isInitialized })
-    if (isInitialized && !user) {
+    if (isInitialized && !user && !isLoading) {
       console.log('Redirecting to login - no user found')
       router.push('/login')
     }

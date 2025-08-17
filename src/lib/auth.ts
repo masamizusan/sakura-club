@@ -280,7 +280,10 @@ export const authService = {
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
     const supabase = createClient()
     
+    // 認証状態の変更を監視（リスナーの重複を防ぐためにeventとsessionを詳細にチェック）
     return supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', { event, hasSession: !!session, hasUser: !!session?.user })
+      
       if (session?.user) {
         const user = await this.getCurrentUser()
         callback(user)
