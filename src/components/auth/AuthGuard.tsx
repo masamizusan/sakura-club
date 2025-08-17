@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/store/authStore'
 import { Loader2 } from 'lucide-react'
@@ -14,10 +14,13 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { user, isLoading, isInitialized } = useAuth()
   const router = useRouter()
   const [timeoutReached, setTimeoutReached] = useState(false)
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    console.log('AuthGuard state:', { user: !!user, isLoading, isInitialized })
-    if (isInitialized && !user && !isLoading) {
+    console.log('AuthGuard state:', { user: !!user, isLoading, isInitialized, hasRedirected: hasRedirected.current })
+    
+    if (isInitialized && !user && !isLoading && !hasRedirected.current) {
+      hasRedirected.current = true
       console.log('Redirecting to login - no user found')
       router.push('/login')
     }
