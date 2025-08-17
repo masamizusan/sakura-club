@@ -7,6 +7,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
+import { authService } from '@/lib/auth'
 import Link from 'next/link'
 import { 
   User, 
@@ -21,15 +22,17 @@ import {
   ArrowLeft,
   Check,
   X,
-  History
+  History,
+  LogOut
 } from 'lucide-react'
 
 function MyPageContent() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -78,6 +81,19 @@ function MyPageContent() {
 
     const completion = Math.round((completedFields.length / requiredFields.length) * 100)
     setProfileCompletion(completion)
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await authService.signOut()
+      logout() // Zustand storeからログアウト
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   if (isLoading) {
@@ -371,6 +387,31 @@ function MyPageContent() {
               </div>
             </div>
           </div>
+
+          {/* ログアウト */}
+          <button 
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full bg-white rounded-lg shadow-lg p-4 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <LogOut className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-left">
+                    {isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                  </h3>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Bottom Navigation Dock */}
