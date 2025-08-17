@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -12,7 +12,7 @@ import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
-import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart } from 'lucide-react'
+import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart, Camera, Upload, X } from 'lucide-react'
 import { z } from 'zod'
 
 const profileEditSchema = z.object({
@@ -46,6 +46,8 @@ function ProfileEditContent() {
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedCulturalInterests, setSelectedCulturalInterests] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -115,6 +117,7 @@ function ProfileEditContent() {
         setSelectedHobbies(profile.hobbies || [])
         setSelectedPersonality(profile.personality || [])
         setSelectedCulturalInterests(profile.cultural_interests || [])
+        setProfileImage(profile.avatar_url || null)
         
         // プロフィール完成度を計算
         calculateProfileCompletion(profile)
@@ -129,14 +132,27 @@ function ProfileEditContent() {
     loadUserData()
   }, [user, reset, router, setValue, supabase])
 
-  const calculateProfileCompletion = (profileData: any) => {
+  // フォーム入力時のリアルタイム完成度更新
+  useEffect(() => {
+    const subscription = watch((value) => {
+      if (value) {
+        calculateProfileCompletion({
+          ...value,
+          avatar_url: profileImage
+        })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [watch, profileImage, calculateProfileCompletion])
+
+  const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
       'first_name', 'last_name', 'gender', 'age', 'nationality', 
       'prefecture', 'city', 'hobbies', 'self_introduction'
     ]
     
     const optionalFields = [
-      'occupation', 'height', 'education', 'personality', 
+      'avatar_url', 'occupation', 'height', 'education', 'personality', 
       'dating_purpose', 'ideal_relationship', 'cultural_interests'
     ]
     
@@ -148,6 +164,7 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFields.filter(field => {
       const value = profileData[field]
+      if (field === 'avatar_url') return value && value.trim().length > 0
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
     })
@@ -157,7 +174,7 @@ function ProfileEditContent() {
     const completion = Math.round((completedFields / totalFields) * 100)
     
     setProfileCompletion(completion)
-  }
+  }, [])
 
   const onSubmit = async (data: ProfileEditFormData) => {
     if (!user) {
@@ -189,6 +206,7 @@ function ProfileEditContent() {
           ideal_relationship: data.ideal_relationship || null,
           self_introduction: data.self_introduction,
           cultural_interests: data.cultural_interests || [],
+          avatar_url: profileImage,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
@@ -213,6 +231,74 @@ function ProfileEditContent() {
     }
   }
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
+
+    // ファイルサイズチェック (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('画像ファイルは5MB以下にしてください')
+      return
+    }
+
+    // ファイル形式チェック
+    if (!file.type.startsWith('image/')) {
+      setError('画像ファイルを選択してください')
+      return
+    }
+
+    try {
+      setUploadingImage(true)
+      setError('')
+
+      // ファイル名を生成
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`
+
+      // Supabase Storageにアップロード
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) {
+        throw new Error(uploadError.message)
+      }
+
+      // 公開URLを取得
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+
+      setProfileImage(publicUrl)
+      
+      // プロフィール完成度を再計算
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        avatar_url: publicUrl
+      })
+
+    } catch (error) {
+      console.error('Image upload error:', error)
+      setError('画像のアップロードに失敗しました')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const removeImage = () => {
+    setProfileImage(null)
+    // プロフィール完成度を再計算
+    const currentData = watch()
+    calculateProfileCompletion({
+      ...currentData,
+      avatar_url: null
+    })
+  }
+
   const toggleHobby = (hobby: string) => {
     const newHobbies = selectedHobbies.includes(hobby)
       ? selectedHobbies.filter(h => h !== hobby)
@@ -221,6 +307,14 @@ function ProfileEditContent() {
     if (newHobbies.length <= 8) {
       setSelectedHobbies(newHobbies)
       setValue('hobbies', newHobbies)
+      
+      // リアルタイム完成度更新
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        hobbies: newHobbies,
+        avatar_url: profileImage
+      })
     }
   }
 
@@ -232,6 +326,14 @@ function ProfileEditContent() {
     if (newPersonality.length <= 5) {
       setSelectedPersonality(newPersonality)
       setValue('personality', newPersonality)
+      
+      // リアルタイム完成度更新
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        personality: newPersonality,
+        avatar_url: profileImage
+      })
     }
   }
 
@@ -243,6 +345,14 @@ function ProfileEditContent() {
     if (newInterests.length <= 5) {
       setSelectedCulturalInterests(newInterests)
       setValue('cultural_interests', newInterests)
+      
+      // リアルタイム完成度更新
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        cultural_interests: newInterests,
+        avatar_url: profileImage
+      })
     }
   }
 
@@ -376,8 +486,94 @@ function ProfileEditContent() {
             </div>
           )}
 
+          {/* プロフィール完成度表示 */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
+              <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-sakura-500 to-pink-500 h-3 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${profileCompletion}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
+               profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
+               profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
+               '素晴らしい！完璧なプロフィールです✨'}
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* プロフィール画像セクションは後で追加 */}
+            {/* プロフィール画像セクション */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                プロフィール画像
+              </h3>
+              
+              <div className="flex items-center space-x-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
+                    {profileImage ? (
+                      <img 
+                        src={profileImage} 
+                        alt="プロフィール画像" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-12 h-12 text-sakura-500" />
+                    )}
+                  </div>
+                  {profileImage && (
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={uploadingImage}
+                      />
+                      <div className="flex items-center px-4 py-2 bg-sakura-600 text-white rounded-lg hover:bg-sakura-700 transition-colors disabled:opacity-50">
+                        {uploadingImage ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        {uploadingImage ? 'アップロード中...' : '画像を選択'}
+                      </div>
+                    </label>
+                    
+                    {profileImage && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={removeImage}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        削除
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    JPG、PNG形式の画像をアップロードできます（最大5MB）
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* 基本情報 */}
             <div className="space-y-4">
