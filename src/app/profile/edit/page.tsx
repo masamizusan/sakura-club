@@ -8,35 +8,35 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ImageUpload } from '@/components/ui/image-upload'
-import { NATIONALITIES, PREFECTURES, HOBBY_OPTIONS } from '@/lib/validations/auth'
-import { authService, AuthError } from '@/lib/auth'
-import { User, Save, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/store/authStore'
+import { createClient } from '@/lib/supabase'
+import AuthGuard from '@/components/auth/AuthGuard'
+import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart } from 'lucide-react'
 import { z } from 'zod'
 
 const profileEditSchema = z.object({
-  firstName: z.string().min(1, '名を入力してください').max(50, '名は50文字以内で入力してください'),
-  lastName: z.string().min(1, '姓を入力してください').max(50, '姓は50文字以内で入力してください'),
+  first_name: z.string().min(1, '名前を入力してください').max(50, '名前は50文字以内で入力してください'),
+  last_name: z.string().min(1, '姓を入力してください').max(50, '姓は50文字以内で入力してください'),
   gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
   age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
-  nationality: z.string().min(1, '国籍を選択してください'),
-  prefecture: z.string().min(1, '都道府県を選択してください'),
-  city: z.string().min(1, '市区町村を入力してください').max(100, '市区町村は100文字以内で入力してください'),
-  hobbies: z.array(z.string()).min(1, '最低1つの趣味を選択してください').max(5, '趣味は最大5つまで選択できます'),
-  selfIntroduction: z.string().min(50, '自己紹介は50文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
+  nationality: z.string().min(1, '国籍を入力してください'),
+  prefecture: z.string().min(1, '都道府県を入力してください'),
+  city: z.string().min(1, '市区町村を入力してください'),
+  hobbies: z.array(z.string()).min(1, '趣味を1つ以上選択してください').max(5, '趣味は5つまで選択できます'),
+  self_introduction: z.string().min(10, '自己紹介は10文字以上で入力してください').max(500, '自己紹介は500文字以内で入力してください'),
 })
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
 
-export default function ProfileEditPage() {
+function ProfileEditContent() {
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [userLoading, setUserLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>('')
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const router = useRouter()
+  const supabase = createClient()
 
   const {
     register,
@@ -52,37 +52,47 @@ export default function ProfileEditPage() {
   // Load current user data
   useEffect(() => {
     const loadUserData = async () => {
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
       try {
-        const user = await authService.getCurrentUser()
-        if (user) {
-          console.log('Loaded user data:', JSON.stringify(user, null, 2)) // デバッグ用
-          
-          setCurrentUser(user)
-          setCurrentImageUrl(user.avatarUrl || '')
-          
-          // フォームフィールドをリセット
-          reset({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            gender: user.gender,
-            age: user.age,
-            nationality: user.nationality,
-            prefecture: user.prefecture,
-            city: user.city,
-            hobbies: user.hobbies,
-            selfIntroduction: user.selfIntroduction,
-          })
-          
-          // Select要素の値を個別に設定
-          setValue('gender', user.gender)
-          setValue('nationality', user.nationality)
-          setValue('prefecture', user.prefecture)
-          setValue('hobbies', user.hobbies)
-          
-          setSelectedHobbies(user.hobbies)
-        } else {
-          router.push('/login')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError || !profile) {
+          console.error('Profile load error:', profileError)
+          setError('プロフィール情報の読み込みに失敗しました')
+          setUserLoading(false)
+          return
         }
+
+        console.log('Loaded profile data:', profile)
+        
+        // フォームフィールドをリセット
+        reset({
+          first_name: profile.first_name || '',
+          last_name: profile.last_name || '',
+          gender: profile.gender || 'female',
+          age: profile.age || 18,
+          nationality: profile.nationality || '',
+          prefecture: profile.prefecture || '',
+          city: profile.city || '',
+          hobbies: profile.hobbies || [],
+          self_introduction: profile.self_introduction || '',
+        })
+        
+        // Select要素の値を個別に設定
+        setValue('gender', profile.gender || 'female')
+        setValue('nationality', profile.nationality || '')
+        setValue('prefecture', profile.prefecture || '')
+        setValue('hobbies', profile.hobbies || [])
+        
+        setSelectedHobbies(profile.hobbies || [])
       } catch (error) {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
@@ -92,26 +102,37 @@ export default function ProfileEditPage() {
     }
 
     loadUserData()
-  }, [reset, router, setValue])
+  }, [user, reset, router, setValue, supabase])
 
   const onSubmit = async (data: ProfileEditFormData) => {
+    if (!user) {
+      setError('ユーザー情報が見つかりません')
+      return
+    }
+
     setIsLoading(true)
     setError('')
     setSuccess(false)
     
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          gender: data.gender,
+          age: data.age,
+          nationality: data.nationality,
+          prefecture: data.prefecture,
+          city: data.city,
+          hobbies: data.hobbies,
+          self_introduction: data.self_introduction,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'プロフィールの更新に失敗しました')
+      if (updateError) {
+        throw new Error(updateError.message)
       }
       
       setSuccess(true)
@@ -140,6 +161,39 @@ export default function ProfileEditPage() {
       setValue('hobbies', newHobbies)
     }
   }
+
+  // 国籍オプション
+  const NATIONALITIES = [
+    { value: 'アメリカ', label: 'アメリカ' },
+    { value: 'イギリス', label: 'イギリス' },
+    { value: 'カナダ', label: 'カナダ' },
+    { value: 'オーストラリア', label: 'オーストラリア' },
+    { value: 'ドイツ', label: 'ドイツ' },
+    { value: 'フランス', label: 'フランス' },
+    { value: 'イタリア', label: 'イタリア' },
+    { value: 'スペイン', label: 'スペイン' },
+    { value: '韓国', label: '韓国' },
+    { value: '中国', label: '中国' },
+    { value: 'その他', label: 'その他' },
+  ]
+
+  // 都道府県オプション
+  const PREFECTURES = [
+    '東京都', '神奈川県', '千葉県', '埼玉県', '大阪府', '京都府', '兵庫県', '愛知県',
+    '福岡県', '北海道', '宮城県', '広島県', '静岡県', '茨城県', '栃木県', '群馬県',
+    '新潟県', '長野県', '山梨県', '岐阜県', '三重県', '滋賀県', '奈良県', '和歌山県',
+    '鳥取県', '島根県', '岡山県', '山口県', '徳島県', '香川県', '愛媛県', '高知県',
+    '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  ]
+
+  // 趣味オプション
+  const HOBBY_OPTIONS = [
+    '料理', '読書', '映画鑑賞', '音楽', 'スポーツ', '旅行',
+    'アート', '写真', 'ゲーム', 'アニメ', 'ファッション', 'ダンス',
+    'ヨガ', 'ジム', 'ランニング', 'サイクリング', 'ハイキング', 'キャンプ',
+    'カラオケ', 'ショッピング', 'カフェ巡り', 'グルメ', 'お酒', 'コーヒー',
+    '茶道', '書道', '華道', '陶芸', '絵画', '楽器演奏'
+  ]
 
   if (userLoading) {
     return (
@@ -198,22 +252,7 @@ export default function ProfileEditPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* プロフィール画像 */}
-            {currentUser && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                  プロフィール画像
-                </h3>
-                <div className="flex justify-center">
-                  <ImageUpload
-                    currentImageUrl={currentImageUrl}
-                    onImageUpload={(imageUrl) => setCurrentImageUrl(imageUrl)}
-                    onImageRemove={() => setCurrentImageUrl('')}
-                    userId={currentUser.id}
-                  />
-                </div>
-              </div>
-            )}
+            {/* プロフィール画像セクションは後で追加 */}
 
             {/* 基本情報 */}
             <div className="space-y-4">
@@ -228,11 +267,11 @@ export default function ProfileEditPage() {
                   </label>
                   <Input
                     placeholder="田中"
-                    {...register('lastName')}
-                    className={errors.lastName ? 'border-red-500' : ''}
+                    {...register('last_name')}
+                    className={errors.last_name ? 'border-red-500' : ''}
                   />
-                  {errors.lastName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                  {errors.last_name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.last_name.message}</p>
                   )}
                 </div>
 
@@ -242,11 +281,11 @@ export default function ProfileEditPage() {
                   </label>
                   <Input
                     placeholder="花子"
-                    {...register('firstName')}
-                    className={errors.firstName ? 'border-red-500' : ''}
+                    {...register('first_name')}
+                    className={errors.first_name ? 'border-red-500' : ''}
                   />
-                  {errors.firstName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+                  {errors.first_name && (
+                    <p className="text-red-500 text-sm mt-1">{errors.first_name.message}</p>
                   )}
                 </div>
               </div>
@@ -395,13 +434,13 @@ export default function ProfileEditPage() {
                   自己紹介文 <span className="text-red-500">*</span>
                 </label>
                 <Textarea
-                  placeholder="あなたの魅力や文化体験への興味について教えてください（50文字以上）"
+                  placeholder="あなたの魅力や文化体験への興味について教えてください（10文字以上）"
                   rows={4}
-                  {...register('selfIntroduction')}
-                  className={errors.selfIntroduction ? 'border-red-500' : ''}
+                  {...register('self_introduction')}
+                  className={errors.self_introduction ? 'border-red-500' : ''}
                 />
-                {errors.selfIntroduction && (
-                  <p className="text-red-500 text-sm mt-1">{errors.selfIntroduction.message}</p>
+                {errors.self_introduction && (
+                  <p className="text-red-500 text-sm mt-1">{errors.self_introduction.message}</p>
                 )}
               </div>
             </div>
@@ -433,5 +472,13 @@ export default function ProfileEditPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ProfileEditPage() {
+  return (
+    <AuthGuard>
+      <ProfileEditContent />
+    </AuthGuard>
   )
 }

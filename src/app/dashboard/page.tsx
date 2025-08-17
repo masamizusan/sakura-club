@@ -203,10 +203,12 @@ function DashboardContent() {
                     className="pl-10 w-64"
                   />
                 </div>
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4 mr-2" />
-                  設定
-                </Button>
+                <Link href="/mypage">
+                  <Button variant="outline" size="sm">
+                    <User className="w-4 h-4 mr-2" />
+                    マイページ
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
