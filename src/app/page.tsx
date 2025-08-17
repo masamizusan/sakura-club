@@ -86,13 +86,13 @@ function HeroSection() {
           </div>
 
           {/* Right Image */}
-          <div className="relative">
-            <div className="aspect-[4/5] bg-gradient-to-br from-green-100 to-green-200 rounded-2xl overflow-hidden">
+          <div className="relative max-w-md mx-auto">
+            <div className="aspect-[3/4] bg-gradient-to-br from-green-100 to-green-200 rounded-2xl overflow-hidden shadow-lg">
               {/* Main photo */}
               <img 
                 src="/hero-image.png" 
-                alt="文化体験を楽しむ日本人女性の笑顔"
-                className="w-full h-full object-cover"
+                alt="文化体験を楽しむカップル"
+                className="w-full h-full object-cover object-right-center"
               />
             </div>
             
