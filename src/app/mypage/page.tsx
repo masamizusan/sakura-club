@@ -167,14 +167,6 @@ function MyPageContent() {
           </Link>
         </div>
 
-        {/* Appeal Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">つぶやきでお相手にアピールしよう！</h3>
-          <Button className="w-full bg-brown-500 hover:bg-brown-600 text-white">
-            <Heart className="w-4 h-4 mr-2" />
-            新しくつぶやく
-          </Button>
-        </div>
 
         {/* Stats Section */}
         <div className="space-y-4 mb-6">
