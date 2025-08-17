@@ -23,8 +23,15 @@ const profileEditSchema = z.object({
   nationality: z.string().min(1, '国籍を入力してください'),
   prefecture: z.string().min(1, '都道府県を入力してください'),
   city: z.string().min(1, '市区町村を入力してください'),
-  hobbies: z.array(z.string()).min(1, '趣味を1つ以上選択してください').max(5, '趣味は5つまで選択できます'),
-  self_introduction: z.string().min(10, '自己紹介は10文字以上で入力してください').max(500, '自己紹介は500文字以内で入力してください'),
+  occupation: z.string().optional(),
+  height: z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional().or(z.literal('')),
+  education: z.string().optional(),
+  hobbies: z.array(z.string()).min(1, '趣味を1つ以上選択してください').max(8, '趣味は8つまで選択できます'),
+  personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
+  dating_purpose: z.string().optional(),
+  ideal_relationship: z.string().optional(),
+  self_introduction: z.string().min(10, '自己紹介は10文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
+  cultural_interests: z.array(z.string()).max(5, '文化的興味は5つまで選択できます').optional(),
 })
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
@@ -36,6 +43,9 @@ function ProfileEditContent() {
   const [success, setSuccess] = useState(false)
   const [userLoading, setUserLoading] = useState(true)
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+  const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
+  const [selectedCulturalInterests, setSelectedCulturalInterests] = useState<string[]>([])
+  const [profileCompletion, setProfileCompletion] = useState(0)
   const router = useRouter()
   const supabase = createClient()
 
@@ -83,8 +93,15 @@ function ProfileEditContent() {
           nationality: profile.nationality || '',
           prefecture: profile.prefecture || '',
           city: profile.city || '',
+          occupation: profile.occupation || '',
+          height: profile.height || '',
+          education: profile.education || '',
           hobbies: profile.hobbies || [],
+          personality: profile.personality || [],
+          dating_purpose: profile.dating_purpose || '',
+          ideal_relationship: profile.ideal_relationship || '',
           self_introduction: profile.self_introduction || '',
+          cultural_interests: profile.cultural_interests || [],
         })
         
         // Select要素の値を個別に設定
@@ -92,8 +109,15 @@ function ProfileEditContent() {
         setValue('nationality', profile.nationality || '')
         setValue('prefecture', profile.prefecture || '')
         setValue('hobbies', profile.hobbies || [])
+        setValue('personality', profile.personality || [])
+        setValue('cultural_interests', profile.cultural_interests || [])
         
         setSelectedHobbies(profile.hobbies || [])
+        setSelectedPersonality(profile.personality || [])
+        setSelectedCulturalInterests(profile.cultural_interests || [])
+        
+        // プロフィール完成度を計算
+        calculateProfileCompletion(profile)
       } catch (error) {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
@@ -104,6 +128,36 @@ function ProfileEditContent() {
 
     loadUserData()
   }, [user, reset, router, setValue, supabase])
+
+  const calculateProfileCompletion = (profileData: any) => {
+    const requiredFields = [
+      'first_name', 'last_name', 'gender', 'age', 'nationality', 
+      'prefecture', 'city', 'hobbies', 'self_introduction'
+    ]
+    
+    const optionalFields = [
+      'occupation', 'height', 'education', 'personality', 
+      'dating_purpose', 'ideal_relationship', 'cultural_interests'
+    ]
+    
+    const completedRequired = requiredFields.filter(field => {
+      const value = profileData[field]
+      if (Array.isArray(value)) return value.length > 0
+      return value && value.toString().trim().length > 0
+    })
+    
+    const completedOptional = optionalFields.filter(field => {
+      const value = profileData[field]
+      if (Array.isArray(value)) return value.length > 0
+      return value && value.toString().trim().length > 0
+    })
+    
+    const totalFields = requiredFields.length + optionalFields.length
+    const completedFields = completedRequired.length + completedOptional.length
+    const completion = Math.round((completedFields / totalFields) * 100)
+    
+    setProfileCompletion(completion)
+  }
 
   const onSubmit = async (data: ProfileEditFormData) => {
     if (!user) {
@@ -126,8 +180,15 @@ function ProfileEditContent() {
           nationality: data.nationality,
           prefecture: data.prefecture,
           city: data.city,
+          occupation: data.occupation || null,
+          height: data.height || null,
+          education: data.education || null,
           hobbies: data.hobbies,
+          personality: data.personality || [],
+          dating_purpose: data.dating_purpose || null,
+          ideal_relationship: data.ideal_relationship || null,
           self_introduction: data.self_introduction,
+          cultural_interests: data.cultural_interests || [],
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
@@ -157,9 +218,31 @@ function ProfileEditContent() {
       ? selectedHobbies.filter(h => h !== hobby)
       : [...selectedHobbies, hobby]
     
-    if (newHobbies.length <= 5) {
+    if (newHobbies.length <= 8) {
       setSelectedHobbies(newHobbies)
       setValue('hobbies', newHobbies)
+    }
+  }
+
+  const togglePersonality = (trait: string) => {
+    const newPersonality = selectedPersonality.includes(trait)
+      ? selectedPersonality.filter(p => p !== trait)
+      : [...selectedPersonality, trait]
+    
+    if (newPersonality.length <= 5) {
+      setSelectedPersonality(newPersonality)
+      setValue('personality', newPersonality)
+    }
+  }
+
+  const toggleCulturalInterest = (interest: string) => {
+    const newInterests = selectedCulturalInterests.includes(interest)
+      ? selectedCulturalInterests.filter(i => i !== interest)
+      : [...selectedCulturalInterests, interest]
+    
+    if (newInterests.length <= 5) {
+      setSelectedCulturalInterests(newInterests)
+      setValue('cultural_interests', newInterests)
     }
   }
 
@@ -187,13 +270,49 @@ function ProfileEditContent() {
     '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
   ]
 
-  // 趣味オプション
+  // 職業オプション
+  const OCCUPATION_OPTIONS = [
+    '会社員', '公務員', '経営者・役員', 'フリーランス', '自営業',
+    '医師', '看護師', '教師・講師', 'エンジニア', 'デザイナー',
+    '営業', 'マーケティング', '研究者', 'コンサルタント', '金融',
+    '法律関係', 'サービス業', '小売業', '製造業', '学生',
+    'その他'
+  ]
+
+  // 学歴オプション
+  const EDUCATION_OPTIONS = [
+    '高校卒業', '専門学校卒業', '短期大学卒業', '大学卒業',
+    '大学院修士課程修了', '大学院博士課程修了', 'その他'
+  ]
+
+  // 趣味オプション（拡張）
   const HOBBY_OPTIONS = [
     '料理', '読書', '映画鑑賞', '音楽', 'スポーツ', '旅行',
     'アート', '写真', 'ゲーム', 'アニメ', 'ファッション', 'ダンス',
     'ヨガ', 'ジム', 'ランニング', 'サイクリング', 'ハイキング', 'キャンプ',
     'カラオケ', 'ショッピング', 'カフェ巡り', 'グルメ', 'お酒', 'コーヒー',
-    '茶道', '書道', '華道', '陶芸', '絵画', '楽器演奏'
+    '茶道', '書道', '華道', '陶芸', '絵画', '楽器演奏', '語学学習', 'ボランティア'
+  ]
+
+  // 性格オプション
+  const PERSONALITY_OPTIONS = [
+    '明るい', '優しい', '真面目', '面白い', '積極的', '慎重',
+    '社交的', '内向的', '創造的', '論理的', '感情的', '冷静',
+    '楽観的', '現実的', '好奇心旺盛', '責任感が強い'
+  ]
+
+  // 恋愛目的オプション
+  const DATING_PURPOSE_OPTIONS = [
+    '真剣な交際', '結婚を前提とした交際', '友達から始めたい',
+    '文化交流がメイン', 'まずは友達として', 'その他'
+  ]
+
+  // 文化的興味オプション
+  const CULTURAL_INTERESTS_OPTIONS = [
+    '茶道', '書道', '華道', '着物', '日本料理', '和菓子作り',
+    '陶芸', '折り紙', '盆栽', '神社仏閣巡り', '祭り', '歌舞伎・能',
+    '日本の歴史', '日本文学', '武道', 'J-POP', 'アニメ・マンガ',
+    '温泉', '桜', '日本の四季'
   ]
 
   if (userLoading) {
