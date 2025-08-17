@@ -132,19 +132,6 @@ function ProfileEditContent() {
     loadUserData()
   }, [user, reset, router, setValue, supabase])
 
-  // フォーム入力時のリアルタイム完成度更新
-  useEffect(() => {
-    const subscription = watch((value) => {
-      if (value) {
-        calculateProfileCompletion({
-          ...value,
-          avatar_url: profileImage
-        })
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [watch, profileImage, calculateProfileCompletion])
-
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
       'first_name', 'last_name', 'gender', 'age', 'nationality', 
@@ -175,6 +162,19 @@ function ProfileEditContent() {
     
     setProfileCompletion(completion)
   }, [])
+
+  // フォーム入力時のリアルタイム完成度更新
+  useEffect(() => {
+    const subscription = watch((value) => {
+      if (value) {
+        calculateProfileCompletion({
+          ...value,
+          avatar_url: profileImage
+        })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [watch, profileImage, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData) => {
     if (!user) {
