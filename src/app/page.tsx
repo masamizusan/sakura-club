@@ -87,16 +87,13 @@ function HeroSection() {
 
           {/* Right Image */}
           <div className="relative">
-            <div className="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-2xl overflow-hidden">
-              {/* Placeholder for image */}
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Heart className="w-12 h-12 text-sakura-500" />
-                  </div>
-                  <p className="text-gray-600">文化体験を通じた出会い</p>
-                </div>
-              </div>
+            <div className="aspect-[4/5] bg-gradient-to-br from-green-100 to-green-200 rounded-2xl overflow-hidden">
+              {/* Main photo */}
+              <img 
+                src="/hero-image.png" 
+                alt="文化体験を楽しむ日本人女性の笑顔"
+                className="w-full h-full object-cover"
+              />
             </div>
             
             {/* Heart icon overlay */}
