@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import AuthGuard from '@/components/auth/AuthGuard'
+import Sidebar from '@/components/layout/Sidebar'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart } from 'lucide-react'
 import { z } from 'zod'
 
@@ -226,22 +227,27 @@ function ProfileEditContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            className="mr-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            戻る
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">プロフィール編集</h1>
-            <p className="text-gray-600">あなたの情報を更新してください</p>
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex">
+      {/* Sidebar */}
+      <Sidebar className="w-64 hidden md:block" />
+      
+      {/* Main Content */}
+      <div className="flex-1 py-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center mb-8">
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="mr-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              戻る
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">プロフィール編集</h1>
+              <p className="text-gray-600">あなたの情報を更新してください</p>
+            </div>
           </div>
-        </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
           {error && (
@@ -469,6 +475,7 @@ function ProfileEditContent() {
               </Button>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </div>

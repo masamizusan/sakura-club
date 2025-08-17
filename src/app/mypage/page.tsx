@@ -19,7 +19,8 @@ import {
   Users,
   ArrowLeft,
   Check,
-  X
+  X,
+  History
 } from 'lucide-react'
 
 function MyPageContent() {
@@ -217,38 +218,186 @@ function MyPageContent() {
           </div>
         </div>
 
-        {/* VIP Pass Section */}
-        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg shadow-lg p-6">
-          <div className="flex items-center mb-4">
-            <div className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-bold mr-2">
-              NEW
+        {/* Additional Features */}
+        <div className="space-y-4">
+          {/* 足跡 */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-brown-100 rounded-full flex items-center justify-center mr-3">
+                  <History className="w-5 h-5 text-brown-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">足跡</h3>
+                  <p className="text-sm text-gray-600">あなたに興味のあるお相手を確認</p>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
-            <span className="font-bold text-gray-900">VIP PASS</span>
           </div>
+
+          {/* お気に入り */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                  <Star className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">お気に入り</h3>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* プライベートアルバム */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                  <User className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">プライベートアルバム</h3>
+                  <p className="text-sm text-gray-600">リクエストや公開しているお相手を確認</p>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* お知らせ */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <div className="relative">
+                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs text-white font-bold">9</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">お知らせ</h3>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* 通知・設定 */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">通知・設定</h3>
+                  <p className="text-sm text-gray-600">メール通知設定、パスワードの変更など</p>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* お問い合わせ・改善要望 */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">お問い合わせ・改善要望</h3>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* よくある質問 */}
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">よくある質問</h3>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Navigation Dock */}
+        <div className="mt-8 bg-white rounded-lg shadow-lg p-4">
           <div className="grid grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2">
-                <Heart className="w-6 h-6 text-pink-500" />
+            <Link href="/dashboard" className="text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
               <span className="text-xs text-gray-700">さがす</span>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2">
-                <Users className="w-6 h-6 text-blue-500" />
+            </Link>
+            <Link href="/messages" className="text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
               </div>
               <span className="text-xs text-gray-700">メッセージ</span>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2">
-                <Heart className="w-6 h-6 text-red-500" />
+            </Link>
+            <Link href="/matches" className="text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-gray-200 transition-colors">
+                <Heart className="w-6 h-6 text-gray-600" />
               </div>
               <span className="text-xs text-gray-700">お相手から</span>
-            </div>
+            </Link>
             <div className="text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2">
-                <User className="w-6 h-6 text-brown-500" />
+              <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <User className="w-6 h-6 text-sakura-600" />
               </div>
-              <span className="text-xs text-gray-700">マイページ</span>
+              <span className="text-xs text-sakura-700 font-semibold">マイページ</span>
             </div>
           </div>
         </div>
