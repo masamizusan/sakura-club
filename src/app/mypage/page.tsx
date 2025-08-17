@@ -7,7 +7,6 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
-import { authService } from '@/lib/auth'
 import Link from 'next/link'
 import { 
   User, 
@@ -86,8 +85,7 @@ function MyPageContent() {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
-      await authService.signOut()
-      logout() // Zustand storeからログアウト
+      await logout() // Zustand storeのlogout関数を使用（内部でauthService.signOutを呼ぶ）
       router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)

@@ -54,11 +54,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
 // Hook for easy access to auth state
 export const useAuth = () => {
-  const { user, isLoading, isInitialized } = useAuthStore()
+  const { user, isLoading, isInitialized, signOut } = useAuthStore()
   return {
     user,
     isLoading,
     isInitialized,
     isAuthenticated: !!user,
+    logout: signOut,
   }
 }
