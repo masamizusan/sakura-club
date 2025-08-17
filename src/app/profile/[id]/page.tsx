@@ -192,7 +192,7 @@ function ProfileDetailContent() {
 
           <div className="flex items-center justify-center text-xs text-gray-500">
             <span className="flex items-center">
-              ⚠️ スペシャルアプローチ送信時にKCポイントを4pt消費します。
+              ⚠️ スペシャルアプローチ送信時にSCポイントを4pt消費します。
             </span>
           </div>
         </div>
