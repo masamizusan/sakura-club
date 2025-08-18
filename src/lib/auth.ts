@@ -86,8 +86,8 @@ export const authService = {
         console.log('Email confirmation required, profile will be updated after verification')
       }
 
-      // メール認証を強制的に有効にする（テスト用）
-      const forceEmailConfirmation = true
+      // Supabaseの設定に従ってメール認証の要否を判定
+      const forceEmailConfirmation = !authData.session
       
       return {
         user: authData.user,
