@@ -122,13 +122,18 @@ export default function SignupPage() {
       const result = await authService.signUp(signupData)
       console.log('Signup result:', result)
       
-      // 性別に応じて異なるプロフィール編集画面に遷移
-      if (data.gender === 'male') {
-        // 外国人男性向けプロフィール編集画面
-        router.push('/profile/edit?type=foreign-male')
+      // メール認証が必要な場合は仮登録完了画面に遷移
+      if (result.needsEmailConfirmation) {
+        router.push(`/register/complete?email=${encodeURIComponent(data.email)}`)
       } else {
-        // 日本人女性向けプロフィール編集画面
-        router.push('/profile/edit?type=japanese-female')
+        // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
+        if (data.gender === 'male') {
+          // 外国人男性向けプロフィール編集画面
+          router.push('/profile/edit?type=foreign-male')
+        } else {
+          // 日本人女性向けプロフィール編集画面
+          router.push('/profile/edit?type=japanese-female')
+        }
       }
       
     } catch (error) {
