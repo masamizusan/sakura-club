@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -41,6 +41,8 @@ type ProfileEditFormData = z.infer<typeof profileEditSchema>
 
 function ProfileEditContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -53,6 +55,10 @@ function ProfileEditContent() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // プロフィールタイプに基づく設定
+  const isForeignMale = profileType === 'foreign-male'
+  const isJapaneseFemale = profileType === 'japanese-female'
 
   const {
     register,
@@ -89,14 +95,36 @@ function ProfileEditContent() {
 
         console.log('Loaded profile data:', profile)
         
+        // プロフィールタイプに基づくデフォルト値
+        const getDefaults = () => {
+          if (isForeignMale) {
+            return {
+              gender: 'male',
+              nationality: profile.nationality || 'アメリカ',
+            }
+          } else if (isJapaneseFemale) {
+            return {
+              gender: 'female', 
+              nationality: profile.nationality || '日本',
+            }
+          } else {
+            return {
+              gender: profile.gender || 'female',
+              nationality: profile.nationality || '',
+            }
+          }
+        }
+
+        const defaults = getDefaults()
+
         // フォームフィールドをリセット
         reset({
           first_name: profile.first_name || '',
           last_name: profile.last_name || '',
-          gender: profile.gender || 'female',
+          gender: defaults.gender,
           birth_date: profile.birth_date || '',
           age: profile.age || 18,
-          nationality: profile.nationality || '',
+          nationality: defaults.nationality,
           prefecture: profile.prefecture || '',
           city: profile.city || '',
           occupation: profile.occupation || '',
@@ -113,8 +141,8 @@ function ProfileEditContent() {
         })
         
         // Select要素の値を個別に設定
-        setValue('gender', profile.gender || 'female')
-        setValue('nationality', profile.nationality || '')
+        setValue('gender', defaults.gender)
+        setValue('nationality', defaults.nationality)
         setValue('prefecture', profile.prefecture || '')
         setValue('hobbies', profile.hobbies || [])
         setValue('personality', profile.personality || [])
@@ -397,21 +425,44 @@ function ProfileEditContent() {
     }
   }
 
-  // 国籍オプション（日本を追加）
-  const NATIONALITIES = [
-    { value: '日本', label: '日本' },
-    { value: 'アメリカ', label: 'アメリカ' },
-    { value: 'イギリス', label: 'イギリス' },
-    { value: 'カナダ', label: 'カナダ' },
-    { value: 'オーストラリア', label: 'オーストラリア' },
-    { value: 'ドイツ', label: 'ドイツ' },
-    { value: 'フランス', label: 'フランス' },
-    { value: 'イタリア', label: 'イタリア' },
-    { value: 'スペイン', label: 'スペイン' },
-    { value: '韓国', label: '韓国' },
-    { value: '中国', label: '中国' },
-    { value: 'その他', label: 'その他' },
-  ]
+  // 国籍オプション（プロフィールタイプに応じて順序変更）
+  const getNationalities = () => {
+    if (isJapaneseFemale) {
+      // 日本人女性の場合、日本を最初に
+      return [
+        { value: '日本', label: '日本' },
+        { value: 'アメリカ', label: 'アメリカ' },
+        { value: 'イギリス', label: 'イギリス' },
+        { value: 'カナダ', label: 'カナダ' },
+        { value: 'オーストラリア', label: 'オーストラリア' },
+        { value: 'ドイツ', label: 'ドイツ' },
+        { value: 'フランス', label: 'フランス' },
+        { value: 'イタリア', label: 'イタリア' },
+        { value: 'スペイン', label: 'スペイン' },
+        { value: '韓国', label: '韓国' },
+        { value: '中国', label: '中国' },
+        { value: 'その他', label: 'その他' },
+      ]
+    } else {
+      // 外国人男性の場合、よくある国を最初に
+      return [
+        { value: 'アメリカ', label: 'アメリカ' },
+        { value: 'イギリス', label: 'イギリス' },
+        { value: 'カナダ', label: 'カナダ' },
+        { value: 'オーストラリア', label: 'オーストラリア' },
+        { value: 'ドイツ', label: 'ドイツ' },
+        { value: 'フランス', label: 'フランス' },
+        { value: 'イタリア', label: 'イタリア' },
+        { value: 'スペイン', label: 'スペイン' },
+        { value: '韓国', label: '韓国' },
+        { value: '中国', label: '中国' },
+        { value: '日本', label: '日本' },
+        { value: 'その他', label: 'その他' },
+      ]
+    }
+  }
+
+  const NATIONALITIES = getNationalities()
 
   // 都道府県オプション
   const PREFECTURES = [
@@ -472,13 +523,28 @@ function ProfileEditContent() {
     '文化交流がメイン', 'まずは友達として', 'その他'
   ]
 
-  // 文化的興味オプション
-  const CULTURAL_INTERESTS_OPTIONS = [
-    '茶道', '書道', '華道', '着物', '日本料理', '和菓子作り',
-    '陶芸', '折り紙', '盆栽', '神社仏閣巡り', '祭り', '歌舞伎・能',
-    '日本の歴史', '日本文学', '武道', 'J-POP', 'アニメ・マンガ',
-    '温泉', '桜', '日本の四季'
-  ]
+  // 文化的興味オプション（プロフィールタイプに応じて変更）
+  const getCulturalInterests = () => {
+    if (isJapaneseFemale) {
+      // 日本人女性向け：外国文化への興味
+      return [
+        '西洋料理', 'ワイン', 'コーヒー文化', '洋楽', '映画', 'ダンス',
+        '旅行', 'アート', 'ファッション', '言語学習', 'ヨガ', 'フィットネス',
+        'ボランティア', 'アウトドア', 'カフェ巡り', 'ショッピング', 
+        'パーティー', 'クラブ', 'バー巡り', '国際交流'
+      ]
+    } else {
+      // 外国人男性向け：日本文化への興味
+      return [
+        '茶道', '書道', '華道', '着物', '日本料理', '和菓子作り',
+        '陶芸', '折り紙', '盆栽', '神社仏閣巡り', '祭り', '歌舞伎・能',
+        '日本の歴史', '日本文学', '武道', 'J-POP', 'アニメ・マンガ',
+        '温泉', '桜', '日本の四季'
+      ]
+    }
+  }
+
+  const CULTURAL_INTERESTS_OPTIONS = getCulturalInterests()
 
   if (userLoading) {
     return (
@@ -528,8 +594,16 @@ function ProfileEditContent() {
               戻る
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">プロフィール編集</h1>
-              <p className="text-gray-600">あなたの情報を更新してください</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {isForeignMale ? '外国人男性プロフィール編集' : 
+                 isJapaneseFemale ? '日本人女性プロフィール編集' : 
+                 'プロフィール編集'}
+              </h1>
+              <p className="text-gray-600">
+                {isForeignMale ? '日本人女性との出会いに向けて、あなたの情報を更新してください' :
+                 isJapaneseFemale ? '外国人男性との出会いに向けて、あなたの情報を更新してください' :
+                 'あなたの情報を更新してください'}
+              </p>
             </div>
           </div>
 
@@ -931,6 +1005,107 @@ function ProfileEditContent() {
               </p>
             </div>
 
+            {/* 文化的興味 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                {isForeignMale ? '日本文化への興味（最大5つまで）' : 
+                 isJapaneseFemale ? '外国文化への興味（最大5つまで）' :
+                 '文化的興味（最大5つまで）'}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {isForeignMale ? '日本人女性との文化交流で興味のある分野を選択してください' :
+                 isJapaneseFemale ? '外国人男性との文化交流で興味のある分野を選択してください' :
+                 '文化交流で興味のある分野を選択してください'}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {CULTURAL_INTERESTS_OPTIONS.map((interest) => (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => toggleCulturalInterest(interest)}
+                    className={`p-2 text-sm rounded-lg border transition-colors ${
+                      selectedCulturalInterests.includes(interest)
+                        ? 'bg-sakura-600 text-white border-sakura-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
+                    }`}
+                  >
+                    {interest}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500">
+                選択済み: {selectedCulturalInterests.length}/5
+              </p>
+            </div>
+
+
+            {/* 性格（任意フィールド） */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                性格（最大5つまで）
+              </h3>
+              <p className="text-sm text-gray-600">あなたの性格を表すキーワードを選択してください</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {PERSONALITY_OPTIONS.map((trait) => (
+                  <button
+                    key={trait}
+                    type="button"
+                    onClick={() => togglePersonality(trait)}
+                    className={`p-2 text-sm rounded-lg border transition-colors ${
+                      selectedPersonality.includes(trait)
+                        ? 'bg-sakura-600 text-white border-sakura-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
+                    }`}
+                  >
+                    {trait}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500">
+                選択済み: {selectedPersonality.length}/5
+              </p>
+            </div>
+
+            {/* 恋愛・交際の目的 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                {isForeignMale ? '日本人女性との交際について' : '外国人男性との交際について'}
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  交際の目的
+                </label>
+                <Select 
+                  value={watch('dating_purpose') || ''} 
+                  onValueChange={(value) => setValue('dating_purpose', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="交際の目的を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATING_PURPOSE_OPTIONS.map((purpose) => (
+                      <SelectItem key={purpose} value={purpose}>
+                        {purpose}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  理想の関係
+                </label>
+                <Textarea
+                  placeholder={isForeignMale ? 
+                    "日本人女性との理想的な関係について教えてください" : 
+                    "外国人男性との理想的な関係について教えてください"}
+                  rows={2}
+                  {...register('ideal_relationship')}
+                />
+              </div>
+            </div>
+
             {/* 自己紹介 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
@@ -941,7 +1116,11 @@ function ProfileEditContent() {
                   自己紹介文 <span className="text-red-500">*</span>
                 </label>
                 <Textarea
-                  placeholder="あなたの魅力や文化体験への興味について教えてください（10文字以上）"
+                  placeholder={isForeignMale ? 
+                    "あなたの魅力や日本文化への興味について教えてください（10文字以上）" :
+                    isJapaneseFemale ?
+                    "あなたの魅力や外国人男性との文化交流への興味について教えてください（10文字以上）" :
+                    "あなたの魅力や文化体験への興味について教えてください（10文字以上）"}
                   rows={4}
                   {...register('self_introduction')}
                   className={errors.self_introduction ? 'border-red-500' : ''}
