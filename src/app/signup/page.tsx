@@ -121,11 +121,15 @@ export default function SignupPage() {
       
       const result = await authService.signUp(signupData)
       console.log('Signup result:', result)
+      console.log('needsEmailConfirmation:', result.needsEmailConfirmation)
+      console.log('hasSession:', !!result.session)
       
       // メール認証が必要な場合は仮登録完了画面に遷移
       if (result.needsEmailConfirmation) {
+        console.log('Redirecting to registration complete page')
         router.push(`/register/complete?email=${encodeURIComponent(data.email)}`)
       } else {
+        console.log('Direct login successful, redirecting to profile edit')
         // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
         if (data.gender === 'male') {
           // 外国人男性向けプロフィール編集画面

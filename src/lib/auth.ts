@@ -38,7 +38,9 @@ export const authService = {
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
-          }
+            gender: data.gender,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       })
 
@@ -50,38 +52,58 @@ export const authService = {
         throw new AuthError('ユーザーの作成に失敗しました')
       }
 
-      // 2. Wait for profile creation by trigger, then update with additional info
-      // Small delay to ensure trigger completes
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // メール認証が不要な場合（既にセッションがある）のみプロフィール更新を実行
+      if (authData.session) {
+        // 2. Wait for profile creation by trigger, then update with additional info
+        // Small delay to ensure trigger completes
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
-      const profileUpdateData = {
-        name: data.firstName,
-        last_name: data.lastName,
-        gender: data.gender,
-        age: data.age,
-        nationality: data.nationality,
-        residence: data.prefecture,
-        city: data.city,
-        interests: data.hobbies,
-        bio: data.selfIntroduction,
+        const profileUpdateData = {
+          name: data.firstName,
+          last_name: data.lastName,
+          gender: data.gender,
+          age: data.age,
+          nationality: data.nationality,
+          residence: data.prefecture,
+          city: data.city,
+          interests: data.hobbies,
+          bio: data.selfIntroduction,
+        }
+
+        console.log('Updating profile with data:', profileUpdateData)
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update(profileUpdateData)
+          .eq('id', authData.user.id)
+
+        if (profileError) {
+          console.error('Profile update error:', profileError)
+          throw new AuthError(`プロフィールの更新に失敗しました: ${profileError.message}`)
+        }
+      } else {
+        // メール認証が必要な場合は、認証後に完了するため追加データを一時保存
+        console.log('Email confirmation required, profile will be updated after verification')
       }
 
-      console.log('Updating profile with data:', profileUpdateData)
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update(profileUpdateData)
-        .eq('id', authData.user.id)
-
-      if (profileError) {
-        console.error('Profile update error:', profileError)
-        throw new AuthError(`プロフィールの更新に失敗しました: ${profileError.message}`)
-      }
-
+      // 開発環境ではメール認証を強制的に有効にする
+      const forceEmailConfirmation = process.env.NODE_ENV === 'development' || !authData.session
+      
       return {
         user: authData.user,
         session: authData.session,
-        needsEmailConfirmation: !authData.session
+        needsEmailConfirmation: forceEmailConfirmation,
+        pendingProfileData: forceEmailConfirmation ? {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          gender: data.gender,
+          age: data.age,
+          nationality: data.nationality,
+          prefecture: data.prefecture,
+          city: data.city,
+          hobbies: data.hobbies,
+          selfIntroduction: data.selfIntroduction,
+        } : null
       }
     } catch (error) {
       if (error instanceof AuthError) {
