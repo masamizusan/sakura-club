@@ -86,8 +86,8 @@ export const authService = {
         console.log('Email confirmation required, profile will be updated after verification')
       }
 
-      // 開発環境ではメール認証を強制的に有効にする
-      const forceEmailConfirmation = process.env.NODE_ENV === 'development' || !authData.session
+      // メール認証を強制的に有効にする（テスト用）
+      const forceEmailConfirmation = true
       
       return {
         user: authData.user,
