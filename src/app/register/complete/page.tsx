@@ -92,6 +92,39 @@ function RegisterCompleteContent() {
               </div>
             </div>
 
+            {/* Test Skip Button - Development only */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-yellow-900 mb-2">開発者向けテスト機能</h4>
+                      <p className="text-yellow-800 text-sm mb-3">
+                        メール認証をスキップしてプロフィール編集に進むことができます
+                      </p>
+                      <Button 
+                        onClick={() => {
+                          // Extract gender from URL parameters
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const gender = urlParams.get('gender')
+                          
+                          if (gender === 'male') {
+                            window.location.href = '/profile/edit?type=foreign-male'
+                          } else {
+                            window.location.href = '/profile/edit?type=japanese-female'
+                          }
+                        }}
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
+                      >
+                        認証をスキップして続行（テスト用）
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="mt-8 space-y-3">
               <Link href="/login">
