@@ -294,7 +294,21 @@ function ProfileEditContent() {
     setError('')
     
     try {
-      const { error: updateError } = await supabase
+      console.log('Starting profile update...', {
+        userId: user.id,
+        updateData: {
+          name: data.nickname,
+          gender: data.gender,
+          age: data.age,
+          nationality: isForeignMale ? data.nationality : null,
+          residence: data.prefecture,
+          bio: data.self_introduction,
+          interests: data.hobbies,
+          avatar_url: profileImage,
+        }
+      })
+      
+      const { error: updateError, data: updateResult } = await supabase
         .from('profiles')
         .update({
           name: data.nickname,
@@ -308,12 +322,22 @@ function ProfileEditContent() {
         })
         .eq('id', user.id)
 
+      console.log('Update result:', { updateResult, updateError })
+
       if (updateError) {
         throw new Error(updateError.message)
       }
       
       // 更新成功後、即座にマイページに遷移
-      router.push('/mypage')
+      console.log('Profile updated successfully, navigating to mypage...')
+      try {
+        await router.push('/mypage')
+        console.log('Router push completed')
+      } catch (navError) {
+        console.error('Router push failed:', navError)
+        // フォールバック: window.location.href を使用
+        window.location.href = '/mypage'
+      }
     } catch (error) {
       console.error('Profile update error:', error)
       if (error instanceof Error) {
