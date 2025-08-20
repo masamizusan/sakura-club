@@ -1076,6 +1076,29 @@ function ProfileEditContent() {
               >
                 キャンセル
               </Button>
+              
+              {/* デバッグ用：直接onSubmitを呼ぶボタン */}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={async () => {
+                  alert('直接onSubmitを呼び出します')
+                  const formData = {
+                    nickname: 'テスト',
+                    gender: 'female' as const,
+                    birth_date: '1990-01-01',
+                    age: 34,
+                    prefecture: '東京都',
+                    hobbies: ['茶道'],
+                    self_introduction: 'テスト用の自己紹介です。100文字以上書いています。テスト用の自己紹介です。テスト用の自己紹介です。テスト用の自己紹介です。',
+                  }
+                  await onSubmit(formData as any)
+                }}
+                className="flex-1"
+              >
+                テスト実行
+              </Button>
+              
               <Button
                 type="button"
                 variant="sakura"
