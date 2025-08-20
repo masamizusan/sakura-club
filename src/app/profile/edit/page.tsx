@@ -24,11 +24,14 @@ const profileEditSchema = z.object({
   prefecture: z.string().min(1, '都道府県を入力してください'),
   city: z.string().optional(),
   occupation: z.string().optional(),
-  height: z.union([
-    z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください'),
-    z.literal(''),
-    z.undefined()
-  ]).optional(),
+  height: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
+  ),
   body_type: z.string().optional(),
   marital_status: z.enum(['single', 'married']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
@@ -892,7 +895,7 @@ function ProfileEditContent() {
                     min="120"
                     max="250"
                     placeholder="160"
-                    {...register('height', { valueAsNumber: true })}
+                    {...register('height')}
                     className={errors.height ? 'border-red-500' : ''}
                   />
                   {errors.height && (
