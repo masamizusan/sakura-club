@@ -284,7 +284,12 @@ function ProfileEditContent() {
     return () => subscription.unsubscribe()
   }, [watch, profileImage, calculateProfileCompletion])
 
-  const onSubmit = async (data: ProfileEditFormData) => {
+  const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
+    // フォームのデフォルト送信を防止
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
     if (!user) {
       setError('ユーザー情報が見つかりません')
       return
@@ -328,14 +333,11 @@ function ProfileEditContent() {
         throw new Error(updateError.message)
       }
       
-      // 更新成功後、即座に遷移
-      console.log('Profile updated successfully, navigating...')
+      // 更新成功後、即座にマイページに遷移
+      console.log('Profile updated successfully, navigating to mypage...')
       
-      // 複数の遷移方法を試行
-      setTimeout(() => {
-        console.log('Attempting navigation with setTimeout...')
-        window.location.href = '/dashboard'
-      }, 100)
+      // 強制的に遷移
+      window.location.replace('/mypage')
     } catch (error) {
       console.error('Profile update error:', error)
       if (error instanceof Error) {
