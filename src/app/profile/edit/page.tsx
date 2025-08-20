@@ -286,7 +286,6 @@ function ProfileEditContent() {
   }, [watch, profileImage, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
-    alert('onSubmit関数が呼ばれました！') // デバッグ用
     // フォームのデフォルト送信を防止
     if (event) {
       event.preventDefault()
@@ -301,21 +300,7 @@ function ProfileEditContent() {
     setError('')
     
     try {
-      console.log('Starting profile update...', {
-        userId: user.id,
-        updateData: {
-          name: data.nickname,
-          gender: data.gender,
-          age: data.age,
-          nationality: isForeignMale ? data.nationality : null,
-          residence: data.prefecture,
-          bio: data.self_introduction,
-          interests: data.hobbies,
-          avatar_url: profileImage,
-        }
-      })
-      
-      const { error: updateError, data: updateResult } = await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           name: data.nickname,
@@ -329,15 +314,12 @@ function ProfileEditContent() {
         })
         .eq('id', user.id)
 
-      console.log('Update result:', { updateResult, updateError })
-
       if (updateError) {
         throw new Error(updateError.message)
       }
       
       // 更新成功後、成功状態を表示
       console.log('Profile updated successfully!')
-      alert('プロフィールが更新されました！') // デバッグ用
       setIsLoading(false)
       setUpdateSuccess(true)
     } catch (error) {
@@ -1077,36 +1059,13 @@ function ProfileEditContent() {
                 キャンセル
               </Button>
               
-              {/* デバッグ用：直接onSubmitを呼ぶボタン */}
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={async () => {
-                  alert('直接onSubmitを呼び出します')
-                  const formData = {
-                    nickname: 'テスト',
-                    gender: 'female' as const,
-                    birth_date: '1990-01-01',
-                    age: 34,
-                    prefecture: '東京都',
-                    hobbies: ['茶道'],
-                    self_introduction: 'テスト用の自己紹介です。100文字以上書いています。テスト用の自己紹介です。テスト用の自己紹介です。テスト用の自己紹介です。',
-                  }
-                  await onSubmit(formData as any)
-                }}
-                className="flex-1"
-              >
-                テスト実行
-              </Button>
-              
               <Button
                 type="button"
                 variant="sakura"
                 className="flex-1"
                 disabled={isLoading}
                 onClick={async () => {
-                  const formData = watch() // 現在のフォームデータを取得
-                  console.log('Form data from watch:', formData)
+                  const formData = watch()
                   await onSubmit(formData as any)
                 }}
               >
