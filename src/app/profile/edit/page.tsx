@@ -264,14 +264,13 @@ function ProfileEditContent() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          first_name: data.first_name,
-          last_name: data.last_name,
+          name: data.nickname,
           gender: data.gender,
           birth_date: data.birth_date,
           age: data.age,
-          nationality: data.nationality,
+          nationality: isForeignMale ? data.nationality : null,
           prefecture: data.prefecture,
-          city: data.city,
+          city: data.city || null,
           occupation: data.occupation || null,
           height: data.height || null,
           body_type: data.body_type || null,
