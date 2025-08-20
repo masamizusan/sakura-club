@@ -1104,7 +1104,11 @@ function ProfileEditContent() {
                 variant="sakura"
                 className="flex-1"
                 disabled={isLoading}
-                onClick={handleSubmit(onSubmit)}
+                onClick={async () => {
+                  const formData = watch() // 現在のフォームデータを取得
+                  console.log('Form data from watch:', formData)
+                  await onSubmit(formData as any)
+                }}
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
