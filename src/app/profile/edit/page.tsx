@@ -1081,6 +1081,7 @@ function ProfileEditContent() {
                 variant="sakura"
                 className="flex-1"
                 disabled={isLoading}
+                onClick={() => alert('更新ボタンがクリックされました！')}
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
