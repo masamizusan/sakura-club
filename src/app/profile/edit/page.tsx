@@ -126,15 +126,15 @@ function ProfileEditContent() {
           birth_date: defaults.birth_date || profile.birth_date || '',
           age: defaults.age || profile.age || 18,
           nationality: isForeignMale ? (defaults.nationality || profile.nationality || '') : undefined,
-          prefecture: defaults.prefecture || profile.prefecture || '',
+          prefecture: defaults.prefecture || profile.residence || profile.prefecture || '',
           city: profile.city || '',
           occupation: profile.occupation || '',
           height: profile.height || '',
           body_type: profile.body_type || '',
           marital_status: profile.marital_status || '',
-          hobbies: profile.hobbies || [],
+          hobbies: profile.interests || profile.hobbies || [],
           personality: profile.personality || [],
-          self_introduction: profile.self_introduction || '',
+          self_introduction: profile.bio || profile.self_introduction || '',
         })
         
         // Select要素の値を個別に設定（signup データを優先）
@@ -143,13 +143,13 @@ function ProfileEditContent() {
         if (isForeignMale) {
           setValue('nationality', defaults.nationality || profile.nationality || '')
         }
-        setValue('prefecture', defaults.prefecture || profile.prefecture || '')
+        setValue('prefecture', defaults.prefecture || profile.residence || profile.prefecture || '')
         setValue('birth_date', defaults.birth_date || profile.birth_date || '')
         setValue('age', defaults.age || profile.age || 18)
-        setValue('hobbies', profile.hobbies || [])
+        setValue('hobbies', profile.interests || profile.hobbies || [])
         setValue('personality', profile.personality || [])
         
-        setSelectedHobbies(profile.hobbies || [])
+        setSelectedHobbies(profile.interests || profile.hobbies || [])
         setSelectedPersonality(profile.personality || [])
         setProfileImage(profile.avatar_url || null)
         
@@ -266,15 +266,9 @@ function ProfileEditContent() {
           birth_date: data.birth_date,
           age: data.age,
           nationality: isForeignMale ? data.nationality : null,
-          prefecture: data.prefecture,
-          city: data.city || null,
-          occupation: data.occupation || null,
-          height: data.height || null,
-          body_type: data.body_type || null,
-          marital_status: data.marital_status || null,
-          hobbies: data.hobbies,
-          personality: data.personality || [],
-          self_introduction: data.self_introduction,
+          residence: data.prefecture,
+          bio: data.self_introduction,
+          interests: data.hobbies,
           avatar_url: profileImage,
           updated_at: new Date().toISOString(),
         })
