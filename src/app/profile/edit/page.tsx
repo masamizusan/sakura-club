@@ -123,8 +123,23 @@ function ProfileEditContent() {
 
         const defaults = getDefaults()
         
-        // 新規ユーザーかどうかを判定（bio, interests, nameが空の場合は新規とみなす）
-        const isNewUser = !profile.bio && !profile.interests && !profile.name
+        // 新規ユーザーかどうかを判定（bio, interests, nameが空、またはテストデータの場合は新規とみなす）
+        const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
+                          profile.name === 'テスト' ||
+                          (profile.interests?.length === 1 && profile.interests[0] === '茶道')
+        const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData
+
+        // テストデータをクリア
+        if (isTestData) {
+          await supabase
+            .from('profiles')
+            .update({
+              name: null,
+              bio: null,
+              interests: null
+            })
+            .eq('id', user.id)
+        }
 
         // ニックネーム（仮登録から）
         const nicknameValue = signupData.nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
