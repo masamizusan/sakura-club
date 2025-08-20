@@ -286,6 +286,7 @@ function ProfileEditContent() {
   }, [watch, profileImage, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
+    alert('onSubmit関数が呼ばれました！') // デバッグ用
     // フォームのデフォルト送信を防止
     if (event) {
       event.preventDefault()
