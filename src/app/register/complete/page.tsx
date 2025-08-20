@@ -105,15 +105,29 @@ function RegisterCompleteContent() {
                       </p>
                       <Button 
                         onClick={() => {
-                          // Extract gender from URL parameters
+                          // Extract all signup data from URL parameters
                           const urlParams = new URLSearchParams(window.location.search)
                           const gender = urlParams.get('gender')
+                          const nickname = urlParams.get('nickname')
+                          const birth_date = urlParams.get('birth_date')
+                          const age = urlParams.get('age')
+                          const nationality = urlParams.get('nationality')
+                          const prefecture = urlParams.get('prefecture')
                           
-                          if (gender === 'male') {
-                            window.location.href = '/profile/edit?type=foreign-male'
-                          } else {
-                            window.location.href = '/profile/edit?type=japanese-female'
-                          }
+                          // Create URL parameters for profile edit page
+                          const profileParams = new URLSearchParams({
+                            type: gender === 'male' ? 'foreign-male' : 'japanese-female'
+                          })
+                          
+                          // Add signup data if available
+                          if (nickname) profileParams.set('nickname', nickname)
+                          if (gender) profileParams.set('gender', gender)
+                          if (birth_date) profileParams.set('birth_date', birth_date)
+                          if (age) profileParams.set('age', age)
+                          if (nationality) profileParams.set('nationality', nationality)
+                          if (prefecture) profileParams.set('prefecture', prefecture)
+                          
+                          window.location.href = `/profile/edit?${profileParams.toString()}`
                         }}
                         className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
                       >

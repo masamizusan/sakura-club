@@ -95,37 +95,44 @@ function ProfileEditContent() {
 
         console.log('Loaded profile data:', profile)
         
-        // プロフィールタイプに基づくデフォルト値
+        // 仮登録からの遷移の場合、URLパラメータからも初期値を取得
+        const urlParams = new URLSearchParams(window.location.search)
+        const signupData = {
+          nickname: urlParams.get('nickname'),
+          gender: urlParams.get('gender'),
+          birth_date: urlParams.get('birth_date'),
+          age: urlParams.get('age'),
+          nationality: urlParams.get('nationality'),
+          prefecture: urlParams.get('prefecture')
+        }
+        
+        // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
         const getDefaults = () => {
-          if (isForeignMale) {
-            return {
-              gender: 'male',
-              nationality: profile.nationality || 'アメリカ',
-            }
-          } else if (isJapaneseFemale) {
-            return {
-              gender: 'female', 
-              nationality: profile.nationality || '日本',
-            }
-          } else {
-            return {
-              gender: profile.gender || 'female',
-              nationality: profile.nationality || '',
-            }
+          const baseDefaults = {
+            gender: signupData.gender || profile.gender || (isForeignMale ? 'male' : 'female'),
+            nationality: signupData.nationality || profile.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
+            prefecture: signupData.prefecture || profile.prefecture || '',
+            birth_date: signupData.birth_date || profile.birth_date || '',
+            age: signupData.age ? parseInt(signupData.age) : profile.age || 18,
           }
+          
+          return baseDefaults
         }
 
         const defaults = getDefaults()
+        
+        // ニックネームから名前を推測（仮登録から）
+        const nameFromNickname = signupData.nickname || profile.name || profile.first_name || ''
 
-        // フォームフィールドをリセット
+        // フォームフィールドをリセット（signup データを優先）
         reset({
-          first_name: profile.first_name || '',
+          first_name: nameFromNickname || profile.first_name || '',
           last_name: profile.last_name || '',
           gender: defaults.gender,
-          birth_date: profile.birth_date || '',
-          age: profile.age || 18,
-          nationality: defaults.nationality,
-          prefecture: profile.prefecture || '',
+          birth_date: defaults.birth_date || profile.birth_date || '',
+          age: defaults.age || profile.age || 18,
+          nationality: defaults.nationality || profile.nationality || '',
+          prefecture: defaults.prefecture || profile.prefecture || '',
           city: profile.city || '',
           occupation: profile.occupation || '',
           height: profile.height || '',
@@ -140,10 +147,12 @@ function ProfileEditContent() {
           cultural_interests: profile.cultural_interests || [],
         })
         
-        // Select要素の値を個別に設定
+        // Select要素の値を個別に設定（signup データを優先）
         setValue('gender', defaults.gender)
         setValue('nationality', defaults.nationality)
-        setValue('prefecture', profile.prefecture || '')
+        setValue('prefecture', defaults.prefecture || profile.prefecture || '')
+        setValue('birth_date', defaults.birth_date || profile.birth_date || '')
+        setValue('age', defaults.age || profile.age || 18)
         setValue('hobbies', profile.hobbies || [])
         setValue('personality', profile.personality || [])
         setValue('cultural_interests', profile.cultural_interests || [])

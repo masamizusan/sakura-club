@@ -127,17 +127,30 @@ export default function SignupPage() {
       // メール認証が必要な場合は仮登録完了画面に遷移
       if (result.needsEmailConfirmation) {
         console.log('Redirecting to registration complete page')
-        router.push(`/register/complete?email=${encodeURIComponent(data.email)}&gender=${data.gender}`)
+        // 仮登録完了画面にsignupデータを含めて遷移
+        const params = new URLSearchParams({
+          email: data.email,
+          gender: data.gender,
+          nickname: data.nickname,
+          birth_date: data.birth_date,
+          age: age.toString(),
+          nationality: data.prefecture, // 男性の場合は居住国、女性の場合は都道府県
+          prefecture: data.prefecture
+        })
+        router.push(`/register/complete?${params.toString()}`)
       } else {
         console.log('Direct login successful, redirecting to profile edit')
         // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
-        if (data.gender === 'male') {
-          // 外国人男性向けプロフィール編集画面
-          router.push('/profile/edit?type=foreign-male')
-        } else {
-          // 日本人女性向けプロフィール編集画面
-          router.push('/profile/edit?type=japanese-female')
-        }
+        const profileParams = new URLSearchParams({
+          type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
+          nickname: data.nickname,
+          gender: data.gender,
+          birth_date: data.birth_date,
+          age: age.toString(),
+          nationality: data.prefecture,
+          prefecture: data.prefecture
+        })
+        router.push(`/profile/edit?${profileParams.toString()}`)
       }
       
     } catch (error) {
