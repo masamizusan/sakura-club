@@ -336,6 +336,7 @@ function ProfileEditContent() {
       
       // 更新成功後、成功状態を表示
       console.log('Profile updated successfully!')
+      alert('プロフィールが更新されました！') // デバッグ用
       setIsLoading(false)
       setUpdateSuccess(true)
     } catch (error) {
