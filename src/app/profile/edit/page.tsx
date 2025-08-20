@@ -162,8 +162,18 @@ function ProfileEditContent() {
         setSelectedPersonality(isNewUser ? [] : (profile.personality || []))
         setProfileImage(profile.avatar_url || null)
         
-        // プロフィール完成度を計算
-        calculateProfileCompletion(profile)
+        // プロフィール完成度を計算（signupデータも含める）
+        const profileDataWithSignup = {
+          ...profile,
+          name: nicknameValue,
+          gender: defaults.gender,
+          age: defaults.age || profile.age || 18,
+          nationality: isForeignMale ? (defaults.nationality || profile.nationality) : profile.nationality,
+          residence: defaults.prefecture || profile.residence || profile.prefecture,
+          interests: isNewUser ? [] : (profile.interests || profile.hobbies || []),
+          bio: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
+        }
+        calculateProfileCompletion(profileDataWithSignup)
       } catch (error) {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
@@ -224,7 +234,26 @@ function ProfileEditContent() {
     ]
     
     const completedRequired = requiredFields.filter(field => {
-      const value = profileData[field]
+      let value
+      
+      // Map form field names to profile data field names
+      switch (field) {
+        case 'nickname':
+          value = profileData.name || profileData.nickname
+          break
+        case 'self_introduction':
+          value = profileData.bio || profileData.self_introduction
+          break
+        case 'hobbies':
+          value = profileData.interests || profileData.hobbies
+          break
+        case 'prefecture':
+          value = profileData.residence || profileData.prefecture
+          break
+        default:
+          value = profileData[field]
+      }
+      
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
     })
@@ -241,7 +270,7 @@ function ProfileEditContent() {
     const completion = Math.round((completedFields / totalFields) * 100)
     
     setProfileCompletion(completion)
-  }, [])
+  }, [isForeignMale])
 
   // フォーム入力時のリアルタイム完成度更新
   useEffect(() => {
@@ -287,7 +316,7 @@ function ProfileEditContent() {
       
       setSuccess(true)
       setTimeout(() => {
-        router.push('/dashboard')
+        router.push('/mypage')
       }, 2000)
     } catch (error) {
       console.error('Profile update error:', error)
