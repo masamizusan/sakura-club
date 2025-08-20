@@ -92,8 +92,8 @@ function RegisterCompleteContent() {
               </div>
             </div>
 
-            {/* Test Skip Button - Development only */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* Test Skip Button - Always show for testing */}
+            {true && (
               <div className="mt-6">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start">
