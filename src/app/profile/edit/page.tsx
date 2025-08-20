@@ -336,17 +336,24 @@ function ProfileEditContent() {
       // 更新成功後、即座にマイページに遷移
       console.log('Profile updated successfully, navigating to mypage...')
       
-      // 強制的に遷移
-      window.location.replace('/mypage')
+      // Next.js App Routerで確実に遷移するため、遅延を設ける
+      setIsLoading(false)
+      
+      // 少し遅延させて確実に遷移
+      setTimeout(() => {
+        console.log('Attempting forced navigation...')
+        window.location.href = '/mypage'
+      }, 500)
+      
+      return // early return to prevent further execution
     } catch (error) {
       console.error('Profile update error:', error)
+      setIsLoading(false)
       if (error instanceof Error) {
         setError(error.message)
       } else {
         setError('プロフィールの更新に失敗しました。もう一度お試しください。')
       }
-    } finally {
-      setIsLoading(false)
     }
   }
 
