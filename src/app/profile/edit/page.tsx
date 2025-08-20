@@ -129,16 +129,25 @@ function ProfileEditContent() {
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
         const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData
 
-        // テストデータをクリア
-        if (isTestData) {
+        // テストデータまたは既存データをクリア
+        if (isTestData || profile.name === 'masamizu') {
           await supabase
             .from('profiles')
             .update({
               name: null,
               bio: null,
-              interests: null
+              interests: null,
+              height: null,
+              avatar_url: null
             })
             .eq('id', user.id)
+          
+          // プロフィールオブジェクトも更新
+          profile.name = null
+          profile.bio = null
+          profile.interests = null
+          profile.height = null
+          profile.avatar_url = null
         }
 
         // ニックネーム（仮登録から）
@@ -368,20 +377,33 @@ function ProfileEditContent() {
       setUploadingImage(true)
       setError('')
 
+      // デバッグ情報
+      console.log('Starting image upload...', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        userId: user.id
+      })
+
       // ファイル名を生成
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`
+
+      console.log('Generated filename:', fileName)
 
       // Supabase Storageにアップロード
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true // falseからtrueに変更
         })
 
+      console.log('Upload result:', { uploadData, uploadError })
+
       if (uploadError) {
-        throw new Error(uploadError.message)
+        console.error('Upload error details:', uploadError)
+        throw new Error(`アップロードエラー: ${uploadError.message}`)
       }
 
       // 公開URLを取得
