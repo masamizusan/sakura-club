@@ -736,7 +736,7 @@ function ProfileEditContent() {
                   </label>
                   <Select 
                     value={watch('marital_status') || ''} 
-                    onValueChange={(value) => setValue('marital_status', value as 'single' | 'married' | 'divorced' | 'widowed')}
+                    onValueChange={(value) => setValue('marital_status', value as 'single' | 'married')}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="結婚状況を選択" />
