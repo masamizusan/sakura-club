@@ -123,7 +123,7 @@ function ProfileEditContent() {
         reset({
           nickname: nicknameValue,
           gender: defaults.gender,
-          birth_date: defaults.birth_date || profile.birth_date || '',
+          birth_date: defaults.birth_date || '',
           age: defaults.age || profile.age || 18,
           nationality: isForeignMale ? (defaults.nationality || profile.nationality || '') : undefined,
           prefecture: defaults.prefecture || profile.residence || profile.prefecture || '',
@@ -144,7 +144,6 @@ function ProfileEditContent() {
           setValue('nationality', defaults.nationality || profile.nationality || '')
         }
         setValue('prefecture', defaults.prefecture || profile.residence || profile.prefecture || '')
-        setValue('birth_date', defaults.birth_date || profile.birth_date || '')
         setValue('age', defaults.age || profile.age || 18)
         setValue('hobbies', profile.interests || profile.hobbies || [])
         setValue('personality', profile.personality || [])
@@ -200,7 +199,7 @@ function ProfileEditContent() {
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
-      'nickname', 'gender', 'birth_date', 'age', 
+      'nickname', 'gender', 'age', 
       'prefecture', 'hobbies', 'self_introduction'
     ]
     
@@ -263,14 +262,12 @@ function ProfileEditContent() {
         .update({
           name: data.nickname,
           gender: data.gender,
-          birth_date: data.birth_date,
           age: data.age,
           nationality: isForeignMale ? data.nationality : null,
           residence: data.prefecture,
           bio: data.self_introduction,
           interests: data.hobbies,
           avatar_url: profileImage,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
 
