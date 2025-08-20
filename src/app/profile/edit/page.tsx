@@ -48,6 +48,7 @@ function ProfileEditContent() {
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [updateSuccess, setUpdateSuccess] = useState(false)
   const [userLoading, setUserLoading] = useState(true)
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
@@ -333,19 +334,10 @@ function ProfileEditContent() {
         throw new Error(updateError.message)
       }
       
-      // 更新成功後、即座にマイページに遷移
-      console.log('Profile updated successfully, navigating to mypage...')
-      
-      // Next.js App Routerで確実に遷移するため、遅延を設ける
+      // 更新成功後、成功状態を表示
+      console.log('Profile updated successfully!')
       setIsLoading(false)
-      
-      // 少し遅延させて確実に遷移
-      setTimeout(() => {
-        console.log('Attempting forced navigation...')
-        window.location.href = '/mypage'
-      }, 500)
-      
-      return // early return to prevent further execution
+      setUpdateSuccess(true)
     } catch (error) {
       console.error('Profile update error:', error)
       setIsLoading(false)
@@ -573,6 +565,40 @@ function ProfileEditContent() {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
           <p className="text-gray-600">プロフィール情報を読み込んでいます...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (updateSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Save className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">更新完了</h2>
+            <p className="text-gray-600 mb-6">
+              プロフィール情報が正常に更新されました。<br />
+              マイページでご確認ください。
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={() => window.location.href = '/mypage'}
+                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
+              >
+                マイページに移動
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setUpdateSuccess(false)}
+                className="w-full"
+              >
+                プロフィールを続けて編集
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     )
