@@ -24,7 +24,11 @@ const profileEditSchema = z.object({
   prefecture: z.string().min(1, '都道府県を入力してください'),
   city: z.string().optional(),
   occupation: z.string().optional(),
-  height: z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional().or(z.literal('')),
+  height: z.union([
+    z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください'),
+    z.literal(''),
+    z.undefined()
+  ]).optional(),
   body_type: z.string().optional(),
   marital_status: z.enum(['single', 'married']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
@@ -116,25 +120,28 @@ function ProfileEditContent() {
 
         const defaults = getDefaults()
         
-        // ニックネーム（仮登録から）
-        const nicknameValue = signupData.nickname || profile.name || profile.first_name || ''
+        // 新規ユーザーかどうかを判定（bio, interests, nameが空の場合は新規とみなす）
+        const isNewUser = !profile.bio && !profile.interests && !profile.name
 
-        // フォームフィールドをリセット（signup データを優先）
+        // ニックネーム（仮登録から）
+        const nicknameValue = signupData.nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
+
+        // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
         reset({
           nickname: nicknameValue,
           gender: defaults.gender,
           birth_date: defaults.birth_date || '',
-          age: defaults.age || profile.age || 18,
-          nationality: isForeignMale ? (defaults.nationality || profile.nationality || '') : undefined,
-          prefecture: defaults.prefecture || profile.residence || profile.prefecture || '',
-          city: profile.city || '',
-          occupation: profile.occupation || '',
-          height: profile.height || '',
-          body_type: profile.body_type || '',
-          marital_status: profile.marital_status || '',
-          hobbies: profile.interests || profile.hobbies || [],
-          personality: profile.personality || [],
-          self_introduction: profile.bio || profile.self_introduction || '',
+          age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
+          nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
+          prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
+          city: isNewUser ? '' : (profile.city || ''),
+          occupation: isNewUser ? '' : (profile.occupation || ''),
+          height: isNewUser ? '' : (profile.height || ''),
+          body_type: isNewUser ? '' : (profile.body_type || ''),
+          marital_status: isNewUser ? '' : (profile.marital_status || ''),
+          hobbies: isNewUser ? [] : (profile.interests || profile.hobbies || []),
+          personality: isNewUser ? [] : (profile.personality || []),
+          self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
         })
         
         // Select要素の値を個別に設定（signup データを優先）
@@ -143,13 +150,13 @@ function ProfileEditContent() {
         if (isForeignMale) {
           setValue('nationality', defaults.nationality || profile.nationality || '')
         }
-        setValue('prefecture', defaults.prefecture || profile.residence || profile.prefecture || '')
-        setValue('age', defaults.age || profile.age || 18)
-        setValue('hobbies', profile.interests || profile.hobbies || [])
-        setValue('personality', profile.personality || [])
+        setValue('prefecture', defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')))
+        setValue('age', defaults.age || (isNewUser ? 18 : (profile.age || 18)))
+        setValue('hobbies', isNewUser ? [] : (profile.interests || profile.hobbies || []))
+        setValue('personality', isNewUser ? [] : (profile.personality || []))
         
-        setSelectedHobbies(profile.interests || profile.hobbies || [])
-        setSelectedPersonality(profile.personality || [])
+        setSelectedHobbies(isNewUser ? [] : (profile.interests || profile.hobbies || []))
+        setSelectedPersonality(isNewUser ? [] : (profile.personality || []))
         setProfileImage(profile.avatar_url || null)
         
         // プロフィール完成度を計算
