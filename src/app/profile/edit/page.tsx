@@ -16,25 +16,22 @@ import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart, Camera, 
 import { z } from 'zod'
 
 const profileEditSchema = z.object({
-  first_name: z.string().min(1, '名前を入力してください').max(50, '名前は50文字以内で入力してください'),
-  last_name: z.string().min(1, '姓を入力してください').max(50, '姓は50文字以内で入力してください'),
+  nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
   gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
   birth_date: z.string().min(1, '生年月日を入力してください'),
   age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
-  nationality: z.string().min(1, '国籍を選択してください'),
+  nationality: z.string().min(1, '国籍を選択してください').optional(),
   prefecture: z.string().min(1, '都道府県を入力してください'),
-  city: z.string().min(1, '市区町村を入力してください'),
+  city: z.string().optional(),
   occupation: z.string().optional(),
   height: z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional().or(z.literal('')),
   body_type: z.string().optional(),
   marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional(),
-  education: z.string().optional(),
-  hobbies: z.array(z.string()).min(1, '趣味を1つ以上選択してください').max(8, '趣味は8つまで選択できます'),
+  hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
   dating_purpose: z.string().optional(),
   ideal_relationship: z.string().optional(),
   self_introduction: z.string().min(10, '自己紹介は10文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
-  cultural_interests: z.array(z.string()).max(5, '文化的興味は5つまで選択できます').optional(),
 })
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
@@ -49,7 +46,6 @@ function ProfileEditContent() {
   const [userLoading, setUserLoading] = useState(true)
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
-  const [selectedCulturalInterests, setSelectedCulturalInterests] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -121,45 +117,43 @@ function ProfileEditContent() {
 
         const defaults = getDefaults()
         
-        // ニックネームから名前を推測（仮登録から）
-        const nameFromNickname = signupData.nickname || profile.name || profile.first_name || ''
+        // ニックネーム（仮登録から）
+        const nicknameValue = signupData.nickname || profile.name || profile.first_name || ''
 
         // フォームフィールドをリセット（signup データを優先）
         reset({
-          first_name: nameFromNickname || profile.first_name || '',
-          last_name: profile.last_name || '',
+          nickname: nicknameValue,
           gender: defaults.gender,
           birth_date: defaults.birth_date || profile.birth_date || '',
           age: defaults.age || profile.age || 18,
-          nationality: defaults.nationality || profile.nationality || '',
+          nationality: isForeignMale ? (defaults.nationality || profile.nationality || '') : undefined,
           prefecture: defaults.prefecture || profile.prefecture || '',
           city: profile.city || '',
           occupation: profile.occupation || '',
           height: profile.height || '',
           body_type: profile.body_type || '',
           marital_status: profile.marital_status || '',
-          education: profile.education || '',
           hobbies: profile.hobbies || [],
           personality: profile.personality || [],
           dating_purpose: profile.dating_purpose || '',
           ideal_relationship: profile.ideal_relationship || '',
           self_introduction: profile.self_introduction || '',
-          cultural_interests: profile.cultural_interests || [],
         })
         
         // Select要素の値を個別に設定（signup データを優先）
+        setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
-        setValue('nationality', defaults.nationality)
+        if (isForeignMale) {
+          setValue('nationality', defaults.nationality || profile.nationality || '')
+        }
         setValue('prefecture', defaults.prefecture || profile.prefecture || '')
         setValue('birth_date', defaults.birth_date || profile.birth_date || '')
         setValue('age', defaults.age || profile.age || 18)
         setValue('hobbies', profile.hobbies || [])
         setValue('personality', profile.personality || [])
-        setValue('cultural_interests', profile.cultural_interests || [])
         
         setSelectedHobbies(profile.hobbies || [])
         setSelectedPersonality(profile.personality || [])
-        setSelectedCulturalInterests(profile.cultural_interests || [])
         setProfileImage(profile.avatar_url || null)
         
         // プロフィール完成度を計算
@@ -209,13 +203,18 @@ function ProfileEditContent() {
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
-      'first_name', 'last_name', 'gender', 'birth_date', 'age', 'nationality', 
-      'prefecture', 'city', 'hobbies', 'self_introduction'
+      'nickname', 'gender', 'birth_date', 'age', 
+      'prefecture', 'hobbies', 'self_introduction'
     ]
+    
+    // 外国人男性の場合は国籍も必須
+    if (isForeignMale) {
+      requiredFields.push('nationality')
+    }
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'education', 'personality', 'dating_purpose', 'ideal_relationship', 'cultural_interests'
+      'personality', 'dating_purpose', 'ideal_relationship'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -277,13 +276,11 @@ function ProfileEditContent() {
           height: data.height || null,
           body_type: data.body_type || null,
           marital_status: data.marital_status || null,
-          education: data.education || null,
           hobbies: data.hobbies,
           personality: data.personality || [],
           dating_purpose: data.dating_purpose || null,
           ideal_relationship: data.ideal_relationship || null,
           self_introduction: data.self_introduction,
-          cultural_interests: data.cultural_interests || [],
           avatar_url: profileImage,
           updated_at: new Date().toISOString(),
         })
@@ -415,24 +412,6 @@ function ProfileEditContent() {
     }
   }
 
-  const toggleCulturalInterest = (interest: string) => {
-    const newInterests = selectedCulturalInterests.includes(interest)
-      ? selectedCulturalInterests.filter(i => i !== interest)
-      : [...selectedCulturalInterests, interest]
-    
-    if (newInterests.length <= 5) {
-      setSelectedCulturalInterests(newInterests)
-      setValue('cultural_interests', newInterests)
-      
-      // リアルタイム完成度更新
-      const currentData = watch()
-      calculateProfileCompletion({
-        ...currentData,
-        cultural_interests: newInterests,
-        avatar_url: profileImage
-      })
-    }
-  }
 
   // 国籍オプション（プロフィールタイプに応じて順序変更）
   const getNationalities = () => {
@@ -491,11 +470,6 @@ function ProfileEditContent() {
     'その他'
   ]
 
-  // 学歴オプション
-  const EDUCATION_OPTIONS = [
-    '高校卒業', '専門学校卒業', '短期大学卒業', '大学卒業',
-    '大学院修士課程修了', '大学院博士課程修了', 'その他'
-  ]
 
   // 体型オプション
   const BODY_TYPE_OPTIONS = [
@@ -510,13 +484,27 @@ function ProfileEditContent() {
     { value: 'widowed', label: '死別' }
   ]
 
-  // 趣味オプション（拡張）
+  // 共有したい日本文化オプション（最新トレンド含む）
   const HOBBY_OPTIONS = [
-    '料理', '読書', '映画鑑賞', '音楽', 'スポーツ', '旅行',
-    'アート', '写真', 'ゲーム', 'アニメ', 'ファッション', 'ダンス',
-    'ヨガ', 'ジム', 'ランニング', 'サイクリング', 'ハイキング', 'キャンプ',
-    'カラオケ', 'ショッピング', 'カフェ巡り', 'グルメ', 'お酒', 'コーヒー',
-    '茶道', '書道', '華道', '陶芸', '絵画', '楽器演奏', '語学学習', 'ボランティア'
+    // 伝統文化
+    '茶道', '華道', '書道', '着物・浴衣', '和菓子作り', '陶芸', '折り紙', '盆栽',
+    '神社仏閣巡り', '武道（剣道・柔道など）', '歌舞伎・能', '日本舞踊',
+    
+    // 食文化
+    '和食料理', '日本酒・焼酎', '抹茶', 'うどん・そば打ち', 'お弁当作り', 
+    'おせち料理', '郷土料理', '精進料理',
+    
+    // 現代文化
+    'アニメ・マンガ', 'J-POP', 'カラオケ', '日本のゲーム', 'コスプレ',
+    '日本映画・ドラマ', 'ボーカロイド', 'アイドル文化',
+    
+    // 季節・自然・行事
+    '桜見物', '紅葉狩り', '温泉', '祭り参加', '花火大会', '雪景色', 
+    '日本の四季', '盆踊り',
+    
+    // 最新トレンド
+    '抹茶カフェ巡り', '和装フォト', '伝統工芸体験', '日本庭園散策', 
+    '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
   ]
 
   // 性格オプション
@@ -532,28 +520,6 @@ function ProfileEditContent() {
     '文化交流がメイン', 'まずは友達として', 'その他'
   ]
 
-  // 文化的興味オプション（プロフィールタイプに応じて変更）
-  const getCulturalInterests = () => {
-    if (isJapaneseFemale) {
-      // 日本人女性向け：外国文化への興味
-      return [
-        '西洋料理', 'ワイン', 'コーヒー文化', '洋楽', '映画', 'ダンス',
-        '旅行', 'アート', 'ファッション', '言語学習', 'ヨガ', 'フィットネス',
-        'ボランティア', 'アウトドア', 'カフェ巡り', 'ショッピング', 
-        'パーティー', 'クラブ', 'バー巡り', '国際交流'
-      ]
-    } else {
-      // 外国人男性向け：日本文化への興味
-      return [
-        '茶道', '書道', '華道', '着物', '日本料理', '和菓子作り',
-        '陶芸', '折り紙', '盆栽', '神社仏閣巡り', '祭り', '歌舞伎・能',
-        '日本の歴史', '日本文学', '武道', 'J-POP', 'アニメ・マンガ',
-        '温泉', '桜', '日本の四季'
-      ]
-    }
-  }
-
-  const CULTURAL_INTERESTS_OPTIONS = getCulturalInterests()
 
   if (userLoading) {
     return (
@@ -719,34 +685,19 @@ function ProfileEditContent() {
                 基本情報
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    姓 <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    placeholder="田中"
-                    {...register('last_name')}
-                    className={errors.last_name ? 'border-red-500' : ''}
-                  />
-                  {errors.last_name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.last_name.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    名 <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    placeholder="花子"
-                    {...register('first_name')}
-                    className={errors.first_name ? 'border-red-500' : ''}
-                  />
-                  {errors.first_name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.first_name.message}</p>
-                  )}
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ニックネーム <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="ニックネーム"
+                  {...register('nickname')}
+                  className={errors.nickname ? 'border-red-500' : ''}
+                />
+                {errors.nickname && (
+                  <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -829,29 +780,32 @@ function ProfileEditContent() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  国籍 <span className="text-red-500">*</span>
-                </label>
-                <Select 
-                  value={watch('nationality')} 
-                  onValueChange={(value) => setValue('nationality', value)}
-                >
-                  <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="国籍を選択" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NATIONALITIES.map((nationality) => (
-                      <SelectItem key={nationality.value} value={nationality.value}>
-                        {nationality.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.nationality && (
-                  <p className="text-red-500 text-sm mt-1">{errors.nationality.message}</p>
-                )}
-              </div>
+              {/* 国籍フィールド（外国人男性のみ表示） */}
+              {isForeignMale && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    国籍 <span className="text-red-500">*</span>
+                  </label>
+                  <Select 
+                    value={watch('nationality')} 
+                    onValueChange={(value) => setValue('nationality', value)}
+                  >
+                    <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="国籍を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NATIONALITIES.map((nationality) => (
+                        <SelectItem key={nationality.value} value={nationality.value}>
+                          {nationality.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.nationality && (
+                    <p className="text-red-500 text-sm mt-1">{errors.nationality.message}</p>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -880,7 +834,7 @@ function ProfileEditContent() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    市区町村 <span className="text-red-500">*</span>
+                    市区町村 <span className="text-gray-400 text-xs">（任意）</span>
                   </label>
                   <Input
                     placeholder="渋谷区"
@@ -922,26 +876,6 @@ function ProfileEditContent() {
                   </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    学歴
-                  </label>
-                  <Select 
-                    value={watch('education') || ''} 
-                    onValueChange={(value) => setValue('education', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="学歴を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EDUCATION_OPTIONS.map((education) => (
-                        <SelectItem key={education} value={education}>
-                          {education}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -985,10 +919,10 @@ function ProfileEditContent() {
               </div>
             </div>
 
-            {/* 趣味・興味 */}
+            {/* 共有したい日本文化 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                趣味・興味（最大8つまで）
+                共有したい日本文化（最大8つまで）
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {HOBBY_OPTIONS.map((hobby) => (
@@ -1014,38 +948,6 @@ function ProfileEditContent() {
               </p>
             </div>
 
-            {/* 文化的興味 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                {isForeignMale ? '日本文化への興味（最大5つまで）' : 
-                 isJapaneseFemale ? '外国文化への興味（最大5つまで）' :
-                 '文化的興味（最大5つまで）'}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {isForeignMale ? '日本人女性との文化交流で興味のある分野を選択してください' :
-                 isJapaneseFemale ? '外国人男性との文化交流で興味のある分野を選択してください' :
-                 '文化交流で興味のある分野を選択してください'}
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {CULTURAL_INTERESTS_OPTIONS.map((interest) => (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => toggleCulturalInterest(interest)}
-                    className={`p-2 text-sm rounded-lg border transition-colors ${
-                      selectedCulturalInterests.includes(interest)
-                        ? 'bg-sakura-600 text-white border-sakura-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
-                    }`}
-                  >
-                    {interest}
-                  </button>
-                ))}
-              </div>
-              <p className="text-sm text-gray-500">
-                選択済み: {selectedCulturalInterests.length}/5
-              </p>
-            </div>
 
 
             {/* 性格（任意フィールド） */}
