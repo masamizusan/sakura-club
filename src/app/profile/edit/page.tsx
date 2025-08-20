@@ -26,12 +26,11 @@ const profileEditSchema = z.object({
   occupation: z.string().optional(),
   height: z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional().or(z.literal('')),
   body_type: z.string().optional(),
-  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional(),
+  marital_status: z.enum(['single', 'married']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
+  custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
-  dating_purpose: z.string().optional(),
-  ideal_relationship: z.string().optional(),
-  self_introduction: z.string().min(10, '自己紹介は10文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
+  self_introduction: z.string().min(100, '自己紹介は100文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
 })
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
@@ -134,9 +133,8 @@ function ProfileEditContent() {
           body_type: profile.body_type || '',
           marital_status: profile.marital_status || '',
           hobbies: profile.hobbies || [],
+          custom_culture: profile.custom_culture || '',
           personality: profile.personality || [],
-          dating_purpose: profile.dating_purpose || '',
-          ideal_relationship: profile.ideal_relationship || '',
           self_introduction: profile.self_introduction || '',
         })
         
@@ -214,7 +212,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'dating_purpose', 'ideal_relationship'
+      'personality', 'custom_culture'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -276,9 +274,8 @@ function ProfileEditContent() {
           body_type: data.body_type || null,
           marital_status: data.marital_status || null,
           hobbies: data.hobbies,
+          custom_culture: data.custom_culture || null,
           personality: data.personality || [],
-          dating_purpose: data.dating_purpose || null,
-          ideal_relationship: data.ideal_relationship || null,
           self_introduction: data.self_introduction,
           avatar_url: profileImage,
           updated_at: new Date().toISOString(),
@@ -478,9 +475,7 @@ function ProfileEditContent() {
   // 結婚状況オプション
   const MARITAL_STATUS_OPTIONS = [
     { value: 'single', label: '未婚' },
-    { value: 'married', label: '既婚' },
-    { value: 'divorced', label: '離婚' },
-    { value: 'widowed', label: '死別' }
+    { value: 'married', label: '既婚' }
   ]
 
   // 共有したい日本文化オプション（最新トレンド含む）
@@ -506,18 +501,15 @@ function ProfileEditContent() {
     '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
   ]
 
-  // 性格オプション
+  // 性格オプション（既婚者クラブを参考）
   const PERSONALITY_OPTIONS = [
-    '明るい', '優しい', '真面目', '面白い', '積極的', '慎重',
-    '社交的', '内向的', '創造的', '論理的', '感情的', '冷静',
-    '楽観的', '現実的', '好奇心旺盛', '責任感が強い'
+    '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
+    '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
+    '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
+    '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
+    'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
   ]
 
-  // 恋愛目的オプション
-  const DATING_PURPOSE_OPTIONS = [
-    '真剣な交際', '結婚を前提とした交際', '友達から始めたい',
-    '文化交流がメイン', 'まずは友達として', 'その他'
-  ]
 
 
   if (userLoading) {
@@ -684,6 +676,23 @@ function ProfileEditContent() {
                 基本情報
               </h3>
               
+              {/* 自己紹介 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  自己紹介文 <span className="text-red-500">*</span>
+                </label>
+                <Textarea
+                  placeholder="あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）"
+                  rows={4}
+                  {...register('self_introduction')}
+                  className={errors.self_introduction ? 'border-red-500' : ''}
+                />
+                {errors.self_introduction && (
+                  <p className="text-red-500 text-sm mt-1">{errors.self_introduction.message}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">自己紹介は100文字以上1000文字以内で入力してください。</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   ニックネーム <span className="text-red-500">*</span>
@@ -945,6 +954,21 @@ function ProfileEditContent() {
               <p className="text-sm text-gray-500">
                 選択済み: {selectedHobbies.length}/8
               </p>
+
+              {/* 自由記入欄 */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  その他の日本文化（自由記入）
+                </label>
+                <Input
+                  placeholder="上記にない日本文化があれば自由に記入してください（100文字以内）"
+                  {...register('custom_culture')}
+                  className={errors.custom_culture ? 'border-red-500' : ''}
+                />
+                {errors.custom_culture && (
+                  <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
+                )}
+              </div>
             </div>
 
 
@@ -976,70 +1000,7 @@ function ProfileEditContent() {
               </p>
             </div>
 
-            {/* 恋愛・交際の目的 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                {isForeignMale ? '日本人女性との交際について' : '外国人男性との交際について'}
-              </h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  交際の目的
-                </label>
-                <Select 
-                  value={watch('dating_purpose') || ''} 
-                  onValueChange={(value) => setValue('dating_purpose', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="交際の目的を選択" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DATING_PURPOSE_OPTIONS.map((purpose) => (
-                      <SelectItem key={purpose} value={purpose}>
-                        {purpose}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  理想の関係
-                </label>
-                <Textarea
-                  placeholder={isForeignMale ? 
-                    "日本人女性との理想的な関係について教えてください" : 
-                    "外国人男性との理想的な関係について教えてください"}
-                  rows={2}
-                  {...register('ideal_relationship')}
-                />
-              </div>
-            </div>
-
-            {/* 自己紹介 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                自己紹介
-              </h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  自己紹介文 <span className="text-red-500">*</span>
-                </label>
-                <Textarea
-                  placeholder={isForeignMale ? 
-                    "あなたの魅力や日本文化への興味について教えてください（10文字以上）" :
-                    isJapaneseFemale ?
-                    "あなたの魅力や外国人男性との文化交流への興味について教えてください（10文字以上）" :
-                    "あなたの魅力や文化体験への興味について教えてください（10文字以上）"}
-                  rows={4}
-                  {...register('self_introduction')}
-                  className={errors.self_introduction ? 'border-red-500' : ''}
-                />
-                {errors.self_introduction && (
-                  <p className="text-red-500 text-sm mt-1">{errors.self_introduction.message}</p>
-                )}
-              </div>
-            </div>
 
             <div className="flex gap-4 pt-6">
               <Button
