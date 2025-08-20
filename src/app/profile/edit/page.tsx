@@ -133,7 +133,6 @@ function ProfileEditContent() {
           body_type: profile.body_type || '',
           marital_status: profile.marital_status || '',
           hobbies: profile.hobbies || [],
-          custom_culture: profile.custom_culture || '',
           personality: profile.personality || [],
           self_introduction: profile.self_introduction || '',
         })
@@ -212,7 +211,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'custom_culture'
+      'personality'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -274,7 +273,6 @@ function ProfileEditContent() {
           body_type: data.body_type || null,
           marital_status: data.marital_status || null,
           hobbies: data.hobbies,
-          custom_culture: data.custom_culture || null,
           personality: data.personality || [],
           self_introduction: data.self_introduction,
           avatar_url: profileImage,
