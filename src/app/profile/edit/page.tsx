@@ -328,16 +328,14 @@ function ProfileEditContent() {
         throw new Error(updateError.message)
       }
       
-      // 更新成功後、即座にマイページに遷移
-      console.log('Profile updated successfully, navigating to mypage...')
-      try {
-        await router.push('/mypage')
-        console.log('Router push completed')
-      } catch (navError) {
-        console.error('Router push failed:', navError)
-        // フォールバック: window.location.href を使用
-        window.location.href = '/mypage'
-      }
+      // 更新成功後、即座に遷移
+      console.log('Profile updated successfully, navigating...')
+      
+      // 複数の遷移方法を試行
+      setTimeout(() => {
+        console.log('Attempting navigation with setTimeout...')
+        window.location.href = '/dashboard'
+      }, 100)
     } catch (error) {
       console.error('Profile update error:', error)
       if (error instanceof Error) {
