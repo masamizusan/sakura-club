@@ -1081,16 +1081,7 @@ function ProfileEditContent() {
                 variant="sakura"
                 className="flex-1"
                 disabled={isLoading}
-                onClick={() => {
-                  alert('更新ボタンがクリックされました！')
-                  const form = document.querySelector('form')
-                  if (form) {
-                    const formData = new FormData(form)
-                    const data = Object.fromEntries(formData.entries())
-                    console.log('Manual form submission with data:', data)
-                    handleSubmit(onSubmit)()
-                  }
-                }}
+                onClick={handleSubmit(onSubmit)}
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
