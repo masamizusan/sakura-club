@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, User } from 'lucide-react'
+import { ArrowLeft, User, Loader2 } from 'lucide-react'
 
-export default function ProfilePreviewPage() {
+function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -129,5 +130,20 @@ export default function ProfilePreviewPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ProfilePreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <p className="text-gray-600">プレビューを読み込んでいます...</p>
+        </div>
+      </div>
+    }>
+      <ProfilePreviewContent />
+    </Suspense>
   )
 }
