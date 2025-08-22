@@ -213,7 +213,7 @@ function ProfileEditContent() {
       console.log('✅ ユーザー確認完了 - プロフィール読み込み開始')
 
       try {
-        const { data: profile, error: profileError } = await supabase
+        let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
@@ -298,10 +298,10 @@ function ProfileEditContent() {
         }
         
         // テストデータまたは既存データクリア（新規登録以外でも実行）
-        const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
+        const isTestData2 = profile.bio?.includes('テスト用の自己紹介です') || 
                           profile.name === 'テスト' ||
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
-        if (isTestData || profile.name === 'masamizu') {
+        if (isTestData2 || profile.name === 'masamizu') {
           await supabase
             .from('profiles')
             .update({
@@ -855,35 +855,35 @@ function ProfileEditContent() {
             </div>
           </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
 
-          {/* プロフィール完成度表示 */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
-              <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
+            {/* プロフィール完成度表示 */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
+                <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-sakura-500 to-pink-500 h-3 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${profileCompletion}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
+                 profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
+                 profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
+                 '素晴らしい！完璧なプロフィールです✨'}
+              </p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-gradient-to-r from-sakura-500 to-pink-500 h-3 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${profileCompletion}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
-               profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
-               profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
-               '素晴らしい！完璧なプロフィールです✨'}
-            </p>
-          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* プロフィール画像セクション */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
@@ -1144,28 +1144,25 @@ function ProfileEditContent() {
                 詳細情報
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    職業
-                  </label>
-                  <Select 
-                    value={watch('occupation') || ''} 
-                    onValueChange={(value) => setValue('occupation', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="職業を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {OCCUPATION_OPTIONS.map((occupation) => (
-                        <SelectItem key={occupation} value={occupation}>
-                          {occupation}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  職業
+                </label>
+                <Select 
+                  value={watch('occupation') || ''} 
+                  onValueChange={(value) => setValue('occupation', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="職業を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OCCUPATION_OPTIONS.map((occupation) => (
+                      <SelectItem key={occupation} value={occupation}>
+                        {occupation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1313,32 +1310,33 @@ function ProfileEditContent() {
                 </Button>
               </div>
             </div>
-          </form>
+            </form>
 
-          {/* プレビューボタン - フォーム外に配置 */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-6">
-            <button
-              type="button"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
-              onClick={() => {
-                const formData = watch()
-                const queryParams = new URLSearchParams({
-                  nickname: formData.nickname || '',
-                  age: String(formData.age || 18),
-                  self_introduction: formData.self_introduction || '',
-                  hobbies: selectedHobbies.join(','),
-                  personality: selectedPersonality.join(','),
-                  custom_culture: formData.custom_culture || '',
-                  image: profileImage || ''
-                })
-                window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
-              }}
-            >
-              👀 プレビュー | 相手からの見え方
-            </button>
-            <p className="text-sm text-orange-700 mt-2 text-center">
-              あなたのプロフィールが他の人にどう見えるかを確認できます
-            </p>
+            {/* プレビューボタン - フォーム外に配置 */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-6">
+              <button
+                type="button"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                onClick={() => {
+                  const formData = watch()
+                  const queryParams = new URLSearchParams({
+                    nickname: formData.nickname || '',
+                    age: String(formData.age || 18),
+                    self_introduction: formData.self_introduction || '',
+                    hobbies: selectedHobbies.join(','),
+                    personality: selectedPersonality.join(','),
+                    custom_culture: formData.custom_culture || '',
+                    image: profileImage || ''
+                  })
+                  window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
+                }}
+              >
+                👀 プレビュー | 相手からの見え方
+              </button>
+              <p className="text-sm text-orange-700 mt-2 text-center">
+                あなたのプロフィールが他の人にどう見えるかを確認できます
+              </p>
+            </div>
           </div>
         </div>
       </div>
