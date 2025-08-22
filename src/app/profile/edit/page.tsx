@@ -73,13 +73,144 @@ function ProfileEditContent() {
     resolver: zodResolver(profileEditSchema)
   })
 
+  // 緊急対応：avatar_urlを強制削除
+  const forceRemoveAvatar = async () => {
+    if (!user) return
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', user.id)
+      
+      if (error) {
+        console.error('Avatar削除エラー:', error)
+      } else {
+        console.log('Avatar強制削除完了')
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Avatar削除処理エラー:', error)
+    }
+  }
+
+  // 強制初期化 - 複数のトリガーで確実に実行
+  useEffect(() => {
+    console.log('🔍 Page load check - user:', user?.id)
+    
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const hasType = urlParams.get('type')
+      const hasNickname = urlParams.get('nickname')
+      
+      console.log('🌐 Current URL:', window.location.href)
+      console.log('🔑 Type parameter:', hasType)
+      console.log('👤 Nickname parameter:', hasNickname)
+      
+      // 新規登録フロー判定を拡張
+      const isSignupFlow = hasType === 'japanese-female' || 
+                          (hasNickname && hasNickname.includes('masamizusan'))
+      
+      if (isSignupFlow) {
+        console.log('🚨 新規登録フロー検出！強制初期化開始')
+        if (user) {
+          forceCompleteReset()
+        } else {
+          console.log('⏳ ユーザー認証待ち...')
+          // ユーザー認証を待つ間隔実行
+          const checkUser = setInterval(() => {
+            if (user) {
+              console.log('👤 認証完了 - 遅延初期化実行')
+              forceCompleteReset()
+              clearInterval(checkUser)
+            }
+          }, 500)
+          
+          // 5秒後にタイムアウト
+          setTimeout(() => clearInterval(checkUser), 5000)
+        }
+      }
+    }
+  }, [user])
+
+  // 追加の安全策 - ページロード後に再チェック
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined' && user) {
+        const urlParams = new URLSearchParams(window.location.search)
+        const hasType = urlParams.get('type')
+        
+        if (hasType === 'japanese-female') {
+          console.log('⏰ 遅延チェック - 強制初期化実行')
+          forceCompleteReset()
+        }
+      }
+    }, 2000)
+    
+    return () => clearTimeout(timer)
+  }, [user])
+
+  const forceCompleteReset = async () => {
+    if (!user) return
+    
+    try {
+      console.log('🧹 全データクリア中...')
+      
+      // より包括的なデータクリア
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: null,
+          bio: null,
+          interests: null,
+          height: null,
+          avatar_url: null,
+          personality: null,
+          custom_culture: null,
+          hobbies: null,
+          marital_status: null
+        })
+        .eq('id', user.id)
+      
+      if (error) {
+        console.error('❌ データクリアエラー:', error)
+      } else {
+        console.log('✅ 完全初期化完了 - すべてのフィールドをクリア')
+        
+        // フロントエンドの状態もクリア
+        setProfileImage(null)
+        setSelectedHobbies([])
+        setSelectedPersonality([])
+        
+        // フォームをリセット
+        reset({
+          nickname: '',
+          self_introduction: '',
+          gender: 'female',
+          age: 18,
+          hobbies: [],
+          personality: [],
+          custom_culture: ''
+        })
+        
+        setTimeout(() => window.location.reload(), 1500)
+      }
+    } catch (error) {
+      console.error('初期化処理エラー:', error)
+    }
+  }
+
   // Load current user data
   useEffect(() => {
+    console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
       if (!user) {
+        console.log('❌ ユーザーなし - ログインページへ')
         router.push('/login')
         return
       }
+      
+      console.log('✅ ユーザー確認完了 - プロフィール読み込み開始')
 
       try {
         const { data: profile, error: profileError } = await supabase
@@ -123,13 +254,53 @@ function ProfileEditContent() {
 
         const defaults = getDefaults()
         
+        // 新規登録フローかどうかを判定
+        const isFromSignup = urlParams.get('type') === 'japanese-female' || 
+                            (signupData.nickname && signupData.gender && signupData.birth_date)
+        
+        console.log('=== Profile Edit Debug ===')
+        console.log('Current URL:', window.location.href)
+        console.log('Signup data:', signupData)
+        console.log('isFromSignup:', isFromSignup)
+        
         // 新規ユーザーかどうかを判定（bio, interests, nameが空、またはテストデータの場合は新規とみなす）
         const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
                           profile.name === 'テスト' ||
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
-        const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData
+        const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup
 
-        // テストデータまたは既存データをクリア
+        // 新規登録フローの場合は必ずプロフィールをクリア
+        if (isFromSignup) {
+          console.log('新規登録フロー検出 - プロフィールデータをクリア')
+          await supabase
+            .from('profiles')
+            .update({
+              name: null,
+              bio: null,
+              interests: null,
+              height: null,
+              avatar_url: null,
+              personality: null
+            })
+            .eq('id', user.id)
+          
+          // データベースからプロフィールを再取得してクリーンな状態にする
+          const { data: cleanProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          
+          if (cleanProfile) {
+            profile = cleanProfile
+            console.log('プロフィールクリア完了:', profile)
+          }
+        }
+        
+        // テストデータまたは既存データクリア（新規登録以外でも実行）
+        const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
+                          profile.name === 'テスト' ||
+                          (profile.interests?.length === 1 && profile.interests[0] === '茶道')
         if (isTestData || profile.name === 'masamizu') {
           await supabase
             .from('profiles')
@@ -142,12 +313,15 @@ function ProfileEditContent() {
             })
             .eq('id', user.id)
           
-          // プロフィールオブジェクトも更新
-          profile.name = null
-          profile.bio = null
-          profile.interests = null
-          profile.height = null
-          profile.avatar_url = null
+          const { data: cleanProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          
+          if (cleanProfile) {
+            profile = cleanProfile
+          }
         }
 
         // ニックネーム（仮登録から）
@@ -184,7 +358,7 @@ function ProfileEditContent() {
         
         setSelectedHobbies(isNewUser ? [] : (profile.interests || profile.hobbies || []))
         setSelectedPersonality(isNewUser ? [] : (profile.personality || []))
-        setProfileImage(profile.avatar_url || null)
+        setProfileImage(isNewUser ? null : (profile.avatar_url || null))
         
         // プロフィール完成度を計算（signupデータも含める）
         const profileDataWithSignup = {
@@ -428,14 +602,39 @@ function ProfileEditContent() {
     }
   }
 
-  const removeImage = () => {
-    setProfileImage(null)
-    // プロフィール完成度を再計算
-    const currentData = watch()
-    calculateProfileCompletion({
-      ...currentData,
-      avatar_url: null
-    })
+  const removeImage = async () => {
+    console.log('🗑️ Avatar削除処理開始')
+    if (!user) {
+      console.log('❌ ユーザーが見つかりません')
+      return
+    }
+    
+    try {
+      console.log('📤 データベース更新中...')
+      // データベースからavatar_urlを削除
+      const { error, data } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', user.id)
+        .select()
+      
+      if (error) {
+        console.error('❌ Avatar削除エラー:', error)
+        return
+      }
+      
+      console.log('✅ Avatar削除完了:', data)
+      setProfileImage(null)
+      
+      // プロフィール完成度を再計算
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        avatar_url: null
+      })
+    } catch (error) {
+      console.error('Avatar削除処理エラー:', error)
+    }
   }
 
   const toggleHobby = (hobby: string) => {
@@ -1084,38 +1283,64 @@ function ProfileEditContent() {
               </p>
             </div>
 
-
-
-            <div className="flex gap-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                className="flex-1"
-              >
-                キャンセル
-              </Button>
-              
-              <Button
-                type="button"
-                variant="sakura"
-                className="flex-1"
-                disabled={isLoading}
-                onClick={async () => {
-                  const formData = watch()
-                  await onSubmit(formData as any)
-                }}
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4 mr-2" />
-                )}
-                {isLoading ? '更新中...' : '更新する'}
-              </Button>
+            {/* 更新・キャンセルボタン */}
+            <div className="space-y-4 pt-6">
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  className="flex-1"
+                >
+                  キャンセル
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="sakura"
+                  className="flex-1"
+                  disabled={isLoading}
+                  onClick={async () => {
+                    const formData = watch()
+                    await onSubmit(formData as any)
+                  }}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {isLoading ? '更新中...' : '更新する'}
+                </Button>
+              </div>
             </div>
           </form>
-        </div>
+
+          {/* プレビューボタン - フォーム外に配置 */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-6">
+            <button
+              type="button"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+              onClick={() => {
+                const formData = watch()
+                const queryParams = new URLSearchParams({
+                  nickname: formData.nickname || '',
+                  age: String(formData.age || 18),
+                  self_introduction: formData.self_introduction || '',
+                  hobbies: selectedHobbies.join(','),
+                  personality: selectedPersonality.join(','),
+                  custom_culture: formData.custom_culture || '',
+                  image: profileImage || ''
+                })
+                window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
+              }}
+            >
+              👀 プレビュー | 相手からの見え方
+            </button>
+            <p className="text-sm text-orange-700 mt-2 text-center">
+              あなたのプロフィールが他の人にどう見えるかを確認できます
+            </p>
+          </div>
         </div>
       </div>
     </div>
