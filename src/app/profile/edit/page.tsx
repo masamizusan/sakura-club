@@ -824,7 +824,6 @@ function ProfileEditContent() {
     )
   }
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
