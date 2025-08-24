@@ -34,7 +34,7 @@ const profileEditSchema = z.object({
     z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
   ),
   body_type: z.string().optional(),
-  marital_status: z.enum(['', 'single', 'married']).optional(),
+  marital_status: z.enum(['none', 'single', 'married']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -349,10 +349,10 @@ function ProfileEditContent() {
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
           city: isNewUser ? '' : (profile.city || ''),
-          occupation: isNewUser ? '' : (profile.occupation || ''),
+          occupation: isNewUser ? 'none' : (profile.occupation || 'none'),
           height: isNewUser ? '' : (profile.height || ''),
-          body_type: isNewUser ? '' : (profile.body_type || ''),
-          marital_status: isNewUser ? '' : (profile.marital_status || ''),
+          body_type: isNewUser ? 'none' : (profile.body_type || 'none'),
+          marital_status: isNewUser ? 'none' : (profile.marital_status || 'none'),
           hobbies: isNewUser ? [] : (profile.interests || profile.hobbies || []),
           personality: isNewUser ? [] : (profile.personality || []),
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
@@ -565,10 +565,10 @@ function ProfileEditContent() {
           bio: data.self_introduction,
           interests: data.hobbies,
           avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
-          occupation: data.occupation || null,
+          occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
           height: data.height || null,
-          body_type: data.body_type || null,
-          marital_status: data.marital_status || null,
+          body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
+          marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null,
         })
         .eq('id', user.id)
 
@@ -682,7 +682,7 @@ function ProfileEditContent() {
 
   // 職業オプション
   const OCCUPATION_OPTIONS = [
-    { value: '', label: '記入しない' },
+    { value: 'none', label: '記入しない' },
     { value: '会社員', label: '会社員' },
     { value: '公務員', label: '公務員' },
     { value: '経営者・役員', label: '経営者・役員' },
@@ -709,7 +709,7 @@ function ProfileEditContent() {
 
   // 体型オプション
   const BODY_TYPE_OPTIONS = [
-    { value: '', label: '記入しない' },
+    { value: 'none', label: '記入しない' },
     { value: 'スリム', label: 'スリム' },
     { value: '普通', label: '普通' },
     { value: 'ぽっちゃり', label: 'ぽっちゃり' },
@@ -719,7 +719,7 @@ function ProfileEditContent() {
 
   // 結婚状況オプション
   const MARITAL_STATUS_OPTIONS = [
-    { value: '', label: '記入しない' },
+    { value: 'none', label: '記入しない' },
     { value: 'single', label: '未婚' },
     { value: 'married', label: '既婚' }
   ]
@@ -933,8 +933,8 @@ function ProfileEditContent() {
                   結婚状況
                 </label>
                 <Select 
-                  value={watch('marital_status') || ''} 
-                  onValueChange={(value) => setValue('marital_status', value as '' | 'single' | 'married')}
+                  value={watch('marital_status') || 'none'} 
+                  onValueChange={(value) => setValue('marital_status', value as 'none' | 'single' | 'married')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="結婚状況を選択" />
@@ -1064,7 +1064,7 @@ function ProfileEditContent() {
                   職業
                 </label>
                 <Select 
-                  value={watch('occupation') || ''} 
+                  value={watch('occupation') || 'none'} 
                   onValueChange={(value) => setValue('occupation', value)}
                 >
                   <SelectTrigger>
@@ -1103,7 +1103,7 @@ function ProfileEditContent() {
                     体型
                   </label>
                   <Select 
-                    value={watch('body_type') || ''} 
+                    value={watch('body_type') || 'none'} 
                     onValueChange={(value) => setValue('body_type', value)}
                   >
                     <SelectTrigger>
