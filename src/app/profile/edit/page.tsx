@@ -54,7 +54,7 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
-  const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; isMain: boolean }>>([])
+  const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   const [uploadingImage, setUploadingImage] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -363,7 +363,9 @@ function ProfileEditContent() {
           setProfileImages([{
             id: '1',
             url: profile.avatar_url,
-            isMain: true
+            originalUrl: profile.avatar_url,
+            isMain: true,
+            isEdited: false
           }])
         }
         

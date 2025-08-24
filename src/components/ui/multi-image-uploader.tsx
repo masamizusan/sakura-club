@@ -7,8 +7,10 @@ import { Upload, X, Edit, Camera, User } from 'lucide-react'
 
 interface ProfileImage {
   id: string
-  url: string
+  url: string // 現在表示されている画像URL（編集後）
+  originalUrl: string // オリジナル画像URL（編集前）
   isMain: boolean
+  isEdited: boolean // 編集されているかどうか
 }
 
 interface MultiImageUploaderProps {
@@ -49,21 +51,47 @@ export default function MultiImageUploader({
     reader.readAsDataURL(file)
   }
 
-  const handleImageSave = (editedImageUrl: string) => {
-    const newImage: ProfileImage = {
-      id: Date.now().toString(),
-      url: editedImageUrl,
-      isMain: images.length === 0 // 最初の画像をメインに設定
-    }
+  const [editingImageId, setEditingImageId] = useState<string | null>(null)
 
-    onImagesChange([...images, newImage])
+  const handleImageSave = (editedImageUrl: string) => {
+    if (editingImageId) {
+      // 既存の画像を編集する場合（上書き）
+      const updatedImages = images.map(img => 
+        img.id === editingImageId 
+          ? { ...img, url: editedImageUrl, isEdited: true }
+          : img
+      )
+      onImagesChange(updatedImages)
+    } else {
+      // 新しい画像を追加する場合
+      const newImage: ProfileImage = {
+        id: Date.now().toString(),
+        url: editedImageUrl,
+        originalUrl: editedImageUrl,
+        isMain: images.length === 0, // 最初の画像をメインに設定
+        isEdited: false
+      }
+      onImagesChange([...images, newImage])
+    }
+    
     setEditingImage(null)
+    setEditingImageId(null)
     setShowImageEditor(false)
   }
 
   const handleImageEdit = (image: ProfileImage) => {
-    setEditingImage(image.url)
+    setEditingImage(image.originalUrl) // オリジナル画像を編集対象とする
+    setEditingImageId(image.id)
     setShowImageEditor(true)
+  }
+
+  const handleResetToOriginal = (imageId: string) => {
+    const updatedImages = images.map(img => 
+      img.id === imageId 
+        ? { ...img, url: img.originalUrl, isEdited: false }
+        : img
+    )
+    onImagesChange(updatedImages)
   }
 
   const handleImageDelete = (imageId: string) => {
@@ -116,6 +144,13 @@ export default function MultiImageUploader({
               </div>
             )}
             
+            {/* 編集済みバッジ */}
+            {image.isEdited && (
+              <div className="absolute top-2 left-12 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                編集済み
+              </div>
+            )}
+            
             {/* アクションボタン */}
             <div className="absolute top-2 right-2 flex space-x-1">
               <Button
@@ -136,17 +171,29 @@ export default function MultiImageUploader({
               </Button>
             </div>
             
-            {/* メイン設定ボタン */}
-            {!image.isMain && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute bottom-2 left-2 right-2 text-xs h-6"
-                onClick={() => handleSetMainImage(image.id)}
-              >
-                メインに設定
-              </Button>
-            )}
+            {/* 下部ボタン */}
+            <div className="absolute bottom-2 left-2 right-2 space-y-1">
+              {!image.isMain && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs h-6"
+                  onClick={() => handleSetMainImage(image.id)}
+                >
+                  メインに設定
+                </Button>
+              )}
+              {image.isEdited && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
+                  onClick={() => handleResetToOriginal(image.id)}
+                >
+                  オリジナルに戻す
+                </Button>
+              )}
+            </div>
           </div>
         ))}
 
