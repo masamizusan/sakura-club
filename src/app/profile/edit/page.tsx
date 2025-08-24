@@ -402,7 +402,7 @@ function ProfileEditContent() {
     }
 
     loadUserData()
-  }, [user, reset, router, setValue, supabase, calculateProfileCompletion, isForeignMale, isJapaneseFemale])
+  }, [user, reset, router, setValue, supabase, isForeignMale, isJapaneseFemale])
 
   // 生年月日から年齢を計算
   const calculateAge = useCallback((birthDate: string): number => {
@@ -434,7 +434,7 @@ function ProfileEditContent() {
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
-  }, [calculateAge, setValue, watch, profileImages, calculateProfileCompletion])
+  }, [calculateAge, setValue, watch, profileImages])
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
