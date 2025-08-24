@@ -871,21 +871,12 @@ function ProfileEditContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     性別 <span className="text-red-500">*</span>
                   </label>
-                  <Select 
-                    value={watch('gender')} 
-                    onValueChange={(value) => setValue('gender', value as 'male' | 'female')}
-                  >
-                    <SelectTrigger className={errors.gender ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="性別を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="female">女性</SelectItem>
-                      <SelectItem value="male">男性</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.gender && (
-                    <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
-                  )}
+                  <Input
+                    value={watch('gender') === 'male' ? '男性' : '女性'}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">性別は仮登録時に設定済みのため変更できません</p>
                 </div>
 
                 <div>
