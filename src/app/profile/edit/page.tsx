@@ -866,8 +866,22 @@ function ProfileEditContent() {
                 <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
               </div>
 
-              {/* 性別フィールドは非表示（プロフィールタイプで決定済み） */}
-              <div>
+              {/* 性別フィールドは日本人女性プロフィールでは非表示 */}
+              {!isJapaneseFemale && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    性別 <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    value={watch('gender') === 'male' ? '男性' : '女性'}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">性別は仮登録時に設定済みのため変更できません</p>
+                </div>
+              )}
+
+              <div className={isJapaneseFemale ? '' : 'md:col-start-2'}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   結婚状況
                 </label>
