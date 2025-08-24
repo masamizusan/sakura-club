@@ -107,9 +107,8 @@ function ProfileEditContent() {
       console.log('🔑 Type parameter:', hasType)
       console.log('👤 Nickname parameter:', hasNickname)
       
-      // 新規登録フロー判定を拡張
-      const isSignupFlow = hasType === 'japanese-female' || 
-                          (hasNickname && hasNickname.includes('masamizusan'))
+      // 新規登録フロー判定を修正（既存ユーザーの場合は実行しない）
+      const isSignupFlow = false // 一時的に無効化
       
       if (isSignupFlow) {
         console.log('🚨 新規登録フロー検出！強制初期化開始')
@@ -140,10 +139,11 @@ function ProfileEditContent() {
         const urlParams = new URLSearchParams(window.location.search)
         const hasType = urlParams.get('type')
         
-        if (hasType === 'japanese-female') {
-          console.log('⏰ 遅延チェック - 強制初期化実行')
-          forceCompleteReset()
-        }
+        // 一時的に無効化
+        // if (hasType === 'japanese-female') {
+        //   console.log('⏰ 遅延チェック - 強制初期化実行')
+        //   forceCompleteReset()
+        // }
       }
     }, 2000)
     
@@ -269,8 +269,8 @@ function ProfileEditContent() {
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
         const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup
 
-        // 新規登録フローの場合は必ずプロフィールをクリア
-        if (isFromSignup) {
+        // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
+        if (false && isFromSignup) {
           console.log('新規登録フロー検出 - プロフィールデータをクリア')
           await supabase
             .from('profiles')
