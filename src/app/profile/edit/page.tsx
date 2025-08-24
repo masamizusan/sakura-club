@@ -278,7 +278,7 @@ function ProfileEditContent() {
         const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
-        if (false && isFromSignup) {
+        if (false && isFromSignup && user?.id) {
           console.log('新規登録フロー検出 - プロフィールデータをクリア')
           await supabase
             .from('profiles')
@@ -309,7 +309,7 @@ function ProfileEditContent() {
         const isTestData2 = profile.bio?.includes('テスト用の自己紹介です') || 
                           profile.name === 'テスト' ||
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
-        if (isTestData2 || profile.name === 'masamizu') {
+        if ((isTestData2 || profile.name === 'masamizu') && user?.id) {
           await supabase
             .from('profiles')
             .update({
