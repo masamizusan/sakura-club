@@ -436,7 +436,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'personality'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -456,6 +456,9 @@ function ProfileEditContent() {
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
           break
+        case 'city':
+          value = profileData.city
+          break
         default:
           value = profileData[field]
       }
@@ -465,8 +468,11 @@ function ProfileEditContent() {
     })
     
     const completedOptional = optionalFields.filter(field => {
-      const value = profileData[field]
+      let value = profileData[field]
+      
       if (field === 'avatar_url') return profileImages.length > 0 // 1枚以上あれば完成扱い
+      if (field === 'city') value = profileData.city
+      
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
     })
@@ -474,6 +480,25 @@ function ProfileEditContent() {
     const totalFields = requiredFields.length + optionalFields.length
     const completedFields = completedRequired.length + completedOptional.length
     const completion = Math.round((completedFields / totalFields) * 100)
+    
+    // デバッグ情報
+    console.log('プロフィール完成度計算:', {
+      requiredFields,
+      completedRequired: completedRequired.length,
+      missingRequired: requiredFields.filter(field => !completedRequired.includes(field)),
+      optionalFields,
+      completedOptional: completedOptional.length,
+      missingOptional: optionalFields.filter(field => {
+        let value = profileData[field]
+        if (field === 'avatar_url') return profileImages.length === 0
+        if (field === 'city') value = profileData.city
+        if (Array.isArray(value)) return value.length === 0
+        return !value || value.toString().trim().length === 0
+      }),
+      totalFields,
+      completedFields,
+      completion
+    })
     
     setProfileCompletion(completion)
   }, [isForeignMale])
