@@ -37,8 +37,14 @@ export default function MultiImageUploader({
       return
     }
 
-    if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください')
+    // より寛容な画像形式チェック
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+    const isValidImage = file.type.startsWith('image/') || 
+                        validImageTypes.includes(file.type.toLowerCase()) ||
+                        /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
+    
+    if (!isValidImage) {
+      alert('対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)')
       return
     }
 
@@ -47,6 +53,10 @@ export default function MultiImageUploader({
       const imageUrl = e.target?.result as string
       setEditingImage(imageUrl)
       setShowImageEditor(true)
+    }
+    reader.onerror = (e) => {
+      console.error('ファイル読み込みエラー:', e)
+      alert('画像ファイルの読み込みに失敗しました。別の画像を選択するか、デスクトップにコピーしてから試してください。')
     }
     reader.readAsDataURL(file)
   }
