@@ -592,7 +592,7 @@ function ProfileEditContent() {
         .from('avatars')
         .getPublicUrl(fileName)
 
-      setProfileImage(publicUrl)
+      // setProfileImage(publicUrl) // 新しいMultiImageUploaderに置き換え
       
       // プロフィール完成度を再計算
       const currentData = watch()
@@ -631,7 +631,7 @@ function ProfileEditContent() {
       }
       
       console.log('✅ Avatar削除完了:', data)
-      setProfileImage(null)
+      // setProfileImage(null) // 新しいMultiImageUploaderに置き換え
       
       // プロフィール完成度を再計算
       const currentData = watch()
