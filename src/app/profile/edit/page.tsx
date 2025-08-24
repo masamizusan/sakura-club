@@ -436,7 +436,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'custom_culture'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -452,15 +452,20 @@ function ProfileEditContent() {
           break
         case 'hobbies':
           value = profileData.interests || profileData.hobbies
+          // custom_cultureも日本文化の一部として含める
+          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          if (Array.isArray(value) && value.length > 0) {
+            // 既に選択された趣味があるので完成とみなす
+          } else if (hasCustomCulture) {
+            // 選択された趣味はないが、カスタム文化があれば完成とみなす
+            value = ['custom']
+          }
           break
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
           break
         case 'city':
           value = profileData.city
-          break
-        case 'custom_culture':
-          value = profileData.custom_culture
           break
         default:
           value = profileData[field]
@@ -475,7 +480,6 @@ function ProfileEditContent() {
       
       if (field === 'avatar_url') return profileImages.length > 0 // 1枚以上あれば完成扱い
       if (field === 'city') value = profileData.city
-      if (field === 'custom_culture') value = profileData.custom_culture
       
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
@@ -496,7 +500,6 @@ function ProfileEditContent() {
         let value = profileData[field]
         if (field === 'avatar_url') return profileImages.length === 0
         if (field === 'city') value = profileData.city
-        if (field === 'custom_culture') value = profileData.custom_culture
         if (Array.isArray(value)) return value.length === 0
         return !value || value.toString().trim().length === 0
       }),
