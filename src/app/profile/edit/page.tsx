@@ -515,7 +515,7 @@ function ProfileEditContent() {
           residence: data.prefecture,
           bio: data.self_introduction,
           interests: data.hobbies,
-          avatar_url: profileImage,
+          avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
         })
         .eq('id', user.id)
 
