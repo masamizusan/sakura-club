@@ -54,6 +54,8 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
+  const [completedItems, setCompletedItems] = useState(0)
+  const [totalItems, setTotalItems] = useState(0)
   const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   const router = useRouter()
   const supabase = createClient()
@@ -520,6 +522,8 @@ function ProfileEditContent() {
     })
     
     setProfileCompletion(completion)
+    setCompletedItems(completedFields)
+    setTotalItems(totalFields)
   }, [isForeignMale, profileImages])
 
   // フォーム入力時のリアルタイム完成度更新
@@ -850,12 +854,17 @@ function ProfileEditContent() {
                   style={{ width: `${profileCompletion}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
-                 profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
-                 profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
-                 '素晴らしい！完璧なプロフィールです✨'}
-              </p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs text-gray-500">
+                  {completedItems}/{totalItems}項目入力済み
+                </p>
+                <p className="text-xs text-gray-500">
+                  {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
+                   profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
+                   profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
+                   '素晴らしい！完璧なプロフィールです✨'}
+                </p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

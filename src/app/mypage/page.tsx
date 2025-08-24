@@ -30,6 +30,8 @@ function MyPageContent() {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
   const [profileCompletion, setProfileCompletion] = useState(0)
+  const [completedItems, setCompletedItems] = useState(0)
+  const [totalItems, setTotalItems] = useState(8)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const supabase = createClient()
@@ -103,6 +105,8 @@ function MyPageContent() {
     
     const completion = Math.round((completedItems / totalRequiredItems) * 100)
     setProfileCompletion(completion)
+    setCompletedItems(completedItems)
+    setTotalItems(totalRequiredItems)
   }
 
   const handleLogout = async () => {
@@ -178,7 +182,7 @@ function MyPageContent() {
               ></div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {Math.ceil((100 - profileCompletion) / 11)}項目入力済み
+              {completedItems}/{totalItems}項目入力済み
             </p>
           </div>
 
