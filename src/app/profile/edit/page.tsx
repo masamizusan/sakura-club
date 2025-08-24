@@ -866,39 +866,26 @@ function ProfileEditContent() {
                 <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    性別 <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={watch('gender') === 'male' ? '男性' : '女性'}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">性別は仮登録時に設定済みのため変更できません</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    結婚状況
-                  </label>
-                  <Select 
-                    value={watch('marital_status') || ''} 
-                    onValueChange={(value) => setValue('marital_status', value as 'single' | 'married')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="結婚状況を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MARITAL_STATUS_OPTIONS.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* 性別フィールドは非表示（プロフィールタイプで決定済み） */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  結婚状況
+                </label>
+                <Select 
+                  value={watch('marital_status') || ''} 
+                  onValueChange={(value) => setValue('marital_status', value as 'single' | 'married')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="結婚状況を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MARITAL_STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
