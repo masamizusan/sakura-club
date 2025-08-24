@@ -12,6 +12,14 @@ function ProfilePreviewContent() {
   // URLパラメーターから値を取得
   const nickname = searchParams.get('nickname') || 'ニックネーム未設定'
   const age = searchParams.get('age') || '18'
+  const gender = searchParams.get('gender') || ''
+  const nationality = searchParams.get('nationality') || ''
+  const prefecture = searchParams.get('prefecture') || ''
+  const city = searchParams.get('city') || ''
+  const occupation = searchParams.get('occupation') || ''
+  const height = searchParams.get('height') || ''
+  const bodyType = searchParams.get('body_type') || ''
+  const maritalStatus = searchParams.get('marital_status') || ''
   const selfIntroduction = searchParams.get('self_introduction') || ''
   const hobbies = searchParams.get('hobbies')?.split(',').filter(h => h) || []
   const personality = searchParams.get('personality')?.split(',').filter(p => p) || []
@@ -58,7 +66,54 @@ function ProfilePreviewContent() {
               {/* 基本情報 */}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{nickname}</h2>
-                <p className="text-lg text-gray-600">{age}歳</p>
+                <div className="space-y-1">
+                  <p className="text-lg text-gray-600">{age}歳</p>
+                  {gender && (
+                    <p className="text-sm text-gray-500">
+                      {gender === 'male' ? '男性' : '女性'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* 基本プロフィール */}
+              <div className="space-y-3 text-sm">
+                {nationality && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">国籍:</span>
+                    <span className="text-gray-600">{nationality}</span>
+                  </div>
+                )}
+                {prefecture && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">居住地:</span>
+                    <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
+                  </div>
+                )}
+                {occupation && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">職業:</span>
+                    <span className="text-gray-600">{occupation}</span>
+                  </div>
+                )}
+                {height && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">身長:</span>
+                    <span className="text-gray-600">{height}cm</span>
+                  </div>
+                )}
+                {bodyType && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">体型:</span>
+                    <span className="text-gray-600">{bodyType}</span>
+                  </div>
+                )}
+                {maritalStatus && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">結婚:</span>
+                    <span className="text-gray-600">{maritalStatus === 'single' ? '未婚' : '既婚'}</span>
+                  </div>
+                )}
               </div>
 
               {/* 自己紹介 */}
