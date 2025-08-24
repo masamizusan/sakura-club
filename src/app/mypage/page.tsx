@@ -69,13 +69,11 @@ function MyPageContent() {
 
   const calculateProfileCompletion = (profileData: any) => {
     const requiredFields = [
-      'first_name',
-      'last_name', 
+      'nickname',
       'gender',
       'age',
       'nationality',
       'prefecture',
-      'city',
       'hobbies',
       'self_introduction'
     ]
@@ -86,7 +84,24 @@ function MyPageContent() {
       return value && value.toString().trim().length > 0
     })
 
-    const completion = Math.round((completedFields.length / requiredFields.length) * 100)
+    // 写真が1枚以上あるかチェック
+    const hasPhotos = profileData.photos && Array.isArray(profileData.photos) && profileData.photos.length > 0
+    
+    const totalRequiredItems = requiredFields.length + 1 // +1 for photos
+    const completedItems = completedFields.length + (hasPhotos ? 1 : 0)
+    
+    // デバッグ情報をログ出力
+    console.log('Profile completion calculation:', {
+      requiredFields,
+      completedFields: completedFields.map(field => ({ field, value: profileData[field] })),
+      hasPhotos,
+      photosCount: profileData.photos?.length || 0,
+      totalRequiredItems,
+      completedItems,
+      profileData
+    })
+    
+    const completion = Math.round((completedItems / totalRequiredItems) * 100)
     setProfileCompletion(completion)
   }
 

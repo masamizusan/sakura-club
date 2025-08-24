@@ -875,7 +875,7 @@ function ProfileEditContent() {
               </div>
 
               {/* 性別フィールドは外国人男性プロフィールでのみ表示 */}
-              {isForeignMale && (
+              {profileType === 'foreign-male' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     性別 <span className="text-red-500">*</span>
