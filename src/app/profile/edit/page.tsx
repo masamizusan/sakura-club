@@ -1279,37 +1279,6 @@ function ProfileEditContent() {
               </p>
             </div>
 
-            {/* 更新・キャンセルボタン */}
-            <div className="space-y-4 pt-6">
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.back()}
-                  className="flex-1"
-                >
-                  キャンセル
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="sakura"
-                  className="flex-1"
-                  disabled={isLoading}
-                  onClick={async () => {
-                    const formData = watch()
-                    await onSubmit(formData as any)
-                  }}
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  {isLoading ? '更新中...' : '更新する'}
-                </Button>
-              </div>
-            </div>
             </form>
 
             {/* プレビューボタン - フォーム外に配置 */}

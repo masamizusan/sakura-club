@@ -113,6 +113,19 @@ function ProfilePreviewContent() {
                 </div>
               )}
 
+              {/* アクションボタン */}
+              <div className="pt-4">
+                <Button
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                  onClick={() => {
+                    // プロフィールを更新するボタン（実際の機能は編集ページで実装済み）
+                    window.close()
+                  }}
+                >
+                  この内容でプロフィールを更新する
+                </Button>
+              </div>
+
             </div>
           </div>
         </div>
