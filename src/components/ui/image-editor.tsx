@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, RotateCcw, Crop, ZoomIn, ZoomOut, Move, Eye } from 'lucide-react'
+import { X, RotateCcw, Crop, ZoomIn, ZoomOut, Move, Eye, Droplets } from 'lucide-react'
 
 interface ImageEditorProps {
   imageUrl: string
@@ -239,12 +239,6 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
             </>
           )}
 
-          {/* 写真を変更するボタン */}
-          <div className="flex justify-center">
-            <Button variant="outline" className="text-sm">
-              写真を変更する
-            </Button>
-          </div>
 
           {/* アクションボタン */}
           <div className="flex justify-between">
@@ -253,25 +247,32 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
               onClick={() => setCropMode(!cropMode)}
               className="flex items-center"
             >
-              <Crop className="w-4 h-4 mr-2" />
-              {cropMode ? 'ぼかし調整' : 'トリミング'}
+              {cropMode ? (
+                <>
+                  <Droplets className="w-4 h-4 mr-2" />
+                  ぼかし調整
+                </>
+              ) : (
+                <>
+                  <Crop className="w-4 h-4 mr-2" />
+                  トリミング
+                </>
+              )}
             </Button>
             
             <Button
               onClick={handleSave}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
-              {cropMode ? `ぼかしレベル「${blurLevel}」で追加する` : '保存する'}
+              保存する
             </Button>
           </div>
 
           {/* 注意書き */}
-          {blurLevel > 0 && (
-            <p className="text-xs text-orange-600 text-center">
-              ※ぼかし「{blurLevel}」は写真をそのまま掲載します。<br />
-              趣味写真・後ろ姿など個人を特定しづらい写真にご利用ください。
-            </p>
-          )}
+          <p className="text-xs text-orange-600 text-center">
+            ※ぼかし「0」は写真をそのまま掲載します。<br />
+            趣味写真・後ろ姿など個人を特定しづらい写真にご利用ください。
+          </p>
         </div>
       </div>
     </div>
