@@ -61,6 +61,14 @@ function ProfileEditContent() {
   // プロフィールタイプに基づく設定
   const isForeignMale = profileType === 'foreign-male'
   const isJapaneseFemale = profileType === 'japanese-female'
+  
+  // デバッグ用ログ
+  console.log('Profile type debug:', {
+    profileType,
+    isForeignMale,
+    isJapaneseFemale,
+    searchParams: searchParams.toString()
+  })
 
   const {
     register,
@@ -866,8 +874,8 @@ function ProfileEditContent() {
                 <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
               </div>
 
-              {/* 性別フィールドは日本人女性プロフィールでは非表示 */}
-              {!isJapaneseFemale && (
+              {/* 性別フィールドは外国人男性プロフィールでのみ表示 */}
+              {isForeignMale && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     性別 <span className="text-red-500">*</span>
@@ -881,7 +889,7 @@ function ProfileEditContent() {
                 </div>
               )}
 
-              <div className={isJapaneseFemale ? '' : 'md:col-start-2'}>
+              <div className={isForeignMale ? 'md:col-start-2' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   結婚状況
                 </label>
