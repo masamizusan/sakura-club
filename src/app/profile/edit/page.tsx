@@ -490,7 +490,7 @@ function ProfileEditContent() {
     const completion = Math.round((completedFields / totalFields) * 100)
     
     // デバッグ情報
-    console.log('プロフィール完成度計算:', {
+    console.warn('🎯 プロフィール完成度計算:', {
       requiredFields,
       completedRequired: completedRequired.length,
       missingRequired: requiredFields.filter(field => !completedRequired.includes(field)),
@@ -509,7 +509,7 @@ function ProfileEditContent() {
     })
     
     setProfileCompletion(completion)
-  }, [isForeignMale])
+  }, [isForeignMale, profileImages])
 
   // フォーム入力時のリアルタイム完成度更新
   useEffect(() => {
