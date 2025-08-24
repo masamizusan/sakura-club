@@ -402,7 +402,7 @@ function ProfileEditContent() {
     }
 
     loadUserData()
-  }, [user, reset, router, setValue, supabase])
+  }, [user, reset, router, setValue, supabase, calculateProfileCompletion, isForeignMale, isJapaneseFemale])
 
   // 生年月日から年齢を計算
   const calculateAge = useCallback((birthDate: string): number => {
@@ -434,7 +434,7 @@ function ProfileEditContent() {
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
-  }, [calculateAge, setValue, watch, profileImages])
+  }, [calculateAge, setValue, watch, profileImages, calculateProfileCompletion])
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
@@ -856,7 +856,7 @@ function ProfileEditContent() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <p className="text-xs text-gray-500">
-                  {completedItems}/{totalItems}項目入力済み
+                  {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :

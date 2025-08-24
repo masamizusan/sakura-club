@@ -67,7 +67,7 @@ function MyPageContent() {
     }
 
     loadProfile()
-  }, [user?.id, supabase])
+  }, [user, supabase])
 
   const calculateProfileCompletion = (profileData: any) => {
     const requiredFields = [
@@ -182,7 +182,7 @@ function MyPageContent() {
               ></div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {completedItems}/{totalItems}項目入力済み
+              {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
             </p>
           </div>
 
