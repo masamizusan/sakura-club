@@ -190,7 +190,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
                   onClick={() => handleResetToOriginal(image.id)}
                 >
-                  オリジナルに戻す
+                  前の画像に戻す
                 </Button>
               )}
             </div>

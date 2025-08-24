@@ -466,7 +466,7 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFields.filter(field => {
       const value = profileData[field]
-      if (field === 'avatar_url') return profileImages.length > 0
+      if (field === 'avatar_url') return profileImages.length > 0 // 1枚以上あれば完成扱い
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
     })
