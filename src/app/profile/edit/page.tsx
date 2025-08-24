@@ -34,7 +34,7 @@ const profileEditSchema = z.object({
     z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
   ),
   body_type: z.string().optional(),
-  marital_status: z.enum(['single', 'married']).optional(),
+  marital_status: z.enum(['', 'single', 'married']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -561,6 +561,10 @@ function ProfileEditContent() {
           bio: data.self_introduction,
           interests: data.hobbies,
           avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
+          occupation: data.occupation || null,
+          height: data.height || null,
+          body_type: data.body_type || null,
+          marital_status: data.marital_status || null,
         })
         .eq('id', user.id)
 
@@ -674,21 +678,44 @@ function ProfileEditContent() {
 
   // 職業オプション
   const OCCUPATION_OPTIONS = [
-    '会社員', '公務員', '経営者・役員', 'フリーランス', '自営業',
-    '医師', '看護師', '教師・講師', 'エンジニア', 'デザイナー',
-    '営業', 'マーケティング', '研究者', 'コンサルタント', '金融',
-    '法律関係', 'サービス業', '小売業', '製造業', '学生',
-    'その他'
+    { value: '', label: '記入しない' },
+    { value: '会社員', label: '会社員' },
+    { value: '公務員', label: '公務員' },
+    { value: '経営者・役員', label: '経営者・役員' },
+    { value: 'フリーランス', label: 'フリーランス' },
+    { value: '自営業', label: '自営業' },
+    { value: '医師', label: '医師' },
+    { value: '看護師', label: '看護師' },
+    { value: '教師・講師', label: '教師・講師' },
+    { value: 'エンジニア', label: 'エンジニア' },
+    { value: 'デザイナー', label: 'デザイナー' },
+    { value: '営業', label: '営業' },
+    { value: 'マーケティング', label: 'マーケティング' },
+    { value: '研究者', label: '研究者' },
+    { value: 'コンサルタント', label: 'コンサルタント' },
+    { value: '金融', label: '金融' },
+    { value: '法律関係', label: '法律関係' },
+    { value: 'サービス業', label: 'サービス業' },
+    { value: '小売業', label: '小売業' },
+    { value: '製造業', label: '製造業' },
+    { value: '学生', label: '学生' },
+    { value: 'その他', label: 'その他' }
   ]
 
 
   // 体型オプション
   const BODY_TYPE_OPTIONS = [
-    'スリム', '普通', 'ぽっちゃり', 'グラマー', 'アスリート体型'
+    { value: '', label: '記入しない' },
+    { value: 'スリム', label: 'スリム' },
+    { value: '普通', label: '普通' },
+    { value: 'ぽっちゃり', label: 'ぽっちゃり' },
+    { value: 'グラマー', label: 'グラマー' },
+    { value: 'アスリート体型', label: 'アスリート体型' }
   ]
 
   // 結婚状況オプション
   const MARITAL_STATUS_OPTIONS = [
+    { value: '', label: '記入しない' },
     { value: 'single', label: '未婚' },
     { value: 'married', label: '既婚' }
   ]
@@ -898,7 +925,7 @@ function ProfileEditContent() {
                 </label>
                 <Select 
                   value={watch('marital_status') || ''} 
-                  onValueChange={(value) => setValue('marital_status', value as 'single' | 'married')}
+                  onValueChange={(value) => setValue('marital_status', value as '' | 'single' | 'married')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="結婚状況を選択" />
@@ -1036,8 +1063,8 @@ function ProfileEditContent() {
                   </SelectTrigger>
                   <SelectContent>
                     {OCCUPATION_OPTIONS.map((occupation) => (
-                      <SelectItem key={occupation} value={occupation}>
-                        {occupation}
+                      <SelectItem key={occupation.value} value={occupation.value}>
+                        {occupation.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1075,8 +1102,8 @@ function ProfileEditContent() {
                     </SelectTrigger>
                     <SelectContent>
                       {BODY_TYPE_OPTIONS.map((bodyType) => (
-                        <SelectItem key={bodyType} value={bodyType}>
-                          {bodyType}
+                        <SelectItem key={bodyType.value} value={bodyType.value}>
+                          {bodyType.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

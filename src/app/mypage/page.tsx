@@ -84,8 +84,8 @@ function MyPageContent() {
       return value && value.toString().trim().length > 0
     })
 
-    // 写真が1枚以上あるかチェック
-    const hasPhotos = profileData.photos && Array.isArray(profileData.photos) && profileData.photos.length > 0
+    // 写真が1枚以上あるかチェック（avatar_urlフィールドを確認）
+    const hasPhotos = profileData.avatar_url && profileData.avatar_url !== null
     
     const totalRequiredItems = requiredFields.length + 1 // +1 for photos
     const completedItems = completedFields.length + (hasPhotos ? 1 : 0)
@@ -95,7 +95,7 @@ function MyPageContent() {
       requiredFields,
       completedFields: completedFields.map(field => ({ field, value: profileData[field] })),
       hasPhotos,
-      photosCount: profileData.photos?.length || 0,
+      avatarUrl: profileData.avatar_url,
       totalRequiredItems,
       completedItems,
       profileData
