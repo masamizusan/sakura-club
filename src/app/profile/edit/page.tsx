@@ -436,7 +436,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'custom_culture'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -459,6 +459,9 @@ function ProfileEditContent() {
         case 'city':
           value = profileData.city
           break
+        case 'custom_culture':
+          value = profileData.custom_culture
+          break
         default:
           value = profileData[field]
       }
@@ -472,6 +475,7 @@ function ProfileEditContent() {
       
       if (field === 'avatar_url') return profileImages.length > 0 // 1枚以上あれば完成扱い
       if (field === 'city') value = profileData.city
+      if (field === 'custom_culture') value = profileData.custom_culture
       
       if (Array.isArray(value)) return value.length > 0
       return value && value.toString().trim().length > 0
@@ -492,6 +496,7 @@ function ProfileEditContent() {
         let value = profileData[field]
         if (field === 'avatar_url') return profileImages.length === 0
         if (field === 'city') value = profileData.city
+        if (field === 'custom_culture') value = profileData.custom_culture
         if (Array.isArray(value)) return value.length === 0
         return !value || value.toString().trim().length === 0
       }),
