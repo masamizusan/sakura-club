@@ -126,19 +126,28 @@ function ProfilePreviewContent() {
                 </div>
               )}
 
-              {/* 趣味 */}
-              {hobbies.length > 0 && (
+              {/* 共有したい日本文化 */}
+              {(hobbies.length > 0 || customCulture) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">趣味・興味</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {hobbies.map((hobby, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
-                      >
-                        {hobby}
-                      </span>
-                    ))}
+                  <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
+                  <div className="space-y-2">
+                    {hobbies.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {hobbies.map((hobby, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
+                          >
+                            {hobby}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {customCulture && (
+                      <div className="bg-amber-50 rounded-lg p-3">
+                        <p className="text-gray-700 text-sm">{customCulture}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -160,13 +169,6 @@ function ProfilePreviewContent() {
                 </div>
               )}
 
-              {/* 共有したい日本文化 */}
-              {customCulture && (
-                <div className="bg-amber-50 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
-                  <p className="text-gray-700 text-sm">{customCulture}</p>
-                </div>
-              )}
 
               {/* アクションボタン */}
               <div className="pt-4">
