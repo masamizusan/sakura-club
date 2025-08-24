@@ -278,7 +278,9 @@ function ProfileEditContent() {
         const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
-        if (false && isFromSignup && user?.id) {
+        // このブロックは現在無効化されています
+        /*
+        if (isFromSignup && user?.id) {
           console.log('新規登録フロー検出 - プロフィールデータをクリア')
           await supabase
             .from('profiles')
@@ -304,6 +306,7 @@ function ProfileEditContent() {
             console.log('プロフィールクリア完了:', profile)
           }
         }
+        */
         
         // テストデータまたは既存データクリア（新規登録以外でも実行）
         const isTestData2 = profile.bio?.includes('テスト用の自己紹介です') || 
