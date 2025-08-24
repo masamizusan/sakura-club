@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
-import { User, Save, ArrowLeft, Loader2, AlertCircle, Briefcase, Heart, Camera, Upload, X } from 'lucide-react'
+import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera } from 'lucide-react'
 import { z } from 'zod'
 
 const profileEditSchema = z.object({
@@ -55,7 +55,6 @@ function ProfileEditContent() {
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
-  const [uploadingImage, setUploadingImage] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -540,111 +539,7 @@ function ProfileEditContent() {
     }
   }
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !user) return
 
-    // ファイルサイズチェック (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('画像ファイルは5MB以下にしてください')
-      return
-    }
-
-    // ファイル形式チェック
-    if (!file.type.startsWith('image/')) {
-      setError('画像ファイルを選択してください')
-      return
-    }
-
-    try {
-      setUploadingImage(true)
-      setError('')
-
-      // デバッグ情報
-      console.log('Starting image upload...', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        userId: user.id
-      })
-
-      // ファイル名を生成
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`
-
-      console.log('Generated filename:', fileName)
-
-      // Supabase Storageにアップロード
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true // falseからtrueに変更
-        })
-
-      console.log('Upload result:', { uploadData, uploadError })
-
-      if (uploadError) {
-        console.error('Upload error details:', uploadError)
-        throw new Error(`アップロードエラー: ${uploadError.message}`)
-      }
-
-      // 公開URLを取得
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName)
-
-      // setProfileImage(publicUrl) // 新しいMultiImageUploaderに置き換え
-      
-      // プロフィール完成度を再計算
-      const currentData = watch()
-      calculateProfileCompletion({
-        ...currentData,
-        avatar_url: publicUrl
-      })
-
-    } catch (error) {
-      console.error('Image upload error:', error)
-      setError('画像のアップロードに失敗しました')
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const removeImage = async () => {
-    console.log('🗑️ Avatar削除処理開始')
-    if (!user) {
-      console.log('❌ ユーザーが見つかりません')
-      return
-    }
-    
-    try {
-      console.log('📤 データベース更新中...')
-      // データベースからavatar_urlを削除
-      const { error, data } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id)
-        .select()
-      
-      if (error) {
-        console.error('❌ Avatar削除エラー:', error)
-        return
-      }
-      
-      console.log('✅ Avatar削除完了:', data)
-      // setProfileImage(null) // 新しいMultiImageUploaderに置き換え
-      
-      // プロフィール完成度を再計算
-      const currentData = watch()
-      calculateProfileCompletion({
-        ...currentData,
-        avatar_url: null
-      })
-    } catch (error) {
-      console.error('Avatar削除処理エラー:', error)
-    }
-  }
 
   const toggleHobby = (hobby: string) => {
     const newHobbies = selectedHobbies.includes(hobby)
