@@ -646,6 +646,18 @@ function ProfileEditContent() {
     }
   }
 
+  // 写真変更時のコールバック関数
+  const handleImagesChange = (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    setProfileImages(newImages)
+    
+    // 写真変更時に完成度を再計算
+    const currentData = watch()
+    calculateProfileCompletion({
+      ...currentData,
+      avatar_url: newImages.length > 0 ? 'has_images' : null
+    })
+  }
+
 
   // 国籍オプション（プロフィールタイプに応じて順序変更）
   const getNationalities = () => {
@@ -886,7 +898,7 @@ function ProfileEditContent() {
             {/* プロフィール画像セクション */}
             <MultiImageUploader
               images={profileImages}
-              onImagesChange={setProfileImages}
+              onImagesChange={handleImagesChange}
               maxImages={3}
             />
 
