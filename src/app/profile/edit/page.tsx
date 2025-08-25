@@ -490,13 +490,13 @@ function ProfileEditContent() {
       
       if (field === 'avatar_url') {
         const hasImages = profileImages.length > 0
-        console.log('🖼️ Avatar URL check:', {
-          field,
-          profileDataAvatarUrl: profileData.avatar_url,
-          profileImagesLength: profileImages.length,
-          hasImages,
-          profileImages
-        })
+        console.log('🖼️ Avatar URL check:', 
+          `フィールド: ${field}`,
+          `profileData.avatar_url: ${profileData.avatar_url}`,
+          `profileImages.length: ${profileImages.length}`,
+          `hasImages: ${hasImages}`,
+          `結果: ${hasImages ? '完成' : '未完成'}`
+        )
         return hasImages // 1枚以上あれば完成扱い
       }
       if (field === 'city') value = profileData.city
@@ -514,26 +514,13 @@ function ProfileEditContent() {
     const completion = Math.round((completedFields / totalFields) * 100)
     
     // デバッグ情報
-    console.warn('🎯 プロフィール完成度計算:', {
-      profileData,
-      requiredFields,
-      completedRequired: completedRequired.map(field => ({ field, value: getFieldValue(field) })),
-      missingRequired: requiredFields.filter(field => !completedRequired.includes(field)),
-      optionalFields,
-      completedOptional: completedOptional.map(field => ({ field, value: getFieldValue(field) })),
-      missingOptional: optionalFields.filter(field => {
-        let value = profileData[field]
-        if (field === 'avatar_url') return profileImages.length === 0
-        if (field === 'city') value = profileData.city
-        if (Array.isArray(value)) return value.length === 0
-        if (value === 'none') return true
-        return !value || value.toString().trim().length === 0
-      }),
-      totalFields,
-      completedFields,
-      completion,
-      profileImages: profileImages.length
-    })
+    console.warn('🎯 プロフィール完成度計算:', 
+      `完成度: ${completion}%`,
+      `完成項目: ${completedFields}/${totalFields}`,
+      `完成必須: ${completedRequired.join(', ')}`,
+      `完成オプション: ${completedOptional.join(', ')}`,
+      `写真枚数: ${profileImages.length}`
+    )
 
     function getFieldValue(field: string) {
       switch (field) {
@@ -658,11 +645,11 @@ function ProfileEditContent() {
 
   // 写真変更時のコールバック関数
   const handleImagesChange = (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
-    console.log('📸 写真変更:', {
-      newImagesLength: newImages.length,
-      newImages,
-      avatarUrlValue: newImages.length > 0 ? 'has_images' : null
-    })
+    console.log('📸 写真変更:', 
+      `新しい画像数: ${newImages.length}`,
+      `avatar_url値: ${newImages.length > 0 ? 'has_images' : null}`,
+      newImages
+    )
     
     setProfileImages(newImages)
     
