@@ -436,6 +436,98 @@ function ProfileEditContent() {
     }
   }, [calculateAge, setValue, watch, profileImages])
 
+  // 画像配列を直接指定する完成度計算関数
+  const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    const requiredFields = [
+      'nickname', 'gender', 'age', 
+      'prefecture', 'hobbies', 'self_introduction'
+    ]
+    
+    // 外国人男性の場合は国籍も必須
+    if (isForeignMale) {
+      requiredFields.push('nationality')
+    }
+    
+    const optionalFields = [
+      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'personality', 'city'
+    ]
+    
+    const completedRequired = requiredFields.filter(field => {
+      let value
+      
+      // Map form field names to profile data field names
+      switch (field) {
+        case 'nickname':
+          value = profileData.name || profileData.nickname
+          break
+        case 'self_introduction':
+          value = profileData.bio || profileData.self_introduction
+          break
+        case 'hobbies':
+          value = profileData.interests || profileData.hobbies
+          // custom_cultureも日本文化の一部として含める
+          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          if (Array.isArray(value) && value.length > 0) {
+            // 既に選択された趣味があるので完成とみなす
+          } else if (hasCustomCulture) {
+            // 選択された趣味はないが、カスタム文化があれば完成とみなす
+            value = ['custom']
+          }
+          break
+        case 'prefecture':
+          value = profileData.residence || profileData.prefecture
+          break
+        default:
+          value = profileData[field]
+      }
+      
+      if (Array.isArray(value)) return value.length > 0
+      return value && value.toString().trim().length > 0
+    })
+    
+    const completedOptional = optionalFields.filter(field => {
+      let value = profileData[field]
+      
+      if (field === 'avatar_url') {
+        const hasImages = imageArray.length > 0
+        console.log('🖼️ Avatar URL check (with images):', 
+          `フィールド: ${field}`,
+          `profileData.avatar_url: ${profileData.avatar_url}`,
+          `imageArray.length: ${imageArray.length}`,
+          `hasImages: ${hasImages}`,
+          `結果: ${hasImages ? '完成' : '未完成'}`
+        )
+        return hasImages // 1枚以上あれば完成扱い
+      }
+      if (field === 'city') value = profileData.city
+      
+      if (Array.isArray(value)) return value.length > 0
+      
+      // 'none'は記入しないを意味するので、完成とはみなさない
+      if (value === 'none') return false
+      
+      return value && value.toString().trim().length > 0
+    })
+    
+    const totalFields = requiredFields.length + optionalFields.length
+    const completedFields = completedRequired.length + completedOptional.length
+    const completion = Math.round((completedFields / totalFields) * 100)
+    
+    // デバッグ情報
+    console.warn('🎯 プロフィール完成度計算 (with images):', 
+      `完成度: ${completion}%`,
+      `完成項目: ${completedFields}/${totalFields}`,
+      `完成必須: ${completedRequired.join(', ')}`,
+      `完成オプション: ${completedOptional.join(', ')}`,
+      `写真枚数: ${imageArray.length}`
+    )
+    
+    setProfileCompletion(completion)
+    setCompletedItems(completedFields)
+    setTotalItems(totalFields)
+  }, [isForeignMale])
+
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
       'nickname', 'gender', 'age', 
@@ -653,12 +745,12 @@ function ProfileEditContent() {
     
     setProfileImages(newImages)
     
-    // 写真変更時に完成度を再計算
+    // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
-    calculateProfileCompletion({
+    calculateProfileCompletionWithImages({
       ...currentData,
       avatar_url: newImages.length > 0 ? 'has_images' : null
-    })
+    }, newImages)
   }
 
 
