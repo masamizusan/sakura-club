@@ -644,16 +644,20 @@ function ProfileEditContent() {
   }, [watch, profileImages, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
+    console.log('🚀 onSubmit started - プロフィール更新開始')
+    
     // フォームのデフォルト送信を防止
     if (event) {
       event.preventDefault()
       event.stopPropagation()
     }
     if (!user) {
+      console.error('❌ User not found')
       setError('ユーザー情報が見つかりません')
       return
     }
 
+    console.log('📝 Updating profile for user:', user.id)
     setIsLoading(true)
     setError('')
     
@@ -681,21 +685,21 @@ function ProfileEditContent() {
       }
       
       // 更新成功後、マイページに遷移
-      console.log('Profile updated successfully!')
+      console.log('✅ Profile updated successfully! Redirecting to mypage...')
       setIsLoading(false)
       setUpdateSuccess(true)
       
-      // 少し待ってからマイページに遷移
-      setTimeout(() => {
-        router.push('/mypage')
-      }, 1000)
+      // 即座にマイページに遷移
+      router.push('/mypage')
     } catch (error) {
-      console.error('Profile update error:', error)
+      console.error('❌ Profile update error:', error)
       setIsLoading(false)
       if (error instanceof Error) {
         setError(error.message)
+        console.error('Error details:', error.message)
       } else {
         setError('プロフィールの更新に失敗しました。もう一度お試しください。')
+        console.error('Unknown error:', error)
       }
     }
   }
