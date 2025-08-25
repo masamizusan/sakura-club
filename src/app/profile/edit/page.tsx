@@ -477,9 +477,6 @@ function ProfileEditContent() {
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
           break
-        case 'city':
-          value = profileData.city
-          break
         default:
           value = profileData[field]
       }
@@ -495,6 +492,10 @@ function ProfileEditContent() {
       if (field === 'city') value = profileData.city
       
       if (Array.isArray(value)) return value.length > 0
+      
+      // 'none'は記入しないを意味するので、完成とはみなさない
+      if (value === 'none') return false
+      
       return value && value.toString().trim().length > 0
     })
     
@@ -504,22 +505,36 @@ function ProfileEditContent() {
     
     // デバッグ情報
     console.warn('🎯 プロフィール完成度計算:', {
+      profileData,
       requiredFields,
-      completedRequired: completedRequired.length,
+      completedRequired: completedRequired.map(field => ({ field, value: getFieldValue(field) })),
       missingRequired: requiredFields.filter(field => !completedRequired.includes(field)),
       optionalFields,
-      completedOptional: completedOptional.length,
+      completedOptional: completedOptional.map(field => ({ field, value: getFieldValue(field) })),
       missingOptional: optionalFields.filter(field => {
         let value = profileData[field]
         if (field === 'avatar_url') return profileImages.length === 0
         if (field === 'city') value = profileData.city
         if (Array.isArray(value)) return value.length === 0
+        if (value === 'none') return true
         return !value || value.toString().trim().length === 0
       }),
       totalFields,
       completedFields,
-      completion
+      completion,
+      profileImages: profileImages.length
     })
+
+    function getFieldValue(field: string) {
+      switch (field) {
+        case 'nickname': return profileData.name || profileData.nickname
+        case 'self_introduction': return profileData.bio || profileData.self_introduction
+        case 'hobbies': return profileData.interests || profileData.hobbies
+        case 'prefecture': return profileData.residence || profileData.prefecture
+        case 'avatar_url': return profileImages.length > 0 ? 'has_images' : null
+        default: return profileData[field]
+      }
+    }
     
     setProfileCompletion(completion)
     setCompletedItems(completedFields)
