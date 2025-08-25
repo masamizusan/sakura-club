@@ -488,7 +488,17 @@ function ProfileEditContent() {
     const completedOptional = optionalFields.filter(field => {
       let value = profileData[field]
       
-      if (field === 'avatar_url') return profileImages.length > 0 // 1枚以上あれば完成扱い
+      if (field === 'avatar_url') {
+        const hasImages = profileImages.length > 0
+        console.log('🖼️ Avatar URL check:', {
+          field,
+          profileDataAvatarUrl: profileData.avatar_url,
+          profileImagesLength: profileImages.length,
+          hasImages,
+          profileImages
+        })
+        return hasImages // 1枚以上あれば完成扱い
+      }
       if (field === 'city') value = profileData.city
       
       if (Array.isArray(value)) return value.length > 0
@@ -648,6 +658,12 @@ function ProfileEditContent() {
 
   // 写真変更時のコールバック関数
   const handleImagesChange = (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    console.log('📸 写真変更:', {
+      newImagesLength: newImages.length,
+      newImages,
+      avatarUrlValue: newImages.length > 0 ? 'has_images' : null
+    })
+    
     setProfileImages(newImages)
     
     // 写真変更時に完成度を再計算
