@@ -680,10 +680,15 @@ function ProfileEditContent() {
         throw new Error(updateError.message)
       }
       
-      // 更新成功後、成功状態を表示
+      // 更新成功後、マイページに遷移
       console.log('Profile updated successfully!')
       setIsLoading(false)
       setUpdateSuccess(true)
+      
+      // 少し待ってからマイページに遷移
+      setTimeout(() => {
+        router.push('/mypage')
+      }, 1000)
     } catch (error) {
       console.error('Profile update error:', error)
       setIsLoading(false)
