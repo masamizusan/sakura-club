@@ -136,16 +136,61 @@ function MyPageContent() {
     const totalRequiredItems = requiredFields.length + optionalFields.length
     const completedItems = completedRequired.length + completedOptional.length
     
-    console.log('Profile completion calculation:', {
-      requiredFields,
-      optionalFields,
-      completedRequired: completedRequired.map(field => ({ field, mapped: field === 'nickname' ? 'name' : field === 'prefecture' ? 'residence' : field === 'hobbies' ? 'interests' : field === 'self_introduction' ? 'bio' : field })),
-      completedOptional: completedOptional.map(field => ({ field, value: field === 'avatar_url' ? !!profileData[field] : profileData[field] })),
-      totalRequiredItems,
-      completedItems,
-      completion: Math.round((completedItems / totalRequiredItems) * 100) + '%',
-      profileData
+    // 詳細デバッグログ
+    const requiredFieldsDetail = requiredFields.map(field => {
+      let value, mappedField
+      switch (field) {
+        case 'nickname':
+          mappedField = 'name'
+          value = profileData.name || profileData.nickname
+          break
+        case 'self_introduction':
+          mappedField = 'bio'
+          value = profileData.bio || profileData.self_introduction
+          break
+        case 'hobbies':
+          mappedField = 'interests'
+          value = profileData.interests || profileData.hobbies
+          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          if (Array.isArray(value) && value.length > 0) {
+            // 既に選択された趣味があるので完成とみなす
+          } else if (hasCustomCulture) {
+            value = ['custom']
+          }
+          break
+        case 'prefecture':
+          mappedField = 'residence'
+          value = profileData.residence || profileData.prefecture
+          break
+        default:
+          mappedField = field
+          value = profileData[field]
+      }
+      
+      const isCompleted = Array.isArray(value) ? value.length > 0 : (value && value.toString().trim().length > 0)
+      return { field, mappedField, value, isCompleted }
     })
+    
+    const optionalFieldsDetail = optionalFields.map(field => {
+      let value = profileData[field]
+      let isCompleted
+      
+      if (field === 'avatar_url') {
+        isCompleted = value && value !== null
+      } else {
+        isCompleted = !(value === 'none' || !value) && (Array.isArray(value) ? value.length > 0 : value.toString().trim().length > 0)
+      }
+      
+      return { field, value, isCompleted }
+    })
+    
+    console.log('🔍 Detailed Profile Completion Analysis:')
+    console.log('必須フィールド:', requiredFieldsDetail)
+    console.log('オプションフィールド:', optionalFieldsDetail)
+    console.log('完成した必須フィールド:', requiredFieldsDetail.filter(f => f.isCompleted).length, '/', requiredFields.length)
+    console.log('完成したオプションフィールド:', optionalFieldsDetail.filter(f => f.isCompleted).length, '/', optionalFields.length)
+    console.log('総完成項目:', completedItems, '/', totalRequiredItems)
+    console.log('完成率:', Math.round((completedItems / totalRequiredItems) * 100) + '%')
     
     const completion = Math.round((completedItems / totalRequiredItems) * 100)
     setProfileCompletion(completion)
