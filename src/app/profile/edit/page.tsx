@@ -670,13 +670,17 @@ function ProfileEditContent() {
           age: data.age,
           nationality: isForeignMale ? data.nationality : null,
           residence: data.prefecture,
+          city: data.city || null,
           bio: data.self_introduction,
           interests: data.hobbies,
+          personality: selectedPersonality,
+          custom_culture: data.custom_culture || null,
           avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
           occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
           height: data.height || null,
           body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
           marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null,
+          birth_date: data.birth_date
         })
         .eq('id', user.id)
 
@@ -1323,6 +1327,33 @@ function ProfileEditContent() {
               <p className="text-sm text-gray-500">
                 選択済み: {selectedPersonality.length}/5
               </p>
+            </div>
+
+            {/* 更新ボタン */}
+            <div className="mt-8">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                onClick={() => {
+                  console.log('📝 Submit button clicked!')
+                  console.log('📊 Form errors:', errors)
+                  const currentFormData = watch()
+                  console.log('📋 Current form data:', currentFormData)
+                }}
+                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    更新中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    プロフィールを更新する
+                  </>
+                )}
+              </Button>
             </div>
 
             </form>
