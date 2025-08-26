@@ -71,13 +71,13 @@ function MyPageContent() {
 
   const calculateProfileCompletion = (profileData: any) => {
     const requiredFields = [
-      'nickname',
+      'name',           // データベースの実際のフィールド名
       'gender',
       'age',
       'nationality',
-      'prefecture',
-      'hobbies',
-      'self_introduction'
+      'residence',      // データベースの実際のフィールド名
+      'interests',      // データベースの実際のフィールド名
+      'bio'            // データベースの実際のフィールド名
     ]
     
     const completedFields = requiredFields.filter(field => {
@@ -161,10 +161,10 @@ function MyPageContent() {
             </div>
             <div className="ml-4 flex-1">
               <h2 className="text-xl font-bold text-gray-900">
-                {profile?.first_name || 'ユーザー'}さん
+                {profile?.name || profile?.first_name || 'ユーザー'}さん
               </h2>
               <p className="text-gray-600">
-                {profile?.age || '未設定'}歳 • {profile?.prefecture || '未設定'}
+                {profile?.age || '未設定'}歳 • {profile?.residence || profile?.prefecture || '未設定'}
               </p>
             </div>
           </div>
