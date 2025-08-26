@@ -93,14 +93,21 @@ function MyPageContent() {
     const completedItems = completedFields.length + (hasPhotos ? 1 : 0)
     
     // デバッグ情報をログ出力
+    const missingFields = requiredFields.filter(field => {
+      const value = profileData[field]
+      if (Array.isArray(value)) return value.length === 0
+      return !value || value.toString().trim().length === 0
+    })
+    
     console.log('Profile completion calculation:', {
       requiredFields,
       completedFields: completedFields.map(field => ({ field, value: profileData[field] })),
+      missingFields: missingFields.map(field => ({ field, value: profileData[field] })),
       hasPhotos,
       avatarUrl: profileData.avatar_url,
       totalRequiredItems,
       completedItems,
-      profileData
+      completion: Math.round((completedItems / totalRequiredItems) * 100) + '%'
     })
     
     const completion = Math.round((completedItems / totalRequiredItems) * 100)
@@ -155,9 +162,17 @@ function MyPageContent() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center mb-6">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-full flex items-center justify-center">
-                <User className="w-10 h-10 text-sakura-500" />
-              </div>
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="プロフィール写真"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-sakura-200"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-full flex items-center justify-center">
+                  <User className="w-10 h-10 text-sakura-500" />
+                </div>
+              )}
             </div>
             <div className="ml-4 flex-1">
               <h2 className="text-xl font-bold text-gray-900">
