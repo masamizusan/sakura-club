@@ -679,8 +679,7 @@ function ProfileEditContent() {
           occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
           height: data.height || null,
           body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
-          marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null,
-          birth_date: data.birth_date
+          marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null
         })
         .eq('id', user.id)
 
