@@ -127,10 +127,14 @@ function MyPageContent() {
         return value && value !== null
       }
       
-      // 'none'は未入力として扱う
-      if (value === 'none' || !value) return false
-      if (Array.isArray(value)) return value.length > 0
-      return value.toString().trim().length > 0
+      // その他のフィールドの判定
+      if (Array.isArray(value)) {
+        return value.length > 0
+      } else if (value === 'none' || value === null || value === undefined || value === '') {
+        return false
+      } else {
+        return value.toString().trim().length > 0
+      }
     })
     
     const totalRequiredItems = requiredFields.length + optionalFields.length
@@ -178,10 +182,18 @@ function MyPageContent() {
       if (field === 'avatar_url') {
         isCompleted = value && value !== null
       } else {
-        isCompleted = !(value === 'none' || !value) && (Array.isArray(value) ? value.length > 0 : value.toString().trim().length > 0)
+        // 'none'でもnullでも空でもない場合は完成とみなす
+        // ただし配列の場合は要素が1つ以上ある場合のみ完成
+        if (Array.isArray(value)) {
+          isCompleted = value.length > 0
+        } else if (value === 'none' || value === null || value === undefined || value === '') {
+          isCompleted = false
+        } else {
+          isCompleted = value.toString().trim().length > 0
+        }
       }
       
-      return { field, value, isCompleted }
+      return { field, value, isCompleted, reason: field === 'avatar_url' ? 'avatar check' : Array.isArray(value) ? 'array check' : value === 'none' ? 'none value' : !value ? 'no value' : 'has value' }
     })
     
     console.log('🔍 Detailed Profile Completion Analysis:')
