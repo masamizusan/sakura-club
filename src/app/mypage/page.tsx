@@ -71,19 +71,28 @@ function MyPageContent() {
 
   const calculateProfileCompletion = (profileData: any) => {
     const requiredFields = [
-      'name',           // データベースの実際のフィールド名
-      'gender',
-      'age',
-      'nationality',
-      'residence',      // データベースの実際のフィールド名
-      'interests',      // データベースの実際のフィールド名
-      'bio'            // データベースの実際のフィールド名
+      'name',           // ニックネーム
+      'gender',         // 性別
+      'age',            // 年齢
+      'nationality',    // 国籍
+      'residence',      // 居住地
+      'city',           // 市町村
+      'occupation',     // 職業
+      'height',         // 身長
+      'body_type',      // 体型
+      'marital_status', // 結婚歴
+      'interests',      // 日本文化/趣味
+      'personality',    // 性格
+      'bio',            // 自己紹介
+      'custom_culture'  // その他の日本文化
     ]
     
     const completedFields = requiredFields.filter(field => {
       const value = profileData[field]
       if (Array.isArray(value)) return value.length > 0
-      return value && value.toString().trim().length > 0
+      // 'none'や空値は未入力として扱う
+      if (!value || value === 'none' || value.toString().trim().length === 0) return false
+      return true
     })
 
     // 写真が1枚以上あるかチェック（avatar_urlフィールドを確認）
@@ -96,7 +105,7 @@ function MyPageContent() {
     const missingFields = requiredFields.filter(field => {
       const value = profileData[field]
       if (Array.isArray(value)) return value.length === 0
-      return !value || value.toString().trim().length === 0
+      return !value || value === 'none' || value.toString().trim().length === 0
     })
     
     console.log('Profile completion calculation:', {
