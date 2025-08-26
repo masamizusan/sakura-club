@@ -70,53 +70,81 @@ function MyPageContent() {
   }, [user, supabase])
 
   const calculateProfileCompletion = (profileData: any) => {
+    // プロフィール編集ページと同じロジックを使用
     const requiredFields = [
-      'name',           // ニックネーム
-      'gender',         // 性別
-      'age',            // 年齢
-      'nationality',    // 国籍
-      'residence',      // 居住地
-      'city',           // 市町村
-      'occupation',     // 職業
-      'height',         // 身長
-      'body_type',      // 体型
-      'marital_status', // 結婚歴
-      'interests',      // 日本文化/趣味
-      'personality',    // 性格
-      'bio',            // 自己紹介
-      'custom_culture'  // その他の日本文化
+      'nickname', 'gender', 'age', 
+      'prefecture', 'hobbies', 'self_introduction'
     ]
     
-    const completedFields = requiredFields.filter(field => {
-      const value = profileData[field]
+    // 外国人男性の場合は国籍も必須（今回は日本人女性なので追加しない）
+    // if (isForeignMale) {
+    //   requiredFields.push('nationality')
+    // }
+    
+    const optionalFields = [
+      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'personality', 'city'
+    ]
+    
+    const completedRequired = requiredFields.filter(field => {
+      let value
+      
+      // Map form field names to profile data field names
+      switch (field) {
+        case 'nickname':
+          value = profileData.name || profileData.nickname
+          break
+        case 'self_introduction':
+          value = profileData.bio || profileData.self_introduction
+          break
+        case 'hobbies':
+          value = profileData.interests || profileData.hobbies
+          // custom_cultureも日本文化の一部として含める
+          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          if (Array.isArray(value) && value.length > 0) {
+            // 既に選択された趣味があるので完成とみなす
+          } else if (hasCustomCulture) {
+            // 選択された趣味はないが、カスタム文化があれば完成とみなす
+            value = ['custom']
+          }
+          break
+        case 'prefecture':
+          value = profileData.residence || profileData.prefecture
+          break
+        default:
+          value = profileData[field]
+      }
+      
       if (Array.isArray(value)) return value.length > 0
-      // 'none'や空値は未入力として扱う
-      if (!value || value === 'none' || value.toString().trim().length === 0) return false
-      return true
+      return value && value.toString().trim().length > 0
     })
-
-    // 写真が1枚以上あるかチェック（avatar_urlフィールドを確認）
-    const hasPhotos = profileData.avatar_url && profileData.avatar_url !== null
     
-    const totalRequiredItems = requiredFields.length + 1 // +1 for photos
-    const completedItems = completedFields.length + (hasPhotos ? 1 : 0)
-    
-    // デバッグ情報をログ出力
-    const missingFields = requiredFields.filter(field => {
-      const value = profileData[field]
-      if (Array.isArray(value)) return value.length === 0
-      return !value || value === 'none' || value.toString().trim().length === 0
+    const completedOptional = optionalFields.filter(field => {
+      let value = profileData[field]
+      
+      // avatar_urlの場合は特別処理
+      if (field === 'avatar_url') {
+        return value && value !== null
+      }
+      
+      // 'none'は未入力として扱う
+      if (value === 'none' || !value) return false
+      if (Array.isArray(value)) return value.length > 0
+      return value.toString().trim().length > 0
     })
+    
+    const totalRequiredItems = requiredFields.length + optionalFields.length
+    const completedItems = completedRequired.length + completedOptional.length
     
     console.log('Profile completion calculation:', {
       requiredFields,
-      completedFields: completedFields.map(field => ({ field, value: profileData[field] })),
-      missingFields: missingFields.map(field => ({ field, value: profileData[field] })),
-      hasPhotos,
-      avatarUrl: profileData.avatar_url,
+      optionalFields,
+      completedRequired: completedRequired.map(field => ({ field, mapped: field === 'nickname' ? 'name' : field === 'prefecture' ? 'residence' : field === 'hobbies' ? 'interests' : field === 'self_introduction' ? 'bio' : field })),
+      completedOptional: completedOptional.map(field => ({ field, value: field === 'avatar_url' ? !!profileData[field] : profileData[field] })),
       totalRequiredItems,
       completedItems,
-      completion: Math.round((completedItems / totalRequiredItems) * 100) + '%'
+      completion: Math.round((completedItems / totalRequiredItems) * 100) + '%',
+      profileData
     })
     
     const completion = Math.round((completedItems / totalRequiredItems) * 100)
