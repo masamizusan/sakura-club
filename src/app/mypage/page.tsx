@@ -197,12 +197,25 @@ function MyPageContent() {
     })
     
     console.log('🔍 Detailed Profile Completion Analysis:')
-    console.log('必須フィールド:', requiredFieldsDetail)
-    console.log('オプションフィールド:', optionalFieldsDetail)
+    console.log('=== 必須フィールド ===')
+    console.table(requiredFieldsDetail)
+    console.log('=== オプションフィールド ===')  
+    console.table(optionalFieldsDetail)
+    console.log('=== サマリー ===')
     console.log('完成した必須フィールド:', requiredFieldsDetail.filter(f => f.isCompleted).length, '/', requiredFields.length)
     console.log('完成したオプションフィールド:', optionalFieldsDetail.filter(f => f.isCompleted).length, '/', optionalFields.length)
     console.log('総完成項目:', completedItems, '/', totalRequiredItems)
     console.log('完成率:', Math.round((completedItems / totalRequiredItems) * 100) + '%')
+    
+    // 未完成のフィールドを明示
+    const incompleteRequired = requiredFieldsDetail.filter(f => !f.isCompleted)
+    const incompleteOptional = optionalFieldsDetail.filter(f => !f.isCompleted)
+    if (incompleteRequired.length > 0) {
+      console.log('❌ 未完成の必須フィールド:', incompleteRequired)
+    }
+    if (incompleteOptional.length > 0) {
+      console.log('❌ 未完成のオプションフィールド:', incompleteOptional)
+    }
     
     const completion = Math.round((completedItems / totalRequiredItems) * 100)
     setProfileCompletion(completion)
