@@ -78,6 +78,7 @@ function ProfileEditContent() {
     setValue,
     watch,
     reset,
+    trigger,
     formState: { errors }
   } = useForm<ProfileEditFormData>({
     resolver: zodResolver(profileEditSchema)
@@ -1340,11 +1341,21 @@ function ProfileEditContent() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                onClick={() => {
+                onClick={async () => {
                   console.log('📝 Submit button clicked!')
                   console.log('📊 Form errors:', errors)
                   const currentFormData = watch()
                   console.log('📋 Current form data:', currentFormData)
+                  
+                  // 手動でフォーム検証を実行
+                  const isValid = await trigger()
+                  console.log('🔍 Form validation result:', isValid)
+                  
+                  if (!isValid) {
+                    console.error('❌ Form validation failed. Errors:', errors)
+                  } else {
+                    console.log('✅ Form validation passed')
+                  }
                 }}
                 className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
               >
