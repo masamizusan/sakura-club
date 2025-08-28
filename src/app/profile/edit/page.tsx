@@ -149,13 +149,16 @@ function ProfileEditContent() {
       if (event.data?.action === 'updateProfile') {
         console.log('🎯 Received update profile message from preview window')
         // フォームの送信処理を実行
-        handleSubmit(onSubmit)()
+        const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
+        if (submitButton) {
+          submitButton.click()
+        }
       }
     }
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [handleSubmit, onSubmit])
+  }, [handleSubmit])
 
   // 追加の安全策 - ページロード後に再チェック
   useEffect(() => {
