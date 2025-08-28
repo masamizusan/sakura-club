@@ -289,6 +289,24 @@ function ProfileEditContent() {
 
         console.log('Loaded profile data:', profile)
         
+        // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
+        let parsedOptionalData = {}
+        if (profile.city && typeof profile.city === 'string') {
+          try {
+            // JSONデータの場合はパース
+            if (profile.city.startsWith('{')) {
+              parsedOptionalData = JSON.parse(profile.city)
+              console.log('📋 Parsed optional data from city field:', parsedOptionalData)
+            } else {
+              // 通常の文字列の場合はそのまま使用
+              parsedOptionalData = { city: profile.city }
+            }
+          } catch (e) {
+            console.log('⚠️ Could not parse city field as JSON, treating as regular city data')
+            parsedOptionalData = { city: profile.city }
+          }
+        }
+        
         // 仮登録からの遷移の場合、URLパラメータからも初期値を取得
         const urlParams = new URLSearchParams(window.location.search)
         const signupData = {
@@ -399,11 +417,11 @@ function ProfileEditContent() {
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
-          city: isNewUser ? '' : (profile.city || ''),
-          occupation: isNewUser ? 'none' : (profile.occupation || 'none'),
-          height: isNewUser ? '' : (profile.height || ''),
-          body_type: isNewUser ? 'none' : (profile.body_type || 'none'),
-          marital_status: isNewUser ? 'none' : (profile.marital_status || 'none'),
+          city: isNewUser ? '' : (parsedOptionalData.city || ''),
+          occupation: isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none'),
+          height: isNewUser ? '' : (parsedOptionalData.height ? String(parsedOptionalData.height) : (profile.height ? String(profile.height) : '')),
+          body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
+          marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
           hobbies: isNewUser ? [] : (profile.interests || profile.hobbies || []),
           personality: isNewUser ? [] : (profile.personality || []),
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
