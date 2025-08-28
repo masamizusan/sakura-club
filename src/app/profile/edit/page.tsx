@@ -759,6 +759,16 @@ function ProfileEditContent() {
     console.log('  - personality (state):', selectedPersonality)
     console.log('  - custom_culture (form):', data.custom_culture)
     
+    // 🚨 React Hook FormのgetValues()を使って現在の値を取得
+    const formValues = getValues()
+    console.log('🔍 REACT HOOK FORM VALUES CHECK:')
+    console.log('  - occupation (form):', formValues.occupation)
+    console.log('  - height (form):', formValues.height)  
+    console.log('  - body_type (form):', formValues.body_type)
+    console.log('  - marital_status (form):', formValues.marital_status)
+    console.log('  - city (form):', formValues.city)
+    console.log('  - data object:', data)
+    
     setIsLoading(true)
     setError('')
     
@@ -901,13 +911,13 @@ function ProfileEditContent() {
         extendedInterests.push(...finalValues.personality.map(p => `personality:${p}`))
       }
 
-      // 🚨 URLパラメータまたはDOM値から強制的にオプションデータを取得
+      // 🚨 React Hook Form → URLパラメータ → DOM値の優先順位で値を取得
       const forceOptionalData = {
-        city: hasUrlParams ? (urlParams.get('city') || null) : (currentCity || null),
-        occupation: hasUrlParams ? (urlParams.get('occupation') || null) : (currentOccupation || null), 
-        height: hasUrlParams ? (urlParams.get('height') ? Number(urlParams.get('height')) : null) : (currentHeight ? Number(currentHeight) : null),
-        body_type: hasUrlParams ? (urlParams.get('body_type') || null) : (currentBodyType || null),
-        marital_status: hasUrlParams ? (urlParams.get('marital_status') || null) : (currentMaritalStatus || null),
+        city: formValues.city || (hasUrlParams ? (urlParams.get('city') || null) : (currentCity || null)),
+        occupation: formValues.occupation || (hasUrlParams ? (urlParams.get('occupation') || null) : (currentOccupation || null)), 
+        height: formValues.height || (hasUrlParams ? (urlParams.get('height') ? Number(urlParams.get('height')) : null) : (currentHeight ? Number(currentHeight) : null)),
+        body_type: formValues.body_type || (hasUrlParams ? (urlParams.get('body_type') || null) : (currentBodyType || null)),
+        marital_status: formValues.marital_status || (hasUrlParams ? (urlParams.get('marital_status') || null) : (currentMaritalStatus || null)),
       }
       
       const forceAdditionalInfo = JSON.stringify(forceOptionalData)
@@ -954,9 +964,11 @@ function ProfileEditContent() {
           console.error('❌ Error parsing preview data:', error)
         }
       } else {
-        console.log('🚨 No preview data found, using fallback data')
+        console.log('🚨 No preview data found, using React Hook Form data')
         updateData.interests = extendedInterests
-        updateData.city = forceAdditionalInfo // 強制的にJSON保存
+        updateData.city = forceAdditionalInfo // React Hook Formの値を使ってJSON保存
+        console.log('🚨 Saving fallback data - extendedInterests:', extendedInterests)
+        console.log('🚨 Saving fallback data - city (JSON):', forceAdditionalInfo)
       }
 
       console.log('🔄 FINAL update data with preview data:', updateData)
