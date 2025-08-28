@@ -645,6 +645,9 @@ function ProfileEditContent() {
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     console.log('🚀 onSubmit started - プロフィール更新開始')
+    console.log('📝 Form data received:', data)
+    console.log('📝 Selected personality:', selectedPersonality)
+    console.log('📝 Profile images:', profileImages)
     
     // フォームのデフォルト送信を防止
     if (event) {
