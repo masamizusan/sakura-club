@@ -599,9 +599,10 @@ function ProfileEditContent() {
       `写真枚数: ${imageArray.length}`
     )
     
-    setProfileCompletion(completion)
-    setCompletedItems(completedFields)
-    setTotalItems(totalFields)
+    // これは古い関数なので一時的に無効化
+    // setProfileCompletion(completion)
+    // setCompletedItems(completedFields)
+    // setTotalItems(totalFields)
   }, [isForeignMale])
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
@@ -653,8 +654,9 @@ function ProfileEditContent() {
       return value && value.toString().trim().length > 0
     })
     
-    const completedOptional = optionalFields.filter(field => {
+    const optionalFieldsDetail = optionalFields.map(field => {
       let value = profileData[field]
+      let isCompleted
       
       if (field === 'avatar_url') {
         const hasImages = profileImages.length > 0
@@ -665,49 +667,87 @@ function ProfileEditContent() {
           `hasImages: ${hasImages}`,
           `結果: ${hasImages ? '完成' : '未完成'}`
         )
-        return hasImages // 1枚以上あれば完成扱い
-      }
-      
-      if (field === 'city') {
+        isCompleted = hasImages // 1枚以上あれば完成扱い
+      } else if (field === 'city') {
         // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
         value = profileData.city
         if (value && typeof value === 'string' && value.startsWith('{')) {
           try {
             const parsedCity = JSON.parse(value)
             const actualCityValue = parsedCity.city
-            const isCompleted = actualCityValue && actualCityValue !== null && actualCityValue !== '' && actualCityValue !== 'none'
+            isCompleted = actualCityValue && actualCityValue !== null && actualCityValue !== '' && actualCityValue !== 'none'
             console.log('🏙️ Edit page - City field JSON analysis:', { originalValue: value, parsedCity, actualCityValue, isCompleted })
-            return isCompleted
           } catch (e) {
             // JSON解析失敗時は通常の文字列として処理
-            return value && value !== 'none' && value.trim().length > 0
+            isCompleted = value && value !== 'none' && value.trim().length > 0
           }
         } else {
           // 通常のcity文字列
-          return value && value !== 'none' && value !== null && value !== undefined && value !== '' && value.trim().length > 0
+          isCompleted = value && value !== 'none' && value !== null && value !== undefined && value !== '' && value.trim().length > 0
+        }
+      } else if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
+        // オプション項目：JSONデータから解析された値を優先使用
+        let parsedOptionalData = {}
+        try {
+          if (profileData.city && typeof profileData.city === 'string' && profileData.city.startsWith('{')) {
+            parsedOptionalData = JSON.parse(profileData.city)
+          }
+        } catch (e) {
+          // JSON解析失敗時は通常処理
+        }
+        
+        const jsonValue = (parsedOptionalData as any)[field]
+        if (jsonValue !== undefined && jsonValue !== null) {
+          // JSONから取得した値を使用
+          if (field === 'height') {
+            // 身長は文字列または数値として保存される可能性があるので両方チェック
+            const heightNum = typeof jsonValue === 'string' ? parseInt(jsonValue) : jsonValue
+            isCompleted = jsonValue && !isNaN(heightNum) && heightNum > 0
+          } else {
+            isCompleted = jsonValue && jsonValue !== 'none' && jsonValue !== '' && jsonValue.toString().trim().length > 0
+          }
+          console.log(`🔍 Edit page - ${field} field JSON analysis:`, { originalValue: value, jsonValue, isCompleted })
+        } else {
+          // JSONから値が取得できない場合は元のフィールド値を使用
+          if (Array.isArray(value)) {
+            isCompleted = value.length > 0
+          } else if (value === 'none' || value === null || value === undefined || value === '') {
+            isCompleted = false
+          } else {
+            isCompleted = value.toString().trim().length > 0
+          }
+        }
+      } else {
+        // その他のフィールド（personality等）
+        if (Array.isArray(value)) {
+          isCompleted = value.length > 0
+        } else if (value === 'none' || value === null || value === undefined || value === '') {
+          isCompleted = false
+        } else {
+          isCompleted = value.toString().trim().length > 0
         }
       }
       
-      if (Array.isArray(value)) return value.length > 0
-      
-      // 'none'は記入しないを意味するので、完成とはみなさない
-      if (value === 'none') return false
-      
-      return value && value.toString().trim().length > 0
+      return { field, value, isCompleted }
     })
     
+    const completedOptional = optionalFieldsDetail.filter(item => item.isCompleted)
+    
     const totalFields = requiredFields.length + optionalFields.length
-    const completedFields = completedRequired.length + completedOptional.length
-    const completion = Math.round((completedFields / totalFields) * 100)
+    const actualCompletedFields = completedRequired.length + completedOptional.length
+    const actualCompletion = Math.round((actualCompletedFields / totalFields) * 100)
     
     // デバッグ情報
     console.warn('🎯 プロフィール完成度計算:', 
-      `完成度: ${completion}%`,
-      `完成項目: ${completedFields}/${totalFields}`,
+      `完成度: ${actualCompletion}%`,
+      `完成項目: ${actualCompletedFields}/${totalFields}`,
       `完成必須: ${completedRequired.join(', ')}`,
-      `完成オプション: ${completedOptional.join(', ')}`,
+      `完成オプション: ${completedOptional.map(item => item.field).join(', ')}`,
       `写真枚数: ${profileImages.length}`
     )
+    
+    console.log('🔍 Edit page - Detailed Optional Fields:')
+    console.table(optionalFieldsDetail)
 
     function getFieldValue(field: string) {
       switch (field) {
@@ -720,8 +760,8 @@ function ProfileEditContent() {
       }
     }
     
-    setProfileCompletion(completion)
-    setCompletedItems(completedFields)
+    setProfileCompletion(actualCompletion)
+    setCompletedItems(actualCompletedFields)
     setTotalItems(totalFields)
   }, [isForeignMale, profileImages])
 
