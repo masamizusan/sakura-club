@@ -143,6 +143,20 @@ function ProfileEditContent() {
     }
   }, [user])
 
+  // プレビューウィンドウからのメッセージを受信
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.action === 'updateProfile') {
+        console.log('🎯 Received update profile message from preview window')
+        // フォームの送信処理を実行
+        handleSubmit(onSubmit)()
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [handleSubmit, onSubmit])
+
   // 追加の安全策 - ページロード後に再チェック
   useEffect(() => {
     const timer = setTimeout(() => {

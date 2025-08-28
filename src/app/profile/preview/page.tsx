@@ -175,8 +175,14 @@ function ProfilePreviewContent() {
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={() => {
-                    // プロフィールを更新するボタン（実際の機能は編集ページで実装済み）
-                    window.close()
+                    // 親ウィンドウ（プロフィール編集画面）にプロフィール更新メッセージを送信
+                    if (window.opener) {
+                      window.opener.postMessage({ action: 'updateProfile' }, '*')
+                      window.close()
+                    } else {
+                      // 新しいタブで開かれている場合は、プロフィール編集ページに戻る
+                      window.location.href = '/profile/edit?action=update'
+                    }
                   }}
                 >
                   この内容でプロフィールを更新する
