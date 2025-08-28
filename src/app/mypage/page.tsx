@@ -228,9 +228,45 @@ function MyPageContent() {
       
       if (field === 'avatar_url') {
         isCompleted = value && value !== null
+      } else if (field === 'city') {
+        // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
+        if (value && typeof value === 'string' && value.startsWith('{')) {
+          try {
+            const parsedCity = JSON.parse(value)
+            const actualCityValue = parsedCity.city
+            isCompleted = actualCityValue && actualCityValue !== null && actualCityValue !== '' && actualCityValue !== 'none'
+            console.log('🏙️ City field JSON analysis:', { originalValue: value, parsedCity, actualCityValue, isCompleted })
+          } catch (e) {
+            // JSON解析失敗時は通常の文字列として処理
+            isCompleted = value && value !== 'none' && value.trim().length > 0
+          }
+        } else {
+          // 通常のcity文字列
+          isCompleted = value && value !== 'none' && value !== null && value !== undefined && value !== '' && value.trim().length > 0
+        }
+      } else if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
+        // オプション項目：JSONデータから解析された値を使用
+        const jsonValue = (parsedOptionalData as any)[field]
+        if (jsonValue !== undefined && jsonValue !== null) {
+          // JSONから取得した値を使用
+          if (field === 'height') {
+            isCompleted = jsonValue && typeof jsonValue === 'number' && jsonValue > 0
+          } else {
+            isCompleted = jsonValue && jsonValue !== 'none' && jsonValue !== '' && jsonValue.toString().trim().length > 0
+          }
+          console.log(`🔍 ${field} field JSON analysis:`, { originalValue: value, jsonValue, isCompleted })
+        } else {
+          // JSONから値が取得できない場合は元のフィールド値を使用
+          if (Array.isArray(value)) {
+            isCompleted = value.length > 0
+          } else if (value === 'none' || value === null || value === undefined || value === '') {
+            isCompleted = false
+          } else {
+            isCompleted = value.toString().trim().length > 0
+          }
+        }
       } else {
-        // 'none'でもnullでも空でもない場合は完成とみなす
-        // ただし配列の場合は要素が1つ以上ある場合のみ完成
+        // その他のフィールド（personality等）
         if (Array.isArray(value)) {
           isCompleted = value.length > 0
         } else if (value === 'none' || value === null || value === undefined || value === '') {
