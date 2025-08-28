@@ -720,11 +720,11 @@ function ProfileEditContent() {
     console.log('📊 selectedHobbies:', selectedHobbies)
     
     // 🚨 DOM要素から強制的に現在の値を取得
-    const currentOccupation = document.querySelector('select[name="occupation"]')?.value
-    const currentHeight = document.querySelector('input[name="height"]')?.value  
-    const currentBodyType = document.querySelector('select[name="body_type"]')?.value
-    const currentMaritalStatus = document.querySelector('select[name="marital_status"]')?.value
-    const currentCity = document.querySelector('input[name="city"]')?.value
+    const currentOccupation = (document.querySelector('select[name="occupation"]') as HTMLSelectElement)?.value
+    const currentHeight = (document.querySelector('input[name="height"]') as HTMLInputElement)?.value  
+    const currentBodyType = (document.querySelector('select[name="body_type"]') as HTMLSelectElement)?.value
+    const currentMaritalStatus = (document.querySelector('select[name="marital_status"]') as HTMLSelectElement)?.value
+    const currentCity = (document.querySelector('input[name="city"]') as HTMLInputElement)?.value
     
     console.log('🔍 FORCED DOM VALUES CHECK:')
     console.log('  - occupation (DOM):', currentOccupation)
