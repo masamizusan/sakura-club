@@ -667,7 +667,26 @@ function ProfileEditContent() {
         )
         return hasImages // 1枚以上あれば完成扱い
       }
-      if (field === 'city') value = profileData.city
+      
+      if (field === 'city') {
+        // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
+        value = profileData.city
+        if (value && typeof value === 'string' && value.startsWith('{')) {
+          try {
+            const parsedCity = JSON.parse(value)
+            const actualCityValue = parsedCity.city
+            const isCompleted = actualCityValue && actualCityValue !== null && actualCityValue !== '' && actualCityValue !== 'none'
+            console.log('🏙️ Edit page - City field JSON analysis:', { originalValue: value, parsedCity, actualCityValue, isCompleted })
+            return isCompleted
+          } catch (e) {
+            // JSON解析失敗時は通常の文字列として処理
+            return value && value !== 'none' && value.trim().length > 0
+          }
+        } else {
+          // 通常のcity文字列
+          return value && value !== 'none' && value !== null && value !== undefined && value !== '' && value.trim().length > 0
+        }
+      }
       
       if (Array.isArray(value)) return value.length > 0
       
