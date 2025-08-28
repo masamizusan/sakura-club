@@ -79,6 +79,7 @@ function ProfileEditContent() {
     watch,
     reset,
     trigger,
+    getValues,
     formState: { errors }
   } = useForm<ProfileEditFormData>({
     resolver: zodResolver(profileEditSchema)
