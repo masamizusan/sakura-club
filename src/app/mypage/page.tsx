@@ -55,6 +55,8 @@ function MyPageContent() {
 
         console.log('Profile data loaded:', !!profileData, error?.message)
         console.log('🔍 Raw profile data from database:', profileData)
+        console.log('🔍 City field value:', profileData?.city, typeof profileData?.city)
+        console.log('🔍 Interests field value:', profileData?.interests)
 
         if (profileData) {
           setProfile(profileData)
@@ -86,22 +88,66 @@ function MyPageContent() {
       'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
       'personality', 'city'
     ]
+
+    // cityフィールドからJSONデータを解析
+    let parsedOptionalData = {}
+    try {
+      if (profileData.city && typeof profileData.city === 'string') {
+        parsedOptionalData = JSON.parse(profileData.city)
+        console.log('📋 Parsed optional data from city field:', parsedOptionalData)
+      }
+    } catch (e) {
+      console.log('⚠️ Could not parse city field as JSON, treating as regular city data')
+      parsedOptionalData = { city: profileData.city }
+    }
+
+    // interestsフィールドから拡張データを解析
+    const extendedPersonality = []
+    let extendedCustomCulture = null
+    const regularInterests = []
+    
+    if (Array.isArray(profileData.interests)) {
+      profileData.interests.forEach(item => {
+        if (typeof item === 'string') {
+          if (item.startsWith('personality:')) {
+            extendedPersonality.push(item.replace('personality:', ''))
+          } else if (item.startsWith('custom_culture:')) {
+            extendedCustomCulture = item.replace('custom_culture:', '')
+          } else {
+            regularInterests.push(item)
+          }
+        } else {
+          regularInterests.push(item)
+        }
+      })
+    }
+
+    // マージされたプロフィールデータを作成
+    const mergedProfile = {
+      ...profileData,
+      interests: regularInterests,
+      personality: extendedPersonality.length > 0 ? extendedPersonality : null,
+      custom_culture: extendedCustomCulture,
+      ...parsedOptionalData // JSONから解析されたオプションデータ
+    }
+
+    console.log('🔍 Merged profile data:', mergedProfile)
     
     const completedRequired = requiredFields.filter(field => {
       let value
       
-      // Map form field names to profile data field names
+      // Map form field names to merged profile data field names
       switch (field) {
         case 'nickname':
-          value = profileData.name || profileData.nickname
+          value = mergedProfile.name || mergedProfile.nickname
           break
         case 'self_introduction':
-          value = profileData.bio || profileData.self_introduction
+          value = mergedProfile.bio || mergedProfile.self_introduction
           break
         case 'hobbies':
-          value = profileData.interests || profileData.hobbies
+          value = mergedProfile.interests || mergedProfile.hobbies
           // custom_cultureも日本文化の一部として含める
-          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          const hasCustomCulture = mergedProfile.custom_culture && mergedProfile.custom_culture.trim().length > 0
           if (Array.isArray(value) && value.length > 0) {
             // 既に選択された趣味があるので完成とみなす
           } else if (hasCustomCulture) {
@@ -110,10 +156,10 @@ function MyPageContent() {
           }
           break
         case 'prefecture':
-          value = profileData.residence || profileData.prefecture
+          value = mergedProfile.residence || mergedProfile.prefecture
           break
         default:
-          value = profileData[field]
+          value = mergedProfile[field]
       }
       
       if (Array.isArray(value)) return value.length > 0
@@ -121,7 +167,7 @@ function MyPageContent() {
     })
     
     const completedOptional = optionalFields.filter(field => {
-      let value = profileData[field]
+      let value = mergedProfile[field]
       
       // avatar_urlの場合は特別処理
       if (field === 'avatar_url') {
@@ -147,16 +193,16 @@ function MyPageContent() {
       switch (field) {
         case 'nickname':
           mappedField = 'name'
-          value = profileData.name || profileData.nickname
+          value = mergedProfile.name || mergedProfile.nickname
           break
         case 'self_introduction':
           mappedField = 'bio'
-          value = profileData.bio || profileData.self_introduction
+          value = mergedProfile.bio || mergedProfile.self_introduction
           break
         case 'hobbies':
           mappedField = 'interests'
-          value = profileData.interests || profileData.hobbies
-          const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
+          value = mergedProfile.interests || mergedProfile.hobbies
+          const hasCustomCulture = mergedProfile.custom_culture && mergedProfile.custom_culture.trim().length > 0
           if (Array.isArray(value) && value.length > 0) {
             // 既に選択された趣味があるので完成とみなす
           } else if (hasCustomCulture) {
@@ -165,11 +211,11 @@ function MyPageContent() {
           break
         case 'prefecture':
           mappedField = 'residence'
-          value = profileData.residence || profileData.prefecture
+          value = mergedProfile.residence || mergedProfile.prefecture
           break
         default:
           mappedField = field
-          value = profileData[field]
+          value = mergedProfile[field]
       }
       
       const isCompleted = Array.isArray(value) ? value.length > 0 : (value && value.toString().trim().length > 0)
@@ -177,7 +223,7 @@ function MyPageContent() {
     })
     
     const optionalFieldsDetail = optionalFields.map(field => {
-      let value = profileData[field]
+      let value = mergedProfile[field]
       let isCompleted
       
       if (field === 'avatar_url') {
@@ -222,6 +268,9 @@ function MyPageContent() {
     setProfileCompletion(completion)
     setCompletedItems(completedItems)
     setTotalItems(totalRequiredItems)
+    
+    // マージされたプロフィールデータを表示用に設定
+    setProfile(mergedProfile)
   }
 
   const handleLogout = async () => {
@@ -290,6 +339,103 @@ function MyPageContent() {
                 {profile?.age || '未設定'}歳 • {profile?.residence || profile?.prefecture || '未設定'}
               </p>
             </div>
+          </div>
+
+          {/* 詳細プロフィール情報 */}
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {profile?.occupation && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">職業:</span>
+                  <span className="text-gray-600">{profile.occupation}</span>
+                </div>
+              )}
+              {profile?.height && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">身長:</span>
+                  <span className="text-gray-600">{profile.height}cm</span>
+                </div>
+              )}
+              {profile?.body_type && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">体型:</span>
+                  <span className="text-gray-600">{profile.body_type}</span>
+                </div>
+              )}
+              {profile?.marital_status && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">結婚:</span>
+                  <span className="text-gray-600">
+                    {profile.marital_status === 'single' ? '未婚' : profile.marital_status === 'married' ? '既婚' : profile.marital_status}
+                  </span>
+                </div>
+              )}
+              {profile?.nationality && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">国籍:</span>
+                  <span className="text-gray-600">{profile.nationality}</span>
+                </div>
+              )}
+              {profile?.city && (
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 w-16">市区町村:</span>
+                  <span className="text-gray-600">{profile.city}</span>
+                </div>
+              )}
+            </div>
+
+            {/* 自己紹介 */}
+            {profile?.bio && (
+              <div className="mt-4">
+                <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
+                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-lg p-3">
+                  {profile.bio}
+                </p>
+              </div>
+            )}
+
+            {/* 共有したい日本文化 */}
+            {(profile?.interests || profile?.custom_culture) && (
+              <div className="mt-4">
+                <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
+                <div className="space-y-2">
+                  {profile.interests && Array.isArray(profile.interests) && profile.interests.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {profile.interests.map((interest: string, index: number) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {profile.custom_culture && (
+                    <div className="bg-amber-50 rounded-lg p-3">
+                      <p className="text-gray-700 text-sm">{profile.custom_culture}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 性格 */}
+            {profile?.personality && Array.isArray(profile.personality) && profile.personality.length > 0 && (
+              <div className="mt-4">
+                <h3 className="font-medium text-gray-900 mb-2">性格</h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.personality.map((trait: string, index: number) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                    >
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Profile Completion */}

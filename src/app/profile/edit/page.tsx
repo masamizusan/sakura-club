@@ -712,22 +712,196 @@ function ProfileEditContent() {
     }
 
     console.log('📝 Updating profile for user:', user.id)
+    console.log('📋 Form data received:', data)
+    
+    // 🚨 強制デバッグ: 現在のフォーム状態を確認
+    console.log('🔍 Current form values debug:')
+    console.log('📊 selectedPersonality:', selectedPersonality)
+    console.log('📊 selectedHobbies:', selectedHobbies)
+    
+    // 🚨 DOM要素から強制的に現在の値を取得
+    const currentOccupation = document.querySelector('select[name="occupation"]')?.value
+    const currentHeight = document.querySelector('input[name="height"]')?.value  
+    const currentBodyType = document.querySelector('select[name="body_type"]')?.value
+    const currentMaritalStatus = document.querySelector('select[name="marital_status"]')?.value
+    const currentCity = document.querySelector('input[name="city"]')?.value
+    
+    console.log('🔍 FORCED DOM VALUES CHECK:')
+    console.log('  - occupation (DOM):', currentOccupation)
+    console.log('  - height (DOM):', currentHeight)
+    console.log('  - body_type (DOM):', currentBodyType) 
+    console.log('  - marital_status (DOM):', currentMaritalStatus)
+    console.log('  - city (DOM):', currentCity)
+    console.log('  - personality (state):', selectedPersonality)
+    console.log('  - custom_culture (form):', data.custom_culture)
+    
     setIsLoading(true)
     setError('')
     
     try {
       // データベーススキーマに存在するフィールドのみ更新
+      // オプション項目を含む完全な更新データ
       const updateData = {
         name: data.nickname,
         gender: data.gender,
         age: data.age,
         nationality: isForeignMale ? data.nationality : null,
         residence: data.prefecture,
+        city: data.city || null, // cityフィールドは存在する
         bio: data.self_introduction,
         interests: data.hobbies,
         avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
-        // 存在しないカラム（body_type, marital_status, occupation, height, city, personality, custom_culture）は一旦除外
+        // オプション項目をcityフィールドに一時的に保存（実際にはJSONとして別管理）
+        // 実際の保存は複数のフィールドに分散
       }
+
+      // オプション情報をJSONとしてbioフィールドに付加情報として保存
+      // 実際にはカスタムフィールドを作成するのが理想的だが、既存スキーマで対応
+      const optionalData = {
+        occupation: data.occupation || null,
+        height: data.height || null,
+        body_type: data.body_type || null,
+        marital_status: data.marital_status || null,
+        personality: data.personality || null,
+        custom_culture: data.custom_culture || null,
+      }
+
+      // interestsフィールドを拡張して、personalityやcustom_cultureも含める
+      const extendedInterests = [...(data.hobbies || [])]
+      
+      if (data.personality && data.personality.length > 0) {
+        extendedInterests.push(...data.personality.map(p => `personality:${p}`))
+      }
+      
+      if (data.custom_culture && data.custom_culture.trim()) {
+        extendedInterests.push(`custom_culture:${data.custom_culture.trim()}`)
+      }
+
+      // 🚨 強制的にURLパラメータをチェック（プレビュー経由の場合）
+      const urlParams = new URLSearchParams(window.location.search)
+      const hasUrlParams = urlParams.toString().length > 0
+      
+      console.log('🚨 CHECKING URL PARAMS:', hasUrlParams)
+      console.log('🚨 URL string:', window.location.search)
+      
+      if (hasUrlParams) {
+        console.log('🚨 Found URL params - extracting option data:')
+        console.log('  - occupation:', urlParams.get('occupation'))
+        console.log('  - height:', urlParams.get('height'))
+        console.log('  - body_type:', urlParams.get('body_type'))  
+        console.log('  - marital_status:', urlParams.get('marital_status'))
+        console.log('  - city:', urlParams.get('city'))
+        console.log('  - personality:', urlParams.get('personality'))
+      }
+      
+      let finalValues
+      
+      if (isFromPreview) {
+        // プレビューからの場合、URLパラメータから取得
+        finalValues = {
+          occupation: urlParams.get('occupation') || null,
+          height: urlParams.get('height') ? Number(urlParams.get('height')) : null,
+          body_type: urlParams.get('body_type') || null,
+          marital_status: urlParams.get('marital_status') || null,
+          city: urlParams.get('city') || null,
+          personality: urlParams.get('personality') ? urlParams.get('personality')?.split(',') : null,
+          custom_culture: urlParams.get('custom_culture') || null
+        }
+        console.log('🔍 Values from URL params:', finalValues)
+      } else {
+        // 通常のフォーム送信の場合、DOM要素から取得
+        const occupationElement = document.querySelector('select[name="occupation"]') as HTMLSelectElement
+        const heightElement = document.querySelector('input[name="height"]') as HTMLInputElement
+        const bodyTypeElement = document.querySelector('select[name="body_type"]') as HTMLSelectElement
+        const maritalStatusElement = document.querySelector('select[name="marital_status"]') as HTMLSelectElement
+        const cityElement = document.querySelector('input[name="city"]') as HTMLInputElement
+
+        finalValues = {
+          occupation: occupationElement?.value || data.occupation || null,
+          height: heightElement?.value ? Number(heightElement.value) : (data.height || null),
+          body_type: bodyTypeElement?.value || data.body_type || null,
+          marital_status: maritalStatusElement?.value || data.marital_status || null,
+          city: cityElement?.value || data.city || null,
+          personality: selectedPersonality.length > 0 ? selectedPersonality : (data.personality || null),
+          custom_culture: data.custom_culture || null
+        }
+        console.log('🔍 Values from DOM elements:', finalValues)
+      }
+
+      // Additional metadata in city field (JSON format)
+      const additionalInfo = JSON.stringify({
+        city: finalValues.city,
+        occupation: finalValues.occupation,
+        height: finalValues.height,
+        body_type: finalValues.body_type,
+        marital_status: finalValues.marital_status,
+      })
+
+      // personalityも拡張interestsに追加
+      if (finalValues.personality && Array.isArray(finalValues.personality) && finalValues.personality.length > 0) {
+        extendedInterests.push(...finalValues.personality.map(p => `personality:${p}`))
+      }
+
+      // 🚨 URLパラメータまたはDOM値から強制的にオプションデータを取得
+      const forceOptionalData = {
+        city: hasUrlParams ? (urlParams.get('city') || null) : (currentCity || null),
+        occupation: hasUrlParams ? (urlParams.get('occupation') || null) : (currentOccupation || null), 
+        height: hasUrlParams ? (urlParams.get('height') ? Number(urlParams.get('height')) : null) : (currentHeight ? Number(currentHeight) : null),
+        body_type: hasUrlParams ? (urlParams.get('body_type') || null) : (currentBodyType || null),
+        marital_status: hasUrlParams ? (urlParams.get('marital_status') || null) : (currentMaritalStatus || null),
+      }
+      
+      const forceAdditionalInfo = JSON.stringify(forceOptionalData)
+      
+      console.log('🚨 FORCING optional data save:', forceOptionalData)
+      console.log('🚨 FORCING JSON to city field:', forceAdditionalInfo)
+      
+      // personalityも強制的に追加（URLパラメータまたは状態から）
+      let personalityToSave = selectedPersonality
+      if (hasUrlParams && urlParams.get('personality')) {
+        personalityToSave = urlParams.get('personality')?.split(',') || []
+        console.log('🚨 Using personality from URL params:', personalityToSave)
+      }
+      
+      if (personalityToSave && personalityToSave.length > 0) {
+        personalityToSave.forEach(p => {
+          if (p && p.trim()) {
+            extendedInterests.push(`personality:${p.trim()}`)
+          }
+        })
+      }
+
+      // 🚨 localStorageからプレビューデータを取得
+      const previewOptionalData = localStorage.getItem('previewOptionalData')
+      const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
+      
+      if (previewOptionalData && previewExtendedInterests) {
+        console.log('🚨 FOUND PREVIEW DATA in localStorage!')
+        try {
+          const parsedOptionalData = JSON.parse(previewOptionalData)
+          const parsedExtendedInterests = JSON.parse(previewExtendedInterests)
+          
+          console.log('🚨 Using preview optional data:', parsedOptionalData)
+          console.log('🚨 Using preview extended interests:', parsedExtendedInterests)
+          
+          // プレビューデータで上書き
+          updateData.city = JSON.stringify(parsedOptionalData)
+          updateData.interests = parsedExtendedInterests
+          
+          // localStorage cleanup
+          localStorage.removeItem('previewOptionalData')
+          localStorage.removeItem('previewExtendedInterests')
+          
+        } catch (error) {
+          console.error('❌ Error parsing preview data:', error)
+        }
+      } else {
+        console.log('🚨 No preview data found, using fallback data')
+        updateData.interests = extendedInterests
+        updateData.city = forceAdditionalInfo // 強制的にJSON保存
+      }
+
+      console.log('🔄 FINAL update data with preview data:', updateData)
       
       console.log('🔄 Updating database with data:', updateData)
       
@@ -1398,33 +1572,88 @@ function ProfileEditContent() {
               </p>
               <button
                 type="button"
-                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg mb-4"
                 onClick={() => {
-                  const formData = watch()
-                  const queryParams = new URLSearchParams({
-                    nickname: formData.nickname || '',
-                    age: String(formData.age || 18),
-                    gender: formData.gender || '',
-                    nationality: formData.nationality || '',
-                    prefecture: formData.prefecture || '',
-                    city: formData.city || '',
-                    occupation: formData.occupation || '',
-                    height: String(formData.height || ''),
-                    body_type: formData.body_type || '',
-                    marital_status: formData.marital_status || '',
-                    self_introduction: formData.self_introduction || '',
-                    hobbies: selectedHobbies.join(','),
-                    personality: selectedPersonality.join(','),
-                    custom_culture: formData.custom_culture || '',
-                    image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || ''
-                  })
-                  window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
+                  // 🔧 デバッグ: 直接更新を試す
+                  console.log('🔧 Direct update button clicked!')
+                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
+                  if (hiddenSubmit) {
+                    console.log('🔧 Found hidden submit, triggering direct update')
+                    hiddenSubmit.click()
+                  } else {
+                    console.log('❌ Hidden submit not found, trying preview instead')
+                    const formData = watch()
+                    const queryParams = new URLSearchParams({
+                      nickname: formData.nickname || '',
+                      age: String(formData.age || 18),
+                      gender: formData.gender || '',
+                      nationality: formData.nationality || '',
+                      prefecture: formData.prefecture || '',
+                      city: formData.city || '',
+                      occupation: formData.occupation || '',
+                      height: String(formData.height || ''),
+                      body_type: formData.body_type || '',
+                      marital_status: formData.marital_status || '',
+                      self_introduction: formData.self_introduction || '',
+                      hobbies: selectedHobbies.join(','),
+                      personality: selectedPersonality.join(','),
+                      custom_culture: formData.custom_culture || '',
+                      image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || ''
+                    })
+                    window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
+                  }
                 }}
               >
-                👀 プレビューで確認・更新する
+                🔧 【テスト】直接更新 / プレビュー
+              </button>
+              
+              {/* 🔧 テスト用直接更新ボタン */}
+              <button
+                type="button"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                onClick={() => {
+                  // 隠しsubmitボタンをクリックして直接フォーム送信
+                  console.log('🔧 Test button clicked - attempting direct update')
+                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
+                  if (hiddenSubmit) {
+                    console.log('🔧 Found hidden submit button, clicking now')
+                    hiddenSubmit.click()
+                  } else {
+                    console.log('❌ Hidden submit button not found')
+                  }
+                }}
+              >
+                🔧 【テスト用】直接更新
               </button>
               <p className="text-sm text-sakura-700 mt-3 text-center">
                 相手からの見え方を確認してから更新できます
+              </p>
+            </div>
+            
+            {/* 🔧 テスト用直接更新ボタン */}
+            <div className="bg-green-50 border border-green-300 rounded-lg p-6 mt-4">
+              <h3 className="text-lg font-semibold text-green-800 mb-3 text-center">
+                🔧 デバッグ用直接更新
+              </h3>
+              <p className="text-sm text-green-700 mb-4 text-center">
+                プレビューを経由せず直接データベースに保存します
+              </p>
+              <button
+                type="button"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                onClick={() => {
+                  // 隠しsubmitボタンをクリックして直接フォーム送信
+                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
+                  if (hiddenSubmit) {
+                    console.log('🔧 Clicking hidden submit button for direct update')
+                    hiddenSubmit.click()
+                  }
+                }}
+              >
+                🔧 【テスト用】直接更新
+              </button>
+              <p className="text-sm text-green-700 mt-3 text-center">
+                デバッグ用：プレビューなしで即座に保存
               </p>
             </div>
           </div>

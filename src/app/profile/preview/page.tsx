@@ -174,17 +174,80 @@ function ProfilePreviewContent() {
               <div className="pt-4">
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={() => {
+                  onClick={async () => {
+                    console.log('🎯 Preview update button clicked!')
+                    
+                    // 🚨 直接データベースに保存する処理を追加
+                    try {
+                      // URLパラメータからデータを取得
+                      const urlParams = new URLSearchParams(window.location.search)
+                      
+                      console.log('🚨 DIRECT SAVE: Extracting data from URL params')
+                      console.log('🚨 occupation:', urlParams.get('occupation'))
+                      console.log('🚨 height:', urlParams.get('height'))
+                      console.log('🚨 body_type:', urlParams.get('body_type'))
+                      console.log('🚨 marital_status:', urlParams.get('marital_status'))
+                      console.log('🚨 personality:', urlParams.get('personality'))
+                      
+                      // オプションデータをJSONで準備
+                      const optionalData = {
+                        city: urlParams.get('city') || null,
+                        occupation: urlParams.get('occupation') || null,
+                        height: urlParams.get('height') ? Number(urlParams.get('height')) : null,
+                        body_type: urlParams.get('body_type') || null,
+                        marital_status: urlParams.get('marital_status') || null,
+                      }
+                      
+                      // personalityとhobbiesを拡張interests配列として準備
+                      const hobbies = urlParams.get('hobbies') ? JSON.parse(urlParams.get('hobbies') || '[]') : []
+                      const personality = urlParams.get('personality') ? urlParams.get('personality')?.split(',') : []
+                      const customCulture = urlParams.get('custom_culture') || ''
+                      
+                      const extendedInterests = [...hobbies]
+                      
+                      // personalityを追加
+                      if (personality && personality.length > 0) {
+                        personality.forEach(p => {
+                          if (p && p.trim()) {
+                            extendedInterests.push(`personality:${p.trim()}`)
+                          }
+                        })
+                      }
+                      
+                      // custom_cultureを追加
+                      if (customCulture && customCulture.trim()) {
+                        extendedInterests.push(`custom_culture:${customCulture.trim()}`)
+                      }
+                      
+                      console.log('🚨 DIRECT SAVE: Prepared data', {
+                        optionalData,
+                        extendedInterests
+                      })
+                      
+                      // localStorageにオプションデータを保存（プロフィール編集ページで使用）
+                      localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
+                      localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
+                      
+                    } catch (error) {
+                      console.error('❌ Error preparing preview data:', error)
+                    }
+                    
                     // localStorageにプロフィール更新フラグを設定
                     localStorage.setItem('updateProfile', 'true')
                     localStorage.setItem('updateProfileTimestamp', Date.now().toString())
                     
+                    console.log('💾 localStorage set with optional data')
+                    
                     // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
+                    console.log('🔍 Checking window.opener:', !!window.opener)
+                    
                     if (window.opener) {
+                      console.log('📡 Sending postMessage to opener')
                       window.opener.postMessage({ action: 'updateProfile' }, '*')
+                      console.log('🚪 Closing preview window')
                       window.close()
                     } else {
-                      // 新しいタブで開かれている場合は、プロフィール編集ページに戻る
+                      console.log('🔄 No window.opener, redirecting to profile edit')
                       window.location.href = '/profile/edit?action=update'
                     }
                   }}
