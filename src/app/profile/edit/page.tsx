@@ -425,7 +425,7 @@ function ProfileEditContent() {
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
           city: isNewUser ? '' : (parsedOptionalData.city || ''),
           occupation: isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none'),
-          height: isNewUser ? '' : String(parsedOptionalData.height || profile.height || ''),
+          height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
           marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
           hobbies: isNewUser ? [] : (profile.interests || profile.hobbies || []),
