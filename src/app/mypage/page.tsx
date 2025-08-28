@@ -107,7 +107,7 @@ function MyPageContent() {
     const regularInterests: string[] = []
     
     if (Array.isArray(profileData.interests)) {
-      profileData.interests.forEach(item => {
+      profileData.interests.forEach((item: any) => {
         if (typeof item === 'string') {
           if (item.startsWith('personality:')) {
             extendedPersonality.push(item.replace('personality:', ''))
