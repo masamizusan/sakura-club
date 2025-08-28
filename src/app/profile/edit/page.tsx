@@ -1386,50 +1386,24 @@ function ProfileEditContent() {
               </p>
             </div>
 
-            {/* 更新ボタン */}
-            <div className="mt-8">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                onClick={async () => {
-                  console.log('📝 Submit button clicked!')
-                  console.log('📊 Form errors:', errors)
-                  const currentFormData = watch()
-                  console.log('📋 Current form data:', currentFormData)
-                  
-                  // 手動でフォーム検証を実行
-                  const isValid = await trigger()
-                  console.log('🔍 Form validation result:', isValid)
-                  
-                  if (!isValid) {
-                    console.error('❌ Form validation failed. Errors:', errors)
-                  } else {
-                    console.log('✅ Form validation passed')
-                  }
-                }}
-                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    更新中...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    プロフィールを更新する
-                  </>
-                )}
-              </Button>
-            </div>
+            {/* 隠し送信ボタン - localStorageからの更新処理で使用 */}
+            <button type="submit" style={{ display: 'none' }} aria-hidden="true">
+              Hidden Submit
+            </button>
 
             </form>
 
             {/* プレビューボタン - フォーム外に配置 */}
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-6">
+            <div className="bg-sakura-50 border border-sakura-300 rounded-lg p-6 mt-8">
+              <h3 className="text-lg font-semibold text-sakura-800 mb-3 text-center">
+                プロフィール確認・更新
+              </h3>
+              <p className="text-sm text-sakura-700 mb-4 text-center">
+                入力内容を確認してからプロフィールを更新できます
+              </p>
               <button
                 type="button"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
                 onClick={() => {
                   const formData = watch()
                   const queryParams = new URLSearchParams({
@@ -1452,10 +1426,10 @@ function ProfileEditContent() {
                   window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
                 }}
               >
-                👀 プレビュー | 相手からの見え方
+                👀 プレビューで確認・更新する
               </button>
-              <p className="text-sm text-orange-700 mt-2 text-center">
-                あなたのプロフィールが他の人にどう見えるかを確認できます
+              <p className="text-sm text-sakura-700 mt-3 text-center">
+                相手からの見え方を確認してから更新できます
               </p>
             </div>
           </div>
