@@ -688,16 +688,19 @@ function ProfileEditContent() {
       } else if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
         // オプション項目：JSONデータから解析された値を優先使用
         let parsedOptionalData = {}
+        let hasJsonData = false
         try {
           if (profileData.city && typeof profileData.city === 'string' && profileData.city.startsWith('{')) {
             parsedOptionalData = JSON.parse(profileData.city)
+            // JSONオブジェクトに実際のデータがあるかチェック
+            hasJsonData = Object.values(parsedOptionalData).some(val => val !== null && val !== undefined && val !== '')
           }
         } catch (e) {
           // JSON解析失敗時は通常処理
         }
         
         const jsonValue = (parsedOptionalData as any)[field]
-        if (jsonValue !== undefined && jsonValue !== null) {
+        if (hasJsonData && jsonValue !== undefined && jsonValue !== null && jsonValue !== '') {
           // JSONから取得した値を使用
           if (field === 'height') {
             // 身長は文字列または数値として保存される可能性があるので両方チェック
@@ -706,7 +709,7 @@ function ProfileEditContent() {
           } else {
             isCompleted = jsonValue && jsonValue !== 'none' && jsonValue !== '' && jsonValue.toString().trim().length > 0
           }
-          console.log(`🔍 Edit page - ${field} field JSON analysis:`, { originalValue: value, jsonValue, isCompleted })
+          console.log(`🔍 Edit page - ${field} field JSON analysis:`, { originalValue: value, jsonValue, isCompleted, hasJsonData })
         } else {
           // JSONから値が取得できない場合は元のフィールド値を使用
           if (Array.isArray(value)) {
