@@ -795,6 +795,7 @@ function ProfileEditContent() {
       }
       
       let finalValues
+      const isFromPreview = urlParams.has('occupation') || urlParams.has('height') || urlParams.has('body_type')
       
       if (isFromPreview) {
         // プレビューからの場合、URLパラメータから取得
