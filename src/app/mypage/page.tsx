@@ -250,7 +250,9 @@ function MyPageContent() {
         if (jsonValue !== undefined && jsonValue !== null) {
           // JSONから取得した値を使用
           if (field === 'height') {
-            isCompleted = jsonValue && typeof jsonValue === 'number' && jsonValue > 0
+            // 身長は文字列または数値として保存される可能性があるので両方チェック
+            const heightNum = typeof jsonValue === 'string' ? parseInt(jsonValue) : jsonValue
+            isCompleted = jsonValue && !isNaN(heightNum) && heightNum > 0
           } else {
             isCompleted = jsonValue && jsonValue !== 'none' && jsonValue !== '' && jsonValue.toString().trim().length > 0
           }
