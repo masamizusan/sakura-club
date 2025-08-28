@@ -893,15 +893,14 @@ function ProfileEditContent() {
         })
       }
 
-      // 🚨 localStorageからプレビューデータを取得
-      const previewOptionalData = localStorage.getItem('previewOptionalData')
-      const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
+      // 🚨 localStorageからプレビューデータを取得（既に上でpreviewOptionalDataは定義済み）
+      const previewExtendedInterestsFromStorage = localStorage.getItem('previewExtendedInterests')
       
-      if (previewOptionalData && previewExtendedInterests) {
+      if (previewOptionalData && previewExtendedInterestsFromStorage) {
         console.log('🚨 FOUND PREVIEW DATA in localStorage!')
         try {
           const parsedOptionalData = JSON.parse(previewOptionalData)
-          const parsedExtendedInterests = JSON.parse(previewExtendedInterests)
+          const parsedExtendedInterests = JSON.parse(previewExtendedInterestsFromStorage)
           
           console.log('🚨 Using preview optional data:', parsedOptionalData)
           console.log('🚨 Using preview extended interests:', parsedExtendedInterests)
