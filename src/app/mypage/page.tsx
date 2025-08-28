@@ -102,9 +102,9 @@ function MyPageContent() {
     }
 
     // interestsフィールドから拡張データを解析
-    const extendedPersonality = []
-    let extendedCustomCulture = null
-    const regularInterests = []
+    const extendedPersonality: string[] = []
+    let extendedCustomCulture: string | null = null
+    const regularInterests: string[] = []
     
     if (Array.isArray(profileData.interests)) {
       profileData.interests.forEach(item => {
