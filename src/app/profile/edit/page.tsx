@@ -290,7 +290,13 @@ function ProfileEditContent() {
         console.log('Loaded profile data:', profile)
         
         // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
-        let parsedOptionalData = {}
+        let parsedOptionalData: {
+          city?: string;
+          occupation?: string;
+          height?: number;
+          body_type?: string;
+          marital_status?: string;
+        } = {}
         if (profile.city && typeof profile.city === 'string') {
           try {
             // JSONデータの場合はパース
