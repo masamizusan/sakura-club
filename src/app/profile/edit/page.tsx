@@ -143,21 +143,54 @@ function ProfileEditContent() {
     }
   }, [user])
 
-  // プレビューウィンドウからのメッセージを受信
+  // プレビューウィンドウからのメッセージを受信 & localStorageを監視
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.action === 'updateProfile') {
         console.log('🎯 Received update profile message from preview window')
-        // フォームの送信処理を実行
-        const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
-        if (submitButton) {
-          submitButton.click()
+        executeProfileUpdate()
+      }
+    }
+
+    const checkLocalStorageUpdate = () => {
+      const shouldUpdate = localStorage.getItem('updateProfile')
+      const timestamp = localStorage.getItem('updateProfileTimestamp')
+      
+      if (shouldUpdate === 'true' && timestamp) {
+        const updateTime = parseInt(timestamp)
+        const currentTime = Date.now()
+        
+        // 5秒以内のリクエストのみ有効とする
+        if (currentTime - updateTime < 5000) {
+          console.log('🎯 Detected profile update request from localStorage')
+          localStorage.removeItem('updateProfile')
+          localStorage.removeItem('updateProfileTimestamp')
+          executeProfileUpdate()
         }
       }
     }
 
+    const executeProfileUpdate = () => {
+      // フォームの送信処理を実行
+      const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
+      if (submitButton) {
+        submitButton.click()
+      }
+    }
+
+    // メッセージリスナーを設定
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
+    
+    // localStorageを定期的にチェック
+    const storageCheck = setInterval(checkLocalStorageUpdate, 1000)
+    
+    // 初回チェック
+    checkLocalStorageUpdate()
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearInterval(storageCheck)
+    }
   }, [handleSubmit])
 
   // 追加の安全策 - ページロード後に再チェック

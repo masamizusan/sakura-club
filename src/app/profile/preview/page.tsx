@@ -175,7 +175,11 @@ function ProfilePreviewContent() {
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={() => {
-                    // 親ウィンドウ（プロフィール編集画面）にプロフィール更新メッセージを送信
+                    // localStorageにプロフィール更新フラグを設定
+                    localStorage.setItem('updateProfile', 'true')
+                    localStorage.setItem('updateProfileTimestamp', Date.now().toString())
+                    
+                    // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
                     if (window.opener) {
                       window.opener.postMessage({ action: 'updateProfile' }, '*')
                       window.close()
