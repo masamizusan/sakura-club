@@ -716,22 +716,17 @@ function ProfileEditContent() {
     setError('')
     
     try {
+      // データベーススキーマに存在するフィールドのみ更新
       const updateData = {
         name: data.nickname,
         gender: data.gender,
         age: data.age,
         nationality: isForeignMale ? data.nationality : null,
         residence: data.prefecture,
-        city: data.city || null,
         bio: data.self_introduction,
         interests: data.hobbies,
-        personality: selectedPersonality,
-        custom_culture: data.custom_culture || null,
         avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
-        occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
-        height: data.height || null,
-        body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
-        marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null
+        // 存在しないカラム（body_type, marital_status, occupation, height, city, personality, custom_culture）は一旦除外
       }
       
       console.log('🔄 Updating database with data:', updateData)
