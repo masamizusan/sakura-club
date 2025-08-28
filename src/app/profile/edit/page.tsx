@@ -850,6 +850,19 @@ function ProfileEditContent() {
         console.log('🔍 Values from DOM elements:', finalValues)
       }
 
+      // finalValuesがnullの場合はデフォルト値を設定
+      if (!finalValues) {
+        finalValues = {
+          occupation: null,
+          height: null,
+          body_type: null,
+          marital_status: null,
+          city: null,
+          personality: null,
+          custom_culture: null
+        }
+      }
+
       // Additional metadata in city field (JSON format)
       const additionalInfo = JSON.stringify({
         city: finalValues.city,
