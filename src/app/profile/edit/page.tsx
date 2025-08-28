@@ -662,25 +662,29 @@ function ProfileEditContent() {
     setError('')
     
     try {
+      const updateData = {
+        name: data.nickname,
+        gender: data.gender,
+        age: data.age,
+        nationality: isForeignMale ? data.nationality : null,
+        residence: data.prefecture,
+        city: data.city || null,
+        bio: data.self_introduction,
+        interests: data.hobbies,
+        personality: selectedPersonality,
+        custom_culture: data.custom_culture || null,
+        avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
+        occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
+        height: data.height || null,
+        body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
+        marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null
+      }
+      
+      console.log('🔄 Updating database with data:', updateData)
+      
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          name: data.nickname,
-          gender: data.gender,
-          age: data.age,
-          nationality: isForeignMale ? data.nationality : null,
-          residence: data.prefecture,
-          city: data.city || null,
-          bio: data.self_introduction,
-          interests: data.hobbies,
-          personality: selectedPersonality,
-          custom_culture: data.custom_culture || null,
-          avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
-          occupation: (data.occupation && data.occupation !== 'none') ? data.occupation : null,
-          height: data.height || null,
-          body_type: (data.body_type && data.body_type !== 'none') ? data.body_type : null,
-          marital_status: (data.marital_status && data.marital_status !== 'none') ? data.marital_status : null
-        })
+        .update(updateData)
         .eq('id', user.id)
 
       if (updateError) {

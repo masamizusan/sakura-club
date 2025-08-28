@@ -54,6 +54,7 @@ function MyPageContent() {
           .single()
 
         console.log('Profile data loaded:', !!profileData, error?.message)
+        console.log('🔍 Raw profile data from database:', profileData)
 
         if (profileData) {
           setProfile(profileData)
