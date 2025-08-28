@@ -795,20 +795,41 @@ function ProfileEditContent() {
       }
       
       let finalValues
-      const isFromPreview = urlParams.has('occupation') || urlParams.has('height') || urlParams.has('body_type')
+      // プレビューからの場合のみ、URLパラメータから取得（localStorage経由の場合）
+      const previewOptionalData = localStorage.getItem('previewOptionalData')
+      const isFromPreview = !!previewOptionalData
       
       if (isFromPreview) {
-        // プレビューからの場合、URLパラメータから取得
-        finalValues = {
-          occupation: urlParams.get('occupation') || null,
-          height: urlParams.get('height') ? Number(urlParams.get('height')) : null,
-          body_type: urlParams.get('body_type') || null,
-          marital_status: urlParams.get('marital_status') || null,
-          city: urlParams.get('city') || null,
-          personality: urlParams.get('personality') ? urlParams.get('personality')?.split(',') : null,
-          custom_culture: urlParams.get('custom_culture') || null
+        // プレビューからの場合、localStorageから取得
+        try {
+          const parsedOptionalData = JSON.parse(previewOptionalData)
+          const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
+          const extendedInterests = previewExtendedInterests ? JSON.parse(previewExtendedInterests) : []
+          
+          // personality データを抽出
+          const personalityFromInterests = extendedInterests
+            .filter((item: string) => item.startsWith('personality:'))
+            .map((item: string) => item.replace('personality:', ''))
+          
+          finalValues = {
+            occupation: parsedOptionalData.occupation,
+            height: parsedOptionalData.height,
+            body_type: parsedOptionalData.body_type,
+            marital_status: parsedOptionalData.marital_status,
+            city: parsedOptionalData.city,
+            personality: personalityFromInterests.length > 0 ? personalityFromInterests : null,
+            custom_culture: extendedInterests.find((item: string) => item.startsWith('custom_culture:'))?.replace('custom_culture:', '') || null
+          }
+          
+          // localStorage クリア
+          localStorage.removeItem('previewOptionalData')
+          localStorage.removeItem('previewExtendedInterests')
+          
+          console.log('🔍 Values from localStorage preview data:', finalValues)
+        } catch (error) {
+          console.error('❌ Error parsing preview data:', error)
+          finalValues = null
         }
-        console.log('🔍 Values from URL params:', finalValues)
       } else {
         // 通常のフォーム送信の場合、DOM要素から取得
         const occupationElement = document.querySelector('select[name="occupation"]') as HTMLSelectElement
