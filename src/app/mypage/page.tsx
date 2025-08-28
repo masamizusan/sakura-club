@@ -185,7 +185,6 @@ function MyPageContent() {
     })
     
     const totalRequiredItems = requiredFields.length + optionalFields.length
-    const completedItems = completedRequired.length + completedOptional.length
     
     // 詳細デバッグログ
     const requiredFieldsDetail = requiredFields.map(field => {
@@ -281,16 +280,23 @@ function MyPageContent() {
       return { field, value, isCompleted, reason: field === 'avatar_url' ? 'avatar check' : Array.isArray(value) ? 'array check' : value === 'none' ? 'none value' : !value ? 'no value' : 'has value' }
     })
     
+    // 正確な完成度計算
+    const completedRequiredCount = requiredFieldsDetail.filter(f => f.isCompleted).length
+    const completedOptionalCount = optionalFieldsDetail.filter(f => f.isCompleted).length
+    const actualCompletedItems = completedRequiredCount + completedOptionalCount
+    const actualCompletionRate = Math.round((actualCompletedItems / totalRequiredItems) * 100)
+    
     console.log('🔍 Detailed Profile Completion Analysis:')
     console.log('=== 必須フィールド ===')
     console.table(requiredFieldsDetail)
     console.log('=== オプションフィールド ===')  
     console.table(optionalFieldsDetail)
     console.log('=== サマリー ===')
-    console.log('完成した必須フィールド:', requiredFieldsDetail.filter(f => f.isCompleted).length, '/', requiredFields.length)
-    console.log('完成したオプションフィールド:', optionalFieldsDetail.filter(f => f.isCompleted).length, '/', optionalFields.length)
-    console.log('総完成項目:', completedItems, '/', totalRequiredItems)
-    console.log('完成率:', Math.round((completedItems / totalRequiredItems) * 100) + '%')
+    console.log('完成した必須フィールド:', completedRequiredCount, '/', requiredFields.length)
+    console.log('完成したオプションフィールド:', completedOptionalCount, '/', optionalFields.length)
+    console.log('総完成項目:', actualCompletedItems, '/', totalRequiredItems)
+    console.log('実際の完成率:', actualCompletionRate + '%')
+    console.log('⚠️ 古い計算 - completedItems:', completedItems, '/', totalRequiredItems)
     
     // 未完成のフィールドを明示
     const incompleteRequired = requiredFieldsDetail.filter(f => !f.isCompleted)
@@ -302,10 +308,17 @@ function MyPageContent() {
       console.log('❌ 未完成のオプションフィールド:', incompleteOptional)
     }
     
-    const completion = Math.round((completedItems / totalRequiredItems) * 100)
-    setProfileCompletion(completion)
-    setCompletedItems(completedItems)
+    // 正確な完成度をUIに設定
+    setProfileCompletion(actualCompletionRate)
+    setCompletedItems(actualCompletedItems)
     setTotalItems(totalRequiredItems)
+    
+    console.log('🎯 最終UI設定:', {
+      completion: actualCompletionRate,
+      completedItems: actualCompletedItems,
+      totalItems: totalRequiredItems,
+      oldCompletion: Math.round((completedItems / totalRequiredItems) * 100)
+    })
     
     // マージされたプロフィールデータを表示用に設定
     setProfile(mergedProfile)
