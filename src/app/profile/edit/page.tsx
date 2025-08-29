@@ -135,7 +135,7 @@ function ProfileEditContent() {
         
         reset({
           nickname: urlParams.get('nickname') || '',
-          gender: urlParams.get('gender') as 'male' | 'female' | '',
+          gender: (urlParams.get('gender') as 'male' | 'female') || 'female',
           age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
           nationality: urlParams.get('nationality') || '',
           prefecture: urlParams.get('prefecture') || '',
