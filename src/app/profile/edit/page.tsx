@@ -192,7 +192,11 @@ function ProfileEditContent() {
       const isSignupFlow = hasType && hasNickname
       console.log('🚨 新規登録フロー判定:', { hasType, hasNickname, isSignupFlow })
       
-      if (isSignupFlow) {
+      // 🚨 緊急：プロフィール削除を一時停止（ログイン問題解決まで）
+      const enableProfileDeletion = false
+      console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
+      
+      if (isSignupFlow && enableProfileDeletion) {
         console.log('🚨 新規登録フロー検出！既存プロフィール完全削除開始')
         if (user) {
           await deleteExistingProfileAndStartFresh()
@@ -202,7 +206,7 @@ function ProfileEditContent() {
           const checkUser = setInterval(() => {
             if (user) {
               console.log('👤 認証完了 - 遅延プロフィール削除実行')
-              deleteExistingProfileAndStartFresh()
+              if (enableProfileDeletion) deleteExistingProfileAndStartFresh()
               clearInterval(checkUser)
             }
           }, 500)
