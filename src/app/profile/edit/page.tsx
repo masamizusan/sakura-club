@@ -246,11 +246,43 @@ function ProfileEditContent() {
     }
 
     const executeProfileUpdate = () => {
-      // フォームの送信処理を実行
-      const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
-      if (submitButton) {
-        submitButton.click()
+      console.log('🎯 executeProfileUpdate called - checking localStorage data')
+      
+      // プレビューからのlocalStorageデータを確認
+      const previewOptionalData = localStorage.getItem('previewOptionalData')
+      const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
+      
+      console.log('🔍 localStorage previewOptionalData:', previewOptionalData)
+      console.log('🔍 localStorage previewExtendedInterests:', previewExtendedInterests)
+      
+      if (previewOptionalData) {
+        try {
+          const parsedData = JSON.parse(previewOptionalData)
+          console.log('🚨 occupation:', parsedData.occupation)
+          console.log('🚨 height:', parsedData.height)
+          console.log('🚨 body_type:', parsedData.body_type)
+          console.log('🚨 marital_status:', parsedData.marital_status)
+          console.log('🚨 city:', parsedData.city)
+          
+          // フォームの値を更新
+          setValue('occupation', parsedData.occupation || 'none')
+          setValue('height', parsedData.height || undefined)
+          setValue('body_type', parsedData.body_type || 'average')
+          setValue('marital_status', parsedData.marital_status || 'single')
+          setValue('city', parsedData.city || '')
+        } catch (error) {
+          console.error('❌ Error parsing localStorage data:', error)
+        }
       }
+      
+      // 短い遅延の後でフォーム送信を実行（値の更新を確実にするため）
+      setTimeout(() => {
+        const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
+        if (submitButton) {
+          console.log('🎯 Clicking submit button after localStorage data processing')
+          submitButton.click()
+        }
+      }, 100)
     }
 
     // メッセージリスナーを設定
