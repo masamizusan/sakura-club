@@ -199,7 +199,7 @@ function ProfileEditContent() {
       if (isSignupFlow && enableProfileDeletion) {
         console.log('🚨 新規登録フロー検出！既存プロフィール完全削除開始')
         if (user) {
-          await deleteExistingProfileAndStartFresh()
+          deleteExistingProfileAndStartFresh()
         } else {
           console.log('⏳ ユーザー認証待ち...')
           // ユーザー認証を待つ間隔実行
