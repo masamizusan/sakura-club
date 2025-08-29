@@ -119,8 +119,9 @@ function ProfileEditContent() {
       console.log('🔑 Type parameter:', hasType)
       console.log('👤 Nickname parameter:', hasNickname)
       
-      // 新規登録フロー判定を修正（既存ユーザーの場合は実行しない）
-      const isSignupFlow = false // 一時的に無効化
+      // 新規登録フロー判定：typeとnicknameのパラメータがあれば新規登録
+      const isSignupFlow = hasType && hasNickname
+      console.log('🚨 新規登録フロー判定:', { hasType, hasNickname, isSignupFlow })
       
       if (isSignupFlow) {
         console.log('🚨 新規登録フロー検出！強制初期化開始')
