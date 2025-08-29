@@ -106,6 +106,75 @@ function ProfileEditContent() {
     }
   }
 
+  // 新規登録時の完全プロフィール削除
+  const deleteExistingProfileAndStartFresh = async () => {
+    if (!user?.id) {
+      console.error('❌ User ID not available for profile deletion')
+      return
+    }
+
+    try {
+      console.log('🗑️ 既存プロフィール完全削除開始 - User ID:', user.id)
+      
+      // プロフィールレコードを完全削除
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id)
+      
+      if (deleteError) {
+        console.error('❌ Profile deletion error:', deleteError)
+        // エラーがあってもフォームは初期化する
+      } else {
+        console.log('✅ 既存プロフィール完全削除成功')
+      }
+      
+      // フォームを完全に初期化（URLパラメータから基本情報のみ設定）
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search)
+        
+        reset({
+          nickname: urlParams.get('nickname') || '',
+          gender: urlParams.get('gender') as 'male' | 'female' | '',
+          age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
+          nationality: urlParams.get('nationality') || '',
+          prefecture: urlParams.get('prefecture') || '',
+          city: '', // 完全に空
+          occupation: 'none', // デフォルト値
+          height: undefined, // 空
+          body_type: 'none', // デフォルト値  
+          marital_status: 'none', // デフォルト値
+          self_introduction: '', // 空
+          hobbies: [], // 空配列
+          personality: [], // 空配列
+          custom_culture: '' // 空
+        })
+        
+        // 状態も初期化
+        setSelectedHobbies([])
+        setSelectedPersonality([])
+        setProfileImages([])
+        
+        console.log('✅ フォーム完全初期化完了 - 真の新規登録状態')
+        
+        // 完成度を再計算
+        setTimeout(() => {
+          const cleanData = {
+            nickname: urlParams.get('nickname') || '',
+            gender: urlParams.get('gender') || '',
+            age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
+            prefecture: urlParams.get('prefecture') || '',
+            // 他は全て空
+          }
+          calculateProfileCompletion(cleanData)
+        }, 500)
+      }
+      
+    } catch (error) {
+      console.error('❌ Profile deletion process error:', error)
+    }
+  }
+
   // 強制初期化 - 複数のトリガーで確実に実行
   useEffect(() => {
     console.log('🔍 Page load check - user:', user?.id)
@@ -124,16 +193,16 @@ function ProfileEditContent() {
       console.log('🚨 新規登録フロー判定:', { hasType, hasNickname, isSignupFlow })
       
       if (isSignupFlow) {
-        console.log('🚨 新規登録フロー検出！強制初期化開始')
+        console.log('🚨 新規登録フロー検出！既存プロフィール完全削除開始')
         if (user) {
-          forceCompleteReset()
+          await deleteExistingProfileAndStartFresh()
         } else {
           console.log('⏳ ユーザー認証待ち...')
           // ユーザー認証を待つ間隔実行
           const checkUser = setInterval(() => {
             if (user) {
-              console.log('👤 認証完了 - 遅延初期化実行')
-              forceCompleteReset()
+              console.log('👤 認証完了 - 遅延プロフィール削除実行')
+              deleteExistingProfileAndStartFresh()
               clearInterval(checkUser)
             }
           }, 500)
