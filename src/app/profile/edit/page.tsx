@@ -718,8 +718,9 @@ function ProfileEditContent() {
           } else if (value === 'none' || value === null || value === undefined || value === '') {
             isCompleted = false
           } else {
-            isCompleted = value.toString().trim().length > 0
+            isCompleted = value && value.toString().trim().length > 0
           }
+          console.log(`🔍 Edit page - ${field} field fallback analysis:`, { originalValue: value, isCompleted, reason: 'no JSON data' })
         }
       } else {
         // その他のフィールド（personality等）
