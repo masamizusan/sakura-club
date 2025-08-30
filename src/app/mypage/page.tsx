@@ -143,9 +143,17 @@ function MyPageContent() {
           break
         case 'self_introduction':
           value = mergedProfile.bio || mergedProfile.self_introduction
+          // デフォルト文は未完了扱い
+          if (value === '後でプロフィールを詳しく書きます。' || value === '') {
+            value = null
+          }
           break
         case 'hobbies':
           value = mergedProfile.interests || mergedProfile.hobbies
+          // デフォルトの['その他']は未完了扱い
+          if (Array.isArray(value) && value.length === 1 && value[0] === 'その他') {
+            value = null
+          }
           // custom_cultureも日本文化の一部として含める
           const hasCustomCulture = mergedProfile.custom_culture && mergedProfile.custom_culture.trim().length > 0
           if (Array.isArray(value) && value.length > 0) {
