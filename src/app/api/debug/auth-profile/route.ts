@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         profilesByEmail: profilesByEmail || [],
         emailSearchError: emailSearchError?.message || null,
         schemaInfo: schemaInfo || 'Schema info not available',
-        schemaError: schemaError?.message || null,
+        schemaError: typeof schemaError === 'string' ? schemaError : schemaError?.message || null,
         timestamp: new Date().toISOString()
       }
     })
