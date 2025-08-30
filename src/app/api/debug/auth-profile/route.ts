@@ -31,9 +31,15 @@ export async function GET(request: NextRequest) {
       .eq('email', user.email || '')
 
     // データベーススキーマ情報を取得（テーブル構造確認）
-    const { data: schemaInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'profiles' })
-      .catch(() => null) // RPC関数が存在しない場合は無視
+    let schemaInfo = null
+    let schemaError = null
+    try {
+      const result = await supabase.rpc('get_table_columns', { table_name: 'profiles' })
+      schemaInfo = result.data
+      schemaError = result.error
+    } catch (error) {
+      schemaError = error instanceof Error ? error.message : 'Schema check failed'
+    }
 
     return NextResponse.json({
       debug: {
