@@ -187,6 +187,13 @@ function MyPageContent() {
         // これらのフィールドはJSONデータから取得する必要がある
         value = (parsedOptionalData as any)[field]
         console.log(`🔍 Optional field ${field} from JSON:`, value)
+        
+        // JSONデータからの値がundefinedまたは存在しない場合は未完了
+        if (value === undefined || value === null || value === '') {
+          return false
+        }
+        // 有効な値がある場合のみ完了扱い
+        return value.toString().trim().length > 0
       }
       
       // その他のフィールドの判定
