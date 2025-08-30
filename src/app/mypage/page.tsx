@@ -185,7 +185,7 @@ function MyPageContent() {
       // cityフィールドに格納されたJSONデータから値を取得
       if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
         // これらのフィールドはJSONデータから取得する必要がある
-        value = parsedOptionalData[field]
+        value = (parsedOptionalData as any)[field]
         console.log(`🔍 Optional field ${field} from JSON:`, value)
       }
       
