@@ -174,6 +174,13 @@ function MyPageContent() {
         return value && value !== null
       }
       
+      // cityフィールドに格納されたJSONデータから値を取得
+      if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
+        // これらのフィールドはJSONデータから取得する必要がある
+        value = parsedOptionalData[field]
+        console.log(`🔍 Optional field ${field} from JSON:`, value)
+      }
+      
       // その他のフィールドの判定
       if (Array.isArray(value)) {
         return value.length > 0
