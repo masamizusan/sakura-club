@@ -192,8 +192,8 @@ function ProfileEditContent() {
       const isSignupFlow = hasType && hasNickname
       console.log('🚨 新規登録フロー判定:', { hasType, hasNickname, isSignupFlow })
       
-      // 🚨 緊急：プロフィール削除を一時停止（ログイン問題解決まで）
-      const enableProfileDeletion = false
+      // 🚨 新規登録フロー検出時は既存データを完全クリア
+      const enableProfileDeletion = true
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (isSignupFlow && enableProfileDeletion) {
