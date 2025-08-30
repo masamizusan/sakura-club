@@ -645,9 +645,17 @@ function ProfileEditContent() {
           break
         case 'self_introduction':
           value = profileData.bio || profileData.self_introduction
+          // デフォルト文は未完了扱い
+          if (value === '後でプロフィールを詳しく書きます。' || value === '') {
+            value = null
+          }
           break
         case 'hobbies':
           value = profileData.interests || profileData.hobbies
+          // デフォルトの['その他']は未完了扱い
+          if (Array.isArray(value) && value.length === 1 && value[0] === 'その他') {
+            value = null
+          }
           // custom_cultureも日本文化の一部として含める
           const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
           if (Array.isArray(value) && value.length > 0) {
@@ -737,9 +745,17 @@ function ProfileEditContent() {
           break
         case 'self_introduction':
           value = profileData.bio || profileData.self_introduction
+          // デフォルト文は未完了扱い
+          if (value === '後でプロフィールを詳しく書きます。' || value === '') {
+            value = null
+          }
           break
         case 'hobbies':
           value = profileData.interests || profileData.hobbies
+          // デフォルトの['その他']は未完了扱い
+          if (Array.isArray(value) && value.length === 1 && value[0] === 'その他') {
+            value = null
+          }
           // custom_cultureも日本文化の一部として含める
           const hasCustomCulture = profileData.custom_culture && profileData.custom_culture.trim().length > 0
           if (Array.isArray(value) && value.length > 0) {
@@ -806,7 +822,7 @@ function ProfileEditContent() {
         }
         
         const jsonValue = (parsedOptionalData as any)[field]
-        if (hasJsonData && jsonValue !== undefined && jsonValue !== null && jsonValue !== '') {
+        if (jsonValue !== undefined && jsonValue !== null && jsonValue !== '') {
           // JSONから取得した値を使用
           if (field === 'height') {
             // 身長は文字列または数値として保存される可能性があるので両方チェック
