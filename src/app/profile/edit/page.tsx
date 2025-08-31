@@ -1247,17 +1247,11 @@ function ProfileEditContent() {
     // 状態更新を待つため少し遅延してから計算
     setTimeout(() => {
       console.log('🔄 Delayed completion calculation with new images:', newImages.length)
-      // 両方の関数を呼び出してログを確認
+      // 画像配列を直接渡す専用関数のみを使用
       calculateProfileCompletionWithImages({
         ...currentData,
         avatar_url: newImages.length > 0 ? 'has_images' : null
       }, newImages)
-      
-      // 通常の関数も呼び出し（画像情報を含める）
-      calculateProfileCompletion({
-        ...currentData,
-        avatar_url: newImages.length > 0 ? 'has_images' : null
-      })
     }, 100)
   }
 
