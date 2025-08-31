@@ -71,6 +71,7 @@ export default function MultiImageUploader({
           ? { ...img, url: editedImageUrl, isEdited: true }
           : img
       )
+      console.log('🚨 MultiImageUploader: Calling onImagesChange with:', updatedImages.length, 'images')
       onImagesChange(updatedImages)
     } else {
       // 新しい画像を追加する場合
@@ -81,6 +82,7 @@ export default function MultiImageUploader({
         isMain: images.length === 0, // 最初の画像をメインに設定
         isEdited: false
       }
+      console.log('🚨 MultiImageUploader: Adding new image, calling onImagesChange with:', images.length + 1, 'images')
       onImagesChange([...images, newImage])
     }
     
