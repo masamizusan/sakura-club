@@ -538,7 +538,7 @@ function MyPageContent() {
               <div className="mt-4">
                 <h3 className="font-medium text-gray-900 mb-2">性格</h3>
                 <div className="flex flex-wrap gap-2">
-                  {profile.personality.map((trait: string, index: number) => (
+                  {profile.personality.filter((trait: string, index: number, array: string[]) => array.indexOf(trait) === index).map((trait: string, index: number) => (
                     <span
                       key={index}
                       className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
