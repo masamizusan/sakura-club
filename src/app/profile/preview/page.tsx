@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, User, Loader2 } from 'lucide-react'
@@ -9,7 +9,10 @@ function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  // URLパラメーターから値を取得
+  // エラーハンドリング用の状態
+  const [hasError, setHasError] = useState(false)
+
+  // URLパラメーターから値を取得（安全な方法）
   const nickname = searchParams.get('nickname') || 'ニックネーム未設定'
   const age = searchParams.get('age') || '18'
   const gender = searchParams.get('gender') || ''
@@ -21,34 +24,38 @@ function ProfilePreviewContent() {
   const bodyType = searchParams.get('body_type') || ''
   const maritalStatus = searchParams.get('marital_status') || ''
   const selfIntroduction = searchParams.get('self_introduction') || ''
-  // 配列データの正しい解析
+  // 配列データの正しい解析（安全なエラーハンドリング）
   const hobbies = (() => {
-    const hobbiesParam = searchParams.get('hobbies')
-    if (!hobbiesParam) return []
     try {
+      const hobbiesParam = searchParams.get('hobbies')
+      if (!hobbiesParam) return []
+      
       // JSON形式の場合
       if (hobbiesParam.startsWith('[')) {
         return JSON.parse(hobbiesParam)
       }
       // カンマ区切りの場合
-      return hobbiesParam.split(',').filter(h => h)
-    } catch {
-      return hobbiesParam.split(',').filter(h => h)
+      return hobbiesParam.split(',').filter(h => h && h.trim())
+    } catch (error) {
+      console.error('Error parsing hobbies:', error)
+      return []
     }
   })()
   
   const personality = (() => {
-    const personalityParam = searchParams.get('personality')
-    if (!personalityParam) return []
     try {
+      const personalityParam = searchParams.get('personality')
+      if (!personalityParam) return []
+      
       // JSON形式の場合
       if (personalityParam.startsWith('[')) {
         return JSON.parse(personalityParam)
       }
       // カンマ区切りの場合
-      return personalityParam.split(',').filter(p => p)
-    } catch {
-      return personalityParam.split(',').filter(p => p)
+      return personalityParam.split(',').filter(p => p && p.trim())
+    } catch (error) {
+      console.error('Error parsing personality:', error)
+      return []
     }
   })()
   const customCulture = searchParams.get('custom_culture') || ''
@@ -57,6 +64,19 @@ function ProfilePreviewContent() {
   // デバッグログ
   console.log('🖼️ Profile image from URL:', profileImage)
   console.log('🎭 All search params:', Object.fromEntries(searchParams.entries()))
+
+  // エラー画面
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">プレビューエラー</h1>
+          <p className="text-gray-600 mb-6">プレビューの読み込みに失敗しました。</p>
+          <Button onClick={() => window.close()}>閉じる</Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
