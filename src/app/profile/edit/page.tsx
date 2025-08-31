@@ -164,6 +164,9 @@ function ProfileEditContent() {
             gender: urlParams.get('gender') || '',
             age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
             prefecture: urlParams.get('prefecture') || '',
+            hobbies: [], // 空配列 - 未完了
+            self_introduction: '', // 空文字 - 未完了
+            nationality: urlParams.get('nationality') || '', // 外国人男性に必要
             // 他は全て空
           }
           calculateProfileCompletion(cleanData)
