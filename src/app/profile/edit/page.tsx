@@ -563,16 +563,26 @@ function ProfileEditContent() {
           }])
         }
         
-        // プロフィール完成度を計算（signupデータも含める）
-        const profileDataWithSignup = {
+        // プロフィール完成度を計算（新規ユーザーは新規データのみ）
+        const profileDataWithSignup = isNewUser ? {
+          // 新規ユーザーの場合：新規登録データのみ使用
+          name: nicknameValue,
+          gender: defaults.gender,
+          age: defaults.age || 18,
+          nationality: isForeignMale ? defaults.nationality : null,
+          residence: defaults.prefecture,
+          interests: [], // 新規は空
+          bio: '', // 新規は空
+        } : {
+          // 既存ユーザーの場合：既存データも含める
           ...profile,
           name: nicknameValue,
           gender: defaults.gender,
           age: defaults.age || profile.age || 18,
           nationality: isForeignMale ? (defaults.nationality || profile.nationality) : profile.nationality,
           residence: defaults.prefecture || profile.residence || profile.prefecture,
-          interests: isNewUser ? [] : (profile.interests || profile.hobbies || []),
-          bio: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
+          interests: profile.interests || profile.hobbies || [],
+          bio: profile.bio || profile.self_introduction || '',
         }
         calculateProfileCompletion(profileDataWithSignup)
       } catch (error) {
