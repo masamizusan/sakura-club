@@ -1232,6 +1232,7 @@ function ProfileEditContent() {
 
   // 写真変更時のコールバック関数
   const handleImagesChange = (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
     console.log('📸 写真変更:', 
       `新しい画像数: ${newImages.length}`,
       `avatar_url値: ${newImages.length > 0 ? 'has_images' : null}`,
