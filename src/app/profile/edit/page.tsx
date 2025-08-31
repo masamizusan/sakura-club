@@ -1243,17 +1243,22 @@ function ProfileEditContent() {
     
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
-    // 両方の関数を呼び出してログを確認
-    calculateProfileCompletionWithImages({
-      ...currentData,
-      avatar_url: newImages.length > 0 ? 'has_images' : null
-    }, newImages)
     
-    // 通常の関数も呼び出し（画像情報を含める）
-    calculateProfileCompletion({
-      ...currentData,
-      avatar_url: newImages.length > 0 ? 'has_images' : null
-    })
+    // 状態更新を待つため少し遅延してから計算
+    setTimeout(() => {
+      console.log('🔄 Delayed completion calculation with new images:', newImages.length)
+      // 両方の関数を呼び出してログを確認
+      calculateProfileCompletionWithImages({
+        ...currentData,
+        avatar_url: newImages.length > 0 ? 'has_images' : null
+      }, newImages)
+      
+      // 通常の関数も呼び出し（画像情報を含める）
+      calculateProfileCompletion({
+        ...currentData,
+        avatar_url: newImages.length > 0 ? 'has_images' : null
+      })
+    }, 100)
   }
 
 
