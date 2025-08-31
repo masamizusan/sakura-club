@@ -47,6 +47,46 @@ function MyPageContent() {
 
       try {
         setIsLoading(true)
+        
+        // プレビューからのプロフィール更新データをチェック
+        const shouldUpdate = localStorage.getItem('updateProfile')
+        const previewOptionalData = localStorage.getItem('previewOptionalData')
+        const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
+        
+        if (shouldUpdate === 'true' && previewOptionalData && previewExtendedInterests) {
+          console.log('🎯 MyPage: Processing preview update data')
+          
+          try {
+            const optionalData = JSON.parse(previewOptionalData)
+            const extendedInterests = JSON.parse(previewExtendedInterests)
+            
+            // プロフィール更新処理
+            const updateData = {
+              city: JSON.stringify(optionalData),
+              interests: extendedInterests
+            }
+            
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update(updateData)
+              .eq('id', user.id)
+            
+            if (updateError) {
+              console.error('❌ Profile update error:', updateError)
+            } else {
+              console.log('✅ Profile updated successfully from preview')
+            }
+            
+            // localStorage クリア
+            localStorage.removeItem('updateProfile')
+            localStorage.removeItem('previewOptionalData')
+            localStorage.removeItem('previewExtendedInterests')
+            
+          } catch (error) {
+            console.error('❌ Error processing preview update:', error)
+          }
+        }
+        
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')

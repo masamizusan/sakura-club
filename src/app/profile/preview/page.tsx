@@ -273,19 +273,21 @@ function ProfilePreviewContent() {
                     // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
                     console.log('🔍 Checking window.opener:', !!window.opener)
                     
+                    // 直接マイページに遷移し、バックグラウンドでプロフィール更新
+                    console.log('🎯 Redirecting directly to mypage')
+                    
                     if (window.opener) {
-                      console.log('📡 Sending postMessage to opener')
+                      // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
+                      console.log('📡 Redirecting opener to mypage and closing preview')
                       window.opener.postMessage({ action: 'updateProfile' }, '*')
-                      console.log('🚪 Closing preview window and redirecting opener to mypage')
                       
-                      // プロフィール更新後、親ウィンドウをマイページにリダイレクト
-                      setTimeout(() => {
-                        window.opener.location.href = '/mypage'
-                        window.close()
-                      }, 500)
+                      // 即座にマイページにリダイレクト
+                      window.opener.location.href = '/mypage'
+                      window.close()
                     } else {
-                      console.log('🔄 No window.opener, redirecting to mypage after update')
-                      window.location.href = '/profile/edit?action=update&redirect=mypage'
+                      // 直接マイページに遷移（プロフィール編集画面を経由しない）
+                      console.log('🔄 Direct redirect to mypage')
+                      window.location.href = '/mypage'
                     }
                   }}
                 >
