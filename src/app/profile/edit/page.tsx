@@ -713,10 +713,10 @@ function ProfileEditContent() {
       `写真枚数: ${imageArray.length}`
     )
     
-    // これは古い関数なので一時的に無効化
-    // setProfileCompletion(completion)
-    // setCompletedItems(completedFields)
-    // setTotalItems(totalFields)
+    // 状態を更新して画面に反映
+    setProfileCompletion(completion)
+    setCompletedItems(completedFields)
+    setTotalItems(totalFields)
   }, [isForeignMale])
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
