@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, User, Loader2 } from 'lucide-react'
@@ -11,59 +11,74 @@ function ProfilePreviewContent() {
 
   // エラーハンドリング用の状態
   const [hasError, setHasError] = useState(false)
+  const [previewData, setPreviewData] = useState<any>(null)
 
-  // URLパラメーターから値を取得（安全な方法）
-  const nickname = searchParams.get('nickname') || 'ニックネーム未設定'
-  const age = searchParams.get('age') || '18'
-  const gender = searchParams.get('gender') || ''
-  const nationality = searchParams.get('nationality') || ''
-  const prefecture = searchParams.get('prefecture') || ''
-  const city = searchParams.get('city') || ''
-  const occupation = searchParams.get('occupation') || ''
-  const height = searchParams.get('height') || ''
-  const bodyType = searchParams.get('body_type') || ''
-  const maritalStatus = searchParams.get('marital_status') || ''
-  const selfIntroduction = searchParams.get('self_introduction') || ''
-  // 配列データの正しい解析（安全なエラーハンドリング）
-  const hobbies = (() => {
+  // sessionStorageからデータを取得
+  useEffect(() => {
     try {
-      const hobbiesParam = searchParams.get('hobbies')
-      if (!hobbiesParam) return []
-      
-      // JSON形式の場合
-      if (hobbiesParam.startsWith('[')) {
-        return JSON.parse(hobbiesParam)
+      const savedData = sessionStorage.getItem('previewData')
+      if (savedData) {
+        const parsedData = JSON.parse(savedData)
+        setPreviewData(parsedData)
+        console.log('📋 Preview data loaded from sessionStorage:', parsedData)
+      } else {
+        // フォールバック：URLパラメータから取得
+        const fallbackData = {
+          nickname: searchParams.get('nickname') || 'ニックネーム未設定',
+          age: searchParams.get('age') || '18',
+          gender: searchParams.get('gender') || '',
+          nationality: searchParams.get('nationality') || '',
+          prefecture: searchParams.get('prefecture') || '',
+          city: searchParams.get('city') || '',
+          occupation: searchParams.get('occupation') || '',
+          height: searchParams.get('height') || '',
+          body_type: searchParams.get('body_type') || '',
+          marital_status: searchParams.get('marital_status') || '',
+          self_introduction: searchParams.get('self_introduction') || '',
+          hobbies: [],
+          personality: [],
+          custom_culture: searchParams.get('custom_culture') || '',
+          image: searchParams.get('image') || ''
+        }
+        setPreviewData(fallbackData)
+        console.log('📋 Using fallback data from URL params')
       }
-      // カンマ区切りの場合
-      return hobbiesParam.split(',').filter(h => h && h.trim())
     } catch (error) {
-      console.error('Error parsing hobbies:', error)
-      return []
+      console.error('❌ Error loading preview data:', error)
+      setHasError(true)
     }
-  })()
-  
-  const personality = (() => {
-    try {
-      const personalityParam = searchParams.get('personality')
-      if (!personalityParam) return []
-      
-      // JSON形式の場合
-      if (personalityParam.startsWith('[')) {
-        return JSON.parse(personalityParam)
-      }
-      // カンマ区切りの場合
-      return personalityParam.split(',').filter(p => p && p.trim())
-    } catch (error) {
-      console.error('Error parsing personality:', error)
-      return []
-    }
-  })()
-  const customCulture = searchParams.get('custom_culture') || ''
-  const profileImage = searchParams.get('image') || ''
-  
-  // デバッグログ
-  console.log('🖼️ Profile image from URL:', profileImage)
-  console.log('🎭 All search params:', Object.fromEntries(searchParams.entries()))
+  }, [searchParams])
+
+  // データが読み込まれていない場合
+  if (!previewData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <p className="text-gray-600">プレビューを読み込んでいます...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // データから値を取得
+  const {
+    nickname = 'ニックネーム未設定',
+    age = '18',
+    gender = '',
+    nationality = '',
+    prefecture = '',
+    city = '',
+    occupation = '',
+    height = '',
+    body_type: bodyType = '',
+    marital_status: maritalStatus = '',
+    self_introduction: selfIntroduction = '',
+    hobbies = [],
+    personality = [],
+    custom_culture: customCulture = '',
+    image: profileImage = ''
+  } = previewData
 
   // エラー画面
   if (hasError) {
@@ -229,37 +244,25 @@ function ProfilePreviewContent() {
                   onClick={async () => {
                     console.log('🎯 Preview update button clicked!')
                     
-                    // 🚨 直接データベースに保存する処理を追加
+                    // sessionStorageからデータを取得してプロフィール更新用データを準備
                     try {
-                      // URLパラメータからデータを取得
-                      const urlParams = new URLSearchParams(window.location.search)
-                      
-                      console.log('🚨 DIRECT SAVE: Extracting data from URL params')
-                      console.log('🚨 occupation:', urlParams.get('occupation'))
-                      console.log('🚨 height:', urlParams.get('height'))
-                      console.log('🚨 body_type:', urlParams.get('body_type'))
-                      console.log('🚨 marital_status:', urlParams.get('marital_status'))
-                      console.log('🚨 personality:', urlParams.get('personality'))
+                      console.log('🚨 DIRECT SAVE: Using sessionStorage data')
                       
                       // オプションデータをJSONで準備
                       const optionalData = {
-                        city: urlParams.get('city') || null,
-                        occupation: urlParams.get('occupation') || null,
-                        height: urlParams.get('height') ? Number(urlParams.get('height')) : null,
-                        body_type: urlParams.get('body_type') || null,
-                        marital_status: urlParams.get('marital_status') || null,
+                        city: city || null,
+                        occupation: occupation || null,
+                        height: height ? Number(height) : null,
+                        body_type: bodyType || null,
+                        marital_status: maritalStatus || null,
                       }
                       
                       // personalityとhobbiesを拡張interests配列として準備
-                      const hobbies = urlParams.get('hobbies') ? JSON.parse(urlParams.get('hobbies') || '[]') : []
-                      const personality = urlParams.get('personality') ? urlParams.get('personality')?.split(',') : []
-                      const customCulture = urlParams.get('custom_culture') || ''
-                      
                       const extendedInterests = [...hobbies]
                       
                       // personalityを追加
                       if (personality && personality.length > 0) {
-                        personality.forEach(p => {
+                        personality.forEach((p: string) => {
                           if (p && p.trim()) {
                             extendedInterests.push(`personality:${p.trim()}`)
                           }
@@ -276,9 +279,12 @@ function ProfilePreviewContent() {
                         extendedInterests
                       })
                       
-                      // localStorageにオプションデータを保存（プロフィール編集ページで使用）
+                      // localStorageにオプションデータを保存（マイページで使用）
                       localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
                       localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
+                      
+                      // sessionStorageをクリア
+                      sessionStorage.removeItem('previewData')
                       
                     } catch (error) {
                       console.error('❌ Error preparing preview data:', error)

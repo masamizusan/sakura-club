@@ -1891,30 +1891,31 @@ function ProfileEditContent() {
                   try {
                     const formData = watch()
                     console.log('🔍 Opening preview with data:', formData)
-                    console.log('🔍 Selected personality:', selectedPersonality)
-                    console.log('🔍 Profile images:', profileImages)
                     
-                    const queryParams = new URLSearchParams({
+                    // データをsessionStorageに保存（URI_TOO_LONG対策）
+                    const previewData = {
                       nickname: formData.nickname || '',
                       gender: formData.gender || '',
                       age: formData.age?.toString() || '',
                       prefecture: formData.prefecture || '',
                       city: formData.city || '',
                       self_introduction: formData.self_introduction || '',
-                      hobbies: JSON.stringify(formData.hobbies || []),
+                      hobbies: formData.hobbies || [],
                       occupation: formData.occupation || '',
                       height: formData.height?.toString() || '',
                       body_type: formData.body_type || '',
                       marital_status: formData.marital_status || '',
-                      personality: JSON.stringify(selectedPersonality || []),
+                      personality: selectedPersonality || [],
                       custom_culture: formData.custom_culture || '',
-                      image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || ''
-                    })
+                      image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || '',
+                      nationality: formData.nationality || ''
+                    }
                     
-                    const previewUrl = `/profile/preview?${queryParams.toString()}`
-                    console.log('🔍 Preview URL:', previewUrl)
+                    sessionStorage.setItem('previewData', JSON.stringify(previewData))
+                    console.log('💾 Preview data saved to sessionStorage')
                     
-                    window.open(previewUrl, '_blank')
+                    // 簡潔なURLでプレビューを開く
+                    window.open('/profile/preview', '_blank')
                   } catch (error) {
                     console.error('❌ Error opening preview:', error)
                     alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
