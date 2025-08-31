@@ -244,11 +244,16 @@ function ProfilePreviewContent() {
                     if (window.opener) {
                       console.log('📡 Sending postMessage to opener')
                       window.opener.postMessage({ action: 'updateProfile' }, '*')
-                      console.log('🚪 Closing preview window')
-                      window.close()
+                      console.log('🚪 Closing preview window and redirecting opener to mypage')
+                      
+                      // プロフィール更新後、親ウィンドウをマイページにリダイレクト
+                      setTimeout(() => {
+                        window.opener.location.href = '/mypage'
+                        window.close()
+                      }, 500)
                     } else {
-                      console.log('🔄 No window.opener, redirecting to profile edit')
-                      window.location.href = '/profile/edit?action=update'
+                      console.log('🔄 No window.opener, redirecting to mypage after update')
+                      window.location.href = '/profile/edit?action=update&redirect=mypage'
                     }
                   }}
                 >
