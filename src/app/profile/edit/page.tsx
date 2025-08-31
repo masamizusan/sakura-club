@@ -1862,6 +1862,33 @@ function ProfileEditContent() {
               >
                 🔧 【テスト】直接更新 / プレビュー
               </button>
+
+              {/* プレビューボタン */}
+              <button
+                type="button"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                onClick={() => {
+                  const formData = watch()
+                  const queryParams = new URLSearchParams({
+                    nickname: formData.nickname || '',
+                    gender: formData.gender || '',
+                    age: formData.age?.toString() || '',
+                    prefecture: formData.prefecture || '',
+                    city: formData.city || '',
+                    self_introduction: formData.self_introduction || '',
+                    hobbies: JSON.stringify(formData.hobbies || []),
+                    occupation: formData.occupation || '',
+                    height: formData.height?.toString() || '',
+                    body_type: formData.body_type || '',
+                    marital_status: formData.marital_status || '',
+                    personality: JSON.stringify(selectedPersonality || []),
+                    custom_culture: formData.custom_culture || ''
+                  })
+                  window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
+                }}
+              >
+                📋 プレビュー確認
+              </button>
               
               {/* 🔧 テスト用直接更新ボタン */}
               <button
