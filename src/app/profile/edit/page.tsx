@@ -1902,7 +1902,8 @@ function ProfileEditContent() {
                     body_type: formData.body_type || '',
                     marital_status: formData.marital_status || '',
                     personality: JSON.stringify(selectedPersonality || []),
-                    custom_culture: formData.custom_culture || ''
+                    custom_culture: formData.custom_culture || '',
+                    image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || ''
                   })
                   window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
                 }}

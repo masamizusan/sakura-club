@@ -21,10 +21,42 @@ function ProfilePreviewContent() {
   const bodyType = searchParams.get('body_type') || ''
   const maritalStatus = searchParams.get('marital_status') || ''
   const selfIntroduction = searchParams.get('self_introduction') || ''
-  const hobbies = searchParams.get('hobbies')?.split(',').filter(h => h) || []
-  const personality = searchParams.get('personality')?.split(',').filter(p => p) || []
+  // 配列データの正しい解析
+  const hobbies = (() => {
+    const hobbiesParam = searchParams.get('hobbies')
+    if (!hobbiesParam) return []
+    try {
+      // JSON形式の場合
+      if (hobbiesParam.startsWith('[')) {
+        return JSON.parse(hobbiesParam)
+      }
+      // カンマ区切りの場合
+      return hobbiesParam.split(',').filter(h => h)
+    } catch {
+      return hobbiesParam.split(',').filter(h => h)
+    }
+  })()
+  
+  const personality = (() => {
+    const personalityParam = searchParams.get('personality')
+    if (!personalityParam) return []
+    try {
+      // JSON形式の場合
+      if (personalityParam.startsWith('[')) {
+        return JSON.parse(personalityParam)
+      }
+      // カンマ区切りの場合
+      return personalityParam.split(',').filter(p => p)
+    } catch {
+      return personalityParam.split(',').filter(p => p)
+    }
+  })()
   const customCulture = searchParams.get('custom_culture') || ''
   const profileImage = searchParams.get('image') || ''
+  
+  // デバッグログ
+  console.log('🖼️ Profile image from URL:', profileImage)
+  console.log('🎭 All search params:', Object.fromEntries(searchParams.entries()))
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
@@ -133,7 +165,7 @@ function ProfilePreviewContent() {
                   <div className="space-y-2">
                     {hobbies.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {hobbies.map((hobby, index) => (
+                        {hobbies.map((hobby: string, index: number) => (
                           <span
                             key={index}
                             className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
@@ -157,7 +189,7 @@ function ProfilePreviewContent() {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">性格</h3>
                   <div className="flex flex-wrap gap-2">
-                    {personality.map((trait, index) => (
+                    {personality.map((trait: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
