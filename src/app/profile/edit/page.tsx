@@ -562,7 +562,7 @@ function ProfileEditContent() {
         reset({
           nickname: nicknameValue,
           gender: defaults.gender,
-          birth_date: isNewUser ? (defaults.birth_date || '') : (profile.birth_date || defaults.birth_date || ''),
+          birth_date: isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || ''),
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
@@ -580,6 +580,7 @@ function ProfileEditContent() {
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
+        setValue('birth_date', isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || ''))
         if (isForeignMale) {
           setValue('nationality', defaults.nationality || profile.nationality || '')
         }
