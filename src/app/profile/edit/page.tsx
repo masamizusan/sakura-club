@@ -449,14 +449,18 @@ function ProfileEditContent() {
 
         const defaults = getDefaults()
         
-        // 新規登録フローかどうかを判定
-        const isFromSignup = urlParams.get('type') === 'japanese-female' || 
-                            (signupData.nickname && signupData.gender && signupData.birth_date)
+        // 新規登録フローかどうかを判定（マイページからの遷移は除外）
+        const isFromMypage = document.referrer.includes('/mypage')
+        const hasSignupParams = urlParams.get('type') === 'japanese-female' || urlParams.get('type') === 'foreign-male'
+        const isFromSignup = hasSignupParams && !isFromMypage
         
         console.log('=== Profile Edit Debug ===')
         console.log('Current URL:', window.location.href)
-        console.log('Signup data:', signupData)
+        console.log('Document referrer:', document.referrer)
+        console.log('Is from mypage:', isFromMypage)
+        console.log('Has signup params:', hasSignupParams)
         console.log('isFromSignup:', isFromSignup)
+        console.log('Signup data:', signupData)
         
         // 新規ユーザーかどうかを判定（bio, interests, nameが空、またはテストデータの場合は新規とみなす）
         const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
@@ -525,11 +529,40 @@ function ProfileEditContent() {
         // ニックネーム（仮登録から）
         const nicknameValue = signupData.nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
 
+        // 既存ユーザーの場合：interests配列から性格データを抽出
+        let existingPersonality: string[] = []
+        let existingHobbies: string[] = []
+        let existingCustomCulture: string = ''
+        
+        if (!isNewUser && profile.interests && Array.isArray(profile.interests)) {
+          profile.interests.forEach((item: string) => {
+            if (item.startsWith('personality:')) {
+              existingPersonality.push(item.replace('personality:', ''))
+            } else if (item.startsWith('custom_culture:')) {
+              existingCustomCulture = item.replace('custom_culture:', '')
+            } else {
+              existingHobbies.push(item)
+            }
+          })
+        }
+        
+        console.log('🔍 Extracted from interests:', {
+          existingPersonality,
+          existingHobbies,
+          existingCustomCulture
+        })
+        
+        // 既存ユーザーの場合：抽出したデータで状態を更新
+        if (!isNewUser) {
+          setSelectedPersonality(existingPersonality)
+          setSelectedHobbies(existingHobbies)
+        }
+
         // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
         reset({
           nickname: nicknameValue,
           gender: defaults.gender,
-          birth_date: defaults.birth_date || '',
+          birth_date: isNewUser ? (defaults.birth_date || '') : (profile.birth_date || defaults.birth_date || ''),
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
@@ -538,9 +571,10 @@ function ProfileEditContent() {
           height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
           marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
-          hobbies: isNewUser ? [] : (profile.interests || profile.hobbies || []),
-          personality: isNewUser ? [] : (profile.personality || []),
+          hobbies: isNewUser ? [] : existingHobbies,
+          personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
+          custom_culture: isNewUser ? '' : existingCustomCulture,
         })
         
         // Select要素の値を個別に設定（signup データを優先）
@@ -551,11 +585,12 @@ function ProfileEditContent() {
         }
         setValue('prefecture', defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')))
         setValue('age', defaults.age || (isNewUser ? 18 : (profile.age || 18)))
-        setValue('hobbies', isNewUser ? [] : (profile.interests || profile.hobbies || []))
-        setValue('personality', isNewUser ? [] : (profile.personality || []))
+        setValue('hobbies', isNewUser ? [] : existingHobbies)
+        setValue('personality', isNewUser ? [] : existingPersonality)
+        setValue('custom_culture', isNewUser ? '' : existingCustomCulture)
         
-        setSelectedHobbies(isNewUser ? [] : (profile.interests || profile.hobbies || []))
-        setSelectedPersonality(isNewUser ? [] : (profile.personality || []))
+        setSelectedHobbies(isNewUser ? [] : existingHobbies)
+        setSelectedPersonality(isNewUser ? [] : existingPersonality)
         if (!isNewUser && profile.avatar_url) {
           setProfileImages([{
             id: '1',
