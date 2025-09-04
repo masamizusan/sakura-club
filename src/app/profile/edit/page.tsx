@@ -34,7 +34,7 @@ const profileEditSchema = z.object({
     z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
   ),
   body_type: z.string().optional(),
-  marital_status: z.enum(['none', 'single', 'married']).optional(),
+  marital_status: z.enum(['none', 'single', 'married', '']).optional(),
   hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
