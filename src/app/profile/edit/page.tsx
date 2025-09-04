@@ -1085,7 +1085,7 @@ function ProfileEditContent() {
         birth_date: data.birth_date, // birth_dateフィールドを追加
         nationality: isForeignMale ? data.nationality : null,
         residence: data.prefecture,
-        // city: JSON形式で後から設定するため初期値は設定しない
+        city: null as string | null, // JSON形式で後から設定するため初期値はnull
         bio: data.self_introduction,
         interests: data.hobbies,
         avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
