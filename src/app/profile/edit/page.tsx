@@ -569,13 +569,12 @@ function ProfileEditContent() {
         // birth_dateが存在しない場合はageから逆算
         let resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
         
-        // birth_dateが空でageが存在する場合、年齢から生年を推定
+        // birth_dateが空でageが存在する場合のみ、年齢から生年を推定（推定値であることを明示）
         if (!resetBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
-          const currentYear = new Date().getFullYear()
-          const estimatedBirthYear = currentYear - profile.age
-          // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
-          resetBirthDate = `${estimatedBirthYear}-01-01`
-          console.log(`🔄 Age-based birth_date estimation: age ${profile.age} → ${resetBirthDate}`)
+          // 推定値であることをユーザーに分かりやすくするため、プレースホルダーとして空文字を設定
+          // （HTMLのdate inputでplaceholder相当の動作をする）
+          resetBirthDate = ''
+          console.log(`⚠️ Birth date not found, age is ${profile.age}. User should set actual birth_date.`)
         }
         
         console.log('🔍 Reset birth_date value:', {
@@ -609,13 +608,11 @@ function ProfileEditContent() {
         setValue('gender', defaults.gender)
         let finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
         
-        // finalBirthDateが空でageが存在する場合、年齢から生年を推定
+        // finalBirthDateが空でageが存在する場合のみ警告（推定値は設定しない）
         if (!finalBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
-          const currentYear = new Date().getFullYear()
-          const estimatedBirthYear = currentYear - profile.age
-          // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
-          finalBirthDate = `${estimatedBirthYear}-01-01`
-          console.log(`🔄 Age-based birth_date estimation (setValue): age ${profile.age} → ${finalBirthDate}`)
+          // 実際の生年月日がない場合は空文字のまま、ユーザーに入力を促す
+          finalBirthDate = ''
+          console.log(`⚠️ Birth date not found (setValue), age is ${profile.age}. User should set actual birth_date.`)
         }
         
         console.log('🔍 Setting birth_date value:', {
@@ -780,26 +777,32 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFields.filter(field => {
       let value = profileData[field]
+      let isFieldCompleted = false
       
       if (field === 'avatar_url') {
         const hasImages = imageArray.length > 0
+        isFieldCompleted = hasImages
         console.log('🖼️ Avatar URL check (with images):', 
           `フィールド: ${field}`,
           `profileData.avatar_url: ${profileData.avatar_url}`,
           `imageArray.length: ${imageArray.length}`,
           `hasImages: ${hasImages}`,
-          `結果: ${hasImages ? '完成' : '未完成'}`
+          `結果: ${isFieldCompleted ? '完成' : '未完成'}`
         )
-        return hasImages // 1枚以上あれば完成扱い
+      } else {
+        if (field === 'city') value = profileData.city
+        
+        if (Array.isArray(value)) {
+          isFieldCompleted = value.length > 0
+        } else if (value === 'none') {
+          isFieldCompleted = false
+        } else {
+          isFieldCompleted = value && value.toString().trim().length > 0
+        }
       }
-      if (field === 'city') value = profileData.city
       
-      if (Array.isArray(value)) return value.length > 0
-      
-      // 'none'は記入しないを意味するので、完成とはみなさない
-      if (value === 'none') return false
-      
-      return value && value.toString().trim().length > 0
+      console.log(`🔍 Optional field completion: ${field} = ${value} → ${isFieldCompleted ? '完成' : '未完成'}`)
+      return isFieldCompleted
     })
     
     const totalFields = requiredFields.length + optionalFields.length
@@ -1082,12 +1085,10 @@ function ProfileEditContent() {
         birth_date: data.birth_date, // birth_dateフィールドを追加
         nationality: isForeignMale ? data.nationality : null,
         residence: data.prefecture,
-        city: data.city || null, // cityフィールドは存在する
+        // city: JSON形式で後から設定するため初期値は設定しない
         bio: data.self_introduction,
         interests: data.hobbies,
         avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
-        // オプション項目をcityフィールドに一時的に保存（実際にはJSONとして別管理）
-        // 実際の保存は複数のフィールドに分散
       }
 
       // オプション情報をJSONとしてbioフィールドに付加情報として保存
@@ -1269,6 +1270,19 @@ function ProfileEditContent() {
         updateData.city = forceAdditionalInfo // React Hook Formの値を使ってJSON保存
         console.log('🚨 Saving fallback data - extendedInterests:', extendedInterests)
         console.log('🚨 Saving fallback data - city (JSON):', forceAdditionalInfo)
+      }
+      
+      // cityフィールドが設定されていない場合の保険処理
+      if (!updateData.city) {
+        const fallbackOptionalData = {
+          city: data.city || null,
+          occupation: data.occupation || null,
+          height: data.height || null,
+          body_type: data.body_type || null,
+          marital_status: data.marital_status || null,
+        }
+        updateData.city = JSON.stringify(fallbackOptionalData)
+        console.log('🔧 Fallback city data set:', updateData.city)
       }
 
       console.log('🔄 FINAL update data with preview data:', updateData)
