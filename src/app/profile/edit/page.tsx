@@ -398,6 +398,13 @@ function ProfileEditContent() {
         }
 
         console.log('Loaded profile data:', profile)
+        console.log('🔍 Birth date related fields:', {
+          birth_date: profile.birth_date,
+          date_of_birth: profile.date_of_birth,
+          birthday: profile.birthday,
+          dob: profile.dob,
+          age: profile.age
+        })
         
         // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
         let parsedOptionalData: {
@@ -559,10 +566,18 @@ function ProfileEditContent() {
         }
 
         // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
+        const resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        console.log('🔍 Reset birth_date value:', {
+          isNewUser,
+          'defaults.birth_date': defaults.birth_date,
+          'profile.birth_date': profile.birth_date,
+          'profile.date_of_birth': profile.date_of_birth,
+          resetBirthDate
+        })
         reset({
           nickname: nicknameValue,
           gender: defaults.gender,
-          birth_date: isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || ''),
+          birth_date: resetBirthDate,
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
           prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
@@ -580,7 +595,15 @@ function ProfileEditContent() {
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
-        setValue('birth_date', isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || ''))
+        const finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        console.log('🔍 Setting birth_date value:', {
+          isNewUser,
+          'defaults.birth_date': defaults.birth_date,
+          'profile.birth_date': profile.birth_date,
+          'profile.date_of_birth': profile.date_of_birth,
+          finalBirthDate
+        })
+        setValue('birth_date', finalBirthDate)
         if (isForeignMale) {
           setValue('nationality', defaults.nationality || profile.nationality || '')
         }
