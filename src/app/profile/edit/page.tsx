@@ -894,7 +894,10 @@ function ProfileEditContent() {
         }
       } else {
         // その他のフィールド（personality等）
-        if (Array.isArray(value)) {
+        if (field === 'personality') {
+          // personalityは配列フィールドとして特別に処理
+          isCompleted = Array.isArray(value) && value.length > 0
+        } else if (Array.isArray(value)) {
           isCompleted = value.length > 0
         } else if (value === 'none' || value === null || value === undefined || value === '') {
           isCompleted = false
