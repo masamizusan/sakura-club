@@ -570,7 +570,7 @@ function ProfileEditContent() {
         let resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
         
         // birth_dateが空でageが存在する場合、年齢から生年を推定
-        if (!resetBirthDate && profile.age) {
+        if (!resetBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
           const currentYear = new Date().getFullYear()
           const estimatedBirthYear = currentYear - profile.age
           // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
@@ -610,7 +610,7 @@ function ProfileEditContent() {
         let finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
         
         // finalBirthDateが空でageが存在する場合、年齢から生年を推定
-        if (!finalBirthDate && profile.age) {
+        if (!finalBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
           const currentYear = new Date().getFullYear()
           const estimatedBirthYear = currentYear - profile.age
           // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
