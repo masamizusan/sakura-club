@@ -1351,7 +1351,7 @@ function ProfileEditContent() {
         birth_date: currentValues.birth_date, // フォームから直接取得
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
-        avatar_url: newImages.length > 0 ? 'has_images' : null
+        // avatar_urlは画像配列で判定するため設定しない
       }, newImages)
     }, 100)
   }

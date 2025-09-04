@@ -115,7 +115,7 @@ function MyPageContent() {
   const calculateProfileCompletion = (profileData: any) => {
     // プロフィール編集ページと同じロジックを使用
     const requiredFields = [
-      'nickname', 'gender', 'age', 
+      'nickname', 'gender', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
     
@@ -205,6 +205,9 @@ function MyPageContent() {
           break
         case 'prefecture':
           value = mergedProfile.residence || mergedProfile.prefecture
+          break
+        case 'birth_date':
+          value = mergedProfile.birth_date
           break
         default:
           value = mergedProfile[field]
@@ -457,44 +460,67 @@ function MyPageContent() {
           {/* 詳細プロフィール情報 */}
           <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              {profile?.occupation && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">職業:</span>
-                  <span className="text-gray-600">{profile.occupation}</span>
-                </div>
-              )}
-              {profile?.height && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">身長:</span>
-                  <span className="text-gray-600">{profile.height}cm</span>
-                </div>
-              )}
-              {profile?.body_type && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">体型:</span>
-                  <span className="text-gray-600">{profile.body_type}</span>
-                </div>
-              )}
-              {profile?.marital_status && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">結婚:</span>
-                  <span className="text-gray-600">
-                    {profile.marital_status === 'single' ? '未婚' : profile.marital_status === 'married' ? '既婚' : profile.marital_status}
-                  </span>
-                </div>
-              )}
-              {profile?.nationality && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">国籍:</span>
-                  <span className="text-gray-600">{profile.nationality}</span>
-                </div>
-              )}
-              {profile?.city && (
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 w-16">市区町村:</span>
-                  <span className="text-gray-600">{profile.city}</span>
-                </div>
-              )}
+              {(() => {
+                // cityフィールドからJSONデータを解析
+                let parsedOptionalData: any = {}
+                try {
+                  if (profile?.city && typeof profile.city === 'string' && profile.city.startsWith('{')) {
+                    parsedOptionalData = JSON.parse(profile.city)
+                  }
+                } catch (e) {
+                  // JSON解析失敗時は空オブジェクト
+                }
+                
+                // 各フィールドの表示判定
+                const occupation = parsedOptionalData.occupation || profile?.occupation
+                const height = parsedOptionalData.height || profile?.height
+                const body_type = parsedOptionalData.body_type || profile?.body_type
+                const marital_status = parsedOptionalData.marital_status || profile?.marital_status
+                const actualCity = parsedOptionalData.city || (profile?.city && !profile.city.startsWith('{') ? profile.city : null)
+                
+                return (
+                  <>
+                    {occupation && occupation !== 'none' && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">職業:</span>
+                        <span className="text-gray-600">{occupation}</span>
+                      </div>
+                    )}
+                    {height && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">身長:</span>
+                        <span className="text-gray-600">{height}cm</span>
+                      </div>
+                    )}
+                    {body_type && body_type !== 'none' && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">体型:</span>
+                        <span className="text-gray-600">{body_type}</span>
+                      </div>
+                    )}
+                    {marital_status && marital_status !== 'none' && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">結婚:</span>
+                        <span className="text-gray-600">
+                          {marital_status === 'single' ? '未婚' : marital_status === 'married' ? '既婚' : marital_status}
+                        </span>
+                      </div>
+                    )}
+                    {profile?.nationality && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">国籍:</span>
+                        <span className="text-gray-600">{profile.nationality}</span>
+                      </div>
+                    )}
+                    {actualCity && (
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-16">市区町村:</span>
+                        <span className="text-gray-600">{actualCity}</span>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
 
             {/* 自己紹介 */}
