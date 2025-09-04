@@ -430,25 +430,32 @@ function ProfileEditContent() {
           }
         }
         
-        // 仮登録からの遷移の場合、URLパラメータからも初期値を取得
+        // マイページからの遷移かどうかを判定
         const urlParams = new URLSearchParams(window.location.search)
-        const signupData = {
-          nickname: urlParams.get('nickname'),
-          gender: urlParams.get('gender'),
-          birth_date: urlParams.get('birth_date'),
-          age: urlParams.get('age'),
-          nationality: urlParams.get('nationality'),
-          prefecture: urlParams.get('prefecture')
+        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+        
+        // マイページからの遷移の場合はURL パラメータからの初期化をスキップ
+        let signupData = {}
+        if (!isFromMyPage) {
+          // 仮登録からの遷移の場合、URLパラメータからも初期値を取得
+          signupData = {
+            nickname: urlParams.get('nickname'),
+            gender: urlParams.get('gender'),
+            birth_date: urlParams.get('birth_date'),
+            age: urlParams.get('age'),
+            nationality: urlParams.get('nationality'),
+            prefecture: urlParams.get('prefecture')
+          }
         }
         
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
         const getDefaults = () => {
           const baseDefaults = {
-            gender: signupData.gender || profile.gender || (isForeignMale ? 'male' : 'female'),
-            nationality: signupData.nationality || profile.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
-            prefecture: signupData.prefecture || profile.prefecture || '',
-            birth_date: signupData.birth_date || profile.birth_date || '',
-            age: signupData.age ? parseInt(signupData.age) : profile.age || 18,
+            gender: (signupData as any).gender || profile.gender || (isForeignMale ? 'male' : 'female'),
+            nationality: (signupData as any).nationality || profile.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
+            prefecture: (signupData as any).prefecture || profile.prefecture || '',
+            birth_date: (signupData as any).birth_date || profile.birth_date || '',
+            age: (signupData as any).age ? parseInt((signupData as any).age) : profile.age || 18,
           }
           
           return baseDefaults
@@ -534,7 +541,7 @@ function ProfileEditContent() {
         }
 
         // ニックネーム（仮登録から）
-        const nicknameValue = signupData.nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
+        const nicknameValue = (signupData as any).nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
 
         // 既存ユーザーの場合：interests配列から性格データを抽出
         let existingPersonality: string[] = []
@@ -727,7 +734,7 @@ function ProfileEditContent() {
     }
     
     const optionalFields = [
-      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'occupation', 'height', 'body_type', 'marital_status', 
       'personality', 'city'
     ]
     
@@ -836,7 +843,7 @@ function ProfileEditContent() {
     }
     
     const optionalFields = [
-      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'occupation', 'height', 'body_type', 'marital_status', 
       'personality', 'city'
     ]
     

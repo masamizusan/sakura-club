@@ -87,6 +87,7 @@ function MyPageContent() {
           }
         }
         
+        // プロフィールデータを取得（プロフィール編集ページと同じ方式）
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
@@ -98,9 +99,55 @@ function MyPageContent() {
         console.log('🔍 City field value:', profileData?.city, typeof profileData?.city)
         console.log('🔍 Interests field value:', profileData?.interests)
 
-        if (profileData) {
-          setProfile(profileData)
-          calculateProfileCompletion(profileData)
+        if (profileData && !error) {
+          // プロフィール編集ページと同じデータ正規化処理
+          let parsedOptionalData = {}
+          if (profileData.city && typeof profileData.city === 'string' && profileData.city.startsWith('{')) {
+            try {
+              parsedOptionalData = JSON.parse(profileData.city)
+              console.log('🔄 MyPage - Parsed optional data from city field:', parsedOptionalData)
+            } catch (e) {
+              console.warn('⚠️ Failed to parse city JSON, using as string')
+              parsedOptionalData = { city: profileData.city }
+            }
+          } else {
+            parsedOptionalData = { city: profileData.city }
+          }
+
+          // interests配列からpersonalityとcustom_cultureを分離
+          const extendedPersonality: string[] = []
+          let extendedCustomCulture: string | null = null
+          const regularInterests: string[] = []
+          
+          if (Array.isArray(profileData.interests)) {
+            profileData.interests.forEach((item: any) => {
+              if (typeof item === 'string') {
+                if (item.startsWith('personality:')) {
+                  extendedPersonality.push(item.replace('personality:', ''))
+                } else if (item.startsWith('custom_culture:')) {
+                  extendedCustomCulture = item.replace('custom_culture:', '')
+                } else {
+                  regularInterests.push(item)
+                }
+              } else {
+                regularInterests.push(item)
+              }
+            })
+          }
+
+          // 正規化されたプロフィールデータを作成
+          const normalizedProfileData = {
+            ...profileData,
+            ...parsedOptionalData,
+            interests: regularInterests,
+            personality: extendedPersonality.length > 0 ? extendedPersonality : null,
+            custom_culture: extendedCustomCulture,
+            hobbies: regularInterests // compatibilityのため
+          }
+
+          console.log('🔄 MyPage - Normalized profile data:', normalizedProfileData)
+          setProfile(normalizedProfileData)
+          calculateProfileCompletion(normalizedProfileData)
         }
       } catch (error) {
         console.error('Profile load error:', error)
@@ -125,7 +172,7 @@ function MyPageContent() {
     // }
     
     const optionalFields = [
-      'avatar_url', 'occupation', 'height', 'body_type', 'marital_status', 
+      'occupation', 'height', 'body_type', 'marital_status', 
       'personality', 'city'
     ]
 
@@ -594,7 +641,7 @@ function MyPageContent() {
             </p>
           </div>
 
-          <Link href="/profile/edit">
+          <Link href="/profile/edit?fromMyPage=true">
             <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
               <Edit3 className="w-4 h-4 mr-2" />
               プロフィールを編集する
