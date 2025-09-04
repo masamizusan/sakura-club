@@ -1046,9 +1046,7 @@ function ProfileEditContent() {
       // interestsフィールドを拡張して、personalityやcustom_cultureも含める
       const extendedInterests = [...(data.hobbies || [])]
       
-      if (data.personality && data.personality.length > 0) {
-        extendedInterests.push(...data.personality.map(p => `personality:${p}`))
-      }
+      // personalityは後で統一的に処理するため、ここでは追加しない
       
       if (data.custom_culture && data.custom_culture.trim()) {
         extendedInterests.push(`custom_culture:${data.custom_culture.trim()}`)
@@ -1149,10 +1147,7 @@ function ProfileEditContent() {
         marital_status: finalValues.marital_status,
       })
 
-      // personalityも拡張interestsに追加
-      if (finalValues.personality && Array.isArray(finalValues.personality) && finalValues.personality.length > 0) {
-        extendedInterests.push(...finalValues.personality.map(p => `personality:${p}`))
-      }
+      // personalityは最後に統一的に処理するため、ここでは追加しない
 
       // 🚨 React Hook Form → URLパラメータ → DOM値の優先順位で値を取得
       const forceOptionalData = {
@@ -1178,7 +1173,11 @@ function ProfileEditContent() {
       if (personalityToSave && personalityToSave.length > 0) {
         personalityToSave.forEach(p => {
           if (p && p.trim()) {
-            extendedInterests.push(`personality:${p.trim()}`)
+            const personalityItem = `personality:${p.trim()}`
+            // 重複チェック：既に存在しない場合のみ追加
+            if (!extendedInterests.includes(personalityItem)) {
+              extendedInterests.push(personalityItem)
+            }
           }
         })
       }
