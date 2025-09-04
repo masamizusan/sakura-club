@@ -140,10 +140,10 @@ function ProfileEditContent() {
           nationality: urlParams.get('nationality') || '',
           prefecture: urlParams.get('prefecture') || '',
           city: '', // 完全に空
-          occupation: 'none', // デフォルト値
+          occupation: '', // 空文字にしてオプション扱い
           height: undefined, // 空
-          body_type: 'none', // デフォルト値  
-          marital_status: 'none', // デフォルト値
+          body_type: '', // 空文字にしてオプション扱い
+          marital_status: '', // 空文字にしてオプション扱い
           self_introduction: '', // 空
           hobbies: [], // 空配列
           personality: [], // 空配列
@@ -697,7 +697,7 @@ function ProfileEditContent() {
   // 画像配列を直接指定する完成度計算関数
   const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     const requiredFields = [
-      'nickname', 'gender', 'age', 
+      'nickname', 'gender', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
     
@@ -743,6 +743,9 @@ function ProfileEditContent() {
           break
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
+          break
+        case 'birth_date':
+          value = profileData.birth_date
           break
         default:
           value = profileData[field]
@@ -797,7 +800,7 @@ function ProfileEditContent() {
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
-      'nickname', 'gender', 'age', 
+      'nickname', 'gender', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
     
@@ -844,6 +847,9 @@ function ProfileEditContent() {
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
           break
+        case 'birth_date':
+          value = profileData.birth_date
+          break
         default:
           value = profileData[field]
       }
@@ -858,14 +864,16 @@ function ProfileEditContent() {
       
       if (field === 'avatar_url') {
         const hasImages = profileImages.length > 0
+        const hasAvatarUrl = value && value !== null && value !== '' && value !== 'null'
+        isCompleted = hasImages || hasAvatarUrl // profileImages状態またはavatar_url値があれば完成扱い
         console.log('🖼️ Avatar URL check:', 
           `フィールド: ${field}`,
           `profileData.avatar_url: ${profileData.avatar_url}`,
           `profileImages.length: ${profileImages.length}`,
           `hasImages: ${hasImages}`,
-          `結果: ${hasImages ? '完成' : '未完成'}`
+          `hasAvatarUrl: ${hasAvatarUrl}`,
+          `結果: ${isCompleted ? '完成' : '未完成'}`
         )
-        isCompleted = hasImages // 1枚以上あれば完成扱い
       } else if (field === 'city') {
         // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
         value = profileData.city
@@ -960,6 +968,7 @@ function ProfileEditContent() {
         case 'self_introduction': return profileData.bio || profileData.self_introduction
         case 'hobbies': return profileData.interests || profileData.hobbies
         case 'prefecture': return profileData.residence || profileData.prefecture
+        case 'birth_date': return profileData.birth_date
         case 'avatar_url': return profileImages.length > 0 ? 'has_images' : null
         default: return profileData[field]
       }
@@ -1047,6 +1056,7 @@ function ProfileEditContent() {
         name: data.nickname,
         gender: data.gender,
         age: data.age,
+        birth_date: data.birth_date, // birth_dateフィールドを追加
         nationality: isForeignMale ? data.nationality : null,
         residence: data.prefecture,
         city: data.city || null, // cityフィールドは存在する

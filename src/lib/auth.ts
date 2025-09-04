@@ -88,6 +88,7 @@ export const authService = {
           last_name: data.lastName,
           gender: data.gender,
           age: data.age,
+          birth_date: data.birth_date, // birth_dateを追加
           nationality: data.nationality,
           residence: data.prefecture,
           city: data.city,
@@ -123,6 +124,7 @@ export const authService = {
           lastName: data.lastName,
           gender: data.gender,
           age: data.age,
+          birth_date: data.birth_date, // birth_dateを追加
           nationality: data.nationality,
           prefecture: data.prefecture,
           city: data.city,

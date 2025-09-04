@@ -28,6 +28,9 @@ export const signupSchema = z.object({
     })
     .min(18, '18歳以上である必要があります')
     .max(99, '有効な年齢を入力してください'),
+  birth_date: z
+    .string()
+    .min(1, '生年月日を入力してください'),
   nationality: z
     .string()
     .min(1, '国籍を選択してください'),
