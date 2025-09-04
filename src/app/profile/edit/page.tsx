@@ -566,12 +566,24 @@ function ProfileEditContent() {
         }
 
         // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
-        const resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        // birth_dateが存在しない場合はageから逆算
+        let resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        
+        // birth_dateが空でageが存在する場合、年齢から生年を推定
+        if (!resetBirthDate && profile.age) {
+          const currentYear = new Date().getFullYear()
+          const estimatedBirthYear = currentYear - profile.age
+          // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
+          resetBirthDate = `${estimatedBirthYear}-01-01`
+          console.log(`🔄 Age-based birth_date estimation: age ${profile.age} → ${resetBirthDate}`)
+        }
+        
         console.log('🔍 Reset birth_date value:', {
           isNewUser,
           'defaults.birth_date': defaults.birth_date,
           'profile.birth_date': profile.birth_date,
           'profile.date_of_birth': profile.date_of_birth,
+          'profile.age': profile.age,
           resetBirthDate
         })
         reset({
@@ -595,12 +607,23 @@ function ProfileEditContent() {
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
-        const finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        let finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        
+        // finalBirthDateが空でageが存在する場合、年齢から生年を推定
+        if (!finalBirthDate && profile.age) {
+          const currentYear = new Date().getFullYear()
+          const estimatedBirthYear = currentYear - profile.age
+          // デフォルトで1月1日を設定（実際の誕生日は後でユーザーが修正）
+          finalBirthDate = `${estimatedBirthYear}-01-01`
+          console.log(`🔄 Age-based birth_date estimation (setValue): age ${profile.age} → ${finalBirthDate}`)
+        }
+        
         console.log('🔍 Setting birth_date value:', {
           isNewUser,
           'defaults.birth_date': defaults.birth_date,
           'profile.birth_date': profile.birth_date,
           'profile.date_of_birth': profile.date_of_birth,
+          'profile.age': profile.age,
           finalBirthDate
         })
         setValue('birth_date', finalBirthDate)
