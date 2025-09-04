@@ -94,10 +94,19 @@ function MyPageContent() {
           .eq('id', user.id)
           .single()
 
+        console.log('========== MYPAGE DEBUG START ==========')
         console.log('Profile data loaded:', !!profileData, error?.message)
         console.log('🔍 Raw profile data from database:', profileData)
-        console.log('🔍 City field value:', profileData?.city, typeof profileData?.city)
-        console.log('🔍 Interests field value:', profileData?.interests)
+        console.log('🔍 Critical fields debug:')
+        console.log('  - name:', profileData?.name)
+        console.log('  - bio:', profileData?.bio)
+        console.log('  - age:', profileData?.age)
+        console.log('  - birth_date:', profileData?.birth_date)
+        console.log('  - city (raw):', profileData?.city, typeof profileData?.city)
+        console.log('  - interests (raw):', profileData?.interests)
+        console.log('  - height:', profileData?.height)
+        console.log('  - occupation:', profileData?.occupation)
+        console.log('========== MYPAGE DEBUG END ===========')
 
         if (profileData && !error) {
           // プロフィール編集ページと同じデータ正規化処理
@@ -145,7 +154,19 @@ function MyPageContent() {
             hobbies: regularInterests // compatibilityのため
           }
 
+          console.log('========== NORMALIZED DATA DEBUG ==========')
           console.log('🔄 MyPage - Normalized profile data:', normalizedProfileData)
+          console.log('🔄 Normalized critical fields:')
+          console.log('  - name:', normalizedProfileData.name)
+          console.log('  - bio:', normalizedProfileData.bio)
+          console.log('  - age:', normalizedProfileData.age)
+          console.log('  - birth_date:', normalizedProfileData.birth_date)
+          console.log('  - city:', normalizedProfileData.city)
+          console.log('  - interests:', normalizedProfileData.interests)
+          console.log('  - personality:', normalizedProfileData.personality)
+          console.log('  - height:', normalizedProfileData.height)
+          console.log('  - occupation:', normalizedProfileData.occupation)
+          console.log('========== NORMALIZED DATA DEBUG END ==========')
           setProfile(normalizedProfileData)
           calculateProfileCompletion(normalizedProfileData)
         }

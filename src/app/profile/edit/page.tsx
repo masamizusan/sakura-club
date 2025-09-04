@@ -397,7 +397,18 @@ function ProfileEditContent() {
           return
         }
 
+        console.log('========== PROFILE EDIT DEBUG START ==========')
         console.log('Loaded profile data:', profile)
+        console.log('🔍 Critical fields debug (Edit Page):')
+        console.log('  - name:', profile?.name)
+        console.log('  - bio:', profile?.bio)
+        console.log('  - age:', profile?.age)
+        console.log('  - birth_date:', profile?.birth_date)
+        console.log('  - city (raw):', profile?.city, typeof profile?.city)
+        console.log('  - interests (raw):', profile?.interests)
+        console.log('  - height:', profile?.height)
+        console.log('  - occupation:', profile?.occupation)
+        console.log('========== PROFILE EDIT DEBUG END ==========')
         console.log('🔍 Birth date related fields:', {
           birth_date: profile.birth_date,
           date_of_birth: profile.date_of_birth,
