@@ -476,11 +476,11 @@ function ProfileEditContent() {
         console.log('isFromSignup:', isFromSignup)
         console.log('Signup data:', signupData)
         
-        // 新規ユーザーかどうかを判定（bio, interests, nameが空、またはテストデータの場合は新規とみなす）
+        // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
         const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
                           profile.name === 'テスト' ||
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
-        const isNewUser = (!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup
+        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup)
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
         // このブロックは現在無効化されています

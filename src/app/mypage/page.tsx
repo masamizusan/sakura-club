@@ -176,49 +176,10 @@ function MyPageContent() {
       'personality', 'city'
     ]
 
-    // cityフィールドからJSONデータを解析
-    let parsedOptionalData = {}
-    try {
-      if (profileData.city && typeof profileData.city === 'string') {
-        parsedOptionalData = JSON.parse(profileData.city)
-        console.log('📋 Parsed optional data from city field:', parsedOptionalData)
-      }
-    } catch (e) {
-      console.log('⚠️ Could not parse city field as JSON, treating as regular city data')
-      parsedOptionalData = { city: profileData.city }
-    }
+    // 既に正規化されたデータを使用（重複処理を防ぐ）
+    const mergedProfile = profileData
 
-    // interestsフィールドから拡張データを解析
-    const extendedPersonality: string[] = []
-    let extendedCustomCulture: string | null = null
-    const regularInterests: string[] = []
-    
-    if (Array.isArray(profileData.interests)) {
-      profileData.interests.forEach((item: any) => {
-        if (typeof item === 'string') {
-          if (item.startsWith('personality:')) {
-            extendedPersonality.push(item.replace('personality:', ''))
-          } else if (item.startsWith('custom_culture:')) {
-            extendedCustomCulture = item.replace('custom_culture:', '')
-          } else {
-            regularInterests.push(item)
-          }
-        } else {
-          regularInterests.push(item)
-        }
-      })
-    }
-
-    // マージされたプロフィールデータを作成
-    const mergedProfile = {
-      ...profileData,
-      interests: regularInterests,
-      personality: extendedPersonality.length > 0 ? extendedPersonality : null,
-      custom_culture: extendedCustomCulture,
-      ...parsedOptionalData // JSONから解析されたオプションデータ
-    }
-
-    console.log('🔍 Merged profile data:', mergedProfile)
+    console.log('🔍 Using normalized profile data:', mergedProfile)
     
     const completedRequired = requiredFields.filter(field => {
       let value
@@ -272,13 +233,12 @@ function MyPageContent() {
         return value && value !== null
       }
       
-      // cityフィールドに格納されたJSONデータから値を取得
+      // 正規化されたデータから値を取得（既に処理済み）
       if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
-        // これらのフィールドはJSONデータから取得する必要がある
-        value = (parsedOptionalData as any)[field]
-        console.log(`🔍 Optional field ${field} from JSON:`, value)
+        value = mergedProfile[field]
+        console.log(`🔍 Optional field ${field} from normalized data:`, value)
         
-        // JSONデータからの値がundefinedまたは存在しない場合は未完了
+        // 値がundefinedまたは存在しない場合は未完了
         if (value === undefined || value === null || value === '') {
           return false
         }
@@ -356,27 +316,21 @@ function MyPageContent() {
           isCompleted = value && value !== 'none' && value !== null && value !== undefined && value !== '' && value.trim().length > 0
         }
       } else if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
-        // オプション項目：JSONデータから解析された値を使用
-        const jsonValue = (parsedOptionalData as any)[field]
-        if (jsonValue !== undefined && jsonValue !== null) {
-          // JSONから取得した値を使用
+        // オプション項目：正規化されたデータを使用
+        const normalizedValue = mergedProfile[field]
+        if (normalizedValue !== undefined && normalizedValue !== null) {
+          // 正規化されたデータから値を使用
           if (field === 'height') {
             // 身長は文字列または数値として保存される可能性があるので両方チェック
-            const heightNum = typeof jsonValue === 'string' ? parseInt(jsonValue) : jsonValue
-            isCompleted = jsonValue && !isNaN(heightNum) && heightNum > 0
+            const heightNum = typeof normalizedValue === 'string' ? parseInt(normalizedValue) : normalizedValue
+            isCompleted = normalizedValue && !isNaN(heightNum) && heightNum > 0
           } else {
-            isCompleted = jsonValue && jsonValue !== 'none' && jsonValue !== '' && jsonValue.toString().trim().length > 0
+            isCompleted = normalizedValue && normalizedValue !== 'none' && normalizedValue !== '' && normalizedValue.toString().trim().length > 0
           }
-          console.log(`🔍 ${field} field JSON analysis:`, { originalValue: value, jsonValue, isCompleted })
+          console.log(`🔍 ${field} field normalized analysis:`, { normalizedValue, isCompleted })
         } else {
-          // JSONから値が取得できない場合は元のフィールド値を使用
-          if (Array.isArray(value)) {
-            isCompleted = value.length > 0
-          } else if (value === 'none' || value === null || value === undefined || value === '') {
-            isCompleted = false
-          } else {
-            isCompleted = value.toString().trim().length > 0
-          }
+          // 正規化されたデータに値がない場合は未完了
+          isCompleted = false
         }
       } else {
         // その他のフィールド（personality等）
@@ -508,22 +462,12 @@ function MyPageContent() {
           <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {(() => {
-                // cityフィールドからJSONデータを解析
-                let parsedOptionalData: any = {}
-                try {
-                  if (profile?.city && typeof profile.city === 'string' && profile.city.startsWith('{')) {
-                    parsedOptionalData = JSON.parse(profile.city)
-                  }
-                } catch (e) {
-                  // JSON解析失敗時は空オブジェクト
-                }
-                
-                // 各フィールドの表示判定
-                const occupation = parsedOptionalData.occupation || profile?.occupation
-                const height = parsedOptionalData.height || profile?.height
-                const body_type = parsedOptionalData.body_type || profile?.body_type
-                const marital_status = parsedOptionalData.marital_status || profile?.marital_status
-                const actualCity = parsedOptionalData.city || (profile?.city && !profile.city.startsWith('{') ? profile.city : null)
+                // 正規化されたプロフィールデータを直接使用（二重処理を回避）
+                const occupation = profile?.occupation
+                const height = profile?.height
+                const body_type = profile?.body_type
+                const marital_status = profile?.marital_status
+                const actualCity = profile?.city
                 
                 return (
                   <>
