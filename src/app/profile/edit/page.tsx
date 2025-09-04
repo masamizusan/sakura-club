@@ -951,15 +951,17 @@ function ProfileEditContent() {
   useEffect(() => {
     const subscription = watch((value) => {
       if (value) {
+        const currentValues = getValues() // 現在のフォーム値を直接取得
         calculateProfileCompletion({
           ...value,
+          birth_date: currentValues.birth_date, // フォームから直接取得
           personality: selectedPersonality, // 状態から直接取得
           avatar_url: profileImages.length > 0 ? 'has_images' : null
         })
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, profileImages, selectedPersonality, calculateProfileCompletion])
+  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     console.log('🚀 onSubmit started - プロフィール更新開始')
@@ -1259,8 +1261,10 @@ function ProfileEditContent() {
       
       // リアルタイム完成度更新
       const currentData = watch()
+      const currentValues = getValues()
       calculateProfileCompletion({
         ...currentData,
+        birth_date: currentValues.birth_date, // フォームから直接取得
         hobbies: newHobbies,
         personality: selectedPersonality, // 状態から直接取得
         avatar_url: profileImages.length > 0 ? 'has_images' : null
@@ -1279,8 +1283,10 @@ function ProfileEditContent() {
       
       // リアルタイム完成度更新
       const currentData = watch()
+      const currentValues = getValues()
       calculateProfileCompletion({
         ...currentData,
+        birth_date: currentValues.birth_date, // フォームから直接取得
         hobbies: selectedHobbies, // 状態から直接取得
         personality: newPersonality,
         avatar_url: profileImages.length > 0 ? 'has_images' : null
@@ -1306,8 +1312,10 @@ function ProfileEditContent() {
     setTimeout(() => {
       console.log('🔄 Delayed completion calculation with new images:', newImages.length)
       // 画像配列を直接渡す専用関数のみを使用
+      const currentValues = getValues()
       calculateProfileCompletionWithImages({
         ...currentData,
+        birth_date: currentValues.birth_date, // フォームから直接取得
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
         avatar_url: newImages.length > 0 ? 'has_images' : null
