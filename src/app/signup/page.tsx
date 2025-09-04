@@ -110,6 +110,7 @@ export default function SignupPage() {
         lastName: '',
         gender: data.gender,
         age: age,
+        birth_date: data.birth_date, // birth_dateフィールドを追加
         nationality: data.prefecture, // 選択された居住国/居住地をnationalityとして使用
         prefecture: data.prefecture,
         city: '',
