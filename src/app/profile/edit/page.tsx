@@ -622,6 +622,8 @@ function ProfileEditContent() {
           residence: defaults.prefecture || profile.residence || profile.prefecture,
           interests: profile.interests || profile.hobbies || [],
           bio: profile.bio || profile.self_introduction || '',
+          hobbies: existingHobbies,
+          personality: existingPersonality,
         }
         calculateProfileCompletion(profileDataWithSignup)
       } catch (error) {
@@ -662,10 +664,12 @@ function ProfileEditContent() {
         ...currentData,
         birth_date: birthDate,
         age: age,
+        hobbies: selectedHobbies, // 状態から直接取得
+        personality: selectedPersonality, // 状態から直接取得
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
-  }, [calculateAge, setValue, watch, profileImages])
+  }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
   // 画像配列を直接指定する完成度計算関数
   const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
@@ -949,12 +953,13 @@ function ProfileEditContent() {
       if (value) {
         calculateProfileCompletion({
           ...value,
+          personality: selectedPersonality, // 状態から直接取得
           avatar_url: profileImages.length > 0 ? 'has_images' : null
         })
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, profileImages, calculateProfileCompletion])
+  }, [watch, profileImages, selectedPersonality, calculateProfileCompletion])
 
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     console.log('🚀 onSubmit started - プロフィール更新開始')
@@ -1258,6 +1263,7 @@ function ProfileEditContent() {
       calculateProfileCompletion({
         ...currentData,
         hobbies: newHobbies,
+        personality: selectedPersonality, // 状態から直接取得
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
@@ -1276,6 +1282,7 @@ function ProfileEditContent() {
       const currentData = watch()
       calculateProfileCompletion({
         ...currentData,
+        hobbies: selectedHobbies, // 状態から直接取得
         personality: newPersonality,
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
@@ -1302,6 +1309,8 @@ function ProfileEditContent() {
       // 画像配列を直接渡す専用関数のみを使用
       calculateProfileCompletionWithImages({
         ...currentData,
+        hobbies: selectedHobbies, // 状態から直接取得
+        personality: selectedPersonality, // 状態から直接取得
         avatar_url: newImages.length > 0 ? 'has_images' : null
       }, newImages)
     }, 100)
