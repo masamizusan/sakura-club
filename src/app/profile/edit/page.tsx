@@ -106,27 +106,60 @@ function ProfileEditContent() {
     }
   }
 
-  // 新規登録時の完全プロフィール削除
-  const deleteExistingProfileAndStartFresh = async () => {
+  // 新規登録時の安全なプロフィール初期化（セキュリティ強化版）
+  const secureProfileInitialization = async () => {
     if (!user?.id) {
-      console.error('❌ User ID not available for profile deletion')
+      console.error('❌ User ID not available for profile initialization')
       return
     }
 
     try {
-      console.log('🗑️ 既存プロフィール完全削除開始 - User ID:', user.id)
+      console.log('🔐 安全なプロフィール初期化開始 - User ID:', user.id)
       
-      // プロフィールレコードを完全削除
-      const { error: deleteError } = await supabase
+      // まずプロフィールの存在確認
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .delete()
+        .select('id, created_at')
         .eq('id', user.id)
+        .single()
       
-      if (deleteError) {
-        console.error('❌ Profile deletion error:', deleteError)
-        // エラーがあってもフォームは初期化する
+      if (checkError && checkError.code !== 'PGRST116') {
+        // PGRST116以外のエラーは処理停止
+        console.error('❌ Profile existence check error:', checkError)
+        return
+      }
+      
+      if (existingProfile) {
+        console.log('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
+        
+        // 既存プロフィールがある場合は、特定フィールドのみを安全にクリア
+        // id, email, created_at, updated_at等の重要フィールドは保持
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            // ユーザー入力データのみクリア（システムデータは保持）
+            name: null,
+            bio: null,
+            interests: null,
+            height: null,
+            avatar_url: null,
+            city: null, // JSONデータも含めてクリア
+            personality: null,
+            custom_culture: null,
+            occupation: null,
+            body_type: null,
+            marital_status: null
+          })
+          .eq('id', user.id)
+        
+        if (updateError) {
+          console.error('❌ Safe profile reset error:', updateError)
+          return
+        }
+        
+        console.log('✅ 既存プロフィールの安全な初期化完了')
       } else {
-        console.log('✅ 既存プロフィール完全削除成功')
+        console.log('ℹ️ 新規プロフィール - 初期化不要')
       }
       
       // フォームを完全に初期化（URLパラメータから基本情報のみ設定）
@@ -140,10 +173,10 @@ function ProfileEditContent() {
           nationality: urlParams.get('nationality') || '',
           prefecture: urlParams.get('prefecture') || '',
           city: '', // 完全に空
-          occupation: '', // 空文字にしてオプション扱い
+          occupation: 'none', // デフォルト値設定
           height: undefined, // 空
-          body_type: '', // 空文字にしてオプション扱い
-          marital_status: '', // 空文字にしてオプション扱い
+          body_type: 'none', // デフォルト値設定
+          marital_status: 'none', // デフォルト値設定
           self_introduction: '', // 空
           hobbies: [], // 空配列
           personality: [], // 空配列
@@ -155,7 +188,7 @@ function ProfileEditContent() {
         setSelectedPersonality([])
         setProfileImages([])
         
-        console.log('✅ フォーム完全初期化完了 - 真の新規登録状態')
+        console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
         
         // 完成度を再計算
         setTimeout(() => {
@@ -174,7 +207,7 @@ function ProfileEditContent() {
       }
       
     } catch (error) {
-      console.error('❌ Profile deletion process error:', error)
+      console.error('❌ Secure profile initialization error:', error)
     }
   }
 
@@ -191,25 +224,33 @@ function ProfileEditContent() {
       console.log('🔑 Type parameter:', hasType)
       console.log('👤 Nickname parameter:', hasNickname)
       
-      // 新規登録フロー判定：typeとnicknameのパラメータがあれば新規登録
-      const isSignupFlow = hasType && hasNickname
-      console.log('🚨 新規登録フロー判定:', { hasType, hasNickname, isSignupFlow })
+      // MyPageからの遷移をチェック
+      const isFromMyPageParam = urlParams.get('fromMyPage') === 'true'
       
-      // 🚨 新規登録フロー検出時は既存データを完全クリア
-      const enableProfileDeletion = true
+      // 新規登録フロー判定：typeとnicknameのパラメータがあり、かつMyPageからの遷移でない場合のみ新規登録
+      const isSignupFlow = hasType && hasNickname && !isFromMyPageParam
+      console.log('🚨 新規登録フロー判定:', { 
+        hasType, 
+        hasNickname, 
+        isFromMyPageParam,
+        isSignupFlow 
+      })
+      
+      // 🚨 新規登録フロー検出時のみ既存データを完全クリア（MyPageからの遷移は除外）
+      const enableProfileDeletion = isSignupFlow && !isFromMyPageParam
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
-      if (isSignupFlow && enableProfileDeletion) {
-        console.log('🚨 新規登録フロー検出！既存プロフィール完全削除開始')
+      if (enableProfileDeletion) {
+        console.log('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
         if (user) {
-          deleteExistingProfileAndStartFresh()
+          secureProfileInitialization()
         } else {
           console.log('⏳ ユーザー認証待ち...')
           // ユーザー認証を待つ間隔実行
           const checkUser = setInterval(() => {
             if (user) {
-              console.log('👤 認証完了 - 遅延プロフィール削除実行')
-              if (enableProfileDeletion) deleteExistingProfileAndStartFresh()
+              console.log('👤 認証完了 - 遅延セキュア初期化実行')
+              secureProfileInitialization()
               clearInterval(checkUser)
             }
           }, 500)
@@ -217,6 +258,8 @@ function ProfileEditContent() {
           // 5秒後にタイムアウト
           setTimeout(() => clearInterval(checkUser), 5000)
         }
+      } else if (isFromMyPageParam) {
+        console.log('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
       }
     }
   }, [user])
@@ -445,6 +488,11 @@ function ProfileEditContent() {
         const urlParams = new URLSearchParams(window.location.search)
         const isFromMyPage = urlParams.get('fromMyPage') === 'true'
         
+        console.log('🔍 MyPage Transition Check:')
+        console.log('  - fromMyPage param:', isFromMyPage)
+        console.log('  - Current URL:', window.location.href)
+        console.log('  - Should skip signup data:', isFromMyPage)
+        
         // マイページからの遷移の場合はURL パラメータからの初期化をスキップ
         let signupData = {}
         if (!isFromMyPage) {
@@ -486,12 +534,37 @@ function ProfileEditContent() {
         console.log('Has signup params:', hasSignupParams)
         console.log('isFromSignup:', isFromSignup)
         console.log('Signup data:', signupData)
+        console.log('isFromMyPage param:', isFromMyPage)
+        
+        console.log('🚨 DATA COMPARISON DEBUG - Profile Edit vs MyPage')
+        console.log('🔍 Raw profile data from DB (Profile Edit):')
+        console.log('  - name:', profile.name)
+        console.log('  - bio:', profile.bio) 
+        console.log('  - age:', profile.age)
+        console.log('  - birth_date:', profile.birth_date)
+        console.log('  - city (raw):', profile.city)
+        console.log('  - interests (raw):', profile.interests)
+        console.log('  - height:', profile.height)
+        console.log('  - occupation:', profile.occupation)
+        console.log('  - marital_status:', profile.marital_status)
+        console.log('  - body_type:', profile.body_type)
+        
+        console.log('🔍 Parsed optional data (Profile Edit):', parsedOptionalData)
         
         // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
         const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
                           profile.name === 'テスト' ||
                           (profile.interests?.length === 1 && profile.interests[0] === '茶道')
         const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup)
+        
+        console.log('🔍 New User Determination Debug:')
+        console.log('  - isFromMyPage:', isFromMyPage)
+        console.log('  - isTestData:', isTestData)
+        console.log('  - isFromSignup:', isFromSignup)
+        console.log('  - profile.bio exists:', !!profile.bio)
+        console.log('  - profile.interests exists:', !!profile.interests)
+        console.log('  - profile.name exists:', !!profile.name)
+        console.log('  - FINAL isNewUser result:', isNewUser)
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
         // このブロックは現在無効化されています
@@ -584,13 +657,25 @@ function ProfileEditContent() {
         }
 
         // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
-        // birth_dateが存在しない場合はageから逆算
-        let resetBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        // MyPageからの遷移時は既存の生年月日を確実に保持
+        let resetBirthDate
+        if (isFromMyPage) {
+          // MyPageからの遷移：既存の生年月日を必ず保持
+          resetBirthDate = profile.birth_date || profile.date_of_birth || ''
+          console.log('🔄 MyPage遷移 - 既存birth_dateを保持:', resetBirthDate)
+        } else if (isNewUser) {
+          // 新規ユーザー：signupデータまたは空
+          resetBirthDate = defaults.birth_date || ''
+          console.log('🆕 新規ユーザー - signup birth_date使用:', resetBirthDate)
+        } else {
+          // 既存ユーザー：既存データを使用
+          resetBirthDate = profile.birth_date || profile.date_of_birth || defaults.birth_date || ''
+          console.log('👤 既存ユーザー - profile birth_date使用:', resetBirthDate)
+        }
         
         // birth_dateが空でageが存在する場合のみ、年齢から生年を推定（推定値であることを明示）
-        if (!resetBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
-          // 推定値であることをユーザーに分かりやすくするため、プレースホルダーとして空文字を設定
-          // （HTMLのdate inputでplaceholder相当の動作をする）
+        if (!resetBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
+          // MyPageからの遷移時は推定を行わず、ユーザーに実際の入力を促す
           resetBirthDate = ''
           console.log(`⚠️ Birth date not found, age is ${profile.age}. User should set actual birth_date.`)
         }
@@ -603,7 +688,20 @@ function ProfileEditContent() {
           'profile.age': profile.age,
           resetBirthDate
         })
-        reset({
+        
+        console.log('🔍 Form Reset Data Debug:')
+        console.log('  - nicknameValue:', nicknameValue)
+        console.log('  - resetBirthDate:', resetBirthDate)
+        console.log('  - parsedOptionalData.city:', parsedOptionalData.city)
+        console.log('  - parsedOptionalData.occupation:', parsedOptionalData.occupation)
+        console.log('  - parsedOptionalData.height:', parsedOptionalData.height)
+        console.log('  - parsedOptionalData.body_type:', parsedOptionalData.body_type)
+        console.log('  - parsedOptionalData.marital_status:', parsedOptionalData.marital_status)
+        console.log('  - existingHobbies:', existingHobbies)
+        console.log('  - existingPersonality:', existingPersonality)
+        console.log('  - existingCustomCulture:', existingCustomCulture)
+        
+        const resetData = {
           nickname: nicknameValue,
           gender: defaults.gender,
           birth_date: resetBirthDate,
@@ -619,22 +717,41 @@ function ProfileEditContent() {
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
-        })
+        }
+        
+        console.log('🚨 Final Reset Data for Form:', resetData)
+        reset(resetData)
         
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
-        let finalBirthDate = isNewUser ? (defaults.birth_date || '') : (profile.birth_date || profile.date_of_birth || defaults.birth_date || '')
+        
+        // birth_date設定でも同じロジックを使用（resetBirthDateと一致させる）
+        let finalBirthDate
+        if (isFromMyPage) {
+          // MyPageからの遷移：既存の生年月日を必ず保持
+          finalBirthDate = profile.birth_date || profile.date_of_birth || ''
+          console.log('🔄 setValue - MyPage遷移のbirth_date保持:', finalBirthDate)
+        } else if (isNewUser) {
+          // 新規ユーザー：signupデータまたは空
+          finalBirthDate = defaults.birth_date || ''
+          console.log('🆕 setValue - 新規ユーザーbirth_date:', finalBirthDate)
+        } else {
+          // 既存ユーザー：既存データを使用
+          finalBirthDate = profile.birth_date || profile.date_of_birth || defaults.birth_date || ''
+          console.log('👤 setValue - 既存ユーザーbirth_date:', finalBirthDate)
+        }
         
         // finalBirthDateが空でageが存在する場合のみ警告（推定値は設定しない）
-        if (!finalBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120) {
-          // 実際の生年月日がない場合は空文字のまま、ユーザーに入力を促す
+        if (!finalBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
+          // 実際の生年月日がない場合は空文字のまま、ユーザーに入力を促す（MyPage遷移時は除く）
           finalBirthDate = ''
           console.log(`⚠️ Birth date not found (setValue), age is ${profile.age}. User should set actual birth_date.`)
         }
         
         console.log('🔍 Setting birth_date value:', {
           isNewUser,
+          isFromMyPage,
           'defaults.birth_date': defaults.birth_date,
           'profile.birth_date': profile.birth_date,
           'profile.date_of_birth': profile.date_of_birth,
