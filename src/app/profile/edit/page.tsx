@@ -832,7 +832,8 @@ function ProfileEditContent() {
         console.log('🔍 FORM RESET DETAILED ANALYSIS:')
         console.log('About to reset form with following data:')
         Object.keys(resetData).forEach(key => {
-          console.log(`  - ${key}: ${JSON.stringify(resetData[key])} (type: ${typeof resetData[key]})`)
+          const value = (resetData as any)[key]
+          console.log(`  - ${key}: ${JSON.stringify(value)} (type: ${typeof value})`)
         })
         
         reset(resetData)
