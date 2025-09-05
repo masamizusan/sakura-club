@@ -110,7 +110,13 @@ function MyPageContent() {
 
         if (profileData && !error) {
           // プロフィール編集ページと同じデータ正規化処理
-          let parsedOptionalData = {}
+          let parsedOptionalData: {
+            city?: string;
+            occupation?: string;
+            height?: number;
+            body_type?: string;
+            marital_status?: string;
+          } = {}
           if (profileData.city && typeof profileData.city === 'string' && profileData.city.startsWith('{')) {
             try {
               parsedOptionalData = JSON.parse(profileData.city)
