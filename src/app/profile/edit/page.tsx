@@ -116,11 +116,24 @@ function ProfileEditContent() {
     try {
       console.log('🔐 安全なプロフィール初期化開始 - User ID:', user.id)
       
-      // まずプロフィールの存在確認
+      // 🛡️ セキュリティ強化: ユーザーID検証
+      console.log('🔒 SECURITY: Validating user authentication')
+      const { data: authUser, error: authError } = await supabase.auth.getUser()
+      if (authError || !authUser.user || authUser.user.id !== user.id) {
+        console.error('🚨 SECURITY BREACH: User ID mismatch or invalid auth', {
+          authError,
+          authUserId: authUser?.user?.id,
+          providedUserId: user.id
+        })
+        return
+      }
+      console.log('✅ User authentication validated')
+      
+      // まずプロフィールの存在確認（該当ユーザーのデータのみ）
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .select('id, created_at')
-        .eq('id', user.id)
+        .select('id, created_at, email') // セキュリティ確認のためemailも取得
+        .eq('id', user.id) // 🛡️ 厳格なユーザーID一致確認
         .single()
       
       if (checkError && checkError.code !== 'PGRST116') {
@@ -131,9 +144,24 @@ function ProfileEditContent() {
       
       if (existingProfile) {
         console.log('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
+        console.log('🔒 SECURITY: Profile belongs to authenticated user:', {
+          profileId: existingProfile.id,
+          userId: user.id,
+          match: existingProfile.id === user.id
+        })
+        
+        // 🛡️ 二重チェック: プロフィールが確実に現在のユーザーのものであることを確認
+        if (existingProfile.id !== user.id) {
+          console.error('🚨 CRITICAL SECURITY BREACH: Profile ID does not match user ID', {
+            profileId: existingProfile.id,
+            userId: user.id
+          })
+          return
+        }
         
         // 既存プロフィールがある場合は、特定フィールドのみを安全にクリア
         // id, email, created_at, updated_at等の重要フィールドは保持
+        console.log('🔄 SECURITY: Clearing user data fields only (preserving system fields)')
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -150,11 +178,27 @@ function ProfileEditContent() {
             body_type: null,
             marital_status: null
           })
-          .eq('id', user.id)
+          .eq('id', user.id) // 🛡️ 厳格なWHERE条件
+          .eq('email', authUser.user.email) // 🛡️ 追加のセキュリティ条件
         
         if (updateError) {
           console.error('❌ Safe profile reset error:', updateError)
           return
+        }
+        
+        // 🔒 セキュリティ確認: 更新後のデータ整合性チェック
+        const { data: updatedProfile, error: verifyError } = await supabase
+          .from('profiles')
+          .select('id, email, name, bio')
+          .eq('id', user.id)
+          .single()
+        
+        if (!verifyError && updatedProfile) {
+          console.log('✅ SECURITY: Data integrity verified after update:', {
+            userId: updatedProfile.id,
+            nameCleared: updatedProfile.name === null,
+            bioCleared: updatedProfile.bio === null
+          })
         }
         
         console.log('✅ 既存プロフィールの安全な初期化完了')
@@ -451,14 +495,27 @@ function ProfileEditContent() {
         console.log('  - interests (raw):', profile?.interests)
         console.log('  - height:', profile?.height)
         console.log('  - occupation:', profile?.occupation)
-        console.log('========== PROFILE EDIT DEBUG END ==========')
-        console.log('🔍 Birth date related fields:', {
+        console.log('  - body_type:', profile?.body_type)
+        console.log('  - marital_status:', profile?.marital_status)
+        
+        console.log('🔍 DETAILED FIELD VALUES FOR MYPAGE COMPARISON:')
+        console.log('Birth date related fields:', {
           birth_date: profile.birth_date,
           date_of_birth: profile.date_of_birth,
           birthday: profile.birthday,
           dob: profile.dob,
           age: profile.age
         })
+        console.log('All occupation related fields:', {
+          occupation: profile.occupation,
+          job: profile.job,
+          work: profile.work
+        })
+        console.log('All height related fields:', {
+          height: profile.height,
+          height_cm: profile.height_cm
+        })
+        console.log('========== PROFILE EDIT DEBUG END ==========')
         
         // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
         let parsedOptionalData: {
@@ -468,20 +525,37 @@ function ProfileEditContent() {
           body_type?: string;
           marital_status?: string;
         } = {}
+        
+        console.log('🔍 CITY FIELD PARSING ANALYSIS:')
+        console.log('Raw city field:', profile.city)
+        console.log('City field type:', typeof profile.city)
+        console.log('Starts with {:', profile.city?.startsWith('{'))
+        
         if (profile.city && typeof profile.city === 'string') {
           try {
             // JSONデータの場合はパース
             if (profile.city.startsWith('{')) {
               parsedOptionalData = JSON.parse(profile.city)
               console.log('📋 Parsed optional data from city field:', parsedOptionalData)
+              console.log('📋 Individual parsed values:', {
+                city: parsedOptionalData.city,
+                occupation: parsedOptionalData.occupation,
+                height: parsedOptionalData.height,
+                body_type: parsedOptionalData.body_type,
+                marital_status: parsedOptionalData.marital_status
+              })
             } else {
               // 通常の文字列の場合はそのまま使用
               parsedOptionalData = { city: profile.city }
+              console.log('📍 Using city as regular string:', parsedOptionalData)
             }
           } catch (e) {
             console.log('⚠️ Could not parse city field as JSON, treating as regular city data')
+            console.log('Parse error:', e)
             parsedOptionalData = { city: profile.city }
           }
+        } else {
+          console.log('📍 No city field data to parse')
         }
         
         // マイページからの遷移かどうかを判定
@@ -552,9 +626,21 @@ function ProfileEditContent() {
         console.log('🔍 Parsed optional data (Profile Edit):', parsedOptionalData)
         
         // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
+        // 🚨 危険なロジック修正: 茶道選択ユーザーを誤って新規ユーザー扱いしないよう修正
         const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
-                          profile.name === 'テスト' ||
-                          (profile.interests?.length === 1 && profile.interests[0] === '茶道')
+                          profile.name === 'テスト'
+        // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーを誤判定する危険
+        
+        console.log('🚨 CRITICAL: New user determination logic:')
+        console.log('  - Original isTestData (with 茶道):', 
+                    profile.bio?.includes('テスト用の自己紹介です') || 
+                    profile.name === 'テスト' ||
+                    (profile.interests?.length === 1 && profile.interests[0] === '茶道'))
+        console.log('  - Safer isTestData (without 茶道):', isTestData)
+        console.log('  - Profile has bio:', !!profile.bio)
+        console.log('  - Profile has interests:', !!profile.interests)  
+        console.log('  - Profile has name:', !!profile.name)
+        
         const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup)
         
         console.log('🔍 New User Determination Debug:')
@@ -598,10 +684,30 @@ function ProfileEditContent() {
         */
         
         // テストデータまたは既存データクリア（新規登録以外でも実行）
+        // 🚨 危険なロジック修正: 茶道選択ユーザーのデータを誤ってクリアしないよう修正
         const isTestData2 = profile.bio?.includes('テスト用の自己紹介です') || 
-                          profile.name === 'テスト' ||
-                          (profile.interests?.length === 1 && profile.interests[0] === '茶道')
-        if ((isTestData2 || profile.name === 'masamizu') && user?.id) {
+                          profile.name === 'テスト'
+        // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーデータを誤削除する危険
+        
+        console.log('🚨 CRITICAL: Test data clear condition check:')
+        console.log('  - isTestData2:', isTestData2)
+        console.log('  - profile.name === "masamizu":', profile.name === 'masamizu')
+        console.log('  - isFromMyPage:', isFromMyPage)
+        console.log('  - Should clear data:', (isTestData2 || profile.name === 'masamizu') && user?.id)
+        console.log('  - DANGER: This will clear data even from MyPage!')
+        
+        // 🚨 セキュリティ問題：MyPageからの遷移でもデータがクリアされる可能性
+        // MyPageからの遷移時はデータクリアを防ぐ
+        const shouldClearData = (isTestData2 || profile.name === 'masamizu') && user?.id && !isFromMyPage
+        
+        console.log('🛡️ SECURITY FIX: Modified condition:')
+        console.log('  - shouldClearData (with MyPage protection):', shouldClearData)
+        
+        if (shouldClearData) {
+          // 🛡️ セキュリティ強化: テストデータクリア時の追加検証
+          console.log('🔒 SECURITY: Applying additional verification for test data clear')
+          const { data: authUser } = await supabase.auth.getUser()
+          
           await supabase
             .from('profiles')
             .update({
@@ -611,7 +717,8 @@ function ProfileEditContent() {
               height: null,
               avatar_url: null
             })
-            .eq('id', user.id)
+            .eq('id', user.id) // 🛡️ 主要条件：ユーザーID一致
+            .eq('email', authUser?.user?.email) // 🛡️ 追加条件：email一致
           
           const { data: cleanProfile } = await supabase
             .from('profiles')
@@ -720,7 +827,16 @@ function ProfileEditContent() {
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
+        
+        // フォームリセット前の詳細ログ
+        console.log('🔍 FORM RESET DETAILED ANALYSIS:')
+        console.log('About to reset form with following data:')
+        Object.keys(resetData).forEach(key => {
+          console.log(`  - ${key}: ${JSON.stringify(resetData[key])} (type: ${typeof resetData[key]})`)
+        })
+        
         reset(resetData)
+        console.log('✅ Form reset completed')
         
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
@@ -758,15 +874,35 @@ function ProfileEditContent() {
           'profile.age': profile.age,
           finalBirthDate
         })
+        console.log('🔍 FORM FIELD SET VALUES DETAILED LOG:')
+        console.log('Setting birth_date:', finalBirthDate)
         setValue('birth_date', finalBirthDate)
+        
         if (isForeignMale) {
-          setValue('nationality', defaults.nationality || profile.nationality || '')
+          const nationalityValue = defaults.nationality || profile.nationality || ''
+          console.log('Setting nationality (foreign male):', nationalityValue)
+          setValue('nationality', nationalityValue)
         }
-        setValue('prefecture', defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')))
-        setValue('age', defaults.age || (isNewUser ? 18 : (profile.age || 18)))
-        setValue('hobbies', isNewUser ? [] : existingHobbies)
-        setValue('personality', isNewUser ? [] : existingPersonality)
-        setValue('custom_culture', isNewUser ? '' : existingCustomCulture)
+        
+        const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))
+        console.log('Setting prefecture:', prefectureValue)
+        setValue('prefecture', prefectureValue)
+        
+        const ageValue = defaults.age || (isNewUser ? 18 : (profile.age || 18))
+        console.log('Setting age:', ageValue)
+        setValue('age', ageValue)
+        
+        const hobbiesValue = isNewUser ? [] : existingHobbies
+        console.log('Setting hobbies:', hobbiesValue)
+        setValue('hobbies', hobbiesValue)
+        
+        const personalityValue = isNewUser ? [] : existingPersonality
+        console.log('Setting personality:', personalityValue)
+        setValue('personality', personalityValue)
+        
+        const customCultureValue = isNewUser ? '' : existingCustomCulture
+        console.log('Setting custom_culture:', customCultureValue)
+        setValue('custom_culture', customCultureValue)
         
         setSelectedHobbies(isNewUser ? [] : existingHobbies)
         setSelectedPersonality(isNewUser ? [] : existingPersonality)

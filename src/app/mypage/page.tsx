@@ -176,6 +176,49 @@ function MyPageContent() {
           console.log('  - originalInterests:', profileData.interests)
           console.log('  - extractedPersonality:', extendedPersonality)
           console.log('  - extractedCustomCulture:', extendedCustomCulture)
+          
+          // プロフィール編集画面との詳細比較用ログ
+          console.log('🔍 DETAILED FIELD VALUES FOR EDIT COMPARISON:')
+          console.log('Birth date related fields:', {
+            birth_date: profileData.birth_date,
+            date_of_birth: profileData.date_of_birth,
+            birthday: profileData.birthday,
+            dob: profileData.dob,
+            age: profileData.age
+          })
+          console.log('City field analysis:', {
+            rawCity: profileData.city,
+            cityType: typeof profileData.city,
+            isJson: profileData.city?.startsWith('{'),
+            parsedCity: parsedOptionalData?.city,
+            finalDisplayCity: normalizedProfileData.city
+          })
+          console.log('Occupation field analysis:', {
+            rawOccupation: profileData.occupation,
+            parsedOccupation: parsedOptionalData?.occupation,
+            finalOccupation: normalizedProfileData.occupation
+          })
+          console.log('Height field analysis:', {
+            rawHeight: profileData.height,
+            parsedHeight: parsedOptionalData?.height,
+            finalHeight: normalizedProfileData.height
+          })
+          console.log('Body type field analysis:', {
+            rawBodyType: profileData.body_type,
+            parsedBodyType: parsedOptionalData?.body_type,
+            finalBodyType: normalizedProfileData.body_type
+          })
+          console.log('Marital status field analysis:', {
+            rawMaritalStatus: profileData.marital_status,
+            parsedMaritalStatus: parsedOptionalData?.marital_status,
+            finalMaritalStatus: normalizedProfileData.marital_status
+          })
+          console.log('Interests transformation:', {
+            originalInterests: profileData.interests,
+            regularInterests: regularInterests,
+            extractedPersonality: extendedPersonality,
+            extractedCustomCulture: extendedCustomCulture
+          })
           console.log('========== NORMALIZED DATA DEBUG END ==========')
           setProfile(normalizedProfileData)
           calculateProfileCompletion(normalizedProfileData)
