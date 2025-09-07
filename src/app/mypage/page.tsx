@@ -75,11 +75,12 @@ function MyPageContent() {
             if (completeData.name) updateData.name = completeData.name
             if (completeData.bio) updateData.bio = completeData.bio
             if (completeData.age) updateData.age = completeData.age
+            if (completeData.birth_date) updateData.birth_date = completeData.birth_date
             if (completeData.gender) updateData.gender = completeData.gender
             if (completeData.nationality) updateData.nationality = completeData.nationality
             if (completeData.residence) updateData.residence = completeData.residence
-            if (completeData.profile_image) updateData.profile_image = completeData.profile_image
-            // birth_date と prefecture は存在しないためスキップ
+            if (completeData.profile_image) updateData.avatar_url = completeData.profile_image
+            // prefecture は既存のresidenceフィールドを使用
             
             // オプション情報（city JSONに格納）
             if (completeData.optionalData) {

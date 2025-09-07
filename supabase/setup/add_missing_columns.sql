@@ -70,4 +70,10 @@ BEGIN
                    WHERE table_name = 'profiles' AND column_name = 'membership_type') THEN
         ALTER TABLE profiles ADD COLUMN membership_type TEXT DEFAULT 'free';
     END IF;
+    
+    -- birth_date列が存在しない場合のみ追加（新規登録時の必須フィールド）
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'profiles' AND column_name = 'birth_date') THEN
+        ALTER TABLE profiles ADD COLUMN birth_date DATE;
+    END IF;
 END $$;
