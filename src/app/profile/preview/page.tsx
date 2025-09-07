@@ -361,9 +361,6 @@ function ProfilePreviewContent() {
                           window.location.href = '/mypage'
                         }
                         
-                      } catch (error) {
-                        console.error('❌ Error preparing preview data:', error)
-                      }
                     } catch (error) {
                       console.error('❌ Error preparing preview data:', error)
                     }
