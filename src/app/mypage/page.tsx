@@ -665,12 +665,18 @@ function MyPageContent() {
             </p>
           </div>
 
-          <Link href="/profile/edit?fromMyPage=true">
-            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
-              <Edit3 className="w-4 h-4 mr-2" />
-              プロフィールを編集する
-            </Button>
-          </Link>
+          <Button 
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+            onClick={() => {
+              // 🛡️ セキュリティ修正: 既存URLパラメータを完全にクリアしてMyPage遷移のみを設定
+              console.log('🔄 MyPage編集ボタンクリック - URLパラメータをクリアして遷移')
+              console.log('🔍 現在のURL:', window.location.href)
+              router.push('/profile/edit?fromMyPage=true')
+            }}
+          >
+            <Edit3 className="w-4 h-4 mr-2" />
+            プロフィールを編集する
+          </Button>
         </div>
 
 
