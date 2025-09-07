@@ -71,15 +71,14 @@ function MyPageContent() {
             // 🛠️ 修正: 全フィールドを更新するデータを準備
             const updateData: any = {}
             
-            // 基本情報の更新
+            // 基本情報の更新（存在するカラムのみ）
             if (completeData.name) updateData.name = completeData.name
             if (completeData.bio) updateData.bio = completeData.bio
             if (completeData.age) updateData.age = completeData.age
-            if (completeData.birth_date) updateData.birth_date = completeData.birth_date
             if (completeData.gender) updateData.gender = completeData.gender
             if (completeData.nationality) updateData.nationality = completeData.nationality
-            if (completeData.prefecture) updateData.prefecture = completeData.prefecture
             if (completeData.residence) updateData.residence = completeData.residence
+            // birth_date と prefecture は存在しないためスキップ
             
             // オプション情報（city JSONに格納）
             if (completeData.optionalData) {
