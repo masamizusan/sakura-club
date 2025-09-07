@@ -280,6 +280,12 @@ function ProfilePreviewContent() {
                       })
                       
                       // 🛠️ 修正: 全フィールドのデータを準備（オプションデータ以外も含む）
+                      console.log('🔍 DEBUG: previewData contents:', previewData)
+                      console.log('🔍 DEBUG: Individual field values:', {
+                        nickname, selfIntroduction, age, gender, nationality, prefecture, city,
+                        occupation, height, bodyType, maritalStatus, hobbies, personality, customCulture
+                      })
+                      
                       const completeProfileData = {
                         // 基本情報
                         name: nickname || null,
@@ -297,6 +303,12 @@ function ProfilePreviewContent() {
                         // interests配列
                         interests: extendedInterests
                       }
+                      
+                      console.log('🔍 DEBUG: birth_date sources:', {
+                        'previewData.birth_date': previewData.birth_date,
+                        'previewData.birthday': previewData.birthday,  
+                        'previewData.dob': previewData.dob
+                      })
                       
                       console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
                       

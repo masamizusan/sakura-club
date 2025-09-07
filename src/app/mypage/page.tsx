@@ -54,11 +54,19 @@ function MyPageContent() {
         const previewOptionalData = localStorage.getItem('previewOptionalData')
         const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
         
+        console.log('🔍 DEBUG: localStorage check:', {
+          shouldUpdate,
+          hasCompleteData: !!previewCompleteData,
+          hasOptionalData: !!previewOptionalData,
+          hasInterestsData: !!previewExtendedInterests
+        })
+        
         if (shouldUpdate === 'true' && previewCompleteData) {
           console.log('🎯 MyPage: Processing complete preview update data')
           
           try {
             const completeData = JSON.parse(previewCompleteData)
+            console.log('🔍 DEBUG: Parsed complete data:', completeData)
             
             // 🛠️ 修正: 全フィールドを更新するデータを準備
             const updateData: any = {}
