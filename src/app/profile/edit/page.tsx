@@ -1427,9 +1427,9 @@ function ProfileEditContent() {
             custom_culture: extendedInterests.find((item: string) => item.startsWith('custom_culture:'))?.replace('custom_culture:', '') || null
           }
           
-          // localStorage クリア
-          localStorage.removeItem('previewOptionalData')
-          localStorage.removeItem('previewExtendedInterests')
+          // localStorage は後でクリア（データベース更新後）
+          // localStorage.removeItem('previewOptionalData')
+          // localStorage.removeItem('previewExtendedInterests')
           
           console.log('🔍 Values from localStorage preview data:', finalValues)
         } catch (error) {
