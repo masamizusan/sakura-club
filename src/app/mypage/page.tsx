@@ -50,17 +50,70 @@ function MyPageContent() {
         
         // プレビューからのプロフィール更新データをチェック
         const shouldUpdate = localStorage.getItem('updateProfile')
+        const previewCompleteData = localStorage.getItem('previewCompleteData')
         const previewOptionalData = localStorage.getItem('previewOptionalData')
         const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
         
-        if (shouldUpdate === 'true' && previewOptionalData && previewExtendedInterests) {
-          console.log('🎯 MyPage: Processing preview update data')
+        if (shouldUpdate === 'true' && previewCompleteData) {
+          console.log('🎯 MyPage: Processing complete preview update data')
+          
+          try {
+            const completeData = JSON.parse(previewCompleteData)
+            
+            // 🛠️ 修正: 全フィールドを更新するデータを準備
+            const updateData: any = {}
+            
+            // 基本情報の更新
+            if (completeData.name) updateData.name = completeData.name
+            if (completeData.bio) updateData.bio = completeData.bio
+            if (completeData.age) updateData.age = completeData.age
+            if (completeData.birth_date) updateData.birth_date = completeData.birth_date
+            if (completeData.gender) updateData.gender = completeData.gender
+            if (completeData.nationality) updateData.nationality = completeData.nationality
+            if (completeData.prefecture) updateData.prefecture = completeData.prefecture
+            if (completeData.residence) updateData.residence = completeData.residence
+            
+            // オプション情報（city JSONに格納）
+            if (completeData.optionalData) {
+              updateData.city = JSON.stringify(completeData.optionalData)
+            }
+            
+            // interests配列
+            if (completeData.interests) {
+              updateData.interests = completeData.interests
+            }
+            
+            console.log('🚨 MyPage: Complete update data prepared', updateData)
+            
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update(updateData)
+              .eq('id', user.id)
+            
+            if (updateError) {
+              console.error('❌ Profile update error:', updateError)
+            } else {
+              console.log('✅ Profile updated successfully with complete data from preview')
+            }
+            
+            // localStorage クリア
+            localStorage.removeItem('updateProfile')
+            localStorage.removeItem('previewCompleteData')
+            localStorage.removeItem('previewOptionalData')
+            localStorage.removeItem('previewExtendedInterests')
+            
+          } catch (error) {
+            console.error('❌ Error processing complete preview update:', error)
+          }
+        } else if (shouldUpdate === 'true' && previewOptionalData && previewExtendedInterests) {
+          // 🔄 フォールバック: 従来の部分的な更新処理（互換性のため）
+          console.log('🎯 MyPage: Processing partial preview update data (fallback)')
           
           try {
             const optionalData = JSON.parse(previewOptionalData)
             const extendedInterests = JSON.parse(previewExtendedInterests)
             
-            // プロフィール更新処理
+            // プロフィール更新処理（部分的）
             const updateData = {
               city: JSON.stringify(optionalData),
               interests: extendedInterests
@@ -74,7 +127,7 @@ function MyPageContent() {
             if (updateError) {
               console.error('❌ Profile update error:', updateError)
             } else {
-              console.log('✅ Profile updated successfully from preview')
+              console.log('✅ Profile updated successfully from preview (partial)')
             }
             
             // localStorage クリア

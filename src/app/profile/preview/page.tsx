@@ -279,7 +279,29 @@ function ProfilePreviewContent() {
                         extendedInterests
                       })
                       
-                      // localStorageにオプションデータを保存（マイページで使用）
+                      // 🛠️ 修正: 全フィールドのデータを準備（オプションデータ以外も含む）
+                      const completeProfileData = {
+                        // 基本情報
+                        name: nickname || null,
+                        bio: selfIntroduction || null,
+                        age: age ? Number(age) : null,
+                        birth_date: previewData.birth_date || null,
+                        gender: gender || null,
+                        nationality: nationality || null,
+                        prefecture: prefecture || null,
+                        residence: prefecture || null, // compatibilityのため
+                        
+                        // オプション情報（city JSONに格納）
+                        optionalData: optionalData,
+                        
+                        // interests配列
+                        interests: extendedInterests
+                      }
+                      
+                      console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
+                      
+                      // localStorageに完全なプロフィールデータを保存
+                      localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
                       localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
                       localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
                       
