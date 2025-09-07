@@ -61,7 +61,7 @@ function MyPageContent() {
           hasInterestsData: !!previewExtendedInterests
         })
         
-        if (shouldUpdate === 'true' && previewCompleteData) {
+        if (previewCompleteData) {
           console.log('🎯 MyPage: Processing complete preview update data')
           
           try {
@@ -117,7 +117,7 @@ function MyPageContent() {
           } catch (error) {
             console.error('❌ Error processing complete preview update:', error)
           }
-        } else if (shouldUpdate === 'true' && previewOptionalData && previewExtendedInterests) {
+        } else if (previewOptionalData && previewExtendedInterests) {
           // 🔄 フォールバック: 従来の部分的な更新処理（互換性のため）
           console.log('🎯 MyPage: Processing partial preview update data (fallback)')
           
