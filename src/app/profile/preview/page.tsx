@@ -324,29 +324,44 @@ function ProfilePreviewContent() {
                       console.error('❌ Error preparing preview data:', error)
                     }
                     
+                    // 🛠️ 修正: localStorageへの保存を確実に完了してから遷移
                     // localStorageにプロフィール更新フラグを設定
                     localStorage.setItem('updateProfile', 'true')
                     localStorage.setItem('updateProfileTimestamp', Date.now().toString())
                     
-                    console.log('💾 localStorage set with optional data')
+                    // 🔒 localStorage保存の確認
+                    const savedUpdateFlag = localStorage.getItem('updateProfile')
+                    const savedCompleteData = localStorage.getItem('previewCompleteData')
+                    const savedOptionalData = localStorage.getItem('previewOptionalData')
+                    const savedInterestsData = localStorage.getItem('previewExtendedInterests')
+                    
+                    console.log('💾 localStorage保存完了確認:', {
+                      updateProfile: savedUpdateFlag,
+                      hasCompleteData: !!savedCompleteData,
+                      hasOptionalData: !!savedOptionalData,
+                      hasInterestsData: !!savedInterestsData
+                    })
+                    
+                    // localStorage保存が完了するまで少し待機
+                    await new Promise(resolve => setTimeout(resolve, 100))
                     
                     // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
                     console.log('🔍 Checking window.opener:', !!window.opener)
                     
                     // 直接マイページに遷移し、バックグラウンドでプロフィール更新
-                    console.log('🎯 Redirecting directly to mypage')
+                    console.log('🎯 Redirecting directly to mypage after localStorage confirmation')
                     
                     if (window.opener) {
                       // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
                       console.log('📡 Redirecting opener to mypage and closing preview')
                       window.opener.postMessage({ action: 'updateProfile' }, '*')
                       
-                      // 即座にマイページにリダイレクト
+                      // localStorage保存完了後にマイページにリダイレクト
                       window.opener.location.href = '/mypage'
                       window.close()
                     } else {
                       // 直接マイページに遷移（プロフィール編集画面を経由しない）
-                      console.log('🔄 Direct redirect to mypage')
+                      console.log('🔄 Direct redirect to mypage after localStorage confirmation')
                       window.location.href = '/mypage'
                     }
                   }}
