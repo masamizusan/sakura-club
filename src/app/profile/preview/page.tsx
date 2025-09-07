@@ -26,6 +26,7 @@ function ProfilePreviewContent() {
         const fallbackData = {
           nickname: searchParams.get('nickname') || 'ニックネーム未設定',
           age: searchParams.get('age') || '18',
+          birth_date: searchParams.get('birth_date') || null,
           gender: searchParams.get('gender') || '',
           nationality: searchParams.get('nationality') || '',
           prefecture: searchParams.get('prefecture') || '',
@@ -38,7 +39,8 @@ function ProfilePreviewContent() {
           hobbies: [],
           personality: [],
           custom_culture: searchParams.get('custom_culture') || '',
-          image: searchParams.get('image') || ''
+          image: searchParams.get('image') || '',
+          profile_image: searchParams.get('profile_image') || null
         }
         setPreviewData(fallbackData)
         console.log('📋 Using fallback data from URL params')
@@ -286,19 +288,28 @@ function ProfilePreviewContent() {
                           occupation, height, bodyType, maritalStatus, hobbies, personality, customCulture
                         })
                         
+                        // birth_dateの確実な取得
+                        const birth_date = previewData.birth_date || 
+                                          previewData.birthday || 
+                                          previewData.dob || 
+                                          searchParams.get('birth_date') || 
+                                          searchParams.get('birthday') || 
+                                          searchParams.get('dob') || 
+                                          null
+                        
                         const completeProfileData = {
                           // 基本情報
                           name: nickname || null,
                           bio: selfIntroduction || null,
                           age: age ? Number(age) : null,
-                          birth_date: previewData.birth_date || searchParams.get('birth_date') || null,
+                          birth_date: birth_date,
                           gender: gender || null,
                           nationality: nationality || null,
                           prefecture: prefecture || null,
                           residence: prefecture || null, // compatibilityのため
                           
                           // 写真データ（既存の写真を含める）
-                          profile_image: previewData.profile_image || null,
+                          profile_image: previewData.profile_image || profileImage || searchParams.get('profile_image') || null,
                           
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
@@ -310,7 +321,11 @@ function ProfilePreviewContent() {
                         console.log('🔍 DEBUG: birth_date sources:', {
                           'previewData.birth_date': previewData.birth_date,
                           'previewData.birthday': previewData.birthday,  
-                          'previewData.dob': previewData.dob
+                          'previewData.dob': previewData.dob,
+                          'searchParams birth_date': searchParams.get('birth_date'),
+                          'searchParams birthday': searchParams.get('birthday'),
+                          'searchParams dob': searchParams.get('dob'),
+                          'final birth_date': birth_date
                         })
                         
                         console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
