@@ -291,11 +291,14 @@ function ProfilePreviewContent() {
                           name: nickname || null,
                           bio: selfIntroduction || null,
                           age: age ? Number(age) : null,
-                          birth_date: previewData.birth_date || null,
+                          birth_date: previewData.birth_date || searchParams.get('birth_date') || null,
                           gender: gender || null,
                           nationality: nationality || null,
                           prefecture: prefecture || null,
                           residence: prefecture || null, // compatibilityのため
+                          
+                          // 写真データ（既存の写真を含める）
+                          profile_image: previewData.profile_image || null,
                           
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,

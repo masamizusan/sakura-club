@@ -78,6 +78,7 @@ function MyPageContent() {
             if (completeData.gender) updateData.gender = completeData.gender
             if (completeData.nationality) updateData.nationality = completeData.nationality
             if (completeData.residence) updateData.residence = completeData.residence
+            if (completeData.profile_image) updateData.profile_image = completeData.profile_image
             // birth_date と prefecture は存在しないためスキップ
             
             // オプション情報（city JSONに格納）
