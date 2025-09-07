@@ -246,123 +246,126 @@ function ProfilePreviewContent() {
                     
                     // sessionStorageからデータを取得してプロフィール更新用データを準備
                     try {
-                      console.log('🚨 DIRECT SAVE: Using sessionStorage data')
-                      
-                      // オプションデータをJSONで準備
-                      const optionalData = {
-                        city: city || null,
-                        occupation: occupation || null,
-                        height: height ? Number(height) : null,
-                        body_type: bodyType || null,
-                        marital_status: maritalStatus || null,
-                      }
-                      
-                      // personalityとhobbiesを拡張interests配列として準備
-                      const extendedInterests = [...hobbies]
-                      
-                      // personalityを追加
-                      if (personality && personality.length > 0) {
-                        personality.forEach((p: string) => {
-                          if (p && p.trim()) {
-                            extendedInterests.push(`personality:${p.trim()}`)
-                          }
+                        console.log('🚨 DIRECT SAVE: Using sessionStorage data')
+                        
+                        // オプションデータをJSONで準備
+                        const optionalData = {
+                          city: city || null,
+                          occupation: occupation || null,
+                          height: height ? Number(height) : null,
+                          body_type: bodyType || null,
+                          marital_status: maritalStatus || null,
+                        }
+                        
+                        // personalityとhobbiesを拡張interests配列として準備
+                        const extendedInterests = [...hobbies]
+                        
+                        // personalityを追加
+                        if (personality && personality.length > 0) {
+                          personality.forEach((p: string) => {
+                            if (p && p.trim()) {
+                              extendedInterests.push(`personality:${p.trim()}`)
+                            }
+                          })
+                        }
+                        
+                        // custom_cultureを追加
+                        if (customCulture && customCulture.trim()) {
+                          extendedInterests.push(`custom_culture:${customCulture.trim()}`)
+                        }
+                        
+                        console.log('🚨 DIRECT SAVE: Prepared data', {
+                          optionalData,
+                          extendedInterests
                         })
-                      }
-                      
-                      // custom_cultureを追加
-                      if (customCulture && customCulture.trim()) {
-                        extendedInterests.push(`custom_culture:${customCulture.trim()}`)
-                      }
-                      
-                      console.log('🚨 DIRECT SAVE: Prepared data', {
-                        optionalData,
-                        extendedInterests
-                      })
-                      
-                      // 🛠️ 修正: 全フィールドのデータを準備（オプションデータ以外も含む）
-                      console.log('🔍 DEBUG: previewData contents:', previewData)
-                      console.log('🔍 DEBUG: Individual field values:', {
-                        nickname, selfIntroduction, age, gender, nationality, prefecture, city,
-                        occupation, height, bodyType, maritalStatus, hobbies, personality, customCulture
-                      })
-                      
-                      const completeProfileData = {
-                        // 基本情報
-                        name: nickname || null,
-                        bio: selfIntroduction || null,
-                        age: age ? Number(age) : null,
-                        birth_date: previewData.birth_date || null,
-                        gender: gender || null,
-                        nationality: nationality || null,
-                        prefecture: prefecture || null,
-                        residence: prefecture || null, // compatibilityのため
                         
-                        // オプション情報（city JSONに格納）
-                        optionalData: optionalData,
+                        // 🛠️ 修正: 全フィールドのデータを準備（オプションデータ以外も含む）
+                        console.log('🔍 DEBUG: previewData contents:', previewData)
+                        console.log('🔍 DEBUG: Individual field values:', {
+                          nickname, selfIntroduction, age, gender, nationality, prefecture, city,
+                          occupation, height, bodyType, maritalStatus, hobbies, personality, customCulture
+                        })
                         
-                        // interests配列
-                        interests: extendedInterests
+                        const completeProfileData = {
+                          // 基本情報
+                          name: nickname || null,
+                          bio: selfIntroduction || null,
+                          age: age ? Number(age) : null,
+                          birth_date: previewData.birth_date || null,
+                          gender: gender || null,
+                          nationality: nationality || null,
+                          prefecture: prefecture || null,
+                          residence: prefecture || null, // compatibilityのため
+                          
+                          // オプション情報（city JSONに格納）
+                          optionalData: optionalData,
+                          
+                          // interests配列
+                          interests: extendedInterests
+                        }
+                        
+                        console.log('🔍 DEBUG: birth_date sources:', {
+                          'previewData.birth_date': previewData.birth_date,
+                          'previewData.birthday': previewData.birthday,  
+                          'previewData.dob': previewData.dob
+                        })
+                        
+                        console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
+                        
+                        // localStorageに完全なプロフィールデータを保存
+                        localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
+                        localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
+                        localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
+                        
+                        // sessionStorageをクリア
+                        sessionStorage.removeItem('previewData')
+                        
+                        // 🛠️ 修正: localStorageへの保存を確実に完了してから遷移
+                        // localStorageにプロフィール更新フラグを設定
+                        localStorage.setItem('updateProfile', 'true')
+                        localStorage.setItem('updateProfileTimestamp', Date.now().toString())
+                        
+                        // 🔒 localStorage保存の確認
+                        const savedUpdateFlag = localStorage.getItem('updateProfile')
+                        const savedCompleteData = localStorage.getItem('previewCompleteData')
+                        const savedOptionalData = localStorage.getItem('previewOptionalData')
+                        const savedInterestsData = localStorage.getItem('previewExtendedInterests')
+                        
+                        console.log('💾 localStorage保存完了確認:', {
+                          updateProfile: savedUpdateFlag,
+                          hasCompleteData: !!savedCompleteData,
+                          hasOptionalData: !!savedOptionalData,
+                          hasInterestsData: !!savedInterestsData
+                        })
+                        
+                        // localStorage保存が完了するまで少し待機
+                        await new Promise(resolve => setTimeout(resolve, 100))
+                        
+                        // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
+                        console.log('🔍 Checking window.opener:', !!window.opener)
+                        
+                        // 直接マイページに遷移し、バックグラウンドでプロフィール更新
+                        console.log('🎯 Redirecting directly to mypage after localStorage confirmation')
+                        
+                        if (window.opener) {
+                          // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
+                          console.log('📡 Redirecting opener to mypage and closing preview')
+                          window.opener.postMessage({ action: 'updateProfile' }, '*')
+                          
+                          // localStorage保存完了後にマイページにリダイレクト
+                          window.opener.location.href = '/mypage'
+                          window.close()
+                        } else {
+                          // 直接マイページに遷移（プロフィール編集画面を経由しない）
+                          console.log('🔄 Direct redirect to mypage after localStorage confirmation')
+                          window.location.href = '/mypage'
+                        }
+                        
+                      } catch (error) {
+                        console.error('❌ Error preparing preview data:', error)
                       }
-                      
-                      console.log('🔍 DEBUG: birth_date sources:', {
-                        'previewData.birth_date': previewData.birth_date,
-                        'previewData.birthday': previewData.birthday,  
-                        'previewData.dob': previewData.dob
-                      })
-                      
-                      console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
-                      
-                      // localStorageに完全なプロフィールデータを保存
-                      localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
-                      localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
-                      localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
-                      
-                      // sessionStorageをクリア
-                      sessionStorage.removeItem('previewData')
-                      
                     } catch (error) {
                       console.error('❌ Error preparing preview data:', error)
-                    }
-                    
-                    // 🛠️ 修正: localStorageへの保存を確実に完了してから遷移
-                    // localStorageにプロフィール更新フラグを設定
-                    localStorage.setItem('updateProfile', 'true')
-                    localStorage.setItem('updateProfileTimestamp', Date.now().toString())
-                    
-                    // 🔒 localStorage保存の確認
-                    const savedUpdateFlag = localStorage.getItem('updateProfile')
-                    const savedCompleteData = localStorage.getItem('previewCompleteData')
-                    const savedOptionalData = localStorage.getItem('previewOptionalData')
-                    const savedInterestsData = localStorage.getItem('previewExtendedInterests')
-                    
-                    console.log('💾 localStorage保存完了確認:', {
-                      updateProfile: savedUpdateFlag,
-                      hasCompleteData: !!savedCompleteData,
-                      hasOptionalData: !!savedOptionalData,
-                      hasInterestsData: !!savedInterestsData
-                    })
-                    
-                    // localStorage保存が完了するまで少し待機
-                    await new Promise(resolve => setTimeout(resolve, 100))
-                    
-                    // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
-                    console.log('🔍 Checking window.opener:', !!window.opener)
-                    
-                    // 直接マイページに遷移し、バックグラウンドでプロフィール更新
-                    console.log('🎯 Redirecting directly to mypage after localStorage confirmation')
-                    
-                    if (window.opener) {
-                      // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
-                      console.log('📡 Redirecting opener to mypage and closing preview')
-                      window.opener.postMessage({ action: 'updateProfile' }, '*')
-                      
-                      // localStorage保存完了後にマイページにリダイレクト
-                      window.opener.location.href = '/mypage'
-                      window.close()
-                    } else {
-                      // 直接マイページに遷移（プロフィール編集画面を経由しない）
-                      console.log('🔄 Direct redirect to mypage after localStorage confirmation')
-                      window.location.href = '/mypage'
                     }
                   }}
                 >
