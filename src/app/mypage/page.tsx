@@ -143,12 +143,17 @@ function MyPageContent() {
             localStorage.removeItem('previewOptionalData')
             localStorage.removeItem('previewExtendedInterests')
             
+            // データベース更新後少し待機してからデータを取得（キャッシュ問題対策）
+            console.log('⏳ Waiting for database update to complete...')
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
           } catch (error) {
             console.error('❌ Error processing preview update:', error)
           }
         }
         
         // プロフィールデータを取得（プロフィール編集ページと同じ方式）
+        console.log('🔍 Fetching updated profile data from database...')
         const { data: profileData, error } = await supabase
           .from('profiles')
           .select('*')
