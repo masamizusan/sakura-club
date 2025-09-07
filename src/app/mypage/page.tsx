@@ -110,6 +110,10 @@ function MyPageContent() {
             localStorage.removeItem('previewOptionalData')
             localStorage.removeItem('previewExtendedInterests')
             
+            // データベース更新後少し待機してからデータを取得（キャッシュ問題対策）
+            console.log('⏳ Waiting for complete database update to complete...')
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
           } catch (error) {
             console.error('❌ Error processing complete preview update:', error)
           }
