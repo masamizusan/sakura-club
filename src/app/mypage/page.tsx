@@ -93,6 +93,15 @@ function MyPageContent() {
             }
             
             console.log('🚨 MyPage: Complete update data prepared', updateData)
+            console.log('🔍 DEBUG: updateData keys and values:')
+            Object.keys(updateData).forEach(key => {
+              console.log(`  - ${key}:`, updateData[key], typeof updateData[key])
+            })
+            console.log('🔍 DEBUG: birth_date specifically:', {
+              'completeData.birth_date': completeData.birth_date,
+              'updateData.birth_date': updateData.birth_date,
+              'birth_date type': typeof completeData.birth_date
+            })
             
             const { error: updateError } = await supabase
               .from('profiles')
