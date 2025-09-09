@@ -291,6 +291,8 @@ export default function SignupPage() {
                 <Input
                   type="date"
                   {...register('birth_date')}
+                  min="1900-01-01"
+                  max={new Date().toISOString().split('T')[0]}
                   className={errors.birth_date ? 'border-red-500' : ''}
                 />
                 {errors.birth_date && (
