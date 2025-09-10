@@ -1989,16 +1989,11 @@ function ProfileEditContent() {
                     生年月日 <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    type="date"
-                    {...register('birth_date')}
-                    min="1900-01-01"
-                    max={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => handleBirthDateChange(e.target.value)}
-                    className={errors.birth_date ? 'border-red-500' : ''}
+                    value={watch('birth_date') ? watch('birth_date') : ''}
+                    readOnly
+                    className="bg-gray-50 cursor-not-allowed"
                   />
-                  {errors.birth_date && (
-                    <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
                 </div>
 
                 <div>
