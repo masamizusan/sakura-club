@@ -1078,13 +1078,17 @@ function ProfileEditContent() {
     })
     
     const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for avatar_url
-    const completedFields = completedRequired.length + completedOptional.length
+    const hasImages = imageArray.length > 0
+    const completedFields = completedRequired.length + completedOptional.length + (hasImages ? 1 : 0)
     const completion = Math.round((completedFields / totalFields) * 100)
     
     // デバッグ情報
     console.warn('🎯 プロフィール完成度計算 (with images):', 
       `完成度: ${completion}%`,
       `完成項目: ${completedFields}/${totalFields}`,
+      `必須: ${requiredFields.length} (${completedRequired.length}完成)`,
+      `オプション: ${optionalFields.length} (${completedOptional.length}完成)`,
+      `画像: ${hasImages ? '1完成' : '0完成'}`,
       `完成必須: ${completedRequired.join(', ')}`,
       `完成オプション: ${completedOptional.join(', ')}`,
       `写真枚数: ${imageArray.length}`
