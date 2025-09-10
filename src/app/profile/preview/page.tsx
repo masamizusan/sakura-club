@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, User, Loader2 } from 'lucide-react'
 
+// 任意項目が表示すべき値かチェックするヘルパー関数
+const shouldDisplayValue = (value: string | null | undefined): boolean => {
+  return value !== null && value !== undefined && value !== '' && value !== 'none'
+}
+
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -159,25 +164,25 @@ function ProfilePreviewContent() {
                     <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
                   </div>
                 )}
-                {occupation && (
+                {shouldDisplayValue(occupation) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">職業:</span>
                     <span className="text-gray-600">{occupation}</span>
                   </div>
                 )}
-                {height && (
+                {shouldDisplayValue(height) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">身長:</span>
                     <span className="text-gray-600">{height}cm</span>
                   </div>
                 )}
-                {bodyType && (
+                {shouldDisplayValue(bodyType) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">体型:</span>
                     <span className="text-gray-600">{bodyType}</span>
                   </div>
                 )}
-                {maritalStatus && (
+                {shouldDisplayValue(maritalStatus) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">結婚:</span>
                     <span className="text-gray-600">{maritalStatus === 'single' ? '未婚' : '既婚'}</span>
@@ -186,7 +191,7 @@ function ProfilePreviewContent() {
               </div>
 
               {/* 自己紹介 */}
-              {selfIntroduction && (
+              {shouldDisplayValue(selfIntroduction) && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
                   <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
@@ -196,7 +201,7 @@ function ProfilePreviewContent() {
               )}
 
               {/* 共有したい日本文化 */}
-              {(hobbies.length > 0 || customCulture) && (
+              {(hobbies.length > 0 || shouldDisplayValue(customCulture)) && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
                   <div className="space-y-2">
@@ -212,7 +217,7 @@ function ProfilePreviewContent() {
                         ))}
                       </div>
                     )}
-                    {customCulture && (
+                    {shouldDisplayValue(customCulture) && (
                       <div className="bg-amber-50 rounded-lg p-3">
                         <p className="text-gray-700 text-sm">{customCulture}</p>
                       </div>
