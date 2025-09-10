@@ -298,6 +298,7 @@ export default function SignupPage() {
                 {errors.birth_date && (
                   <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>
                 )}
+                <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
               </div>
 
               {/* 居住地・居住国 */}

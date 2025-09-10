@@ -1994,6 +1994,7 @@ function ProfileEditContent() {
                     className="bg-gray-50 cursor-not-allowed"
                   />
                   <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
+                  <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
                 </div>
 
                 <div>
