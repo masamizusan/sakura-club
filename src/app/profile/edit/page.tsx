@@ -1000,7 +1000,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'avatar_url'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1077,7 +1077,7 @@ function ProfileEditContent() {
       return isFieldCompleted
     })
     
-    const totalFields = requiredFields.length + optionalFields.length
+    const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for avatar_url
     const completedFields = completedRequired.length + completedOptional.length
     const completion = Math.round((completedFields / totalFields) * 100)
     
@@ -1109,7 +1109,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'avatar_url'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1244,8 +1244,9 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFieldsDetail.filter(item => item.isCompleted)
     
-    const totalFields = requiredFields.length + optionalFields.length
-    const actualCompletedFields = completedRequired.length + completedOptional.length
+    const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for avatar_url  
+    const hasImages = profileImages.length > 0
+    const actualCompletedFields = completedRequired.length + completedOptional.length + (hasImages ? 1 : 0)
     const actualCompletion = Math.round((actualCompletedFields / totalFields) * 100)
     
     // デバッグ情報
