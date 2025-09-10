@@ -1000,7 +1000,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'avatar_url'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1109,7 +1109,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'avatar_url'
     ]
     
     const completedRequired = requiredFields.filter(field => {
