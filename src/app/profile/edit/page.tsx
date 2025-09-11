@@ -1539,6 +1539,10 @@ function ProfileEditContent() {
           // プレビューデータで上書き
           updateData.city = JSON.stringify(parsedOptionalData)
           updateData.interests = parsedExtendedInterests
+          // 画像データも現在のprofileImages状態を反映
+          updateData.avatar_url = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
+          console.log('🚨 Using preview data - avatar_url:', updateData.avatar_url)
+          console.log('🚨 Using preview data - profileImages:', profileImages)
           
           // localStorage cleanup
           localStorage.removeItem('previewOptionalData')
@@ -1551,8 +1555,11 @@ function ProfileEditContent() {
         console.log('🚨 No preview data found, using React Hook Form data')
         updateData.interests = extendedInterests
         updateData.city = forceAdditionalInfo // React Hook Formの値を使ってJSON保存
+        // 画像データも現在のprofileImages状態を反映
+        updateData.avatar_url = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
         console.log('🚨 Saving fallback data - extendedInterests:', extendedInterests)
         console.log('🚨 Saving fallback data - city (JSON):', forceAdditionalInfo)
+        console.log('🚨 Saving fallback data - avatar_url:', updateData.avatar_url)
       }
       
       // cityフィールドが設定されていない場合の保険処理
