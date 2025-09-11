@@ -1000,7 +1000,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'avatar_url'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1051,30 +1051,51 @@ function ProfileEditContent() {
       let value = profileData[field]
       let isFieldCompleted = false
       
-      if (field === 'city') value = profileData.city
-      
-      if (Array.isArray(value)) {
-        isFieldCompleted = value.length > 0
-      } else if (value === 'none') {
-        isFieldCompleted = false
+      if (field === 'avatar_url') {
+        const hasImages = imageArray.length > 0
+        isFieldCompleted = hasImages
+        console.log('🖼️ Avatar URL check (with images):', 
+          `フィールド: ${field}`,
+          `imageArray.length: ${imageArray.length}`,
+          `hasImages: ${hasImages}`,
+          `結果: ${isFieldCompleted ? '完成' : '未完成'}`
+        )
+      } else if (field === 'city') {
+        value = profileData.city
+        
+        if (Array.isArray(value)) {
+          isFieldCompleted = value.length > 0
+        } else if (value === 'none') {
+          isFieldCompleted = false
+        } else {
+          isFieldCompleted = value && value.toString().trim().length > 0
+        }
       } else {
-        isFieldCompleted = value && value.toString().trim().length > 0
+        if (Array.isArray(value)) {
+          isFieldCompleted = value.length > 0
+        } else if (value === 'none') {
+          isFieldCompleted = false
+        } else {
+          isFieldCompleted = value && value.toString().trim().length > 0
+        }
       }
       
       console.log(`🔍 Optional field completion: ${field} = ${value} → ${isFieldCompleted ? '完成' : '未完成'}`)
       return isFieldCompleted
     })
     
-    const totalFields = requiredFields.length + optionalFields.length // 13 items total (no avatar_url)
+    const totalFields = requiredFields.length + optionalFields.length // 14 items total (with avatar_url)
     const completedFields = completedRequired.length + completedOptional.length
     const completion = Math.round((completedFields / totalFields) * 100)
     
     // デバッグ情報
+    const hasImages = imageArray.length > 0
     console.warn('🎯 プロフィール完成度計算 (with images):', 
       `完成度: ${completion}%`,
       `完成項目: ${completedFields}/${totalFields}`,
       `必須: ${requiredFields.length} (${completedRequired.length}完成)`,
       `オプション: ${optionalFields.length} (${completedOptional.length}完成)`,
+      `画像: ${hasImages ? '1完成' : '0完成'}`,
       `完成必須: ${completedRequired.join(', ')}`,
       `完成オプション: ${completedOptional.join(', ')}`,
       `写真枚数: ${imageArray.length}`
@@ -1099,7 +1120,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'avatar_url'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1150,7 +1171,19 @@ function ProfileEditContent() {
       let value = profileData[field]
       let isCompleted
       
-      if (field === 'city') {
+      if (field === 'avatar_url') {
+        const hasImages = profileImages.length > 0
+        const hasAvatarUrl = value && value !== null && value !== '' && value !== 'null'
+        isCompleted = hasImages || hasAvatarUrl // profileImages状態またはavatar_url値があれば完成扱い
+        console.log('🖼️ Avatar URL check:', 
+          `フィールド: ${field}`,
+          `profileData.avatar_url: ${profileData.avatar_url}`,
+          `profileImages.length: ${profileImages.length}`,
+          `hasImages: ${hasImages}`,
+          `hasAvatarUrl: ${hasAvatarUrl}`,
+          `結果: ${isCompleted ? '完成' : '未完成'}`
+        )
+      } else if (field === 'city') {
         // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
         value = profileData.city
         if (value && typeof value === 'string' && value.startsWith('{')) {

@@ -333,7 +333,7 @@ function MyPageContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality', 'city', 'avatar_url'
     ]
 
     // 既に正規化されたデータを使用（重複処理を防ぐ）
