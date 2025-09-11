@@ -1416,7 +1416,28 @@ function ProfileEditContent() {
       const previewOptionalData = localStorage.getItem('previewOptionalData')
       const isFromPreview = !!previewOptionalData
       
-      if (isFromPreview) {
+      console.log('🔍 PREVIEW DATA CHECK:')
+      console.log('  - previewOptionalData exists:', !!previewOptionalData)
+      console.log('  - isFromPreview:', isFromPreview)
+      console.log('  - fromMyPage param:', searchParams.get('fromMyPage'))
+      
+      // マイページからの遷移の場合は、プレビューデータを使用しない
+      const isFromMyPage = searchParams.get('fromMyPage') === 'true'
+      const shouldUsePreviewData = isFromPreview && !isFromMyPage
+      
+      console.log('🔍 FINAL DECISION:')
+      console.log('  - isFromMyPage:', isFromMyPage)
+      console.log('  - shouldUsePreviewData:', shouldUsePreviewData)
+      
+      // マイページからの場合は古いプレビューデータをクリア
+      if (isFromMyPage && previewOptionalData) {
+        console.log('🧹 Clearing old preview data (from MyPage)')
+        localStorage.removeItem('previewOptionalData')
+        localStorage.removeItem('previewExtendedInterests')
+        localStorage.removeItem('previewCompleteData')
+      }
+      
+      if (shouldUsePreviewData) {
         // プレビューからの場合、localStorageから取得
         try {
           const parsedOptionalData = JSON.parse(previewOptionalData)
@@ -1527,7 +1548,8 @@ function ProfileEditContent() {
       // 🚨 localStorageからプレビューデータを取得（既に上でpreviewOptionalDataは定義済み）
       const previewExtendedInterestsFromStorage = localStorage.getItem('previewExtendedInterests')
       
-      if (previewOptionalData && previewExtendedInterestsFromStorage) {
+      // マイページからの場合はプレビューデータを使用しない
+      if (shouldUsePreviewData && previewOptionalData && previewExtendedInterestsFromStorage) {
         console.log('🚨 FOUND PREVIEW DATA in localStorage!')
         try {
           const parsedOptionalData = JSON.parse(previewOptionalData)
@@ -1576,8 +1598,11 @@ function ProfileEditContent() {
       }
 
       console.log('🔄 FINAL update data with preview data:', updateData)
+      console.log('🔍 CRITICAL DEBUG - Final avatar_url before database update:', updateData.avatar_url)
+      console.log('🔍 CRITICAL DEBUG - Current profileImages before database update:', profileImages)
       
       console.log('🔄 Updating database with data:', updateData)
+      console.log('🔍 DETAILED UPDATE DATA:', JSON.stringify(updateData, null, 2))
       
       const { error: updateError } = await supabase
         .from('profiles')
