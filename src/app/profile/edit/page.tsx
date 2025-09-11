@@ -907,7 +907,15 @@ function ProfileEditContent() {
         
         setSelectedHobbies(isNewUser ? [] : existingHobbies)
         setSelectedPersonality(isNewUser ? [] : existingPersonality)
+        
+        console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
+        console.log('  - isNewUser:', isNewUser)
+        console.log('  - profile.avatar_url:', profile.avatar_url)
+        console.log('  - profile.avatar_url exists:', !!profile.avatar_url)
+        console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
+        
         if (!isNewUser && profile.avatar_url) {
+          console.log('✅ SETTING PROFILE IMAGES with avatar_url:', profile.avatar_url.substring(0, 50) + '...')
           setProfileImages([{
             id: '1',
             url: profile.avatar_url,
@@ -915,6 +923,9 @@ function ProfileEditContent() {
             isMain: true,
             isEdited: false
           }])
+        } else {
+          console.log('❌ NOT SETTING PROFILE IMAGES')
+          console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
         }
         
         // プロフィール完成度を計算（新規ユーザーは新規データのみ）
