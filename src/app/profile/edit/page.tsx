@@ -1011,7 +1011,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'avatar_url'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1062,16 +1062,7 @@ function ProfileEditContent() {
       let value = profileData[field]
       let isFieldCompleted = false
       
-      if (field === 'avatar_url') {
-        const hasImages = imageArray.length > 0
-        isFieldCompleted = hasImages
-        console.log('🖼️ Avatar URL check (with images):', 
-          `フィールド: ${field}`,
-          `imageArray.length: ${imageArray.length}`,
-          `hasImages: ${hasImages}`,
-          `結果: ${isFieldCompleted ? '完成' : '未完成'}`
-        )
-      } else if (field === 'city') {
+      if (field === 'city') {
         value = profileData.city
         
         if (Array.isArray(value)) {
@@ -1095,18 +1086,20 @@ function ProfileEditContent() {
       return isFieldCompleted
     })
     
-    const totalFields = requiredFields.length + optionalFields.length // 14 items total (with avatar_url)
-    const completedFields = completedRequired.length + completedOptional.length
+    // 写真の有無もチェック（13項目 + 写真1項目 = 14項目）
+    const hasImages = imageArray.length > 0
+    const totalFields = requiredFields.length + optionalFields.length + 1 // 14 items total (13 fields + images)
+    const imageCompletionCount = hasImages ? 1 : 0
+    const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
     
     // デバッグ情報
-    const hasImages = imageArray.length > 0
     console.warn('🎯 プロフィール完成度計算 (with images):', 
       `完成度: ${completion}%`,
       `完成項目: ${completedFields}/${totalFields}`,
       `必須: ${requiredFields.length} (${completedRequired.length}完成)`,
       `オプション: ${optionalFields.length} (${completedOptional.length}完成)`,
-      `画像: ${hasImages ? '1完成' : '0完成'}`,
+      `画像: ${hasImages ? '1完成' : '0完成'} (${imageArray.length}枚)`,
       `完成必須: ${completedRequired.join(', ')}`,
       `完成オプション: ${completedOptional.join(', ')}`,
       `写真枚数: ${imageArray.length}`
@@ -1131,7 +1124,7 @@ function ProfileEditContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'avatar_url'
+      'personality', 'city'
     ]
     
     const completedRequired = requiredFields.filter(field => {
@@ -1182,19 +1175,7 @@ function ProfileEditContent() {
       let value = profileData[field]
       let isCompleted
       
-      if (field === 'avatar_url') {
-        const hasImages = profileImages.length > 0
-        const hasAvatarUrl = value && value !== null && value !== '' && value !== 'null'
-        isCompleted = hasImages || hasAvatarUrl // profileImages状態またはavatar_url値があれば完成扱い
-        console.log('🖼️ Avatar URL check:', 
-          `フィールド: ${field}`,
-          `profileData.avatar_url: ${profileData.avatar_url}`,
-          `profileImages.length: ${profileImages.length}`,
-          `hasImages: ${hasImages}`,
-          `hasAvatarUrl: ${hasAvatarUrl}`,
-          `結果: ${isCompleted ? '完成' : '未完成'}`
-        )
-      } else if (field === 'city') {
+      if (field === 'city') {
         // cityフィールドの特別処理：JSONデータが入っている場合は実際のcity値をチェック
         value = profileData.city
         if (value && typeof value === 'string' && value.startsWith('{')) {
@@ -1266,8 +1247,11 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFieldsDetail.filter(item => item.isCompleted)
     
-    const totalFields = requiredFields.length + optionalFields.length // 13 items total (no avatar_url)
-    const actualCompletedFields = completedRequired.length + completedOptional.length
+    // 写真の有無もチェック（13項目 + 写真1項目 = 14項目）
+    const hasImages = profileImages.length > 0
+    const totalFields = requiredFields.length + optionalFields.length + 1 // 14 items total (13 fields + images)
+    const imageCompletionCount = hasImages ? 1 : 0
+    const actualCompletedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const actualCompletion = Math.round((actualCompletedFields / totalFields) * 100)
     
     // デバッグ情報
@@ -1276,7 +1260,7 @@ function ProfileEditContent() {
       `完成項目: ${actualCompletedFields}/${totalFields}`,
       `完成必須: ${completedRequired.join(', ')}`,
       `完成オプション: ${completedOptional.map(item => item.field).join(', ')}`,
-      `写真枚数: ${profileImages.length}`
+      `画像: ${hasImages ? '1完成' : '0完成'} (${profileImages.length}枚)`
     )
     
     console.log('🔍 Edit page - Detailed Optional Fields:')
@@ -1289,7 +1273,7 @@ function ProfileEditContent() {
         case 'hobbies': return profileData.interests || profileData.hobbies
         case 'prefecture': return profileData.residence || profileData.prefecture
         case 'birth_date': return profileData.birth_date
-        case 'avatar_url': return profileImages.length > 0 ? 'has_images' : null
+        // avatar_urlはもう使用しない（画像は別途計算）
         default: return profileData[field]
       }
     }
@@ -1308,7 +1292,7 @@ function ProfileEditContent() {
           ...value,
           birth_date: currentValues.birth_date, // フォームから直接取得
           personality: selectedPersonality, // 状態から直接取得
-          avatar_url: profileImages.length > 0 ? 'has_images' : null
+          // avatar_urlはもう使用しない（画像は別途計算）
         })
       }
     })
