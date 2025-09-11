@@ -79,7 +79,12 @@ function MyPageContent() {
             if (completeData.gender) updateData.gender = completeData.gender
             if (completeData.nationality) updateData.nationality = completeData.nationality
             if (completeData.residence) updateData.residence = completeData.residence
-            if (completeData.profile_image) updateData.avatar_url = completeData.profile_image
+            // 画像の更新：存在する場合は設定、削除された場合はnullを設定
+            updateData.avatar_url = completeData.profile_image || null
+            console.log('🖼️ MyPage: 画像データ更新:', {
+              'completeData.profile_image': completeData.profile_image,
+              'updateData.avatar_url': updateData.avatar_url
+            })
             // prefecture は既存のresidenceフィールドを使用
             
             // オプション情報（city JSONに格納）
@@ -182,6 +187,7 @@ function MyPageContent() {
         console.log('  - bio:', profileData?.bio)
         console.log('  - age:', profileData?.age)
         console.log('  - birth_date:', profileData?.birth_date)
+        console.log('  - avatar_url:', profileData?.avatar_url)
         console.log('  - city (raw):', profileData?.city, typeof profileData?.city)
         console.log('  - interests (raw):', profileData?.interests)
         console.log('  - height:', profileData?.height)
@@ -247,6 +253,7 @@ function MyPageContent() {
           console.log('  - bio:', normalizedProfileData.bio)
           console.log('  - age:', normalizedProfileData.age)
           console.log('  - birth_date:', normalizedProfileData.birth_date)
+          console.log('  - avatar_url:', normalizedProfileData.avatar_url)
           console.log('  - city:', normalizedProfileData.city)
           console.log('  - interests:', normalizedProfileData.interests)
           console.log('  - personality:', normalizedProfileData.personality)

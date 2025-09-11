@@ -1356,6 +1356,14 @@ function ProfileEditContent() {
     try {
       // データベーススキーマに存在するフィールドのみ更新
       // オプション項目を含む完全な更新データ
+      const avatarUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
+      console.log('🖼️ Profile Edit - Avatar URL calculation:', {
+        'profileImages.length': profileImages.length,
+        'mainImage': profileImages.find(img => img.isMain),
+        'firstImage': profileImages[0],
+        'calculated avatarUrl': avatarUrl
+      })
+      
       const updateData = {
         name: data.nickname,
         gender: data.gender,
@@ -1366,7 +1374,7 @@ function ProfileEditContent() {
         city: null as string | null, // JSON形式で後から設定するため初期値はnull
         bio: data.self_introduction,
         interests: data.hobbies,
-        avatar_url: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null,
+        avatar_url: avatarUrl,
       }
 
       // オプション情報をJSONとしてbioフィールドに付加情報として保存
