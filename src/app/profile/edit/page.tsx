@@ -1900,7 +1900,6 @@ function ProfileEditContent() {
     '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
   ]
 
-
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
