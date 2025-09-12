@@ -43,6 +43,15 @@ const profileEditSchema = z.object({
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
 
+// 性格オプション（既婚者クラブを参考）
+const PERSONALITY_OPTIONS = [
+  '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
+  '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
+  '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
+  '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
+  'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
+]
+
 function ProfileEditContent() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
@@ -1891,14 +1900,6 @@ function ProfileEditContent() {
     '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
   ]
 
-  // 性格オプション（既婚者クラブを参考）
-  const PERSONALITY_OPTIONS = [
-    '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
-    '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
-    '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
-    '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
-    'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
-  ]
 
   if (userLoading) {
     return (
