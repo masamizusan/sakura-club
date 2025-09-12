@@ -914,8 +914,35 @@ function ProfileEditContent() {
         console.log('  - profile.avatar_url exists:', !!profile.avatar_url)
         console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
         
-        if (!isNewUser && profile.avatar_url) {
-          console.log('✅ SETTING PROFILE IMAGES with avatar_url:', profile.avatar_url.substring(0, 50) + '...')
+        // セッションストレージから最新の画像状態をチェック
+        const currentImageState = sessionStorage.getItem('currentProfileImages')
+        let shouldUseStorageImages = false
+        let storageImages: any[] = []
+        
+        if (currentImageState) {
+          try {
+            storageImages = JSON.parse(currentImageState)
+            const storageTimestamp = sessionStorage.getItem('imageStateTimestamp')
+            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000 // 5分前
+            
+            if (storageTimestamp && parseInt(storageTimestamp) > fiveMinutesAgo) {
+              shouldUseStorageImages = true
+              console.log('💾 セッションストレージから最新の画像状態を使用:', storageImages.length, '枚')
+            } else {
+              console.log('🕰️ セッションストレージの画像状態が古いため破棄')
+              sessionStorage.removeItem('currentProfileImages')
+              sessionStorage.removeItem('imageStateTimestamp')
+            }
+          } catch (e) {
+            console.warn('❕ セッションストレージの画像データが破損')
+          }
+        }
+        
+        if (shouldUseStorageImages) {
+          console.log('✅ セッションストレージから画像状態を復元:', storageImages)
+          setProfileImages(storageImages)
+        } else if (!isNewUser && profile.avatar_url) {
+          console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
           setProfileImages([{
             id: '1',
             url: profile.avatar_url,
@@ -924,7 +951,7 @@ function ProfileEditContent() {
             isEdited: false
           }])
         } else {
-          console.log('❌ NOT SETTING PROFILE IMAGES')
+          console.log('❌ 画像なしで初期化')
           console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
         }
         
@@ -1683,7 +1710,7 @@ function ProfileEditContent() {
   }
 
   // 写真変更時のコールバック関数
-  const handleImagesChange = (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+  const handleImagesChange = async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
     console.log('📸 写真変更:', 
       `新しい画像数: ${newImages.length}`,
@@ -1692,6 +1719,32 @@ function ProfileEditContent() {
     )
     
     setProfileImages(newImages)
+    
+    // セッションストレージに最新の画像状態を保存
+    sessionStorage.setItem('currentProfileImages', JSON.stringify(newImages))
+    sessionStorage.setItem('imageStateTimestamp', Date.now().toString())
+    console.log('💾 最新の画像状態をセッションストレージに保存')
+    
+    // 写真変更時に即座データベースに保存
+    if (user) {
+      try {
+        const avatarUrl = newImages.find(img => img.isMain)?.url || newImages[0]?.url || null
+        console.log('💾 写真変更をデータベースに即座保存:', avatarUrl)
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({ avatar_url: avatarUrl })
+          .eq('id', user.id)
+        
+        if (error) {
+          console.error('❌ 写真保存エラー:', error)
+        } else {
+          console.log('✅ 写真がデータベースに保存されました')
+        }
+      } catch (error) {
+        console.error('❌ 写真保存中にエラー:', error)
+      }
+    }
     
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
