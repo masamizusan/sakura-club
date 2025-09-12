@@ -1900,8 +1900,6 @@ function ProfileEditContent() {
     'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
   ]
 
-
-
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
