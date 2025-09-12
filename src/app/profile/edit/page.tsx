@@ -1710,7 +1710,7 @@ function ProfileEditContent() {
   }
 
   // 写真変更時のコールバック関数
-  const handleImagesChange = async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+  const handleImagesChange = useCallback(async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
     console.log('📸 写真変更:', 
       `新しい画像数: ${newImages.length}`,
@@ -1718,12 +1718,22 @@ function ProfileEditContent() {
       newImages
     )
     
+    // 無限ループ防止：現在の状態と同じ場合は早期リターン
+    if (JSON.stringify(profileImages) === JSON.stringify(newImages)) {
+      console.log('🚫 同じ画像状態のため処理をスキップ')
+      return
+    }
+    
     setProfileImages(newImages)
     
     // セッションストレージに最新の画像状態を保存
-    sessionStorage.setItem('currentProfileImages', JSON.stringify(newImages))
-    sessionStorage.setItem('imageStateTimestamp', Date.now().toString())
-    console.log('💾 最新の画像状態をセッションストレージに保存')
+    try {
+      sessionStorage.setItem('currentProfileImages', JSON.stringify(newImages))
+      sessionStorage.setItem('imageStateTimestamp', Date.now().toString())
+      console.log('💾 最新の画像状態をセッションストレージに保存')
+    } catch (sessionError) {
+      console.error('❌ セッションストレージ保存エラー:', sessionError)
+    }
     
     // 写真変更時に即座データベースに保存
     if (user) {
@@ -1742,9 +1752,10 @@ function ProfileEditContent() {
           console.log('✅ 写真がデータベースに保存されました')
         }
       } catch (error) {
-        console.error('❌ 写真保存中にエラー:', error)
+        console.error('❌ 写真保存中にエャー:', error)
       }
     }
+  }, [profileImages, user])
     
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
