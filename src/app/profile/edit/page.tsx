@@ -1900,6 +1900,51 @@ function ProfileEditContent() {
     'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
   ]
 
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <p className="text-gray-600">プロフィール情報を読み込んでいます...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (updateSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Save className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">更新完了</h2>
+            <p className="text-gray-600 mb-6">
+              プロフィール情報が正常に更新されました。<br />
+              マイページでご確認ください。
+            </p>
+            <div className="space-y-3">
+              <Button
+                onClick={() => window.location.href = '/mypage'}
+                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
+              >
+                マイページに移動
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setUpdateSuccess(false)}
+                className="w-full"
+              >
+                プロフィールを続けて編集
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
