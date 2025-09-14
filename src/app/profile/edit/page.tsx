@@ -184,6 +184,7 @@ function ProfileEditContent() {
         age: age,
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
+        custom_culture: currentData.custom_culture, // カスタム文化も含める
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
@@ -1936,6 +1937,11 @@ function ProfileEditContent() {
       }
 
       console.log('📝 Final update data:', updateData)
+      console.log('🔍 Custom culture check:', {
+        formValue: data.custom_culture,
+        trimmedValue: data.custom_culture?.trim(),
+        finalValue: updateData.custom_culture
+      })
 
       // データベースを更新
       const { data: updateResult, error: updateError } = await supabase
