@@ -1975,26 +1975,54 @@ function ProfileEditContent() {
   // Hobby selection handler
   const toggleHobby = (hobby: string) => {
     setSelectedHobbies(prev => {
-      if (prev.includes(hobby)) {
-        const newHobbies = prev.filter(h => h !== hobby)
-        return newHobbies.length > 0 ? newHobbies : ['その他'] // 空の場合はデフォルト値
-      } else {
-        const newHobbies = prev.includes('その他') ? [hobby] : [...prev, hobby]
-        return newHobbies
-      }
+      const newHobbies = prev.includes(hobby) 
+        ? prev.filter(h => h !== hobby).length > 0 
+          ? prev.filter(h => h !== hobby) 
+          : ['その他']
+        : prev.includes('その他') 
+          ? [hobby] 
+          : [...prev, hobby]
+      
+      // リアルタイム完成度更新
+      setTimeout(() => {
+        const currentData = watch()
+        calculateProfileCompletion({
+          ...currentData,
+          hobbies: newHobbies,
+          personality: selectedPersonality,
+          custom_culture: currentData.custom_culture,
+          avatar_url: profileImages.length > 0 ? 'has_images' : null
+        })
+      }, 0)
+      
+      return newHobbies
     })
   }
 
   // Personality selection handler
   const togglePersonality = (trait: string) => {
     setSelectedPersonality(prev => {
-      if (prev.includes(trait)) {
-        const newTraits = prev.filter(t => t !== trait)
-        return newTraits.length > 0 ? newTraits : ['その他'] // 空の場合はデフォルト値
-      } else {
-        const newTraits = prev.includes('その他') ? [trait] : [...prev, trait]
-        return newTraits
-      }
+      const newTraits = prev.includes(trait)
+        ? prev.filter(t => t !== trait).length > 0
+          ? prev.filter(t => t !== trait)
+          : ['その他']
+        : prev.includes('その他')
+          ? [trait]
+          : [...prev, trait]
+      
+      // リアルタイム完成度更新
+      setTimeout(() => {
+        const currentData = watch()
+        calculateProfileCompletion({
+          ...currentData,
+          hobbies: selectedHobbies,
+          personality: newTraits,
+          custom_culture: currentData.custom_culture,
+          avatar_url: profileImages.length > 0 ? 'has_images' : null
+        })
+      }, 0)
+      
+      return newTraits
     })
   }
 
