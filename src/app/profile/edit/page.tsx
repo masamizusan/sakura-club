@@ -52,6 +52,72 @@ const PERSONALITY_OPTIONS = [
   'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
 ]
 
+// 共有したい日本文化オプション（最新トレンド含む）
+const HOBBY_OPTIONS = [
+  // 伝統文化
+  '茶道', '華道', '書道', '着物・浴衣', '和菓子作り', '陶芸', '折り紙', '盆栽',
+  '神社仏閣巡り', '武道（剣道・柔道など）', '歌舞伎・能', '日本舞踊',
+  
+  // 食文化
+  '和食料理', '日本酒・焼酎', '抹茶', 'うどん・そば打ち', 'お弁当作り', 
+  'おせち料理', '郷土料理', '精進料理',
+  
+  // 現代文化
+  'アニメ・マンガ', 'J-POP', 'カラオケ', '日本のゲーム', 'コスプレ',
+  '日本映画・ドラマ', 'ボーカロイド', 'アイドル文化',
+  
+  // 季節・自然・行事
+  '桜見物', '紅葉狩り', '温泉', '祭り参加', '花火大会', '雪景色', 
+  '日本の四季', '盆踊り',
+  
+  // 最新トレンド
+  '抹茶カフェ巡り', '和装フォト', '伝統工芸体験', '日本庭園散策', 
+  '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
+]
+
+// 結婚状況オプション
+const MARITAL_STATUS_OPTIONS = [
+  { value: 'none', label: '記入しない' },
+  { value: 'single', label: '未婚' },
+  { value: 'married', label: '既婚' }
+]
+
+// 職業オプション
+const OCCUPATION_OPTIONS = [
+  { value: 'none', label: '記入しない' },
+  { value: '会社員', label: '会社員' },
+  { value: '公務員', label: '公務員' },
+  { value: '経営者・役員', label: '経営者・役員' },
+  { value: 'フリーランス', label: 'フリーランス' },
+  { value: '自営業', label: '自営業' },
+  { value: '医師', label: '医師' },
+  { value: '看護師', label: '看護師' },
+  { value: '教師・講師', label: '教師・講師' },
+  { value: 'エンジニア', label: 'エンジニア' },
+  { value: 'デザイナー', label: 'デザイナー' },
+  { value: '営業', label: '営業' },
+  { value: 'マーケティング', label: 'マーケティング' },
+  { value: '研究者', label: '研究者' },
+  { value: 'コンサルタント', label: 'コンサルタント' },
+  { value: '金融', label: '金融' },
+  { value: '法律関係', label: '法律関係' },
+  { value: 'サービス業', label: 'サービス業' },
+  { value: '小売業', label: '小売業' },
+  { value: '製造業', label: '製造業' },
+  { value: '学生', label: '学生' },
+  { value: 'その他', label: 'その他' }
+]
+
+// 体型オプション
+const BODY_TYPE_OPTIONS = [
+  { value: 'none', label: '記入しない' },
+  { value: 'スリム', label: 'スリム' },
+  { value: '普通', label: '普通' },
+  { value: 'ぽっちゃり', label: 'ぽっちゃり' },
+  { value: 'グラマー', label: 'グラマー' },
+  { value: 'アスリート体型', label: 'アスリート体型' }
+]
+
 function ProfileEditContent() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
@@ -1879,75 +1945,7 @@ function ProfileEditContent() {
     '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
   ]
 
-  // 職業オプション
-  const OCCUPATION_OPTIONS = [
-    { value: 'none', label: '記入しない' },
-    { value: '会社員', label: '会社員' },
-    { value: '公務員', label: '公務員' },
-    { value: '経営者・役員', label: '経営者・役員' },
-    { value: 'フリーランス', label: 'フリーランス' },
-    { value: '自営業', label: '自営業' },
-    { value: '医師', label: '医師' },
-    { value: '看護師', label: '看護師' },
-    { value: '教師・講師', label: '教師・講師' },
-    { value: 'エンジニア', label: 'エンジニア' },
-    { value: 'デザイナー', label: 'デザイナー' },
-    { value: '営業', label: '営業' },
-    { value: 'マーケティング', label: 'マーケティング' },
-    { value: '研究者', label: '研究者' },
-    { value: 'コンサルタント', label: 'コンサルタント' },
-    { value: '金融', label: '金融' },
-    { value: '法律関係', label: '法律関係' },
-    { value: 'サービス業', label: 'サービス業' },
-    { value: '小売業', label: '小売業' },
-    { value: '製造業', label: '製造業' },
-    { value: '学生', label: '学生' },
-    { value: 'その他', label: 'その他' }
-  ]
-
-
-  // 体型オプション
-  const BODY_TYPE_OPTIONS = [
-    { value: 'none', label: '記入しない' },
-    { value: 'スリム', label: 'スリム' },
-    { value: '普通', label: '普通' },
-    { value: 'ぽっちゃり', label: 'ぽっちゃり' },
-    { value: 'グラマー', label: 'グラマー' },
-    { value: 'アスリート体型', label: 'アスリート体型' }
-  ]
-
-  // 結婚状況オプション
-  const MARITAL_STATUS_OPTIONS = [
-    { value: 'none', label: '記入しない' },
-    { value: 'single', label: '未婚' },
-    { value: 'married', label: '既婚' }
-  ]
-
-  // 共有したい日本文化オプション（最新トレンド含む）
-  const HOBBY_OPTIONS = [
-    // 伝統文化
-    '茶道', '華道', '書道', '着物・浴衣', '和菓子作り', '陶芸', '折り紙', '盆栽',
-    '神社仏閣巡り', '武道（剣道・柔道など）', '歌舞伎・能', '日本舞踊',
-    
-    // 食文化
-    '和食料理', '日本酒・焼酎', '抹茶', 'うどん・そば打ち', 'お弁当作り', 
-    'おせち料理', '郷土料理', '精進料理',
-    
-    // 現代文化
-    'アニメ・マンガ', 'J-POP', 'カラオケ', '日本のゲーム', 'コスプレ',
-    '日本映画・ドラマ', 'ボーカロイド', 'アイドル文化',
-    
-    // 季節・自然・行事
-    '桜見物', '紅葉狩り', '温泉', '祭り参加', '花火大会', '雪景色', 
-    '日本の四季', '盆踊り',
-    
-    // 最新トレンド
-    '抹茶カフェ巡り', '和装フォト', '伝統工芸体験', '日本庭園散策', 
-    '御朱印集め', '和モダンインテリア', '古民家カフェ', '職人技見学'
-  ]
-
-  // Main render function (early returns are properly placed above in the component function)
-  
+  // Main render function starts here
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
