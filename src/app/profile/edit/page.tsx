@@ -830,7 +830,7 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile.interests)  
         console.log('  - Profile has name:', !!profile.name)
         
-        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup)
+        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData || isFromSignup)
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)
@@ -1484,7 +1484,7 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile.interests)  
         console.log('  - Profile has name:', !!profile.name)
         
-        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name) || isTestData || isFromSignup)
+        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData || isFromSignup)
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)
