@@ -127,6 +127,58 @@ function ProfileEditContent() {
   const [updateSuccess, setUpdateSuccess] = useState(false)
   const [userLoading, setUserLoading] = useState(true)
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
+
+  // Profile type flags
+  const isForeignMale = profileType === 'foreign-male'
+  const isJapaneseFemale = profileType === 'japanese-female'
+
+  // 国籍オプション（プロフィールタイプに応じて順序変更）
+  const getNationalities = () => {
+    if (isJapaneseFemale) {
+      // 日本人女性の場合、日本を最初に
+      return [
+        { value: '日本', label: '日本' },
+        { value: 'アメリカ', label: 'アメリカ' },
+        { value: 'イギリス', label: 'イギリス' },
+        { value: 'カナダ', label: 'カナダ' },
+        { value: 'オーストラリア', label: 'オーストラリア' },
+        { value: 'ドイツ', label: 'ドイツ' },
+        { value: 'フランス', label: 'フランス' },
+        { value: 'イタリア', label: 'イタリア' },
+        { value: 'スペイン', label: 'スペイン' },
+        { value: '韓国', label: '韓国' },
+        { value: '中国', label: '中国' },
+        { value: 'その他', label: 'その他' },
+      ]
+    } else {
+      // 外国人男性の場合、よくある国を最初に
+      return [
+        { value: 'アメリカ', label: 'アメリカ' },
+        { value: 'イギリス', label: 'イギリス' },
+        { value: 'カナダ', label: 'カナダ' },
+        { value: 'オーストラリア', label: 'オーストラリア' },
+        { value: 'ドイツ', label: 'ドイツ' },
+        { value: 'フランス', label: 'フランス' },
+        { value: 'イタリア', label: 'イタリア' },
+        { value: 'スペイン', label: 'スペイン' },
+        { value: '韓国', label: '韓国' },
+        { value: '中国', label: '中国' },
+        { value: '日本', label: '日本' },
+        { value: 'その他', label: 'その他' },
+      ]
+    }
+  }
+
+  const NATIONALITIES = getNationalities()
+
+  // 都道府県オプション
+  const PREFECTURES = [
+    '東京都', '神奈川県', '千葉県', '埼玉県', '大阪府', '京都府', '兵庫県', '愛知県',
+    '福岡県', '北海道', '宮城県', '広島県', '静岡県', '茨城県', '栃木県', '群馬県',
+    '新潟県', '長野県', '山梨県', '岐阜県', '三重県', '滋賀県', '奈良県', '和歌山県',
+    '鳥取県', '島根県', '岡山県', '山口県', '徳島県', '香川県', '愛媛県', '高知県',
+    '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  ]
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
@@ -135,10 +187,6 @@ function ProfileEditContent() {
   const router = useRouter()
   const supabase = createClient()
 
-  // プロフィールタイプに基づく設定
-  const isForeignMale = profileType === 'foreign-male'
-  const isJapaneseFemale = profileType === 'japanese-female'
-  
   // デバッグ用ログ
   console.log('Profile type debug:', {
     profileType,
@@ -1876,8 +1924,6 @@ function ProfileEditContent() {
         console.error('❌ 写真保存中にエャー:', error)
       }
     }
-  }, [profileImages, user])
-    
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
     
@@ -1894,58 +1940,8 @@ function ProfileEditContent() {
         // avatar_urlは画像配列で判定するため設定しない
       }, newImages)
     }, 100)
-  }
+  }, [profileImages, user])
 
-
-  // 国籍オプション（プロフィールタイプに応じて順序変更）
-  const getNationalities = () => {
-    if (isJapaneseFemale) {
-      // 日本人女性の場合、日本を最初に
-      return [
-        { value: '日本', label: '日本' },
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: '韓国', label: '韓国' },
-        { value: '中国', label: '中国' },
-        { value: 'その他', label: 'その他' },
-      ]
-    } else {
-      // 外国人男性の場合、よくある国を最初に
-      return [
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: '韓国', label: '韓国' },
-        { value: '中国', label: '中国' },
-        { value: '日本', label: '日本' },
-        { value: 'その他', label: 'その他' },
-      ]
-    }
-  }
-
-  const NATIONALITIES = getNationalities()
-
-  // 都道府県オプション
-  const PREFECTURES = [
-    '東京都', '神奈川県', '千葉県', '埼玉県', '大阪府', '京都府', '兵庫県', '愛知県',
-    '福岡県', '北海道', '宮城県', '広島県', '静岡県', '茨城県', '栃木県', '群馬県',
-    '新潟県', '長野県', '山梨県', '岐阜県', '三重県', '滋賀県', '奈良県', '和歌山県',
-    '鳥取県', '島根県', '岡山県', '山口県', '徳島県', '香川県', '愛媛県', '高知県',
-    '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-  ]
-
-  // Main render function starts here
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
