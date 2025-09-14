@@ -1748,6 +1748,11 @@ function ProfileEditContent() {
         console.log('Setting custom_culture:', customCultureValue)
         setValue('custom_culture', customCultureValue)
         
+        console.log('🔍 HOBBY/PERSONALITY INITIALIZATION DEBUG:')
+        console.log('  - existingHobbies:', existingHobbies)
+        console.log('  - existingPersonality:', existingPersonality)
+        console.log('  - isNewUser:', isNewUser)
+        
         setSelectedHobbies(isNewUser ? [] : existingHobbies)
         setSelectedPersonality(isNewUser ? [] : existingPersonality)
         
