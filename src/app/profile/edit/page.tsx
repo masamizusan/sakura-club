@@ -1905,17 +1905,17 @@ function ProfileEditContent() {
 
       // プロフィール更新データを準備
       const updateData: any = {
-        name: data.name,
+        nickname: data.nickname,
         gender: data.gender,
         age: data.age,
         birth_date: data.birth_date,
         prefecture: data.prefecture,
         city: data.city === 'none' ? null : data.city,
         occupation: data.occupation === 'none' ? null : data.occupation,
-        height: data.height === 'none' ? null : data.height,
+        height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
-        bio: data.bio,
+        self_introduction: data.self_introduction,
         interests: selectedHobbies.length > 0 ? selectedHobbies : ['その他'],
         personality: selectedPersonality.length > 0 ? selectedPersonality : ['その他'],
         avatar_url: avatarUrl,
@@ -1994,7 +1994,7 @@ function ProfileEditContent() {
 
   // Use conditional JSX rendering instead of early returns
   return (
-    <>
+    <div>
       {userLoading && (
         <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
           <div className="text-center">
@@ -2571,6 +2571,8 @@ function ProfileEditContent() {
           </div>
         </div>
       </div>
+    </div>
+      )}
     </div>
   )
 }
