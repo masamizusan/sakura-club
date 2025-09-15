@@ -758,7 +758,9 @@ function MyPageContent() {
               // 🛡️ セキュリティ修正: 既存URLパラメータを完全にクリアしてMyPage遷移のみを設定
               console.log('🔄 MyPage編集ボタンクリック - URLパラメータをクリアして遷移')
               console.log('🔍 現在のURL:', window.location.href)
-              router.push('/profile/edit?fromMyPage=true')
+              
+              // 🔧 修正: window.location.href を使用してパラメータを確実にクリア
+              window.location.href = '/profile/edit?fromMyPage=true'
             }}
           >
             <Edit3 className="w-4 h-4 mr-2" />

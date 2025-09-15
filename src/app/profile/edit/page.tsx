@@ -525,6 +525,14 @@ function ProfileEditContent() {
       // MyPageからの遷移をチェック
       const isFromMyPageParam = urlParams.get('fromMyPage') === 'true'
       
+      console.log('🔍 URL PARAMETER ANALYSIS:', {
+        'fromMyPage param': urlParams.get('fromMyPage'),
+        'isFromMyPageParam': isFromMyPageParam,
+        'hasType': hasType,
+        'hasNickname': hasNickname,
+        'all params': Array.from(urlParams.entries())
+      })
+      
       // 新規登録フロー判定：typeとnicknameのパラメータがあり、かつMyPageからの遷移でない場合のみ新規登録
       const isSignupFlow = hasType && hasNickname && !isFromMyPageParam
       console.log('🚨 新規登録フロー判定:', { 
@@ -1128,6 +1136,14 @@ function ProfileEditContent() {
       
       // MyPageからの遷移をチェック
       const isFromMyPageParam = urlParams.get('fromMyPage') === 'true'
+      
+      console.log('🔍 URL PARAMETER ANALYSIS:', {
+        'fromMyPage param': urlParams.get('fromMyPage'),
+        'isFromMyPageParam': isFromMyPageParam,
+        'hasType': hasType,
+        'hasNickname': hasNickname,
+        'all params': Array.from(urlParams.entries())
+      })
       
       // 新規登録フロー判定：typeとnicknameのパラメータがあり、かつMyPageからの遷移でない場合のみ新規登録
       const isSignupFlow = hasType && hasNickname && !isFromMyPageParam
