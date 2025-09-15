@@ -1582,22 +1582,41 @@ function ProfileEditContent() {
         let existingHobbies: string[] = []
         let existingCustomCulture: string = ''
         
-        if (!isNewUser && profile.interests && Array.isArray(profile.interests)) {
-          profile.interests.forEach((item: string) => {
-            if (item.startsWith('personality:')) {
-              existingPersonality.push(item.replace('personality:', ''))
-            } else if (item.startsWith('custom_culture:')) {
-              existingCustomCulture = item.replace('custom_culture:', '')
-            } else {
-              existingHobbies.push(item)
-            }
-          })
+        if (!isNewUser) {
+          // まず、separate personality fieldから personality データを取得
+          if (profile.personality && Array.isArray(profile.personality)) {
+            existingPersonality = profile.personality.filter((item: string) => item !== 'その他')
+          }
+          
+          // interests配列から hobbies と custom_culture を抽出
+          if (profile.interests && Array.isArray(profile.interests)) {
+            profile.interests.forEach((item: string) => {
+              if (item.startsWith('personality:')) {
+                // レガシー形式のサポート（すでに separate field があればスキップ）
+                if (existingPersonality.length === 0) {
+                  existingPersonality.push(item.replace('personality:', ''))
+                }
+              } else if (item.startsWith('custom_culture:')) {
+                existingCustomCulture = item.replace('custom_culture:', '')
+              } else if (item !== 'その他') {
+                existingHobbies.push(item)
+              }
+            })
+          }
+          
+          // custom_culture は direct field も確認
+          if (!existingCustomCulture && profile.custom_culture) {
+            existingCustomCulture = profile.custom_culture
+          }
         }
         
-        console.log('🔍 Extracted from interests:', {
-          existingPersonality,
-          existingHobbies,
-          existingCustomCulture
+        console.log('🔍 DATA EXTRACTION DEBUG:', {
+          'profile.personality (direct field)': profile.personality,
+          'profile.interests (array field)': profile.interests, 
+          'profile.custom_culture (direct field)': profile.custom_culture,
+          'extracted existingPersonality': existingPersonality,
+          'extracted existingHobbies': existingHobbies,
+          'extracted existingCustomCulture': existingCustomCulture
         })
         
         // 既存ユーザーの場合：抽出したデータで状態を更新
