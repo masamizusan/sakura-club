@@ -1044,11 +1044,20 @@ function ProfileEditContent() {
             body_type: null,
             marital_status: null
           })
-          .eq('id', user.id) // 🛡️ 厳格なWHERE条件
-          .eq('email', authUser.user.email) // 🛡️ 追加のセキュリティ条件
+          .eq('id', user.id) // 🛡️ ユーザーID条件（emailマッチング条件を緩和）
         
         if (updateError) {
           console.error('❌ Safe profile reset error:', updateError)
+          console.error('🔍 Error details:', {
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint,
+            code: updateError.code
+          })
+          console.error('🔍 Auth user info:', {
+            userId: user.id,
+            userEmail: authUser?.user?.email
+          })
           return
         }
         
@@ -1068,6 +1077,11 @@ function ProfileEditContent() {
         }
         
         console.log('✅ 既存プロフィールの安全な初期化完了')
+        console.log('🧹 Profile data cleared:', {
+          clearedFields: ['name', 'bio', 'interests', 'height', 'avatar_url', 'city', 'personality', 'custom_culture', 'occupation', 'body_type', 'marital_status'],
+          userId: user.id,
+          success: true
+        })
       } else {
         console.log('ℹ️ 新規プロフィール - 初期化不要')
       }
