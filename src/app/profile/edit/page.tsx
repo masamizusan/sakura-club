@@ -1616,14 +1616,25 @@ function ProfileEditContent() {
           'profile.custom_culture (direct field)': profile.custom_culture,
           'extracted existingPersonality': existingPersonality,
           'extracted existingHobbies': existingHobbies,
-          'extracted existingCustomCulture': existingCustomCulture
+          'extracted existingCustomCulture': existingCustomCulture,
+          'isNewUser': isNewUser
         })
         
-        // 既存ユーザーの場合：抽出したデータで状態を更新
-        if (!isNewUser) {
-          setSelectedPersonality(existingPersonality)
-          setSelectedHobbies(existingHobbies)
-        }
+        console.log('🔍 RAW DATABASE FIELDS CHECK:', {
+          'profile.interests type': typeof profile.interests,
+          'profile.interests isArray': Array.isArray(profile.interests),
+          'profile.interests content': profile.interests,
+          'profile.personality type': typeof profile.personality,
+          'profile.personality isArray': Array.isArray(profile.personality),
+          'profile.personality content': profile.personality
+        })
+        
+        // 状態更新は後でまとめて実行するため、ここでは実行しない
+        console.log('🔧 DATA EXTRACTED - WILL SET STATE LATER:', {
+          'existingPersonality': existingPersonality,
+          'existingHobbies': existingHobbies,
+          'isNewUser': isNewUser
+        })
 
         // フォームフィールドをリセット（新規ユーザーはsignupデータとデフォルト値のみ使用）
         // MyPageからの遷移時は既存の生年月日を確実に保持
@@ -1772,8 +1783,17 @@ function ProfileEditContent() {
         console.log('  - existingPersonality:', existingPersonality)
         console.log('  - isNewUser:', isNewUser)
         
-        setSelectedHobbies(isNewUser ? [] : existingHobbies)
-        setSelectedPersonality(isNewUser ? [] : existingPersonality)
+        const finalHobbies = isNewUser ? [] : existingHobbies
+        const finalPersonality = isNewUser ? [] : existingPersonality
+        
+        console.log('🚨 FINAL STATE SETTING:')
+        console.log('  - setSelectedHobbies will be called with:', finalHobbies)
+        console.log('  - setSelectedPersonality will be called with:', finalPersonality)
+        
+        setSelectedHobbies(finalHobbies)
+        setSelectedPersonality(finalPersonality)
+        
+        console.log('✅ STATE SETTING COMPLETED')
         
         console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
         console.log('  - isNewUser:', isNewUser)
@@ -2552,7 +2572,7 @@ function ProfileEditContent() {
                       prefecture: formData.prefecture || '',
                       city: formData.city || '',
                       self_introduction: formData.self_introduction || '',
-                      hobbies: formData.hobbies || [],
+                      hobbies: selectedHobbies || [], // 🔧 修正: selectedHobbies状態から取得
                       occupation: formData.occupation || '',
                       height: formData.height?.toString() || '',
                       body_type: formData.body_type || '',
