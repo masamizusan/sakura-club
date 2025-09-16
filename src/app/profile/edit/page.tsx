@@ -1035,11 +1035,9 @@ function ProfileEditContent() {
             name: null,
             bio: null,
             interests: null,
-            height: null,
             avatar_url: null,
-            city: null, // cityフィールドは存在するためクリア
-            // 🔧 存在しないカラムを除外: body_type, marital_status, personality, custom_culture, occupation
-            // これらは interests 配列内で管理されているため、interests: null で十分
+            // 🔧 存在しないカラムを除外: height, city, body_type, marital_status, personality, custom_culture, occupation
+            // これらは interests 配列やoptionalDataで管理されているため、interests: null で十分
           })
           .eq('id', user.id) // 🛡️ ユーザーID条件（emailマッチング条件を緩和）
         
@@ -1075,8 +1073,8 @@ function ProfileEditContent() {
         
         console.log('✅ 既存プロフィールの安全な初期化完了')
         console.log('🧹 Profile data cleared:', {
-          clearedFields: ['name', 'bio', 'interests', 'height', 'avatar_url', 'city'],
-          note: 'personality, custom_culture, occupation, body_type, marital_status are managed via interests array',
+          clearedFields: ['name', 'bio', 'interests', 'avatar_url'],
+          note: 'height, city, personality, custom_culture, occupation, body_type, marital_status are managed via interests array or optionalData',
           userId: user.id,
           success: true
         })
