@@ -1036,7 +1036,8 @@ function ProfileEditContent() {
             bio: null,
             interests: null,
             avatar_url: null,
-            // 🔧 存在しないカラムを除外: height, city, body_type, marital_status, personality, custom_culture, occupation
+            city: null, // 🔧 cityフィールドもクリア（JSONデータを含むため重要）
+            // 🔧 存在しないカラムを除外: height, body_type, marital_status, personality, custom_culture, occupation
             // これらは interests 配列やoptionalDataで管理されているため、interests: null で十分
           })
           .eq('id', user.id) // 🛡️ ユーザーID条件（emailマッチング条件を緩和）
@@ -1073,8 +1074,8 @@ function ProfileEditContent() {
         
         console.log('✅ 既存プロフィールの安全な初期化完了')
         console.log('🧹 Profile data cleared:', {
-          clearedFields: ['name', 'bio', 'interests', 'avatar_url'],
-          note: 'height, city, personality, custom_culture, occupation, body_type, marital_status are managed via interests array or optionalData',
+          clearedFields: ['name', 'bio', 'interests', 'avatar_url', 'city'],
+          note: 'height, personality, custom_culture, occupation, body_type, marital_status are managed via interests array or optionalData',
           userId: user.id,
           success: true
         })
@@ -1090,11 +1091,12 @@ function ProfileEditContent() {
           nickname: urlParams.get('nickname') || '',
           gender: (urlParams.get('gender') as 'male' | 'female') || 'female',
           age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
+          birth_date: urlParams.get('birth_date') || '', // 🔧 URLパラメータから生年月日を設定
           nationality: urlParams.get('nationality') || '',
           prefecture: urlParams.get('prefecture') || '',
           city: '', // 完全に空
           occupation: 'none', // デフォルト値設定
-          height: undefined, // 空
+          height: undefined, // 🔧 数値フィールドなのでundefined
           body_type: 'none', // デフォルト値設定
           marital_status: 'none', // デフォルト値設定
           self_introduction: '', // 空
