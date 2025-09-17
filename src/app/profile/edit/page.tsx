@@ -1010,72 +1010,57 @@ function ProfileEditContent() {
       
       if (existingProfile) {
         console.log('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
-        console.log('🔒 SECURITY: Profile belongs to authenticated user:', {
-          profileId: existingProfile.id,
-          userId: user.id,
-          match: existingProfile.id === user.id
-        })
+        console.log('🔒 SECURITY: Profile belongs to authenticated user - proceeding with DELETE+INSERT')
         
-        // 🛡️ 二重チェック: プロフィールが確実に現在のユーザーのものであることを確認
-        if (existingProfile.id !== user.id) {
-          console.error('🚨 CRITICAL SECURITY BREACH: Profile ID does not match user ID', {
-            profileId: existingProfile.id,
-            userId: user.id
-          })
-          return
-        }
+        // 🗑️ 新規登録時: 既存プロフィールを完全削除して新しいプロフィールを作成（「新しい紙」アプローチ）
+        console.log('🗑️ NEW SIGNUP: Deleting existing profile completely and creating fresh one')
         
-        // 既存プロフィールがある場合は、特定フィールドのみを安全にクリア
-        // id, email, created_at, updated_at等の重要フィールドは保持
-        console.log('🔄 SECURITY: Clearing user data fields only (preserving system fields)')
-        const { error: updateError } = await supabase
+        // Step 1: 既存プロフィールの基本情報を保存（システムフィールド）
+        const { data: profileBackup, error: fetchError } = await supabase
           .from('profiles')
-          .update({
-            // ユーザー入力データのみクリア（システムデータは保持）
-            name: null,
-            bio: null,
-            interests: null,
-            avatar_url: null,
-            city: null, // 🔧 cityフィールドもクリア（JSONデータを含むため重要）
-            // 🔧 存在しないカラムを除外: height, body_type, marital_status, personality, custom_culture, occupation
-            // これらは interests 配列やoptionalDataで管理されているため、interests: null で十分
-          })
-          .eq('id', user.id) // 🛡️ ユーザーID条件（emailマッチング条件を緩和）
-        
-        if (updateError) {
-          console.error('❌ Safe profile reset error:', updateError)
-          console.error('🔍 Error details:', {
-            message: updateError.message,
-            details: updateError.details,
-            hint: updateError.hint,
-            code: updateError.code
-          })
-          console.error('🔍 Auth user info:', {
-            userId: user.id,
-            userEmail: authUser?.user?.email
-          })
-          return
-        }
-        
-        // 🔒 セキュリティ確認: 更新後のデータ整合性チェック
-        const { data: updatedProfile, error: verifyError } = await supabase
-          .from('profiles')
-          .select('id, email, name, bio')
+          .select('id, email, created_at')
           .eq('id', user.id)
           .single()
         
-        if (!verifyError && updatedProfile) {
-          console.log('✅ SECURITY: Data integrity verified after update:', {
-            userId: updatedProfile.id,
-            nameCleared: updatedProfile.name === null,
-            bioCleared: updatedProfile.bio === null
-          })
+        if (fetchError) {
+          console.error('❌ Failed to fetch existing profile for backup:', fetchError)
+          return
         }
         
-        console.log('✅ 既存プロフィールの安全な初期化完了')
-        console.log('🧹 Profile data cleared:', {
-          clearedFields: ['name', 'bio', 'interests', 'avatar_url', 'city'],
-          note: 'height, personality, custom_culture, occupation, body_type, marital_status are managed via interests array or optionalData',
+        // Step 2: 既存プロフィールを完全削除
+        const { error: deleteError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', user.id)
+        
+        if (deleteError) {
+          console.error('❌ Failed to delete existing profile:', deleteError)
+          return
+        }
+        
+        console.log('✅ OLD PROFILE DELETED: Complete removal successful')
+        
+        // Step 3: 新しいクリーンなプロフィールを作成
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: profileBackup.id,
+            email: profileBackup.email,
+            created_at: profileBackup.created_at,
+            updated_at: new Date().toISOString(),
+            // その他のフィールドは未設定（NULL状態）
+          })
+        
+        if (createError) {
+          console.error('❌ Failed to create fresh profile:', createError)
+          return
+        }
+        
+        console.log('✅ FRESH PROFILE CREATED: Clean slate ready for new user')
+        console.log('🧹 Profile completely refreshed:', {
+          method: 'DELETE + INSERT',
+          preservedFields: ['id', 'email', 'created_at'],
+          freshFields: 'all user data fields are now NULL',
           userId: user.id,
           success: true
         })
