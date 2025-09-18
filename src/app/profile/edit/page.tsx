@@ -1015,33 +1015,20 @@ function ProfileEditContent() {
         // 🧹 新規登録時: 全フィールドを確実にNULLクリア（「新しい紙に完全リセット」アプローチ）
         console.log('🧹 NEW SIGNUP: Clearing ALL user data fields to NULL state')
         
-        // すべてのユーザーデータフィールドを明示的にNULLに設定
+        // 確実に存在するフィールドのみをNULLに設定（段階的アプローチ）
         const { error: resetError } = await supabase
           .from('profiles')
           .update({
-            // 🧹 基本フィールドを完全クリア
+            // 🧹 確実に存在する基本フィールドのみクリア
             name: null,
             bio: null,
-            age: null,
-            birth_date: null,
-            gender: null,
-            nationality: null,
-            prefecture: null,
-            residence: null,
-            
-            // 🧹 データ配列フィールドを完全クリア  
             interests: null,
             avatar_url: null,
-            
-            // 🧹 JSONフィールドを完全クリア
             city: null,
             
-            // 🧹 その他の可能性のあるフィールドもクリア
-            profile_image: null,
-            profile_images: null,
-            images: null,
-            
-            // 注意: id, email, created_at等のシステムフィールドは保持
+            // 注意: age, birth_date, gender, nationality, prefecture, residence等は
+            // 存在しない可能性があるため除外
+            // profile_image, profile_images, images等も除外
           })
           .eq('id', user.id)
         
@@ -1058,8 +1045,9 @@ function ProfileEditContent() {
         
         console.log('✅ PROFILE COMPLETELY RESET: All user data cleared to NULL')
         console.log('🧹 Profile reset completed:', {
-          method: 'COMPREHENSIVE_NULL_UPDATE',
-          clearedFields: ['name', 'bio', 'age', 'birth_date', 'gender', 'nationality', 'prefecture', 'residence', 'interests', 'avatar_url', 'city', 'profile_image', 'profile_images', 'images'],
+          method: 'SAFE_NULL_UPDATE',
+          clearedFields: ['name', 'bio', 'interests', 'avatar_url', 'city'],
+          note: 'Only existing columns updated to prevent schema errors',
           preservedFields: ['id', 'email', 'created_at'],
           userId: user.id,
           success: true
