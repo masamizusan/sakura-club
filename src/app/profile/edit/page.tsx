@@ -310,10 +310,6 @@ function ProfileEditContent() {
       'personality', 'city'
     ]
     
-    console.log('🔍 COMPLETION CALCULATION DEBUG:')
-    console.log('Required fields:', requiredFields)
-    console.log('Optional fields:', optionalFields)
-    console.log('Profile data:', profileData)
     
     const completedRequired = requiredFields.filter(field => {
       let value
@@ -355,16 +351,7 @@ function ProfileEditContent() {
           value = profileData[field]
       }
       
-      const isCompleted = Array.isArray(value) ? value.length > 0 : value && value.toString().trim().length > 0
-      console.log(`🔍 Required field '${field}':`, {
-        rawValue: value,
-        type: typeof value,
-        isArray: Array.isArray(value),
-        arrayLength: Array.isArray(value) ? value.length : 'N/A',
-        isCompleted: isCompleted
-      })
-      
-      return isCompleted
+      return Array.isArray(value) ? value.length > 0 : value && value.toString().trim().length > 0
     })
     
     const optionalFieldsDetail = optionalFields.map(field => {
@@ -460,12 +447,6 @@ function ProfileEditContent() {
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
     
-    console.log('🔍 FINAL COMPLETION CALCULATION:')
-    console.log('Required completed:', completedRequired.length, '/', requiredFields.length)
-    console.log('Optional completed:', completedOptional.length, '/', optionalFields.length)
-    console.log('Has images:', hasImages, '(count:', imageCompletionCount, ')')
-    console.log('Total completed:', completedFields, '/', totalFields)
-    console.log('Completion percentage:', completion, '%')
     
     setProfileCompletion(completion)
     setCompletedItems(completedFields)
