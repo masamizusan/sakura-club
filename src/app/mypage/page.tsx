@@ -329,9 +329,10 @@ function MyPageContent() {
   const calculateProfileCompletion = (profileData: any) => {
     // プロフィール編集ページと同じロジックを使用
     const requiredFields = [
-      'nickname', 'gender', 'age', 'birth_date',
+      'nickname', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
+    // 注意: genderは編集不可のため完成度計算から除外
     
     // 外国人男性の場合は国籍も必須（今回は日本人女性なので追加しない）
     // if (isForeignMale) {
@@ -340,7 +341,7 @@ function MyPageContent() {
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city', 'avatar_url'
+      'personality', 'city'
     ]
 
     // 既に正規化されたデータを使用（重複処理を防ぐ）
@@ -395,11 +396,6 @@ function MyPageContent() {
     const completedOptional = optionalFields.filter(field => {
       let value = mergedProfile[field]
       
-      // avatar_urlの場合は特別処理
-      if (field === 'avatar_url') {
-        return value && value !== null
-      }
-      
       // 正規化されたデータから値を取得（既に処理済み）
       if (['occupation', 'height', 'body_type', 'marital_status'].includes(field)) {
         value = mergedProfile[field]
@@ -423,7 +419,10 @@ function MyPageContent() {
       }
     })
     
-    const totalRequiredItems = requiredFields.length + optionalFields.length
+    // 写真の有無もチェック（プロフィール編集ページと同じ計算）
+    const hasImages = mergedProfile.avatar_url && mergedProfile.avatar_url !== null
+    const totalRequiredItems = requiredFields.length + optionalFields.length + 1 // 13 items total (12 fields + images)
+    const imageCompletionCount = hasImages ? 1 : 0
     
     // 詳細デバッグログ
     const requiredFieldsDetail = requiredFields.map(field => {
@@ -513,10 +512,10 @@ function MyPageContent() {
       return { field, value, isCompleted, reason: field === 'avatar_url' ? 'avatar check' : Array.isArray(value) ? 'array check' : value === 'none' ? 'none value' : !value ? 'no value' : 'has value' }
     })
     
-    // 正確な完成度計算
+    // 正確な完成度計算（画像含む）
     const completedRequiredCount = requiredFieldsDetail.filter(f => f.isCompleted).length
     const completedOptionalCount = optionalFieldsDetail.filter(f => f.isCompleted).length
-    const actualCompletedItems = completedRequiredCount + completedOptionalCount
+    const actualCompletedItems = completedRequiredCount + completedOptionalCount + imageCompletionCount
     const actualCompletionRate = Math.round((actualCompletedItems / totalRequiredItems) * 100)
     
     console.log('🔍 Detailed Profile Completion Analysis:')
@@ -527,6 +526,7 @@ function MyPageContent() {
     console.log('=== サマリー ===')
     console.log('完成した必須フィールド:', completedRequiredCount, '/', requiredFields.length)
     console.log('完成したオプションフィールド:', completedOptionalCount, '/', optionalFields.length)
+    console.log('画像項目:', imageCompletionCount, '/', 1, '(has images:', hasImages, ')')
     console.log('総完成項目:', actualCompletedItems, '/', totalRequiredItems)
     console.log('実際の完成率:', actualCompletionRate + '%')
     console.log('⚠️ 古い計算 - completedItems:', completedItems, '/', totalRequiredItems)
