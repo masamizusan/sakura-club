@@ -356,6 +356,19 @@ function ProfileEditContent() {
           break
         case 'birth_date':
           value = profileData.birth_date
+          // フォールバック: URLパラメータから取得（新規登録時）
+          if (!value && typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search)
+            value = urlParams.get('birth_date')
+          }
+          console.log('🔍 Birth date field debug:', {
+            field: field,
+            profileData_birth_date: profileData.birth_date,
+            urlParams_birth_date: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('birth_date') : 'N/A',
+            finalValue: value,
+            type: typeof value,
+            isCompleted: value && value.toString().trim().length > 0
+          })
           break
         default:
           value = profileData[field]
