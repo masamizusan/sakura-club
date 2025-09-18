@@ -193,9 +193,10 @@ function ProfileEditContent() {
   // 画像配列を直接指定する完成度計算関数
   const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     const requiredFields = [
-      'nickname', 'gender', 'age', 'birth_date',
+      'nickname', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
+    // 注意: genderは編集不可のため完成度計算から除外
     
     // 外国人男性の場合は国籍も必須
     if (isForeignMale) {
@@ -294,9 +295,10 @@ function ProfileEditContent() {
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
-      'nickname', 'gender', 'age', 'birth_date',
+      'nickname', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
+    // 注意: genderは編集不可のため完成度計算から除外
     
     // 外国人男性の場合は国籍も必須
     if (isForeignMale) {
