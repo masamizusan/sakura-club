@@ -1047,7 +1047,7 @@ function ProfileEditContent() {
             id: profileBackup.id,
             email: profileBackup.email,
             created_at: profileBackup.created_at,
-            updated_at: new Date().toISOString(),
+            // 🔧 updated_atカラムは存在しないため除外
             // その他のフィールドは未設定（NULL状態）
           })
         
