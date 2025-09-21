@@ -169,6 +169,19 @@ function ProfileEditContent() {
     return age
   }, [])
 
+  // プロフィール画像の変更を監視して完成度を再計算
+  useEffect(() => {
+    if (profileImages.length > 0) {
+      console.log('🖼️ 画像状態変更検出 - 完成度再計算実行')
+      const currentData = watch()
+      calculateProfileCompletion({
+        ...currentData,
+        hobbies: selectedHobbies,
+        personality: selectedPersonality,
+      })
+    }
+  }, [profileImages, calculateProfileCompletion, watch, selectedHobbies, selectedPersonality])
+
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
     if (birthDate) {
@@ -1881,16 +1894,6 @@ function ProfileEditContent() {
         if (shouldUseStorageImages) {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
           setProfileImages(storageImages)
-          
-          // 画像復元後に完成度計算を再実行
-          setTimeout(() => {
-            const currentData = getValues()
-            calculateProfileCompletion({
-              ...currentData,
-              hobbies: selectedHobbies,
-              personality: selectedPersonality,
-            })
-          }, 100)
         } else if (!isNewUser && profile.avatar_url) {
           console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
           setProfileImages([{
@@ -1900,16 +1903,6 @@ function ProfileEditContent() {
             isMain: true,
             isEdited: false
           }])
-          
-          // 画像設定後に完成度計算を再実行
-          setTimeout(() => {
-            const currentData = getValues()
-            calculateProfileCompletion({
-              ...currentData,
-              hobbies: selectedHobbies,
-              personality: selectedPersonality,
-            })
-          }, 100)
         } else {
           console.log('❌ 画像なしで初期化')
           console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
