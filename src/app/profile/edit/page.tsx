@@ -180,7 +180,7 @@ function ProfileEditContent() {
         personality: selectedPersonality,
       })
     }
-  }, [profileImages, calculateProfileCompletion, watch, selectedHobbies, selectedPersonality])
+  }, [profileImages.length, selectedHobbies, selectedPersonality])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
