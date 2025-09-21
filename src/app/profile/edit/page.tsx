@@ -2397,6 +2397,7 @@ function ProfileEditContent() {
                 <div>
                   <p className="text-orange-700 text-sm font-medium">初期化エラー</p>
                   <p className="text-orange-600 text-xs mt-1">{initializationError}</p>
+                  <p className="text-orange-500 text-xs mt-2">エラーハンドリング v2.0 有効</p>
                 </div>
               </div>
             )}
