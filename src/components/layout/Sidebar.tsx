@@ -7,7 +7,6 @@ import {
   MessageCircle, 
   Heart, 
   History, 
-  Calendar, 
   User
 } from 'lucide-react'
 
@@ -23,7 +22,6 @@ export default function Sidebar({ className = '' }: SidebarProps) {
     { id: 'messages', icon: MessageCircle, label: 'メッセージ', href: '/messages' },
     { id: 'liked', icon: Heart, label: 'お相手から', href: '/matches' },
     { id: 'footprints', icon: History, label: '足跡', href: '/footprints' },
-    { id: 'experiences', icon: Calendar, label: '文化体験', href: '/experiences' },
     { id: 'profile', icon: User, label: 'マイページ', href: '/mypage' },
   ]
 
