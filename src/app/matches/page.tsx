@@ -18,6 +18,7 @@ import {
   Coffee
 } from 'lucide-react'
 import Link from 'next/link'
+import Sidebar from '@/components/layout/Sidebar'
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -239,8 +240,12 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* Sidebar */}
+      <Sidebar className="w-64 hidden md:block" />
+      
+      <div className="md:ml-64 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">おすすめのお相手</h1>

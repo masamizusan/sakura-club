@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Calendar, MapPin, Clock, Users, Search, Filter, Plus, Heart, Star } from 'lucide-react'
 import Link from 'next/link'
+import Sidebar from '@/components/layout/Sidebar'
 
 // 文化体験のタイプ定義
 interface Experience {
@@ -194,8 +195,12 @@ export default function ExperiencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* Sidebar */}
+      <Sidebar className="w-64 hidden md:block" />
+      
+      <div className="md:ml-64 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
         {/* ヘッダー */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">文化体験一覧</h1>
@@ -395,6 +400,7 @@ export default function ExperiencesPage() {
             </Button>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

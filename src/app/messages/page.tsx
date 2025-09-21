@@ -17,6 +17,7 @@ import {
   Circle
 } from 'lucide-react'
 import Link from 'next/link'
+import Sidebar from '@/components/layout/Sidebar'
 
 // メッセージの型定義
 interface Message {
@@ -330,8 +331,12 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 h-screen">
+      {/* Sidebar */}
+      <Sidebar className="w-64 hidden md:block" />
+      
+      <div className="md:ml-64">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 h-screen">
           {/* 会話リスト */}
           <div className="bg-white border-r border-gray-200 flex flex-col">
             {/* ヘッダー */}
