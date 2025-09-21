@@ -1173,6 +1173,10 @@ function ProfileEditContent() {
           nationality: urlParams.get('nationality') || '',
           prefecture: urlParams.get('prefecture') || '',
           city: '', // 完全に空
+          // 外国人男性向け新フィールド
+          planned_prefectures: [],
+          visit_schedule: '',
+          travel_companion: '',
           occupation: 'none', // デフォルト値設定
           height: undefined, // 🔧 数値フィールドなのでundefined
           body_type: 'none', // デフォルト値設定
@@ -1186,6 +1190,7 @@ function ProfileEditContent() {
         // 状態も初期化
         setSelectedHobbies([])
         setSelectedPersonality([])
+        setSelectedPlannedPrefectures([])
         setProfileImages([])
         
         console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
@@ -1403,6 +1408,7 @@ function ProfileEditContent() {
         setProfileImages([])
         setSelectedHobbies([])
         setSelectedPersonality([])
+        setSelectedPlannedPrefectures([])
         
         // フォームをリセット
         reset({
@@ -1410,6 +1416,9 @@ function ProfileEditContent() {
           self_introduction: '',
           gender: 'female',
           age: 18,
+          planned_prefectures: [],
+          visit_schedule: '',
+          travel_companion: '',
           hobbies: [],
           personality: [],
           custom_culture: ''
@@ -1805,8 +1814,12 @@ function ProfileEditContent() {
           birth_date: resetBirthDate,
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
-          prefecture: defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || '')),
-          city: isNewUser ? '' : (parsedOptionalData.city || ''),
+          prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
+          city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
+          // 外国人男性向け新フィールド
+          planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile.planned_prefectures || [])) : undefined,
+          visit_schedule: isForeignMale ? (isNewUser ? '' : (profile.visit_schedule || '')) : undefined,
+          travel_companion: isForeignMale ? (isNewUser ? '' : (profile.travel_companion || '')) : undefined,
           occupation: isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none'),
           height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
@@ -1895,6 +1908,22 @@ function ProfileEditContent() {
         const customCultureValue = isNewUser ? '' : existingCustomCulture
         console.log('Setting custom_culture:', customCultureValue)
         setValue('custom_culture', customCultureValue)
+        
+        // 外国人男性向けフィールドの設定
+        if (isForeignMale) {
+          const plannedPrefecturesValue = isNewUser ? [] : (profile.planned_prefectures || [])
+          console.log('Setting planned_prefectures:', plannedPrefecturesValue)
+          setValue('planned_prefectures', plannedPrefecturesValue)
+          setSelectedPlannedPrefectures(plannedPrefecturesValue)
+          
+          const visitScheduleValue = isNewUser ? '' : (profile.visit_schedule || '')
+          console.log('Setting visit_schedule:', visitScheduleValue)
+          setValue('visit_schedule', visitScheduleValue)
+          
+          const travelCompanionValue = isNewUser ? '' : (profile.travel_companion || '')
+          console.log('Setting travel_companion:', travelCompanionValue)
+          setValue('travel_companion', travelCompanionValue)
+        }
         
         console.log('🔍 HOBBY/PERSONALITY INITIALIZATION DEBUG:')
         console.log('  - existingHobbies:', existingHobbies)
