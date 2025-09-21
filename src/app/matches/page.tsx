@@ -507,6 +507,7 @@ export default function MatchesPage() {
             )}
           </Button>
         </div>
+        </div>
       </div>
     </div>
   )
