@@ -627,7 +627,7 @@ function MyPageContent() {
 
           {/* 詳細プロフィール情報 */}
           <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="hidden grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {(() => {
                 // 正規化されたプロフィールデータを直接使用（二重処理を回避）
                 const occupation = profile?.occupation
@@ -682,7 +682,7 @@ function MyPageContent() {
             </div>
 
             {/* 自己紹介 */}
-            {profile?.bio && (
+            {false && profile?.bio && (
               <div className="mt-4">
                 <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
                 <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 rounded-lg p-3">
@@ -692,7 +692,7 @@ function MyPageContent() {
             )}
 
             {/* 共有したい日本文化 */}
-            {(profile?.interests || profile?.custom_culture) && (
+            {false && (profile?.interests || profile?.custom_culture) && (
               <div className="mt-4">
                 <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
                 <div className="space-y-2">
@@ -718,7 +718,7 @@ function MyPageContent() {
             )}
 
             {/* 性格 */}
-            {profile?.personality && Array.isArray(profile.personality) && profile.personality.length > 0 && (
+            {false && profile?.personality && Array.isArray(profile.personality) && profile.personality.length > 0 && (
               <div className="mt-4">
                 <h3 className="font-medium text-gray-900 mb-2">性格</h3>
                 <div className="flex flex-wrap gap-2">
