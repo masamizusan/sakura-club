@@ -472,9 +472,9 @@ function ProfileEditContent() {
     
     const completedOptional = optionalFieldsDetail.filter(Boolean)
     
-    // 写真の有無もチェック（13項目 + 写真1項目 = 14項目）
+    // 写真の有無もチェック（13項目計算に含める）
     const hasImages = profileImages.length > 0
-    const totalFields = requiredFields.length + optionalFields.length + 1 // 14 items total (13 fields + images)
+    const totalFields = requiredFields.length + optionalFields.length + 1 // 13 items total (includes images)
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
@@ -850,14 +850,13 @@ function ProfileEditContent() {
         const defaults = getDefaults()
         
         // 新規登録フローかどうかを判定（マイページからの遷移は除外）
-        const isFromMypage = document.referrer.includes('/mypage')
         const hasSignupParams = urlParams.get('type') === 'japanese-female' || urlParams.get('type') === 'foreign-male'
-        const isFromSignup = hasSignupParams && !isFromMypage
+        const isFromSignup = hasSignupParams && !isFromMyPage
         
         console.log('=== Profile Edit Debug ===')
         console.log('Current URL:', window.location.href)
         console.log('Document referrer:', document.referrer)
-        console.log('Is from mypage:', isFromMypage)
+        console.log('Is from mypage:', isFromMyPage)
         console.log('Has signup params:', hasSignupParams)
         console.log('isFromSignup:', isFromSignup)
         console.log('Signup data:', signupData)
@@ -1497,14 +1496,13 @@ function ProfileEditContent() {
         const defaults = getDefaults()
         
         // 新規登録フローかどうかを判定（マイページからの遷移は除外）
-        const isFromMypage = document.referrer.includes('/mypage')
         const hasSignupParams = urlParams.get('type') === 'japanese-female' || urlParams.get('type') === 'foreign-male'
-        const isFromSignup = hasSignupParams && !isFromMypage
+        const isFromSignup = hasSignupParams && !isFromMyPage
         
         console.log('=== Profile Edit Debug ===')
         console.log('Current URL:', window.location.href)
         console.log('Document referrer:', document.referrer)
-        console.log('Is from mypage:', isFromMypage)
+        console.log('Is from mypage:', isFromMyPage)
         console.log('Has signup params:', hasSignupParams)
         console.log('isFromSignup:', isFromSignup)
         console.log('Signup data:', signupData)
@@ -1883,6 +1881,16 @@ function ProfileEditContent() {
         if (shouldUseStorageImages) {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
           setProfileImages(storageImages)
+          
+          // 画像復元後に完成度計算を再実行
+          setTimeout(() => {
+            const currentData = getValues()
+            calculateProfileCompletion({
+              ...currentData,
+              hobbies: selectedHobbies,
+              personality: selectedPersonality,
+            })
+          }, 100)
         } else if (!isNewUser && profile.avatar_url) {
           console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
           setProfileImages([{
@@ -1892,6 +1900,16 @@ function ProfileEditContent() {
             isMain: true,
             isEdited: false
           }])
+          
+          // 画像設定後に完成度計算を再実行
+          setTimeout(() => {
+            const currentData = getValues()
+            calculateProfileCompletion({
+              ...currentData,
+              hobbies: selectedHobbies,
+              personality: selectedPersonality,
+            })
+          }, 100)
         } else {
           console.log('❌ 画像なしで初期化')
           console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
