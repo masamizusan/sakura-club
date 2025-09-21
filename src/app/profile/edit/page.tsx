@@ -2605,42 +2605,6 @@ function ProfileEditContent() {
               <p className="text-sm text-sakura-700 mb-4 text-center">
                 入力内容を確認してからプロフィールを更新できます
               </p>
-              <button
-                type="button"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg mb-4"
-                onClick={() => {
-                  // 🔧 デバッグ: 直接更新を試す
-                  console.log('🔧 Direct update button clicked!')
-                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
-                  if (hiddenSubmit) {
-                    console.log('🔧 Found hidden submit, triggering direct update')
-                    hiddenSubmit.click()
-                  } else {
-                    console.log('❌ Hidden submit not found, trying preview instead')
-                    const formData = watch()
-                    const queryParams = new URLSearchParams({
-                      nickname: formData.nickname || '',
-                      age: String(formData.age || 18),
-                      gender: formData.gender || '',
-                      nationality: formData.nationality || '',
-                      prefecture: formData.prefecture || '',
-                      city: formData.city || '',
-                      occupation: formData.occupation || '',
-                      height: String(formData.height || ''),
-                      body_type: formData.body_type || '',
-                      marital_status: formData.marital_status || '',
-                      self_introduction: formData.self_introduction || '',
-                      hobbies: selectedHobbies.join(','),
-                      personality: selectedPersonality.join(','),
-                      custom_culture: formData.custom_culture || '',
-                      image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || ''
-                    })
-                    window.open(`/profile/preview?${queryParams.toString()}`, '_blank')
-                  }
-                }}
-              >
-                🔧 【テスト】直接更新 / プレビュー
-              </button>
 
               {/* プレビューボタン */}
               <button
@@ -2683,54 +2647,8 @@ function ProfileEditContent() {
               >
                 📋 プレビュー確認
               </button>
-              
-              {/* 🔧 テスト用直接更新ボタン */}
-              <button
-                type="button"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
-                onClick={() => {
-                  // 隠しsubmitボタンをクリックして直接フォーム送信
-                  console.log('🔧 Test button clicked - attempting direct update')
-                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
-                  if (hiddenSubmit) {
-                    console.log('🔧 Found hidden submit button, clicking now')
-                    hiddenSubmit.click()
-                  } else {
-                    console.log('❌ Hidden submit button not found')
-                  }
-                }}
-              >
-                🔧 【テスト用】直接更新
-              </button>
               <p className="text-sm text-sakura-700 mt-3 text-center">
                 相手からの見え方を確認してから更新できます
-              </p>
-            </div>
-            
-            {/* 🔧 テスト用直接更新ボタン */}
-            <div className="bg-green-50 border border-green-300 rounded-lg p-6 mt-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-3 text-center">
-                🔧 デバッグ用直接更新
-              </h3>
-              <p className="text-sm text-green-700 mb-4 text-center">
-                プレビューを経由せず直接データベースに保存します
-              </p>
-              <button
-                type="button"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
-                onClick={() => {
-                  // 隠しsubmitボタンをクリックして直接フォーム送信
-                  const hiddenSubmit = document.querySelector('button[type="submit"][aria-hidden="true"]') as HTMLButtonElement
-                  if (hiddenSubmit) {
-                    console.log('🔧 Clicking hidden submit button for direct update')
-                    hiddenSubmit.click()
-                  }
-                }}
-              >
-                🔧 【テスト用】直接更新
-              </button>
-              <p className="text-sm text-green-700 mt-3 text-center">
-                デバッグ用：プレビューなしで即座に保存
               </p>
             </div>
           </div>
