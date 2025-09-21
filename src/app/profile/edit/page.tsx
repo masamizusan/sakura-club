@@ -24,6 +24,10 @@ const profileEditSchema = z.object({
   nationality: z.string().min(1, '国籍を選択してください').optional(),
   prefecture: z.string().min(1, '都道府県を入力してください'),
   city: z.string().optional(),
+  // 外国人男性向け新フィールド
+  planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
+  visit_schedule: z.string().optional(),
+  travel_companion: z.string().optional(),
   occupation: z.string().optional(),
   height: z.preprocess(
     (val) => {
@@ -118,6 +122,32 @@ const BODY_TYPE_OPTIONS = [
   { value: 'アスリート体型', label: 'アスリート体型' }
 ]
 
+// 外国人男性向け選択肢
+const VISIT_SCHEDULE_OPTIONS = [
+  { value: '', label: '記入しない' },
+  { value: 'undecided', label: 'まだ決まっていない' },
+  { value: '2025-spring', label: '2025年春（3-5月）' },
+  { value: '2025-summer', label: '2025年夏（6-8月）' },
+  { value: '2025-autumn', label: '2025年秋（9-11月）' },
+  { value: '2025-winter', label: '2025年冬（12-2月）' },
+  { value: '2026-spring', label: '2026年春（3-5月）' },
+  { value: '2026-summer', label: '2026年夏（6-8月）' },
+  { value: '2026-autumn', label: '2026年秋（9-11月）' },
+  { value: '2026-winter', label: '2026年冬（12-2月）' },
+  { value: 'beyond-2026', label: '2026年以降' }
+]
+
+const TRAVEL_COMPANION_OPTIONS = [
+  { value: '', label: '記入しない' },
+  { value: 'solo', label: '一人旅' },
+  { value: 'couple', label: 'カップル（恋人・配偶者）' },
+  { value: 'friends', label: '友達' },
+  { value: 'family', label: '家族' },
+  { value: 'colleagues', label: '同僚・仕事仲間' },
+  { value: 'group', label: 'グループ・団体' },
+  { value: 'other', label: 'その他' }
+]
+
 function ProfileEditContent() {
   // ALL HOOKS MUST BE AT THE VERY TOP - NO EARLY RETURNS BEFORE HOOKS
   const { user } = useAuth()
@@ -131,6 +161,7 @@ function ProfileEditContent() {
   const [userLoading, setUserLoading] = useState(true)
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
+  const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(0)
@@ -309,19 +340,31 @@ function ProfileEditContent() {
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
       'nickname', 'age', 'birth_date',
-      'prefecture', 'hobbies', 'self_introduction'
+      'hobbies', 'self_introduction'
     ]
-    // 注意: genderは編集不可のため完成度計算から除外
     
-    // 外国人男性の場合は国籍も必須
+    // 外国人男性と日本人女性で必須フィールドを分ける
     if (isForeignMale) {
       requiredFields.push('nationality')
+      // 行く予定の都道府県（1つ以上選択されていれば完成）
+      requiredFields.push('planned_prefectures')
+    } else {
+      // 日本人女性の場合は都道府県が必須
+      requiredFields.push('prefecture')
     }
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality'
     ]
+    
+    // 外国人男性向けのオプションフィールド
+    if (isForeignMale) {
+      optionalFields.push('visit_schedule', 'travel_companion')
+    } else {
+      // 日本人女性向けのオプションフィールド
+      optionalFields.push('city')
+    }
     
     console.log('🔍 COMPLETION CALCULATION DEBUG:')
     console.log('Profile data:', profileData)
@@ -354,6 +397,15 @@ function ProfileEditContent() {
           } else if (hasCustomCulture) {
             // 選択された趣味はないが、カスタム文化があれば完成とみなす
             value = ['custom']
+          }
+          break
+        case 'planned_prefectures':
+          // 外国人男性の行く予定の都道府県（1つ以上選択されていれば完成）
+          value = profileData.planned_prefectures
+          if (Array.isArray(value) && value.length > 0) {
+            // 選択されている場合は完成
+          } else {
+            value = null
           }
           break
         case 'prefecture':
@@ -2157,6 +2209,31 @@ function ProfileEditContent() {
     })
   }
 
+  // 外国人男性向け: 行く予定の都道府県選択
+  const togglePlannedPrefecture = (prefecture: string) => {
+    setSelectedPlannedPrefectures(prev => {
+      const newPrefectures = prev.includes(prefecture)
+        ? prev.filter(p => p !== prefecture)
+        : prev.length < 3
+          ? [...prev, prefecture]
+          : prev
+      
+      // フォームデータに反映
+      setValue('planned_prefectures', newPrefectures)
+      
+      // リアルタイム完成度更新
+      setTimeout(() => {
+        const currentData = watch()
+        calculateProfileCompletion({
+          ...currentData,
+          planned_prefectures: newPrefectures
+        })
+      }, 0)
+      
+      return newPrefectures
+    })
+  }
+
   // Use conditional JSX rendering instead of early returns
   return (
     <div>
@@ -2311,20 +2388,7 @@ function ProfileEditContent() {
                 <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
               </div>
 
-              {/* 性別フィールドは外国人男性プロフィールでのみ表示 */}
-              {profileType === 'foreign-male' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    性別 <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    value={watch('gender') === 'male' ? '男性' : '女性'}
-                    readOnly
-                    className="bg-gray-50 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">性別は仮登録時に設定済みのため変更できません</p>
-                </div>
-              )}
+              {/* 性別フィールドは非表示（外国人男性） */}
 
               <div className={isForeignMale ? 'md:col-start-2' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2405,39 +2469,42 @@ function ProfileEditContent() {
                   {errors.nationality && (
                     <p className="text-red-500 text-sm mt-1">{errors.nationality.message}</p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">※ 身分証明書と一致している必要があります</p>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    都道府県 <span className="text-red-500">*</span>
-                  </label>
-                  <Select 
-                    value={watch('prefecture')} 
-                    onValueChange={(value) => setValue('prefecture', value)}
-                  >
-                    <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="都道府県を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PREFECTURES.map((prefecture) => (
-                        <SelectItem key={prefecture} value={prefecture}>
-                          {prefecture}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.prefecture && (
-                    <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
-                  )}
-                </div>
+              {/* 都道府県・市区町村（日本人女性のみ） */}
+              {!isForeignMale && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      都道府県 <span className="text-red-500">*</span>
+                    </label>
+                    <Select 
+                      value={watch('prefecture')} 
+                      onValueChange={(value) => setValue('prefecture', value)}
+                    >
+                      <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="都道府県を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PREFECTURES.map((prefecture) => (
+                          <SelectItem key={prefecture} value={prefecture}>
+                            {prefecture}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.prefecture && (
+                      <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    市区町村 <span className="text-gray-400 text-xs">（任意）</span>
-                  </label>
-                  <Input
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      市区町村 <span className="text-gray-400 text-xs">（任意）</span>
+                    </label>
+                    <Input
                     placeholder="渋谷区"
                     {...register('city')}
                     className={errors.city ? 'border-red-500' : ''}
@@ -2445,8 +2512,83 @@ function ProfileEditContent() {
                   {errors.city && (
                     <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
                   )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* 外国人男性向け: 行く予定の都道府県 */}
+              {isForeignMale && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      行く予定の都道府県 <span className="text-gray-400 text-xs">（最大3つまで）</span>
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {PREFECTURES.map((prefecture) => (
+                        <button
+                          key={prefecture}
+                          type="button"
+                          onClick={() => togglePlannedPrefecture(prefecture)}
+                          className={`p-2 text-sm rounded-lg border transition-colors ${
+                            selectedPlannedPrefectures.includes(prefecture)
+                              ? 'bg-sakura-600 text-white border-sakura-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
+                          }`}
+                        >
+                          {prefecture}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      選択済み: {selectedPlannedPrefectures.length}/3
+                    </p>
+                  </div>
+
+                  {/* 日本訪問予定時期 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      日本訪問予定時期
+                    </label>
+                    <Select 
+                      value={watch('visit_schedule') || ''} 
+                      onValueChange={(value) => setValue('visit_schedule', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="訪問予定時期を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISIT_SCHEDULE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* 同行者 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      同行者
+                    </label>
+                    <Select 
+                      value={watch('travel_companion') || ''} 
+                      onValueChange={(value) => setValue('travel_companion', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="同行者を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TRAVEL_COMPANION_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 詳細情報 */}
