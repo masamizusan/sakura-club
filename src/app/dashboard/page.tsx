@@ -66,7 +66,6 @@ function DashboardContent() {
     { id: 'messages', icon: MessageCircle, label: 'メッセージ', isPage: false, href: undefined },
     { id: 'liked', icon: Heart, label: 'お相手から', isPage: false, href: undefined },
     { id: 'footprints', icon: History, label: '足跡', isPage: false, href: undefined },
-    { id: 'experiences', icon: Calendar, label: '文化体験', isPage: true, href: '/experiences' },
     { id: 'profile', icon: User, label: 'マイページ', isPage: true, href: '/mypage' },
   ]
 

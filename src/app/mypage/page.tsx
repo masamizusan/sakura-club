@@ -22,7 +22,8 @@ import {
   Check,
   X,
   History,
-  LogOut
+  LogOut,
+  Calendar
 } from 'lucide-react'
 
 function MyPageContent() {
@@ -957,6 +958,26 @@ function MyPageContent() {
               </div>
             </div>
           </div>
+
+          {/* 文化体験 */}
+          <Link href="/experiences" className="block bg-white rounded-lg shadow-lg p-4 hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center mr-3">
+                  <Calendar className="w-5 h-5 text-sakura-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">文化体験</h3>
+                  <p className="text-sm text-gray-600">日本文化を一緒に体験しよう</p>
+                </div>
+              </div>
+              <div className="text-gray-400">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </Link>
 
           {/* よくある質問 */}
           <div className="bg-white rounded-lg shadow-lg p-4">
