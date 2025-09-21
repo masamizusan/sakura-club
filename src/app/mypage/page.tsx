@@ -695,7 +695,9 @@ function MyPageContent() {
             {/* 共有したい日本文化 */}
             {false && (profile?.interests || profile?.custom_culture) && (
               <div className="mt-4">
-                <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
+                <h3 className="font-medium text-gray-900 mb-2">
+                  {profile?.gender === 'male' ? '学びたい日本文化' : '共有したい日本文化'}
+                </h3>
                 <div className="space-y-2">
                   {profile.interests && Array.isArray(profile.interests) && profile.interests.length > 0 && (
                     <div className="flex flex-wrap gap-2">

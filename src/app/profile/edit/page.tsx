@@ -35,7 +35,7 @@ const profileEditSchema = z.object({
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
-  hobbies: z.array(z.string()).min(1, '共有したい日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
+  hobbies: z.array(z.string()).min(1, '日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
   self_introduction: z.string().min(100, '自己紹介は100文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
@@ -2520,7 +2520,7 @@ function ProfileEditContent() {
             {/* 共有したい日本文化 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                共有したい日本文化（最大8つまで）
+                {isForeignMale ? '学びたい日本文化（最大8つまで）' : '共有したい日本文化（最大8つまで）'}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {HOBBY_OPTIONS.map((hobby) => (
@@ -2551,7 +2551,10 @@ function ProfileEditContent() {
                   その他の日本文化（自由記入）
                 </label>
                 <Input
-                  placeholder="上記にない日本文化があれば自由に記入してください（100文字以内）"
+                  placeholder={isForeignMale 
+                    ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
+                    : "上記にない日本文化があれば自由に記入してください（100文字以内）"
+                  }
                   {...register('custom_culture')}
                   className={errors.custom_culture ? 'border-red-500' : ''}
                 />
