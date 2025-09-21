@@ -16,13 +16,13 @@ import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera } from 'lucide-react'
 import { z } from 'zod'
 
-const profileEditSchema = z.object({
+const baseProfileEditSchema = z.object({
   nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
   gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
   birth_date: z.string().min(1, '生年月日を入力してください'),
   age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
-  nationality: z.string().min(1, '国籍を選択してください').optional(),
-  prefecture: z.string().min(1, '都道府県を入力してください'),
+  nationality: z.string().optional(),
+  prefecture: z.string().optional(),
   city: z.string().optional(),
   // 外国人男性向け新フィールド
   planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
@@ -44,6 +44,45 @@ const profileEditSchema = z.object({
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
   self_introduction: z.string().min(100, '自己紹介は100文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
 })
+
+// 条件付きバリデーション関数
+const createProfileEditSchema = (isForeignMale: boolean) => {
+  if (isForeignMale) {
+    return baseProfileEditSchema.refine((data) => {
+      // 外国人男性の場合は国籍が必須
+      if (!data.nationality || data.nationality.trim() === '') {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: '国籍を選択してください',
+          path: ['nationality']
+        }])
+      }
+      // 行く予定の都道府県が少なくとも1つ必要
+      if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: '行く予定の都道府県を少なくとも1つ選択してください',
+          path: ['planned_prefectures']
+        }])
+      }
+      return true
+    })
+  } else {
+    // 日本人女性の場合は都道府県が必須
+    return baseProfileEditSchema.refine((data) => {
+      if (!data.prefecture || data.prefecture.trim() === '') {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: '都道府県を入力してください',
+          path: ['prefecture']
+        }])
+      }
+      return true
+    })
+  }
+}
+
+const profileEditSchema = baseProfileEditSchema
 
 type ProfileEditFormData = z.infer<typeof profileEditSchema>
 
@@ -155,6 +194,7 @@ function ProfileEditContent() {
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [initializationError, setInitializationError] = useState('')
   const [success, setSuccess] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [updateSuccess, setUpdateSuccess] = useState(false)
@@ -1911,18 +1951,23 @@ function ProfileEditContent() {
         
         // 外国人男性向けフィールドの設定
         if (isForeignMale) {
-          const plannedPrefecturesValue = isNewUser ? [] : (profile.planned_prefectures || [])
-          console.log('Setting planned_prefectures:', plannedPrefecturesValue)
-          setValue('planned_prefectures', plannedPrefecturesValue)
-          setSelectedPlannedPrefectures(plannedPrefecturesValue)
-          
-          const visitScheduleValue = isNewUser ? '' : (profile.visit_schedule || '')
-          console.log('Setting visit_schedule:', visitScheduleValue)
-          setValue('visit_schedule', visitScheduleValue)
-          
-          const travelCompanionValue = isNewUser ? '' : (profile.travel_companion || '')
-          console.log('Setting travel_companion:', travelCompanionValue)
-          setValue('travel_companion', travelCompanionValue)
+          try {
+            const plannedPrefecturesValue = isNewUser ? [] : (profile.planned_prefectures || [])
+            console.log('Setting planned_prefectures:', plannedPrefecturesValue)
+            setValue('planned_prefectures', plannedPrefecturesValue)
+            setSelectedPlannedPrefectures(plannedPrefecturesValue)
+            
+            const visitScheduleValue = isNewUser ? '' : (profile.visit_schedule || '')
+            console.log('Setting visit_schedule:', visitScheduleValue)
+            setValue('visit_schedule', visitScheduleValue)
+            
+            const travelCompanionValue = isNewUser ? '' : (profile.travel_companion || '')
+            console.log('Setting travel_companion:', travelCompanionValue)
+            setValue('travel_companion', travelCompanionValue)
+          } catch (error) {
+            console.error('🚨 外国人男性フィールド初期化エラー:', error)
+            setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          }
         }
         
         console.log('🔍 HOBBY/PERSONALITY INITIALIZATION DEBUG:')
@@ -2343,6 +2388,16 @@ function ProfileEditContent() {
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
                 <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
                 <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            {initializationError && (
+              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-center">
+                <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
+                <div>
+                  <p className="text-orange-700 text-sm font-medium">初期化エラー</p>
+                  <p className="text-orange-600 text-xs mt-1">{initializationError}</p>
+                </div>
               </div>
             )}
 
@@ -2835,6 +2890,60 @@ function ProfileEditContent() {
 }
 
 export default function ProfileEditPage() {
+  const [hasError, setHasError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('🚨 JavaScript Error Detected:', error)
+      setHasError(true)
+      setErrorMessage(error.message || 'Unknown error occurred')
+    }
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('🚨 Unhandled Promise Rejection:', event.reason)
+      setHasError(true)
+      setErrorMessage(event.reason?.message || 'Promise rejection occurred')
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
+  }, [])
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">エラーが発生しました</h2>
+            <p className="text-gray-600 mb-6">
+              アプリケーションでエラーが発生しました。<br />
+              詳細: {errorMessage}
+            </p>
+            <Button 
+              onClick={() => {
+                setHasError(false)
+                setErrorMessage('')
+                window.location.reload()
+              }}
+              className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
+            >
+              ページを再読み込み
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <AuthGuard>
       <ProfileEditContent />
