@@ -219,7 +219,8 @@ function ProfileEditContent() {
     getValues,
     formState: { errors }
   } = useForm<ProfileEditFormData>({
-    resolver: zodResolver(profileEditSchema)
+    resolver: zodResolver(baseProfileEditSchema),
+    mode: 'onChange'
   })
 
   // Profile type flags
@@ -1952,21 +1953,33 @@ function ProfileEditContent() {
         // 外国人男性向けフィールドの設定
         if (isForeignMale) {
           try {
-            const plannedPrefecturesValue = isNewUser ? [] : (profile.planned_prefectures || [])
+            // 安全な初期化のため、フィールドが存在することを確認
+            const plannedPrefecturesValue = Array.isArray(profile?.planned_prefectures) 
+              ? profile.planned_prefectures 
+              : (isNewUser ? [] : [])
             console.log('Setting planned_prefectures:', plannedPrefecturesValue)
-            setValue('planned_prefectures', plannedPrefecturesValue)
+            setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
             
-            const visitScheduleValue = isNewUser ? '' : (profile.visit_schedule || '')
+            const visitScheduleValue = typeof profile?.visit_schedule === 'string' 
+              ? profile.visit_schedule 
+              : (isNewUser ? '' : '')
             console.log('Setting visit_schedule:', visitScheduleValue)
-            setValue('visit_schedule', visitScheduleValue)
+            setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
             
-            const travelCompanionValue = isNewUser ? '' : (profile.travel_companion || '')
+            const travelCompanionValue = typeof profile?.travel_companion === 'string' 
+              ? profile.travel_companion 
+              : (isNewUser ? '' : '')
             console.log('Setting travel_companion:', travelCompanionValue)
-            setValue('travel_companion', travelCompanionValue)
+            setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
           } catch (error) {
             console.error('🚨 外国人男性フィールド初期化エラー:', error)
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            // エラーが発生した場合はデフォルト値で初期化
+            setValue('planned_prefectures', [], { shouldValidate: false })
+            setValue('visit_schedule', '', { shouldValidate: false })
+            setValue('travel_companion', '', { shouldValidate: false })
+            setSelectedPlannedPrefectures([])
           }
         }
         
