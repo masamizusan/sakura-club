@@ -1051,16 +1051,15 @@ function ProfileEditContent() {
     const subscription = watch((value) => {
       if (value) {
         const currentValues = getValues() // 現在のフォーム値を直接取得
-        calculateProfileCompletion({
+        calculateProfileCompletionWithImages({
           ...value,
           birth_date: currentValues.birth_date, // フォームから直接取得
           personality: selectedPersonality, // 状態から直接取得
-          // avatar_urlはもう使用しない（画像は別途計算）
-        })
+        }, profileImages)
       }
     })
     return () => subscription.unsubscribe()
-  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion])
+  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletionWithImages])
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍オプション（プロフィールタイプに応じて順序変更）
