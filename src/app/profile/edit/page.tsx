@@ -163,7 +163,7 @@ const BODY_TYPE_OPTIONS = [
 
 // 外国人男性向け選択肢
 const VISIT_SCHEDULE_OPTIONS = [
-  { value: '', label: '記入しない' },
+  { value: 'no-entry', label: '記入しない' },
   { value: 'undecided', label: 'まだ決まっていない' },
   { value: '2025-spring', label: '2025年春（3-5月）' },
   { value: '2025-summer', label: '2025年夏（6-8月）' },
@@ -177,7 +177,7 @@ const VISIT_SCHEDULE_OPTIONS = [
 ]
 
 const TRAVEL_COMPANION_OPTIONS = [
-  { value: '', label: '記入しない' },
+  { value: 'no-entry', label: '記入しない' },
   { value: 'solo', label: '一人旅' },
   { value: 'couple', label: 'カップル（恋人・配偶者）' },
   { value: 'friends', label: '友達' },
@@ -1216,8 +1216,8 @@ function ProfileEditContent() {
           city: '', // 完全に空
           // 外国人男性向け新フィールド
           planned_prefectures: [],
-          visit_schedule: '',
-          travel_companion: '',
+          visit_schedule: 'no-entry',
+          travel_companion: 'no-entry',
           occupation: 'none', // デフォルト値設定
           height: undefined, // 🔧 数値フィールドなのでundefined
           body_type: 'none', // デフォルト値設定
@@ -1963,13 +1963,13 @@ function ProfileEditContent() {
             
             const visitScheduleValue = typeof profile?.visit_schedule === 'string' 
               ? profile.visit_schedule 
-              : (isNewUser ? '' : '')
+              : (isNewUser ? 'no-entry' : 'no-entry')
             console.log('Setting visit_schedule:', visitScheduleValue)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
             
             const travelCompanionValue = typeof profile?.travel_companion === 'string' 
               ? profile.travel_companion 
-              : (isNewUser ? '' : '')
+              : (isNewUser ? 'no-entry' : 'no-entry')
             console.log('Setting travel_companion:', travelCompanionValue)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
           } catch (error) {
@@ -1977,8 +1977,8 @@ function ProfileEditContent() {
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
             // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
-            setValue('visit_schedule', '', { shouldValidate: false })
-            setValue('travel_companion', '', { shouldValidate: false })
+            setValue('visit_schedule', 'no-entry', { shouldValidate: false })
+            setValue('travel_companion', 'no-entry', { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
         }
