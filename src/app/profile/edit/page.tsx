@@ -2648,7 +2648,7 @@ function ProfileEditContent() {
                       日本訪問予定時期
                     </label>
                     <Select 
-                      value={watch('visit_schedule') || ''} 
+                      value={watch('visit_schedule') || undefined} 
                       onValueChange={(value) => setValue('visit_schedule', value)}
                     >
                       <SelectTrigger>
@@ -2670,7 +2670,7 @@ function ProfileEditContent() {
                       同行者
                     </label>
                     <Select 
-                      value={watch('travel_companion') || ''} 
+                      value={watch('travel_companion') || undefined} 
                       onValueChange={(value) => setValue('travel_companion', value)}
                     >
                       <SelectTrigger>
