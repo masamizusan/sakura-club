@@ -279,19 +279,31 @@ function ProfileEditContent() {
   const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     const requiredFields = [
       'nickname', 'age', 'birth_date',
-      'prefecture', 'hobbies', 'self_introduction'
+      'hobbies', 'self_introduction'
     ]
-    // 注意: genderは編集不可のため完成度計算から除外
     
-    // 外国人男性の場合は国籍も必須
+    // 外国人男性と日本人女性で必須フィールドを分ける
     if (isForeignMale) {
       requiredFields.push('nationality')
+      // 行く予定の都道府県（1つ以上選択されていれば完成）
+      requiredFields.push('planned_prefectures')
+    } else {
+      // 日本人女性の場合は都道府県が必須
+      requiredFields.push('prefecture')
     }
     
     const optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'city'
+      'personality'
     ]
+    
+    // 外国人男性向けのオプションフィールド
+    if (isForeignMale) {
+      optionalFields.push('visit_schedule', 'travel_companion')
+    } else {
+      // 日本人女性向けのオプションフィールド
+      optionalFields.push('city')
+    }
     
     const completedRequired = requiredFields.filter(field => {
       let value
@@ -326,6 +338,9 @@ function ProfileEditContent() {
         case 'prefecture':
           value = profileData.residence || profileData.prefecture
           break
+        case 'planned_prefectures':
+          value = profileData.planned_prefectures
+          break
         case 'birth_date':
           value = profileData.birth_date
           break
@@ -347,6 +362,13 @@ function ProfileEditContent() {
         if (Array.isArray(value)) {
           isFieldCompleted = value.length > 0
         } else if (value === 'none') {
+          isFieldCompleted = false
+        } else {
+          isFieldCompleted = value && value.toString().trim().length > 0
+        }
+      } else if (field === 'visit_schedule' || field === 'travel_companion') {
+        // 外国人男性のオプションフィールド：'no-entry' は未記入扱い
+        if (value === 'no-entry' || !value) {
           isFieldCompleted = false
         } else {
           isFieldCompleted = value && value.toString().trim().length > 0
