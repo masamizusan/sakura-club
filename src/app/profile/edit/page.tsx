@@ -1070,7 +1070,7 @@ function ProfileEditContent() {
             prefecture: urlParams.get('prefecture') || '',
             hobbies: [], // 空配列 - 未完了
             self_introduction: '', // 空文字 - 未完了
-            nationality: urlParams.get('nationality') || '', // 外国人男性に必要
+            nationality: urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : ''), // 外国人男性にはデフォルト値を設定
             // 他は全て空
           }
           calculateProfileCompletion(cleanData)
@@ -1679,7 +1679,7 @@ function ProfileEditContent() {
           gender: defaults.gender,
           birth_date: resetBirthDate,
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
-          nationality: isForeignMale ? (defaults.nationality || (isNewUser ? '' : (profile.nationality || ''))) : undefined,
+          nationality: isForeignMale ? (defaults.nationality || (isNewUser ? 'アメリカ' : (profile.nationality || ''))) : undefined,
           prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
           city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
