@@ -347,12 +347,31 @@ function ProfileEditContent() {
         case 'birth_date':
           value = profileData.birth_date
           break
+        case 'nationality':
+          value = profileData.nationality
+          console.log(`🌍 DEBUG - nationality field validation:`, {
+            raw_value: profileData.nationality,
+            is_valid: !!(value && value.toString().trim().length > 0),
+            field_name: field
+          })
+          break
         default:
           value = profileData[field]
       }
       
-      if (Array.isArray(value)) return value.length > 0
-      return value && value.toString().trim().length > 0
+      const isCompleted = Array.isArray(value) ? value.length > 0 : !!(value && value.toString().trim().length > 0)
+      
+      // 詳細デバッグログ
+      if (field === 'nationality' || field === 'nickname' || field === 'birth_date' || field === 'age') {
+        console.log(`✅ Field '${field}' validation:`, {
+          value,
+          isCompleted,
+          type: typeof value,
+          isArray: Array.isArray(value)
+        })
+      }
+      
+      return isCompleted
     })
     
     const completedOptional = optionalFields.filter(field => {
@@ -396,13 +415,19 @@ function ProfileEditContent() {
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
     
-    // デバッグ情報（簡潔版）
+    // デバッグ情報（詳細版）
     console.log('📊 Profile Completion:', {
       required: `${completedRequired.length}/${requiredFields.length}`,
       optional: `${completedOptional.length}/${optionalFields.length}`,
       images: hasImages ? '1/1' : '0/1',
       total: `${completedFields}/${totalFields}`,
       percentage: `${completion}%`
+    })
+    
+    console.log('📋 Required Fields Debug:', {
+      all_required: requiredFields,
+      completed_required: completedRequired,
+      missing_required: requiredFields.filter(field => !completedRequired.includes(field))
     })
     
     setProfileCompletion(completion)
