@@ -438,6 +438,9 @@ function ProfileEditContent() {
   }, [isForeignMale, profileImages])
 
 
+  // 写真変更フラグ（デバウンス計算との競合を避けるため）
+  const [isImageChanging, setIsImageChanging] = useState(false)
+  
   // 写真変更時のコールバック関数
   const handleImagesChange = useCallback(async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
@@ -453,6 +456,8 @@ function ProfileEditContent() {
       return
     }
     
+    // 写真変更中フラグを設定（デバウンス計算を一時的に無効化）
+    setIsImageChanging(true)
     setProfileImages(newImages)
     
     // セッションストレージに最新の画像状態を保存
@@ -492,6 +497,12 @@ function ProfileEditContent() {
       personality: selectedPersonality, // 状態から直接取得
       avatar_url: newImages.length > 0 ? 'has_images' : null
     }, newImages)
+    
+    // 写真変更完了フラグをリセット
+    setTimeout(() => {
+      setIsImageChanging(false)
+      console.log('📸 写真変更完了：デバウンス計算を再有効化')
+    }, 100)
   }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletion])
 
   // ALL useEffect hooks must be here (after all other hooks)
@@ -888,6 +899,12 @@ function ProfileEditContent() {
         
         // 500ms後に計算実行（デバウンス）
         timeoutId = setTimeout(() => {
+          // 写真変更中は計算をスキップ
+          if (isImageChanging) {
+            console.log('🚫 写真変更中のためデバウンス計算をスキップ')
+            return
+          }
+          
           const currentValues = getValues()
           calculateProfileCompletion({
             ...value,
@@ -902,7 +919,7 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion])
+  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion, isImageChanging])
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍オプション（プロフィールタイプに応じて順序変更）
