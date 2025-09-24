@@ -752,6 +752,13 @@ function ProfileEditContent() {
             nationality: urlParams.get('nationality'),
             prefecture: urlParams.get('prefecture')
           }
+          
+          // デバッグ用ログ
+          console.log('🔍 URL Parameters from signup:', {
+            nationality: urlParams.get('nationality'),
+            prefecture: urlParams.get('prefecture'),
+            all_params: Object.fromEntries(urlParams.entries())
+          })
         }
         
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
@@ -763,6 +770,13 @@ function ProfileEditContent() {
             birth_date: (signupData as any).birth_date || profile.birth_date || '',
             age: (signupData as any).age ? parseInt((signupData as any).age) : profile.age || 18,
           }
+          
+          console.log('🏗️ getDefaults calculation:', {
+            signupData_nationality: (signupData as any).nationality,
+            profile_nationality: profile.nationality,
+            isForeignMale,
+            final_nationality: baseDefaults.nationality
+          })
           
           return baseDefaults
         }
@@ -1418,6 +1432,13 @@ function ProfileEditContent() {
             nationality: urlParams.get('nationality'),
             prefecture: urlParams.get('prefecture')
           }
+          
+          // デバッグ用ログ
+          console.log('🔍 URL Parameters from signup:', {
+            nationality: urlParams.get('nationality'),
+            prefecture: urlParams.get('prefecture'),
+            all_params: Object.fromEntries(urlParams.entries())
+          })
         }
         
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
@@ -1429,6 +1450,13 @@ function ProfileEditContent() {
             birth_date: (signupData as any).birth_date || profile.birth_date || '',
             age: (signupData as any).age ? parseInt((signupData as any).age) : profile.age || 18,
           }
+          
+          console.log('🏗️ getDefaults calculation:', {
+            signupData_nationality: (signupData as any).nationality,
+            profile_nationality: profile.nationality,
+            isForeignMale,
+            final_nationality: baseDefaults.nationality
+          })
           
           return baseDefaults
         }
@@ -1751,7 +1779,11 @@ function ProfileEditContent() {
         
         if (isForeignMale) {
           const nationalityValue = defaults.nationality || profile.nationality || ''
-          console.log('Setting nationality (foreign male):', nationalityValue)
+          console.log('🌍 Setting nationality (foreign male):', {
+            defaults_nationality: defaults.nationality,
+            profile_nationality: profile.nationality,
+            final_value: nationalityValue
+          })
           setValue('nationality', nationalityValue)
         }
         
@@ -2375,7 +2407,7 @@ function ProfileEditContent() {
                     国籍 <span className="text-red-500">*</span>
                   </label>
                   <Select 
-                    value={watch('nationality')} 
+                    value={watch('nationality') || undefined} 
                     onValueChange={(value) => setValue('nationality', value)}
                   >
                     <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
