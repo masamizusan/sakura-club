@@ -1100,23 +1100,18 @@ function ProfileEditContent() {
         
         console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
         
-        // 完成度を再計算（フォーム設定完了後に実行）
+        // 完成度を再計算（フォームsetValue完了後に実行）
         setTimeout(() => {
-          const cleanData = {
-            nickname: urlParams.get('nickname') || '',
-            gender: urlParams.get('gender') || '',
-            age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
-            prefecture: urlParams.get('prefecture') || '',
-            hobbies: [], // 空配列 - 未完了
-            self_introduction: '', // 空文字 - 未完了
-            nationality: urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : ''), // 外国人男性にはデフォルト値を設定
-            planned_prefectures: [], // 空配列 - 未完了
-            // 他は全て空
-          }
-          
-          console.log('🚀 Initial completion calculation with cleanData:', cleanData)
-          calculateProfileCompletion(cleanData)
-        }, 1000) // タイミングを1秒後に延長
+          // フォームの実際の値を取得して計算
+          const actualFormValues = getValues()
+          console.log('🚀 Initial completion calculation with actual form values:', actualFormValues)
+          console.log('🔍 Form nationality vs URL nationality:', {
+            form_nationality: actualFormValues.nationality,
+            url_nationality: urlParams.get('nationality'),
+            should_match: true
+          })
+          calculateProfileCompletion(actualFormValues)
+        }, 1500) // フォーム設定完了を確実に待つ
       }
       
     } catch (error) {
@@ -1810,9 +1805,21 @@ function ProfileEditContent() {
           console.log('🌍 Setting nationality (foreign male):', {
             defaults_nationality: defaults.nationality,
             profile_nationality: profile.nationality,
-            final_value: nationalityValue
+            final_value: nationalityValue,
+            url_nationality: urlParams.get('nationality'),
+            should_be: urlParams.get('nationality') || 'アメリカ'
           })
           setValue('nationality', nationalityValue)
+          
+          // 設定後の確認
+          setTimeout(() => {
+            const actualValue = getValues().nationality
+            console.log('🔍 Nationality setValue confirmation:', {
+              attempted_to_set: nationalityValue,
+              actually_set: actualValue,
+              setValue_success: nationalityValue === actualValue
+            })
+          }, 100)
         }
         
         const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))
@@ -1961,6 +1968,11 @@ function ProfileEditContent() {
         setTimeout(() => {
           const currentValues = getValues()
           console.log('📊 Post-form-setup completion recalculation with current values:', currentValues)
+          console.log('🔍 Nationality comparison:', {
+            initial_cleanup_nationality: urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : ''),
+            form_nationality: currentValues.nationality,
+            are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
+          })
           calculateProfileCompletion(currentValues)
         }, 2000)
       } catch (error) {
