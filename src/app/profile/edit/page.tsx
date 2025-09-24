@@ -1760,6 +1760,12 @@ function ProfileEditContent() {
         reset(resetData)
         console.log('✅ Form reset completed')
         
+        // 外国人男性の国籍値を確実に設定
+        if (isForeignMale && defaults.nationality) {
+          console.log('🔧 Explicitly setting nationality after reset:', defaults.nationality)
+          setValue('nationality', defaults.nationality)
+        }
+        
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
         setValue('gender', defaults.gender)
@@ -2454,7 +2460,7 @@ function ProfileEditContent() {
                     国籍 <span className="text-red-500">*</span>
                   </label>
                   <Select 
-                    value={watch('nationality') || undefined} 
+                    value={watch('nationality') || ''} 
                     onValueChange={(value) => setValue('nationality', value)}
                   >
                     <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
