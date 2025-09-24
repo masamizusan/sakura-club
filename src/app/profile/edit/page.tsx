@@ -2505,6 +2505,141 @@ function ProfileEditContent() {
                 </div>
               )}
 
+              {/* 詳細情報 */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                  詳細情報
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    職業
+                  </label>
+                  <Select 
+                    value={watch('occupation') || 'none'} 
+                    onValueChange={(value) => setValue('occupation', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="職業を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OCCUPATION_OPTIONS.map((occupation) => (
+                        <SelectItem key={occupation.value} value={occupation.value}>
+                          {occupation.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      身長 (cm)
+                    </label>
+                    <Input
+                      type="number"
+                      min="120"
+                      max="250"
+                      placeholder="160"
+                      {...register('height')}
+                      className={errors.height ? 'border-red-500' : ''}
+                    />
+                    {errors.height && (
+                      <p className="text-red-500 text-sm mt-1">{errors.height.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      体型
+                    </label>
+                    <Select 
+                      value={watch('body_type') || 'none'} 
+                      onValueChange={(value) => setValue('body_type', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="体型を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BODY_TYPE_OPTIONS.map((bodyType) => (
+                          <SelectItem key={bodyType.value} value={bodyType.value}>
+                            {bodyType.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    結婚歴
+                  </label>
+                  <Select 
+                    value={watch('marital_status') || 'none'} 
+                    onValueChange={(value) => setValue('marital_status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="結婚歴を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">記入しない</SelectItem>
+                      <SelectItem value="single">未婚</SelectItem>
+                      <SelectItem value="married">既婚</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 日本文化の学習・体験したいもの（外国人男性向け） */}
+                <p className="text-sm text-gray-600 mt-4">
+                  {isForeignMale 
+                    ? "学習・体験したい日本文化を選択してください（1つ以上8つまで）" 
+                    : "興味のある日本文化を選択してください（1つ以上8つまで）"
+                  }
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {HOBBY_OPTIONS.map((hobby) => (
+                    <button
+                      key={hobby}
+                      type="button"
+                      onClick={() => toggleHobby(hobby)}
+                      className={`p-2 text-sm rounded-lg border transition-colors ${
+                        selectedHobbies.includes(hobby)
+                          ? 'bg-sakura-600 text-white border-sakura-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
+                      }`}
+                    >
+                      {hobby}
+                    </button>
+                  ))}
+                </div>
+                {errors.hobbies && (
+                  <p className="text-red-500 text-sm">{errors.hobbies.message}</p>
+                )}
+                <p className="text-sm text-gray-500">
+                  選択済み: {selectedHobbies.length}/8
+                </p>
+
+                {/* 自由記入欄 */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    その他の日本文化（自由記入）
+                  </label>
+                  <Input
+                    placeholder={isForeignMale 
+                      ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
+                      : "上記にない日本文化があれば自由に記入してください（100文字以内）"
+                    }
+                    {...register('custom_culture')}
+                    className={errors.custom_culture ? 'border-red-500' : ''}
+                  />
+                  {errors.custom_culture && (
+                    <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
+                  )}
+                </div>
+              </div>
+
               {/* 都道府県・市区町村（日本人女性のみ） */}
               {!isForeignMale && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2623,123 +2758,6 @@ function ProfileEditContent() {
               )}
             </div>
 
-            {/* 詳細情報 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                詳細情報
-              </h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  職業
-                </label>
-                <Select 
-                  value={watch('occupation') || 'none'} 
-                  onValueChange={(value) => setValue('occupation', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="職業を選択" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {OCCUPATION_OPTIONS.map((occupation) => (
-                      <SelectItem key={occupation.value} value={occupation.value}>
-                        {occupation.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    身長 (cm)
-                  </label>
-                  <Input
-                    type="number"
-                    min="120"
-                    max="250"
-                    placeholder="160"
-                    {...register('height')}
-                    className={errors.height ? 'border-red-500' : ''}
-                  />
-                  {errors.height && (
-                    <p className="text-red-500 text-sm mt-1">{errors.height.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    体型
-                  </label>
-                  <Select 
-                    value={watch('body_type') || 'none'} 
-                    onValueChange={(value) => setValue('body_type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="体型を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BODY_TYPE_OPTIONS.map((bodyType) => (
-                        <SelectItem key={bodyType.value} value={bodyType.value}>
-                          {bodyType.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* 共有したい日本文化 */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                {isForeignMale ? '学びたい日本文化（最大8つまで）' : '共有したい日本文化（最大8つまで）'}
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {HOBBY_OPTIONS.map((hobby) => (
-                  <button
-                    key={hobby}
-                    type="button"
-                    onClick={() => toggleHobby(hobby)}
-                    className={`p-2 text-sm rounded-lg border transition-colors ${
-                      selectedHobbies.includes(hobby)
-                        ? 'bg-sakura-600 text-white border-sakura-600'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-sakura-400'
-                    }`}
-                  >
-                    {hobby}
-                  </button>
-                ))}
-              </div>
-              {errors.hobbies && (
-                <p className="text-red-500 text-sm">{errors.hobbies.message}</p>
-              )}
-              <p className="text-sm text-gray-500">
-                選択済み: {selectedHobbies.length}/8
-              </p>
-
-              {/* 自由記入欄 */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  その他の日本文化（自由記入）
-                </label>
-                <Input
-                  placeholder={isForeignMale 
-                    ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
-                    : "上記にない日本文化があれば自由に記入してください（100文字以内）"
-                  }
-                  {...register('custom_culture')}
-                  className={errors.custom_culture ? 'border-red-500' : ''}
-                />
-                {errors.custom_culture && (
-                  <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
-                )}
-              </div>
-            </div>
-
-
-
             {/* 性格（任意フィールド） */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
@@ -2767,26 +2785,38 @@ function ProfileEditContent() {
               </p>
             </div>
 
-            {/* 隠し送信ボタン - localStorageからの更新処理で使用 */}
-            <button type="submit" style={{ display: 'none' }} aria-hidden="true">
-              Hidden Submit
-            </button>
-
-            </form>
-
-            {/* プレビューボタン - フォーム外に配置 */}
-            <div className="bg-sakura-50 border border-sakura-300 rounded-lg p-6 mt-8">
-              <h3 className="text-lg font-semibold text-sakura-800 mb-3 text-center">
-                プロフィール確認・更新
+            {/* 自己紹介（必須） */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+                自己紹介 <span className="text-red-500">*</span>
               </h3>
-              <p className="text-sm text-sakura-700 mb-4 text-center">
-                入力内容を確認してからプロフィールを更新できます
+              <p className="text-sm text-gray-600">
+                {isForeignMale 
+                  ? "あなたの魅力や日本文化への想いを伝えてください（100文字以上1000文字以内）" 
+                  : "あなたの魅力や国際交流への想いを伝えてください（100文字以上1000文字以内）"
+                }
               </p>
+              <textarea
+                placeholder={isForeignMale 
+                  ? "例：私は〇〇出身で、日本の文化に深い関心を持っています。特に茶道に興味があり、..." 
+                  : "例：私は国際的な友人関係を築くことが好きで、異文化交流を通じて成長したいと思っています..."
+                }
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sakura-500 focus:border-transparent ${
+                  errors.self_introduction ? 'border-red-500' : ''
+                }`}
+                rows={6}
+                {...register('self_introduction')}
+              />
+              {errors.self_introduction && (
+                <p className="text-red-500 text-sm">{errors.self_introduction.message}</p>
+              )}
+            </div>
 
-              {/* プレビューボタン */}
-              <button
+            {/* プレビューボタン */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Button
                 type="button"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center text-lg"
+                variant="outline"
                 onClick={() => {
                   try {
                     const formData = watch()
@@ -2827,59 +2857,45 @@ function ProfileEditContent() {
                   }
                 }}
               >
-                📋 プレビュー確認
-              </button>
-              <p className="text-sm text-sakura-700 mt-3 text-center">
-                相手からの見え方を確認してから更新できます
-              </p>
+                プレビュー
+              </Button>
+
+              {/* 保存・続行ボタン */}
+              <Button
+                type="submit"
+                disabled={isSubmitting || !isValid}
+                className="bg-sakura-600 hover:bg-sakura-700 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  'プロフィールを保存'
+                )}
+              </Button>
             </div>
           </div>
-        </div>
+        </form>
       </div>
-    </div>
-      )}
-    </div>
-  )
-}
+    )
+  }
 
-export default function ProfileEditPage() {
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-
-  useEffect(() => {
-    const handleError = (error: ErrorEvent) => {
-      console.error('🚨 JavaScript Error Detected:', error)
-      setHasError(true)
-      setErrorMessage(error.message || 'Unknown error occurred')
-    }
-
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('🚨 Unhandled Promise Rejection:', event.reason)
-      setHasError(true)
-      setErrorMessage(event.reason?.message || 'Promise rejection occurred')
-    }
-
-    window.addEventListener('error', handleError)
-    window.addEventListener('unhandledrejection', handleUnhandledRejection)
-
-    return () => {
-      window.removeEventListener('error', handleError)
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
-    }
-  }, [])
-
+  // エラー状態のUI
   if (hasError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">エラーが発生しました</h2>
-            <p className="text-gray-600 mb-6">
-              アプリケーションでエラーが発生しました。<br />
-              詳細: {errorMessage}
+            <h3 className="text-lg font-medium text-gray-900 mb-2">エラーが発生しました</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              {errorMessage || 'プロフィール編集画面の読み込み中にエラーが発生しました。ページを再読み込みしてください。'}
             </p>
             <Button 
               onClick={() => {
