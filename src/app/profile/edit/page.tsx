@@ -2773,6 +2773,7 @@ function ProfileEditContent() {
                       nickname: formData.nickname || '',
                       gender: formData.gender || '',
                       age: formData.age?.toString() || '',
+                      birth_date: formData.birth_date || '', // 生年月日を追加
                       prefecture: formData.prefecture || '',
                       city: formData.city || '',
                       self_introduction: formData.self_introduction || '',
@@ -2784,7 +2785,11 @@ function ProfileEditContent() {
                       personality: selectedPersonality || [],
                       custom_culture: formData.custom_culture || '',
                       image: profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || '',
-                      nationality: formData.nationality || ''
+                      nationality: formData.nationality || '',
+                      // 外国人男性特有のフィールド
+                      planned_prefectures: formData.planned_prefectures || [],
+                      visit_schedule: formData.visit_schedule || '',
+                      travel_companion: formData.travel_companion || ''
                     }
                     
                     sessionStorage.setItem('previewData', JSON.stringify(previewData))

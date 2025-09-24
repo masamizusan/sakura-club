@@ -45,7 +45,11 @@ function ProfilePreviewContent() {
           personality: [],
           custom_culture: searchParams.get('custom_culture') || '',
           image: searchParams.get('image') || '',
-          profile_image: searchParams.get('profile_image') || null
+          profile_image: searchParams.get('profile_image') || null,
+          // 外国人男性特有のフィールド
+          planned_prefectures: [],
+          visit_schedule: searchParams.get('visit_schedule') || '',
+          travel_companion: searchParams.get('travel_companion') || ''
         }
         setPreviewData(fallbackData)
         console.log('📋 Using fallback data from URL params')
@@ -82,6 +86,10 @@ function ProfilePreviewContent() {
     marital_status: maritalStatus = '',
     self_introduction: selfIntroduction = '',
     hobbies = [],
+    // 外国人男性特有のフィールド
+    planned_prefectures = [],
+    visit_schedule = '',
+    travel_companion = '',
     personality = [],
     custom_culture: customCulture = '',
     image: profileImage = ''
@@ -158,7 +166,46 @@ function ProfilePreviewContent() {
                     <span className="text-gray-600">{nationality}</span>
                   </div>
                 )}
-                {prefecture && (
+                
+                {/* 外国人男性の場合：行く予定の都道府県 */}
+                {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
+                  <div className="flex items-start">
+                    <span className="font-medium text-gray-700 w-20">行く予定:</span>
+                    <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
+                  </div>
+                )}
+                
+                {/* 外国人男性の場合：訪問予定 */}
+                {gender === 'male' && shouldDisplayValue(visit_schedule) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">訪問予定:</span>
+                    <span className="text-gray-600">
+                      {visit_schedule === 'within_month' ? '1ヶ月以内' :
+                       visit_schedule === 'within_3months' ? '3ヶ月以内' :
+                       visit_schedule === 'within_6months' ? '6ヶ月以内' :
+                       visit_schedule === 'within_year' ? '1年以内' :
+                       visit_schedule === 'undecided' ? '未定' : visit_schedule}
+                    </span>
+                  </div>
+                )}
+                
+                {/* 外国人男性の場合：同行者 */}
+                {gender === 'male' && shouldDisplayValue(travel_companion) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">同行者:</span>
+                    <span className="text-gray-600">
+                      {travel_companion === 'alone' ? '一人' :
+                       travel_companion === 'friends' ? '友人' :
+                       travel_companion === 'family' ? '家族' :
+                       travel_companion === 'colleagues' ? '同僚・仕事仲間' :
+                       travel_companion === 'group' ? 'グループ・団体' :
+                       travel_companion === 'other' ? 'その他' : travel_companion}
+                    </span>
+                  </div>
+                )}
+                
+                {/* 日本人女性の場合：居住地 */}
+                {gender === 'female' && prefecture && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">居住地:</span>
                     <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
