@@ -1100,7 +1100,7 @@ function ProfileEditContent() {
         
         console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
         
-        // 完成度を再計算
+        // 完成度を再計算（フォーム設定完了後に実行）
         setTimeout(() => {
           const cleanData = {
             nickname: urlParams.get('nickname') || '',
@@ -1110,10 +1110,13 @@ function ProfileEditContent() {
             hobbies: [], // 空配列 - 未完了
             self_introduction: '', // 空文字 - 未完了
             nationality: urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : ''), // 外国人男性にはデフォルト値を設定
+            planned_prefectures: [], // 空配列 - 未完了
             // 他は全て空
           }
+          
+          console.log('🚀 Initial completion calculation with cleanData:', cleanData)
           calculateProfileCompletion(cleanData)
-        }, 500)
+        }, 1000) // タイミングを1秒後に延長
       }
       
     } catch (error) {
@@ -1953,6 +1956,13 @@ function ProfileEditContent() {
           personality: existingPersonality,
         }
         calculateProfileCompletion(profileDataWithSignup)
+        
+        // フォーム設定完了後の完成度再計算
+        setTimeout(() => {
+          const currentValues = getValues()
+          console.log('📊 Post-form-setup completion recalculation with current values:', currentValues)
+          calculateProfileCompletion(currentValues)
+        }, 2000)
       } catch (error) {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
