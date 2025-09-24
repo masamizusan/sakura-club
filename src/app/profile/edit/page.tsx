@@ -2531,8 +2531,278 @@ function ProfileEditContent() {
                   </div>
                 </div>
 
+                {/* 生年月日と年齢 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      生年月日 <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={watch('birth_date') ? watch('birth_date') : ''}
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
+                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      年齢 <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      min="18"
+                      max="99"
+                      placeholder="25"
+                      {...register('age', { valueAsNumber: true })}
+                      className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
+                      readOnly
+                    />
+                    {errors.age && (
+                      <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
+                  </div>
+                </div>
+
+                {/* 居住地（日本人女性のみ） */}
+                {isJapaneseFemale && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        都道府県 <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        value={watch('prefecture') || ''}
+                        onValueChange={(value) => setValue('prefecture', value)}
+                      >
+                        <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="都道府県を選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PREFECTURES.map((prefecture) => (
+                            <SelectItem key={prefecture} value={prefecture}>
+                              {prefecture}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.prefecture && (
+                        <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        市区町村
+                      </label>
+                      <Input
+                        placeholder="市区町村を入力"
+                        {...register('city')}
+                        className={errors.city ? 'border-red-500' : ''}
+                      />
+                      {errors.city && (
+                        <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 外国人男性向け専用フィールド */}
+                {isForeignMale && (
+                  <>
+                    {/* 日本訪問計画 */}
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">日本訪問計画</h4>
+                      
+                      {/* 行く予定の都道府県 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          行く予定の都道府県 <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {PREFECTURES.map((prefecture) => (
+                            <label key={prefecture} className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedPlannedPrefectures.includes(prefecture)}
+                                onChange={() => togglePlannedPrefecture(prefecture)}
+                                className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                                disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
+                              />
+                              <span className="text-sm text-gray-700">{prefecture}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {errors.planned_prefectures && (
+                          <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
+                        )}
+                      </div>
+
+                      {/* 訪問予定時期 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          訪問予定時期 <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          value={watch('visit_schedule') || ''}
+                          onValueChange={(value) => setValue('visit_schedule', value)}
+                        >
+                          <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
+                            <SelectValue placeholder="訪問予定を選択" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {VISIT_SCHEDULE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.visit_schedule && (
+                          <p className="text-red-500 text-sm mt-1">{errors.visit_schedule.message}</p>
+                        )}
+                      </div>
+
+                      {/* 同行者 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          同行者 <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          value={watch('travel_companion') || ''}
+                          onValueChange={(value) => setValue('travel_companion', value)}
+                        >
+                          <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
+                            <SelectValue placeholder="同行者を選択" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TRAVEL_COMPANION_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.travel_companion && (
+                          <p className="text-red-500 text-sm mt-1">{errors.travel_companion.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* 興味・趣味セクション */}
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
+                    {isForeignMale ? '学びたい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {isForeignMale 
+                      ? "学習・体験したい日本文化を選択してください（1つ以上8つまで）" 
+                      : "興味のある日本文化を選択してください（1つ以上8つまで）"
+                    }
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {HOBBY_OPTIONS.map((hobby) => (
+                      <label key={hobby} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedHobbies.includes(hobby)}
+                          onChange={() => toggleHobby(hobby)}
+                          className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                          disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
+                        />
+                        <span className="text-sm text-gray-700">{hobby}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {errors.hobbies && (
+                    <p className="text-red-500 text-sm mt-1">{errors.hobbies.message}</p>
+                  )}
+
+                  {/* カスタム日本文化 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {isForeignMale
+                        ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
+                        : "上記にない日本文化があれば自由に記入してください（100文字以内）"
+                      }
+                    </label>
+                    <Input
+                      placeholder={
+                        isForeignMale
+                          ? "例：日本の伝統工芸、地方の祭り など"
+                          : "例：地域の伝統行事、家庭料理 など"
+                      }
+                      {...register('custom_culture')}
+                      className={errors.custom_culture ? 'border-red-500' : ''}
+                    />
+                    {errors.custom_culture && (
+                      <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 性格 */}
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">性格</h4>
+                  <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {PERSONALITY_OPTIONS.map((trait) => (
+                      <label key={trait} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedPersonality.includes(trait)}
+                          onChange={() => togglePersonality(trait)}
+                          className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                          disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                        />
+                        <span className="text-sm text-gray-700">{trait}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* プレビューボタン */}
+                <div className="pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full mb-4"
+                    onClick={() => {
+                      try {
+                        const formData = watch()
+                        const previewData = {
+                          ...formData,
+                          hobbies: selectedHobbies,
+                          personality: selectedPersonality,
+                          planned_prefectures: selectedPlannedPrefectures,
+                          visit_schedule: formData.visit_schedule || '',
+                          travel_companion: formData.travel_companion || ''
+                        }
+                        
+                        sessionStorage.setItem('previewData', JSON.stringify(previewData))
+                        
+                        const previewWindow = window.open('/profile/preview', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
+                        if (!previewWindow) {
+                          alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
+                        }
+                      } catch (error) {
+                        console.error('❌ Error opening preview:', error)
+                        alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
+                      }
+                    }}
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    プレビューで確認
+                  </Button>
+                </div>
+
                 {/* 保存ボタン */}
-                <div className="pt-6">
+                <div className="pt-2">
                   <Button
                     type="submit"
                     disabled={isSubmitting}
