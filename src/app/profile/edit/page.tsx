@@ -275,8 +275,11 @@ function ProfileEditContent() {
     }
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
-  // 画像配列を直接指定する完成度計算関数
-  const calculateProfileCompletionWithImages = useCallback((profileData: any, imageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+  // 統一されたプロフィール完成度計算関数
+  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    // 使用する画像配列を決定（引数で指定されていない場合は現在の状態を使用）
+    const images = imageArray || profileImages
+    
     const requiredFields = [
       'nickname', 'age', 'birth_date',
       'hobbies', 'self_introduction'
@@ -387,18 +390,27 @@ function ProfileEditContent() {
     })
     
     // 写真の有無もチェック
-    const hasImages = imageArray.length > 0
+    const hasImages = images.length > 0
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
+    
+    // デバッグ情報（簡潔版）
+    console.log('📊 Profile Completion:', {
+      required: `${completedRequired.length}/${requiredFields.length}`,
+      optional: `${completedOptional.length}/${optionalFields.length}`,
+      images: hasImages ? '1/1' : '0/1',
+      total: `${completedFields}/${totalFields}`,
+      percentage: `${completion}%`
+    })
     
     setProfileCompletion(completion)
     setCompletedItems(completedFields)
     setTotalItems(totalFields)
     
     return completion
-  }, [isForeignMale])
+  }, [isForeignMale, profileImages])
 
   const calculateProfileCompletion = useCallback((profileData: any) => {
     const requiredFields = [
@@ -669,13 +681,13 @@ function ProfileEditContent() {
     }
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
-    calculateProfileCompletionWithImages({
+    calculateProfileCompletion({
       ...currentData,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
       avatar_url: newImages.length > 0 ? 'has_images' : null
     }, newImages)
-  }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletionWithImages])
+  }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletion])
 
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
@@ -1046,20 +1058,32 @@ function ProfileEditContent() {
     loadUserData()
   }, [user, reset, router, setValue, supabase, isForeignMale, isJapaneseFemale])
 
-  // フォーム入力時のリアルタイム完成度更新
+  // フォーム入力時のリアルタイム完成度更新（デバウンス付き）
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+    
     const subscription = watch((value) => {
       if (value) {
-        const currentValues = getValues() // 現在のフォーム値を直接取得
-        calculateProfileCompletionWithImages({
-          ...value,
-          birth_date: currentValues.birth_date, // フォームから直接取得
-          personality: selectedPersonality, // 状態から直接取得
-        }, profileImages)
+        // 前の計算をキャンセル
+        clearTimeout(timeoutId)
+        
+        // 500ms後に計算実行（デバウンス）
+        timeoutId = setTimeout(() => {
+          const currentValues = getValues()
+          calculateProfileCompletion({
+            ...value,
+            birth_date: currentValues.birth_date,
+            personality: selectedPersonality,
+          }, profileImages)
+        }, 500)
       }
     })
-    return () => subscription.unsubscribe()
-  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletionWithImages])
+    
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeoutId)
+    }
+  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion])
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍オプション（プロフィールタイプに応じて順序変更）
