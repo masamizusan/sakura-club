@@ -402,8 +402,12 @@ function ProfileEditContent() {
       return isFieldCompleted
     })
     
-    // 写真の有無もチェック
-    const hasImages = images.length > 0
+    // 写真の有無もチェック（マイページと同じロジック）
+    // 1. images配列をチェック（現在の編集状態）
+    // 2. profileData.avatar_urlをチェック（データベースの状態）
+    const hasImagesInArray = images.length > 0
+    const hasImagesInProfile = profileData.avatar_url && profileData.avatar_url !== null
+    const hasImages = hasImagesInArray || hasImagesInProfile
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
@@ -414,7 +418,10 @@ function ProfileEditContent() {
       profileImagesLength: profileImages.length,
       imageArrayParam: imageArray ? imageArray.length : 'not provided',
       finalImagesLength: images.length,
-      hasImages,
+      hasImagesInArray,
+      hasImagesInProfile,
+      profileDataAvatarUrl: profileData.avatar_url ? 'exists' : 'null',
+      finalHasImages: hasImages,
       imageCompletionCount
     })
     
@@ -532,7 +539,8 @@ function ProfileEditContent() {
       ...currentData,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
-      avatar_url: newImages.length > 0 ? 'has_images' : null
+      // 画像削除時はavatar_urlをnullに設定
+      avatar_url: newImages.length > 0 ? (currentData.avatar_url || 'has_images') : null
     }, newImages)
     
     // 写真変更完了フラグをリセット
