@@ -309,7 +309,57 @@ function ProfilePreviewContent() {
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={async () => {
                     console.log('🎯 Preview update button clicked!')
-                    
+
+                    // 🔍 バリデーション: 必須項目のチェック
+                    const validationErrors = []
+
+                    if (!nickname || nickname === 'ニックネーム未設定') {
+                      validationErrors.push('ニックネームを入力してください')
+                    }
+
+                    if (!age || age < 18) {
+                      validationErrors.push('年齢は18歳以上で入力してください')
+                    }
+
+                    // birth_dateのチェック（previewDataから取得）
+                    const birth_date = previewData.birth_date || previewData.birthday || previewData.dob
+                    if (!birth_date) {
+                      validationErrors.push('生年月日を入力してください')
+                    }
+
+                    if (!selfIntroduction || selfIntroduction.length < 100) {
+                      validationErrors.push('自己紹介は100文字以上で入力してください')
+                    }
+
+                    if (!hobbies || hobbies.length === 0 || (hobbies.length === 1 && hobbies[0] === 'その他')) {
+                      validationErrors.push('共有したい日本文化を1つ以上選択してください')
+                    }
+
+                    // 性別による必須項目チェック
+                    if (gender === 'male') {
+                      // 外国人男性の場合
+                      if (!nationality) {
+                        validationErrors.push('国籍を選択してください')
+                      }
+                      if (!planned_prefectures || planned_prefectures.length === 0) {
+                        validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                      }
+                    } else {
+                      // 日本人女性の場合
+                      if (!prefecture) {
+                        validationErrors.push('都道府県を入力してください')
+                      }
+                    }
+
+                    // バリデーションエラーがある場合は保存を中止
+                    if (validationErrors.length > 0) {
+                      alert('以下の項目を確認してください:\n\n' + validationErrors.join('\n'))
+                      console.log('❌ Validation errors:', validationErrors)
+                      return
+                    }
+
+                    console.log('✅ All validation checks passed')
+
                     // sessionStorageからデータを取得してプロフィール更新用データを準備
                     try {
                         console.log('🚨 DIRECT SAVE: Using sessionStorage data')

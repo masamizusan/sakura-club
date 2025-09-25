@@ -415,6 +415,15 @@ function ProfileEditContent() {
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
     const completion = Math.round((completedFields / totalFields) * 100)
     
+    // 🔍 画像デバッグ情報
+    console.log('🖼️ Image Debug Info:', {
+      profileImagesLength: profileImages.length,
+      imageArrayParam: imageArray ? imageArray.length : 'not provided',
+      finalImagesLength: images.length,
+      hasImages,
+      imageCompletionCount
+    })
+    
     // デバッグ情報（詳細版）
     console.log('📊 Profile Completion:', {
       required: `${completedRequired.length}/${requiredFields.length}`,
@@ -1152,7 +1161,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletion(actualFormValues)
+          calculateProfileCompletion(actualFormValues, profileImages)
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
@@ -2036,7 +2045,7 @@ function ProfileEditContent() {
           hobbies: existingHobbies,
           personality: existingPersonality,
         }
-        calculateProfileCompletion(profileDataWithSignup)
+        calculateProfileCompletion(profileDataWithSignup, profileImages)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -2047,7 +2056,7 @@ function ProfileEditContent() {
             form_nationality: currentValues.nationality,
             are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
           })
-          calculateProfileCompletion(currentValues)
+          calculateProfileCompletion(currentValues, profileImages)
         }, 2000)
       } catch (error) {
         console.error('Error loading user data:', error)
@@ -2866,22 +2875,11 @@ function ProfileEditContent() {
                   </Button>
                 </div>
 
-                {/* 保存ボタン */}
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-sakura-600 hover:bg-sakura-700 text-white py-3"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        保存中...
-                      </>
-                    ) : (
-                      'プロフィールを保存'
-                    )}
-                  </Button>
+                {/* 注意メッセージ */}
+                <div className="pt-2 text-center text-gray-600">
+                  <p className="text-sm">
+                    プレビューで内容を確認してから保存してください
+                  </p>
                 </div>
               </div>
             </form>
