@@ -18,14 +18,26 @@ function ProfilePreviewContent() {
   const [hasError, setHasError] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
 
-  // sessionStorageからデータを取得
+  // 🔒 セキュリティ強化: ユーザー固有のsessionStorageからデータを取得
   useEffect(() => {
     try {
-      const savedData = sessionStorage.getItem('previewData')
+      // まず新形式（ユーザー固有）のキーを試す
+      const urlParams = new URLSearchParams(window.location.search)
+      const userId = urlParams.get('userId') // URLパラメータからユーザーIDを取得
+      const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
+      
+      let savedData = sessionStorage.getItem(previewDataKey)
+      
+      // 新形式がない場合は旧形式も試す（後方互換性）
+      if (!savedData && previewDataKey !== 'previewData') {
+        savedData = sessionStorage.getItem('previewData')
+        console.log('🔄 旧形式のプレビューデータを使用（後方互換性）')
+      }
+      
       if (savedData) {
         const parsedData = JSON.parse(savedData)
         setPreviewData(parsedData)
-        console.log('📋 Preview data loaded from sessionStorage:', parsedData)
+        console.log('📋 Preview data loaded from sessionStorage:', previewDataKey, parsedData)
       } else {
         // フォールバック：URLパラメータから取得
         const fallbackData = {

@@ -460,30 +460,52 @@ function ProfileEditContent() {
     setIsImageChanging(true)
     setProfileImages(newImages)
     
-    // セッションストレージに最新の画像状態を保存
+    // 🔒 セキュリティ強化: ユーザー固有のセッションストレージ保存
     try {
-      sessionStorage.setItem('currentProfileImages', JSON.stringify(newImages))
-      sessionStorage.setItem('imageStateTimestamp', Date.now().toString())
-      console.log('💾 最新の画像状態をセッションストレージに保存')
+      const userImageKey = `currentProfileImages_${user?.id}`
+      const userTimestampKey = `imageStateTimestamp_${user?.id}`
+      sessionStorage.setItem(userImageKey, JSON.stringify(newImages))
+      sessionStorage.setItem(userTimestampKey, Date.now().toString())
+      console.log('💾 最新の画像状態をユーザー固有キーでセッションストレージに保存:', userImageKey)
     } catch (sessionError) {
       console.error('❌ セッションストレージ保存エラー:', sessionError)
     }
     
-    // 写真変更時に即座データベースに保存
+    // 写真変更時に即座データベースに保存（blob URLは除外）
     if (user) {
       try {
-        const avatarUrl = newImages.find(img => img.isMain)?.url || newImages[0]?.url || null
-        console.log('💾 写真変更をデータベースに即座保存:', avatarUrl)
+        // メイン画像を探す（blob URLでない場合のみ）
+        let avatarUrl = null
+        const mainImage = newImages.find(img => img.isMain)
+        const firstImage = newImages[0]
         
-        const { error } = await supabase
-          .from('profiles')
-          .update({ avatar_url: avatarUrl })
-          .eq('id', user.id)
+        if (mainImage && !mainImage.url.startsWith('blob:')) {
+          avatarUrl = mainImage.url
+        } else if (firstImage && !firstImage.url.startsWith('blob:')) {
+          avatarUrl = firstImage.url
+        }
         
-        if (error) {
-          console.error('❌ 写真保存エラー:', error)
+        console.log('💾 写真変更をデータベースに即座保存:', {
+          hasImages: newImages.length > 0,
+          hasBlobImages: newImages.some(img => img.url.startsWith('blob:')),
+          avatarUrl,
+          willSave: !!avatarUrl
+        })
+        
+        // blob URLでない場合のみデータベースに保存
+        if (avatarUrl) {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ avatar_url: avatarUrl })
+            .eq('id', user.id)
+          
+          if (error) {
+            console.error('❌ 写真保存エラー:', error)
+          } else {
+            console.log('✅ 写真がデータベースに保存されました')
+          }
         } else {
-          console.log('✅ 写真がデータベースに保存されました')
+          console.log('⚠️ blob URL画像のため、データベース保存をスキップ（フォーム送信時に処理）')
         }
       } catch (error) {
         console.error('❌ 写真保存中にエラー:', error)
@@ -863,7 +885,10 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile.interests)  
         console.log('  - Profile has name:', !!profile.name)
         
-        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData)
+        // 🔒 セキュリティ強化: 新規ユーザー判定の厳格化
+        const isNewUser = isFromMyPage ? false : 
+          (isFromSignup || // 新規登録フローの場合は必ず新規扱い
+           ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData))
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)
@@ -1547,7 +1572,10 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile.interests)  
         console.log('  - Profile has name:', !!profile.name)
         
-        const isNewUser = isFromMyPage ? false : ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData)
+        // 🔒 セキュリティ強化: 新規ユーザー判定の厳格化
+        const isNewUser = isFromMyPage ? false : 
+          (isFromSignup || // 新規登録フローの場合は必ず新規扱い
+           ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData))
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)
@@ -1928,15 +1956,18 @@ function ProfileEditContent() {
         console.log('  - profile.avatar_url exists:', !!profile.avatar_url)
         console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
         
-        // セッションストレージから最新の画像状態をチェック
-        const currentImageState = sessionStorage.getItem('currentProfileImages')
+        // 🔒 セキュリティ強化: ユーザー固有のセッションストレージチェック
+        const userImageKey = `currentProfileImages_${user.id}`
+        const userTimestampKey = `imageStateTimestamp_${user.id}`
+        const currentImageState = sessionStorage.getItem(userImageKey)
         let shouldUseStorageImages = false
         let storageImages: any[] = []
         
-        if (currentImageState) {
+        // 🚨 新規ユーザーの場合は絶対にセッションストレージを使用しない
+        if (currentImageState && !isNewUser) {
           try {
             storageImages = JSON.parse(currentImageState)
-            const storageTimestamp = sessionStorage.getItem('imageStateTimestamp')
+            const storageTimestamp = sessionStorage.getItem(userTimestampKey)
             const fiveMinutesAgo = Date.now() - 5 * 60 * 1000 // 5分前
             
             if (storageTimestamp && parseInt(storageTimestamp) > fiveMinutesAgo) {
@@ -1944,11 +1975,24 @@ function ProfileEditContent() {
               console.log('💾 セッションストレージから最新の画像状態を使用:', storageImages.length, '枚')
             } else {
               console.log('🕰️ セッションストレージの画像状態が古いため破棄')
-              sessionStorage.removeItem('currentProfileImages')
-              sessionStorage.removeItem('imageStateTimestamp')
+              sessionStorage.removeItem(userImageKey)
+              sessionStorage.removeItem(userTimestampKey)
             }
           } catch (e) {
             console.warn('❕ セッションストレージの画像データが破損')
+            sessionStorage.removeItem(userImageKey)
+            sessionStorage.removeItem(userTimestampKey)
+          }
+        } else if (isNewUser) {
+          console.log('🔒 新規ユーザー: セッションストレージの使用を禁止（セキュリティ保護）')
+          // 新規ユーザーの場合は他ユーザーのデータを完全削除
+          sessionStorage.removeItem('currentProfileImages')
+          sessionStorage.removeItem('imageStateTimestamp')
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i)
+            if (key?.startsWith('currentProfileImages_') || key?.startsWith('imageStateTimestamp_')) {
+              sessionStorage.removeItem(key)
+            }
           }
         }
         
@@ -2074,7 +2118,14 @@ function ProfileEditContent() {
           }
         } else {
           // 既存の画像URLをそのまま使用
-          uploadedImageUrls.push(image.url)
+          // image.url または image.originalUrl のいずれかを使用
+          const existingUrl = image.url || image.originalUrl
+          if (existingUrl && !existingUrl.startsWith('blob:')) {
+            uploadedImageUrls.push(existingUrl)
+            console.log('✅ 既存画像URL使用:', existingUrl)
+          } else {
+            console.log('⚠️ 無効な既存画像URL:', existingUrl)
+          }
         }
       }
 
@@ -2086,6 +2137,13 @@ function ProfileEditContent() {
 
       console.log('🎯 Selected avatar URL:', avatarUrl)
       console.log('📸 All uploaded URLs:', uploadedImageUrls)
+      console.log('🔍 Profile images state:', profileImages)
+      console.log('📊 Image processing summary:', {
+        totalImages: profileImages.length,
+        uploadedUrls: uploadedImageUrls.length,
+        mainImageIndex,
+        finalAvatarUrl: avatarUrl
+      })
 
       // 🔧 修正: interests配列に hobbies, personality, custom_culture を統合
       const consolidatedInterests: string[] = []
@@ -2775,18 +2833,25 @@ function ProfileEditContent() {
                     onClick={() => {
                       try {
                         const formData = watch()
+                        // プレビュー用画像URL（blob URLまたは既存URL）
+                        const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
+                        
                         const previewData = {
                           ...formData,
                           hobbies: selectedHobbies,
                           personality: selectedPersonality,
                           planned_prefectures: selectedPlannedPrefectures,
                           visit_schedule: formData.visit_schedule || '',
-                          travel_companion: formData.travel_companion || ''
+                          travel_companion: formData.travel_companion || '',
+                          image: previewImageUrl,
+                          profile_image: previewImageUrl
                         }
                         
-                        sessionStorage.setItem('previewData', JSON.stringify(previewData))
+                        // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
+                        const previewDataKey = `previewData_${user?.id || 'anonymous'}`
+                        sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
                         
-                        const previewWindow = window.open('/profile/preview', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
+                        const previewWindow = window.open(`/profile/preview?userId=${user?.id || ''}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
                         if (!previewWindow) {
                           alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
                         }

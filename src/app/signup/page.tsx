@@ -90,6 +90,25 @@ export default function SignupPage() {
     setIsLoading(true)
     setSignupError('')
     
+    // 🔒 セキュリティ強化: 新規登録時に古いセッションストレージを完全クリア
+    console.log('🧹 新規登録開始: セッションストレージクリーンアップ実行')
+    try {
+      // 画像関連のセッションストレージを完全削除（両タイプ共通）
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i)
+        if (key?.startsWith('currentProfileImages') || 
+            key?.startsWith('imageStateTimestamp') || 
+            key?.startsWith('previewData') ||
+            key === 'signupData') {
+          sessionStorage.removeItem(key)
+          console.log('🗑️ 削除:', key)
+        }
+      }
+      console.log('✅ セッションストレージクリーンアップ完了')
+    } catch (error) {
+      console.error('⚠️ セッションストレージクリーンアップエラー:', error)
+    }
+    
     try {
       // 年齢を計算
       const age = calculateAge(data.birth_date)
