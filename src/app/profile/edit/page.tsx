@@ -501,11 +501,23 @@ function ProfileEditContent() {
             .from('profiles')
             .update({ avatar_url: avatarUrl })
             .eq('id', user.id)
-          
+
           if (error) {
             console.error('❌ 写真保存エラー:', error)
           } else {
             console.log('✅ 写真がデータベースに保存されました')
+          }
+        } else if (newImages.length === 0) {
+          // 画像が完全に削除された場合は、データベースのavatar_urlをnullに更新
+          const { error } = await supabase
+            .from('profiles')
+            .update({ avatar_url: null })
+            .eq('id', user.id)
+
+          if (error) {
+            console.error('❌ 写真削除エラー:', error)
+          } else {
+            console.log('✅ 写真がデータベースから削除されました')
           }
         } else {
           console.log('⚠️ blob URL画像のため、データベース保存をスキップ（フォーム送信時に処理）')
