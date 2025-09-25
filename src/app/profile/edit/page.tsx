@@ -540,7 +540,7 @@ function ProfileEditContent() {
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
       // 画像削除時はavatar_urlをnullに設定
-      avatar_url: newImages.length > 0 ? (currentData.avatar_url || 'has_images') : null
+      avatar_url: newImages.length > 0 ? 'has_images' : null
     }, newImages)
     
     // 写真変更完了フラグをリセット
