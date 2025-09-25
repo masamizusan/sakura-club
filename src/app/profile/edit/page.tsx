@@ -282,30 +282,24 @@ function ProfileEditContent() {
     
     const requiredFields = [
       'nickname', 'age', 'birth_date',
-      'hobbies', 'self_introduction'
+      'prefecture', 'hobbies', 'self_introduction'
     ]
-    
-    // 外国人男性と日本人女性で必須フィールドを分ける
+    // 注意: genderは編集不可のため完成度計算から除外
+
+    // 外国人男性の場合は国籍と行く予定の都道府県も必須
     if (isForeignMale) {
       requiredFields.push('nationality')
-      // 行く予定の都道府県（1つ以上選択されていれば完成）
       requiredFields.push('planned_prefectures')
-    } else {
-      // 日本人女性の場合は都道府県が必須
-      requiredFields.push('prefecture')
     }
     
     const optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status', 
-      'personality'
+      'occupation', 'height', 'body_type', 'marital_status',
+      'personality', 'city'
     ]
-    
-    // 外国人男性向けのオプションフィールド
+
+    // 外国人男性向けのオプションフィールドを追加
     if (isForeignMale) {
       optionalFields.push('visit_schedule', 'travel_companion')
-    } else {
-      // 日本人女性向けのオプションフィールド
-      optionalFields.push('city')
     }
     
     const completedRequired = requiredFields.filter(field => {
