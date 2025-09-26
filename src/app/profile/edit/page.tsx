@@ -281,8 +281,8 @@ function ProfileEditContent() {
 
   // 統一されたプロフィール完成度計算関数
   const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
-    // 使用する画像配列を決定（引数で指定されていない場合は現在の状態を使用）
-    const images = imageArray || profileImages
+    // 使用する画像配列を決定（引数で指定されていない場合、または空配列の場合は現在の状態を使用）
+    const images = (imageArray && imageArray.length > 0) ? imageArray : profileImages
     
     const requiredFields = [
       'nickname', 'age', 'birth_date',
@@ -413,12 +413,23 @@ function ProfileEditContent() {
     const hasImagesInArray = images.length > 0
     const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
 
-    // より安全な画像判定：profileDataが不完全な場合も考慮
-    // 4. userオブジェクトからも確認（最終フォールバック）
-    const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
-    const hasImages = hasImagesInArray || hasImagesInProfile ||
-      (profileImages && profileImages.length > 0) || // セッション状態からもチェック
-      hasImagesInUser // userオブジェクトからのフォールバック
+    // 編集画面では現在の編集状態を最優先にする
+    // フォールバックは初期ロード時（編集が行われていない場合）のみ適用
+    let hasImages: boolean
+
+    // セッションで画像の編集履歴があるかチェック
+    const hasImageEditHistory = sessionStorage.getItem('imageEditHistory') === 'true'
+
+    if (hasImagesInArray || hasImageEditHistory) {
+      // 画像が追加されているか、または編集履歴がある場合は編集状態を最優先
+      hasImages = hasImagesInArray
+    } else {
+      // 初期状態でフォールバック適用
+      const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
+      hasImages = hasImagesInProfile ||
+        (profileImages && profileImages.length > 0) ||
+        hasImagesInUser
+    }
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
@@ -435,10 +446,14 @@ function ProfileEditContent() {
       profileDataAvatarUrl: profileData?.avatar_url ? 'exists' : 'null/undefined',
       userAvatarUrl: user?.avatarUrl ? 'exists' : 'null/undefined',
       sessionProfileImages: profileImages.length,
-      hasImagesInUser,
+      hasImageEditHistory,
+      editHistoryExists: hasImageEditHistory,
+      usingEditState: hasImagesInArray || hasImageEditHistory,
       finalHasImages: hasImages,
       imageCompletionCount,
-      calculation: `${hasImagesInArray} || ${hasImagesInProfile} || ${profileImages.length > 0} || ${hasImagesInUser} = ${hasImages}`
+      logic: hasImagesInArray || hasImageEditHistory
+        ? `編集状態優先: ${hasImagesInArray} = ${hasImages}`
+        : `フォールバック適用: ${hasImagesInProfile} || ${profileImages.length > 0} || ${user?.avatarUrl ? 'userAvatar' : 'none'} = ${hasImages}`
     })
     
     // デバッグ情報（詳細版）
@@ -492,7 +507,12 @@ function ProfileEditContent() {
       const userTimestampKey = `imageStateTimestamp_${user?.id}`
       sessionStorage.setItem(userImageKey, JSON.stringify(newImages))
       sessionStorage.setItem(userTimestampKey, Date.now().toString())
+
+      // 画像編集履歴を記録（完成度計算で使用）
+      sessionStorage.setItem('imageEditHistory', 'true')
+
       console.log('💾 最新の画像状態をユーザー固有キーでセッションストレージに保存:', userImageKey)
+      console.log('✏️ 画像編集履歴を記録')
     } catch (sessionError) {
       console.error('❌ セッションストレージ保存エラー:', sessionError)
     }
