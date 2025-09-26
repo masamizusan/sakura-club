@@ -2102,7 +2102,8 @@ function ProfileEditContent() {
             }])
           } else {
             console.log('❌ 画像なしで初期化')
-          console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
+            console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
+          }
         }
         
         // プロフィール完成度を計算（新規ユーザーは新規データのみ）
