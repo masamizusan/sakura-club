@@ -420,11 +420,11 @@ function ProfileEditContent() {
     // セッションで画像の編集履歴があるかチェック
     const hasImageEditHistory = sessionStorage.getItem('imageEditHistory') === 'true'
 
-    if (hasImagesInArray || hasImageEditHistory) {
-      // 画像が追加されているか、または編集履歴がある場合は編集状態を最優先
+    if (hasImageEditHistory) {
+      // 編集履歴がある場合のみ編集状態を最優先（実際の編集操作後）
       hasImages = hasImagesInArray
     } else {
-      // 初期状態でフォールバック適用
+      // 初期状態またはページリロード時はフォールバック適用
       const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
       hasImages = hasImagesInProfile ||
         (profileImages && profileImages.length > 0) ||
@@ -451,9 +451,9 @@ function ProfileEditContent() {
       usingEditState: hasImagesInArray || hasImageEditHistory,
       finalHasImages: hasImages,
       imageCompletionCount,
-      logic: hasImagesInArray || hasImageEditHistory
-        ? `編集状態優先: ${hasImagesInArray} = ${hasImages}`
-        : `フォールバック適用: ${hasImagesInProfile} || ${profileImages.length > 0} || ${user?.avatarUrl ? 'userAvatar' : 'none'} = ${hasImages}`
+      logic: hasImageEditHistory
+        ? `編集状態優先: hasImagesInArray=${hasImagesInArray} = ${hasImages}`
+        : `フォールバック適用: hasImagesInProfile=${hasImagesInProfile} || profileImages=${profileImages.length > 0} || userAvatar=${!!user?.avatarUrl} = ${hasImages}`
     })
     
     // デバッグ情報（詳細版）
@@ -2086,17 +2086,22 @@ function ProfileEditContent() {
         if (shouldUseStorageImages) {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
           setProfileImages(storageImages)
-        } else if (!isNewUser && profile.avatar_url) {
-          console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
-          setProfileImages([{
-            id: '1',
-            url: profile.avatar_url,
-            originalUrl: profile.avatar_url,
-            isMain: true,
-            isEdited: false
-          }])
         } else {
-          console.log('❌ 画像なしで初期化')
+          // 初期状態では編集履歴をクリア（フォールバック機能を有効にする）
+          sessionStorage.removeItem('imageEditHistory')
+          console.log('🔄 画像編集履歴をクリア（初期状態）')
+
+          if (!isNewUser && profile.avatar_url) {
+            console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
+            setProfileImages([{
+              id: '1',
+              url: profile.avatar_url,
+              originalUrl: profile.avatar_url,
+              isMain: true,
+              isEdited: false
+            }])
+          } else {
+            console.log('❌ 画像なしで初期化')
           console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
         }
         
