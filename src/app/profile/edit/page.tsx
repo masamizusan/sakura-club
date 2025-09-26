@@ -409,9 +409,13 @@ function ProfileEditContent() {
     // 写真の有無もチェック（マイページと同じロジック）
     // 1. images配列をチェック（現在の編集状態）
     // 2. profileData.avatar_urlをチェック（データベースの状態）
+    // 3. profileDataが渡されていない場合は、user情報からフォールバック
     const hasImagesInArray = images.length > 0
-    const hasImagesInProfile = profileData.avatar_url && profileData.avatar_url !== null
-    const hasImages = hasImagesInArray || hasImagesInProfile
+    const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
+
+    // より安全な画像判定：profileDataが不完全な場合も考慮
+    const hasImages = hasImagesInArray || hasImagesInProfile ||
+      (profileImages && profileImages.length > 0) // セッション状態からもチェック
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
@@ -424,9 +428,12 @@ function ProfileEditContent() {
       finalImagesLength: images.length,
       hasImagesInArray,
       hasImagesInProfile,
-      profileDataAvatarUrl: profileData.avatar_url ? 'exists' : 'null',
+      profileDataExists: !!profileData,
+      profileDataAvatarUrl: profileData?.avatar_url ? 'exists' : 'null/undefined',
+      sessionProfileImages: profileImages.length,
       finalHasImages: hasImages,
-      imageCompletionCount
+      imageCompletionCount,
+      calculation: `${hasImagesInArray} || ${hasImagesInProfile} || ${profileImages.length > 0} = ${hasImages}`
     })
     
     // デバッグ情報（詳細版）
