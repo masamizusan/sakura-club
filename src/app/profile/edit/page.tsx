@@ -224,8 +224,11 @@ function ProfileEditContent() {
   })
 
   // Profile type flags
-  const isForeignMale = profileType === 'foreign-male'
-  const isJapaneseFemale = profileType === 'japanese-female'
+  // URLパラメータからの判定を優先し、なければユーザーのプロフィールから判定
+  const [userBasedType, setUserBasedType] = useState<string | null>(null)
+  const effectiveProfileType = profileType || userBasedType
+  const isForeignMale = effectiveProfileType === 'foreign-male' || (!profileType && userBasedType === 'foreign-male')
+  const isJapaneseFemale = effectiveProfileType === 'japanese-female' || (!profileType && userBasedType === 'japanese-female')
 
   // 生年月日から年齢を計算
   const calculateAge = useCallback((birthDate: string): number => {
@@ -770,7 +773,21 @@ function ProfileEditContent() {
           height_cm: profile.height_cm
         })
         console.log('========== PROFILE EDIT DEBUG END ==========')
-        
+
+        // 👤 URLにtypeパラメータがない場合、プロフィールから判定
+        if (!profileType) {
+          const detectedType = profile.gender === 'male' && profile.nationality && profile.nationality !== '日本'
+            ? 'foreign-male'
+            : 'japanese-female'
+          setUserBasedType(detectedType)
+          console.log('🔍 Auto-detected profile type:', {
+            gender: profile.gender,
+            nationality: profile.nationality,
+            detectedType,
+            reasoning: profile.gender === 'male' ? 'Male gender detected' : 'Female or no gender detected'
+          })
+        }
+
         // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
         let parsedOptionalData: {
           city?: string;
@@ -1457,7 +1474,21 @@ function ProfileEditContent() {
           height_cm: profile.height_cm
         })
         console.log('========== PROFILE EDIT DEBUG END ==========')
-        
+
+        // 👤 URLにtypeパラメータがない場合、プロフィールから判定
+        if (!profileType) {
+          const detectedType = profile.gender === 'male' && profile.nationality && profile.nationality !== '日本'
+            ? 'foreign-male'
+            : 'japanese-female'
+          setUserBasedType(detectedType)
+          console.log('🔍 Auto-detected profile type:', {
+            gender: profile.gender,
+            nationality: profile.nationality,
+            detectedType,
+            reasoning: profile.gender === 'male' ? 'Male gender detected' : 'Female or no gender detected'
+          })
+        }
+
         // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
         let parsedOptionalData: {
           city?: string;
