@@ -415,7 +415,7 @@ function ProfileEditContent() {
 
     // より安全な画像判定：profileDataが不完全な場合も考慮
     // 4. userオブジェクトからも確認（最終フォールバック）
-    const hasImagesInUser = user?.avatar_url && user.avatar_url !== null && user.avatar_url !== ''
+    const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
     const hasImages = hasImagesInArray || hasImagesInProfile ||
       (profileImages && profileImages.length > 0) || // セッション状態からもチェック
       hasImagesInUser // userオブジェクトからのフォールバック
@@ -433,7 +433,7 @@ function ProfileEditContent() {
       hasImagesInProfile,
       profileDataExists: !!profileData,
       profileDataAvatarUrl: profileData?.avatar_url ? 'exists' : 'null/undefined',
-      userAvatarUrl: user?.avatar_url ? 'exists' : 'null/undefined',
+      userAvatarUrl: user?.avatarUrl ? 'exists' : 'null/undefined',
       sessionProfileImages: profileImages.length,
       hasImagesInUser,
       finalHasImages: hasImages,
