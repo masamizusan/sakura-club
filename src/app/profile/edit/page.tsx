@@ -148,6 +148,7 @@ const OCCUPATION_OPTIONS = [
   { value: '小売業', label: '小売業' },
   { value: '製造業', label: '製造業' },
   { value: '学生', label: '学生' },
+  { value: '主婦', label: '主婦' },
   { value: 'その他', label: 'その他' }
 ]
 

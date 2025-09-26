@@ -172,7 +172,8 @@ function ProfilePreviewContent() {
 
               {/* 基本プロフィール */}
               <div className="space-y-3 text-sm">
-                {nationality && (
+                {/* 外国人男性の場合のみ国籍を表示 */}
+                {gender === 'male' && nationality && nationality !== '日本' && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">国籍:</span>
                     <span className="text-gray-600">{nationality}</span>
