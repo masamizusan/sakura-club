@@ -414,8 +414,11 @@ function ProfileEditContent() {
     const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
 
     // より安全な画像判定：profileDataが不完全な場合も考慮
+    // 4. userオブジェクトからも確認（最終フォールバック）
+    const hasImagesInUser = user?.avatar_url && user.avatar_url !== null && user.avatar_url !== ''
     const hasImages = hasImagesInArray || hasImagesInProfile ||
-      (profileImages && profileImages.length > 0) // セッション状態からもチェック
+      (profileImages && profileImages.length > 0) || // セッション状態からもチェック
+      hasImagesInUser // userオブジェクトからのフォールバック
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
     const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
@@ -430,10 +433,12 @@ function ProfileEditContent() {
       hasImagesInProfile,
       profileDataExists: !!profileData,
       profileDataAvatarUrl: profileData?.avatar_url ? 'exists' : 'null/undefined',
+      userAvatarUrl: user?.avatar_url ? 'exists' : 'null/undefined',
       sessionProfileImages: profileImages.length,
+      hasImagesInUser,
       finalHasImages: hasImages,
       imageCompletionCount,
-      calculation: `${hasImagesInArray} || ${hasImagesInProfile} || ${profileImages.length > 0} = ${hasImages}`
+      calculation: `${hasImagesInArray} || ${hasImagesInProfile} || ${profileImages.length > 0} || ${hasImagesInUser} = ${hasImages}`
     })
     
     // デバッグ情報（詳細版）
