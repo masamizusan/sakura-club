@@ -128,6 +128,7 @@ const MARITAL_STATUS_OPTIONS = [
 // 職業オプション
 const OCCUPATION_OPTIONS = [
   { value: 'none', label: '記入しない' },
+  { value: '主婦', label: '主婦' },
   { value: '会社員', label: '会社員' },
   { value: '公務員', label: '公務員' },
   { value: '経営者・役員', label: '経営者・役員' },
@@ -148,7 +149,6 @@ const OCCUPATION_OPTIONS = [
   { value: '小売業', label: '小売業' },
   { value: '製造業', label: '製造業' },
   { value: '学生', label: '学生' },
-  { value: '主婦', label: '主婦' },
   { value: 'その他', label: 'その他' }
 ]
 
