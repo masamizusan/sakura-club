@@ -330,9 +330,18 @@ function ProfileEditContent() {
   useEffect(() => {
     if (isForeignMale && typeof window !== 'undefined') {
       const currentNationality = watch('nationality')
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlNationality = urlParams.get('nationality')
+
+      console.log('🔍 国籍フォールバック詳細デバッグ:', {
+        isForeignMale,
+        currentNationality,
+        urlNationality,
+        shouldSetFallback: !currentNationality || currentNationality === '' || currentNationality === '国籍を選択',
+        windowLocation: window.location.href
+      })
+
       if (!currentNationality || currentNationality === '' || currentNationality === '国籍を選択') {
-        const urlParams = new URLSearchParams(window.location.search)
-        const urlNationality = urlParams.get('nationality')
         if (urlNationality) {
           console.log('🔧 Fallback: Setting nationality from URL:', urlNationality)
           setValue('nationality', urlNationality)
@@ -341,7 +350,11 @@ function ProfileEditContent() {
             const formData = getValues()
             calculateProfileCompletion(formData, profileImages, 'nationality-fallback')
           }, 100)
+        } else {
+          console.log('⚠️ No nationality in URL parameters')
         }
+      } else {
+        console.log('✅ Nationality already set:', currentNationality)
       }
     }
   }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages])
