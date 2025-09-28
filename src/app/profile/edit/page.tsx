@@ -247,15 +247,17 @@ function ProfileEditContent() {
 
   // プロフィール画像の変更を監視して完成度を再計算
   useEffect(() => {
-    if (profileImages.length > 0) {
-      console.log('🖼️ 画像状態変更検出 - 完成度再計算実行')
-      const currentData = watch()
-      calculateProfileCompletion({
-        ...currentData,
-        hobbies: selectedHobbies,
-        personality: selectedPersonality,
-      })
-    }
+    console.log('🖼️ 画像状態変更検出 - 完成度再計算実行', {
+      'profileImages.length': profileImages.length,
+      'selectedHobbies.length': selectedHobbies.length,
+      'selectedPersonality.length': selectedPersonality.length
+    })
+    const currentData = watch()
+    calculateProfileCompletion({
+      ...currentData,
+      hobbies: selectedHobbies,
+      personality: selectedPersonality,
+    }, profileImages)  // 🔧 現在の画像配列を明示的に渡す
   }, [profileImages.length, selectedHobbies, selectedPersonality])
 
   // 生年月日変更時の年齢自動更新
