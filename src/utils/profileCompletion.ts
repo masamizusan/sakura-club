@@ -82,6 +82,18 @@ export function calculateProfileCompletion(
     if (Array.isArray(value)) {
       return value.length > 0
     }
+
+    // 国籍の特別チェック：空文字、null、undefined、選択プレースホルダーを除外
+    if (field === 'nationality') {
+      const isValid = value && value !== '' && value !== '国籍を選択' && value !== 'none' && value !== null && value !== undefined
+      console.log(`🔍 国籍フィールド検証 [${field}]:`, {
+        value,
+        isValid,
+        type: typeof value
+      })
+      return isValid
+    }
+
     return value !== null && value !== undefined && value !== ''
   })
 

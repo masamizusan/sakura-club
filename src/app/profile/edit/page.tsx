@@ -2492,8 +2492,22 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      value={watch('nationality') || (isForeignMale ? (new URLSearchParams(window.location.search).get('nationality') || '') : '')}
+                      value={(() => {
+                        const currentNationality = watch('nationality')
+                        const urlNationality = isForeignMale ? new URLSearchParams(window.location.search).get('nationality') : null
+                        const fallbackValue = currentNationality || urlNationality || ''
+
+                        console.log('🔍 国籍Select値デバッグ:', {
+                          currentNationality,
+                          urlNationality,
+                          fallbackValue,
+                          willDisplay: fallbackValue !== '' ? fallbackValue : '国籍を選択'
+                        })
+
+                        return fallbackValue
+                      })()}
                       onValueChange={(value) => {
+                        console.log('🔧 国籍選択変更:', value)
                         setValue('nationality', value)
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
