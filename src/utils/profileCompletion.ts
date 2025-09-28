@@ -106,6 +106,24 @@ export function calculateProfileCompletion(
   const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
   const completion = Math.round((completedFields / totalFields) * 100)
 
+  // 外国人男性の詳細デバッグ
+  if (isForeignMale) {
+    console.log('🌍 外国人男性プロフィール完成度詳細:', {
+      requiredFields,
+      optionalFields,
+      completedRequired: completedRequired.map(field => field),
+      completedOptional: completedOptional.map(field => field),
+      requiredTotal: requiredFields.length,
+      optionalTotal: optionalFields.length,
+      totalFields,
+      completedFields,
+      completion: `${completion}%`,
+      hasImages,
+      profileData_nationality: profileData?.nationality,
+      profileData_planned_prefectures: profileData?.planned_prefectures
+    })
+  }
+
   return {
     completion,
     completedFields,

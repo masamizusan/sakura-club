@@ -1955,6 +1955,7 @@ function ProfileEditContent() {
           residence: defaults.prefecture,
           interests: [], // 新規は空
           bio: '', // 新規は空
+          planned_prefectures: isForeignMale ? [] : undefined, // 外国人男性の必須フィールド
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl,
           avatar_url: user?.avatarUrl, // userオブジェクトはavatarUrlのみ
