@@ -268,9 +268,20 @@ function MyPageContent() {
           console.log('  - body_type:', normalizedProfileData.body_type)
           console.log('  - marital_status:', normalizedProfileData.marital_status)
           console.log('  - custom_culture:', normalizedProfileData.custom_culture)
-          console.log('  - visit_schedule:', normalizedProfileData.visit_schedule)
-          console.log('  - travel_companion:', normalizedProfileData.travel_companion)
-          console.log('  - planned_prefectures:', normalizedProfileData.planned_prefectures)
+          console.log('  - visit_schedule:', normalizedProfileData.visit_schedule, typeof normalizedProfileData.visit_schedule)
+          console.log('  - travel_companion:', normalizedProfileData.travel_companion, typeof normalizedProfileData.travel_companion)
+          console.log('  - planned_prefectures:', normalizedProfileData.planned_prefectures, typeof normalizedProfileData.planned_prefectures, Array.isArray(normalizedProfileData.planned_prefectures) ? `length: ${normalizedProfileData.planned_prefectures.length}` : 'not array')
+
+          // 🔍 外国人男性専用フィールドの詳細デバッグ
+          console.log('🌍 FOREIGN MALE FIELDS DETAILED DEBUG:')
+          console.log('Raw data from database:')
+          console.log('  - raw visit_schedule:', profileData.visit_schedule, typeof profileData.visit_schedule)
+          console.log('  - raw travel_companion:', profileData.travel_companion, typeof profileData.travel_companion)
+          console.log('  - raw planned_prefectures:', profileData.planned_prefectures, typeof profileData.planned_prefectures, Array.isArray(profileData.planned_prefectures) ? `length: ${profileData.planned_prefectures.length}` : 'not array')
+          console.log('Normalized data:')
+          console.log('  - normalized visit_schedule:', normalizedProfileData.visit_schedule)
+          console.log('  - normalized travel_companion:', normalizedProfileData.travel_companion)
+          console.log('  - normalized planned_prefectures:', normalizedProfileData.planned_prefectures)
           
           console.log('🚨 MyPage - Data for Profile Edit Comparison:')
           console.log('  - originalCityField:', profileData.city)
