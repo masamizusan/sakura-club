@@ -2186,9 +2186,22 @@ function ProfileEditContent() {
         updated_at: new Date().toISOString()
       }
 
-      // 外国人男性の場合は国籍も更新
-      if (isForeignMale && data.nationality) {
-        updateData.nationality = data.nationality
+      // 外国人男性の場合は国籍と専用フィールドも更新
+      if (isForeignMale) {
+        if (data.nationality) {
+          updateData.nationality = data.nationality
+        }
+        // 外国人男性専用フィールドを追加
+        updateData.visit_schedule = data.visit_schedule || null
+        updateData.travel_companion = data.travel_companion || null
+        updateData.planned_prefectures = data.planned_prefectures || null
+
+        console.log('🌍 外国人男性保存フィールド追加:', {
+          nationality: updateData.nationality,
+          visit_schedule: updateData.visit_schedule,
+          travel_companion: updateData.travel_companion,
+          planned_prefectures: updateData.planned_prefectures
+        })
       }
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
