@@ -1813,7 +1813,7 @@ function ProfileEditContent() {
           }, 100)
         }
         
-        const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))
+        const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
         console.log('Setting prefecture:', prefectureValue)
         setValue('prefecture', prefectureValue)
         
@@ -2006,6 +2006,7 @@ function ProfileEditContent() {
           }
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS')
         }, 2000)
+
       } catch (error) {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
