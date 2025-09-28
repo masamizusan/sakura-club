@@ -1,0 +1,15 @@
+# 重要: プロフィール完成度システム保護ファイル
+# 以下のファイルの変更時は十分注意すること
+
+# 完璧な状態のコミット ID: dc1bdca5
+# 日付: 2025-09-28
+
+# 保護対象ファイル:
+src/utils/profileCompletion.ts
+src/app/profile/edit/page.tsx
+src/app/mypage/page.tsx
+
+# 特に重要な箇所:
+# - profileDataWithSignup の画像情報追加部分
+# - DELAYED_2000MS での currentValuesWithUserData
+# - 共通関数の 4つのフォールバック画像検出
