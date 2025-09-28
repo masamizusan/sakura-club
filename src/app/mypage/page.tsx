@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'

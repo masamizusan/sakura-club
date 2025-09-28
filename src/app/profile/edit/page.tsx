@@ -15,6 +15,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera } from 'lucide-react'
 import { z } from 'zod'
+import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
 
 const baseProfileEditSchema = z.object({
   nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
@@ -281,8 +282,27 @@ function ProfileEditContent() {
     }
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
-  // 統一されたプロフィール完成度計算関数
+  // 統一されたプロフィール完成度計算関数（共通utilsを使用）
   const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    // 共通関数を使用して計算
+    const result = calculateSharedProfileCompletion(profileData, imageArray, isForeignMale)
+
+    // 既存のUI更新ロジックを維持
+    setProfileCompletion(result.completion)
+    setCompletedItems(result.completedFields)
+    setTotalItems(result.totalFields)
+
+    console.log('📊 Profile Completion:', {
+      required: `${result.requiredCompleted}/${result.requiredTotal}`,
+      optional: `${result.optionalCompleted}/${result.optionalTotal}`,
+      images: `${result.hasImages ? 1 : 0}/1`,
+      total: `${result.completedFields}/${result.totalFields}`,
+      percentage: `${result.completion}%`
+    })
+
+    return
+
+    // 以下は古いロジック（削除予定）
     // 使用する画像配列を決定（引数で指定されていない場合、または空配列の場合は現在の状態を使用）
     const images = (imageArray && imageArray.length > 0) ? imageArray : profileImages
     
