@@ -2107,8 +2107,10 @@ function ProfileEditContent() {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
           setProfileImages(storageImages)
         } else {
-          if (!isNewUser && profile.avatar_url) {
-            console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
+          // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
+          if (profile.avatar_url) {
+            console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
+            console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出')
             setProfileImages([{
               id: '1',
               url: profile.avatar_url,
@@ -2118,7 +2120,7 @@ function ProfileEditContent() {
             }])
           } else {
             console.log('❌ 画像なしで初期化')
-            console.log('  - Reason: isNewUser=', isNewUser, ', avatar_url=', !!profile.avatar_url)
+            console.log('  - Reason: avatar_url=', !!profile.avatar_url)
           }
         }
         
