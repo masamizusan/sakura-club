@@ -20,27 +20,34 @@ export function calculateProfileCompletion(
   isForeignMale: boolean = false
 ): ProfileCompletionResult {
 
-  // 必須フィールド（マイページ・プロフィール編集で統一）
-  const requiredFields = [
-    'nickname', 'age', 'birth_date',
-    'prefecture', 'hobbies', 'self_introduction'
-  ]
+  // 必須・オプションフィールドの定義
+  let requiredFields = []
+  let optionalFields = []
 
-  // 外国人男性の場合は国籍と行く予定の都道府県も必須
   if (isForeignMale) {
-    requiredFields.push('nationality')
-    requiredFields.push('planned_prefectures')
-  }
+    // 外国人男性の必須フィールド（6個）
+    requiredFields = [
+      'nickname', 'age', 'birth_date', 'nationality',
+      'hobbies', 'self_introduction'
+    ]
 
-  // オプションフィールド
-  const optionalFields = [
-    'occupation', 'height', 'body_type', 'marital_status',
-    'personality', 'city'
-  ]
+    // 外国人男性のオプションフィールド（8個）
+    optionalFields = [
+      'occupation', 'height', 'body_type', 'marital_status',
+      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
+    ]
+  } else {
+    // 日本人女性の必須フィールド（6個）
+    requiredFields = [
+      'nickname', 'age', 'birth_date', 'prefecture',
+      'hobbies', 'self_introduction'
+    ]
 
-  // 外国人男性向けのオプションフィールドを追加
-  if (isForeignMale) {
-    optionalFields.push('visit_schedule', 'travel_companion')
+    // 日本人女性のオプションフィールド（6個）
+    optionalFields = [
+      'occupation', 'height', 'body_type', 'marital_status',
+      'personality', 'city'
+    ]
   }
 
   // 必須フィールドの完成チェック
