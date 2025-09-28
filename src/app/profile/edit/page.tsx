@@ -1801,17 +1801,6 @@ function ProfileEditContent() {
         setValue('birth_date', finalBirthDate)
         
         // 国籍はresetDataで設定済み
-          
-          // 設定後の確認
-          setTimeout(() => {
-            const actualValue = getValues().nationality
-            console.log('🔍 Nationality setValue confirmation:', {
-              attempted_to_set: nationalityValue,
-              actually_set: actualValue,
-              setValue_success: nationalityValue === actualValue
-            })
-          }, 100);
-        }
         
         const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
         console.log('Setting prefecture:', prefectureValue)
