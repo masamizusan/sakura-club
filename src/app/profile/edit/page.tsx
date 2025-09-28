@@ -425,17 +425,22 @@ function ProfileEditContent() {
       hasImages = hasImagesInArray
     } else {
       // 初期状態またはページリロード時はフォールバック適用
-      // profileDataが空/nullの場合は必ずuserオブジェクトからチェック
+      // 編集履歴なし = 初期状態なので、user.avatarUrlを最優先で確認
       const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
-      hasImages = hasImagesInProfile ||
-        (profileImages && profileImages.length > 0) ||
-        hasImagesInUser
 
-      // profileDataが不正またはavatar_urlが無効な場合の強制フォールバック
-      if (!profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile) {
-        console.log('⚠️ profileDataまたはavatar_urlが無効のため、強制的にuserフォールバック適用')
-        hasImages = hasImagesInUser || (profileImages && profileImages.length > 0)
-      }
+      console.log('🔍 初期状態フォールバック検証:', {
+        hasImagesInProfile,
+        profileImagesCount: profileImages.length,
+        hasImagesInUser,
+        userAvatarUrl: user?.avatarUrl ? 'exists' : 'none'
+      })
+
+      // 初期状態では確実にuserからの検出を最優先
+      hasImages = hasImagesInUser ||
+        hasImagesInProfile ||
+        (profileImages && profileImages.length > 0)
+
+      console.log('✅ 初期状態フォールバック結果:', hasImages)
     }
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
@@ -456,14 +461,12 @@ function ProfileEditContent() {
       hasImageEditHistory,
       editHistoryExists: hasImageEditHistory,
       usingEditState: hasImagesInArray || hasImageEditHistory,
-      profileDataValid: !!(profileData && Object.keys(profileData).length > 0),
-      forcedFallback: !profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile,
+      userAvatarExists: !!user?.avatarUrl,
       finalHasImages: hasImages,
       imageCompletionCount,
       logic: hasImageEditHistory
-        ? `編集状態優先: hasImagesInArray=${hasImagesInArray} = ${hasImages}`
-        : `フォールバック適用: hasImagesInProfile=${hasImagesInProfile} || profileImages=${profileImages.length > 0} || userAvatar=${!!user?.avatarUrl} = ${hasImages}` +
-          (!profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile ? ' [強制フォールバック]' : '')
+        ? `編集状態優先: ${hasImagesInArray} = ${hasImages}`
+        : `初期状態フォールバック: userAvatar=${!!user?.avatarUrl} || profileData=${!!hasImagesInProfile} || session=${profileImages.length > 0} = ${hasImages}`
     })
     
     // デバッグ情報（詳細版）
