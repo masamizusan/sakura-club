@@ -1833,15 +1833,29 @@ function ProfileEditContent() {
         
         if (isForeignMale) {
           // URLパラメータから国籍を取得（新規登録で選択した値）
-          const nationalityValue = urlParams.get('nationality') || defaults.nationality || profile.nationality || 'アメリカ'
+          const urlNationality = urlParams.get('nationality')
+          const defaultNationality = defaults.nationality || profile.nationality
+          const nationalityValue = urlNationality || defaultNationality || 'アメリカ'
+
           console.log('🌍 Setting nationality (foreign male):', {
-            url_nationality: urlParams.get('nationality'),
+            url_nationality: urlNationality,
             defaults_nationality: defaults.nationality,
             profile_nationality: profile.nationality,
             final_value: nationalityValue,
-            should_be: urlParams.get('nationality') || 'アメリカ'
+            will_force_set: true
           })
+
+          // 国籍を確実に設定
           setValue('nationality', nationalityValue, { shouldValidate: true, shouldDirty: true })
+
+          // さらに確実にするため、少し遅延して再設定
+          setTimeout(() => {
+            const currentValue = getValues().nationality
+            if (!currentValue || currentValue === '') {
+              console.log('🔧 Nationality not set, forcing re-set:', nationalityValue)
+              setValue('nationality', nationalityValue, { shouldValidate: true, shouldDirty: true })
+            }
+          }, 50)
           
           // 設定後の確認
           setTimeout(() => {
