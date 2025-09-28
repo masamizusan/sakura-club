@@ -1956,7 +1956,7 @@ function ProfileEditContent() {
           bio: '', // 新規は空
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl,
-          avatar_url: user?.avatar_url,
+          avatar_url: user?.avatarUrl, // userオブジェクトはavatarUrlのみ
         } : {
           // 既存ユーザーの場合：既存データも含める
           ...profile,
@@ -1971,7 +1971,7 @@ function ProfileEditContent() {
           personality: existingPersonality,
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
-          avatar_url: user?.avatar_url || profile.avatar_url,
+          avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
         calculateProfileCompletion(profileDataWithSignup, currentImageArray)
