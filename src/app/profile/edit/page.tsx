@@ -2103,24 +2103,30 @@ function ProfileEditContent() {
           }
         }
         
+        // 🔧 画像設定と完成度計算に使用する配列を決定
+        let currentImageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }> = []
+
         if (shouldUseStorageImages) {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
+          currentImageArray = storageImages
           setProfileImages(storageImages)
         } else {
           // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
           if (profile.avatar_url) {
             console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
             console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出')
-            setProfileImages([{
+            currentImageArray = [{
               id: '1',
               url: profile.avatar_url,
               originalUrl: profile.avatar_url,
               isMain: true,
               isEdited: false
-            }])
+            }]
+            setProfileImages(currentImageArray)
           } else {
             console.log('❌ 画像なしで初期化')
             console.log('  - Reason: avatar_url=', !!profile.avatar_url)
+            currentImageArray = []
           }
         }
         
@@ -2147,7 +2153,8 @@ function ProfileEditContent() {
           hobbies: existingHobbies,
           personality: existingPersonality,
         }
-        calculateProfileCompletion(profileDataWithSignup, profileImages)
+        // 🔧 修正: 正しい画像配列を完成度計算に渡す
+        calculateProfileCompletion(profileDataWithSignup, currentImageArray)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
