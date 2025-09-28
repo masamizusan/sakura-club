@@ -413,34 +413,37 @@ function ProfileEditContent() {
     const hasImagesInArray = images.length > 0
     const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
 
-    // 編集画面では現在の編集状態を最優先にする
-    // フォールバックは初期ロード時（編集が行われていない場合）のみ適用
-    let hasImages: boolean
-
-    // セッションで画像の編集履歴があるかチェック
+    // 💡 新しいアプローチ: 確実な画像検出
+    // まず全ての画像ソースを確認
+    const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
+    const hasImagesInSession = profileImages && profileImages.length > 0
     const hasImageEditHistory = sessionStorage.getItem('imageEditHistory') === 'true'
 
+    console.log('🔍 全画像ソース確認:', {
+      'user.avatarUrl': user?.avatarUrl ? `存在: ${user.avatarUrl.substring(0, 30)}...` : '無し',
+      'hasImagesInUser': hasImagesInUser,
+      'hasImagesInProfile': hasImagesInProfile,
+      'hasImagesInSession': hasImagesInSession,
+      'hasImagesInArray': hasImagesInArray,
+      'hasImageEditHistory': hasImageEditHistory
+    })
+
+    let hasImages: boolean
+
     if (hasImageEditHistory) {
-      // 編集履歴がある場合のみ編集状態を最優先（実際の編集操作後）
+      // 編集履歴がある場合は編集状態優先
       hasImages = hasImagesInArray
+      console.log('📝 編集状態優先:', hasImages)
     } else {
-      // 初期状態またはページリロード時はフォールバック適用
-      // 編集履歴なし = 初期状態なので、user.avatarUrlを最優先で確認
-      const hasImagesInUser = user?.avatarUrl && user.avatarUrl !== null && user.avatarUrl !== ''
-
-      console.log('🔍 初期状態フォールバック検証:', {
-        hasImagesInProfile,
-        profileImagesCount: profileImages.length,
-        hasImagesInUser,
-        userAvatarUrl: user?.avatarUrl ? 'exists' : 'none'
+      // 初期状態では最も信頼できるソースから順に確認
+      hasImages = hasImagesInUser || hasImagesInSession || hasImagesInProfile || hasImagesInArray
+      console.log('🏠 初期状態フォールバック:', {
+        'user': hasImagesInUser,
+        'session': hasImagesInSession,
+        'profile': hasImagesInProfile,
+        'array': hasImagesInArray,
+        '最終結果': hasImages
       })
-
-      // 初期状態では確実にuserからの検出を最優先
-      hasImages = hasImagesInUser ||
-        hasImagesInProfile ||
-        (profileImages && profileImages.length > 0)
-
-      console.log('✅ 初期状態フォールバック結果:', hasImages)
     }
     const totalFields = requiredFields.length + optionalFields.length + 1
     const imageCompletionCount = hasImages ? 1 : 0
