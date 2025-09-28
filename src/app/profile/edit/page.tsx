@@ -222,7 +222,12 @@ function ProfileEditContent() {
     formState: { errors }
   } = useForm<ProfileEditFormData>({
     resolver: zodResolver(baseProfileEditSchema),
-    mode: 'onChange'
+    mode: 'onChange',
+    defaultValues: {
+      nationality: typeof window !== 'undefined' && profileType === 'foreign-male'
+        ? new URLSearchParams(window.location.search).get('nationality') || 'アメリカ'
+        : undefined
+    }
   })
 
   // Profile type flags
@@ -326,39 +331,7 @@ function ProfileEditContent() {
 
   }, [isForeignMale, profileImages, calculateSharedProfileCompletion])
 
-  // 国籍フォールバック設定（外国人男性）
-  useEffect(() => {
-    if (isForeignMale && typeof window !== 'undefined') {
-      const currentNationality = watch('nationality')
-      const urlParams = new URLSearchParams(window.location.search)
-      const urlNationality = urlParams.get('nationality')
-
-      console.log('🔍 国籍フォールバック詳細デバッグ:', {
-        isForeignMale,
-        currentNationality,
-        urlNationality,
-        shouldSetFallback: !currentNationality || currentNationality === '' || currentNationality === '国籍を選択',
-        windowLocation: window.location.href
-      })
-
-      // 外国人男性で国籍が設定されていない場合
-      if (!currentNationality || currentNationality === '' || currentNationality === '国籍を選択') {
-        if (urlNationality) {
-          console.log('🔧 Fallback: Setting nationality from URL:', urlNationality)
-          setValue('nationality', urlNationality, { shouldValidate: true, shouldDirty: true })
-          // 国籍設定後に完成度を再計算
-          setTimeout(() => {
-            const formData = getValues()
-            calculateProfileCompletion(formData, profileImages, 'nationality-fallback')
-          }, 100)
-        } else {
-          console.log('⚠️ No nationality in URL parameters')
-        }
-      } else {
-        console.log('✅ Nationality already set:', currentNationality)
-      }
-    }
-  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages])
+  // 簡素化された国籍設定（他のフィールドと同様にresetで処理）
 
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
@@ -1785,11 +1758,7 @@ function ProfileEditContent() {
         reset(resetData)
         console.log('✅ Form reset completed')
         
-        // 外国人男性の国籍値を確実に設定
-        if (isForeignMale && defaults.nationality) {
-          console.log('🔧 Explicitly setting nationality after reset:', defaults.nationality)
-          setValue('nationality', defaults.nationality)
-        }
+        // 国籍はresetDataに含まれているため、個別設定は不要
         
         // Select要素の値を個別に設定（signup データを優先）
         setValue('nickname', nicknameValue)
@@ -1831,31 +1800,7 @@ function ProfileEditContent() {
         console.log('Setting birth_date:', finalBirthDate)
         setValue('birth_date', finalBirthDate)
         
-        if (isForeignMale) {
-          // URLパラメータから国籍を取得（新規登録で選択した値）
-          const urlNationality = urlParams.get('nationality')
-          const defaultNationality = defaults.nationality || profile.nationality
-          const nationalityValue = urlNationality || defaultNationality || 'アメリカ'
-
-          console.log('🌍 Setting nationality (foreign male):', {
-            url_nationality: urlNationality,
-            defaults_nationality: defaults.nationality,
-            profile_nationality: profile.nationality,
-            final_value: nationalityValue,
-            will_force_set: true
-          })
-
-          // 国籍を確実に設定
-          setValue('nationality', nationalityValue, { shouldValidate: true, shouldDirty: true })
-
-          // さらに確実にするため、少し遅延して再設定
-          setTimeout(() => {
-            const currentValue = getValues().nationality
-            if (!currentValue || currentValue === '') {
-              console.log('🔧 Nationality not set, forcing re-set:', nationalityValue)
-              setValue('nationality', nationalityValue, { shouldValidate: true, shouldDirty: true })
-            }
-          }, 50)
+        // 国籍はresetDataで設定済み
           
           // 設定後の確認
           setTimeout(() => {
@@ -2507,10 +2452,11 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
+                      {...register('nationality')}
                       value={watch('nationality') || ''}
                       onValueChange={(value) => {
                         console.log('🔧 国籍選択変更:', value)
-                        setValue('nationality', value)
+                        setValue('nationality', value, { shouldValidate: true })
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
