@@ -283,7 +283,7 @@ function ProfileEditContent() {
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
   // 統一されたプロフィール完成度計算関数（共通utilsを使用）
-  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string) => {
     // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
     const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
 
@@ -295,7 +295,7 @@ function ProfileEditContent() {
     setCompletedItems(result.completedFields)
     setTotalItems(result.totalFields)
 
-    console.log('📊 Profile Edit Completion (共通関数使用):', {
+    console.log(`📊 Profile Edit Completion [${source || 'unknown'}] (共通関数使用):`, {
       required: `${result.requiredCompleted}/${result.requiredTotal}`,
       optional: `${result.optionalCompleted}/${result.optionalTotal}`,
       images: `${result.hasImages ? 1 : 0}/1`,
@@ -303,7 +303,8 @@ function ProfileEditContent() {
       percentage: `${result.completion}%`,
       imageArrayPassed: imageArrayToPass ? `${imageArrayToPass.length} images` : 'undefined (using fallback)',
       profileAvatarUrl: profileData?.avatar_url,
-      profileAvatarUrlExists: !!profileData?.avatarUrl
+      profileAvatarUrlExists: !!profileData?.avatarUrl,
+      timestamp: new Date().toISOString()
     })
 
   }, [isForeignMale, profileImages, calculateSharedProfileCompletion])
@@ -1059,7 +1060,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletion(actualFormValues, profileImages)
+          calculateProfileCompletion(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
@@ -1974,7 +1975,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletion(profileDataWithSignup, currentImageArray)
+        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD')
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -1985,7 +1986,13 @@ function ProfileEditContent() {
             form_nationality: currentValues.nationality,
             are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
           })
-          calculateProfileCompletion(currentValues, profileImages)
+          // ❌ 問題: currentValues にはユーザー画像情報が含まれていない
+          const currentValuesWithUserData = {
+            ...currentValues,
+            avatarUrl: user?.avatarUrl,
+            avatar_url: user?.avatarUrl
+          }
+          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS')
         }, 2000)
       } catch (error) {
         console.error('Error loading user data:', error)
