@@ -287,6 +287,23 @@ function ProfileEditContent() {
     // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
     const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
 
+    // 🔍 Profile Edit専用: profileDataの詳細デバッグ
+    console.log(`🔍 Profile Edit: profileData debug BEFORE shared function [${source || 'unknown'}]:`, {
+      avatar_url: profileData?.avatar_url,
+      avatarUrl: profileData?.avatarUrl,
+      hasAvatarUrl: !!profileData?.avatar_url,
+      hasAvatarUrlCamel: !!profileData?.avatarUrl,
+      profileDataKeys: Object.keys(profileData || {}),
+      nickname: profileData?.nickname || profileData?.name,
+      age: profileData?.age,
+      birth_date: profileData?.birth_date || profileData?.date_of_birth,
+      prefecture: profileData?.prefecture || profileData?.residence,
+      hobbies: profileData?.hobbies || profileData?.interests,
+      self_introduction: profileData?.self_introduction || profileData?.bio,
+      imageArrayLength: imageArray?.length || 0,
+      imageArrayToPassLength: imageArrayToPass?.length || 0
+    })
+
     // 共通関数を使用して計算
     const result = calculateSharedProfileCompletion(profileData, imageArrayToPass, isForeignMale)
 

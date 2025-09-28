@@ -331,6 +331,22 @@ function MyPageContent() {
   const calculateProfileCompletion = (profileData: any) => {
     // 共通関数を使用（マイページとプロフィール編集画面で統一）
     const isForeignMale = profileData.gender === 'male' && profileData.nationality && profileData.nationality !== '日本'
+
+    // 🔍 MyPage専用: profileDataの詳細デバッグ
+    console.log('🔍 MyPage: profileData debug BEFORE shared function:', {
+      avatar_url: profileData?.avatar_url,
+      avatarUrl: profileData?.avatarUrl,
+      hasAvatarUrl: !!profileData?.avatar_url,
+      hasAvatarUrlCamel: !!profileData?.avatarUrl,
+      profileDataKeys: Object.keys(profileData || {}),
+      nickname: profileData?.nickname || profileData?.name,
+      age: profileData?.age,
+      birth_date: profileData?.birth_date || profileData?.date_of_birth,
+      prefecture: profileData?.prefecture || profileData?.residence,
+      hobbies: profileData?.hobbies || profileData?.interests,
+      self_introduction: profileData?.self_introduction || profileData?.bio
+    })
+
     const result = calculateSharedProfileCompletion(profileData, undefined, isForeignMale)
 
     // 既存のUI更新ロジックを維持
