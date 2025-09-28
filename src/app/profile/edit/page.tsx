@@ -431,9 +431,9 @@ function ProfileEditContent() {
         (profileImages && profileImages.length > 0) ||
         hasImagesInUser
 
-      // profileDataが不正な場合の強制フォールバック
-      if (!profileData || Object.keys(profileData).length === 0) {
-        console.log('⚠️ profileDataが空のため、強制的にuserフォールバック適用')
+      // profileDataが不正またはavatar_urlが無効な場合の強制フォールバック
+      if (!profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile) {
+        console.log('⚠️ profileDataまたはavatar_urlが無効のため、強制的にuserフォールバック適用')
         hasImages = hasImagesInUser || (profileImages && profileImages.length > 0)
       }
     }
@@ -457,13 +457,13 @@ function ProfileEditContent() {
       editHistoryExists: hasImageEditHistory,
       usingEditState: hasImagesInArray || hasImageEditHistory,
       profileDataValid: !!(profileData && Object.keys(profileData).length > 0),
-      forcedFallback: !profileData || Object.keys(profileData).length === 0,
+      forcedFallback: !profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile,
       finalHasImages: hasImages,
       imageCompletionCount,
       logic: hasImageEditHistory
         ? `編集状態優先: hasImagesInArray=${hasImagesInArray} = ${hasImages}`
         : `フォールバック適用: hasImagesInProfile=${hasImagesInProfile} || profileImages=${profileImages.length > 0} || userAvatar=${!!user?.avatarUrl} = ${hasImages}` +
-          (!profileData || Object.keys(profileData).length === 0 ? ' [強制フォールバック]' : '')
+          (!profileData || Object.keys(profileData).length === 0 || !hasImagesInProfile ? ' [強制フォールバック]' : '')
     })
     
     // デバッグ情報（詳細版）
