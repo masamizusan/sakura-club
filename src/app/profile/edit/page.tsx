@@ -430,16 +430,17 @@ function ProfileEditContent() {
 
     let hasImages: boolean
 
-    if (hasImageEditHistory) {
-      // 編集履歴がある場合は編集状態優先
+    // 🔧 修正: 現在の編集状態を最優先にする
+    if (hasImageEditHistory || hasImagesInSession) {
+      // 編集履歴があるか、現在セッションに画像がある場合は編集状態を優先
       hasImages = hasImagesInArray
       console.log('📝 編集状態優先:', hasImages)
+      console.log('  - 理由: 編集履歴またはセッション画像が存在')
     } else {
       // 初期状態では最も信頼できるソースから順に確認
-      hasImages = hasImagesInUser || hasImagesInSession || hasImagesInProfile || hasImagesInArray
+      hasImages = hasImagesInUser || hasImagesInProfile || hasImagesInArray
       console.log('🏠 初期状態フォールバック:', {
         'user': hasImagesInUser,
-        'session': hasImagesInSession,
         'profile': hasImagesInProfile,
         'array': hasImagesInArray,
         '最終結果': hasImages
