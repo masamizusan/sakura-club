@@ -329,20 +329,39 @@ function MyPageContent() {
   }, [user, supabase])
 
   const calculateProfileCompletion = (profileData: any) => {
-    // プロフィール編集ページと同じロジックを使用
+    // 共通関数を使用（マイページとプロフィール編集画面で統一）
+    const isForeignMale = profileData.gender === 'male' && profileData.nationality && profileData.nationality !== '日本'
+    const result = calculateSharedProfileCompletion(profileData, undefined, isForeignMale)
+
+    // 既存のUI更新ロジックを維持
+    setProfileCompletion(result.completion)
+    setCompletedItems(result.completedFields)
+    setTotalItems(result.totalFields)
+
+    console.log('📊 MyPage Profile Completion (共通関数使用):', {
+      required: `${result.requiredCompleted}/${result.requiredTotal}`,
+      optional: `${result.optionalCompleted}/${result.optionalTotal}`,
+      images: `${result.hasImages ? 1 : 0}/1`,
+      total: `${result.completedFields}/${result.totalFields}`,
+      percentage: `${result.completion}%`
+    })
+
+    return
+
+    // 以下は古いロジック（削除予定）
     const requiredFields = [
       'nickname', 'age', 'birth_date',
       'prefecture', 'hobbies', 'self_introduction'
     ]
     // 注意: genderは編集不可のため完成度計算から除外
-    
+
     // 外国人男性の場合は国籍も必須（今回は日本人女性なので追加しない）
     // if (isForeignMale) {
     //   requiredFields.push('nationality')
     // }
-    
+
     const optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status', 
+      'occupation', 'height', 'body_type', 'marital_status',
       'personality', 'city'
     ]
 
