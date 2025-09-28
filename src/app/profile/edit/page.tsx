@@ -353,17 +353,12 @@ function ProfileEditContent() {
           }, 100)
         } else {
           console.log('⚠️ No nationality in URL parameters')
-          // URLにもない場合は、既存のプロフィールデータから取得を試みる
-          if (profile?.nationality) {
-            console.log('🔧 Fallback: Setting nationality from profile:', profile.nationality)
-            setValue('nationality', profile.nationality, { shouldValidate: true, shouldDirty: true })
-          }
         }
       } else {
         console.log('✅ Nationality already set:', currentNationality)
       }
     }
-  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages, profile])
+  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages])
 
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
