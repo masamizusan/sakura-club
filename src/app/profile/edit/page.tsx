@@ -284,20 +284,26 @@ function ProfileEditContent() {
 
   // 統一されたプロフィール完成度計算関数（共通utilsを使用）
   const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+    // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
+    const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
+
     // 共通関数を使用して計算
-    const result = calculateSharedProfileCompletion(profileData, imageArray, isForeignMale)
+    const result = calculateSharedProfileCompletion(profileData, imageArrayToPass, isForeignMale)
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
     setCompletedItems(result.completedFields)
     setTotalItems(result.totalFields)
 
-    console.log('📊 Profile Completion:', {
+    console.log('📊 Profile Edit Completion (共通関数使用):', {
       required: `${result.requiredCompleted}/${result.requiredTotal}`,
       optional: `${result.optionalCompleted}/${result.optionalTotal}`,
       images: `${result.hasImages ? 1 : 0}/1`,
       total: `${result.completedFields}/${result.totalFields}`,
-      percentage: `${result.completion}%`
+      percentage: `${result.completion}%`,
+      imageArrayPassed: imageArrayToPass ? `${imageArrayToPass.length} images` : 'undefined (using fallback)',
+      profileAvatarUrl: profileData?.avatar_url,
+      profileAvatarUrlExists: !!profileData?.avatarUrl
     })
 
   }, [isForeignMale, profileImages, calculateSharedProfileCompletion])
