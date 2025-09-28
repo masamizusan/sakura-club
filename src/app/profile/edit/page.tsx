@@ -1810,7 +1810,7 @@ function ProfileEditContent() {
               actually_set: actualValue,
               setValue_success: nationalityValue === actualValue
             })
-          }, 100)
+          }, 100);
         }
         
         const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
@@ -2005,7 +2005,7 @@ function ProfileEditContent() {
             avatar_url: user?.avatarUrl
           }
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS')
-        }, 2000)
+        }, 2000);
 
       } catch (error) {
         console.error('Error loading user data:', error)
