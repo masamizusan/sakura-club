@@ -118,8 +118,8 @@ export function calculateProfileCompletion(
     console.log('🌍 外国人男性プロフィール完成度詳細:', {
       requiredFields,
       optionalFields,
-      completedRequired: completedRequired.map(field => field),
-      completedOptional: completedOptional.map(field => field),
+      completedRequired: completedRequired,
+      completedOptional: completedOptional,
       requiredTotal: requiredFields.length,
       optionalTotal: optionalFields.length,
       totalFields,
@@ -127,7 +127,15 @@ export function calculateProfileCompletion(
       completion: `${completion}%`,
       hasImages,
       profileData_nationality: profileData?.nationality,
-      profileData_planned_prefectures: profileData?.planned_prefectures
+      profileData_planned_prefectures: profileData?.planned_prefectures,
+      // 詳細データ確認
+      profileData_occupation: profileData?.occupation,
+      profileData_height: profileData?.height,
+      profileData_body_type: profileData?.body_type,
+      profileData_marital_status: profileData?.marital_status,
+      profileData_personality: profileData?.personality,
+      profileData_visit_schedule: profileData?.visit_schedule,
+      profileData_travel_companion: profileData?.travel_companion
     })
   }
 
