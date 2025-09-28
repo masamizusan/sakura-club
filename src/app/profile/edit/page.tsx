@@ -309,6 +309,20 @@ function ProfileEditContent() {
 
   }, [isForeignMale, profileImages, calculateSharedProfileCompletion])
 
+  // 国籍フォールバック設定（外国人男性）
+  useEffect(() => {
+    if (isForeignMale) {
+      const currentNationality = watch('nationality')
+      if (!currentNationality || currentNationality === '') {
+        const urlNationality = urlParams.get('nationality')
+        if (urlNationality) {
+          console.log('🔧 Fallback: Setting nationality from URL:', urlNationality)
+          setValue('nationality', urlNationality)
+        }
+      }
+    }
+  }, [isForeignMale, setValue, watch, urlParams])
+
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
   const [isImageChanging, setIsImageChanging] = useState(false)
@@ -2429,7 +2443,7 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      value={watch('nationality') || ''}
+                      value={watch('nationality') || (isForeignMale ? (new URLSearchParams(window.location.search).get('nationality') || '') : '')}
                       onValueChange={(value) => setValue('nationality', value)}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
