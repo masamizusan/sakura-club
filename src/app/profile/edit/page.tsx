@@ -1212,6 +1212,10 @@ function ProfileEditContent() {
         setSelectedPersonality([])
         setSelectedPlannedPrefectures([])
         setProfileImages([])
+
+        // 新規ユーザーの場合のみ編集履歴をクリア
+        sessionStorage.removeItem('imageEditHistory')
+        console.log('🔄 新規ユーザー: 画像編集履歴をクリア')
         
         console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
         
@@ -2087,10 +2091,6 @@ function ProfileEditContent() {
           console.log('✅ セッションストレージから画像状態を復元:', storageImages)
           setProfileImages(storageImages)
         } else {
-          // 初期状態では編集履歴をクリア（フォールバック機能を有効にする）
-          sessionStorage.removeItem('imageEditHistory')
-          console.log('🔄 画像編集履歴をクリア（初期状態）')
-
           if (!isNewUser && profile.avatar_url) {
             console.log('✅ データベースから画像を設定:', profile.avatar_url.substring(0, 50) + '...')
             setProfileImages([{
