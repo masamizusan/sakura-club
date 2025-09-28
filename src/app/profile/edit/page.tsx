@@ -330,16 +330,21 @@ function ProfileEditContent() {
   useEffect(() => {
     if (isForeignMale && typeof window !== 'undefined') {
       const currentNationality = watch('nationality')
-      if (!currentNationality || currentNationality === '') {
+      if (!currentNationality || currentNationality === '' || currentNationality === '国籍を選択') {
         const urlParams = new URLSearchParams(window.location.search)
         const urlNationality = urlParams.get('nationality')
         if (urlNationality) {
           console.log('🔧 Fallback: Setting nationality from URL:', urlNationality)
           setValue('nationality', urlNationality)
+          // 国籍設定後に完成度を再計算
+          setTimeout(() => {
+            const formData = getValues()
+            calculateProfileCompletion(formData, profileImages, 'nationality-fallback')
+          }, 100)
         }
       }
     }
-  }, [isForeignMale, setValue, watch])
+  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages])
 
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
@@ -2462,7 +2467,14 @@ function ProfileEditContent() {
                     </label>
                     <Select
                       value={watch('nationality') || (isForeignMale ? (new URLSearchParams(window.location.search).get('nationality') || '') : '')}
-                      onValueChange={(value) => setValue('nationality', value)}
+                      onValueChange={(value) => {
+                        setValue('nationality', value)
+                        // 国籍変更時に完成度を再計算
+                        setTimeout(() => {
+                          const formData = getValues()
+                          calculateProfileCompletion(formData, profileImages, 'nationality-change')
+                        }, 100)
+                      }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
                         <SelectValue placeholder="国籍を選択" />
