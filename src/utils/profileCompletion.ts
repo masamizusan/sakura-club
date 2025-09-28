@@ -89,19 +89,40 @@ export function calculateProfileCompletion(
   const completedOptional = optionalFields.filter(field => {
     let value = profileData[field]
 
-    // 特別な処理が必要なフィールド
-    if (field === 'personality') {
-      value = profileData.personality || []
+    // フィールド別の特別な処理
+    switch (field) {
+      case 'personality':
+        value = profileData.personality || []
+        break
+      case 'visit_schedule':
+        // 外国人男性の訪問予定時期
+        value = profileData.visit_schedule
+        break
+      case 'travel_companion':
+        // 外国人男性の同行者
+        value = profileData.travel_companion
+        break
+      case 'planned_prefectures':
+        // 外国人男性の行く予定の都道府県
+        value = profileData.planned_prefectures || []
+        break
+      default:
+        value = profileData[field]
     }
 
     // 値の有効性チェック
     if (Array.isArray(value)) {
       return value.length > 0
     }
-    if (field === 'city') {
-      return value && value !== '' && value !== 'none'
+
+    // 無効な値を除外（空文字、null、undefined、'none'、未選択系の値）
+    if (!value || value === '' || value === 'none' ||
+        value === '選択してください' || value === '未選択' ||
+        value === '国籍を選択' || value === '都道府県を選択') {
+      return false
     }
-    return value && value !== '' && value !== 'none'
+
+    return true
   })
 
   // 画像の有無チェック
@@ -135,7 +156,10 @@ export function calculateProfileCompletion(
       profileData_marital_status: profileData?.marital_status,
       profileData_personality: profileData?.personality,
       profileData_visit_schedule: profileData?.visit_schedule,
-      profileData_travel_companion: profileData?.travel_companion
+      profileData_travel_companion: profileData?.travel_companion,
+      // どのフィールドが完成済みかの詳細
+      completedRequiredDetail: completedRequired.map(field => `${field}: ${JSON.stringify(profileData[field])}`),
+      completedOptionalDetail: completedOptional.map(field => `${field}: ${JSON.stringify(profileData[field])}`)
     })
   }
 
