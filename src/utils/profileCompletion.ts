@@ -150,6 +150,20 @@ function checkImagePresence(
     }
   }
 
+  const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser)
+
+  // デバッグログ
+  console.log('🖼️ 画像検出デバッグ:', {
+    imageArray: imageArray ? `${imageArray.length} images` : 'undefined',
+    hasImagesInArray,
+    hasImagesInProfile,
+    hasImagesInUser,
+    hasImagesInSession,
+    profileData_avatar_url: profileData?.avatar_url,
+    profileData_avatarUrl: profileData?.avatarUrl,
+    finalResult: result
+  })
+
   // CLAUDE.mdの完璧な実装：4つのフォールバック方法
-  return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser)
+  return result
 }
