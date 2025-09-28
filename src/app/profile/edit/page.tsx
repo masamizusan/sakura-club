@@ -341,10 +341,11 @@ function ProfileEditContent() {
         windowLocation: window.location.href
       })
 
+      // 外国人男性で国籍が設定されていない場合
       if (!currentNationality || currentNationality === '' || currentNationality === '国籍を選択') {
         if (urlNationality) {
           console.log('🔧 Fallback: Setting nationality from URL:', urlNationality)
-          setValue('nationality', urlNationality)
+          setValue('nationality', urlNationality, { shouldValidate: true, shouldDirty: true })
           // 国籍設定後に完成度を再計算
           setTimeout(() => {
             const formData = getValues()
@@ -352,12 +353,17 @@ function ProfileEditContent() {
           }, 100)
         } else {
           console.log('⚠️ No nationality in URL parameters')
+          // URLにもない場合は、既存のプロフィールデータから取得を試みる
+          if (profile?.nationality) {
+            console.log('🔧 Fallback: Setting nationality from profile:', profile.nationality)
+            setValue('nationality', profile.nationality, { shouldValidate: true, shouldDirty: true })
+          }
         }
       } else {
         console.log('✅ Nationality already set:', currentNationality)
       }
     }
-  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages])
+  }, [isForeignMale, setValue, watch, getValues, calculateProfileCompletion, profileImages, profile])
 
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
@@ -1840,7 +1846,7 @@ function ProfileEditContent() {
             final_value: nationalityValue,
             should_be: urlParams.get('nationality') || 'アメリカ'
           })
-          setValue('nationality', nationalityValue)
+          setValue('nationality', nationalityValue, { shouldValidate: true, shouldDirty: true })
           
           // 設定後の確認
           setTimeout(() => {
@@ -2492,20 +2498,7 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      value={(() => {
-                        const currentNationality = watch('nationality')
-                        const urlNationality = isForeignMale ? new URLSearchParams(window.location.search).get('nationality') : null
-                        const fallbackValue = currentNationality || urlNationality || ''
-
-                        console.log('🔍 国籍Select値デバッグ:', {
-                          currentNationality,
-                          urlNationality,
-                          fallbackValue,
-                          willDisplay: fallbackValue !== '' ? fallbackValue : '国籍を選択'
-                        })
-
-                        return fallbackValue
-                      })()}
+                      value={watch('nationality') || ''}
                       onValueChange={(value) => {
                         console.log('🔧 国籍選択変更:', value)
                         setValue('nationality', value)
