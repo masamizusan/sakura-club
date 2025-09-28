@@ -245,7 +245,11 @@ function MyPageContent() {
             interests: regularInterests,
             personality: extendedPersonality.length > 0 ? extendedPersonality : null,
             custom_culture: extendedCustomCulture,
-            hobbies: regularInterests // compatibilityのため
+            hobbies: regularInterests, // compatibilityのため
+            // 外国人男性専用フィールドを明示的に含める
+            visit_schedule: profileData.visit_schedule,
+            travel_companion: profileData.travel_companion,
+            planned_prefectures: profileData.planned_prefectures
           }
 
           console.log('========== NORMALIZED DATA DEBUG ==========')
@@ -264,6 +268,9 @@ function MyPageContent() {
           console.log('  - body_type:', normalizedProfileData.body_type)
           console.log('  - marital_status:', normalizedProfileData.marital_status)
           console.log('  - custom_culture:', normalizedProfileData.custom_culture)
+          console.log('  - visit_schedule:', normalizedProfileData.visit_schedule)
+          console.log('  - travel_companion:', normalizedProfileData.travel_companion)
+          console.log('  - planned_prefectures:', normalizedProfileData.planned_prefectures)
           
           console.log('🚨 MyPage - Data for Profile Edit Comparison:')
           console.log('  - originalCityField:', profileData.city)
