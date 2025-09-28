@@ -119,7 +119,7 @@ export function calculateProfileCompletion(
 }
 
 /**
- * 画像の存在チェック（複数のソースから検出）
+ * 画像の存在チェック（CLAUDE.mdの完璧な実装に基づく）
  */
 function checkImagePresence(
   profileData: any,
@@ -136,5 +136,20 @@ function checkImagePresence(
   const hasImagesInUser = profileData.avatarUrl &&
     profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 
-  return !!(hasImagesInArray || hasImagesInProfile || hasImagesInUser)
+  // 4. セッションストレージからの画像（ブラウザ環境でのみ）
+  let hasImagesInSession = false
+  if (typeof window !== 'undefined') {
+    try {
+      const profileImages = window.sessionStorage.getItem('currentProfileImages')
+      if (profileImages) {
+        const parsedImages = JSON.parse(profileImages)
+        hasImagesInSession = Array.isArray(parsedImages) && parsedImages.length > 0
+      }
+    } catch (e) {
+      // セッションストレージエラーは無視
+    }
+  }
+
+  // CLAUDE.mdの完璧な実装：4つのフォールバック方法
+  return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser)
 }
