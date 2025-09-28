@@ -1781,12 +1781,13 @@ function ProfileEditContent() {
         setValue('birth_date', finalBirthDate)
         
         if (isForeignMale) {
-          const nationalityValue = defaults.nationality || profile.nationality || ''
+          // URLパラメータから国籍を取得（新規登録で選択した値）
+          const nationalityValue = urlParams.get('nationality') || defaults.nationality || profile.nationality || 'アメリカ'
           console.log('🌍 Setting nationality (foreign male):', {
+            url_nationality: urlParams.get('nationality'),
             defaults_nationality: defaults.nationality,
             profile_nationality: profile.nationality,
             final_value: nationalityValue,
-            url_nationality: urlParams.get('nationality'),
             should_be: urlParams.get('nationality') || 'アメリカ'
           })
           setValue('nationality', nationalityValue)
@@ -1951,7 +1952,7 @@ function ProfileEditContent() {
           name: nicknameValue,
           gender: defaults.gender,
           age: defaults.age || 18,
-          nationality: isForeignMale ? defaults.nationality : null,
+          nationality: isForeignMale ? (urlParams.get('nationality') || defaults.nationality) : null,
           residence: defaults.prefecture,
           interests: [], // 新規は空
           bio: '', // 新規は空
