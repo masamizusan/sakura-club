@@ -350,6 +350,18 @@ function MyPageContent() {
     // 共通関数を使用（マイページとプロフィール編集画面で統一）
     const isForeignMale = profileData.gender === 'male' && profileData.nationality && profileData.nationality !== '日本'
 
+    // 🔍 外国人男性判定デバッグ
+    console.log('🚨 MyPage: 外国人男性判定チェック:', {
+      gender: profileData.gender,
+      nationality: profileData.nationality,
+      nationalityType: typeof profileData.nationality,
+      isNotJapan: profileData.nationality !== '日本',
+      isForeignMale: isForeignMale,
+      visit_schedule: profileData.visit_schedule,
+      travel_companion: profileData.travel_companion,
+      planned_prefectures: profileData.planned_prefectures
+    })
+
     // 🔍 MyPage専用: profileDataの詳細デバッグ
     console.log('🔍 MyPage: profileData debug BEFORE shared function:', {
       avatar_url: profileData?.avatar_url,
