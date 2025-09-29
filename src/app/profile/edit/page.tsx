@@ -904,6 +904,7 @@ function ProfileEditContent() {
         { value: 'ドイツ', label: 'ドイツ' },
         { value: 'フランス', label: 'フランス' },
         { value: 'オランダ', label: 'オランダ' },
+        { value: 'スウェーデン', label: 'スウェーデン' },
         { value: 'イタリア', label: 'イタリア' },
         { value: 'スペイン', label: 'スペイン' },
         { value: '韓国', label: '韓国' },
