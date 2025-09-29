@@ -2442,7 +2442,6 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      {...register('nationality')}
                       value={watch('nationality') || ''}
                       onValueChange={(value) => {
                         console.log('🔧 国籍選択変更:', value)
