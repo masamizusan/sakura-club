@@ -887,6 +887,7 @@ function ProfileEditContent() {
         { value: 'オーストラリア', label: 'オーストラリア' },
         { value: 'ドイツ', label: 'ドイツ' },
         { value: 'フランス', label: 'フランス' },
+        { value: 'オランダ', label: 'オランダ' },
         { value: 'イタリア', label: 'イタリア' },
         { value: 'スペイン', label: 'スペイン' },
         { value: '韓国', label: '韓国' },
@@ -902,6 +903,7 @@ function ProfileEditContent() {
         { value: 'オーストラリア', label: 'オーストラリア' },
         { value: 'ドイツ', label: 'ドイツ' },
         { value: 'フランス', label: 'フランス' },
+        { value: 'オランダ', label: 'オランダ' },
         { value: 'イタリア', label: 'イタリア' },
         { value: 'スペイン', label: 'スペイン' },
         { value: '韓国', label: '韓国' },
@@ -2442,7 +2444,11 @@ function ProfileEditContent() {
                       国籍 <span className="text-red-500">*</span>
                     </label>
                     <Select
-                      value={watch('nationality') || ''}
+                      value={(() => {
+                        const currentNationality = watch('nationality') || ''
+                        // 「オランジ」を「オランダ」に正規化
+                        return currentNationality === 'オランジ' ? 'オランダ' : currentNationality
+                      })()}
                       onValueChange={(value) => {
                         console.log('🔧 国籍選択変更:', value)
                         setValue('nationality', value, { shouldValidate: true })
