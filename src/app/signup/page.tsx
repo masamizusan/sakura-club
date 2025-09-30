@@ -33,11 +33,11 @@ const PREFECTURES = [
   '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ]
 
-// 居住国オプション（男性向け）
+// 国籍オプション（男性向け）
 const NATIONALITIES = [
-  '日本', 'アメリカ', 'イギリス', 'カナダ', 'オーストラリア', 'ドイツ', 'フランス',
+  'アメリカ', 'イギリス', 'カナダ', 'オーストラリア', 'ドイツ', 'フランス',
   'イタリア', 'スペイン', 'オランダ', 'スウェーデン', 'ノルウェー', 'デンマーク',
-  '韓国', '中国', '台湾', 'タイ', 'インド', 'ブラジル', 'その他'
+  '韓国', '台湾', 'タイ', 'シンガポール', 'その他'
 ]
 
 export default function SignupPage() {
@@ -64,8 +64,8 @@ export default function SignupPage() {
     setValue('gender', gender)
     
     if (gender === 'male') {
-      // 男性の場合：居住国を強制選択（日本をデフォルト）
-      setValue('prefecture', '日本') // 都道府県フィールドを居住国として使用
+      // 男性の場合：国籍を強制選択（デフォルトなし）
+      // setValue('prefecture', '') // 国籍フィールドとして使用
     } else if (gender === 'female') {
       // 女性の場合：都道府県を強制選択（東京都をデフォルト）
       setValue('prefecture', '東京都')
@@ -130,7 +130,7 @@ export default function SignupPage() {
         gender: data.gender,
         age: age,
         birth_date: data.birth_date, // birth_dateフィールドを追加
-        nationality: data.prefecture, // 選択された居住国/居住地をnationalityとして使用
+        nationality: data.prefecture, // 選択された国籍/居住地をnationalityとして使用
         prefecture: data.prefecture,
         city: '',
         hobbies: ['その他'], // 最低1つの趣味が必要
@@ -154,7 +154,7 @@ export default function SignupPage() {
           nickname: data.nickname,
           birth_date: data.birth_date,
           age: age.toString(),
-          nationality: data.prefecture, // 男性の場合は居住国、女性の場合は都道府県
+          nationality: data.prefecture, // 男性の場合は国籍、女性の場合は都道府県
           prefecture: data.prefecture
         })
         router.push(`/register/complete?${params.toString()}`)
@@ -320,18 +320,18 @@ export default function SignupPage() {
                 <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
               </div>
 
-              {/* 居住地・居住国 */}
+              {/* 居住地・国籍 */}
               {selectedGender && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {selectedGender === 'male' ? '居住国' : '居住地'} <span className="text-red-500">必須</span>
+                    {selectedGender === 'male' ? '国籍' : '居住地'} <span className="text-red-500">必須</span>
                   </label>
                   <Select 
                     value={watch('prefecture') || ''} 
                     onValueChange={(value) => setValue('prefecture', value)}
                   >
                     <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={selectedGender === 'male' ? '居住国を選択' : '都道府県を選択'} />
+                      <SelectValue placeholder={selectedGender === 'male' ? '国籍を選択' : '都道府県を選択'} />
                     </SelectTrigger>
                     <SelectContent>
                       {(selectedGender === 'male' ? NATIONALITIES : PREFECTURES).map((option) => (
