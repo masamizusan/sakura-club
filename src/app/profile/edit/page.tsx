@@ -2143,6 +2143,16 @@ function ProfileEditContent() {
       }
 
       // 外国人男性の場合は国籍と専用フィールドも更新
+      console.log('🔍 保存時の外国人男性判定デバッグ:', {
+        isForeignMale,
+        effectiveProfileType,
+        profileType,
+        userBasedType,
+        formData_visit_schedule: data.visit_schedule,
+        formData_travel_companion: data.travel_companion,
+        formData_planned_prefectures: data.planned_prefectures
+      })
+
       if (isForeignMale) {
         if (data.nationality) {
           updateData.nationality = data.nationality
@@ -2158,6 +2168,8 @@ function ProfileEditContent() {
           travel_companion: updateData.travel_companion,
           planned_prefectures: updateData.planned_prefectures
         })
+      } else {
+        console.log('❌ 外国人男性判定がfalseのため、専用フィールドは保存されません')
       }
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
