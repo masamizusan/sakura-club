@@ -8,12 +8,14 @@
 - ✅ 「100%表示→数秒後92%」遅延計算問題
 - ✅ 日本人女性のプレビュー画面での国籍表示問題
 - ✅ 職業選択肢「主婦」の順序問題
+- ✅ **外国人男性の完成度100%→80%問題（2025-10-03完全解決）**
 
 ### 🛡️ 保護すべき最新コミット情報
-- **保護すべきコミットID**: `dc1bdca5`
-- **コミットメッセージ**: "デバッグ: 完成度計算の特定とDELAYED_2000MS問題の修正"
-- **日付**: 2025-09-28
-- **以前の重要コミット**: `4527c5d6` (2025-09-26)
+- **🏆 最新の完璧なコミットID**: `fda4f352`
+- **コミットメッセージ**: "Fix: マイページのlocalStorage処理に外国人男性専用フィールドを追加"
+- **日付**: 2025-10-03
+- **解決内容**: 外国人男性の完成度100%→80%問題を完全解決
+- **以前の重要コミット**: `dc1bdca5` (2025-09-28)
 
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
@@ -49,25 +51,29 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 
 ### 🚨 緊急時の復旧コマンド（最新版）
 ```bash
-# 完璧な状態への復旧
-git checkout dc1bdca5 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx
-git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (dc1bdca5)"
+# 最新の完璧な状態への復旧
+git checkout fda4f352 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
+git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (fda4f352)"
 
 # または、特定ファイルのみ復旧
-git checkout dc1bdca5 -- src/utils/profileCompletion.ts
-git checkout dc1bdca5 -- src/app/profile/edit/page.tsx
+git checkout fda4f352 -- src/utils/profileCompletion.ts
+git checkout fda4f352 -- src/app/profile/edit/page.tsx
+git checkout fda4f352 -- src/app/mypage/page.tsx
 ```
 
 ### 🛡️ 保護対象ファイル（絶対に変更禁止）
 1. **`src/utils/profileCompletion.ts`** - 共通完成度計算関数
 2. **`src/app/profile/edit/page.tsx`** - プロフィール編集画面（特に1978行目、1990-1995行目）
-3. **`src/app/mypage/page.tsx`** - マイページ（完成度計算部分）
+3. **`src/app/mypage/page.tsx`** - マイページ（完成度計算部分 + localStorage処理の外国人男性フィールド）
+4. **`src/app/profile/preview/page.tsx`** - プレビュー画面（completeProfileData の外国人男性フィールド）
 
 ### 🔍 今後の修正時の注意点
 1. **完成度計算関連は一切触らない**
 2. **ユーザー画像情報（avatarUrl）の扱いは変更しない**
 3. **遅延計算（setTimeout）で必ずユーザーデータを含める**
 4. **新機能追加時も既存の完成度ロジックは保護する**
+5. **外国人男性専用フィールド（visit_schedule、travel_companion、planned_prefectures）の処理は絶対に変更しない**
+6. **マイページのlocalStorage処理（102-105行目）は保護対象**
 
 ## 開発コマンド
 - **開発サーバー**: `npm run dev`

@@ -99,10 +99,25 @@ function MyPageContent() {
               updateData.interests = completeData.interests
             }
 
-            // 外国人男性専用フィールドを追加
-            if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
-            if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
-            if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
+            // 外国人男性専用フィールドを追加（外国人男性のみ）
+            const isForeignMale = completeData.gender === 'male' &&
+              completeData.nationality &&
+              completeData.nationality !== '日本'
+
+            console.log('🔍 DEBUG: Foreign male check:', {
+              gender: completeData.gender,
+              nationality: completeData.nationality,
+              isForeignMale: isForeignMale
+            })
+
+            if (isForeignMale) {
+              if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
+              if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
+              if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
+              console.log('✅ MyPage: 外国人男性専用フィールドを追加しました')
+            } else {
+              console.log('🚫 MyPage: 外国人男性以外のため、専用フィールドをスキップしました')
+            }
             
             console.log('🚨 MyPage: Complete update data prepared', updateData)
             console.log('🔍 DEBUG: updateData keys and values:')

@@ -432,10 +432,12 @@ function ProfilePreviewContent() {
                           // interests配列
                           interests: extendedInterests,
 
-                          // 外国人男性専用フィールドを追加
-                          visit_schedule: previewData.visit_schedule || visit_schedule || null,
-                          travel_companion: previewData.travel_companion || travel_companion || null,
-                          planned_prefectures: previewData.planned_prefectures || planned_prefectures || null
+                          // 外国人男性専用フィールドを追加（外国人男性のみ）
+                          ...(gender === 'male' && nationality && nationality !== '日本' ? {
+                            visit_schedule: previewData.visit_schedule || visit_schedule || null,
+                            travel_companion: previewData.travel_companion || travel_companion || null,
+                            planned_prefectures: previewData.planned_prefectures || planned_prefectures || null
+                          } : {})
                         }
                         
                         console.log('🔍 DEBUG: birth_date sources:', {
