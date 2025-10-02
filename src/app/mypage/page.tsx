@@ -827,9 +827,18 @@ function MyPageContent() {
               // 🛡️ セキュリティ修正: 既存URLパラメータを完全にクリアしてMyPage遷移のみを設定
               console.log('🔄 MyPage編集ボタンクリック - URLパラメータをクリアして遷移')
               console.log('🔍 現在のURL:', window.location.href)
-              
-              // 🔧 修正: window.location.href を使用してパラメータを確実にクリア
-              window.location.href = '/profile/edit?fromMyPage=true'
+
+              // 外国人男性判定
+              const isForeignMale = profile?.gender === 'male' && profile?.nationality && profile.nationality !== '日本'
+              console.log('🌍 外国人男性判定:', {
+                gender: profile?.gender,
+                nationality: profile?.nationality,
+                isForeignMale
+              })
+
+              // 🔧 修正: 外国人男性の場合はtype=foreign-maleパラメータを追加
+              const profileType = isForeignMale ? 'foreign-male' : 'japanese-female'
+              window.location.href = `/profile/edit?fromMyPage=true&type=${profileType}`
             }}
           >
             <Edit3 className="w-4 h-4 mr-2" />
