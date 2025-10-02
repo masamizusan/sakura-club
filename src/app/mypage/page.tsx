@@ -98,6 +98,11 @@ function MyPageContent() {
             if (completeData.interests) {
               updateData.interests = completeData.interests
             }
+
+            // 外国人男性専用フィールドを追加
+            if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
+            if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
+            if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
             
             console.log('🚨 MyPage: Complete update data prepared', updateData)
             console.log('🔍 DEBUG: updateData keys and values:')
