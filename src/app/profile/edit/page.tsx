@@ -2526,7 +2526,13 @@ function ProfileEditContent() {
                         type="number"
                         min="120"
                         max="250"
-                        placeholder="170"
+                        placeholder="160"
+                        step="1"
+                        onFocus={(e) => {
+                          if (!e.target.value) {
+                            e.target.value = '160'
+                          }
+                        }}
                         {...register('height', { valueAsNumber: true })}
                         className={errors.height ? 'border-red-500' : ''}
                       />

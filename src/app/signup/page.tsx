@@ -344,9 +344,6 @@ export default function SignupPage() {
                   {errors.prefecture && (
                     <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
                   )}
-                  {selectedGender === 'male' && (
-                    <p className="text-xs text-gray-500 mt-1">現在お住まいの国を選択してください</p>
-                  )}
                   {selectedGender === 'female' && (
                     <p className="text-xs text-gray-500 mt-1">現在お住まいの都道府県を選択してください</p>
                   )}
