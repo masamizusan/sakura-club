@@ -422,15 +422,20 @@ function ProfilePreviewContent() {
                           nationality: nationality || null,
                           prefecture: prefecture || null,
                           residence: prefecture || null, // compatibilityのため
-                          
+
                           // 写真データ（既存の写真を含める）
                           profile_image: previewData.profile_image || profileImage || searchParams.get('profile_image') || null,
-                          
+
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
-                          
+
                           // interests配列
-                          interests: extendedInterests
+                          interests: extendedInterests,
+
+                          // 外国人男性専用フィールドを追加
+                          visit_schedule: previewData.visit_schedule || visit_schedule || null,
+                          travel_companion: previewData.travel_companion || travel_companion || null,
+                          planned_prefectures: previewData.planned_prefectures || planned_prefectures || null
                         }
                         
                         console.log('🔍 DEBUG: birth_date sources:', {
