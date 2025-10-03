@@ -275,13 +275,14 @@ function ProfileEditContent() {
       
       // リアルタイム完成度更新
       const currentData = watch()
+      // custom_culture は完成度計算から除外（コメント扱い）
+      const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
       calculateProfileCompletion({
-        ...currentData,
+        ...currentDataWithoutCustomCulture,
         birth_date: birthDate,
         age: age,
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
-        custom_culture: currentData.custom_culture, // カスタム文化も含める
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       })
     }
@@ -426,8 +427,10 @@ function ProfileEditContent() {
     }
     // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
     const currentData = watch()
+    // custom_culture は完成度計算から除外（コメント扱い）
+    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
     calculateProfileCompletion({
-      ...currentData,
+      ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
       // 画像削除時はavatar_urlをnullに設定
@@ -859,8 +862,10 @@ function ProfileEditContent() {
           }
           
           const currentValues = getValues()
+          // custom_culture は完成度計算から除外（コメント扱い）
+          const { custom_culture, ...valueWithoutCustomCulture } = value || {}
           calculateProfileCompletion({
-            ...value,
+            ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
             personality: selectedPersonality,
           }, profileImages)
@@ -2832,6 +2837,7 @@ function ProfileEditContent() {
                         const isValid = await trigger()
 
                         if (!isValid) {
+                          console.log('Basic validation failed')
                           // エラーがある場合、該当フィールドにスクロール
                           const firstErrorElement = document.querySelector('.border-red-500')
                           if (firstErrorElement) {
@@ -2840,7 +2846,26 @@ function ProfileEditContent() {
                           return
                         }
 
+                        // 条件付きバリデーションを実行
                         const formData = watch()
+                        const customSchema = createProfileEditSchema(isForeignMale)
+
+                        try {
+                          customSchema.parse({
+                            ...formData,
+                            hobbies: selectedHobbies,
+                            personality: selectedPersonality,
+                            planned_prefectures: selectedPlannedPrefectures
+                          })
+                        } catch (validationError) {
+                          console.error('Custom validation failed:', validationError)
+                          if (validationError instanceof z.ZodError) {
+                            // 最初のエラーメッセージを表示
+                            const firstError = validationError.errors[0]
+                            alert(firstError.message)
+                          }
+                          return
+                        }
                         // プレビュー用画像URL（blob URLまたは既存URL）
                         const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
 
