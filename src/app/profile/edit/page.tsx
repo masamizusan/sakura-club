@@ -2848,17 +2848,32 @@ function ProfileEditContent() {
 
                         // 条件付きバリデーションを実行
                         const formData = watch()
+
+                        console.log('🔍 プレビュー前バリデーション詳細:', {
+                          isForeignMale,
+                          effectiveProfileType,
+                          profileType,
+                          userBasedType,
+                          formData_nationality: formData.nationality,
+                          formData_prefecture: formData.prefecture,
+                          selectedPlannedPrefectures: selectedPlannedPrefectures,
+                          selectedPlannedPrefecturesLength: selectedPlannedPrefectures?.length
+                        })
+
                         const customSchema = createProfileEditSchema(isForeignMale)
+                        const validationData = {
+                          ...formData,
+                          hobbies: selectedHobbies,
+                          personality: selectedPersonality,
+                          planned_prefectures: selectedPlannedPrefectures
+                        }
 
                         try {
-                          customSchema.parse({
-                            ...formData,
-                            hobbies: selectedHobbies,
-                            personality: selectedPersonality,
-                            planned_prefectures: selectedPlannedPrefectures
-                          })
+                          customSchema.parse(validationData)
+                          console.log('✅ カスタムバリデーション成功')
                         } catch (validationError) {
-                          console.error('Custom validation failed:', validationError)
+                          console.error('❌ Custom validation failed:', validationError)
+                          console.log('🔍 バリデーションデータ:', validationData)
                           if (validationError instanceof z.ZodError) {
                             // 最初のエラーメッセージを表示
                             const firstError = validationError.errors[0]
