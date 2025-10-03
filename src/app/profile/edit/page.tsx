@@ -2826,12 +2826,24 @@ function ProfileEditContent() {
                     type="button"
                     variant="outline"
                     className="w-full mb-4"
-                    onClick={() => {
+                    onClick={async () => {
                       try {
+                        // フォームのバリデーションをトリガー
+                        const isValid = await trigger()
+
+                        if (!isValid) {
+                          // エラーがある場合、該当フィールドにスクロール
+                          const firstErrorElement = document.querySelector('.border-red-500')
+                          if (firstErrorElement) {
+                            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                          }
+                          return
+                        }
+
                         const formData = watch()
                         // プレビュー用画像URL（blob URLまたは既存URL）
                         const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
-                        
+
                         const previewData = {
                           ...formData,
                           hobbies: selectedHobbies,
@@ -2842,11 +2854,11 @@ function ProfileEditContent() {
                           image: previewImageUrl,
                           profile_image: previewImageUrl
                         }
-                        
+
                         // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
                         const previewDataKey = `previewData_${user?.id || 'anonymous'}`
                         sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
-                        
+
                         const previewWindow = window.open(`/profile/preview?userId=${user?.id || ''}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
                         if (!previewWindow) {
                           alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
