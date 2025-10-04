@@ -2244,13 +2244,14 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
+        // custom_culture は完成度計算から除外（コメント扱い）
+        const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
         calculateProfileCompletion({
-          ...currentData,
+          ...currentDataWithoutCustomCulture,
           hobbies: newHobbies,
           personality: selectedPersonality,
-          custom_culture: currentData.custom_culture,
           avatar_url: profileImages.length > 0 ? 'has_images' : null
-        })
+        }, profileImages, 'hobby-checkbox-change')
       }, 0)
       
       return newHobbies
