@@ -2833,54 +2833,57 @@ function ProfileEditContent() {
                     className="w-full mb-4"
                     onClick={async () => {
                       try {
-                        // フォームのバリデーションをトリガー
-                        const isValid = await trigger()
-
-                        if (!isValid) {
-                          console.log('Basic validation failed')
-                          // エラーがある場合、該当フィールドにスクロール
-                          const firstErrorElement = document.querySelector('.border-red-500')
-                          if (firstErrorElement) {
-                            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                          }
-                          return
-                        }
-
-                        // 条件付きバリデーションを実行
+                        // 手動バリデーションを実行
                         const formData = watch()
 
-                        console.log('🔍 プレビュー前バリデーション詳細:', {
+                        console.log('🔍 Manual validation start:', {
                           isForeignMale,
-                          effectiveProfileType,
-                          profileType,
-                          userBasedType,
-                          formData_nationality: formData.nationality,
-                          formData_prefecture: formData.prefecture,
-                          selectedPlannedPrefectures: selectedPlannedPrefectures,
-                          selectedPlannedPrefecturesLength: selectedPlannedPrefectures?.length
+                          formData: formData,
+                          selectedHobbies,
+                          selectedPlannedPrefectures
                         })
 
-                        const customSchema = createProfileEditSchema(isForeignMale)
-                        const validationData = {
-                          ...formData,
-                          hobbies: selectedHobbies,
-                          personality: selectedPersonality,
-                          planned_prefectures: selectedPlannedPrefectures
+                        // 必須フィールドのチェック
+                        const validationErrors = []
+
+                        // 共通必須フィールド
+                        if (!formData.nickname?.trim()) validationErrors.push('ニックネームを入力してください')
+                        if (!formData.birth_date) validationErrors.push('生年月日を入力してください')
+                        if (!formData.self_introduction || formData.self_introduction.length < 100) {
+                          validationErrors.push('自己紹介は100文字以上で入力してください')
+                        }
+                        if (!selectedHobbies || selectedHobbies.length === 0) {
+                          validationErrors.push('日本文化を1つ以上選択してください')
                         }
 
-                        try {
-                          customSchema.parse(validationData)
-                          console.log('✅ カスタムバリデーション成功')
-                        } catch (validationError) {
-                          console.error('❌ Custom validation failed:', validationError)
-                          console.log('🔍 バリデーションデータ:', validationData)
-                          if (validationError instanceof z.ZodError) {
-                            // 最初のエラーメッセージを表示
-                            const firstError = validationError.errors[0]
-                            alert(firstError.message)
+                        // 外国人男性の場合の追加チェック
+                        if (isForeignMale) {
+                          if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
+                          if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
+                            validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
                           }
+                        } else {
+                          // 日本人女性の場合
+                          if (!formData.prefecture?.trim()) validationErrors.push('都道府県を入力してください')
+                        }
+
+                        if (validationErrors.length > 0) {
+                          console.log('❌ Manual validation failed:', validationErrors)
+                          alert(validationErrors[0])
                           return
                         }
+
+                        console.log('✅ Manual validation passed')
+
+                        // React Hook Formの基本バリデーション（緩い条件）
+                        const isValid = await trigger()
+                        if (!isValid) {
+                          console.log('❌ React Hook Form validation failed:', errors)
+                          return
+                        }
+
+                        // 条件付きバリデーションは手動バリデーションで完了
+
                         // プレビュー用画像URL（blob URLまたは既存URL）
                         const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
 
