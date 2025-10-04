@@ -51,6 +51,12 @@ export function calculateProfileCompletion(
   }
 
   // 必須フィールドの完成チェック
+  console.log(`🔍 必須フィールドチェック開始:`, {
+    requiredFields,
+    profileDataKeys: Object.keys(profileData),
+    isForeignMale
+  })
+
   const completedRequired = requiredFields.filter(field => {
     let value
 
@@ -67,6 +73,14 @@ export function calculateProfileCompletion(
         break
       case 'hobbies':
         value = profileData.interests || profileData.hobbies
+        console.log(`🔍 hobbies フィールド検証:`, {
+          field,
+          'profileData.interests': profileData.interests,
+          'profileData.hobbies': profileData.hobbies,
+          'final value': value,
+          'isArray': Array.isArray(value),
+          'length': Array.isArray(value) ? value.length : 'not array'
+        })
         break
       case 'self_introduction':
         value = profileData.bio || profileData.self_introduction
