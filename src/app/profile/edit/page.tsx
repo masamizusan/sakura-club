@@ -867,7 +867,8 @@ function ProfileEditContent() {
           calculateProfileCompletion({
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
-            personality: selectedPersonality,
+            hobbies: selectedHobbies, // 状態から直接取得
+            personality: selectedPersonality, // 状態から直接取得
           }, profileImages)
         }, 500)
       }
