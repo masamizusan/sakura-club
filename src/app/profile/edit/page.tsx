@@ -878,7 +878,19 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [watch, getValues, profileImages, selectedPersonality, calculateProfileCompletion, isImageChanging])
+  }, [watch, getValues, profileImages, selectedHobbies, selectedPersonality, calculateProfileCompletion, isImageChanging])
+
+  // selectedHobbies変更時の完成度再計算
+  useEffect(() => {
+    console.log('🔍 selectedHobbies changed:', selectedHobbies)
+    const currentData = watch()
+    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+    calculateProfileCompletion({
+      ...currentDataWithoutCustomCulture,
+      hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
+      personality: selectedPersonality,
+    }, profileImages, 'selectedHobbies-change')
+  }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletion, profileImages])
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍オプション（プロフィールタイプに応じて順序変更）
