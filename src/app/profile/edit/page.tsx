@@ -2875,12 +2875,8 @@ function ProfileEditContent() {
 
                         console.log('✅ Manual validation passed')
 
-                        // React Hook Formの基本バリデーション（緩い条件）
-                        const isValid = await trigger()
-                        if (!isValid) {
-                          console.log('❌ React Hook Form validation failed:', errors)
-                          return
-                        }
+                        // 手動バリデーションが成功した場合はReact Hook Formのバリデーションをスキップ
+                        console.log('✅ Skipping React Hook Form validation as manual validation passed')
 
                         // 条件付きバリデーションは手動バリデーションで完了
 
