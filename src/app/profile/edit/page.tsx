@@ -1880,24 +1880,23 @@ function ProfileEditContent() {
         // 外国人男性向けフィールドの設定
         if (isForeignMale) {
           try {
-            // 安全な初期化のため、フィールドが存在することを確認
-            const plannedPrefecturesValue = Array.isArray(profile?.planned_prefectures) 
-              ? profile.planned_prefectures 
-              : (isNewUser ? [] : [])
-            console.log('Setting planned_prefectures:', plannedPrefecturesValue)
+            // 新規ユーザーの場合は既存データを無視して空の状態で初期化
+            const plannedPrefecturesValue = isNewUser ? [] :
+              (Array.isArray(profile?.planned_prefectures) ? profile.planned_prefectures : [])
+            console.log('Setting planned_prefectures:', plannedPrefecturesValue, 'isNewUser:', isNewUser)
             setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
-            
-            const visitScheduleValue = typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry'
-              ? profile.visit_schedule
-              : 'no-entry'
-            console.log('Setting visit_schedule:', visitScheduleValue, 'from DB value:', profile?.visit_schedule)
+
+            const visitScheduleValue = isNewUser ? 'no-entry' :
+              (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry'
+                ? profile.visit_schedule : 'no-entry')
+            console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
-            const travelCompanionValue = typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry'
-              ? profile.travel_companion
-              : 'no-entry'
-            console.log('Setting travel_companion:', travelCompanionValue, 'from DB value:', profile?.travel_companion)
+            const travelCompanionValue = isNewUser ? 'no-entry' :
+              (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry'
+                ? profile.travel_companion : 'no-entry')
+            console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
           } catch (error) {
             console.error('🚨 外国人男性フィールド初期化エラー:', error)
