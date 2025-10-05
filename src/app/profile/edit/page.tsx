@@ -2460,10 +2460,12 @@ function ProfileEditContent() {
                 maxImages={3}
               />
 
-              {/* 基本情報 */}
+              {/* 必須情報 */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
-                  基本情報
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
+                  <span className="text-red-500 mr-2">*</span>
+                  必須情報
+                  <span className="text-sm font-normal text-gray-500 ml-2">（プロフィール公開に必要な項目）</span>
                 </h3>
                 
                 {/* 自己紹介 */}
@@ -2537,9 +2539,13 @@ function ProfileEditContent() {
                   </div>
                 )}
 
-                {/* 詳細情報セクション */}
+                {/* オプション情報セクション */}
                 <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">詳細情報</h4>
+                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4 flex items-center">
+                    <span className="text-green-600 mr-2">○</span>
+                    オプション情報
+                    <span className="text-sm font-normal text-gray-500 ml-2">（記入すると魅力的なプロフィールになります）</span>
+                  </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -2714,31 +2720,6 @@ function ProfileEditContent() {
                     {/* 日本訪問計画 */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">日本訪問計画</h4>
-                      
-                      {/* 行く予定の都道府県 */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          行く予定の都道府県 <span className="text-red-500">*</span>
-                        </label>
-                        <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {PREFECTURES.map((prefecture) => (
-                            <label key={prefecture} className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedPlannedPrefectures.includes(prefecture)}
-                                onChange={() => togglePlannedPrefecture(prefecture)}
-                                className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                                disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
-                              />
-                              <span className="text-sm text-gray-700">{prefecture}</span>
-                            </label>
-                          ))}
-                        </div>
-                        {errors.planned_prefectures && (
-                          <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
-                        )}
-                      </div>
 
                       {/* 訪問予定時期 */}
                       <div>
@@ -2787,6 +2768,31 @@ function ProfileEditContent() {
                         </Select>
                         {errors.travel_companion && (
                           <p className="text-red-500 text-sm mt-1">{errors.travel_companion.message}</p>
+                        )}
+                      </div>
+
+                      {/* 行く予定の都道府県 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          行く予定の都道府県 <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {PREFECTURES.map((prefecture) => (
+                            <label key={prefecture} className="flex items-center space-x-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedPlannedPrefectures.includes(prefecture)}
+                                onChange={() => togglePlannedPrefecture(prefecture)}
+                                className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                                disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
+                              />
+                              <span className="text-sm text-gray-700">{prefecture}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {errors.planned_prefectures && (
+                          <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
                         )}
                       </div>
                     </div>

@@ -15,11 +15,11 @@
 - ✅ **デプロイ直後の新規ユーザー完成度問題（2025-10-05完全解決）**
 
 ### 🛡️ 保護すべき最新コミット情報
-- **🏆 最新の完璧なコミットID**: `950e19e5`
-- **コミットメッセージ**: "Fix: React.useEffect → useEffect修正"
+- **🏆 最新の完璧なコミットID**: `8f5bfaf0`
+- **コミットメッセージ**: "Fix: 新規ユーザーの外国人男性フィールド初期化問題を解決"
 - **日付**: 2025-10-05
-- **解決内容**: プロフィール完成度システム完全完成
-- **重要な先行コミット**: `4f41de44` (デプロイ直後対策), `3ba36fbd` (新規ユーザー対策), `2fdcdc10` (日本文化・性格修正)
+- **解決内容**: 新規ユーザー完成度問題完全解決（5/15→4/15、5/13→4/13）
+- **重要な先行コミット**: `950e19e5` (React修正), `4f41de44` (デプロイ直後対策), `2fdcdc10` (日本文化・性格修正)
 
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
@@ -56,14 +56,14 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 ### 🚨 緊急時の復旧コマンド（最新版）
 ```bash
 # 最新の完璧な状態への復旧
-git checkout 950e19e5 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
-git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (950e19e5)"
+git checkout 8f5bfaf0 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
+git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (8f5bfaf0)"
 
 # または、特定ファイルのみ復旧
-git checkout 950e19e5 -- src/utils/profileCompletion.ts
-git checkout 950e19e5 -- src/app/profile/edit/page.tsx
-git checkout 950e19e5 -- src/app/mypage/page.tsx
-git checkout 950e19e5 -- src/app/profile/preview/page.tsx
+git checkout 8f5bfaf0 -- src/utils/profileCompletion.ts
+git checkout 8f5bfaf0 -- src/app/profile/edit/page.tsx
+git checkout 8f5bfaf0 -- src/app/mypage/page.tsx
+git checkout 8f5bfaf0 -- src/app/profile/preview/page.tsx
 ```
 
 ### 🛡️ 保護対象ファイル（絶対に変更禁止）
@@ -83,6 +83,7 @@ git checkout 950e19e5 -- src/app/profile/preview/page.tsx
 8. **🆕 toggleHobby/togglePersonality関数の空配列許可ロジックは保護対象**
 9. **🆕 新規ユーザー画像検出のisNewUserフラグ処理は保護対象**
 10. **🆕 セッションストレージ早期クリア処理（199-221行目）は保護対象**
+11. **🆕 外国人男性フィールド初期化でのisNewUser優先処理（1884-1900行目）は保護対象**
 
 ## 開発コマンド
 - **開発サーバー**: `npm run dev`
