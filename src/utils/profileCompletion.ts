@@ -17,7 +17,8 @@ export interface ProfileCompletionResult {
 export function calculateProfileCompletion(
   profileData: any,
   imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
-  isForeignMale: boolean = false
+  isForeignMale: boolean = false,
+  isNewUser: boolean = false
 ): ProfileCompletionResult {
 
   // 必須・オプションフィールドの定義
@@ -152,7 +153,7 @@ export function calculateProfileCompletion(
   })
 
   // 画像の有無チェック
-  const hasImages = checkImagePresence(profileData, imageArray)
+  const hasImages = checkImagePresence(profileData, imageArray, isNewUser)
 
   // 完成度計算
   const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for images
@@ -206,7 +207,8 @@ export function calculateProfileCompletion(
  */
 function checkImagePresence(
   profileData: any,
-  imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>
+  imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
+  isNewUser: boolean = false
 ): boolean {
   // 1. 引数で渡された画像配列
   const hasImagesInArray = imageArray && imageArray.length > 0
@@ -219,9 +221,9 @@ function checkImagePresence(
   const hasImagesInUser = profileData.avatarUrl &&
     profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 
-  // 4. セッションストレージからの画像（ブラウザ環境でのみ）
+  // 4. セッションストレージからの画像（ブラウザ環境でのみ、新規ユーザーは除外）
   let hasImagesInSession = false
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && !isNewUser) {
     try {
       const profileImages = window.sessionStorage.getItem('currentProfileImages')
       if (profileImages) {
@@ -242,6 +244,8 @@ function checkImagePresence(
     hasImagesInProfile,
     hasImagesInUser,
     hasImagesInSession,
+    isNewUser,
+    sessionStorageSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileData_avatar_url: profileData?.avatar_url,
     profileData_avatarUrl: profileData?.avatarUrl,
     finalResult: result

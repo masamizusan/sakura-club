@@ -289,7 +289,7 @@ function ProfileEditContent() {
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
   // 統一されたプロフィール完成度計算関数（共通utilsを使用）
-  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string) => {
+  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string, isNewUserOverride?: boolean) => {
     // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
     const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
 
@@ -311,7 +311,7 @@ function ProfileEditContent() {
     })
 
     // 共通関数を使用して計算
-    const result = calculateSharedProfileCompletion(profileData, imageArrayToPass, isForeignMale)
+    const result = calculateSharedProfileCompletion(profileData, imageArrayToPass, isForeignMale, isNewUserOverride || false)
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
@@ -2000,7 +2000,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD')
+        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -2017,7 +2017,7 @@ function ProfileEditContent() {
             avatarUrl: user?.avatarUrl,
             avatar_url: user?.avatarUrl
           }
-          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS')
+          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
         }, 2000);
 
       } catch (error) {
