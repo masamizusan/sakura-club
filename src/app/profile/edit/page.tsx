@@ -2233,12 +2233,10 @@ function ProfileEditContent() {
   // Hobby selection handler
   const toggleHobby = (hobby: string) => {
     setSelectedHobbies(prev => {
-      const newHobbies = prev.includes(hobby) 
-        ? prev.filter(h => h !== hobby).length > 0 
-          ? prev.filter(h => h !== hobby) 
-          : ['その他']
-        : prev.includes('その他') 
-          ? [hobby] 
+      const newHobbies = prev.includes(hobby)
+        ? prev.filter(h => h !== hobby)  // 単純にfilterのみ（空配列も許可）
+        : prev.includes('その他')
+          ? [hobby]
           : [...prev, hobby]
       
       // リアルタイム完成度更新
@@ -2262,9 +2260,7 @@ function ProfileEditContent() {
   const togglePersonality = (trait: string) => {
     setSelectedPersonality(prev => {
       const newTraits = prev.includes(trait)
-        ? prev.filter(t => t !== trait).length > 0
-          ? prev.filter(t => t !== trait)
-          : ['その他']
+        ? prev.filter(t => t !== trait)  // 単純にfilterのみ（空配列も許可）
         : prev.includes('その他')
           ? [trait]
           : [...prev, trait]
