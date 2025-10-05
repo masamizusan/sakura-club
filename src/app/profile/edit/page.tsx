@@ -2708,7 +2708,7 @@ function ProfileEditContent() {
                     </div>
 
                     {/* 性格 */}
-                    <div>
+                    <div className="space-y-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         性格
                       </label>
