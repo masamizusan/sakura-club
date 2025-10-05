@@ -2721,7 +2721,7 @@ function ProfileEditContent() {
                             onClick={() => togglePersonality(trait)}
                             disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
                             className={`
-                              px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center
+                              px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] min-w-[4rem] flex items-center justify-center
                               ${selectedPersonality.includes(trait)
                                 ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                 : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
@@ -2813,7 +2813,7 @@ function ProfileEditContent() {
                               onClick={() => togglePlannedPrefecture(prefecture)}
                               disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
                               className={`
-                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center
+                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] min-w-[4rem] flex items-center justify-center
                                 ${selectedPlannedPrefectures.includes(prefecture)
                                   ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                   : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
@@ -2855,7 +2855,7 @@ function ProfileEditContent() {
                         onClick={() => toggleHobby(hobby)}
                         disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
                         className={`
-                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center
+                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] min-w-[4rem] flex items-center justify-center
                           ${selectedHobbies.includes(hobby)
                             ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
