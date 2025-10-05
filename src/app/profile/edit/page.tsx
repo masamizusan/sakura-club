@@ -2619,10 +2619,6 @@ function ProfileEditContent() {
 
                 {/* オプション情報セクション */}
                 <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4 flex items-center">
-                    <span className="text-green-600 mr-2">○</span>
-                    オプション情報
-                  </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -2717,7 +2713,7 @@ function ProfileEditContent() {
                         性格
                       </label>
                       <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                         {PERSONALITY_OPTIONS.map((trait) => (
                           <label key={trait} className="flex items-center space-x-2 cursor-pointer">
                             <input
