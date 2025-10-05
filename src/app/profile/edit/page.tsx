@@ -2724,7 +2724,7 @@ function ProfileEditContent() {
                       {/* 訪問予定時期 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          訪問予定時期 <span className="text-red-500">*</span>
+                          訪問予定時期
                         </label>
                         <Select
                           value={watch('visit_schedule') || ''}
@@ -2749,7 +2749,7 @@ function ProfileEditContent() {
                       {/* 同行者 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          同行者 <span className="text-red-500">*</span>
+                          同行者
                         </label>
                         <Select
                           value={watch('travel_companion') || ''}
@@ -2774,7 +2774,7 @@ function ProfileEditContent() {
                       {/* 行く予定の都道府県 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          行く予定の都道府県 <span className="text-red-500">*</span>
+                          行く予定の都道府県
                         </label>
                         <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -2849,25 +2849,27 @@ function ProfileEditContent() {
                       <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
                     )}
                   </div>
-                </div>
 
-                {/* 性格 */}
-                <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">性格</h4>
-                  <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {PERSONALITY_OPTIONS.map((trait) => (
-                      <label key={trait} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedPersonality.includes(trait)}
-                          onChange={() => togglePersonality(trait)}
-                          className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                          disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
-                        />
-                        <span className="text-sm text-gray-700">{trait}</span>
-                      </label>
-                    ))}
+                  {/* 性格 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      性格
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {PERSONALITY_OPTIONS.map((trait) => (
+                        <label key={trait} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedPersonality.includes(trait)}
+                            onChange={() => togglePersonality(trait)}
+                            className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                            disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                          />
+                          <span className="text-sm text-gray-700">{trait}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
