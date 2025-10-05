@@ -2500,6 +2500,41 @@ function ProfileEditContent() {
                   <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
                 </div>
 
+                {/* 生年月日と年齢 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      生年月日 <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={watch('birth_date') ? watch('birth_date') : ''}
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
+                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      年齢 <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      min="18"
+                      max="99"
+                      placeholder="25"
+                      {...register('age', { valueAsNumber: true })}
+                      className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
+                      readOnly
+                    />
+                    {errors.age && (
+                      <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
+                  </div>
+                </div>
+
                 {/* 国籍フィールド（外国人男性のみ） */}
                 {isForeignMale && (
                   <div>
@@ -2658,40 +2693,6 @@ function ProfileEditContent() {
                   </div>
                 </div>
 
-                {/* 生年月日と年齢 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      生年月日 <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      value={watch('birth_date') ? watch('birth_date') : ''}
-                      readOnly
-                      className="bg-gray-50 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
-                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      年齢 <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      min="18"
-                      max="99"
-                      placeholder="25"
-                      {...register('age', { valueAsNumber: true })}
-                      className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
-                      readOnly
-                    />
-                    {errors.age && (
-                      <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
-                  </div>
-                </div>
 
                 {/* 居住地（日本人女性のみ） */}
                 {isJapaneseFemale && (
