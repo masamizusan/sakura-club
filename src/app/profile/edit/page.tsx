@@ -183,8 +183,8 @@ const generateVisitScheduleOptions = () => {
   };
 
   const currentSeason = getCurrentSeason();
-  const seasons = ['spring', 'summer', 'autumn', 'winter'];
-  const seasonLabels = {
+  const seasons = ['spring', 'summer', 'autumn', 'winter'] as const;
+  const seasonLabels: Record<typeof seasons[number], string> = {
     spring: '春（3-5月）',
     summer: '夏（6-8月）',
     autumn: '秋（9-11月）',

@@ -207,13 +207,13 @@ function ProfilePreviewContent() {
                         const match = visit_schedule.match(/^(\d{4})-(spring|summer|autumn|winter)$/);
                         if (match) {
                           const [, year, season] = match;
-                          const seasonLabels = {
+                          const seasonLabels: Record<string, string> = {
                             spring: '春（3-5月）',
                             summer: '夏（6-8月）',
                             autumn: '秋（9-11月）',
                             winter: '冬（12-2月）'
                           };
-                          return `${year}年${seasonLabels[season]}`;
+                          return `${year}年${seasonLabels[season] || season}`;
                         }
 
                         // フォールバック：そのまま表示
