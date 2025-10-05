@@ -163,20 +163,57 @@ const BODY_TYPE_OPTIONS = [
   { value: 'アスリート体型', label: 'アスリート体型' }
 ]
 
+// 動的な訪問予定時期選択肢生成関数
+const generateVisitScheduleOptions = () => {
+  const options = [
+    { value: 'no-entry', label: '記入しない' },
+    { value: 'undecided', label: 'まだ決まっていない' }
+  ];
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-11
+
+  // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+  const getCurrentSeason = () => {
+    if (currentMonth >= 2 && currentMonth <= 4) return 'spring';
+    if (currentMonth >= 5 && currentMonth <= 7) return 'summer';
+    if (currentMonth >= 8 && currentMonth <= 10) return 'autumn';
+    return 'winter';
+  };
+
+  const currentSeason = getCurrentSeason();
+  const seasons = ['spring', 'summer', 'autumn', 'winter'];
+  const seasonLabels = {
+    spring: '春（3-5月）',
+    summer: '夏（6-8月）',
+    autumn: '秋（9-11月）',
+    winter: '冬（12-2月）'
+  };
+
+  // 今後2年分の選択肢を生成
+  for (let year = currentYear; year <= currentYear + 2; year++) {
+    seasons.forEach((season, index) => {
+      // 現在年の場合、過去の季節は除外
+      if (year === currentYear) {
+        const currentSeasonIndex = seasons.indexOf(currentSeason);
+        if (index <= currentSeasonIndex) return; // 現在季節以前は除外
+      }
+
+      const value = `${year}-${season}`;
+      const label = `${year}年${seasonLabels[season]}`;
+      options.push({ value, label });
+    });
+  }
+
+  // 2年以降の選択肢
+  options.push({ value: `beyond-${currentYear + 2}`, label: `${currentYear + 2}年以降` });
+
+  return options;
+};
+
 // 外国人男性向け選択肢
-const VISIT_SCHEDULE_OPTIONS = [
-  { value: 'no-entry', label: '記入しない' },
-  { value: 'undecided', label: 'まだ決まっていない' },
-  { value: '2025-spring', label: '2025年春（3-5月）' },
-  { value: '2025-summer', label: '2025年夏（6-8月）' },
-  { value: '2025-autumn', label: '2025年秋（9-11月）' },
-  { value: '2025-winter', label: '2025年冬（12-2月）' },
-  { value: '2026-spring', label: '2026年春（3-5月）' },
-  { value: '2026-summer', label: '2026年夏（6-8月）' },
-  { value: '2026-autumn', label: '2026年秋（9-11月）' },
-  { value: '2026-winter', label: '2026年冬（12-2月）' },
-  { value: 'beyond-2026', label: '2026年以降' }
-]
+const VISIT_SCHEDULE_OPTIONS = generateVisitScheduleOptions();
 
 const TRAVEL_COMPANION_OPTIONS = [
   { value: 'no-entry', label: '記入しない' },

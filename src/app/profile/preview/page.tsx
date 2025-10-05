@@ -193,17 +193,32 @@ function ProfilePreviewContent() {
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">訪問予定:</span>
                     <span className="text-gray-600">
-                      {visit_schedule === 'undecided' ? 'まだ決まっていない' :
-                       visit_schedule === '2025-spring' ? '2025年春（3-5月）' :
-                       visit_schedule === '2025-summer' ? '2025年夏（6-8月）' :
-                       visit_schedule === '2025-autumn' ? '2025年秋（9-11月）' :
-                       visit_schedule === '2025-winter' ? '2025年冬（12-2月）' :
-                       visit_schedule === '2026-spring' ? '2026年春（3-5月）' :
-                       visit_schedule === '2026-summer' ? '2026年夏（6-8月）' :
-                       visit_schedule === '2026-autumn' ? '2026年秋（9-11月）' :
-                       visit_schedule === '2026-winter' ? '2026年冬（12-2月）' :
-                       visit_schedule === 'beyond-2026' ? '2026年以降' :
-                       visit_schedule === 'no-entry' ? '記入しない' : visit_schedule}
+                      {(() => {
+                        if (visit_schedule === 'undecided') return 'まだ決まっていない';
+                        if (visit_schedule === 'no-entry') return '記入しない';
+
+                        // beyond-YYYY 形式の処理
+                        if (visit_schedule.startsWith('beyond-')) {
+                          const year = visit_schedule.split('-')[1];
+                          return `${year}年以降`;
+                        }
+
+                        // YYYY-season 形式の処理
+                        const match = visit_schedule.match(/^(\d{4})-(spring|summer|autumn|winter)$/);
+                        if (match) {
+                          const [, year, season] = match;
+                          const seasonLabels = {
+                            spring: '春（3-5月）',
+                            summer: '夏（6-8月）',
+                            autumn: '秋（9-11月）',
+                            winter: '冬（12-2月）'
+                          };
+                          return `${year}年${seasonLabels[season]}`;
+                        }
+
+                        // フォールバック：そのまま表示
+                        return visit_schedule;
+                      })()}
                     </span>
                   </div>
                 )}
