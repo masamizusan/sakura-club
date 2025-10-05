@@ -161,6 +161,20 @@ export function calculateProfileCompletion(
   const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
   const completion = Math.round((completedFields / totalFields) * 100)
 
+  // 🔍 詳細デバッグ: どの項目が完成済みかを表示
+  console.log('🔍 完成度計算詳細:', {
+    '必須完成項目': completedRequired,
+    'オプション完成項目': completedOptional,
+    '画像完成': hasImages,
+    '必須完成数': completedRequired.length,
+    'オプション完成数': completedOptional.length,
+    '画像完成数': imageCompletionCount,
+    '総完成数': completedFields,
+    '総項目数': totalFields,
+    '完成度': `${completion}%`,
+    isNewUser
+  })
+
   // 外国人男性の詳細デバッグ
   if (isForeignMale) {
     console.log('🌍 外国人男性プロフィール完成度詳細:', {
