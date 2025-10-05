@@ -2713,7 +2713,7 @@ function ProfileEditContent() {
                         性格
                       </label>
                       <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         {PERSONALITY_OPTIONS.map((trait) => (
                           <button
                             key={trait}
