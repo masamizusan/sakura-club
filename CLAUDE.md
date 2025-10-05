@@ -10,13 +10,16 @@
 - ✅ 職業選択肢「主婦」の順序問題
 - ✅ **外国人男性の完成度100%→80%問題（2025-10-03完全解決）**
 - ✅ **新規登録時の外国人男性専用フィールド不正保存問題（2025-10-03完全解決）**
+- ✅ **日本文化と性格のチェックボックス完成度計算問題（2025-10-05完全解決）**
+- ✅ **新規ユーザー初期完成度5/15・5/13問題（2025-10-05完全解決）**
+- ✅ **デプロイ直後の新規ユーザー完成度問題（2025-10-05完全解決）**
 
 ### 🛡️ 保護すべき最新コミット情報
-- **🏆 最新の完璧なコミットID**: `b9346fcf`
-- **コミットメッセージ**: "Fix: 外国人男性以外への専用フィールド不正保存を防止"
-- **日付**: 2025-10-03
-- **解決内容**: 新規登録時の外国人男性専用フィールド不正保存問題を完全解決
-- **以前の重要コミット**: `fda4f352` (2025-10-03)
+- **🏆 最新の完璧なコミットID**: `950e19e5`
+- **コミットメッセージ**: "Fix: React.useEffect → useEffect修正"
+- **日付**: 2025-10-05
+- **解決内容**: プロフィール完成度システム完全完成
+- **重要な先行コミット**: `4f41de44` (デプロイ直後対策), `3ba36fbd` (新規ユーザー対策), `2fdcdc10` (日本文化・性格修正)
 
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
@@ -53,14 +56,14 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 ### 🚨 緊急時の復旧コマンド（最新版）
 ```bash
 # 最新の完璧な状態への復旧
-git checkout b9346fcf -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
-git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (b9346fcf)"
+git checkout 950e19e5 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
+git commit -m "緊急復旧: 完璧なプロフィール完成度システムに戻す (950e19e5)"
 
 # または、特定ファイルのみ復旧
-git checkout b9346fcf -- src/utils/profileCompletion.ts
-git checkout b9346fcf -- src/app/profile/edit/page.tsx
-git checkout b9346fcf -- src/app/mypage/page.tsx
-git checkout b9346fcf -- src/app/profile/preview/page.tsx
+git checkout 950e19e5 -- src/utils/profileCompletion.ts
+git checkout 950e19e5 -- src/app/profile/edit/page.tsx
+git checkout 950e19e5 -- src/app/mypage/page.tsx
+git checkout 950e19e5 -- src/app/profile/preview/page.tsx
 ```
 
 ### 🛡️ 保護対象ファイル（絶対に変更禁止）
@@ -77,6 +80,9 @@ git checkout b9346fcf -- src/app/profile/preview/page.tsx
 5. **外国人男性専用フィールド（visit_schedule、travel_companion、planned_prefectures）の処理は絶対に変更しない**
 6. **マイページのlocalStorage処理の外国人男性判定（103-120行目）は保護対象**
 7. **プレビュー画面の外国人男性判定（436-440行目）は保護対象**
+8. **🆕 toggleHobby/togglePersonality関数の空配列許可ロジックは保護対象**
+9. **🆕 新規ユーザー画像検出のisNewUserフラグ処理は保護対象**
+10. **🆕 セッションストレージ早期クリア処理（199-221行目）は保護対象**
 
 ## 開発コマンド
 - **開発サーバー**: `npm run dev`
