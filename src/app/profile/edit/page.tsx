@@ -429,13 +429,19 @@ function ProfileEditContent() {
     const currentData = watch()
     // custom_culture は完成度計算から除外（コメント扱い）
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+
+    // 新規ユーザー判定（画像変更時）
+    const urlParams = new URLSearchParams(window.location.search)
+    const isFromSignup = urlParams.get('from') === 'signup'
+    const isNewUserForImage = isFromSignup
+
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
       // 画像削除時はavatar_urlをnullに設定
       avatar_url: newImages.length > 0 ? 'has_images' : null
-    }, newImages)
+    }, newImages, 'image-change', isNewUserForImage)
     
     // 写真変更完了フラグをリセット
     setTimeout(() => {
