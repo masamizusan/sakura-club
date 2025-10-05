@@ -2707,36 +2707,37 @@ function ProfileEditContent() {
                       </Select>
                     </div>
 
-                    {/* 性格 */}
-                    <div className="space-y-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        性格
-                      </label>
-                      <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-3">
-                        {PERSONALITY_OPTIONS.map((trait) => (
-                          <button
-                            key={trait}
-                            type="button"
-                            onClick={() => togglePersonality(trait)}
-                            disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
-                            className={`
-                              px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                              ${selectedPersonality.includes(trait)
-                                ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                              }
-                              ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
-                                ? 'opacity-50 cursor-not-allowed'
-                                : 'cursor-pointer hover:shadow-md'
-                              }
-                            `}
-                          >
-                            {trait}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                  </div>
+                </div>
+
+                {/* 性格セクション - 独立したセクション */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    性格
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {PERSONALITY_OPTIONS.map((trait) => (
+                      <button
+                        key={trait}
+                        type="button"
+                        onClick={() => togglePersonality(trait)}
+                        disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                        className={`
+                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                          ${selectedPersonality.includes(trait)
+                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                          }
+                          ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'cursor-pointer hover:shadow-md'
+                          }
+                        `}
+                      >
+                        {trait}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
