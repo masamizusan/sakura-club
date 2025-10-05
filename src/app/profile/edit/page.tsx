@@ -2713,18 +2713,27 @@ function ProfileEditContent() {
                         性格
                       </label>
                       <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         {PERSONALITY_OPTIONS.map((trait) => (
-                          <label key={trait} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={selectedPersonality.includes(trait)}
-                              onChange={() => togglePersonality(trait)}
-                              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                              disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
-                            />
-                            <span className="text-sm text-gray-700">{trait}</span>
-                          </label>
+                          <button
+                            key={trait}
+                            type="button"
+                            onClick={() => togglePersonality(trait)}
+                            disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                            className={`
+                              px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
+                              ${selectedPersonality.includes(trait)
+                                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-rose-500 shadow-lg transform scale-105'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700'
+                              }
+                              ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'cursor-pointer hover:shadow-md'
+                              }
+                            `}
+                          >
+                            {trait}
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -2796,18 +2805,27 @@ function ProfileEditContent() {
                           行く予定の都道府県
                         </label>
                         <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                           {PREFECTURES.map((prefecture) => (
-                            <label key={prefecture} className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={selectedPlannedPrefectures.includes(prefecture)}
-                                onChange={() => togglePlannedPrefecture(prefecture)}
-                                className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                                disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
-                              />
-                              <span className="text-sm text-gray-700">{prefecture}</span>
-                            </label>
+                            <button
+                              key={prefecture}
+                              type="button"
+                              onClick={() => togglePlannedPrefecture(prefecture)}
+                              disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
+                              className={`
+                                px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
+                                ${selectedPlannedPrefectures.includes(prefecture)
+                                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-500 shadow-lg transform scale-105'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700'
+                                }
+                                ${(!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3)
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : 'cursor-pointer hover:shadow-md'
+                                }
+                              `}
+                            >
+                              {prefecture}
+                            </button>
                           ))}
                         </div>
                         {errors.planned_prefectures && (
@@ -2829,18 +2847,27 @@ function ProfileEditContent() {
                       : "興味のある日本文化を選択してください（1つ以上8つまで）"
                     }
                   </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {HOBBY_OPTIONS.map((hobby) => (
-                      <label key={hobby} className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedHobbies.includes(hobby)}
-                          onChange={() => toggleHobby(hobby)}
-                          className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                          disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
-                        />
-                        <span className="text-sm text-gray-700">{hobby}</span>
-                      </label>
+                      <button
+                        key={hobby}
+                        type="button"
+                        onClick={() => toggleHobby(hobby)}
+                        disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
+                        className={`
+                          px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
+                          ${selectedHobbies.includes(hobby)
+                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-indigo-500 shadow-lg transform scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700'
+                          }
+                          ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'cursor-pointer hover:shadow-md'
+                          }
+                        `}
+                      >
+                        {hobby}
+                      </button>
                     ))}
                   </div>
                   {errors.hobbies && (
