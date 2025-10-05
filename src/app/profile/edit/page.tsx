@@ -2721,7 +2721,7 @@ function ProfileEditContent() {
                             onClick={() => togglePersonality(trait)}
                             disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
                             className={`
-                              px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
+                              px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
                               ${selectedPersonality.includes(trait)
                                 ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                 : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
