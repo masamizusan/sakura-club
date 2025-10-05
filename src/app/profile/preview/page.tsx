@@ -193,11 +193,17 @@ function ProfilePreviewContent() {
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">訪問予定:</span>
                     <span className="text-gray-600">
-                      {visit_schedule === 'within_month' ? '1ヶ月以内' :
-                       visit_schedule === 'within_3months' ? '3ヶ月以内' :
-                       visit_schedule === 'within_6months' ? '6ヶ月以内' :
-                       visit_schedule === 'within_year' ? '1年以内' :
-                       visit_schedule === 'undecided' ? '未定' : visit_schedule}
+                      {visit_schedule === 'undecided' ? 'まだ決まっていない' :
+                       visit_schedule === '2025-spring' ? '2025年春（3-5月）' :
+                       visit_schedule === '2025-summer' ? '2025年夏（6-8月）' :
+                       visit_schedule === '2025-autumn' ? '2025年秋（9-11月）' :
+                       visit_schedule === '2025-winter' ? '2025年冬（12-2月）' :
+                       visit_schedule === '2026-spring' ? '2026年春（3-5月）' :
+                       visit_schedule === '2026-summer' ? '2026年夏（6-8月）' :
+                       visit_schedule === '2026-autumn' ? '2026年秋（9-11月）' :
+                       visit_schedule === '2026-winter' ? '2026年冬（12-2月）' :
+                       visit_schedule === 'beyond-2026' ? '2026年以降' :
+                       visit_schedule === 'no-entry' ? '記入しない' : visit_schedule}
                     </span>
                   </div>
                 )}
@@ -207,12 +213,14 @@ function ProfilePreviewContent() {
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">同行者:</span>
                     <span className="text-gray-600">
-                      {travel_companion === 'alone' ? '一人' :
-                       travel_companion === 'friends' ? '友人' :
+                      {travel_companion === 'solo' ? '一人旅' :
+                       travel_companion === 'couple' ? 'カップル（恋人・配偶者）' :
+                       travel_companion === 'friends' ? '友達' :
                        travel_companion === 'family' ? '家族' :
                        travel_companion === 'colleagues' ? '同僚・仕事仲間' :
                        travel_companion === 'group' ? 'グループ・団体' :
-                       travel_companion === 'other' ? 'その他' : travel_companion}
+                       travel_companion === 'other' ? 'その他' :
+                       travel_companion === 'no-entry' ? '記入しない' : travel_companion}
                     </span>
                   </div>
                 )}
