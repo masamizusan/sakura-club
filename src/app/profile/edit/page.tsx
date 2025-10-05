@@ -2633,6 +2633,28 @@ function ProfileEditContent() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* 性格 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        性格
+                      </label>
+                      <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {PERSONALITY_OPTIONS.map((trait) => (
+                          <label key={trait} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedPersonality.includes(trait)}
+                              onChange={() => togglePersonality(trait)}
+                              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+                              disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                            />
+                            <span className="text-sm text-gray-700">{trait}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -2850,27 +2872,6 @@ function ProfileEditContent() {
                     )}
                   </div>
 
-                  {/* 性格 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      性格
-                    </label>
-                    <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {PERSONALITY_OPTIONS.map((trait) => (
-                        <label key={trait} className="flex items-center space-x-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedPersonality.includes(trait)}
-                            onChange={() => togglePersonality(trait)}
-                            className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
-                            disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
-                          />
-                          <span className="text-sm text-gray-700">{trait}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 {/* プレビューボタン */}
