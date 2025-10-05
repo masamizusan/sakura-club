@@ -194,6 +194,31 @@ function ProfileEditContent() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
+
+  // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
+  React.useEffect(() => {
+    const isFromSignup = searchParams.get('from') === 'signup'
+    if (isFromSignup && typeof window !== 'undefined') {
+      console.log('🧹 新規ユーザー: デプロイ直後対策でセッションストレージを早期クリア')
+      try {
+        // すべての画像関連セッションストレージを削除
+        sessionStorage.removeItem('currentProfileImages')
+        sessionStorage.removeItem('imageStateTimestamp')
+        sessionStorage.removeItem('imageEditHistory')
+
+        // ユーザー固有キーも削除
+        const keys = Object.keys(sessionStorage)
+        keys.forEach(key => {
+          if (key.startsWith('currentProfileImages_') ||
+              key.startsWith('imageStateTimestamp_')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+      } catch (e) {
+        console.warn('セッションストレージクリアエラー:', e)
+      }
+    }
+  }, [searchParams])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [initializationError, setInitializationError] = useState('')
