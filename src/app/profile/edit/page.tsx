@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import AuthGuard from '@/components/auth/AuthGuard'
@@ -96,33 +97,44 @@ const PERSONALITY_OPTIONS = [
   'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
 ]
 
-// 共有したい日本文化オプション（新しいカテゴリ構造）
-const HOBBY_OPTIONS = [
-  // 伝統文化
-  '茶道', '華道', '書道', '着物・浴衣', '和菓子', '陶芸', '折り紙', '盆栽', '神社仏閣', '御朱印集め',
-
-  // 食文化
-  '寿司', '天ぷら', 'うなぎ', '牛丼', 'とんかつ', 'ラーメン', 'お好み焼き', 'たこ焼き', 'カレーライス', 'コンビニフード',
-  'ポテトチップス', '出汁', '味噌', '豆腐', '梅干し', '漬物', '日本酒', '焼酎', 'そば', 'うどん',
-
-  // スイーツ
-  '抹茶スイーツ', '団子', 'たい焼き', '大判焼き', 'わらび餅', 'りんご飴', 'わたあめ', '駄菓子', 'コンビニスイーツ',
-
-  // 芸能・スポーツ
-  '相撲', '武道', '歌舞伎', '能', '日本舞踊', '邦楽', '演歌',
-
-  // 季節・自然
-  '桜見物', '紅葉狩り', '花火大会', '祭り参加', '盆踊り', '雪景色', '日本庭園散策',
-
-  // 暮らし・空間
-  '障子', '襖の張り替え', '畳', '古民家カフェ', '銭湯', '昭和レトロ家電', '和モダンインテリア',
-
-  // 工芸・職人技
-  '漆器', '金箔貼り', '和紙漉き', '染物', '刀鍛冶', '木工', '飴細工',
-
-  // 現代カルチャー
-  'アニメ', 'マンガ', 'コスプレ', '日本のゲーム', 'J-POP', 'カラオケ', '日本映画', 'ドラマ', 'ボーカロイド', 'アイドル文化'
+// 共有したい日本文化オプション（カテゴリ構造）
+const CULTURE_CATEGORIES = [
+  {
+    name: "伝統文化",
+    items: ["茶道", "華道", "書道", "着物・浴衣", "和菓子", "陶芸", "折り紙", "盆栽", "神社仏閣", "御朱印集め"]
+  },
+  {
+    name: "食文化",
+    items: ["寿司", "天ぷら", "うなぎ", "牛丼", "とんかつ", "ラーメン", "お好み焼き", "たこ焼き", "カレーライス", "コンビニフード", "ポテトチップス", "出汁", "味噌", "豆腐", "梅干し", "漬物", "日本酒", "焼酎", "そば", "うどん"]
+  },
+  {
+    name: "スイーツ",
+    items: ["抹茶スイーツ", "団子", "たい焼き", "大判焼き", "わらび餅", "りんご飴", "わたあめ", "駄菓子", "コンビニスイーツ"]
+  },
+  {
+    name: "芸能・スポーツ",
+    items: ["相撲", "武道", "歌舞伎", "能", "日本舞踊", "邦楽", "演歌"]
+  },
+  {
+    name: "季節・自然",
+    items: ["桜見物", "紅葉狩り", "花火大会", "祭り参加", "盆踊り", "雪景色", "日本庭園散策"]
+  },
+  {
+    name: "暮らし・空間",
+    items: ["障子", "襖の張り替え", "畳", "古民家カフェ", "銭湯", "昭和レトロ家電", "和モダンインテリア"]
+  },
+  {
+    name: "工芸・職人技",
+    items: ["漆器", "金箔貼り", "和紙漉き", "染物", "刀鍛冶", "木工", "飴細工"]
+  },
+  {
+    name: "現代カルチャー",
+    items: ["アニメ", "マンガ", "コスプレ", "日本のゲーム", "J-POP", "カラオケ", "日本映画", "ドラマ", "ボーカロイド", "アイドル文化"]
+  }
 ]
+
+// 後方互換性のため、フラットな配列も保持
+const HOBBY_OPTIONS = CULTURE_CATEGORIES.flatMap(category => category.items)
 
 // 結婚状況オプション
 const MARITAL_STATUS_OPTIONS = [
@@ -2890,29 +2902,40 @@ function ProfileEditContent() {
                       : "興味のある日本文化を選択してください（1つ以上8つまで）"
                     }
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {HOBBY_OPTIONS.map((hobby) => (
-                      <button
-                        key={hobby}
-                        type="button"
-                        onClick={() => toggleHobby(hobby)}
-                        disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
-                        className={`
-                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                          ${selectedHobbies.includes(hobby)
-                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                          }
-                          ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer hover:shadow-md'
-                          }
-                        `}
-                      >
-                        {hobby}
-                      </button>
+                  <Accordion type="multiple" className="w-full">
+                    {CULTURE_CATEGORIES.map((category) => (
+                      <AccordionItem key={category.name} value={category.name}>
+                        <AccordionTrigger className="text-lg font-semibold">
+                          {category.name}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-2">
+                            {category.items.map((hobby) => (
+                              <button
+                                key={hobby}
+                                type="button"
+                                onClick={() => toggleHobby(hobby)}
+                                disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
+                                className={`
+                                  px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                  ${selectedHobbies.includes(hobby)
+                                    ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                  }
+                                  ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'cursor-pointer hover:shadow-md'
+                                  }
+                                `}
+                              >
+                                {hobby}
+                              </button>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     ))}
-                  </div>
+                  </Accordion>
                   {errors.hobbies && (
                     <p className="text-red-500 text-sm mt-1">{errors.hobbies.message}</p>
                   )}
