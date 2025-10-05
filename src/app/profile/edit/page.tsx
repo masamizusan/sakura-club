@@ -2713,7 +2713,7 @@ function ProfileEditContent() {
                         性格
                       </label>
                       <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                         {PERSONALITY_OPTIONS.map((trait) => (
                           <button
                             key={trait}
@@ -2723,8 +2723,8 @@ function ProfileEditContent() {
                             className={`
                               px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
                               ${selectedPersonality.includes(trait)
-                                ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-rose-500 shadow-lg transform scale-105'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700'
+                                ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                               }
                               ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
                                 ? 'opacity-50 cursor-not-allowed'
@@ -2815,8 +2815,8 @@ function ProfileEditContent() {
                               className={`
                                 px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
                                 ${selectedPlannedPrefectures.includes(prefecture)
-                                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-500 shadow-lg transform scale-105'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700'
+                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                                 }
                                 ${(!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3)
                                   ? 'opacity-50 cursor-not-allowed'
@@ -2857,8 +2857,8 @@ function ProfileEditContent() {
                         className={`
                           px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out
                           ${selectedHobbies.includes(hobby)
-                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-indigo-500 shadow-lg transform scale-105'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700'
+                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                           }
                           ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
                             ? 'opacity-50 cursor-not-allowed'
