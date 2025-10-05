@@ -2574,12 +2574,54 @@ function ProfileEditContent() {
                   </div>
                 )}
 
+                {/* 居住地（日本人女性のみ） */}
+                {isJapaneseFemale && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        都道府県 <span className="text-red-500">*</span>
+                      </label>
+                      <Select
+                        value={watch('prefecture') || ''}
+                        onValueChange={(value) => setValue('prefecture', value)}
+                      >
+                        <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="都道府県を選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PREFECTURES.map((prefecture) => (
+                            <SelectItem key={prefecture} value={prefecture}>
+                              {prefecture}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.prefecture && (
+                        <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        市区町村
+                      </label>
+                      <Input
+                        placeholder="市区町村を入力"
+                        {...register('city')}
+                        className={errors.city ? 'border-red-500' : ''}
+                      />
+                      {errors.city && (
+                        <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* オプション情報セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4 flex items-center">
                     <span className="text-green-600 mr-2">○</span>
                     オプション情報
-                    <span className="text-sm font-normal text-gray-500 ml-2">（記入すると魅力的なプロフィールになります）</span>
                   </h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2694,48 +2736,6 @@ function ProfileEditContent() {
                 </div>
 
 
-                {/* 居住地（日本人女性のみ） */}
-                {isJapaneseFemale && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        都道府県 <span className="text-red-500">*</span>
-                      </label>
-                      <Select
-                        value={watch('prefecture') || ''}
-                        onValueChange={(value) => setValue('prefecture', value)}
-                      >
-                        <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="都道府県を選択" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PREFECTURES.map((prefecture) => (
-                            <SelectItem key={prefecture} value={prefecture}>
-                              {prefecture}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.prefecture && (
-                        <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        市区町村
-                      </label>
-                      <Input
-                        placeholder="市区町村を入力"
-                        {...register('city')}
-                        className={errors.city ? 'border-red-500' : ''}
-                      />
-                      {errors.city && (
-                        <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* 外国人男性向け専用フィールド */}
                 {isForeignMale && (
