@@ -196,7 +196,7 @@ function ProfileEditContent() {
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
-  React.useEffect(() => {
+  useEffect(() => {
     const isFromSignup = searchParams.get('from') === 'signup'
     if (isFromSignup && typeof window !== 'undefined') {
       console.log('🧹 新規ユーザー: デプロイ直後対策でセッションストレージを早期クリア')
