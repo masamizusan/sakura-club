@@ -44,10 +44,10 @@ export function calculateProfileCompletion(
       'hobbies', 'self_introduction'
     ]
 
-    // 日本人女性のオプションフィールド（6個）
+    // 日本人女性のオプションフィールド（7個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city'
+      'personality', 'city', 'english_level'
     ]
   }
 
