@@ -2967,29 +2967,40 @@ function ProfileEditContent() {
                           行く予定の都道府県
                         </label>
                         <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                          {PREFECTURES.map((prefecture) => (
-                            <button
-                              key={prefecture}
-                              type="button"
-                              onClick={() => togglePlannedPrefecture(prefecture)}
-                              disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
-                              className={`
-                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                ${selectedPlannedPrefectures.includes(prefecture)
-                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                                }
-                                ${(!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3)
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : 'cursor-pointer hover:shadow-md'
-                                }
-                              `}
-                            >
-                              {prefecture}
-                            </button>
-                          ))}
-                        </div>
+
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="prefectures">
+                            <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
+                              都道府県を選択（{selectedPlannedPrefectures.length}/3 選択済み）
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
+                                {PREFECTURES.map((prefecture) => (
+                                  <button
+                                    key={prefecture}
+                                    type="button"
+                                    onClick={() => togglePlannedPrefecture(prefecture)}
+                                    disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
+                                    className={`
+                                      px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                      ${selectedPlannedPrefectures.includes(prefecture)
+                                        ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                      }
+                                      ${(!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3)
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : 'cursor-pointer hover:shadow-md'
+                                      }
+                                    `}
+                                  >
+                                    {prefecture}
+                                  </button>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
                         {errors.planned_prefectures && (
                           <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
                         )}
