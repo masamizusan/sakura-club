@@ -42,6 +42,7 @@ const baseProfileEditSchema = z.object({
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
   english_level: z.string().optional(),
+  japanese_level: z.string().optional(),
   hobbies: z.array(z.string()).min(1, '日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
   custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -183,6 +184,17 @@ const BODY_TYPE_OPTIONS = [
 
 // 英語レベルオプション
 const ENGLISH_LEVEL_OPTIONS = [
+  { value: 'none', label: '記入しない' },
+  { value: '初級', label: '初級（日常会話は難しい）' },
+  { value: '初中級', label: '初中級（簡単な日常会話）' },
+  { value: '中級', label: '中級（日常会話ができる）' },
+  { value: '中上級', label: '中上級（ビジネス会話も一部可能）' },
+  { value: '上級', label: '上級（ビジネス会話も流暢）' },
+  { value: 'ネイティブレベル', label: 'ネイティブレベル' }
+]
+
+// 日本語レベルオプション
+const JAPANESE_LEVEL_OPTIONS = [
   { value: 'none', label: '記入しない' },
   { value: '初級', label: '初級（日常会話は難しい）' },
   { value: '初中級', label: '初中級（簡単な日常会話）' },
@@ -2250,6 +2262,7 @@ function ProfileEditContent() {
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
         english_level: data.english_level === 'none' ? null : data.english_level,
+        japanese_level: data.japanese_level === 'none' ? null : data.japanese_level,
         self_introduction: data.self_introduction,
         interests: consolidatedInterests,
         avatar_url: avatarUrl,
@@ -2773,6 +2786,28 @@ function ProfileEditContent() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {isForeignMale && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          日本語レベル
+                        </label>
+                        <Select
+                          value={watch('japanese_level') || 'none'}
+                          onValueChange={(value) => setValue('japanese_level', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="日本語レベルを選択" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {JAPANESE_LEVEL_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     {!isForeignMale && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">

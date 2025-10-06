@@ -53,6 +53,7 @@ function ProfilePreviewContent() {
           body_type: searchParams.get('body_type') || '',
           marital_status: searchParams.get('marital_status') || '',
           english_level: searchParams.get('english_level') || '',
+          japanese_level: searchParams.get('japanese_level') || '',
           self_introduction: searchParams.get('self_introduction') || '',
           hobbies: [],
           personality: [],
@@ -98,6 +99,7 @@ function ProfilePreviewContent() {
     body_type: bodyType = '',
     marital_status: maritalStatus = '',
     english_level: englishLevel = '',
+    japanese_level: japaneseLevel = '',
     self_introduction: selfIntroduction = '',
     hobbies = [],
     // 外国人男性特有のフィールド
@@ -279,6 +281,12 @@ function ProfilePreviewContent() {
                     <span className="text-gray-600">{englishLevel}</span>
                   </div>
                 )}
+                {shouldDisplayValue(japaneseLevel) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">日本語:</span>
+                    <span className="text-gray-600">{japaneseLevel}</span>
+                  </div>
+                )}
               </div>
 
               {/* 自己紹介 */}
@@ -404,6 +412,7 @@ function ProfilePreviewContent() {
                           body_type: bodyType || null,
                           marital_status: maritalStatus || null,
                           english_level: englishLevel || null,
+                          japanese_level: japaneseLevel || null,
                         }
                         
                         // personalityとhobbiesを拡張interests配列として準備
