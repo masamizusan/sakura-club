@@ -28,6 +28,7 @@ const baseProfileEditSchema = z.object({
   city: z.string().optional(),
   // 外国人男性向け新フィールド
   planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
+  planned_stations: z.array(z.string()).max(5, '訪問予定の駅は5つまで選択できます').optional(),
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),
@@ -204,6 +205,16 @@ const JAPANESE_LEVEL_OPTIONS = [
   { value: 'ネイティブレベル', label: 'ネイティブレベル' }
 ]
 
+// 人気駅30（外国人に人気の駅）
+const POPULAR_STATIONS = [
+  "東京駅（東京都）","京都駅（京都府）","金沢駅（石川県）","嵐山駅（京都府）","浅草駅（東京都）",
+  "渋谷駅（東京都）","箱根湯本駅（神奈川県）","大阪駅（大阪府）","鎌倉駅（神奈川県）","小樽駅（北海道）",
+  "上野駅（東京都）","河口湖駅（山梨県）","名古屋駅（愛知県）","大阪梅田駅（大阪府）","天橋立駅（京都府）",
+  "札幌駅（北海道）","日光駅（栃木県）","横浜駅（神奈川県）","博多駅（福岡県）","熱海駅（静岡県）",
+  "函館駅（北海道）","品川駅（東京都）","片瀬江ノ島駅（神奈川県）","岐阜駅（岐阜県）","新大久保駅（東京都）",
+  "高山駅（岐阜県）","ニセコ駅（北海道）","難波駅（大阪府）","池袋駅（東京都）","由布院駅（大分県）"
+]
+
 // 動的な訪問予定時期選択肢生成関数
 const generateVisitScheduleOptions = () => {
   const options = [
@@ -307,6 +318,7 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
+  const [selectedPlannedStations, setSelectedPlannedStations] = useState<string[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(0)
@@ -1976,6 +1988,12 @@ function ProfileEditContent() {
                 ? profile.travel_companion : 'no-entry')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
+
+            const plannedStationsValue = isNewUser ? [] :
+              (Array.isArray(profile?.planned_stations) ? profile.planned_stations : [])
+            console.log('Setting planned_stations:', plannedStationsValue, 'isNewUser:', isNewUser)
+            setValue('planned_stations', plannedStationsValue, { shouldValidate: false })
+            setSelectedPlannedStations(plannedStationsValue)
           } catch (error) {
             console.error('🚨 外国人男性フィールド初期化エラー:', error)
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -1983,7 +2001,9 @@ function ProfileEditContent() {
             setValue('planned_prefectures', [], { shouldValidate: false })
             setValue('visit_schedule', 'no-entry', { shouldValidate: false })
             setValue('travel_companion', 'no-entry', { shouldValidate: false })
+            setValue('planned_stations', [], { shouldValidate: false })
             setSelectedPlannedPrefectures([])
+            setSelectedPlannedStations([])
           }
         }
         
@@ -2289,12 +2309,14 @@ function ProfileEditContent() {
         updateData.visit_schedule = (data.visit_schedule && data.visit_schedule !== 'no-entry') ? data.visit_schedule : null
         updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry') ? data.travel_companion : null
         updateData.planned_prefectures = (data.planned_prefectures && Array.isArray(data.planned_prefectures) && data.planned_prefectures.length > 0) ? data.planned_prefectures : null
+        updateData.planned_stations = (data.planned_stations && Array.isArray(data.planned_stations) && data.planned_stations.length > 0) ? data.planned_stations : null
 
         console.log('🌍 外国人男性保存フィールド追加:', {
           nationality: updateData.nationality,
           visit_schedule: updateData.visit_schedule,
           travel_companion: updateData.travel_companion,
-          planned_prefectures: updateData.planned_prefectures
+          planned_prefectures: updateData.planned_prefectures,
+          planned_stations: updateData.planned_stations
         })
       } else {
         console.log('❌ 外国人男性判定がfalseのため、専用フィールドは保存されません')
@@ -2413,6 +2435,22 @@ function ProfileEditContent() {
       }, 0)
       
       return newPrefectures
+    })
+  }
+
+  // 外国人男性向け: 訪問予定の駅選択
+  const togglePlannedStation = (station: string) => {
+    setSelectedPlannedStations(prev => {
+      const newStations = prev.includes(station)
+        ? prev.filter(s => s !== station)
+        : prev.length < 5
+          ? [...prev, station]
+          : prev
+
+      // フォームデータに反映
+      setValue('planned_stations', newStations)
+
+      return newStations
     })
   }
 
@@ -2954,6 +2992,40 @@ function ProfileEditContent() {
                         </div>
                         {errors.planned_prefectures && (
                           <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
+                        )}
+                      </div>
+
+                      {/* 訪問予定の駅 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          訪問予定の駅（任意）
+                        </label>
+                        <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つまで選択できます</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {POPULAR_STATIONS.map((station) => (
+                            <button
+                              key={station}
+                              type="button"
+                              onClick={() => togglePlannedStation(station)}
+                              disabled={!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5}
+                              className={`
+                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                ${selectedPlannedStations.includes(station)
+                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                }
+                                ${(!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5)
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : 'cursor-pointer hover:shadow-md'
+                                }
+                              `}
+                            >
+                              {station}
+                            </button>
+                          ))}
+                        </div>
+                        {errors.planned_stations && (
+                          <p className="text-red-500 text-sm mt-1">{errors.planned_stations.message}</p>
                         )}
                       </div>
                     </div>
