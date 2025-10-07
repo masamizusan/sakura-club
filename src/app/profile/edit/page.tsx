@@ -14,9 +14,11 @@ import { createClient } from '@/lib/supabase'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
-import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera } from 'lucide-react'
+import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
+import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
+import { useTranslation } from '@/utils/translations'
 
 const baseProfileEditSchema = z.object({
   nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
@@ -319,12 +321,14 @@ function ProfileEditContent() {
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
   const [selectedPlannedStations, setSelectedPlannedStations] = useState<string[]>([])
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(0)
   const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   const router = useRouter()
   const supabase = createClient()
+  const { t } = useTranslation(currentLanguage)
 
   const {
     register,
@@ -2023,7 +2027,17 @@ function ProfileEditContent() {
         setSelectedPersonality(finalPersonality)
         
         console.log('✅ STATE SETTING COMPLETED')
-        
+
+        // 🌐 言語設定の初期化
+        const nationality = profile.nationality || ((signupData as any)?.nationality)
+        const detectedLanguage = determineLanguage(nationality)
+        setCurrentLanguage(detectedLanguage)
+        console.log('🌐 Language initialization:', {
+          nationality,
+          detectedLanguage,
+          source: 'profile load'
+        })
+
         console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
         console.log('  - isNewUser:', isNewUser)
         console.log('  - profile.avatar_url:', profile.avatar_url)
@@ -2503,6 +2517,31 @@ function ProfileEditContent() {
       {/* Main Content */}
       <div className="md:ml-64 py-12 px-4">
         <div className="max-w-2xl mx-auto">
+          {/* 言語切り替えボタン */}
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-gray-600" />
+              <Select
+                value={currentLanguage}
+                onValueChange={(value: SupportedLanguage) => {
+                  setCurrentLanguage(value)
+                  saveLanguagePreference(value)
+                  console.log('🌐 Language changed to:', value)
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                  <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="flex items-center mb-8">
             <Button
               variant="outline"
@@ -2510,7 +2549,7 @@ function ProfileEditContent() {
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              戻る
+              {t('common.cancel')}
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -2964,14 +3003,14 @@ function ProfileEditContent() {
                       {/* 行く予定の都道府県 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          行く予定の都道府県
+                          {t('profile.plannedPrefectures')}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
+                        <p className="text-xs text-gray-500 mb-3">最大3つ{t('profile.maxSelection')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="prefectures">
                             <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
-                              都道府県を選択（{selectedPlannedPrefectures.length}/3 選択済み）
+                              {t('profile.selectPrefectures')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
@@ -3009,14 +3048,14 @@ function ProfileEditContent() {
                       {/* 訪問予定の駅 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          訪問予定の駅（任意）
+                          {t('profile.plannedStations')}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つまで選択できます</p>
+                        <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つ{t('profile.maxSelection')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="stations">
                             <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
-                              駅を選択（{selectedPlannedStations.length}/5 選択済み）
+                              {t('profile.selectStations')}（{selectedPlannedStations.length}/5 {t('profile.selectedCount')}）
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
