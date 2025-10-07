@@ -3096,11 +3096,11 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? '学びたい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
+                    {isForeignMale ? '体験したい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {isForeignMale 
-                      ? "学習・体験したい日本文化を選択してください（1つ以上8つまで）" 
+                      ? "体験したい日本文化を選択してください（1つ以上8つまで）" 
                       : "興味のある日本文化を選択してください（1つ以上8つまで）"
                     }
                   </p>
@@ -3146,7 +3146,7 @@ function ProfileEditContent() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {isForeignMale
-                        ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
+                        ? "上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）"
                         : "上記にない日本文化があれば自由に記入してください（100文字以内）"
                       }
                     </label>
