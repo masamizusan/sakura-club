@@ -3012,29 +3012,40 @@ function ProfileEditContent() {
                           訪問予定の駅（任意）
                         </label>
                         <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つまで選択できます</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {POPULAR_STATIONS.map((station) => (
-                            <button
-                              key={station}
-                              type="button"
-                              onClick={() => togglePlannedStation(station)}
-                              disabled={!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5}
-                              className={`
-                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                ${selectedPlannedStations.includes(station)
-                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                                }
-                                ${(!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5)
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : 'cursor-pointer hover:shadow-md'
-                                }
-                              `}
-                            >
-                              {station}
-                            </button>
-                          ))}
-                        </div>
+
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="stations">
+                            <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
+                              駅を選択（{selectedPlannedStations.length}/5 選択済み）
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                                {POPULAR_STATIONS.map((station) => (
+                                  <button
+                                    key={station}
+                                    type="button"
+                                    onClick={() => togglePlannedStation(station)}
+                                    disabled={!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5}
+                                    className={`
+                                      px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                      ${selectedPlannedStations.includes(station)
+                                        ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                      }
+                                      ${(!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5)
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : 'cursor-pointer hover:shadow-md'
+                                      }
+                                    `}
+                                  >
+                                    {station}
+                                  </button>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
                         {errors.planned_stations && (
                           <p className="text-red-500 text-sm mt-1">{errors.planned_stations.message}</p>
                         )}
