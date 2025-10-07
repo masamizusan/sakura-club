@@ -3170,8 +3170,7 @@ function ProfileEditContent() {
                 <div className="pt-4">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="w-full mb-4"
+                    className="w-full mb-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 border-0 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
                     onClick={async () => {
                       try {
                         // 手動バリデーションを実行
@@ -3249,15 +3248,15 @@ function ProfileEditContent() {
                       }
                     }}
                   >
-                    <User className="w-4 h-4 mr-2" />
-                    プレビューで確認
+                    <User className="w-5 h-5 mr-3" />
+                    📋 プレビューで内容を確認する
                   </Button>
                 </div>
 
                 {/* 注意メッセージ */}
-                <div className="pt-2 text-center text-gray-600">
-                  <p className="text-sm">
-                    プレビューで内容を確認してから保存してください
+                <div className="pt-2 text-center">
+                  <p className="text-sm text-blue-600 font-medium">
+                    💡 上のボタンでプレビューを確認してから保存してください
                   </p>
                 </div>
               </div>
