@@ -15,6 +15,19 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [scale, setScale] = useState(1)
   const [blurLevel, setBlurLevel] = useState(0)
+
+  // ぼかしレベルをピクセル値に変換する関数
+  const getBlurPixels = (level: number): number => {
+    const blurMapping = {
+      0: 0,    // なし
+      1: 1,    // 軽い
+      2: 2.5,  // 中程度
+      3: 5,    // 旧レベル5相当
+      4: 8,    // より濃い
+      5: 12    // 最も濃い
+    }
+    return blurMapping[level as keyof typeof blurMapping] || 0
+  }
   const [cropMode, setCropMode] = useState(false)
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 })
   const [isDragging, setIsDragging] = useState(false)
@@ -54,7 +67,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
       
       // ぼかしフィルターを適用
       if (blurLevel > 0) {
-        ctx.filter = `blur(${blurLevel}px)`
+        ctx.filter = `blur(${getBlurPixels(blurLevel)}px)`
       } else {
         ctx.filter = 'none'
       }
@@ -82,7 +95,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
         ctx.clip()
         
         if (blurLevel > 0) {
-          ctx.filter = `blur(${blurLevel}px)`
+          ctx.filter = `blur(${getBlurPixels(blurLevel)}px)`
         }
         ctx.drawImage(img, x, y, drawWidth, drawHeight)
         ctx.restore()

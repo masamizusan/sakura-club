@@ -147,15 +147,15 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* プロフィール画像 */}
-            <div className="relative h-80 bg-gray-100">
+            <div className="relative min-h-80 max-h-96 bg-gray-100 flex items-center justify-center">
               {profileImage ? (
                 <img
                   src={profileImage}
                   alt="プロフィール"
-                  className="w-full h-full object-cover"
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <div className="w-full min-h-80 flex items-center justify-center bg-gray-200 rounded-lg">
                   <User className="w-24 h-24 text-gray-400" />
                 </div>
               )}
