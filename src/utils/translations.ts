@@ -45,6 +45,15 @@ type TranslationKeys = {
     selfIntroPlaceholder: string
     selfIntroNote: string
     requiredInfoNote: string
+    completionEncouragement: string
+    nicknameDescription: string
+    birthDateLocked: string
+    birthDatePrivate: string
+    ageAutoCalculated: string
+    japanVisitPlan: string
+    popularStationsDescription: string
+    cultureSelectionDescription: string
+    customCultureDescription: string
   }
 
   // プロフィール写真関連
@@ -440,7 +449,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '自己紹介文',
       selfIntroPlaceholder: 'あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）',
       selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。',
-      requiredInfoNote: '（プロフィール公開に必要な項目）'
+      requiredInfoNote: '（プロフィール公開に必要な項目）',
+      completionEncouragement: '基本情報をもう少し入力してみましょう',
+      nicknameDescription: 'プロフィールに表示される名前です',
+      birthDateLocked: '生年月日は仮登録時に設定済みのため変更できません',
+      birthDatePrivate: '※生年月日はお相手には表示されません。',
+      ageAutoCalculated: '年齢は生年月日から自動計算されます',
+      japanVisitPlan: '日本訪問計画',
+      popularStationsDescription: '外国人に人気の駅から最大5つ',
+      cultureSelectionDescription: '体験したい日本文化を選択してください（1つ以上8つまで）',
+      customCultureDescription: '上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）'
     },
 
     profilePhotos: {
@@ -789,7 +807,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: 'Self Introduction',
       selfIntroPlaceholder: 'Tell us about your charm and interest in Japanese culture (100-1000 characters)',
       selfIntroNote: 'Please write your self-introduction in 100-1000 characters.',
-      requiredInfoNote: '(Required for profile publication)'
+      requiredInfoNote: '(Required for profile publication)',
+      completionEncouragement: 'Let\'s add a bit more basic information',
+      nicknameDescription: 'Name displayed on your profile',
+      birthDateLocked: 'Birth date was set during initial registration and cannot be changed',
+      birthDatePrivate: '※Birth date is not shown to other users.',
+      ageAutoCalculated: 'Age is automatically calculated from birth date',
+      japanVisitPlan: 'Japan Visit Plan',
+      popularStationsDescription: 'Up to 5 stations popular with foreigners',
+      cultureSelectionDescription: 'Select Japanese culture experiences you\'d like to try (1-8 selections)',
+      customCultureDescription: 'Please describe any other Japanese culture experiences you\'d like to try (up to 100 characters)'
     },
 
     profilePhotos: {
@@ -1138,7 +1165,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '자기소개',
       selfIntroPlaceholder: '당신의 매력과 일본 문화에 대한 관심에 대해 알려주세요 (100자 이상 1000자 이내)',
       selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.',
-      requiredInfoNote: '(프로필 공개에 필요한 항목)'
+      requiredInfoNote: '(프로필 공개에 필요한 항목)',
+      completionEncouragement: '기본 정보를 조금 더 입력해 보세요',
+      nicknameDescription: '프로필에 표시되는 이름입니다',
+      birthDateLocked: '생년월일은 가입 시 설정되어 변경할 수 없습니다',
+      birthDatePrivate: '※생년월일은 상대방에게 표시되지 않습니다.',
+      ageAutoCalculated: '나이는 생년월일에서 자동 계산됩니다',
+      japanVisitPlan: '일본 방문 계획',
+      popularStationsDescription: '외국인에게 인기 있는 역에서 최대 5개',
+      cultureSelectionDescription: '체험하고 싶은 일본 문화를 선택해 주세요 (1개 이상 8개까지)',
+      customCultureDescription: '위 외에 체험하고 싶은 일본 문화가 있다면 자유롭게 작성해 주세요 (100자 이내)'
     },
 
     profilePhotos: {
@@ -1487,7 +1523,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '自我介紹',
       selfIntroPlaceholder: '請介紹您的魅力和對日本文化的興趣（100-1000字）',
       selfIntroNote: '請在100-1000字內寫自我介紹。',
-      requiredInfoNote: '（個人資料公開所需項目）'
+      requiredInfoNote: '（個人資料公開所需項目）',
+      completionEncouragement: '請再多填寫一些基本資訊',
+      nicknameDescription: '顯示在個人資料上的名稱',
+      birthDateLocked: '出生日期已在註冊時設定，無法變更',
+      birthDatePrivate: '※出生日期不會顯示給其他用戶。',
+      ageAutoCalculated: '年齡會根據出生日期自動計算',
+      japanVisitPlan: '日本拜訪計畫',
+      popularStationsDescription: '從外國人熱門車站中最多選擇5個',
+      cultureSelectionDescription: '請選擇想體驗的日本文化（至少1個，最多8個）',
+      customCultureDescription: '如有其他想體驗的日本文化，請自由填寫（100字以內）'
     },
 
     profilePhotos: {

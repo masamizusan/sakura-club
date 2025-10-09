@@ -2833,7 +2833,7 @@ function ProfileEditContent() {
                   {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
+                  {profileCompletion < 50 ? t('profile.completionEncouragement') :
                    profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
                    profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
                    '素晴らしい！完璧なプロフィールです✨'}
@@ -2887,7 +2887,7 @@ function ProfileEditContent() {
                   {errors.nickname && (
                     <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('profile.nicknameDescription')}</p>
                 </div>
 
                 {/* 生年月日と年齢 */}
@@ -2901,8 +2901,8 @@ function ProfileEditContent() {
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
-                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.birthDateLocked')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('profile.birthDatePrivate')}</p>
                   </div>
 
                   <div>
@@ -2921,7 +2921,7 @@ function ProfileEditContent() {
                     {errors.age && (
                       <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.ageAutoCalculated')}</p>
                   </div>
                 </div>
 
@@ -3181,7 +3181,7 @@ function ProfileEditContent() {
                   <>
                     {/* 日本訪問計画 */}
                     <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">日本訪問計画</h4>
+                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">{t('profile.japanVisitPlan')}</h4>
 
                       {/* 訪問予定時期 */}
                       <div>
@@ -3283,7 +3283,7 @@ function ProfileEditContent() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('profile.plannedStations')}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つ{t('profile.maxSelection')}</p>
+                        <p className="text-xs text-gray-500 mb-3">{t('profile.popularStationsDescription')}{t('profile.maxSelection')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="stations">
@@ -3333,7 +3333,7 @@ function ProfileEditContent() {
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {isForeignMale 
-                      ? "体験したい日本文化を選択してください（1つ以上8つまで）" 
+                      ? t('profile.cultureSelectionDescription') 
                       : "興味のある日本文化を選択してください（1つ以上8つまで）"
                     }
                   </p>
@@ -3379,7 +3379,7 @@ function ProfileEditContent() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {isForeignMale
-                        ? "上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）"
+                        ? t('profile.customCultureDescription')
                         : "上記にない日本文化があれば自由に記入してください（100文字以内）"
                       }
                     </label>
