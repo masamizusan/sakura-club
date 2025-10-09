@@ -202,9 +202,12 @@ type TranslationKeys = {
   cultureCategories: {
     traditional: string
     food: string
+    sweets: string
+    arts: string
     seasonal: string
-    modernCulture: string
+    lifestyle: string
     craftmanship: string
+    modernCulture: string
   }
 
   // 日本文化アイテム
@@ -253,6 +256,7 @@ type TranslationKeys = {
     snowScape: string
     fourSeasons: string
     bonDance: string
+    gardenWalk: string
 
     // 現代カルチャー
     anime: string
@@ -265,6 +269,41 @@ type TranslationKeys = {
     drama: string
     vocaloid: string
     idolCulture: string
+
+    // スイーツ
+    matchaSweets: string
+    dango: string
+    taiyaki: string
+    obanyaki: string
+    warabimochi: string
+    candiedApple: string
+    cottonCandy: string
+    dagashi: string
+    conbiniSweets: string
+
+    // 芸能・スポーツ
+    sumo: string
+    kendo: string
+    judo: string
+    karate: string
+    kyudo: string
+    aikido: string
+    naginata: string
+    kabuki: string
+    noh: string
+    japaneseDance: string
+    hogaku: string
+    enka: string
+    taiko: string
+
+    // 暮らし・空間
+    shoji: string
+    fusuma: string
+    tatami: string
+    oldHouseCafe: string
+    sento: string
+    showaRetro: string
+    waModernInterior: string
 
     // 工芸・職人技
     lacquerware: string
@@ -458,9 +497,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     cultureCategories: {
       traditional: '伝統文化',
       food: '食文化',
-      seasonal: '季節・自然・行事',
-      modernCulture: '現代カルチャー',
-      craftmanship: '工芸・職人技'
+      sweets: 'スイーツ',
+      arts: '芸能・スポーツ',
+      seasonal: '季節・自然',
+      lifestyle: '暮らし・空間',
+      craftmanship: '工芸・職人技',
+      modernCulture: '現代カルチャー'
     },
     culture: {
       teaCeremony: '茶道',
@@ -502,6 +544,36 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       snowScape: '雪景色',
       fourSeasons: '日本の四季',
       bonDance: '盆踊り',
+      gardenWalk: '日本庭園散策',
+      matchaSweets: '抹茶スイーツ',
+      dango: '団子',
+      taiyaki: 'たい焼き',
+      obanyaki: '大判焼き',
+      warabimochi: 'わらび餅',
+      candiedApple: 'りんご飴',
+      cottonCandy: 'わたあめ',
+      dagashi: '駄菓子',
+      conbiniSweets: 'コンビニスイーツ',
+      sumo: '相撲',
+      kendo: '剣道',
+      judo: '柔道',
+      karate: '空手',
+      kyudo: '弓道',
+      aikido: '合気道',
+      naginata: '薙刀',
+      kabuki: '歌舞伎',
+      noh: '能',
+      japaneseDance: '日本舞踊',
+      hogaku: '邦楽',
+      enka: '演歌',
+      taiko: '太鼓',
+      shoji: '障子',
+      fusuma: '襖の張り替え',
+      tatami: '畳',
+      oldHouseCafe: '古民家カフェ',
+      sento: '銭湯',
+      showaRetro: '昭和レトロ家電',
+      waModernInterior: '和モダンインテリア',
       anime: 'アニメ',
       manga: 'マンガ',
       cosplay: 'コスプレ',

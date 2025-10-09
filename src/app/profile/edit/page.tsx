@@ -361,16 +361,71 @@ const getCultureCategories = (t: any) => [
     ]
   },
   {
+    name: t('cultureCategories.sweets'),
+    items: [
+      { value: '抹茶スイーツ', label: t('culture.matchaSweets') },
+      { value: '団子', label: t('culture.dango') },
+      { value: 'たい焼き', label: t('culture.taiyaki') },
+      { value: '大判焼き', label: t('culture.obanyaki') },
+      { value: 'わらび餅', label: t('culture.warabimochi') },
+      { value: 'りんご飴', label: t('culture.candiedApple') },
+      { value: 'わたあめ', label: t('culture.cottonCandy') },
+      { value: '駄菓子', label: t('culture.dagashi') },
+      { value: 'コンビニスイーツ', label: t('culture.conbiniSweets') }
+    ]
+  },
+  {
+    name: t('cultureCategories.arts'),
+    items: [
+      { value: '相撲', label: t('culture.sumo') },
+      { value: '剣道', label: t('culture.kendo') },
+      { value: '柔道', label: t('culture.judo') },
+      { value: '空手', label: t('culture.karate') },
+      { value: '弓道', label: t('culture.kyudo') },
+      { value: '合気道', label: t('culture.aikido') },
+      { value: '薙刀', label: t('culture.naginata') },
+      { value: '歌舞伎', label: t('culture.kabuki') },
+      { value: '能', label: t('culture.noh') },
+      { value: '日本舞踊', label: t('culture.japaneseDance') },
+      { value: '邦楽', label: t('culture.hogaku') },
+      { value: '演歌', label: t('culture.enka') },
+      { value: '太鼓', label: t('culture.taiko') }
+    ]
+  },
+  {
     name: t('cultureCategories.seasonal'),
     items: [
       { value: '桜見物', label: t('culture.cherryBlossom') },
       { value: '紅葉狩り', label: t('culture.autumnLeaves') },
-      { value: '温泉', label: t('culture.hotSprings') },
-      { value: '祭り', label: t('culture.festivals') },
       { value: '花火大会', label: t('culture.fireworks') },
+      { value: '祭り参加', label: t('culture.festivals') },
+      { value: '盆踊り', label: t('culture.bonDance') },
       { value: '雪景色', label: t('culture.snowScape') },
-      { value: '日本の四季', label: t('culture.fourSeasons') },
-      { value: '盆踊り', label: t('culture.bonDance') }
+      { value: '日本庭園散策', label: t('culture.gardenWalk') }
+    ]
+  },
+  {
+    name: t('cultureCategories.lifestyle'),
+    items: [
+      { value: '障子', label: t('culture.shoji') },
+      { value: '襖の張り替え', label: t('culture.fusuma') },
+      { value: '畳', label: t('culture.tatami') },
+      { value: '古民家カフェ', label: t('culture.oldHouseCafe') },
+      { value: '銭湯', label: t('culture.sento') },
+      { value: '昭和レトロ家電', label: t('culture.showaRetro') },
+      { value: '和モダンインテリア', label: t('culture.waModernInterior') }
+    ]
+  },
+  {
+    name: t('cultureCategories.craftmanship'),
+    items: [
+      { value: '漆器', label: t('culture.lacquerware') },
+      { value: '金箔貼り', label: t('culture.goldLeaf') },
+      { value: '和紙漉き', label: t('culture.paperMaking') },
+      { value: '染物', label: t('culture.dyeing') },
+      { value: '刀鍛冶', label: t('culture.swordSmithing') },
+      { value: '木工', label: t('culture.woodworking') },
+      { value: '飴細工', label: t('culture.sugarCrafts') }
     ]
   },
   {
@@ -386,18 +441,6 @@ const getCultureCategories = (t: any) => [
       { value: 'ドラマ', label: t('culture.drama') },
       { value: 'ボーカロイド', label: t('culture.vocaloid') },
       { value: 'アイドル文化', label: t('culture.idolCulture') }
-    ]
-  },
-  {
-    name: t('cultureCategories.craftmanship'),
-    items: [
-      { value: '漆器', label: t('culture.lacquerware') },
-      { value: '金箔貼り', label: t('culture.goldLeaf') },
-      { value: '和紙漉き', label: t('culture.paperMaking') },
-      { value: '染物', label: t('culture.dyeing') },
-      { value: '刀鍛冶', label: t('culture.swordSmithing') },
-      { value: '木工', label: t('culture.woodworking') },
-      { value: '飴細工', label: t('culture.sugarCrafts') }
     ]
   }
 ]
