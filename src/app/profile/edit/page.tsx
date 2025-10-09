@@ -2661,7 +2661,7 @@ function ProfileEditContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      生年月日 <span className="text-red-500">*</span>
+                      {t('profile.birthDate')} <span className="text-red-500">*</span>
                     </label>
                     <Input
                       value={watch('birth_date') ? watch('birth_date') : ''}
@@ -2674,7 +2674,7 @@ function ProfileEditContent() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      年齢 <span className="text-red-500">*</span>
+                      {t('profile.age')} <span className="text-red-500">*</span>
                     </label>
                     <Input
                       type="number"
@@ -2696,7 +2696,7 @@ function ProfileEditContent() {
                 {isForeignMale && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      国籍 <span className="text-red-500">*</span>
+                      {t('profile.nationality')} <span className="text-red-500">*</span>
                     </label>
                     <Select
                       value={(() => {
@@ -2715,7 +2715,7 @@ function ProfileEditContent() {
                       }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="国籍を選択" />
+                        <SelectValue placeholder={`${t('profile.nationality')}を選択`} />
                       </SelectTrigger>
                       <SelectContent>
                         {NATIONALITIES.map((nationality) => (
@@ -2736,14 +2736,14 @@ function ProfileEditContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        都道府県 <span className="text-red-500">*</span>
+                        {t('profile.prefecture')} <span className="text-red-500">*</span>
                       </label>
                       <Select
                         value={watch('prefecture') || ''}
                         onValueChange={(value) => setValue('prefecture', value)}
                       >
                         <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="都道府県を選択" />
+                          <SelectValue placeholder={t('profile.selectPrefectures')} />
                         </SelectTrigger>
                         <SelectContent>
                           {PREFECTURES.map((prefecture) => (
@@ -2760,10 +2760,10 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        市区町村
+                        {t('profile.city')}
                       </label>
                       <Input
-                        placeholder="市区町村を入力"
+                        placeholder={`${t('profile.city')}を入力`}
                         {...register('city')}
                         className={errors.city ? 'border-red-500' : ''}
                       />
@@ -2780,7 +2780,7 @@ function ProfileEditContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        職業
+                        {t('profile.occupation')}
                       </label>
                       <Select
                         value={watch('occupation') || 'none'}
@@ -2801,7 +2801,7 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        身長
+                        {t('profile.height')}
                       </label>
                       <Input
                         type="number"
@@ -2824,14 +2824,14 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        体型
+                        {t('profile.bodyType')}
                       </label>
                       <Select
                         value={watch('body_type') || 'none'}
                         onValueChange={(value) => setValue('body_type', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="体型を選択" />
+                          <SelectValue placeholder={`${t('profile.bodyType')}を選択`} />
                         </SelectTrigger>
                         <SelectContent>
                           {BODY_TYPE_OPTIONS.map((option) => (
@@ -2845,14 +2845,14 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        結婚状況
+                        {t('profile.maritalStatus')}
                       </label>
                       <Select
                         value={watch('marital_status') || 'none'}
                         onValueChange={(value) => setValue('marital_status', value as 'none' | 'single' | 'married')}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="結婚状況を選択" />
+                          <SelectValue placeholder={`${t('profile.maritalStatus')}を選択`} />
                         </SelectTrigger>
                         <SelectContent>
                           {MARITAL_STATUS_OPTIONS.map((option) => (
@@ -2866,14 +2866,14 @@ function ProfileEditContent() {
                     {isForeignMale && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          日本語レベル
+                          {t('profile.japaneseLevel')}
                         </label>
                         <Select
                           value={watch('japanese_level') || 'none'}
                           onValueChange={(value) => setValue('japanese_level', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="日本語レベルを選択" />
+                            <SelectValue placeholder={`${t('profile.japaneseLevel')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
                             {JAPANESE_LEVEL_OPTIONS.map((option) => (
@@ -2888,14 +2888,14 @@ function ProfileEditContent() {
                     {!isForeignMale && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          英語レベル
+                          {t('profile.englishLevel')}
                         </label>
                         <Select
                           value={watch('english_level') || 'none'}
                           onValueChange={(value) => setValue('english_level', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="英語レベルを選択" />
+                            <SelectValue placeholder={`${t('profile.englishLevel')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
                             {ENGLISH_LEVEL_OPTIONS.map((option) => (
@@ -2913,7 +2913,7 @@ function ProfileEditContent() {
                 {/* 性格セクション - 独立したセクション */}
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    性格
+                    {t('profile.personality')}
                   </label>
                   <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -2953,14 +2953,14 @@ function ProfileEditContent() {
                       {/* 訪問予定時期 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          訪問予定時期
+                          {t('profile.visitSchedule')}
                         </label>
                         <Select
                           value={watch('visit_schedule') || ''}
                           onValueChange={(value) => setValue('visit_schedule', value)}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="訪問予定を選択" />
+                            <SelectValue placeholder={`${t('profile.visitSchedule')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
                             {VISIT_SCHEDULE_OPTIONS.map((option) => (
@@ -2978,14 +2978,14 @@ function ProfileEditContent() {
                       {/* 同行者 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          同行者
+                          {t('profile.travelCompanion')}
                         </label>
                         <Select
                           value={watch('travel_companion') || ''}
                           onValueChange={(value) => setValue('travel_companion', value)}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="同行者を選択" />
+                            <SelectValue placeholder={`${t('profile.travelCompanion')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
                             {TRAVEL_COMPANION_OPTIONS.map((option) => (
