@@ -28,7 +28,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   nationality: z.string().optional(),
   prefecture: z.string().optional(),
   city: z.string().optional(),
-  // 外国人男性向け新フィールド
+  // New fields for foreign male users
   planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
   planned_stations: z.array(z.string()).max(5, '訪問予定の駅は5つまで選択できます').optional(),
   visit_schedule: z.string().optional(),
@@ -57,7 +57,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
   const baseSchema = baseProfileEditSchema(t)
   if (isForeignMale) {
     return baseSchema.refine((data) => {
-      // 外国人男性の場合は国籍が必須
+      // Nationality is required for foreign male users
       if (!data.nationality || data.nationality.trim() === '') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
@@ -65,7 +65,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['nationality']
         }])
       }
-      // 行く予定の都道府県が少なくとも1つ必要
+      // At least one planned prefecture is required
       if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
@@ -76,7 +76,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
       return true
     })
   } else {
-    // 日本人女性の場合は都道府県が必須
+    // Prefecture is required for Japanese female users
     return baseSchema.refine((data) => {
       if (!data.prefecture || data.prefecture.trim() === '') {
         throw new z.ZodError([{
@@ -93,7 +93,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
 
 type ProfileEditFormData = z.infer<ReturnType<typeof baseProfileEditSchema>>
 
-// 性格オプション（既婚者クラブを参考）
+// Personality options (based on married club references)
 const PERSONALITY_OPTIONS = [
   '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
   '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
@@ -102,7 +102,7 @@ const PERSONALITY_OPTIONS = [
   'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
 ]
 
-// 共有したい日本文化オプション（カテゴリ構造）
+// Japanese culture options to share (category structure)
 const CULTURE_CATEGORIES = [
   {
     name: "伝統文化",
@@ -138,17 +138,17 @@ const CULTURE_CATEGORIES = [
   }
 ]
 
-// 後方互換性のため、フラットな配列も保持
+// Maintain flat array for backward compatibility
 const HOBBY_OPTIONS = CULTURE_CATEGORIES.flatMap(category => category.items)
 
-// 結婚状況オプション（翻訳対応）
+// Marital status options (with translation support)
 const getMaritalStatusOptions = (t: any) => [
   { value: 'none', label: t('maritalStatus.none') },
   { value: 'single', label: t('maritalStatus.single') },
   { value: 'married', label: t('maritalStatus.married') }
 ]
 
-// 職業オプション（翻訳対応・性別フィルタリング付き）
+// Occupation options (with translation support and gender filtering)
 const getOccupationOptions = (t: any, profileType?: string | null) => {
   const baseOptions = [
     { value: 'none', label: t('occupations.noEntry') },
@@ -175,16 +175,16 @@ const getOccupationOptions = (t: any, profileType?: string | null) => {
     { value: 'その他', label: t('occupations.other') }
   ]
 
-  // 性別・国籍に応じたオプション追加
+  // Add options based on gender and nationality
   if (profileType === 'japanese-female') {
-    // 日本人女性は主婦のみ追加
+    // Add housewife option for Japanese women only
     return [
       baseOptions[0], // none
       { value: '主婦', label: t('occupations.housewife') },
       ...baseOptions.slice(1)
     ]
   } else if (profileType === 'foreign-male') {
-    // 外国人男性は主夫のみ追加
+    // Add house husband option for foreign men only
     return [
       baseOptions[0], // none
       { value: '主夫', label: t('occupations.houseHusband') },
@@ -192,11 +192,11 @@ const getOccupationOptions = (t: any, profileType?: string | null) => {
     ]
   }
 
-  // その他の場合は基本オプションのみ
+  // Return basic options for other cases
   return baseOptions
 }
 
-// 体型オプション（翻訳対応）
+// Body type options (with translation support)
 const getBodyTypeOptions = (t: any) => [
   { value: 'none', label: t('bodyType.noEntry') },
   { value: 'slim', label: t('bodyType.slim') },
@@ -237,7 +237,7 @@ const POPULAR_STATIONS = [
   "高山駅（岐阜県）","ニセコ駅（北海道）","難波駅（大阪府）","池袋駅（東京都）","由布院駅（大分県）"
 ]
 
-// 動的な訪問予定時期選択肢生成関数
+// Dynamic visit schedule options generation function
 const generateVisitScheduleOptions = () => {
   const options = [
     { value: 'no-entry', label: '記入しない' },
@@ -339,7 +339,7 @@ const getPersonalityOptions = (t: any) => [
   return { value: trait, label: t(`personality.${key}`) }
 })
 
-// 日本文化カテゴリ（翻訳対応）
+// Japanese culture categories (with translation support)
 const getCultureCategories = (t: any) => [
   {
     name: t('cultureCategories.traditional'),
@@ -582,13 +582,13 @@ function ProfileEditContent() {
   })
 
   // Profile type flags
-  // URLパラメータからの判定を優先し、なければユーザーのプロフィールから判定
+  // Prioritize URL parameter judgment, fallback to user profile if not available
   const [userBasedType, setUserBasedType] = useState<string | null>(null)
   const effectiveProfileType = profileType || userBasedType
   const isForeignMale = effectiveProfileType === 'foreign-male' || (!profileType && userBasedType === 'foreign-male')
   const isJapaneseFemale = effectiveProfileType === 'japanese-female' || (!profileType && userBasedType === 'japanese-female')
 
-  // 生年月日から年齢を計算
+  // Calculate age from birth date
   const calculateAge = useCallback((birthDate: string): number => {
     const today = new Date()
     const birth = new Date(birthDate)
