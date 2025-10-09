@@ -151,14 +151,27 @@ const getMaritalStatusOptions = (t: any) => [
 // 職業オプション（翻訳対応）
 const getOccupationOptions = (t: any) => [
   { value: 'none', label: t('occupations.noEntry') },
-  { value: 'housewife', label: t('occupations.housewife') },
-  { value: 'student', label: t('occupations.student') },
-  { value: 'companyEmployee', label: t('occupations.companyEmployee') },
-  { value: 'publicServant', label: t('occupations.publicServant') },
-  { value: 'selfEmployed', label: t('occupations.selfEmployed') },
-  { value: 'freelance', label: t('occupations.freelance') },
-  { value: 'partTime', label: t('occupations.partTime') },
-  { value: 'other', label: t('occupations.other') }
+  { value: '会社員', label: t('occupations.companyEmployee') },
+  { value: '公務員', label: t('occupations.publicServant') },
+  { value: '経営者・役員', label: t('occupations.executiveManager') },
+  { value: 'フリーランス', label: t('occupations.freelance') },
+  { value: '自営業', label: t('occupations.selfEmployed') },
+  { value: '医師', label: t('occupations.doctor') },
+  { value: '看護師', label: t('occupations.nurse') },
+  { value: '教師・講師', label: t('occupations.teacher') },
+  { value: 'エンジニア', label: t('occupations.engineer') },
+  { value: 'デザイナー', label: t('occupations.designer') },
+  { value: '営業', label: t('occupations.sales') },
+  { value: 'マーケティング', label: t('occupations.marketing') },
+  { value: '研究者', label: t('occupations.researcher') },
+  { value: 'コンサルタント', label: t('occupations.consultant') },
+  { value: '金融', label: t('occupations.finance') },
+  { value: '法律関係', label: t('occupations.legal') },
+  { value: 'サービス業', label: t('occupations.serviceIndustry') },
+  { value: '小売業', label: t('occupations.retail') },
+  { value: '製造業', label: t('occupations.manufacturing') },
+  { value: '学生', label: t('occupations.student') },
+  { value: 'その他', label: t('occupations.other') }
 ]
 
 // 体型オプション（翻訳対応）
@@ -389,15 +402,50 @@ const getCultureCategories = (t: any) => [
   }
 ]
 
-// 訪問予定時期選択肢（翻訳対応）
-const getVisitScheduleOptions = (t: any) => [
-  { value: 'undecided', label: t('schedule.undecided') },
-  { value: 'noEntry', label: t('schedule.noEntry') },
-  { value: 'year2024', label: t('schedule.year2024') },
-  { value: 'year2025', label: t('schedule.year2025') },
-  { value: 'beyond2025', label: t('schedule.beyond2025') },
-  { value: 'beyond2026', label: t('schedule.beyond2026') }
-]
+// 訪問予定時期選択肢（翻訳対応・動的生成）
+const getVisitScheduleOptions = (t: any) => {
+  const options = [
+    { value: 'no-entry', label: t('schedule.noEntry') },
+    { value: 'undecided', label: t('schedule.undecided') }
+  ];
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-11
+
+  // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+  const currentSeason =
+    currentMonth >= 2 && currentMonth <= 4 ? '春' :
+    currentMonth >= 5 && currentMonth <= 7 ? '夏' :
+    currentMonth >= 8 && currentMonth <= 10 ? '秋' : '冬';
+
+  // 今年の残りの季節
+  const seasons = ['春', '夏', '秋', '冬'];
+  const currentSeasonIndex = seasons.indexOf(currentSeason);
+
+  for (let i = currentSeasonIndex; i < seasons.length; i++) {
+    options.push({
+      value: `${currentYear}-${seasons[i]}`,
+      label: `${currentYear}年${seasons[i]}`
+    });
+  }
+
+  // 来年の全季節
+  for (const season of seasons) {
+    options.push({
+      value: `${currentYear + 1}-${season}`,
+      label: `${currentYear + 1}年${season}`
+    });
+  }
+
+  // 2年以降の選択肢
+  options.push({
+    value: `beyond-${currentYear + 2}`,
+    label: `${currentYear + 2}年以降`
+  });
+
+  return options;
+}
 
 function ProfileEditContent() {
   // ALL HOOKS MUST BE AT THE VERY TOP - NO EARLY RETURNS BEFORE HOOKS

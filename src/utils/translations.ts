@@ -101,13 +101,26 @@ type TranslationKeys = {
   // 職業
   occupations: {
     noEntry: string
-    housewife: string
-    student: string
     companyEmployee: string
     publicServant: string
-    selfEmployed: string
+    executiveManager: string
     freelance: string
-    partTime: string
+    selfEmployed: string
+    doctor: string
+    nurse: string
+    teacher: string
+    engineer: string
+    designer: string
+    sales: string
+    marketing: string
+    researcher: string
+    consultant: string
+    finance: string
+    legal: string
+    serviceIndustry: string
+    retail: string
+    manufacturing: string
+    student: string
     other: string
   }
 
@@ -358,18 +371,31 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     maritalStatus: {
       none: '記入しない',
-      single: '独身',
+      single: '未婚',
       married: '既婚'
     },
     occupations: {
       noEntry: '記入しない',
-      housewife: '主婦',
-      student: '学生',
       companyEmployee: '会社員',
       publicServant: '公務員',
-      selfEmployed: '自営業',
+      executiveManager: '経営者・役員',
       freelance: 'フリーランス',
-      partTime: 'パート・アルバイト',
+      selfEmployed: '自営業',
+      doctor: '医師',
+      nurse: '看護師',
+      teacher: '教師・講師',
+      engineer: 'エンジニア',
+      designer: 'デザイナー',
+      sales: '営業',
+      marketing: 'マーケティング',
+      researcher: '研究者',
+      consultant: 'コンサルタント',
+      finance: '金融',
+      legal: '法律関係',
+      serviceIndustry: 'サービス業',
+      retail: '小売業',
+      manufacturing: '製造業',
+      student: '学生',
       other: 'その他'
     },
     japaneseHobbies: {
@@ -601,13 +627,26 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: 'Not specified',
-      housewife: 'Housewife',
-      student: 'Student',
       companyEmployee: 'Company Employee',
       publicServant: 'Public Servant',
-      selfEmployed: 'Self-employed',
+      executiveManager: 'Executive/Manager',
       freelance: 'Freelance',
-      partTime: 'Part-time',
+      selfEmployed: 'Self-employed',
+      doctor: 'Doctor',
+      nurse: 'Nurse',
+      teacher: 'Teacher/Instructor',
+      engineer: 'Engineer',
+      designer: 'Designer',
+      sales: 'Sales',
+      marketing: 'Marketing',
+      researcher: 'Researcher',
+      consultant: 'Consultant',
+      finance: 'Finance',
+      legal: 'Legal',
+      serviceIndustry: 'Service Industry',
+      retail: 'Retail',
+      manufacturing: 'Manufacturing',
+      student: 'Student',
       other: 'Other'
     },
     japaneseHobbies: {
@@ -839,13 +878,26 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: '기입하지 않음',
-      housewife: '주부',
-      student: '학생',
       companyEmployee: '회사원',
       publicServant: '공무원',
-      selfEmployed: '자영업',
+      executiveManager: '경영자·임원',
       freelance: '프리랜서',
-      partTime: '아르바이트',
+      selfEmployed: '자영업',
+      doctor: '의사',
+      nurse: '간호사',
+      teacher: '교사·강사',
+      engineer: '엔지니어',
+      designer: '디자이너',
+      sales: '영업',
+      marketing: '마케팅',
+      researcher: '연구원',
+      consultant: '컨설턴트',
+      finance: '금융',
+      legal: '법률 관련',
+      serviceIndustry: '서비스업',
+      retail: '소매업',
+      manufacturing: '제조업',
+      student: '학생',
       other: '기타'
     },
     japaneseHobbies: {
@@ -1077,13 +1129,26 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: '不填寫',
-      housewife: '家庭主婦',
-      student: '學生',
       companyEmployee: '上班族',
       publicServant: '公務員',
-      selfEmployed: '自雇',
+      executiveManager: '經營者·主管',
       freelance: '自由工作者',
-      partTime: '兼職',
+      selfEmployed: '自雇',
+      doctor: '醫師',
+      nurse: '護理師',
+      teacher: '教師·講師',
+      engineer: '工程師',
+      designer: '設計師',
+      sales: '業務',
+      marketing: '行銷',
+      researcher: '研究員',
+      consultant: '顧問',
+      finance: '金融',
+      legal: '法律相關',
+      serviceIndustry: '服務業',
+      retail: '零售業',
+      manufacturing: '製造業',
+      student: '學生',
       other: '其他'
     },
     japaneseHobbies: {
