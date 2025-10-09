@@ -20,11 +20,11 @@ import { calculateProfileCompletion as calculateSharedProfileCompletion } from '
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
 
-const baseProfileEditSchema = z.object({
-  nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
-  gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
-  birth_date: z.string().min(1, '生年月日を入力してください'),
-  age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
+const baseProfileEditSchema = (t: any) => z.object({
+  nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
+  gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
+  birth_date: z.string().min(1, t('errors.birthDateRequired')),
+  age: z.number().min(18, t('errors.ageMinimum')).max(99, t('errors.ageMaximum')),
   nationality: z.string().optional(),
   prefecture: z.string().optional(),
   city: z.string().optional(),
@@ -40,27 +40,28 @@ const baseProfileEditSchema = z.object({
       const num = Number(val);
       return isNaN(num) ? undefined : num;
     },
-    z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
+    z.number().min(120, t('errors.heightMinimum')).max(250, t('errors.heightMaximum')).optional()
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
   english_level: z.string().optional(),
   japanese_level: z.string().optional(),
-  hobbies: z.array(z.string()).min(1, '日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
-  custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
+  hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
+  custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
-  self_introduction: z.string().min(100, '自己紹介は100文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
+  self_introduction: z.string().min(100, t('errors.selfIntroMinimum')).max(1000, t('errors.selfIntroMaximum')),
 })
 
 // 条件付きバリデーション関数
-const createProfileEditSchema = (isForeignMale: boolean) => {
+const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
+  const baseSchema = baseProfileEditSchema(t)
   if (isForeignMale) {
-    return baseProfileEditSchema.refine((data) => {
+    return baseSchema.refine((data) => {
       // 外国人男性の場合は国籍が必須
       if (!data.nationality || data.nationality.trim() === '') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '国籍を選択してください',
+          message: t('errors.nationalityRequired'),
           path: ['nationality']
         }])
       }
@@ -68,7 +69,7 @@ const createProfileEditSchema = (isForeignMale: boolean) => {
       if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '行く予定の都道府県を少なくとも1つ選択してください',
+          message: t('errors.prefecturesMinimum'),
           path: ['planned_prefectures']
         }])
       }
@@ -76,11 +77,11 @@ const createProfileEditSchema = (isForeignMale: boolean) => {
     })
   } else {
     // 日本人女性の場合は都道府県が必須
-    return baseProfileEditSchema.refine((data) => {
+    return baseSchema.refine((data) => {
       if (!data.prefecture || data.prefecture.trim() === '') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '都道府県を入力してください',
+          message: t('errors.cityRequired'),
           path: ['prefecture']
         }])
       }
@@ -89,9 +90,8 @@ const createProfileEditSchema = (isForeignMale: boolean) => {
   }
 }
 
-const profileEditSchema = baseProfileEditSchema
 
-type ProfileEditFormData = z.infer<typeof profileEditSchema>
+type ProfileEditFormData = z.infer<ReturnType<typeof baseProfileEditSchema>>
 
 // 性格オプション（既婚者クラブを参考）
 const PERSONALITY_OPTIONS = [
@@ -572,7 +572,7 @@ function ProfileEditContent() {
     getValues,
     formState: { errors }
   } = useForm<ProfileEditFormData>({
-    resolver: zodResolver(baseProfileEditSchema),
+    resolver: zodResolver(baseProfileEditSchema(() => ({}))),
     mode: 'onChange',
     defaultValues: {
       nationality: typeof window !== 'undefined' && profileType === 'foreign-male'
@@ -2879,7 +2879,7 @@ function ProfileEditContent() {
                     {t('profile.nickname')} <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    placeholder="ニックネーム"
+                    placeholder={t('placeholders.nickname')}
                     {...register('nickname')}
                     className={errors.nickname ? 'border-red-500' : ''}
                   />
@@ -2912,7 +2912,7 @@ function ProfileEditContent() {
                       type="number"
                       min="18"
                       max="99"
-                      placeholder="25"
+                      placeholder={t('placeholders.age')}
                       {...register('age', { valueAsNumber: true })}
                       className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
                       readOnly
@@ -2947,7 +2947,7 @@ function ProfileEditContent() {
                       }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
-                        <SelectValue placeholder={`${t('profile.nationality')}を選択`} />
+                        <SelectValue placeholder={t('placeholders.selectNationality')} />
                       </SelectTrigger>
                       <SelectContent>
                         {NATIONALITIES.map((nationality) => (
@@ -2995,7 +2995,7 @@ function ProfileEditContent() {
                         {t('profile.city')}
                       </label>
                       <Input
-                        placeholder={`${t('profile.city')}を入力`}
+                        placeholder={t('placeholders.city')}
                         {...register('city')}
                         className={errors.city ? 'border-red-500' : ''}
                       />
@@ -3019,7 +3019,7 @@ function ProfileEditContent() {
                         onValueChange={(value) => setValue('occupation', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="職業を選択" />
+                          <SelectValue placeholder={t('placeholders.selectOccupation')} />
                         </SelectTrigger>
                         <SelectContent>
                           {getOccupationOptions(t, profileType).map((option) => (
@@ -3039,7 +3039,7 @@ function ProfileEditContent() {
                         type="number"
                         min="120"
                         max="250"
-                        placeholder="160"
+                        placeholder={t('placeholders.height')}
                         step="1"
                         onFocus={(e) => {
                           if (!e.target.value) {
@@ -3063,7 +3063,7 @@ function ProfileEditContent() {
                         onValueChange={(value) => setValue('body_type', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={`${t('profile.bodyType')}を選択`} />
+                          <SelectValue placeholder={t('placeholders.selectBodyType')} />
                         </SelectTrigger>
                         <SelectContent>
                           {getBodyTypeOptions(t).map((option) => (
@@ -3084,7 +3084,7 @@ function ProfileEditContent() {
                         onValueChange={(value) => setValue('marital_status', value as 'none' | 'single' | 'married')}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={`${t('profile.maritalStatus')}を選択`} />
+                          <SelectValue placeholder={t('placeholders.selectMaritalStatus')} />
                         </SelectTrigger>
                         <SelectContent>
                           {getMaritalStatusOptions(t).map((option) => (
@@ -3105,7 +3105,7 @@ function ProfileEditContent() {
                           onValueChange={(value) => setValue('japanese_level', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={`${t('profile.japaneseLevel')}を選択`} />
+                            <SelectValue placeholder={t('placeholders.selectJapaneseLevel')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getJapaneseLevelOptions(t).map((option) => (
@@ -3127,7 +3127,7 @@ function ProfileEditContent() {
                           onValueChange={(value) => setValue('english_level', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={`${t('profile.englishLevel')}を選択`} />
+                            <SelectValue placeholder={t('placeholders.selectEnglishLevel')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getEnglishLevelOptions(t).map((option) => (
@@ -3192,7 +3192,7 @@ function ProfileEditContent() {
                           onValueChange={(value) => setValue('visit_schedule', value)}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
-                            <SelectValue placeholder={`${t('profile.visitSchedule')}を選択`} />
+                            <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getVisitScheduleOptions(t).map((option) => (
@@ -3217,7 +3217,7 @@ function ProfileEditContent() {
                           onValueChange={(value) => setValue('travel_companion', value)}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
-                            <SelectValue placeholder={`${t('profile.travelCompanion')}を選択`} />
+                            <SelectValue placeholder={t('placeholders.selectTravelCompanion')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getTravelCompanionOptions(t).map((option) => (
@@ -3383,11 +3383,7 @@ function ProfileEditContent() {
                       }
                     </label>
                     <Input
-                      placeholder={
-                        isForeignMale
-                          ? "例：日本の伝統工芸、地方の祭り など"
-                          : "例：地域の伝統行事、家庭料理 など"
-                      }
+                      placeholder={t('placeholders.enterCustomCulture')}
                       {...register('custom_culture')}
                       className={errors.custom_culture ? 'border-red-500' : ''}
                     />
@@ -3481,14 +3477,14 @@ function ProfileEditContent() {
                     }}
                   >
                     <User className="w-5 h-5 mr-3" />
-                    📋 プレビューで内容を確認する
+{t('buttons.preview')}で内容を確認する
                   </Button>
                 </div>
 
                 {/* 注意メッセージ */}
                 <div className="pt-2 text-center">
                   <p className="text-sm text-blue-600 font-medium">
-                    💡 上のボタンでプレビューを確認してから保存してください
+💡 上のボタンで{t('buttons.preview')}を確認してから{t('buttons.save')}してください
                   </p>
                 </div>
               </div>
@@ -3527,7 +3523,7 @@ export default function ProfileEditPage() {
               }}
               className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
             >
-              ページを再読み込み
+ページを再読み込み
             </Button>
           </div>
         </div>

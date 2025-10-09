@@ -46,6 +46,65 @@ type TranslationKeys = {
     selfIntroNote: string
   }
 
+  // プレースホルダーテキスト
+  placeholders: {
+    nickname: string
+    age: string
+    height: string
+    city: string
+    selectOccupation: string
+    selectNationality: string
+    selectPrefectures: string
+    selectBodyType: string
+    selectMaritalStatus: string
+    selectJapaneseLevel: string
+    selectEnglishLevel: string
+    selectVisitSchedule: string
+    selectTravelCompanion: string
+    enterCustomCulture: string
+  }
+
+  // ボタンラベル
+  buttons: {
+    save: string
+    cancel: string
+    add: string
+    remove: string
+    edit: string
+    delete: string
+    upload: string
+    preview: string
+    back: string
+    next: string
+    complete: string
+    selectAll: string
+    clearAll: string
+    confirm: string
+  }
+
+  // エラーメッセージ
+  errors: {
+    required: string
+    nicknameRequired: string
+    nicknameMaxLength: string
+    genderRequired: string
+    birthDateRequired: string
+    ageMinimum: string
+    ageMaximum: string
+    heightMinimum: string
+    heightMaximum: string
+    hobbiesMinimum: string
+    hobbiesMaximum: string
+    customCultureMaxLength: string
+    selfIntroMinimum: string
+    selfIntroMaximum: string
+    nationalityRequired: string
+    prefecturesMinimum: string
+    cityRequired: string
+    saveFailed: string
+    loadFailed: string
+  }
+
   // 言語レベル
   levels: {
     none: string
@@ -158,16 +217,6 @@ type TranslationKeys = {
     thoughtful: string
   }
 
-  // エラーメッセージ
-  errors: {
-    required: string
-    tooLong: string
-    tooShort: string
-    invalidAge: string
-    invalidHeight: string
-    selectAtLeastOne: string
-    selectMaxItems: string
-  }
 
   // 性格特性
   personality: {
@@ -374,6 +423,62 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '自己紹介文',
       selfIntroPlaceholder: 'あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）',
       selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。'
+    },
+
+    placeholders: {
+      nickname: 'ニックネーム',
+      age: '25',
+      height: '160',
+      city: '市区町村名を入力',
+      selectOccupation: '職業を選択',
+      selectNationality: '国籍を選択',
+      selectPrefectures: '都道府県を選択',
+      selectBodyType: '体型を選択',
+      selectMaritalStatus: '婚姻状況を選択',
+      selectJapaneseLevel: '日本語レベルを選択',
+      selectEnglishLevel: '英語レベルを選択',
+      selectVisitSchedule: '訪問予定時期を選択',
+      selectTravelCompanion: '同行者を選択',
+      enterCustomCulture: 'その他の日本文化を入力（任意）'
+    },
+
+    buttons: {
+      save: '保存',
+      cancel: 'キャンセル',
+      add: '追加',
+      remove: '削除',
+      edit: '編集',
+      delete: '削除',
+      upload: 'アップロード',
+      preview: 'プレビュー',
+      back: '戻る',
+      next: '次へ',
+      complete: '完了',
+      selectAll: '全て選択',
+      clearAll: '全てクリア',
+      confirm: '確定'
+    },
+
+    errors: {
+      required: 'この項目は必須です',
+      nicknameRequired: 'ニックネームを入力してください',
+      nicknameMaxLength: 'ニックネームは20文字以内で入力してください',
+      genderRequired: '性別を選択してください',
+      birthDateRequired: '生年月日を入力してください',
+      ageMinimum: '18歳以上である必要があります',
+      ageMaximum: '99歳以下で入力してください',
+      heightMinimum: '身長は120cm以上で入力してください',
+      heightMaximum: '身長は250cm以下で入力してください',
+      hobbiesMinimum: '日本文化を1つ以上選択してください',
+      hobbiesMaximum: '日本文化は8つまで選択できます',
+      customCultureMaxLength: 'その他の日本文化は100文字以内で入力してください',
+      selfIntroMinimum: '自己紹介は100文字以上で入力してください',
+      selfIntroMaximum: '自己紹介は1000文字以内で入力してください',
+      nationalityRequired: '国籍を選択してください',
+      prefecturesMinimum: '行く予定の都道府県を少なくとも1つ選択してください',
+      cityRequired: '都道府県を入力してください',
+      saveFailed: '保存に失敗しました',
+      loadFailed: '読み込みに失敗しました'
     },
     levels: {
       none: '記入しない',
@@ -596,15 +701,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       woodworking: '木工',
       sugarCrafts: '飴細工'
     },
-    errors: {
-      required: 'この項目は必須です',
-      tooLong: '文字数が多すぎます',
-      tooShort: '文字数が足りません',
-      invalidAge: '有効な年齢を入力してください',
-      invalidHeight: '有効な身長を入力してください',
-      selectAtLeastOne: '1つ以上選択してください',
-      selectMaxItems: '選択できる数を超えています'
-    },
     common: {
       save: '保存',
       cancel: 'キャンセル',
@@ -660,6 +756,62 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: 'Self Introduction',
       selfIntroPlaceholder: 'Tell us about your charm and interest in Japanese culture (100-1000 characters)',
       selfIntroNote: 'Please write your self-introduction in 100-1000 characters.'
+    },
+
+    placeholders: {
+      nickname: 'Nickname',
+      age: '25',
+      height: '160',
+      city: 'Enter city name',
+      selectOccupation: 'Select occupation',
+      selectNationality: 'Select nationality',
+      selectPrefectures: 'Select prefectures',
+      selectBodyType: 'Select body type',
+      selectMaritalStatus: 'Select marital status',
+      selectJapaneseLevel: 'Select Japanese level',
+      selectEnglishLevel: 'Select English level',
+      selectVisitSchedule: 'Select visit schedule',
+      selectTravelCompanion: 'Select travel companion',
+      enterCustomCulture: 'Enter other Japanese culture (optional)'
+    },
+
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+      add: 'Add',
+      remove: 'Remove',
+      edit: 'Edit',
+      delete: 'Delete',
+      upload: 'Upload',
+      preview: 'Preview',
+      back: 'Back',
+      next: 'Next',
+      complete: 'Complete',
+      selectAll: 'Select All',
+      clearAll: 'Clear All',
+      confirm: 'Confirm'
+    },
+
+    errors: {
+      required: 'This field is required',
+      nicknameRequired: 'Please enter your nickname',
+      nicknameMaxLength: 'Nickname must be 20 characters or less',
+      genderRequired: 'Please select your gender',
+      birthDateRequired: 'Please enter your date of birth',
+      ageMinimum: 'Must be 18 years or older',
+      ageMaximum: 'Must be 99 years or younger',
+      heightMinimum: 'Height must be 120cm or more',
+      heightMaximum: 'Height must be 250cm or less',
+      hobbiesMinimum: 'Please select at least one Japanese culture',
+      hobbiesMaximum: 'You can select up to 8 Japanese cultures',
+      customCultureMaxLength: 'Other Japanese culture must be 100 characters or less',
+      selfIntroMinimum: 'Self introduction must be at least 100 characters',
+      selfIntroMaximum: 'Self introduction must be 1000 characters or less',
+      nationalityRequired: 'Please select your nationality',
+      prefecturesMinimum: 'Please select at least one prefecture to visit',
+      cityRequired: 'Please enter prefecture',
+      saveFailed: 'Failed to save',
+      loadFailed: 'Failed to load'
     },
     levels: {
       none: 'Not specified',
@@ -882,15 +1034,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       woodworking: 'Woodworking',
       sugarCrafts: 'Sugar Crafts'
     },
-    errors: {
-      required: 'This field is required',
-      tooLong: 'Too many characters',
-      tooShort: 'Not enough characters',
-      invalidAge: 'Please enter a valid age',
-      invalidHeight: 'Please enter a valid height',
-      selectAtLeastOne: 'Please select at least one',
-      selectMaxItems: 'Maximum selection exceeded'
-    },
     common: {
       save: 'Save',
       cancel: 'Cancel',
@@ -946,6 +1089,62 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '자기소개',
       selfIntroPlaceholder: '당신의 매력과 일본 문화에 대한 관심에 대해 알려주세요 (100자 이상 1000자 이내)',
       selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.'
+    },
+
+    placeholders: {
+      nickname: '닉네임',
+      age: '25',
+      height: '160',
+      city: '시명을 입력하세요',
+      selectOccupation: '직업 선택',
+      selectNationality: '국적 선택',
+      selectPrefectures: '현 선택',
+      selectBodyType: '체형 선택',
+      selectMaritalStatus: '혼인 상태 선택',
+      selectJapaneseLevel: '일본어 수준 선택',
+      selectEnglishLevel: '영어 수준 선택',
+      selectVisitSchedule: '방문 예정 시기 선택',
+      selectTravelCompanion: '동행자 선택',
+      enterCustomCulture: '기타 일본 문화 입력 (선택사항)'
+    },
+
+    buttons: {
+      save: '저장',
+      cancel: '취소',
+      add: '추가',
+      remove: '제거',
+      edit: '편집',
+      delete: '삭제',
+      upload: '업로드',
+      preview: '미리보기',
+      back: '뒤로',
+      next: '다음',
+      complete: '완료',
+      selectAll: '모두 선택',
+      clearAll: '모두 지우기',
+      confirm: '확인'
+    },
+
+    errors: {
+      required: '이 항목은 필수입니다',
+      nicknameRequired: '닉네임을 입력해 주세요',
+      nicknameMaxLength: '닉네임은 20자 이내로 입력해 주세요',
+      genderRequired: '성별을 선택해 주세요',
+      birthDateRequired: '생년월일을 입력해 주세요',
+      ageMinimum: '18세 이상이어야 합니다',
+      ageMaximum: '99세 이하로 입력해 주세요',
+      heightMinimum: '키는 120cm 이상으로 입력해 주세요',
+      heightMaximum: '키는 250cm 이하로 입력해 주세요',
+      hobbiesMinimum: '일본 문화를 1개 이상 선택해 주세요',
+      hobbiesMaximum: '일본 문화는 8개까지 선택할 수 있습니다',
+      customCultureMaxLength: '기타 일본 문화는 100자 이내로 입력해 주세요',
+      selfIntroMinimum: '자기소개는 100자 이상으로 입력해 주세요',
+      selfIntroMaximum: '자기소개는 1000자 이내로 입력해 주세요',
+      nationalityRequired: '국적을 선택해 주세요',
+      prefecturesMinimum: '방문 예정 현을 최소 1개 선택해 주세요',
+      cityRequired: '현을 입력해 주세요',
+      saveFailed: '저장에 실패했습니다',
+      loadFailed: '로드에 실패했습니다'
     },
     levels: {
       none: '기입하지 않음',
@@ -1168,15 +1367,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       woodworking: '목공',
       sugarCrafts: '설탕 공예'
     },
-    errors: {
-      required: '이 항목은 필수입니다',
-      tooLong: '글자 수가 너무 많습니다',
-      tooShort: '글자 수가 부족합니다',
-      invalidAge: '유효한 나이를 입력하세요',
-      invalidHeight: '유효한 키를 입력하세요',
-      selectAtLeastOne: '하나 이상 선택하세요',
-      selectMaxItems: '최대 선택 수를 초과했습니다'
-    },
     common: {
       save: '저장',
       cancel: '취소',
@@ -1232,6 +1422,62 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroduction: '自我介紹',
       selfIntroPlaceholder: '請介紹您的魅力和對日本文化的興趣（100-1000字）',
       selfIntroNote: '請在100-1000字內寫自我介紹。'
+    },
+
+    placeholders: {
+      nickname: '暱稱',
+      age: '25',
+      height: '160',
+      city: '請輸入市區名稱',
+      selectOccupation: '選擇職業',
+      selectNationality: '選擇國籍',
+      selectPrefectures: '選擇都道府縣',
+      selectBodyType: '選擇體型',
+      selectMaritalStatus: '選擇婚姻狀態',
+      selectJapaneseLevel: '選擇日語程度',
+      selectEnglishLevel: '選擇英語程度',
+      selectVisitSchedule: '選擇拜訪時期',
+      selectTravelCompanion: '選擇同行者',
+      enterCustomCulture: '輸入其他日本文化（選填）'
+    },
+
+    buttons: {
+      save: '儲存',
+      cancel: '取消',
+      add: '新增',
+      remove: '移除',
+      edit: '編輯',
+      delete: '刪除',
+      upload: '上傳',
+      preview: '預覽',
+      back: '返回',
+      next: '下一步',
+      complete: '完成',
+      selectAll: '全選',
+      clearAll: '全部清除',
+      confirm: '確認'
+    },
+
+    errors: {
+      required: '此欄位為必填',
+      nicknameRequired: '請輸入暱稱',
+      nicknameMaxLength: '暱稱請在20字以內',
+      genderRequired: '請選擇性別',
+      birthDateRequired: '請輸入出生日期',
+      ageMinimum: '必須年滿18歲',
+      ageMaximum: '請輸入99歲以下',
+      heightMinimum: '身高請輸入120cm以上',
+      heightMaximum: '身高請輸入250cm以下',
+      hobbiesMinimum: '請至少選擇一項日本文化',
+      hobbiesMaximum: '最多可選擇8項日本文化',
+      customCultureMaxLength: '其他日本文化請在100字以內',
+      selfIntroMinimum: '自我介紹請至少100字',
+      selfIntroMaximum: '自我介紹請在1000字以內',
+      nationalityRequired: '請選擇國籍',
+      prefecturesMinimum: '請至少選擇一個預計前往的都道府縣',
+      cityRequired: '請輸入都道府縣',
+      saveFailed: '儲存失敗',
+      loadFailed: '載入失敗'
     },
     levels: {
       none: '不填寫',
@@ -1453,15 +1699,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       swordSmithing: '鍛刀',
       woodworking: '木工',
       sugarCrafts: '糖藝'
-    },
-    errors: {
-      required: '此欄位為必填',
-      tooLong: '字數過多',
-      tooShort: '字數不足',
-      invalidAge: '請輸入有效的年齡',
-      invalidHeight: '請輸入有效的身高',
-      selectAtLeastOne: '請至少選擇一項',
-      selectMaxItems: '超過最大選擇數量'
     },
     common: {
       save: '保存',
