@@ -44,6 +44,20 @@ type TranslationKeys = {
     selfIntroduction: string
     selfIntroPlaceholder: string
     selfIntroNote: string
+    requiredInfoNote: string
+  }
+
+  // プロフィール写真関連
+  profilePhotos: {
+    title: string
+    addPhoto: string
+    mainBadge: string
+    editedBadge: string
+    setAsMain: string
+    resetToOriginal: string
+    noteMainPhoto: string
+    noteSizeLimit: string
+    noteEditFeatures: string
   }
 
   // プレースホルダーテキスト
@@ -103,6 +117,9 @@ type TranslationKeys = {
     cityRequired: string
     saveFailed: string
     loadFailed: string
+    imageFileSizeLimit: string
+    unsupportedImageFormat: string
+    imageLoadFailed: string
   }
 
   // 言語レベル
@@ -422,7 +439,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: 'あなたの情報を更新してください',
       selfIntroduction: '自己紹介文',
       selfIntroPlaceholder: 'あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）',
-      selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。'
+      selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。',
+      requiredInfoNote: '（プロフィール公開に必要な項目）'
+    },
+
+    profilePhotos: {
+      title: 'プロフィール写真（最大3枚）',
+      addPhoto: '写真を追加',
+      mainBadge: 'メイン',
+      editedBadge: '編集済み',
+      setAsMain: 'メインに設定',
+      resetToOriginal: '前の画像に戻す',
+      noteMainPhoto: '1枚目がメイン写真として表示されます',
+      noteSizeLimit: '各写真は5MB以下にしてください',
+      noteEditFeatures: 'トリミングやぼかし加工ができます'
     },
 
     placeholders: {
@@ -478,7 +508,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '行く予定の都道府県を少なくとも1つ選択してください',
       cityRequired: '都道府県を入力してください',
       saveFailed: '保存に失敗しました',
-      loadFailed: '読み込みに失敗しました'
+      loadFailed: '読み込みに失敗しました',
+      imageFileSizeLimit: '画像ファイルは5MB以下にしてください',
+      unsupportedImageFormat: '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)',
+      imageLoadFailed: '画像ファイルの読み込みに失敗しました。別の画像を選択するか、デスクトップにコピーしてから試してください。'
     },
     levels: {
       none: '記入しない',
@@ -755,7 +788,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: 'Update your information',
       selfIntroduction: 'Self Introduction',
       selfIntroPlaceholder: 'Tell us about your charm and interest in Japanese culture (100-1000 characters)',
-      selfIntroNote: 'Please write your self-introduction in 100-1000 characters.'
+      selfIntroNote: 'Please write your self-introduction in 100-1000 characters.',
+      requiredInfoNote: '(Required for profile publication)'
+    },
+
+    profilePhotos: {
+      title: 'Profile Photos (up to 3)',
+      addPhoto: 'Add Photo',
+      mainBadge: 'Main',
+      editedBadge: 'Edited',
+      setAsMain: 'Set as Main',
+      resetToOriginal: 'Reset to Original',
+      noteMainPhoto: 'The first photo will be displayed as main',
+      noteSizeLimit: 'Please keep each photo under 5MB',
+      noteEditFeatures: 'Cropping and blur effects available'
     },
 
     placeholders: {
@@ -811,7 +857,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: 'Please select at least one prefecture to visit',
       cityRequired: 'Please enter prefecture',
       saveFailed: 'Failed to save',
-      loadFailed: 'Failed to load'
+      loadFailed: 'Failed to load',
+      imageFileSizeLimit: 'Please keep image files under 5MB',
+      unsupportedImageFormat: 'Please select a supported image file (JPEG, PNG, WebP, HEIC)',
+      imageLoadFailed: 'Failed to load image file. Please select a different image or copy it to your desktop and try again.'
     },
     levels: {
       none: 'Not specified',
@@ -1088,7 +1137,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: '정보를 업데이트하세요',
       selfIntroduction: '자기소개',
       selfIntroPlaceholder: '당신의 매력과 일본 문화에 대한 관심에 대해 알려주세요 (100자 이상 1000자 이내)',
-      selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.'
+      selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.',
+      requiredInfoNote: '(프로필 공개에 필요한 항목)'
+    },
+
+    profilePhotos: {
+      title: '프로필 사진 (최대 3장)',
+      addPhoto: '사진 추가',
+      mainBadge: '메인',
+      editedBadge: '편집됨',
+      setAsMain: '메인으로 설정',
+      resetToOriginal: '원본으로 되돌리기',
+      noteMainPhoto: '첫 번째 사진이 메인 사진으로 표시됩니다',
+      noteSizeLimit: '각 사진은 5MB 이하로 해주세요',
+      noteEditFeatures: '크롭 및 블러 효과 이용 가능'
     },
 
     placeholders: {
@@ -1144,7 +1206,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '방문 예정 현을 최소 1개 선택해 주세요',
       cityRequired: '현을 입력해 주세요',
       saveFailed: '저장에 실패했습니다',
-      loadFailed: '로드에 실패했습니다'
+      loadFailed: '로드에 실패했습니다',
+      imageFileSizeLimit: '이미지 파일은 5MB 이하로 해주세요',
+      unsupportedImageFormat: '지원하는 이미지 파일을 선택해 주세요 (JPEG, PNG, WebP, HEIC)',
+      imageLoadFailed: '이미지 파일 로드에 실패했습니다. 다른 이미지를 선택하거나 데스크탑에 복사한 후 다시 시도해 주세요.'
     },
     levels: {
       none: '기입하지 않음',
@@ -1421,7 +1486,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: '請更新您的資訊',
       selfIntroduction: '自我介紹',
       selfIntroPlaceholder: '請介紹您的魅力和對日本文化的興趣（100-1000字）',
-      selfIntroNote: '請在100-1000字內寫自我介紹。'
+      selfIntroNote: '請在100-1000字內寫自我介紹。',
+      requiredInfoNote: '（個人資料公開所需項目）'
+    },
+
+    profilePhotos: {
+      title: '個人資料照片（最多3張）',
+      addPhoto: '新增照片',
+      mainBadge: '主要',
+      editedBadge: '已編輯',
+      setAsMain: '設為主要照片',
+      resetToOriginal: '恢復原始照片',
+      noteMainPhoto: '第一張照片將顯示為主要照片',
+      noteSizeLimit: '每張照片請控制在5MB以下',
+      noteEditFeatures: '可使用裁剪和模糊效果'
     },
 
     placeholders: {
@@ -1477,7 +1555,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '請至少選擇一個預計前往的都道府縣',
       cityRequired: '請輸入都道府縣',
       saveFailed: '儲存失敗',
-      loadFailed: '載入失敗'
+      loadFailed: '載入失敗',
+      imageFileSizeLimit: '圖片檔案請控制在5MB以下',
+      unsupportedImageFormat: '請選擇支援的圖片檔案格式 (JPEG, PNG, WebP, HEIC)',
+      imageLoadFailed: '圖片檔案載入失敗。請選擇其他圖片或複製到桌面後重試。'
     },
     levels: {
       none: '不填寫',
@@ -1742,4 +1823,5 @@ export function useTranslation(language: SupportedLanguage) {
   }
 }
 
+export { translations }
 export default translations

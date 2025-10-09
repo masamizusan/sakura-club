@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import ImageEditor from './image-editor'
 import { Upload, X, Edit, Camera, User } from 'lucide-react'
+import { translations } from '@/utils/translations'
+import { SupportedLanguage } from '@/utils/language'
 
 interface ProfileImage {
   id: string
@@ -17,23 +19,26 @@ interface MultiImageUploaderProps {
   images: ProfileImage[]
   onImagesChange: (images: ProfileImage[]) => void
   maxImages?: number
+  language?: SupportedLanguage
 }
 
 export default function MultiImageUploader({ 
   images, 
   onImagesChange, 
-  maxImages = 3 
+  maxImages = 3,
+  language = 'ja'
 }: MultiImageUploaderProps) {
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [showImageEditor, setShowImageEditor] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const t = translations[language]
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('画像ファイルは5MB以下にしてください')
+      alert(t('errors.imageFileSizeLimit'))
       return
     }
 
@@ -44,7 +49,7 @@ export default function MultiImageUploader({
                         /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
     
     if (!isValidImage) {
-      alert('対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)')
+      alert(t('errors.unsupportedImageFormat'))
       return
     }
 
@@ -56,7 +61,7 @@ export default function MultiImageUploader({
     }
     reader.onerror = (e) => {
       console.error('ファイル読み込みエラー:', e)
-      alert('画像ファイルの読み込みに失敗しました。別の画像を選択するか、デスクトップにコピーしてから試してください。')
+      alert(t('errors.imageLoadFailed'))
     }
     reader.readAsDataURL(file)
   }
@@ -133,7 +138,7 @@ export default function MultiImageUploader({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
-        プロフィール写真（最大{maxImages}枚）
+        {t('profilePhotos.title').replace('（最大3枚）', `（最大${maxImages}枚）`)}
       </h3>
 
       {/* 画像グリッド */}
@@ -144,7 +149,7 @@ export default function MultiImageUploader({
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-sakura-300 transition-colors">
               <img
                 src={image.url}
-                alt={`プロフィール写真 ${index + 1}`}
+                alt={`${t('profilePhotos.title')} ${index + 1}`}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -152,14 +157,14 @@ export default function MultiImageUploader({
             {/* メインバッジ */}
             {image.isMain && (
               <div className="absolute top-2 left-2 bg-sakura-600 text-white text-xs px-2 py-1 rounded-full">
-                メイン
+                {t('profilePhotos.mainBadge')}
               </div>
             )}
             
             {/* 編集済みバッジ */}
             {image.isEdited && (
               <div className="absolute top-2 left-12 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                編集済み
+                {t('profilePhotos.editedBadge')}
               </div>
             )}
             
@@ -192,7 +197,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6"
                   onClick={() => handleSetMainImage(image.id)}
                 >
-                  メインに設定
+                  {t('profilePhotos.setAsMain')}
                 </Button>
               )}
               {image.isEdited && (
@@ -202,7 +207,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
                   onClick={() => handleResetToOriginal(image.id)}
                 >
-                  前の画像に戻す
+                  {t('profilePhotos.resetToOriginal')}
                 </Button>
               )}
             </div>
@@ -217,7 +222,7 @@ export default function MultiImageUploader({
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500 text-center">
-              写真を追加<br />
+              {t('profilePhotos.addPhoto')}<br />
               ({images.length}/{maxImages})
             </span>
           </div>
@@ -245,9 +250,9 @@ export default function MultiImageUploader({
 
       {/* 注意事項 */}
       <div className="text-sm text-gray-600 space-y-1">
-        <p>• 1枚目がメイン写真として表示されます</p>
-        <p>• 各写真は5MB以下にしてください</p>
-        <p>• トリミングやぼかし加工ができます</p>
+        <p>• {t('profilePhotos.noteMainPhoto')}</p>
+        <p>• {t('profilePhotos.noteSizeLimit')}</p>
+        <p>• {t('profilePhotos.noteEditFeatures')}</p>
       </div>
 
       {/* 画像エディター */}

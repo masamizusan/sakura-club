@@ -52,7 +52,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   self_introduction: z.string().min(100, t('errors.selfIntroMinimum')).max(1000, t('errors.selfIntroMaximum')),
 })
 
-// 条件付きバリデーション関数
+// Conditional validation function
 const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
   const baseSchema = baseProfileEditSchema(t)
   if (isForeignMale) {
@@ -205,7 +205,7 @@ const getBodyTypeOptions = (t: any) => [
   { value: 'plump', label: t('bodyType.plump') }
 ]
 
-// 英語レベルオプション（翻訳対応）
+// English level options (with translation support)
 const getEnglishLevelOptions = (t: any) => [
   { value: 'none', label: t('levels.none') },
   { value: 'beginner', label: t('levels.beginner') },
@@ -216,7 +216,7 @@ const getEnglishLevelOptions = (t: any) => [
   { value: 'native', label: t('levels.native') }
 ]
 
-// 日本語レベルオプション（翻訳対応）
+// Japanese level options (with translation support)
 const getJapaneseLevelOptions = (t: any) => [
   { value: 'none', label: t('levels.none') },
   { value: 'beginner', label: t('levels.beginner') },
@@ -227,7 +227,7 @@ const getJapaneseLevelOptions = (t: any) => [
   { value: 'native', label: t('levels.native') }
 ]
 
-// 人気駅30（外国人に人気の駅）
+// 30 Popular stations (popular with foreigners)
 const POPULAR_STATIONS = [
   "東京駅（東京都）","京都駅（京都府）","金沢駅（石川県）","嵐山駅（京都府）","浅草駅（東京都）",
   "渋谷駅（東京都）","箱根湯本駅（神奈川県）","大阪駅（大阪府）","鎌倉駅（神奈川県）","小樽駅（北海道）",
@@ -248,7 +248,7 @@ const generateVisitScheduleOptions = () => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth(); // 0-11
 
-  // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+  // Determine current season (Spring: Feb-Apr, Summer: May-Jul, Autumn: Aug-Oct, Winter: Nov-Jan)
   const getCurrentSeason = () => {
     if (currentMonth >= 2 && currentMonth <= 4) return 'spring';
     if (currentMonth >= 5 && currentMonth <= 7) return 'summer';
@@ -265,13 +265,13 @@ const generateVisitScheduleOptions = () => {
     winter: '冬（12-2月）'
   };
 
-  // 今後2年分の選択肢を生成
+  // Generate options for the next 2 years
   for (let year = currentYear; year <= currentYear + 2; year++) {
     seasons.forEach((season, index) => {
-      // 現在年の場合、過去の季節は除外
+      // For current year, exclude past seasons
       if (year === currentYear) {
         const currentSeasonIndex = seasons.indexOf(currentSeason);
-        if (index <= currentSeasonIndex) return; // 現在季節以前は除外
+        if (index <= currentSeasonIndex) return; // Exclude seasons before current
       }
 
       const value = `${year}-${season}`;
@@ -280,16 +280,16 @@ const generateVisitScheduleOptions = () => {
     });
   }
 
-  // 2年以降の選択肢
+  // Options for 2+ years ahead
   options.push({ value: `beyond-${currentYear + 2}`, label: `${currentYear + 2}年以降` });
 
   return options;
 };
 
-// 外国人男性向け選択肢
+// Options for foreign male users
 const VISIT_SCHEDULE_OPTIONS = generateVisitScheduleOptions();
 
-// 同行者選択肢（翻訳対応）
+// Travel companion options (with translation support)
 const getTravelCompanionOptions = (t: any) => [
   { value: 'noEntry', label: t('companion.noEntry') },
   { value: 'alone', label: t('companion.alone') },
@@ -298,7 +298,7 @@ const getTravelCompanionOptions = (t: any) => [
   { value: 'partner', label: t('companion.partner') }
 ]
 
-// 性格オプション（翻訳対応）
+// Personality options (with translation support)
 const getPersonalityOptions = (t: any) => [
   '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
   '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
@@ -467,7 +467,7 @@ const getCultureCategories = (t: any) => [
   }
 ]
 
-// 訪問予定時期選択肢（翻訳対応・動的生成）
+// Visit schedule options (with translation support, dynamically generated)
 const getVisitScheduleOptions = (t: any) => {
   const options = [
     { value: 'no-entry', label: t('schedule.noEntry') },
@@ -478,13 +478,13 @@ const getVisitScheduleOptions = (t: any) => {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth(); // 0-11
 
-  // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+  // Determine current season (Spring: Feb-Apr, Summer: May-Jul, Autumn: Aug-Oct, Winter: Nov-Jan)
   const currentSeason =
     currentMonth >= 2 && currentMonth <= 4 ? '春' :
     currentMonth >= 5 && currentMonth <= 7 ? '夏' :
     currentMonth >= 8 && currentMonth <= 10 ? '秋' : '冬';
 
-  // 今年の残りの季節
+  // Remaining seasons of this year
   const seasons = ['春', '夏', '秋', '冬'];
   const currentSeasonIndex = seasons.indexOf(currentSeason);
 
@@ -495,7 +495,7 @@ const getVisitScheduleOptions = (t: any) => {
     });
   }
 
-  // 来年の全季節
+  // All seasons of next year
   for (const season of seasons) {
     options.push({
       value: `${currentYear + 1}-${season}`,
@@ -503,7 +503,7 @@ const getVisitScheduleOptions = (t: any) => {
     });
   }
 
-  // 2年以降の選択肢
+  // Options for 2+ years ahead
   options.push({
     value: `beyond-${currentYear + 2}`,
     label: `${currentYear + 2}年以降`
@@ -2847,6 +2847,7 @@ function ProfileEditContent() {
                 images={profileImages}
                 onImagesChange={handleImagesChange}
                 maxImages={3}
+                language={currentLanguage}
               />
 
               {/* 必須情報 */}
@@ -2854,7 +2855,7 @@ function ProfileEditContent() {
                 <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
                   <span className="text-red-500 mr-2">*</span>
                   {t('profile.requiredInfo')}
-                  <span className="text-sm font-normal text-gray-500 ml-2">（プロフィール公開に必要な項目）</span>
+                  <span className="text-sm font-normal text-gray-500 ml-2">{t('profile.requiredInfoNote')}</span>
                 </h3>
                 
                 {/* 自己紹介 */}
