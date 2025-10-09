@@ -151,6 +151,8 @@ const getMaritalStatusOptions = (t: any) => [
 // 職業オプション（翻訳対応）
 const getOccupationOptions = (t: any) => [
   { value: 'none', label: t('occupations.noEntry') },
+  { value: '主婦', label: t('occupations.housewife') },
+  { value: '主夫', label: t('occupations.houseHusband') },
   { value: '会社員', label: t('occupations.companyEmployee') },
   { value: '公務員', label: t('occupations.publicServant') },
   { value: '経営者・役員', label: t('occupations.executiveManager') },

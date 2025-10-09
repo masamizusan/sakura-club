@@ -101,6 +101,8 @@ type TranslationKeys = {
   // 職業
   occupations: {
     noEntry: string
+    housewife: string
+    houseHusband: string
     companyEmployee: string
     publicServant: string
     executiveManager: string
@@ -415,6 +417,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: '記入しない',
+      housewife: '主婦',
+      houseHusband: '主夫',
       companyEmployee: '会社員',
       publicServant: '公務員',
       executiveManager: '経営者・役員',
@@ -699,6 +703,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: 'Not specified',
+      housewife: 'Housewife',
+      houseHusband: 'House Husband',
       companyEmployee: 'Company Employee',
       publicServant: 'Public Servant',
       executiveManager: 'Executive/Manager',
@@ -983,6 +989,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: '기입하지 않음',
+      housewife: '주부',
+      houseHusband: '주부남',
       companyEmployee: '회사원',
       publicServant: '공무원',
       executiveManager: '경영자·임원',
@@ -1267,6 +1275,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: '不填寫',
+      housewife: '家庭主婦',
+      houseHusband: '家庭主夫',
       companyEmployee: '上班族',
       publicServant: '公務員',
       executiveManager: '經營者·主管',
