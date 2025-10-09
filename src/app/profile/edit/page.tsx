@@ -149,7 +149,7 @@ const getMaritalStatusOptions = (t: any) => [
 ]
 
 // 職業オプション（翻訳対応・性別フィルタリング付き）
-const getOccupationOptions = (t: any, profileType?: string) => {
+const getOccupationOptions = (t: any, profileType?: string | null) => {
   const baseOptions = [
     { value: 'none', label: t('occupations.noEntry') },
     { value: '会社員', label: t('occupations.companyEmployee') },
