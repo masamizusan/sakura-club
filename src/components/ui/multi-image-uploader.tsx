@@ -38,7 +38,7 @@ export default function MultiImageUploader({
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert(t('errors.imageFileSizeLimit'))
+      alert(t.errors.imageFileSizeLimit)
       return
     }
 
@@ -49,7 +49,7 @@ export default function MultiImageUploader({
                         /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
     
     if (!isValidImage) {
-      alert(t('errors.unsupportedImageFormat'))
+      alert(t.errors.unsupportedImageFormat)
       return
     }
 
@@ -61,7 +61,7 @@ export default function MultiImageUploader({
     }
     reader.onerror = (e) => {
       console.error('ファイル読み込みエラー:', e)
-      alert(t('errors.imageLoadFailed'))
+      alert(t.errors.imageLoadFailed)
     }
     reader.readAsDataURL(file)
   }
@@ -138,7 +138,7 @@ export default function MultiImageUploader({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
-        {t('profilePhotos.title').replace('（最大3枚）', `（最大${maxImages}枚）`)}
+        {t.profilePhotos.title.replace('（最大3枚）', `（最大${maxImages}枚）`)}
       </h3>
 
       {/* 画像グリッド */}
@@ -149,7 +149,7 @@ export default function MultiImageUploader({
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-sakura-300 transition-colors">
               <img
                 src={image.url}
-                alt={`${t('profilePhotos.title')} ${index + 1}`}
+                alt={`${t.profilePhotos.title} ${index + 1}`}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -157,14 +157,14 @@ export default function MultiImageUploader({
             {/* メインバッジ */}
             {image.isMain && (
               <div className="absolute top-2 left-2 bg-sakura-600 text-white text-xs px-2 py-1 rounded-full">
-                {t('profilePhotos.mainBadge')}
+                {t.profilePhotos.mainBadge}
               </div>
             )}
             
             {/* 編集済みバッジ */}
             {image.isEdited && (
               <div className="absolute top-2 left-12 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                {t('profilePhotos.editedBadge')}
+                {t.profilePhotos.editedBadge}
               </div>
             )}
             
@@ -197,7 +197,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6"
                   onClick={() => handleSetMainImage(image.id)}
                 >
-                  {t('profilePhotos.setAsMain')}
+                  {t.profilePhotos.setAsMain}
                 </Button>
               )}
               {image.isEdited && (
@@ -207,7 +207,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
                   onClick={() => handleResetToOriginal(image.id)}
                 >
-                  {t('profilePhotos.resetToOriginal')}
+                  {t.profilePhotos.resetToOriginal}
                 </Button>
               )}
             </div>
@@ -222,7 +222,7 @@ export default function MultiImageUploader({
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500 text-center">
-              {t('profilePhotos.addPhoto')}<br />
+              {t.profilePhotos.addPhoto}<br />
               ({images.length}/{maxImages})
             </span>
           </div>
@@ -250,9 +250,9 @@ export default function MultiImageUploader({
 
       {/* 注意事項 */}
       <div className="text-sm text-gray-600 space-y-1">
-        <p>• {t('profilePhotos.noteMainPhoto')}</p>
-        <p>• {t('profilePhotos.noteSizeLimit')}</p>
-        <p>• {t('profilePhotos.noteEditFeatures')}</p>
+        <p>• {t.profilePhotos.noteMainPhoto}</p>
+        <p>• {t.profilePhotos.noteSizeLimit}</p>
+        <p>• {t.profilePhotos.noteEditFeatures}</p>
       </div>
 
       {/* 画像エディター */}
