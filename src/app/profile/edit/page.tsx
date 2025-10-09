@@ -141,70 +141,55 @@ const CULTURE_CATEGORIES = [
 // 後方互換性のため、フラットな配列も保持
 const HOBBY_OPTIONS = CULTURE_CATEGORIES.flatMap(category => category.items)
 
-// 結婚状況オプション
-const MARITAL_STATUS_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: 'single', label: '未婚' },
-  { value: 'married', label: '既婚' }
+// 結婚状況オプション（翻訳対応）
+const getMaritalStatusOptions = (t: any) => [
+  { value: 'none', label: t('maritalStatus.none') },
+  { value: 'single', label: t('maritalStatus.single') },
+  { value: 'married', label: t('maritalStatus.married') }
 ]
 
-// 職業オプション
-const OCCUPATION_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '主婦、主夫', label: '主婦、主夫' },
-  { value: '会社員', label: '会社員' },
-  { value: '公務員', label: '公務員' },
-  { value: '経営者・役員', label: '経営者・役員' },
-  { value: 'フリーランス', label: 'フリーランス' },
-  { value: '自営業', label: '自営業' },
-  { value: '医師', label: '医師' },
-  { value: '看護師', label: '看護師' },
-  { value: '教師・講師', label: '教師・講師' },
-  { value: 'エンジニア', label: 'エンジニア' },
-  { value: 'デザイナー', label: 'デザイナー' },
-  { value: '営業', label: '営業' },
-  { value: 'マーケティング', label: 'マーケティング' },
-  { value: '研究者', label: '研究者' },
-  { value: 'コンサルタント', label: 'コンサルタント' },
-  { value: '金融', label: '金融' },
-  { value: '法律関係', label: '法律関係' },
-  { value: 'サービス業', label: 'サービス業' },
-  { value: '小売業', label: '小売業' },
-  { value: '製造業', label: '製造業' },
-  { value: '学生', label: '学生' },
-  { value: 'その他', label: 'その他' }
+// 職業オプション（翻訳対応）
+const getOccupationOptions = (t: any) => [
+  { value: 'none', label: t('occupations.noEntry') },
+  { value: 'housewife', label: t('occupations.housewife') },
+  { value: 'student', label: t('occupations.student') },
+  { value: 'companyEmployee', label: t('occupations.companyEmployee') },
+  { value: 'publicServant', label: t('occupations.publicServant') },
+  { value: 'selfEmployed', label: t('occupations.selfEmployed') },
+  { value: 'freelance', label: t('occupations.freelance') },
+  { value: 'partTime', label: t('occupations.partTime') },
+  { value: 'other', label: t('occupations.other') }
 ]
 
-// 体型オプション
-const BODY_TYPE_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: 'スリム', label: 'スリム' },
-  { value: '普通', label: '普通' },
-  { value: 'ぽっちゃり', label: 'ぽっちゃり' },
-  { value: 'グラマー', label: 'グラマー' },
-  { value: 'アスリート体型', label: 'アスリート体型' }
+// 体型オプション（翻訳対応）
+const getBodyTypeOptions = (t: any) => [
+  { value: 'none', label: t('bodyType.noEntry') },
+  { value: 'slim', label: t('bodyType.slim') },
+  { value: 'average', label: t('bodyType.average') },
+  { value: 'muscular', label: t('bodyType.muscular') },
+  { value: 'plump', label: t('bodyType.plump') }
 ]
 
-// 英語レベルオプション
-const ENGLISH_LEVEL_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '初級', label: '初級（日常会話は難しい）' },
-  { value: '初中級', label: '初中級（簡単な日常会話）' },
-  { value: '中級', label: '中級（日常会話ができる）' },
-  { value: '中上級', label: '中上級（ビジネス会話も一部可能）' },
-  { value: '上級', label: '上級（ビジネス会話も流暢）' },
-  { value: 'ネイティブレベル', label: 'ネイティブレベル' }
+// 英語レベルオプション（翻訳対応）
+const getEnglishLevelOptions = (t: any) => [
+  { value: 'none', label: t('levels.none') },
+  { value: 'beginner', label: t('levels.beginner') },
+  { value: 'elementary', label: t('levels.elementary') },
+  { value: 'intermediate', label: t('levels.intermediate') },
+  { value: 'upperIntermediate', label: t('levels.upperIntermediate') },
+  { value: 'advanced', label: t('levels.advanced') },
+  { value: 'native', label: t('levels.native') }
 ]
 
-// 日本語レベルオプション
-const JAPANESE_LEVEL_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '初級', label: '初級（日常会話は難しい）' },
-  { value: '初中級', label: '初中級（簡単な日常会話）' },
-  { value: '中級', label: '中級（日常会話ができる）' },
-  { value: '中上級', label: '中上級（ビジネス会話も一部可能）' },
-  { value: '上級', label: '上級（ビジネス会話も流暢）' },
-  { value: 'ネイティブレベル', label: 'ネイティブレベル' }
+// 日本語レベルオプション（翻訳対応）
+const getJapaneseLevelOptions = (t: any) => [
+  { value: 'none', label: t('levels.none') },
+  { value: 'beginner', label: t('levels.beginner') },
+  { value: 'elementary', label: t('levels.elementary') },
+  { value: 'intermediate', label: t('levels.intermediate') },
+  { value: 'upperIntermediate', label: t('levels.upperIntermediate') },
+  { value: 'advanced', label: t('levels.advanced') },
+  { value: 'native', label: t('levels.native') }
 ]
 
 // 人気駅30（外国人に人気の駅）
@@ -269,15 +254,23 @@ const generateVisitScheduleOptions = () => {
 // 外国人男性向け選択肢
 const VISIT_SCHEDULE_OPTIONS = generateVisitScheduleOptions();
 
-const TRAVEL_COMPANION_OPTIONS = [
-  { value: 'no-entry', label: '記入しない' },
-  { value: 'solo', label: '一人旅' },
-  { value: 'couple', label: 'カップル（恋人・配偶者）' },
-  { value: 'friends', label: '友達' },
-  { value: 'family', label: '家族' },
-  { value: 'colleagues', label: '同僚・仕事仲間' },
-  { value: 'group', label: 'グループ・団体' },
-  { value: 'other', label: 'その他' }
+// 同行者選択肢（翻訳対応）
+const getTravelCompanionOptions = (t: any) => [
+  { value: 'noEntry', label: t('companion.noEntry') },
+  { value: 'alone', label: t('companion.alone') },
+  { value: 'friend', label: t('companion.friend') },
+  { value: 'family', label: t('companion.family') },
+  { value: 'partner', label: t('companion.partner') }
+]
+
+// 訪問予定時期選択肢（翻訳対応）
+const getVisitScheduleOptions = (t: any) => [
+  { value: 'undecided', label: t('schedule.undecided') },
+  { value: 'noEntry', label: t('schedule.noEntry') },
+  { value: 'year2024', label: t('schedule.year2024') },
+  { value: 'year2025', label: t('schedule.year2025') },
+  { value: 'beyond2025', label: t('schedule.beyond2025') },
+  { value: 'beyond2026', label: t('schedule.beyond2026') }
 ]
 
 function ProfileEditContent() {
@@ -2790,7 +2783,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder="職業を選択" />
                         </SelectTrigger>
                         <SelectContent>
-                          {OCCUPATION_OPTIONS.map((option) => (
+                          {getOccupationOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -2834,7 +2827,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder={`${t('profile.bodyType')}を選択`} />
                         </SelectTrigger>
                         <SelectContent>
-                          {BODY_TYPE_OPTIONS.map((option) => (
+                          {getBodyTypeOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -2855,7 +2848,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder={`${t('profile.maritalStatus')}を選択`} />
                         </SelectTrigger>
                         <SelectContent>
-                          {MARITAL_STATUS_OPTIONS.map((option) => (
+                          {getMaritalStatusOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -2876,7 +2869,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder={`${t('profile.japaneseLevel')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {JAPANESE_LEVEL_OPTIONS.map((option) => (
+                            {getJapaneseLevelOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -2898,7 +2891,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder={`${t('profile.englishLevel')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {ENGLISH_LEVEL_OPTIONS.map((option) => (
+                            {getEnglishLevelOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -2963,7 +2956,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder={`${t('profile.visitSchedule')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {VISIT_SCHEDULE_OPTIONS.map((option) => (
+                            {getVisitScheduleOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -2988,7 +2981,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder={`${t('profile.travelCompanion')}を選択`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {TRAVEL_COMPANION_OPTIONS.map((option) => (
+                            {getTravelCompanionOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
