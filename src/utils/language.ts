@@ -1,13 +1,13 @@
 /**
- * 多言語対応ユーティリティ
- * 段階的実装: Phase 1 - 基本的な言語判定
+ * Multilingual support utilities
+ * Gradual implementation: Phase 1 - Basic language detection
  */
 
 export type SupportedLanguage = 'ja' | 'en' | 'ko' | 'zh-tw'
 
-// 国籍から言語を判定するマッピング
+// Mapping to determine language from nationality
 const NATIONALITY_TO_LANGUAGE: Record<string, SupportedLanguage> = {
-  // 英語圏
+  // English-speaking countries
   'アメリカ': 'en',
   'イギリス': 'en',
   'カナダ': 'en',
@@ -15,29 +15,29 @@ const NATIONALITY_TO_LANGUAGE: Record<string, SupportedLanguage> = {
   'ニュージーランド': 'en',
   'アイルランド': 'en',
   'ジャマイカ': 'en',
-  'その他': 'en', // デフォルトは英語
+  'その他': 'en', // Default is English
 
-  // 韓国語
+  // Korean
   '韓国': 'ko',
 
-  // 中国語（繁体字）
+  // Traditional Chinese
   '台湾': 'zh-tw',
 
-  // 日本語
+  // Japanese
   '日本': 'ja',
 }
 
 /**
- * 国籍から適切な言語を取得
+ * Get appropriate language from nationality
  */
 export function getLanguageFromNationality(nationality: string | null | undefined): SupportedLanguage {
-  if (!nationality) return 'en' // デフォルトは英語
+  if (!nationality) return 'en' // Default is English
 
   return NATIONALITY_TO_LANGUAGE[nationality] || 'en'
 }
 
 /**
- * 言語コードから表示名を取得
+ * Get display name from language code
  */
 export function getLanguageDisplayName(language: SupportedLanguage): string {
   const displayNames: Record<SupportedLanguage, string> = {
@@ -51,10 +51,10 @@ export function getLanguageDisplayName(language: SupportedLanguage): string {
 }
 
 /**
- * ブラウザの言語設定から推定
+ * Infer from browser language settings
  */
 export function getBrowserLanguage(): SupportedLanguage {
-  if (typeof window === 'undefined') return 'ja'
+  if (typeof window === 'undefined') return 'ja' // Server-side default
 
   const browserLang = navigator.language || navigator.languages?.[0] || 'ja'
 
@@ -62,11 +62,11 @@ export function getBrowserLanguage(): SupportedLanguage {
   if (browserLang.startsWith('ko')) return 'ko'
   if (browserLang.startsWith('zh-TW') || browserLang.startsWith('zh-Hant')) return 'zh-tw'
 
-  return 'ja' // デフォルトは日本語
+  return 'ja' // Default is Japanese
 }
 
 /**
- * 言語設定をlocalStorageに保存
+ * Save language preference to localStorage
  */
 export function saveLanguagePreference(language: SupportedLanguage): void {
   if (typeof window !== 'undefined') {
@@ -75,7 +75,7 @@ export function saveLanguagePreference(language: SupportedLanguage): void {
 }
 
 /**
- * localStorageから言語設定を取得
+ * Get language preference from localStorage
  */
 export function getStoredLanguagePreference(): SupportedLanguage | null {
   if (typeof window === 'undefined') return null
@@ -89,22 +89,22 @@ export function getStoredLanguagePreference(): SupportedLanguage | null {
 }
 
 /**
- * 最適な言語を決定（優先順位: localStorage > 国籍 > ブラウザ設定）
+ * Determine optimal language (priority: localStorage > nationality > browser settings)
  */
 export function determineLanguage(nationality?: string | null): SupportedLanguage {
-  // 1. localStorageの設定を最優先
+  // 1. Prioritize localStorage settings
   const stored = getStoredLanguagePreference()
   if (stored) return stored
 
-  // 2. 国籍から判定
+  // 2. Determine from nationality
   if (nationality) {
     const fromNationality = getLanguageFromNationality(nationality)
     if (fromNationality !== 'en' || nationality !== 'その他') {
-      // 明確に特定の国籍の場合、または「その他」以外で英語になった場合
+      // For clearly specified nationalities, or when English is assigned for non-'other' cases
       return fromNationality
     }
   }
 
-  // 3. ブラウザ設定から判定
+  // 3. Determine from browser settings
   return getBrowserLanguage()
 }

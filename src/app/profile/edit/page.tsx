@@ -738,7 +738,7 @@ function ProfileEditContent() {
           avatarUrl = firstImage.url
         }
         
-        console.log('💾 写真変更をデータベースに即座保存:', {
+        console.log('💾 Save photo changes to database immediately:', {
           hasImages: newImages.length > 0,
           hasBlobImages: newImages.some(img => img.url.startsWith('blob:')),
           avatarUrl,
@@ -755,7 +755,7 @@ function ProfileEditContent() {
           if (error) {
             console.error('❌ 写真保存エラー:', error)
           } else {
-            console.log('✅ 写真がデータベースに保存されました')
+            console.log('✅ Photo saved to database successfully')
           }
         } else if (newImages.length === 0) {
           // 画像が完全に削除された場合は、データベースのavatar_urlをnullに更新
@@ -767,10 +767,10 @@ function ProfileEditContent() {
           if (error) {
             console.error('❌ 写真削除エラー:', error)
           } else {
-            console.log('✅ 写真がデータベースから削除されました')
+            console.log('✅ Photo deleted from database successfully')
           }
         } else {
-          console.log('⚠️ blob URL画像のため、データベース保存をスキップ（フォーム送信時に処理）')
+          console.log('⚠️ Skipping database save for blob URL images (will be processed on form submission)')
         }
       } catch (error) {
         console.error('❌ 写真保存中にエラー:', error)
@@ -840,7 +840,7 @@ function ProfileEditContent() {
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
-        console.log('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
+        console.log('🚨 True new registration flow detected! Starting secure profile initialization')
         if (user) {
           secureProfileInitialization()
         } else {
@@ -858,7 +858,7 @@ function ProfileEditContent() {
           setTimeout(() => clearInterval(checkUser), 5000)
         }
       } else if (isFromMyPageParam) {
-        console.log('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
+        console.log('✅ Safe transition from MyPage detected - skipping data deletion')
       }
     }
   }, [user])
@@ -968,7 +968,7 @@ function ProfileEditContent() {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
       if (!user) {
-        console.log('❌ ユーザーなし - ログインページへ')
+        console.log('❌ No user - redirecting to login page')
         router.push('/login')
         return
       }
@@ -1341,7 +1341,7 @@ function ProfileEditContent() {
     }
 
     try {
-      console.log('🔐 安全なプロフィール初期化開始 - User ID:', user.id)
+      console.log('🔐 Starting secure profile initialization - User ID:', user.id)
       
       // 🛡️ セキュリティ強化: ユーザーID検証
       console.log('🔒 SECURITY: Validating user authentication')
@@ -1370,7 +1370,7 @@ function ProfileEditContent() {
       }
       
       if (existingProfile) {
-        console.log('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
+        console.log('⚠️ Existing profile detected - executing safe initialization')
         console.log('🔒 SECURITY: Profile belongs to authenticated user - proceeding with DELETE+INSERT')
         
         // 🧹 新規登録時: 全フィールドを確実にNULLクリア（「新しい紙に完全リセット」アプローチ）
@@ -1453,7 +1453,7 @@ function ProfileEditContent() {
         sessionStorage.removeItem('imageEditHistory')
         console.log('🔄 新規ユーザー: 画像編集履歴をクリア')
         
-        console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
+        console.log('✅ Form initialization completed in secure new registration state')
         
         // 完成度を再計算（フォームsetValue完了後に実行）
         setTimeout(() => {
@@ -1512,7 +1512,7 @@ function ProfileEditContent() {
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
-        console.log('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
+        console.log('🚨 True new registration flow detected! Starting secure profile initialization')
         if (user) {
           secureProfileInitialization()
         } else {
@@ -1530,7 +1530,7 @@ function ProfileEditContent() {
           setTimeout(() => clearInterval(checkUser), 5000)
         }
       } else if (isFromMyPageParam) {
-        console.log('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
+        console.log('✅ Safe transition from MyPage detected - skipping data deletion')
       }
     }
   }, [user])
@@ -1639,7 +1639,7 @@ function ProfileEditContent() {
     if (!user) return
     
     try {
-      console.log('🧹 全データクリア中...')
+      console.log('🧹 Clearing all data...')
       
       // より包括的なデータクリア
       const { error } = await supabase
@@ -1694,7 +1694,7 @@ function ProfileEditContent() {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
       if (!user) {
-        console.log('❌ ユーザーなし - ログインページへ')
+        console.log('❌ No user - redirecting to login page')
         router.push('/login')
         return
       }
@@ -1917,7 +1917,7 @@ function ProfileEditContent() {
         // このブロックは現在無効化されています
         /*
         if (isFromSignup && user?.id) {
-          console.log('新規登録フロー検出 - プロフィールデータをクリア')
+          console.log('New registration flow detected - clearing profile data')
           await supabase
             .from('profiles')
             .update({
@@ -2292,9 +2292,9 @@ function ProfileEditContent() {
             
             if (storageTimestamp && parseInt(storageTimestamp) > fiveMinutesAgo) {
               shouldUseStorageImages = true
-              console.log('💾 セッションストレージから最新の画像状態を使用:', storageImages.length, '枚')
+              console.log('💾 Using latest image state from session storage:', storageImages.length, 'images')
             } else {
-              console.log('🕰️ セッションストレージの画像状態が古いため破棄')
+              console.log('🕰️ Session storage image state is old, discarding')
               sessionStorage.removeItem(userImageKey)
               sessionStorage.removeItem(userTimestampKey)
             }
@@ -2320,14 +2320,14 @@ function ProfileEditContent() {
         let currentImageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }> = []
 
         if (shouldUseStorageImages) {
-          console.log('✅ セッションストレージから画像状態を復元:', storageImages)
+          console.log('✅ Restored image state from session storage:', storageImages)
           currentImageArray = storageImages
           setProfileImages(storageImages)
         } else {
           // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
           if (profile.avatar_url) {
             console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
-            console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出')
+            console.log('  - isNewUser:', isNewUser, ', valid image data detected')
             currentImageArray = [{
               id: '1',
               url: profile.avatar_url,
@@ -2337,7 +2337,7 @@ function ProfileEditContent() {
             }]
             setProfileImages(currentImageArray)
           } else {
-            console.log('❌ 画像なしで初期化')
+            console.log('❌ Initializing without images')
             console.log('  - Reason: avatar_url=', !!profile.avatar_url)
             currentImageArray = []
           }
@@ -2408,7 +2408,7 @@ function ProfileEditContent() {
   // Form submission handler
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     console.log('🚀 Form submission started')
-    console.log('📋 提出されたデータ:', data)
+    console.log('📋 Submitted data:', data)
     console.log('📸 Current profile images:', profileImages)
 
     if (!user) {
@@ -2469,7 +2469,7 @@ function ProfileEditContent() {
             uploadedImageUrls.push(existingUrl)
             console.log('✅ 既存画像URL使用:', existingUrl)
           } else {
-            console.log('⚠️ 無効な既存画像URL:', existingUrl)
+            console.log('⚠️ Invalid existing image URL:', existingUrl)
           }
         }
       }
@@ -2565,7 +2565,7 @@ function ProfileEditContent() {
           planned_stations: updateData.planned_stations
         })
       } else {
-        console.log('❌ 外国人男性判定がfalseのため、専用フィールドは保存されません')
+        console.log('❌ Foreign male determination is false, dedicated fields will not be saved')
       }
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
