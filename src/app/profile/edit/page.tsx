@@ -263,6 +263,132 @@ const getTravelCompanionOptions = (t: any) => [
   { value: 'partner', label: t('companion.partner') }
 ]
 
+// 性格オプション（翻訳対応）
+const getPersonalityOptions = (t: any) => [
+  '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
+  '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
+  '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
+  '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
+  'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
+].map(trait => {
+  const traitMap: Record<string, string> = {
+    '優しい': 'gentle',
+    '穏やか': 'calm',
+    '寂しがりや': 'lonely',
+    '落ち着いている': 'composed',
+    '思いやりがある': 'caring',
+    '謙虚': 'humble',
+    '冷静': 'cool',
+    '素直': 'honest',
+    '明るい': 'bright',
+    '親しみやすい': 'friendly',
+    '面倒見が良い': 'helpful',
+    '気が利く': 'considerate',
+    '責任感がある': 'responsible',
+    '決断力がある': 'decisive',
+    '社交的': 'sociable',
+    '負けず嫌い': 'competitive',
+    '熱血': 'passionate',
+    'インドア': 'indoor',
+    'アクティブ': 'active',
+    '知的': 'intellectual',
+    '几帳面': 'meticulous',
+    '楽観的': 'optimistic',
+    'シャイ': 'shy',
+    'マメ': 'attentive',
+    'さわやか': 'refreshing',
+    '天然': 'natural',
+    'マイペース': 'ownPace'
+  }
+  const key = traitMap[trait] || trait
+  return { value: trait, label: t(`personality.${key}`) }
+})
+
+// 日本文化カテゴリ（翻訳対応）
+const getCultureCategories = (t: any) => [
+  {
+    name: t('cultureCategories.traditional'),
+    items: [
+      { value: '茶道', label: t('culture.teaCeremony') },
+      { value: '華道', label: t('culture.flowerArrangement') },
+      { value: '書道', label: t('culture.calligraphy') },
+      { value: '着物・浴衣', label: t('culture.kimono') },
+      { value: '和菓子', label: t('culture.wagashi') },
+      { value: '陶芸', label: t('culture.pottery') },
+      { value: '折り紙', label: t('culture.origami') },
+      { value: '盆栽', label: t('culture.bonsai') },
+      { value: '神社仏閣', label: t('culture.shrinesTemples') },
+      { value: '御朱印集め', label: t('culture.sealCollection') },
+      { value: '禅', label: t('culture.zen') }
+    ]
+  },
+  {
+    name: t('cultureCategories.food'),
+    items: [
+      { value: '寿司', label: t('culture.sushi') },
+      { value: '天ぷら', label: t('culture.tempura') },
+      { value: 'うなぎ', label: t('culture.unagi') },
+      { value: '牛丼', label: t('culture.gyudon') },
+      { value: 'とんかつ', label: t('culture.tonkatsu') },
+      { value: 'ラーメン', label: t('culture.ramen') },
+      { value: 'お好み焼き', label: t('culture.okonomiyaki') },
+      { value: 'たこ焼き', label: t('culture.takoyaki') },
+      { value: 'カレーライス', label: t('culture.curry') },
+      { value: 'コンビニフード', label: t('culture.conbiniFood') },
+      { value: 'ポテトチップス', label: t('culture.potatoChips') },
+      { value: '出汁', label: t('culture.dashi') },
+      { value: '味噌', label: t('culture.miso') },
+      { value: '豆腐', label: t('culture.tofu') },
+      { value: '梅干し', label: t('culture.umeboshi') },
+      { value: '漬物', label: t('culture.pickles') },
+      { value: '日本酒', label: t('culture.sake') },
+      { value: '焼酎', label: t('culture.shochu') },
+      { value: 'そば', label: t('culture.soba') },
+      { value: 'うどん', label: t('culture.udon') }
+    ]
+  },
+  {
+    name: t('cultureCategories.seasonal'),
+    items: [
+      { value: '桜見物', label: t('culture.cherryBlossom') },
+      { value: '紅葉狩り', label: t('culture.autumnLeaves') },
+      { value: '温泉', label: t('culture.hotSprings') },
+      { value: '祭り', label: t('culture.festivals') },
+      { value: '花火大会', label: t('culture.fireworks') },
+      { value: '雪景色', label: t('culture.snowScape') },
+      { value: '日本の四季', label: t('culture.fourSeasons') },
+      { value: '盆踊り', label: t('culture.bonDance') }
+    ]
+  },
+  {
+    name: t('cultureCategories.modernCulture'),
+    items: [
+      { value: 'アニメ', label: t('culture.anime') },
+      { value: 'マンガ', label: t('culture.manga') },
+      { value: 'コスプレ', label: t('culture.cosplay') },
+      { value: '日本のゲーム', label: t('culture.japaneseGames') },
+      { value: 'J-POP', label: t('culture.jpop') },
+      { value: 'カラオケ', label: t('culture.karaoke') },
+      { value: '日本映画', label: t('culture.japaneseMov') },
+      { value: 'ドラマ', label: t('culture.drama') },
+      { value: 'ボーカロイド', label: t('culture.vocaloid') },
+      { value: 'アイドル文化', label: t('culture.idolCulture') }
+    ]
+  },
+  {
+    name: t('cultureCategories.craftmanship'),
+    items: [
+      { value: '漆器', label: t('culture.lacquerware') },
+      { value: '金箔貼り', label: t('culture.goldLeaf') },
+      { value: '和紙漉き', label: t('culture.paperMaking') },
+      { value: '染物', label: t('culture.dyeing') },
+      { value: '刀鍛冶', label: t('culture.swordSmithing') },
+      { value: '木工', label: t('culture.woodworking') },
+      { value: '飴細工', label: t('culture.sugarCrafts') }
+    ]
+  }
+]
+
 // 訪問予定時期選択肢（翻訳対応）
 const getVisitScheduleOptions = (t: any) => [
   { value: 'undecided', label: t('schedule.undecided') },
@@ -2910,25 +3036,25 @@ function ProfileEditContent() {
                   </label>
                   <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {PERSONALITY_OPTIONS.map((trait) => (
+                    {getPersonalityOptions(t).map((option) => (
                       <button
-                        key={trait}
+                        key={option.value}
                         type="button"
-                        onClick={() => togglePersonality(trait)}
-                        disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                        onClick={() => togglePersonality(option.value)}
+                        disabled={!selectedPersonality.includes(option.value) && selectedPersonality.length >= 5}
                         className={`
                           px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                          ${selectedPersonality.includes(trait)
+                          ${selectedPersonality.includes(option.value)
                             ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                           }
-                          ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
+                          ${(!selectedPersonality.includes(option.value) && selectedPersonality.length >= 5)
                             ? 'opacity-50 cursor-not-allowed'
                             : 'cursor-pointer hover:shadow-md'
                           }
                         `}
                       >
-                        {trait}
+                        {option.label}
                       </button>
                     ))}
                   </div>
@@ -3098,7 +3224,7 @@ function ProfileEditContent() {
                     }
                   </p>
                   <Accordion type="multiple" className="w-full">
-                    {CULTURE_CATEGORIES.map((category) => (
+                    {getCultureCategories(t).map((category) => (
                       <AccordionItem key={category.name} value={category.name}>
                         <AccordionTrigger className="text-lg font-semibold">
                           {category.name}
@@ -3107,23 +3233,23 @@ function ProfileEditContent() {
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-2">
                             {category.items.map((hobby) => (
                               <button
-                                key={hobby}
+                                key={hobby.value}
                                 type="button"
-                                onClick={() => toggleHobby(hobby)}
-                                disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
+                                onClick={() => toggleHobby(hobby.value)}
+                                disabled={!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8}
                                 className={`
                                   px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                  ${selectedHobbies.includes(hobby)
+                                  ${selectedHobbies.includes(hobby.value)
                                     ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                     : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                                   }
-                                  ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
+                                  ${(!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8)
                                     ? 'opacity-50 cursor-not-allowed'
                                     : 'cursor-pointer hover:shadow-md'
                                   }
                                 `}
                               >
-                                {hobby}
+                                {hobby.label}
                               </button>
                             ))}
                           </div>

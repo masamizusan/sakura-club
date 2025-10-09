@@ -154,6 +154,115 @@ type TranslationKeys = {
     selectMaxItems: string
   }
 
+  // 性格特性
+  personality: {
+    gentle: string
+    calm: string
+    lonely: string
+    composed: string
+    caring: string
+    humble: string
+    cool: string
+    honest: string
+    bright: string
+    friendly: string
+    helpful: string
+    considerate: string
+    responsible: string
+    decisive: string
+    sociable: string
+    competitive: string
+    passionate: string
+    indoor: string
+    active: string
+    intellectual: string
+    meticulous: string
+    optimistic: string
+    shy: string
+    attentive: string
+    refreshing: string
+    natural: string
+    ownPace: string
+  }
+
+  // 日本文化カテゴリ
+  cultureCategories: {
+    traditional: string
+    food: string
+    seasonal: string
+    modernCulture: string
+    craftmanship: string
+  }
+
+  // 日本文化アイテム
+  culture: {
+    // 伝統文化
+    teaCeremony: string
+    flowerArrangement: string
+    calligraphy: string
+    kimono: string
+    wagashi: string
+    pottery: string
+    origami: string
+    bonsai: string
+    shrinesTemples: string
+    sealCollection: string
+    zen: string
+
+    // 食文化
+    sushi: string
+    tempura: string
+    unagi: string
+    gyudon: string
+    tonkatsu: string
+    ramen: string
+    okonomiyaki: string
+    takoyaki: string
+    curry: string
+    conbiniFood: string
+    potatoChips: string
+    dashi: string
+    miso: string
+    tofu: string
+    umeboshi: string
+    pickles: string
+    sake: string
+    shochu: string
+    soba: string
+    udon: string
+
+    // 季節・自然・行事
+    cherryBlossom: string
+    autumnLeaves: string
+    hotSprings: string
+    festivals: string
+    fireworks: string
+    snowScape: string
+    fourSeasons: string
+    bonDance: string
+
+    // 現代カルチャー
+    anime: string
+    manga: string
+    cosplay: string
+    japaneseGames: string
+    jpop: string
+    karaoke: string
+    japaneseMov: string
+    drama: string
+    vocaloid: string
+    idolCulture: string
+
+    // 工芸・職人技
+    lacquerware: string
+    goldLeaf: string
+    paperMaking: string
+    dyeing: string
+    swordSmithing: string
+    woodworking: string
+    sugarCrafts: string
+  }
+
   // 共通ボタン・アクション
   common: {
     save: string
@@ -290,6 +399,100 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       active: 'アクティブ',
       creative: 'クリエイティブ',
       thoughtful: '思いやりがある'
+    },
+    personality: {
+      gentle: '優しい',
+      calm: '穏やか',
+      lonely: '寂しがりや',
+      composed: '落ち着いている',
+      caring: '思いやりがある',
+      humble: '謙虚',
+      cool: '冷静',
+      honest: '素直',
+      bright: '明るい',
+      friendly: '親しみやすい',
+      helpful: '面倒見が良い',
+      considerate: '気が利く',
+      responsible: '責任感がある',
+      decisive: '決断力がある',
+      sociable: '社交的',
+      competitive: '負けず嫌い',
+      passionate: '熱血',
+      indoor: 'インドア',
+      active: 'アクティブ',
+      intellectual: '知的',
+      meticulous: '几帳面',
+      optimistic: '楽観的',
+      shy: 'シャイ',
+      attentive: 'マメ',
+      refreshing: 'さわやか',
+      natural: '天然',
+      ownPace: 'マイペース'
+    },
+    cultureCategories: {
+      traditional: '伝統文化',
+      food: '食文化',
+      seasonal: '季節・自然・行事',
+      modernCulture: '現代カルチャー',
+      craftmanship: '工芸・職人技'
+    },
+    culture: {
+      teaCeremony: '茶道',
+      flowerArrangement: '華道',
+      calligraphy: '書道',
+      kimono: '着物・浴衣',
+      wagashi: '和菓子',
+      pottery: '陶芸',
+      origami: '折り紙',
+      bonsai: '盆栽',
+      shrinesTemples: '神社仏閣',
+      sealCollection: '御朱印集め',
+      zen: '禅',
+      sushi: '寿司',
+      tempura: '天ぷら',
+      unagi: 'うなぎ',
+      gyudon: '牛丼',
+      tonkatsu: 'とんかつ',
+      ramen: 'ラーメン',
+      okonomiyaki: 'お好み焼き',
+      takoyaki: 'たこ焼き',
+      curry: 'カレーライス',
+      conbiniFood: 'コンビニフード',
+      potatoChips: 'ポテトチップス',
+      dashi: '出汁',
+      miso: '味噌',
+      tofu: '豆腐',
+      umeboshi: '梅干し',
+      pickles: '漬物',
+      sake: '日本酒',
+      shochu: '焼酎',
+      soba: 'そば',
+      udon: 'うどん',
+      cherryBlossom: '桜見物',
+      autumnLeaves: '紅葉狩り',
+      hotSprings: '温泉',
+      festivals: '祭り',
+      fireworks: '花火大会',
+      snowScape: '雪景色',
+      fourSeasons: '日本の四季',
+      bonDance: '盆踊り',
+      anime: 'アニメ',
+      manga: 'マンガ',
+      cosplay: 'コスプレ',
+      japaneseGames: '日本のゲーム',
+      jpop: 'J-POP',
+      karaoke: 'カラオケ',
+      japaneseMov: '日本映画',
+      drama: 'ドラマ',
+      vocaloid: 'ボーカロイド',
+      idolCulture: 'アイドル文化',
+      lacquerware: '漆器',
+      goldLeaf: '金箔貼り',
+      paperMaking: '和紙漉き',
+      dyeing: '染物',
+      swordSmithing: '刀鍛冶',
+      woodworking: '木工',
+      sugarCrafts: '飴細工'
     },
     errors: {
       required: 'この項目は必須です',
@@ -435,6 +638,100 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       creative: 'Creative',
       thoughtful: 'Thoughtful'
     },
+    personality: {
+      gentle: 'Gentle',
+      calm: 'Calm',
+      lonely: 'Lonely',
+      composed: 'Composed',
+      caring: 'Caring',
+      humble: 'Humble',
+      cool: 'Cool-headed',
+      honest: 'Honest',
+      bright: 'Bright',
+      friendly: 'Friendly',
+      helpful: 'Helpful',
+      considerate: 'Considerate',
+      responsible: 'Responsible',
+      decisive: 'Decisive',
+      sociable: 'Sociable',
+      competitive: 'Competitive',
+      passionate: 'Passionate',
+      indoor: 'Indoor',
+      active: 'Active',
+      intellectual: 'Intellectual',
+      meticulous: 'Meticulous',
+      optimistic: 'Optimistic',
+      shy: 'Shy',
+      attentive: 'Attentive',
+      refreshing: 'Refreshing',
+      natural: 'Natural',
+      ownPace: 'Own pace'
+    },
+    cultureCategories: {
+      traditional: 'Traditional Culture',
+      food: 'Food Culture',
+      seasonal: 'Seasonal & Events',
+      modernCulture: 'Modern Culture',
+      craftmanship: 'Crafts & Artisanship'
+    },
+    culture: {
+      teaCeremony: 'Tea Ceremony',
+      flowerArrangement: 'Flower Arrangement',
+      calligraphy: 'Calligraphy',
+      kimono: 'Kimono/Yukata',
+      wagashi: 'Wagashi',
+      pottery: 'Pottery',
+      origami: 'Origami',
+      bonsai: 'Bonsai',
+      shrinesTemples: 'Shrines & Temples',
+      sealCollection: 'Temple Seal Collection',
+      zen: 'Zen',
+      sushi: 'Sushi',
+      tempura: 'Tempura',
+      unagi: 'Unagi',
+      gyudon: 'Gyudon',
+      tonkatsu: 'Tonkatsu',
+      ramen: 'Ramen',
+      okonomiyaki: 'Okonomiyaki',
+      takoyaki: 'Takoyaki',
+      curry: 'Japanese Curry',
+      conbiniFood: 'Convenience Store Food',
+      potatoChips: 'Japanese Potato Chips',
+      dashi: 'Dashi',
+      miso: 'Miso',
+      tofu: 'Tofu',
+      umeboshi: 'Umeboshi',
+      pickles: 'Japanese Pickles',
+      sake: 'Sake',
+      shochu: 'Shochu',
+      soba: 'Soba',
+      udon: 'Udon',
+      cherryBlossom: 'Cherry Blossom Viewing',
+      autumnLeaves: 'Autumn Leaves Viewing',
+      hotSprings: 'Hot Springs',
+      festivals: 'Festivals',
+      fireworks: 'Fireworks Display',
+      snowScape: 'Snow Scenery',
+      fourSeasons: 'Four Seasons',
+      bonDance: 'Bon Dance',
+      anime: 'Anime',
+      manga: 'Manga',
+      cosplay: 'Cosplay',
+      japaneseGames: 'Japanese Games',
+      jpop: 'J-POP',
+      karaoke: 'Karaoke',
+      japaneseMov: 'Japanese Movies',
+      drama: 'Japanese Drama',
+      vocaloid: 'Vocaloid',
+      idolCulture: 'Idol Culture',
+      lacquerware: 'Lacquerware',
+      goldLeaf: 'Gold Leaf Application',
+      paperMaking: 'Japanese Paper Making',
+      dyeing: 'Traditional Dyeing',
+      swordSmithing: 'Sword Smithing',
+      woodworking: 'Woodworking',
+      sugarCrafts: 'Sugar Crafts'
+    },
     errors: {
       required: 'This field is required',
       tooLong: 'Too many characters',
@@ -579,6 +876,100 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       creative: '창의적인',
       thoughtful: '사려깊은'
     },
+    personality: {
+      gentle: '상냥한',
+      calm: '차분한',
+      lonely: '외로움을 타는',
+      composed: '침착한',
+      caring: '배려하는',
+      humble: '겸손한',
+      cool: '냉정한',
+      honest: '솔직한',
+      bright: '밝은',
+      friendly: '친근한',
+      helpful: '도움이 되는',
+      considerate: '신경 쓰는',
+      responsible: '책임감 있는',
+      decisive: '결단력 있는',
+      sociable: '사교적인',
+      competitive: '승부욕 강한',
+      passionate: '열정적인',
+      indoor: '인도어',
+      active: '활동적인',
+      intellectual: '지적인',
+      meticulous: '꼼꼼한',
+      optimistic: '낙천적인',
+      shy: '수줍은',
+      attentive: '세심한',
+      refreshing: '상쾌한',
+      natural: '천연',
+      ownPace: '마이페이스'
+    },
+    cultureCategories: {
+      traditional: '전통 문화',
+      food: '음식 문화',
+      seasonal: '계절 & 행사',
+      modernCulture: '현대 문화',
+      craftmanship: '공예 & 장인 기술'
+    },
+    culture: {
+      teaCeremony: '다도',
+      flowerArrangement: '화도',
+      calligraphy: '서도',
+      kimono: '기모노/유카타',
+      wagashi: '와가시',
+      pottery: '도예',
+      origami: '종이접기',
+      bonsai: '분재',
+      shrinesTemples: '신사불각',
+      sealCollection: '고슈인 수집',
+      zen: '선',
+      sushi: '스시',
+      tempura: '템푸라',
+      unagi: '우나기',
+      gyudon: '규동',
+      tonkatsu: '돈가스',
+      ramen: '라멘',
+      okonomiyaki: '오코노미야키',
+      takoyaki: '타코야키',
+      curry: '일본식 카레',
+      conbiniFood: '편의점 음식',
+      potatoChips: '일본 감자칩',
+      dashi: '다시',
+      miso: '미소',
+      tofu: '두부',
+      umeboshi: '우메보시',
+      pickles: '일본 절임',
+      sake: '사케',
+      shochu: '소주',
+      soba: '소바',
+      udon: '우동',
+      cherryBlossom: '벚꽃 구경',
+      autumnLeaves: '단풍 구경',
+      hotSprings: '온천',
+      festivals: '축제',
+      fireworks: '불꽃축제',
+      snowScape: '설경',
+      fourSeasons: '사계절',
+      bonDance: '본 춤',
+      anime: '애니메이션',
+      manga: '만화',
+      cosplay: '코스프레',
+      japaneseGames: '일본 게임',
+      jpop: 'J-POP',
+      karaoke: '노래방',
+      japaneseMov: '일본 영화',
+      drama: '드라마',
+      vocaloid: '보컬로이드',
+      idolCulture: '아이돌 문화',
+      lacquerware: '칠기',
+      goldLeaf: '금박 작업',
+      paperMaking: '일본 종이 만들기',
+      dyeing: '염색',
+      swordSmithing: '도검 제작',
+      woodworking: '목공',
+      sugarCrafts: '설탕 공예'
+    },
     errors: {
       required: '이 항목은 필수입니다',
       tooLong: '글자 수가 너무 많습니다',
@@ -722,6 +1113,100 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       active: '活躍',
       creative: '創意',
       thoughtful: '體貼'
+    },
+    personality: {
+      gentle: '溫柔',
+      calm: '沉靜',
+      lonely: '容易寂寞',
+      composed: '沉穩',
+      caring: '貼心',
+      humble: '謙遜',
+      cool: '冷靜',
+      honest: '率直',
+      bright: '開朗',
+      friendly: '親切',
+      helpful: '樂於助人',
+      considerate: '體貼',
+      responsible: '有責任感',
+      decisive: '有決斷力',
+      sociable: '社交能力強',
+      competitive: '不服輸',
+      passionate: '熱情',
+      indoor: '室內派',
+      active: '活躍',
+      intellectual: '知性',
+      meticulous: '一絲不苟',
+      optimistic: '樂觀',
+      shy: '害羞',
+      attentive: '細心',
+      refreshing: '清新',
+      natural: '天然',
+      ownPace: '按自己的節奏'
+    },
+    cultureCategories: {
+      traditional: '傳統文化',
+      food: '飲食文化',
+      seasonal: '季節與活動',
+      modernCulture: '現代文化',
+      craftmanship: '工藝與職人技術'
+    },
+    culture: {
+      teaCeremony: '茶道',
+      flowerArrangement: '華道',
+      calligraphy: '書道',
+      kimono: '和服/浴衣',
+      wagashi: '和菓子',
+      pottery: '陶藝',
+      origami: '摺紙',
+      bonsai: '盆栽',
+      shrinesTemples: '神社佛閣',
+      sealCollection: '御朱印收集',
+      zen: '禪',
+      sushi: '壽司',
+      tempura: '天婦羅',
+      unagi: '鰻魚',
+      gyudon: '牛丼',
+      tonkatsu: '豬排',
+      ramen: '拉麵',
+      okonomiyaki: '大阪燒',
+      takoyaki: '章魚燒',
+      curry: '日式咖哩',
+      conbiniFood: '便利商店食品',
+      potatoChips: '日式洋芋片',
+      dashi: '高湯',
+      miso: '味噌',
+      tofu: '豆腐',
+      umeboshi: '梅乾',
+      pickles: '日式漬菜',
+      sake: '日本酒',
+      shochu: '燒酒',
+      soba: '蕎麥麵',
+      udon: '烏龍麵',
+      cherryBlossom: '賞櫻',
+      autumnLeaves: '賞楓',
+      hotSprings: '溫泉',
+      festivals: '祭典',
+      fireworks: '煙火大會',
+      snowScape: '雪景',
+      fourSeasons: '四季',
+      bonDance: '盆舞',
+      anime: '動畫',
+      manga: '漫畫',
+      cosplay: '角色扮演',
+      japaneseGames: '日本遊戲',
+      jpop: 'J-POP',
+      karaoke: 'KTV',
+      japaneseMov: '日本電影',
+      drama: '日劇',
+      vocaloid: '初音未來',
+      idolCulture: '偶像文化',
+      lacquerware: '漆器',
+      goldLeaf: '金箔裝飾',
+      paperMaking: '和紙製作',
+      dyeing: '染物',
+      swordSmithing: '鍛刀',
+      woodworking: '木工',
+      sugarCrafts: '糖藝'
     },
     errors: {
       required: '此欄位為必填',
