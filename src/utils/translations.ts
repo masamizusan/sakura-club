@@ -36,6 +36,14 @@ type TranslationKeys = {
     profileCompletion: string
     requiredInfo: string
     optionalInfo: string
+    foreignMaleTitle: string
+    japaneseFemaleTitle: string
+    foreignMaleSubtitle: string
+    japaneseFemaleSubtitle: string
+    defaultSubtitle: string
+    selfIntroduction: string
+    selfIntroPlaceholder: string
+    selfIntroNote: string
   }
 
   // 言語レベル
