@@ -2553,14 +2553,14 @@ function ProfileEditContent() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {isForeignMale ? '外国人男性プロフィール編集' : 
-                 isJapaneseFemale ? '日本人女性プロフィール編集' : 
-                 'プロフィール編集'}
+                {isForeignMale ? t('profile.foreignMaleTitle') :
+                 isJapaneseFemale ? t('profile.japaneseFemaleTitle') :
+                 t('profile.editTitle')}
               </h1>
               <p className="text-gray-600">
-                {isForeignMale ? '日本人女性との出会いに向けて、あなたの情報を更新してください' :
-                 isJapaneseFemale ? '外国人男性との出会いに向けて、あなたの情報を更新してください' :
-                 'あなたの情報を更新してください'}
+                {isForeignMale ? t('profile.foreignMaleSubtitle') :
+                 isJapaneseFemale ? t('profile.japaneseFemaleSubtitle') :
+                 t('profile.defaultSubtitle')}
               </p>
             </div>
           </div>
@@ -2587,7 +2587,7 @@ function ProfileEditContent() {
             {/* プロフィール完成度表示 */}
             <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
+                <span className="text-sm font-medium text-gray-700">{t('profile.profileCompletion')}</span>
                 <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
@@ -2621,17 +2621,17 @@ function ProfileEditContent() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
                   <span className="text-red-500 mr-2">*</span>
-                  必須情報
+                  {t('profile.requiredInfo')}
                   <span className="text-sm font-normal text-gray-500 ml-2">（プロフィール公開に必要な項目）</span>
                 </h3>
                 
                 {/* 自己紹介 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    自己紹介文 <span className="text-red-500">*</span>
+                    {t('profile.selfIntroduction')} <span className="text-red-500">*</span>
                   </label>
                   <Textarea
-                    placeholder="あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）"
+                    placeholder={t('profile.selfIntroPlaceholder')}
                     rows={4}
                     {...register('self_introduction')}
                     className={errors.self_introduction ? 'border-red-500' : ''}
@@ -2639,12 +2639,12 @@ function ProfileEditContent() {
                   {errors.self_introduction && (
                     <p className="text-red-500 text-sm mt-1">{errors.self_introduction.message}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">自己紹介は100文字以上1000文字以内で入力してください。</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('profile.selfIntroNote')}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ニックネーム <span className="text-red-500">*</span>
+                    {t('profile.nickname')} <span className="text-red-500">*</span>
                   </label>
                   <Input
                     placeholder="ニックネーム"
