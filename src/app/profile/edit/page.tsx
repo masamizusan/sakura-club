@@ -148,33 +148,53 @@ const getMaritalStatusOptions = (t: any) => [
   { value: 'married', label: t('maritalStatus.married') }
 ]
 
-// 職業オプション（翻訳対応）
-const getOccupationOptions = (t: any) => [
-  { value: 'none', label: t('occupations.noEntry') },
-  { value: '主婦', label: t('occupations.housewife') },
-  { value: '主夫', label: t('occupations.houseHusband') },
-  { value: '会社員', label: t('occupations.companyEmployee') },
-  { value: '公務員', label: t('occupations.publicServant') },
-  { value: '経営者・役員', label: t('occupations.executiveManager') },
-  { value: 'フリーランス', label: t('occupations.freelance') },
-  { value: '自営業', label: t('occupations.selfEmployed') },
-  { value: '医師', label: t('occupations.doctor') },
-  { value: '看護師', label: t('occupations.nurse') },
-  { value: '教師・講師', label: t('occupations.teacher') },
-  { value: 'エンジニア', label: t('occupations.engineer') },
-  { value: 'デザイナー', label: t('occupations.designer') },
-  { value: '営業', label: t('occupations.sales') },
-  { value: 'マーケティング', label: t('occupations.marketing') },
-  { value: '研究者', label: t('occupations.researcher') },
-  { value: 'コンサルタント', label: t('occupations.consultant') },
-  { value: '金融', label: t('occupations.finance') },
-  { value: '法律関係', label: t('occupations.legal') },
-  { value: 'サービス業', label: t('occupations.serviceIndustry') },
-  { value: '小売業', label: t('occupations.retail') },
-  { value: '製造業', label: t('occupations.manufacturing') },
-  { value: '学生', label: t('occupations.student') },
-  { value: 'その他', label: t('occupations.other') }
-]
+// 職業オプション（翻訳対応・性別フィルタリング付き）
+const getOccupationOptions = (t: any, profileType?: string) => {
+  const baseOptions = [
+    { value: 'none', label: t('occupations.noEntry') },
+    { value: '会社員', label: t('occupations.companyEmployee') },
+    { value: '公務員', label: t('occupations.publicServant') },
+    { value: '経営者・役員', label: t('occupations.executiveManager') },
+    { value: 'フリーランス', label: t('occupations.freelance') },
+    { value: '自営業', label: t('occupations.selfEmployed') },
+    { value: '医師', label: t('occupations.doctor') },
+    { value: '看護師', label: t('occupations.nurse') },
+    { value: '教師・講師', label: t('occupations.teacher') },
+    { value: 'エンジニア', label: t('occupations.engineer') },
+    { value: 'デザイナー', label: t('occupations.designer') },
+    { value: '営業', label: t('occupations.sales') },
+    { value: 'マーケティング', label: t('occupations.marketing') },
+    { value: '研究者', label: t('occupations.researcher') },
+    { value: 'コンサルタント', label: t('occupations.consultant') },
+    { value: '金融', label: t('occupations.finance') },
+    { value: '法律関係', label: t('occupations.legal') },
+    { value: 'サービス業', label: t('occupations.serviceIndustry') },
+    { value: '小売業', label: t('occupations.retail') },
+    { value: '製造業', label: t('occupations.manufacturing') },
+    { value: '学生', label: t('occupations.student') },
+    { value: 'その他', label: t('occupations.other') }
+  ]
+
+  // 性別・国籍に応じたオプション追加
+  if (profileType === 'japanese-female') {
+    // 日本人女性は主婦のみ追加
+    return [
+      baseOptions[0], // none
+      { value: '主婦', label: t('occupations.housewife') },
+      ...baseOptions.slice(1)
+    ]
+  } else if (profileType === 'foreign-male') {
+    // 外国人男性は主夫のみ追加
+    return [
+      baseOptions[0], // none
+      { value: '主夫', label: t('occupations.houseHusband') },
+      ...baseOptions.slice(1)
+    ]
+  }
+
+  // その他の場合は基本オプションのみ
+  return baseOptions
+}
 
 // 体型オプション（翻訳対応）
 const getBodyTypeOptions = (t: any) => [
@@ -3002,7 +3022,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder="職業を選択" />
                         </SelectTrigger>
                         <SelectContent>
-                          {getOccupationOptions(t).map((option) => (
+                          {getOccupationOptions(t, profileType).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
