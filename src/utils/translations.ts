@@ -54,6 +54,9 @@ type TranslationKeys = {
     popularStationsDescription: string
     cultureSelectionDescription: string
     customCultureDescription: string
+    itemsCompleted: string
+    calculating: string
+    previewInstruction: string
   }
 
   // プロフィール写真関連
@@ -67,6 +70,30 @@ type TranslationKeys = {
     noteMainPhoto: string
     noteSizeLimit: string
     noteEditFeatures: string
+  }
+
+  // 国籍オプション
+  countries: {
+    japan: string
+    usa: string
+    uk: string
+    canada: string
+    australia: string
+    germany: string
+    france: string
+    netherlands: string
+    italy: string
+    spain: string
+    korea: string
+    china: string
+    taiwan: string
+    sweden: string
+    norway: string
+    denmark: string
+    newZealand: string
+    thailand: string
+    singapore: string
+    other: string
   }
 
   // プレースホルダーテキスト
@@ -458,7 +485,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '日本訪問計画',
       popularStationsDescription: '外国人に人気の駅から最大5つ',
       cultureSelectionDescription: '体験したい日本文化を選択してください（1つ以上8つまで）',
-      customCultureDescription: '上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）'
+      customCultureDescription: '上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）',
+      itemsCompleted: '項目入力済み',
+      calculating: '計算中...',
+      previewInstruction: '💡 上のボタンでPreviewを確認してからSaveしてください'
     },
 
     profilePhotos: {
@@ -471,6 +501,29 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       noteMainPhoto: '1枚目がメイン写真として表示されます',
       noteSizeLimit: '各写真は5MB以下にしてください',
       noteEditFeatures: 'トリミングやぼかし加工ができます'
+    },
+
+    countries: {
+      japan: '日本',
+      usa: 'アメリカ',
+      uk: 'イギリス',
+      canada: 'カナダ',
+      australia: 'オーストラリア',
+      germany: 'ドイツ',
+      france: 'フランス',
+      netherlands: 'オランダ',
+      italy: 'イタリア',
+      spain: 'スペイン',
+      korea: '韓国',
+      china: '中国',
+      taiwan: '台湾',
+      sweden: 'スウェーデン',
+      norway: 'ノルウェー',
+      denmark: 'デンマーク',
+      newZealand: 'ニュージーランド',
+      thailand: 'タイ',
+      singapore: 'シンガポール',
+      other: 'その他'
     },
 
     placeholders: {
@@ -816,7 +869,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: 'Japan Visit Plan',
       popularStationsDescription: 'Up to 5 stations popular with foreigners',
       cultureSelectionDescription: 'Select Japanese culture experiences you\'d like to try (1-8 selections)',
-      customCultureDescription: 'Please describe any other Japanese culture experiences you\'d like to try (up to 100 characters)'
+      customCultureDescription: 'Please describe any other Japanese culture experiences you\'d like to try (up to 100 characters)',
+      itemsCompleted: 'items completed',
+      calculating: 'Calculating...',
+      previewInstruction: '💡 Please check with Preview button above before Save'
     },
 
     profilePhotos: {
@@ -829,6 +885,29 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       noteMainPhoto: 'The first photo will be displayed as main',
       noteSizeLimit: 'Please keep each photo under 5MB',
       noteEditFeatures: 'Cropping and blur effects available'
+    },
+
+    countries: {
+      japan: 'Japan',
+      usa: 'United States',
+      uk: 'United Kingdom',
+      canada: 'Canada',
+      australia: 'Australia',
+      germany: 'Germany',
+      france: 'France',
+      netherlands: 'Netherlands',
+      italy: 'Italy',
+      spain: 'Spain',
+      korea: 'South Korea',
+      china: 'China',
+      taiwan: 'Taiwan',
+      sweden: 'Sweden',
+      norway: 'Norway',
+      denmark: 'Denmark',
+      newZealand: 'New Zealand',
+      thailand: 'Thailand',
+      singapore: 'Singapore',
+      other: 'Other'
     },
 
     placeholders: {
@@ -1174,7 +1253,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '일본 방문 계획',
       popularStationsDescription: '외국인에게 인기 있는 역에서 최대 5개',
       cultureSelectionDescription: '체험하고 싶은 일본 문화를 선택해 주세요 (1개 이상 8개까지)',
-      customCultureDescription: '위 외에 체험하고 싶은 일본 문화가 있다면 자유롭게 작성해 주세요 (100자 이내)'
+      customCultureDescription: '위 외에 체험하고 싶은 일본 문화가 있다면 자유롭게 작성해 주세요 (100자 이내)',
+      itemsCompleted: '개 항목 입력 완료',
+      calculating: '계산 중...',
+      previewInstruction: '💡 위 버튼으로 미리보기 확인 후 저장해 주세요'
     },
 
     profilePhotos: {
@@ -1187,6 +1269,29 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       noteMainPhoto: '첫 번째 사진이 메인 사진으로 표시됩니다',
       noteSizeLimit: '각 사진은 5MB 이하로 해주세요',
       noteEditFeatures: '크롭 및 블러 효과 이용 가능'
+    },
+
+    countries: {
+      japan: '일본',
+      usa: '미국',
+      uk: '영국',
+      canada: '캐나다',
+      australia: '호주',
+      germany: '독일',
+      france: '프랑스',
+      netherlands: '네덜란드',
+      italy: '이탈리아',
+      spain: '스페인',
+      korea: '한국',
+      china: '중국',
+      taiwan: '대만',
+      sweden: '스웨덴',
+      norway: '노르웨이',
+      denmark: '덴마크',
+      newZealand: '뉴질랜드',
+      thailand: '태국',
+      singapore: '싱가포르',
+      other: '기타'
     },
 
     placeholders: {
@@ -1532,7 +1637,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '日本拜訪計畫',
       popularStationsDescription: '從外國人熱門車站中最多選擇5個',
       cultureSelectionDescription: '請選擇想體驗的日本文化（至少1個，最多8個）',
-      customCultureDescription: '如有其他想體驗的日本文化，請自由填寫（100字以內）'
+      customCultureDescription: '如有其他想體驗的日本文化，請自由填寫（100字以內）',
+      itemsCompleted: '個項目已填寫',
+      calculating: '計算中...',
+      previewInstruction: '💡 請先用上方按鈕預覽確認後再儲存'
     },
 
     profilePhotos: {
@@ -1545,6 +1653,29 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       noteMainPhoto: '第一張照片將顯示為主要照片',
       noteSizeLimit: '每張照片請控制在5MB以下',
       noteEditFeatures: '可使用裁剪和模糊效果'
+    },
+
+    countries: {
+      japan: '日本',
+      usa: '美國',
+      uk: '英國',
+      canada: '加拿大',
+      australia: '澳洲',
+      germany: '德國',
+      france: '法國',
+      netherlands: '荷蘭',
+      italy: '義大利',
+      spain: '西班牙',
+      korea: '韓國',
+      china: '中國',
+      taiwan: '臺灣',
+      sweden: '瑞典',
+      norway: '挪威',
+      denmark: '丹麥',
+      newZealand: '紐西蘭',
+      thailand: '泰國',
+      singapore: '新加坡',
+      other: '其他'
     },
 
     placeholders: {

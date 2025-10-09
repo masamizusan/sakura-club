@@ -1255,40 +1255,40 @@ function ProfileEditContent() {
     if (isJapaneseFemale) {
       // 日本人女性の場合、日本を最初に
       return [
-        { value: '日本', label: '日本' },
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: '韓国', label: '韓国' },
-        { value: '中国', label: '中国' },
-        { value: 'その他', label: 'その他' },
+        { value: '日本', label: t('countries.japan') },
+        { value: 'アメリカ', label: t('countries.usa') },
+        { value: 'イギリス', label: t('countries.uk') },
+        { value: 'カナダ', label: t('countries.canada') },
+        { value: 'オーストラリア', label: t('countries.australia') },
+        { value: 'ドイツ', label: t('countries.germany') },
+        { value: 'フランス', label: t('countries.france') },
+        { value: 'オランダ', label: t('countries.netherlands') },
+        { value: 'イタリア', label: t('countries.italy') },
+        { value: 'スペイン', label: t('countries.spain') },
+        { value: '韓国', label: t('countries.korea') },
+        { value: '中国', label: t('countries.china') },
+        { value: 'その他', label: t('countries.other') },
       ]
     } else {
       // 外国人男性の場合、よくある国を最初に
       return [
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'スウェーデン', label: 'スウェーデン' },
-        { value: 'ノルウェー', label: 'ノルウェー' },
-        { value: 'デンマーク', label: 'デンマーク' },
-        { value: '韓国', label: '韓国' },
-        { value: '台湾', label: '台湾' },
-        { value: 'タイ', label: 'タイ' },
-        { value: 'シンガポール', label: 'シンガポール' },
-        { value: 'その他', label: 'その他' },
+        { value: 'アメリカ', label: t('countries.usa') },
+        { value: 'イギリス', label: t('countries.uk') },
+        { value: 'カナダ', label: t('countries.canada') },
+        { value: 'オーストラリア', label: t('countries.australia') },
+        { value: 'ドイツ', label: t('countries.germany') },
+        { value: 'フランス', label: t('countries.france') },
+        { value: 'イタリア', label: t('countries.italy') },
+        { value: 'スペイン', label: t('countries.spain') },
+        { value: 'オランダ', label: t('countries.netherlands') },
+        { value: 'スウェーデン', label: t('countries.sweden') },
+        { value: 'ノルウェー', label: t('countries.norway') },
+        { value: 'デンマーク', label: t('countries.denmark') },
+        { value: '韓国', label: t('countries.korea') },
+        { value: '台湾', label: t('countries.taiwan') },
+        { value: 'タイ', label: t('countries.thailand') },
+        { value: 'シンガポール', label: t('countries.singapore') },
+        { value: 'その他', label: t('countries.other') },
       ]
     }
   }
@@ -2830,7 +2830,7 @@ function ProfileEditContent() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <p className="text-xs text-gray-500">
-                  {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
+                  {totalItems > 0 ? `${completedItems}/${totalItems}${t('profile.itemsCompleted')}` : t('profile.calculating')}
                 </p>
                 <p className="text-xs text-gray-500">
                   {profileCompletion < 50 ? t('profile.completionEncouragement') :
@@ -3485,7 +3485,7 @@ function ProfileEditContent() {
                 {/* 注意メッセージ */}
                 <div className="pt-2 text-center">
                   <p className="text-sm text-blue-600 font-medium">
-💡 上のボタンで{t('buttons.preview')}を確認してから{t('buttons.save')}してください
+{t('profile.previewInstruction')}
                   </p>
                 </div>
               </div>
