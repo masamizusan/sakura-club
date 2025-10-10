@@ -1287,6 +1287,18 @@ function ProfileEditContent() {
     loadUserData()
   }, [user, reset, router, setValue, supabase, isForeignMale, isJapaneseFemale])
 
+  // 🌸 日本人女性の言語設定を確実にする
+  useEffect(() => {
+    if (isJapaneseFemale && currentLanguage !== 'ja') {
+      console.log('🌸 日本人女性検出：言語を日本語に修正', { 
+        isJapaneseFemale, 
+        currentLanguage, 
+        profileType 
+      })
+      setCurrentLanguage('ja')
+    }
+  }, [isJapaneseFemale, currentLanguage, profileType])
+
   // フォーム入力時のリアルタイム完成度更新（デバウンス付き）
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -2348,13 +2360,21 @@ function ProfileEditContent() {
 
         // 🌐 言語設定の初期化
         const nationality = profile.nationality || ((signupData as any)?.nationality)
-        const detectedLanguage = determineLanguage(nationality)
+        const detectedLanguage = isJapaneseFemale ? 'ja' : determineLanguage(nationality)
         setCurrentLanguage(detectedLanguage)
         console.log('🌐 Language initialization:', {
           nationality,
           detectedLanguage,
+          isJapaneseFemale,
+          profileType,
           source: 'profile load'
         })
+        
+        // 🚨 日本人女性の場合は強制的に日本語固定
+        if (isJapaneseFemale) {
+          setCurrentLanguage('ja')
+          console.log('🌸 日本人女性検出：言語を日本語に固定')
+        }
 
         console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
         console.log('  - isNewUser:', isNewUser)
