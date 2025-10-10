@@ -480,18 +480,18 @@ const getVisitScheduleOptions = (t: any) => {
 
   // Determine current season (Spring: Feb-Apr, Summer: May-Jul, Autumn: Aug-Oct, Winter: Nov-Jan)
   const currentSeason =
-    currentMonth >= 2 && currentMonth <= 4 ? '春' :
-    currentMonth >= 5 && currentMonth <= 7 ? '夏' :
-    currentMonth >= 8 && currentMonth <= 10 ? '秋' : '冬';
+    currentMonth >= 2 && currentMonth <= 4 ? 'spring' :
+    currentMonth >= 5 && currentMonth <= 7 ? 'summer' :
+    currentMonth >= 8 && currentMonth <= 10 ? 'autumn' : 'winter';
 
   // Remaining seasons of this year
-  const seasons = ['春', '夏', '秋', '冬'];
+  const seasons = ['spring', 'summer', 'autumn', 'winter'];
   const currentSeasonIndex = seasons.indexOf(currentSeason);
 
   for (let i = currentSeasonIndex; i < seasons.length; i++) {
     options.push({
       value: `${currentYear}-${seasons[i]}`,
-      label: `${currentYear}年${seasons[i]}`
+      label: `${currentYear}${t('seasons.year')}${t(`seasons.${seasons[i]}`)}`
     });
   }
 
@@ -499,18 +499,104 @@ const getVisitScheduleOptions = (t: any) => {
   for (const season of seasons) {
     options.push({
       value: `${currentYear + 1}-${season}`,
-      label: `${currentYear + 1}年${season}`
+      label: `${currentYear + 1}${t('seasons.year')}${t(`seasons.${season}`)}`
     });
   }
 
   // Options for 2+ years ahead
   options.push({
     value: `beyond-${currentYear + 2}`,
-    label: `${currentYear + 2}年以降`
+    label: `${currentYear + 2}${t('seasons.onwards')}`
   });
 
   return options;
 }
+
+// Helper function to get localized prefecture/station names
+const getLocalizedLocationName = (name: string, language: SupportedLanguage): string => {
+  // For non-Japanese languages, add romanized version in parentheses
+  if (language === 'ja') {
+    return name;
+  }
+  
+  // Simple mapping for major locations
+  const locationMap: Record<string, string> = {
+    // Prefectures
+    '東京都': 'Tokyo',
+    '神奈川県': 'Kanagawa',
+    '千葉県': 'Chiba', 
+    '埼玉県': 'Saitama',
+    '大阪府': 'Osaka',
+    '京都府': 'Kyoto',
+    '兵庫県': 'Hyogo',
+    '愛知県': 'Aichi',
+    '福岡県': 'Fukuoka',
+    '北海道': 'Hokkaido',
+    '宮城県': 'Miyagi',
+    '広島県': 'Hiroshima',
+    '静岡県': 'Shizuoka',
+    '茨城県': 'Ibaraki',
+    '栃木県': 'Tochigi',
+    '群馬県': 'Gunma',
+    '新潟県': 'Niigata',
+    '長野県': 'Nagano',
+    '山梨県': 'Yamanashi',
+    '岐阜県': 'Gifu',
+    '三重県': 'Mie',
+    '滋賀県': 'Shiga',
+    '奈良県': 'Nara',
+    '和歌山県': 'Wakayama',
+    '鳥取県': 'Tottori',
+    '島根県': 'Shimane',
+    '岡山県': 'Okayama',
+    '山口県': 'Yamaguchi',
+    '徳島県': 'Tokushima',
+    '香川県': 'Kagawa',
+    '愛媛県': 'Ehime',
+    '高知県': 'Kochi',
+    '佐賀県': 'Saga',
+    '長崎県': 'Nagasaki',
+    '熊本県': 'Kumamoto',
+    '大分県': 'Oita',
+    '宮崎県': 'Miyazaki',
+    '鹿児島県': 'Kagoshima',
+    '沖縄県': 'Okinawa',
+    // Stations (with prefecture info)
+    '東京駅（東京都）': 'Tokyo Station (Tokyo)',
+    '京都駅（京都府）': 'Kyoto Station (Kyoto)',
+    '金沢駅（石川県）': 'Kanazawa Station (Ishikawa)',
+    '嵐山駅（京都府）': 'Arashiyama Station (Kyoto)',
+    '浅草駅（東京都）': 'Asakusa Station (Tokyo)',
+    '渋谷駅（東京都）': 'Shibuya Station (Tokyo)',
+    '箱根湯本駅（神奈川県）': 'Hakone-Yumoto Station (Kanagawa)',
+    '大阪駅（大阪府）': 'Osaka Station (Osaka)',
+    '鎌倉駅（神奈川県）': 'Kamakura Station (Kanagawa)',
+    '小樽駅（北海道）': 'Otaru Station (Hokkaido)',
+    '上野駅（東京都）': 'Ueno Station (Tokyo)',
+    '河口湖駅（山梨県）': 'Kawaguchiko Station (Yamanashi)',
+    '名古屋駅（愛知県）': 'Nagoya Station (Aichi)',
+    '大阪梅田駅（大阪府）': 'Osaka-Umeda Station (Osaka)',
+    '天橋立駅（京都府）': 'Amanohashidate Station (Kyoto)',
+    '札幌駅（北海道）': 'Sapporo Station (Hokkaido)',
+    '日光駅（栃木県）': 'Nikko Station (Tochigi)',
+    '横浜駅（神奈川県）': 'Yokohama Station (Kanagawa)',
+    '博多駅（福岡県）': 'Hakata Station (Fukuoka)',
+    '熱海駅（静岡県）': 'Atami Station (Shizuoka)',
+    '函館駅（北海道）': 'Hakodate Station (Hokkaido)',
+    '品川駅（東京都）': 'Shinagawa Station (Tokyo)',
+    '片瀬江ノ島駅（神奈川県）': 'Katase-Enoshima Station (Kanagawa)',
+    '岐阜駅（岐阜県）': 'Gifu Station (Gifu)',
+    '新大久保駅（東京都）': 'Shin-Okubo Station (Tokyo)',
+    '高山駅（岐阜県）': 'Takayama Station (Gifu)',
+    'ニセコ駅（北海道）': 'Niseko Station (Hokkaido)',
+    '難波駅（大阪府）': 'Namba Station (Osaka)',
+    '池袋駅（東京都）': 'Ikebukuro Station (Tokyo)',
+    '由布院駅（大分県）': 'Yufuin Station (Oita)'
+  };
+  
+  const englishName = locationMap[name];
+  return englishName ? englishName : name;
+};
 
 function ProfileEditContent() {
   // ALL HOOKS MUST BE AT THE VERY TOP - NO EARLY RETURNS BEFORE HOOKS
@@ -2981,7 +3067,7 @@ function ProfileEditContent() {
                         <SelectContent>
                           {PREFECTURES.map((prefecture) => (
                             <SelectItem key={prefecture} value={prefecture}>
-                              {prefecture}
+                              {getLocalizedLocationName(prefecture, currentLanguage)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -3265,7 +3351,7 @@ function ProfileEditContent() {
                                       }
                                     `}
                                   >
-                                    {prefecture}
+                                    {getLocalizedLocationName(prefecture, currentLanguage)}
                                   </button>
                                 ))}
                               </div>
@@ -3310,7 +3396,7 @@ function ProfileEditContent() {
                                       }
                                     `}
                                   >
-                                    {station}
+                                    {getLocalizedLocationName(station, currentLanguage)}
                                   </button>
                                 ))}
                               </div>

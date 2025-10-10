@@ -120,6 +120,16 @@ type TranslationKeys = {
     enterCustomCulture: string
   }
 
+  // 季節と年表記
+  seasons: {
+    spring: string
+    summer: string
+    autumn: string
+    winter: string
+    year: string
+    onwards: string
+  }
+
   // ボタンラベル
   buttons: {
     save: string
@@ -572,6 +582,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       confirm: '確定'
     },
 
+    seasons: {
+      spring: '春',
+      summer: '夏', 
+      autumn: '秋',
+      winter: '冬',
+      year: '年',
+      onwards: '年以降'
+    },
+
     errors: {
       required: 'この項目は必須です',
       nicknameRequired: 'ニックネームを入力してください',
@@ -960,6 +979,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectAll: 'Select All',
       clearAll: 'Clear All',
       confirm: 'Confirm'
+    },
+
+    seasons: {
+      spring: 'Spring',
+      summer: 'Summer',
+      autumn: 'Autumn', 
+      winter: 'Winter',
+      year: '',
+      onwards: ' onwards'
     },
 
     errors: {
@@ -1352,6 +1380,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       confirm: '확인'
     },
 
+    seasons: {
+      spring: '봄',
+      summer: '여름',
+      autumn: '가을',
+      winter: '겨울', 
+      year: '년',
+      onwards: '년 이후'
+    },
+
     errors: {
       required: '이 항목은 필수입니다',
       nicknameRequired: '닉네임을 입력해 주세요',
@@ -1740,6 +1777,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectAll: '全選',
       clearAll: '全部清除',
       confirm: '確認'
+    },
+
+    seasons: {
+      spring: '春季',
+      summer: '夏季',
+      autumn: '秋季',
+      winter: '冬季',
+      year: '年',
+      onwards: '年以後'
     },
 
     errors: {
