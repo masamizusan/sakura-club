@@ -2835,30 +2835,32 @@ function ProfileEditContent() {
       {/* Main Content */}
       <div className="md:ml-64 py-12 px-4">
         <div className="max-w-2xl mx-auto">
-          {/* 言語切り替えボタン */}
-          <div className="flex justify-end mb-4">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-gray-600" />
-              <Select
-                value={currentLanguage}
-                onValueChange={(value: SupportedLanguage) => {
-                  setCurrentLanguage(value)
-                  saveLanguagePreference(value)
-                  console.log('🌐 Language changed to:', value)
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ja">🇯🇵 日本語</SelectItem>
-                  <SelectItem value="en">🇺🇸 English</SelectItem>
-                  <SelectItem value="ko">🇰🇷 한국어</SelectItem>
-                  <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* 言語切り替えボタン - 外国人男性のみ表示 */}
+          {isForeignMale && (
+            <div className="flex justify-end mb-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-gray-600" />
+                <Select
+                  value={currentLanguage}
+                  onValueChange={(value: SupportedLanguage) => {
+                    setCurrentLanguage(value)
+                    saveLanguagePreference(value)
+                    console.log('🌐 Language changed to:', value)
+                  }}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                    <SelectItem value="en">🇺🇸 English</SelectItem>
+                    <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                    <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center mb-8">
             <Button
