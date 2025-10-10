@@ -21,6 +21,7 @@ type TranslationKeys = {
     selectStations: string
     selectedCount: string
     maxSelection: string
+    maxThreeSelection: string
     gender: string
     birthDate: string
     prefecture: string
@@ -57,6 +58,11 @@ type TranslationKeys = {
     itemsCompleted: string
     calculating: string
     previewInstruction: string
+    cultureExperienceTitle: string
+    cultureShareTitle: string
+    previewButtonText: string
+    cultureShareDescription: string
+    customCultureShareDescription: string
   }
 
   // プロフィール写真関連
@@ -453,6 +459,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '駅を選択',
       selectedCount: '選択済み',
       maxSelection: 'まで選択できます',
+      maxThreeSelection: '最大3つまで選択',
       gender: '性別',
       birthDate: '生年月日',
       prefecture: '都道府県',
@@ -488,7 +495,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       customCultureDescription: '上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）',
       itemsCompleted: '項目入力済み',
       calculating: '計算中...',
-      previewInstruction: '💡 上のボタンでPreviewを確認してからSaveしてください'
+      previewInstruction: '💡 上のボタンでPreviewを確認してからSaveしてください',
+      cultureExperienceTitle: '体験したい日本文化',
+      cultureShareTitle: '共有したい日本文化',
+      previewButtonText: 'で内容を確認する',
+      cultureShareDescription: '興味のある日本文化を選択してください（１つ以上８つまで）',
+      customCultureShareDescription: '上記にない日本文化があれば自由に記入してください（100文字以内）'
     },
 
     profilePhotos: {
@@ -837,6 +849,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: 'Select Stations',
       selectedCount: 'selected',
       maxSelection: 'can be selected',
+      maxThreeSelection: 'Select up to 3',
       gender: 'Gender',
       birthDate: 'Date of Birth',
       prefecture: 'Prefecture',
@@ -872,7 +885,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       customCultureDescription: 'Please describe any other Japanese culture experiences you\'d like to try (up to 100 characters)',
       itemsCompleted: 'items completed',
       calculating: 'Calculating...',
-      previewInstruction: '💡 Please check with Preview button above before Save'
+      previewInstruction: '💡 Please check with Preview button above before Save',
+      cultureExperienceTitle: 'Japanese Culture to Experience',
+      cultureShareTitle: 'Japanese Culture to Share',
+      previewButtonText: ' to check content',
+      cultureShareDescription: 'Select Japanese culture you are interested in (1-8 selections)',
+      customCultureShareDescription: 'Please describe any other Japanese culture not listed above (up to 100 characters)'
     },
 
     profilePhotos: {
@@ -1221,6 +1239,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '역 선택',
       selectedCount: '선택됨',
       maxSelection: '까지 선택 가능',
+      maxThreeSelection: '최대 3개까지 선택',
       gender: '성별',
       birthDate: '생년월일',
       prefecture: '현',
@@ -1256,7 +1275,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       customCultureDescription: '위 외에 체험하고 싶은 일본 문화가 있다면 자유롭게 작성해 주세요 (100자 이내)',
       itemsCompleted: '개 항목 입력 완료',
       calculating: '계산 중...',
-      previewInstruction: '💡 위 버튼으로 미리보기 확인 후 저장해 주세요'
+      previewInstruction: '💡 위 버튼으로 미리보기 확인 후 저장해 주세요',
+      cultureExperienceTitle: '체험하고 싶은 일본 문화',
+      cultureShareTitle: '공유하고 싶은 일본 문화',
+      previewButtonText: '로 내용 확인하기',
+      cultureShareDescription: '관심 있는 일본 문화를 선택해 주세요 (1개 이상 8개까지)',
+      customCultureShareDescription: '위에 없는 일본 문화가 있다면 자유롭게 작성해 주세요 (100자 이내)'
     },
 
     profilePhotos: {
@@ -1605,6 +1629,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '選擇車站',
       selectedCount: '已選擇',
       maxSelection: '最多可選擇',
+      maxThreeSelection: '最多選擇3個',
       gender: '性別',
       birthDate: '出生日期',
       prefecture: '都道府縣',
@@ -1640,7 +1665,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       customCultureDescription: '如有其他想體驗的日本文化，請自由填寫（100字以內）',
       itemsCompleted: '個項目已填寫',
       calculating: '計算中...',
-      previewInstruction: '💡 請先用上方按鈕預覽確認後再儲存'
+      previewInstruction: '💡 請先用上方按鈕預覽確認後再儲存',
+      cultureExperienceTitle: '想體驗的日本文化',
+      cultureShareTitle: '想分享的日本文化',
+      previewButtonText: '確認內容',
+      cultureShareDescription: '請選擇您感興趣的日本文化（至少1個，最多8個）',
+      customCultureShareDescription: '如有上述清單中沒有的日本文化，請自由填寫（100字以內）'
     },
 
     profilePhotos: {

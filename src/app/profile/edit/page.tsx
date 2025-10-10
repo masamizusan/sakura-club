@@ -3238,7 +3238,7 @@ function ProfileEditContent() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('profile.plannedPrefectures')}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">最大3つ{t('profile.maxSelection')}</p>
+                        <p className="text-xs text-gray-500 mb-3">{t('profile.maxThreeSelection')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="prefectures">
@@ -3329,12 +3329,12 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? '体験したい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
+                    {isForeignMale ? t('profile.cultureExperienceTitle') : t('profile.cultureShareTitle')} <span className="text-red-500">*</span>
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {isForeignMale 
                       ? t('profile.cultureSelectionDescription') 
-                      : "興味のある日本文化を選択してください（1つ以上8つまで）"
+                      : t('profile.cultureShareDescription')
                     }
                   </p>
                   <Accordion type="multiple" className="w-full">
@@ -3380,7 +3380,7 @@ function ProfileEditContent() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {isForeignMale
                         ? t('profile.customCultureDescription')
-                        : "上記にない日本文化があれば自由に記入してください（100文字以内）"
+                        : t('profile.customCultureShareDescription')
                       }
                     </label>
                     <Input
@@ -3478,7 +3478,7 @@ function ProfileEditContent() {
                     }}
                   >
                     <User className="w-5 h-5 mr-3" />
-{t('buttons.preview')}で内容を確認する
+{t('buttons.preview')}
                   </Button>
                 </div>
 
