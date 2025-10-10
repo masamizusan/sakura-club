@@ -986,7 +986,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       summer: 'Summer',
       autumn: 'Autumn', 
       winter: 'Winter',
-      year: '',
+      year: ' ',
       onwards: ' onwards'
     },
 
@@ -1385,7 +1385,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       summer: '여름',
       autumn: '가을',
       winter: '겨울', 
-      year: '년',
+      year: '년 ',
       onwards: '년 이후'
     },
 
@@ -1784,7 +1784,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       summer: '夏季',
       autumn: '秋季',
       winter: '冬季',
-      year: '年',
+      year: '年 ',
       onwards: '年以後'
     },
 
