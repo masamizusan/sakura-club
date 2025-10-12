@@ -32,10 +32,10 @@ export function calculateProfileCompletion(
       'hobbies', 'self_introduction'
     ]
 
-    // 外国人男性のオプションフィールド（10個）
+    // 外国人男性のオプションフィールド（9個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'japanese_level', 'planned_stations'
+      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'japanese_level'
     ]
   } else {
     // 日本人女性の必須フィールド（6個）

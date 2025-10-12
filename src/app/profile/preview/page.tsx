@@ -62,7 +62,6 @@ function ProfilePreviewContent() {
           profile_image: searchParams.get('profile_image') || null,
           // 外国人男性特有のフィールド
           planned_prefectures: [],
-          planned_stations: [],
           visit_schedule: searchParams.get('visit_schedule') || '',
           travel_companion: searchParams.get('travel_companion') || ''
         }
@@ -105,7 +104,6 @@ function ProfilePreviewContent() {
     hobbies = [],
     // 外国人男性特有のフィールド
     planned_prefectures = [],
-    planned_stations = [],
     visit_schedule = '',
     travel_companion = '',
     personality = [],
@@ -194,13 +192,6 @@ function ProfilePreviewContent() {
                   </div>
                 )}
 
-                {/* 外国人男性の場合：訪問予定の駅 */}
-                {gender === 'male' && planned_stations && planned_stations.length > 0 && (
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">訪問予定駅:</span>
-                    <span className="text-gray-600">{planned_stations.join(', ')}</span>
-                  </div>
-                )}
                 
                 {/* 外国人男性の場合：訪問予定 */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (
@@ -488,7 +479,6 @@ function ProfilePreviewContent() {
                             visit_schedule: previewData.visit_schedule || visit_schedule || null,
                             travel_companion: previewData.travel_companion || travel_companion || null,
                             planned_prefectures: previewData.planned_prefectures || planned_prefectures || null,
-                            planned_stations: previewData.planned_stations || planned_stations || null
                           } : {})
                         }
                         

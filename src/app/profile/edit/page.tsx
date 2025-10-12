@@ -30,7 +30,6 @@ const baseProfileEditSchema = (t: any) => z.object({
   city: z.string().optional(),
   // New fields for foreign male users
   planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
-  planned_stations: z.array(z.string()).max(5, '訪問予定の駅は5つまで選択できます').optional(),
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),
@@ -552,7 +551,6 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
-  const [selectedPlannedStations, setSelectedPlannedStations] = useState<string[]>([])
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
@@ -2225,11 +2223,6 @@ function ProfileEditContent() {
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
-            const plannedStationsValue = isNewUser ? [] :
-              (Array.isArray(profile?.planned_stations) ? profile.planned_stations : [])
-            console.log('Setting planned_stations:', plannedStationsValue, 'isNewUser:', isNewUser)
-            setValue('planned_stations', plannedStationsValue, { shouldValidate: false })
-            setSelectedPlannedStations(plannedStationsValue)
           } catch (error) {
             console.error('🚨 外国人男性フィールド初期化エラー:', error)
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -2237,9 +2230,7 @@ function ProfileEditContent() {
             setValue('planned_prefectures', [], { shouldValidate: false })
             setValue('visit_schedule', 'no-entry', { shouldValidate: false })
             setValue('travel_companion', 'no-entry', { shouldValidate: false })
-            setValue('planned_stations', [], { shouldValidate: false })
             setSelectedPlannedPrefectures([])
-            setSelectedPlannedStations([])
           }
         }
         
@@ -2555,14 +2546,12 @@ function ProfileEditContent() {
         updateData.visit_schedule = (data.visit_schedule && data.visit_schedule !== 'no-entry') ? data.visit_schedule : null
         updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry') ? data.travel_companion : null
         updateData.planned_prefectures = (data.planned_prefectures && Array.isArray(data.planned_prefectures) && data.planned_prefectures.length > 0) ? data.planned_prefectures : null
-        updateData.planned_stations = (data.planned_stations && Array.isArray(data.planned_stations) && data.planned_stations.length > 0) ? data.planned_stations : null
 
         console.log('🌍 外国人男性保存フィールド追加:', {
           nationality: updateData.nationality,
           visit_schedule: updateData.visit_schedule,
           travel_companion: updateData.travel_companion,
           planned_prefectures: updateData.planned_prefectures,
-          planned_stations: updateData.planned_stations
         })
       } else {
         console.log('❌ Foreign male determination is false, dedicated fields will not be saved')
@@ -2684,21 +2673,6 @@ function ProfileEditContent() {
     })
   }
 
-  // 外国人男性向け: 訪問予定の駅選択
-  const togglePlannedStation = (station: string) => {
-    setSelectedPlannedStations(prev => {
-      const newStations = prev.includes(station)
-        ? prev.filter(s => s !== station)
-        : prev.length < 5
-          ? [...prev, station]
-          : prev
-
-      // フォームデータに反映
-      setValue('planned_stations', newStations)
-
-      return newStations
-    })
-  }
 
   // Loading state
   if (userLoading) {
@@ -3277,50 +3251,6 @@ function ProfileEditContent() {
                         )}
                       </div>
 
-                      {/* 訪問予定の駅 */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('profile.plannedStations')}
-                        </label>
-                        <p className="text-xs text-gray-500 mb-3">外国人に人気の駅から最大5つ{t('profile.maxSelection')}</p>
-
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="stations">
-                            <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
-                              {t('profile.selectStations')}（{selectedPlannedStations.length}/5 {t('profile.selectedCount')}）
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                {POPULAR_STATIONS.map((station) => (
-                                  <button
-                                    key={station}
-                                    type="button"
-                                    onClick={() => togglePlannedStation(station)}
-                                    disabled={!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5}
-                                    className={`
-                                      px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                      ${selectedPlannedStations.includes(station)
-                                        ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                                      }
-                                      ${(!selectedPlannedStations.includes(station) && selectedPlannedStations.length >= 5)
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'cursor-pointer hover:shadow-md'
-                                      }
-                                    `}
-                                  >
-                                    {station}
-                                  </button>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-
-                        {errors.planned_stations && (
-                          <p className="text-red-500 text-sm mt-1">{errors.planned_stations.message}</p>
-                        )}
-                      </div>
                     </div>
                   </>
                 )}
