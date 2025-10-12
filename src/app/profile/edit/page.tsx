@@ -3132,7 +3132,12 @@ function ProfileEditContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('profile.personality')}
                   </label>
-                  <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {isForeignMale 
+                      ? "Select your personality traits (max 5)" 
+                      : "あなたの性格を選択してください（最大5つまで）"
+                    }
+                  </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {getPersonalityOptions(t).map((option) => (
                       <button
@@ -3273,7 +3278,7 @@ function ProfileEditContent() {
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {isForeignMale 
-                      ? "体験したい日本文化を選択してください（1つ以上8つまで）" 
+                      ? "Select Japanese culture you want to experience (1-8 items)" 
                       : "興味のある日本文化を選択してください（1つ以上8つまで）"
                     }
                   </p>
@@ -3319,7 +3324,7 @@ function ProfileEditContent() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {isForeignMale
-                        ? "上記の他に体験したい日本文化があれば自由に記入してください（100文字以内）"
+                        ? "Other Japanese culture you want to experience (max 100 characters)"
                         : "上記にない日本文化があれば自由に記入してください（100文字以内）"
                       }
                     </label>
@@ -3356,21 +3361,25 @@ function ProfileEditContent() {
                         const validationErrors = []
 
                         // 共通必須フィールド
-                        if (!formData.nickname?.trim()) validationErrors.push('ニックネームを入力してください')
-                        if (!formData.birth_date) validationErrors.push('生年月日を入力してください')
+                        if (!formData.nickname?.trim()) {
+                          validationErrors.push(isForeignMale ? 'Please enter your nickname' : 'ニックネームを入力してください')
+                        }
+                        if (!formData.birth_date) {
+                          validationErrors.push(isForeignMale ? 'Please enter your birth date' : '生年月日を入力してください')
+                        }
                         if (!formData.self_introduction || formData.self_introduction.length < 100) {
-                          validationErrors.push('自己紹介は100文字以上で入力してください')
+                          validationErrors.push(isForeignMale ? 'Please enter at least 100 characters for self-introduction' : '自己紹介は100文字以上で入力してください')
                         }
                         if (!selectedHobbies || selectedHobbies.length === 0) {
-                          validationErrors.push('日本文化を1つ以上選択してください')
+                          validationErrors.push(isForeignMale ? 'Please select at least one Japanese culture' : '日本文化を1つ以上選択してください')
                         }
 
                         // 外国人男性の場合の追加チェック
                         if (isForeignMale) {
-                          if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
+                          if (!formData.nationality?.trim()) validationErrors.push('Please select your nationality')
                           // 行く予定の都道府県は任意項目のため、必須チェックを削除
                           // if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
-                          //   validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                          //   validationErrors.push('Please select at least one prefecture you plan to visit')
                           // }
                         } else {
                           // 日本人女性の場合
