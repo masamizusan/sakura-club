@@ -125,6 +125,11 @@ type TranslationKeys = {
     cityRequired: string
     saveFailed: string
     loadFailed: string
+    // 新規登録用エラーメッセージ
+    emailInvalid: string
+    passwordMinLength: string
+    passwordFormat: string
+    locationRequired: string
   }
 
   // 言語レベル
@@ -482,6 +487,40 @@ type TranslationKeys = {
     kagoshima: string
     okinawa: string
   }
+
+  // 新規登録画面
+  signup: {
+    title: string
+    backButton: string
+    emailAddress: string
+    emailPlaceholder: string
+    password: string
+    passwordPlaceholder: string
+    passwordRequirement: string
+    nickname: string
+    nicknamePlaceholder: string
+    nicknameNote: string
+    gender: string
+    male: string
+    female: string
+    genderNote: string
+    birthDate: string
+    birthDateNote: string
+    nationality: string
+    residence: string
+    selectNationality: string
+    selectPrefecture: string
+    residenceNote: string
+    genderSelectPrompt: string
+    signupButton: string
+    signingUp: string
+    privacyNote: string
+    loginPrompt: string
+    loginLink: string
+    ageRestriction: string
+    signupFailed: string
+    required: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -600,7 +639,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '行く予定の都道府県を少なくとも1つ選択してください',
       cityRequired: '都道府県を入力してください',
       saveFailed: '保存に失敗しました',
-      loadFailed: '読み込みに失敗しました'
+      loadFailed: '読み込みに失敗しました',
+      // 新規登録用エラーメッセージ
+      emailInvalid: '有効なメールアドレスを入力してください',
+      passwordMinLength: 'パスワードは8文字以上で入力してください',
+      passwordFormat: '半角英字と数字をどちらも含む必要があります',
+      locationRequired: '居住地を選択してください'
     },
     levels: {
       none: '記入しない',
@@ -913,6 +957,39 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       miyazaki: '宮崎県',
       kagoshima: '鹿児島県',
       okinawa: '沖縄県'
+    },
+
+    signup: {
+      title: '会員登録',
+      backButton: '戻る',
+      emailAddress: 'メールアドレス',
+      emailPlaceholder: 'メールアドレス',
+      password: 'パスワード',
+      passwordPlaceholder: 'パスワード',
+      passwordRequirement: '半角英字と数字をどちらも含む8文字以上',
+      nickname: 'ニックネーム',
+      nicknamePlaceholder: 'ニックネーム',
+      nicknameNote: 'あとで変更可能です。迷ったらイニシャルでもOK',
+      gender: '性別',
+      male: '男性',
+      female: '女性',
+      genderNote: '登録した性別は変更できません',
+      birthDate: '生年月日',
+      birthDateNote: '※生年月日はお相手には表示されません。',
+      nationality: '国籍',
+      residence: '居住地',
+      selectNationality: '国籍を選択',
+      selectPrefecture: '都道府県を選択',
+      residenceNote: '現在お住まいの都道府県を選択してください',
+      genderSelectPrompt: 'まず性別を選択してください',
+      signupButton: '無料で登録する',
+      signingUp: '登録中...',
+      privacyNote: 'ご利用者様の個人情報は厳重に管理いたします。\nこのサイトはreCAPTCHAによって保護されており、\nGoogleのプライバシーポリシーと利用規約が適用されます。',
+      loginPrompt: '既にアカウントをお持ちの方は',
+      loginLink: 'ログイン',
+      ageRestriction: '18歳以上の方のみご利用いただけます',
+      signupFailed: '登録に失敗しました。もう一度お試しください。',
+      required: '必須'
     }
   },
 
@@ -1031,7 +1108,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: 'Please select at least one prefecture to visit',
       cityRequired: 'Please enter prefecture',
       saveFailed: 'Failed to save',
-      loadFailed: 'Failed to load'
+      loadFailed: 'Failed to load',
+      // 新規登録用エラーメッセージ
+      emailInvalid: 'Please enter a valid email address',
+      passwordMinLength: 'Password must be at least 8 characters',
+      passwordFormat: 'Must contain both letters and numbers',
+      locationRequired: 'Please select your location'
     },
     levels: {
       none: 'Not specified',
@@ -1344,6 +1426,38 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       miyazaki: 'Miyazaki',
       kagoshima: 'Kagoshima',
       okinawa: 'Okinawa'
+    },
+    signup: {
+      title: 'Sign Up',
+      backButton: 'Back',
+      emailAddress: 'Email Address',
+      emailPlaceholder: 'Email Address',
+      password: 'Password',
+      passwordPlaceholder: 'Password',
+      passwordRequirement: 'At least 8 characters with both letters and numbers',
+      nickname: 'Nickname',
+      nicknamePlaceholder: 'Nickname',
+      nicknameNote: 'You can change this later. Initials are OK if undecided',
+      gender: 'Gender',
+      male: 'Male',
+      female: 'Female',
+      genderNote: 'Gender cannot be changed after registration',
+      birthDate: 'Date of Birth',
+      birthDateNote: '※Date of birth is not shown to other users.',
+      nationality: 'Nationality',
+      residence: 'Residence',
+      selectNationality: 'Select nationality',
+      selectPrefecture: 'Select prefecture',
+      residenceNote: 'Please select your current prefecture of residence',
+      genderSelectPrompt: 'Please select gender first',
+      signupButton: 'Register for Free',
+      signingUp: 'Registering...',
+      privacyNote: 'Your personal information is strictly managed.\nThis site is protected by reCAPTCHA and\nGoogle\'s Privacy Policy and Terms of Service apply.',
+      loginPrompt: 'Already have an account?',
+      loginLink: 'Log in',
+      ageRestriction: 'Must be 18 years or older',
+      signupFailed: 'Registration failed. Please try again.',
+      required: 'Required'
     }
   },
 
@@ -1462,7 +1576,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '방문 예정 현을 최소 1개 선택해 주세요',
       cityRequired: '현을 입력해 주세요',
       saveFailed: '저장에 실패했습니다',
-      loadFailed: '로드에 실패했습니다'
+      loadFailed: '로드에 실패했습니다',
+      // 새 가입용 오류 메시지
+      emailInvalid: '유효한 이메일 주소를 입력해 주세요',
+      passwordMinLength: '비밀번호는 8자 이상으로 입력해 주세요',
+      passwordFormat: '영문자와 숫자를 모두 포함해야 합니다',
+      locationRequired: '거주지를 선택해 주세요'
     },
     levels: {
       none: '기입하지 않음',
@@ -1775,6 +1894,38 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       miyazaki: '미야자키현',
       kagoshima: '가고시마현',
       okinawa: '오키나와현'
+    },
+    signup: {
+      title: '회원가입',
+      backButton: '돌아가기',
+      emailAddress: '이메일 주소',
+      emailPlaceholder: '이메일 주소',
+      password: '비밀번호',
+      passwordPlaceholder: '비밀번호',
+      passwordRequirement: '영문자와 숫자를 모두 포함한 8자 이상',
+      nickname: '닉네임',
+      nicknamePlaceholder: '닉네임',
+      nicknameNote: '나중에 변경 가능합니다. 고민되시면 이니셜도 괜찮아요',
+      gender: '성별',
+      male: '남성',
+      female: '여성',
+      genderNote: '등록 후 성별은 변경할 수 없습니다',
+      birthDate: '생년월일',
+      birthDateNote: '※생년월일은 상대방에게 표시되지 않습니다.',
+      nationality: '국적',
+      residence: '거주지',
+      selectNationality: '국적 선택',
+      selectPrefecture: '도도부현 선택',
+      residenceNote: '현재 거주하고 계신 도도부현을 선택해 주세요',
+      genderSelectPrompt: '먼저 성별을 선택해 주세요',
+      signupButton: '무료 가입하기',
+      signingUp: '가입 중...',
+      privacyNote: '이용자님의 개인정보는 엄격히 관리됩니다.\n이 사이트는 reCAPTCHA로 보호되며,\nGoogle의 개인정보보호정책과 서비스 약관이 적용됩니다.',
+      loginPrompt: '이미 계정이 있으신가요?',
+      loginLink: '로그인',
+      ageRestriction: '18세 이상만 이용할 수 있습니다',
+      signupFailed: '가입에 실패했습니다. 다시 시도해 주세요.',
+      required: '필수'
     }
   },
 
@@ -1893,7 +2044,11 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       prefecturesMinimum: '請至少選擇一個預計前往的都道府縣',
       cityRequired: '請輸入都道府縣',
       saveFailed: '儲存失敗',
-      loadFailed: '載入失敗'
+      loadFailed: '載入失敗',
+      emailInvalid: '請輸入正確的電子郵件地址',
+      passwordMinLength: '密碼至少需要8個字符',
+      passwordFormat: '密碼必須包含英文字母和數字',
+      locationRequired: '請選擇居住地'
     },
     levels: {
       none: '不填寫',
@@ -2206,6 +2361,38 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       miyazaki: '宮崎縣',
       kagoshima: '鹿兒島縣',
       okinawa: '沖繩縣'
+    },
+    signup: {
+      title: '會員註冊',
+      backButton: '返回',
+      emailAddress: '電子郵件地址',
+      emailPlaceholder: '電子郵件地址',
+      password: '密碼',
+      passwordPlaceholder: '密碼',
+      passwordRequirement: '半形英文字母和數字都要包含的8字符以上',
+      nickname: '暱稱',
+      nicknamePlaceholder: '暱稱',
+      nicknameNote: '之後可以更改。猶豫的話用姓名縮寫也OK',
+      gender: '性別',
+      male: '男性',
+      female: '女性',
+      genderNote: '註冊後無法更改性別',
+      birthDate: '出生日期',
+      birthDateNote: '※出生日期不會顯示給其他用戶。',
+      nationality: '國籍',
+      residence: '居住地',
+      selectNationality: '選擇國籍',
+      selectPrefecture: '選擇都道府縣',
+      residenceNote: '請選擇您目前居住的都道府縣',
+      genderSelectPrompt: '請先選擇性別',
+      signupButton: '免費註冊',
+      signingUp: '註冊中...',
+      privacyNote: '我們會嚴格管理您的個人資訊。\n本網站受reCAPTCHA保護，\n適用Google的隱私政策和服務條款。',
+      loginPrompt: '已經有帳號了嗎？',
+      loginLink: '登入',
+      ageRestriction: '僅限18歲以上使用',
+      signupFailed: '註冊失敗。請再試一次。',
+      required: '必填'
     }
   }
 }

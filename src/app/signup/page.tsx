@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
@@ -9,20 +9,22 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService, AuthError } from '@/lib/auth'
-import { Heart, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react'
+import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
+import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
+import { useTranslation } from '@/utils/translations'
 
-// 簡素化された登録スキーマ
-const simpleSignupSchema = z.object({
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  password: z.string().min(8, 'パスワードは8文字以上で入力してください').regex(/^(?=.*[A-Za-z])(?=.*\d)/, '半角英字と数字をどちらも含む必要があります'),
-  nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
-  gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
-  birth_date: z.string().min(1, '生年月日を入力してください'),
-  prefecture: z.string().min(1, '居住地を選択してください'),
+// 多言語対応の登録スキーマ生成関数
+const createSignupSchema = (t: any) => z.object({
+  email: z.string().email(t('errors.emailInvalid')),
+  password: z.string().min(8, t('errors.passwordMinLength')).regex(/^(?=.*[A-Za-z])(?=.*\d)/, t('errors.passwordFormat')),
+  nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
+  gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
+  birth_date: z.string().min(1, t('errors.birthDateRequired')),
+  prefecture: z.string().min(1, t('errors.locationRequired')),
 })
 
-type SimpleSignupFormData = z.infer<typeof simpleSignupSchema>
+type SimpleSignupFormData = z.infer<ReturnType<typeof createSignupSchema>>
 
 // 都道府県オプション
 const PREFECTURES = [
@@ -44,7 +46,17 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const router = useRouter()
+  
+  // 翻訳関数の取得
+  const { t } = useTranslation(currentLanguage)
+
+  // ページ読み込み時の言語検出
+  useEffect(() => {
+    const detectedLanguage = determineLanguage()
+    setCurrentLanguage(detectedLanguage)
+  }, [])
 
   const {
     register,
@@ -53,11 +65,81 @@ export default function SignupPage() {
     watch,
     formState: { errors }
   } = useForm<SimpleSignupFormData>({
-    resolver: zodResolver(simpleSignupSchema)
+    resolver: zodResolver(createSignupSchema(t))
   })
 
   // 性別の監視
   const selectedGender = watch('gender')
+
+  // 国籍の翻訳関数
+  const getNationalityLabel = (value: string): string => {
+    const nationalityMap: { [key: string]: { [lang: string]: string } } = {
+      'アメリカ': { ja: 'アメリカ', en: 'United States', ko: '미국', 'zh-tw': '美國' },
+      'イギリス': { ja: 'イギリス', en: 'United Kingdom', ko: '영국', 'zh-tw': '英國' },
+      'カナダ': { ja: 'カナダ', en: 'Canada', ko: '캐나다', 'zh-tw': '加拿大' },
+      'オーストラリア': { ja: 'オーストラリア', en: 'Australia', ko: '호주', 'zh-tw': '澳洲' },
+      'ドイツ': { ja: 'ドイツ', en: 'Germany', ko: '독일', 'zh-tw': '德國' },
+      'フランス': { ja: 'フランス', en: 'France', ko: '프랑스', 'zh-tw': '法國' },
+      'イタリア': { ja: 'イタリア', en: 'Italy', ko: '이탈리아', 'zh-tw': '義大利' },
+      'スペイン': { ja: 'スペイン', en: 'Spain', ko: '스페인', 'zh-tw': '西班牙' },
+      'オランダ': { ja: 'オランダ', en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' },
+      'スウェーデン': { ja: 'スウェーデン', en: 'Sweden', ko: '스웨덴', 'zh-tw': '瑞典' },
+      'ノルウェー': { ja: 'ノルウェー', en: 'Norway', ko: '노르웨이', 'zh-tw': '挪威' },
+      'デンマーク': { ja: 'デンマーク', en: 'Denmark', ko: '덴마크', 'zh-tw': '丹麥' },
+      '韓国': { ja: '韓国', en: 'South Korea', ko: '한국', 'zh-tw': '韓國' },
+      '台湾': { ja: '台湾', en: 'Taiwan', ko: '대만', 'zh-tw': '台灣' },
+      'タイ': { ja: 'タイ', en: 'Thailand', ko: '태국', 'zh-tw': '泰國' },
+      'シンガポール': { ja: 'シンガポール', en: 'Singapore', ko: '싱가포르', 'zh-tw': '新加坡' },
+      'その他': { ja: 'その他', en: 'Other', ko: '기타', 'zh-tw': '其他' },
+    }
+    return nationalityMap[value]?.[currentLanguage] || value
+  }
+
+  // 都道府県の翻訳関数
+  const getPrefectureLabel = (value: string): string => {
+    const prefectureMap: { [key: string]: { [lang: string]: string } } = {
+      '東京都': { ja: '東京都', en: 'Tokyo', ko: '도쿄도', 'zh-tw': '東京都' },
+      '神奈川県': { ja: '神奈川県', en: 'Kanagawa', ko: '가나가와현', 'zh-tw': '神奈川縣' },
+      '千葉県': { ja: '千葉県', en: 'Chiba', ko: '치바현', 'zh-tw': '千葉縣' },
+      '埼玉県': { ja: '埼玉県', en: 'Saitama', ko: '사이타마현', 'zh-tw': '埼玉縣' },
+      '大阪府': { ja: '大阪府', en: 'Osaka', ko: '오사카부', 'zh-tw': '大阪府' },
+      '京都府': { ja: '京都府', en: 'Kyoto', ko: '교토부', 'zh-tw': '京都府' },
+      '兵庫県': { ja: '兵庫県', en: 'Hyogo', ko: '효고현', 'zh-tw': '兵庫縣' },
+      '愛知県': { ja: '愛知県', en: 'Aichi', ko: '아이치현', 'zh-tw': '愛知縣' },
+      '福岡県': { ja: '福岡県', en: 'Fukuoka', ko: '후쿠오카현', 'zh-tw': '福岡縣' },
+      '北海道': { ja: '北海道', en: 'Hokkaido', ko: '홋카이도', 'zh-tw': '北海道' },
+      '宮城県': { ja: '宮城県', en: 'Miyagi', ko: '미야기현', 'zh-tw': '宮城縣' },
+      '広島県': { ja: '広島県', en: 'Hiroshima', ko: '히로시마현', 'zh-tw': '廣島縣' },
+      '静岡県': { ja: '静岡県', en: 'Shizuoka', ko: '시즈오카현', 'zh-tw': '靜岡縣' },
+      '茨城県': { ja: '茨城県', en: 'Ibaraki', ko: '이바라키현', 'zh-tw': '茨城縣' },
+      '栃木県': { ja: '栃木県', en: 'Tochigi', ko: '도치기현', 'zh-tw': '栃木縣' },
+      '群馬県': { ja: '群馬県', en: 'Gunma', ko: '군마현', 'zh-tw': '群馬縣' },
+      '新潟県': { ja: '新潟県', en: 'Niigata', ko: '니가타현', 'zh-tw': '新潟縣' },
+      '長野県': { ja: '長野県', en: 'Nagano', ko: '나가노현', 'zh-tw': '長野縣' },
+      '山梨県': { ja: '山梨県', en: 'Yamanashi', ko: '야마나시현', 'zh-tw': '山梨縣' },
+      '岐阜県': { ja: '岐阜県', en: 'Gifu', ko: '기후현', 'zh-tw': '岐阜縣' },
+      '三重県': { ja: '三重県', en: 'Mie', ko: '미에현', 'zh-tw': '三重縣' },
+      '滋賀県': { ja: '滋賀県', en: 'Shiga', ko: '시가현', 'zh-tw': '滋賀縣' },
+      '奈良県': { ja: '奈良県', en: 'Nara', ko: '나라현', 'zh-tw': '奈良縣' },
+      '和歌山県': { ja: '和歌山県', en: 'Wakayama', ko: '와카야마현', 'zh-tw': '和歌山縣' },
+      '鳥取県': { ja: '鳥取県', en: 'Tottori', ko: '돗토리현', 'zh-tw': '鳥取縣' },
+      '島根県': { ja: '島根県', en: 'Shimane', ko: '시마네현', 'zh-tw': '島根縣' },
+      '岡山県': { ja: '岡山県', en: 'Okayama', ko: '오카야마현', 'zh-tw': '岡山縣' },
+      '山口県': { ja: '山口県', en: 'Yamaguchi', ko: '야마구치현', 'zh-tw': '山口縣' },
+      '徳島県': { ja: '徳島県', en: 'Tokushima', ko: '도쿠시마현', 'zh-tw': '德島縣' },
+      '香川県': { ja: '香川県', en: 'Kagawa', ko: '가가와현', 'zh-tw': '香川縣' },
+      '愛媛県': { ja: '愛媛県', en: 'Ehime', ko: '에히메현', 'zh-tw': '愛媛縣' },
+      '高知県': { ja: '高知県', en: 'Kochi', ko: '고치현', 'zh-tw': '高知縣' },
+      '佐賀県': { ja: '佐賀県', en: 'Saga', ko: '사가현', 'zh-tw': '佐賀縣' },
+      '長崎県': { ja: '長崎県', en: 'Nagasaki', ko: '나가사키현', 'zh-tw': '長崎縣' },
+      '熊本県': { ja: '熊本県', en: 'Kumamoto', ko: '구마모토현', 'zh-tw': '熊本縣' },
+      '大分県': { ja: '大分県', en: 'Oita', ko: '오이타현', 'zh-tw': '大分縣' },
+      '宮崎県': { ja: '宮崎県', en: 'Miyazaki', ko: '미야자키현', 'zh-tw': '宮崎縣' },
+      '鹿児島県': { ja: '鹿児島県', en: 'Kagoshima', ko: '가고시마현', 'zh-tw': '鹿兒島縣' },
+      '沖縄県': { ja: '沖縄県', en: 'Okinawa', ko: '오키나와현', 'zh-tw': '沖繩縣' },
+    }
+    return prefectureMap[value]?.[currentLanguage] || value
+  }
 
   // 性別変更時の自動設定
   const handleGenderChange = (gender: 'male' | 'female') => {
@@ -115,7 +197,7 @@ export default function SignupPage() {
       
       // 18歳未満チェック
       if (age < 18) {
-        setSignupError('18歳以上の方のみご利用いただけます')
+        setSignupError(t('signup.ageRestriction'))
         setIsLoading(false)
         return
       }
@@ -178,7 +260,7 @@ export default function SignupPage() {
       if (error instanceof AuthError) {
         setSignupError(error.message)
       } else {
-        setSignupError('登録に失敗しました。もう一度お試しください。')
+        setSignupError(t('signup.signupFailed'))
       }
     } finally {
       setIsLoading(false)
@@ -191,11 +273,32 @@ export default function SignupPage() {
         <div className="max-w-md mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center mb-6 text-gray-600 hover:text-gray-800">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              戻る
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">会員登録</h1>
+            <div className="flex justify-between items-center mb-6">
+              <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-800">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t('signup.backButton')}
+              </Link>
+              
+              {/* Language Switcher */}
+              <div className="flex items-center space-x-2">
+                <Globe className="w-4 h-4 text-gray-500" />
+                <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
+                  setCurrentLanguage(value)
+                  saveLanguagePreference(value)
+                }}>
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ja">日本語</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ko">한국어</SelectItem>
+                    <SelectItem value="zh-tw">繁體中文</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('signup.title')}</h1>
           </div>
 
           {/* Registration Form */}
@@ -210,11 +313,11 @@ export default function SignupPage() {
               {/* メールアドレス */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  メールアドレス <span className="text-red-500">必須</span>
+                  {t('signup.emailAddress')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
                 <Input
                   type="email"
-                  placeholder="メールアドレス"
+                  placeholder={t('signup.emailPlaceholder')}
                   {...register('email')}
                   className={errors.email ? 'border-red-500' : ''}
                 />
@@ -226,12 +329,12 @@ export default function SignupPage() {
               {/* パスワード */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  パスワード <span className="text-red-500">必須</span>
+                  {t('signup.password')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="パスワード"
+                    placeholder={t('signup.passwordPlaceholder')}
                     {...register('password')}
                     className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                   />
@@ -250,29 +353,29 @@ export default function SignupPage() {
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">半角英字と数字をどちらも含む8文字以上</p>
+                <p className="text-xs text-gray-500 mt-1">{t('signup.passwordRequirement')}</p>
               </div>
 
               {/* ニックネーム */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ニックネーム <span className="text-red-500">必須</span>
+                  {t('signup.nickname')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
                 <Input
-                  placeholder="ニックネーム"
+                  placeholder={t('signup.nicknamePlaceholder')}
                   {...register('nickname')}
                   className={errors.nickname ? 'border-red-500' : ''}
                 />
                 {errors.nickname && (
                   <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">あとで変更可能です。迷ったらイニシャルでもOK</p>
+                <p className="text-xs text-gray-500 mt-1">{t('signup.nicknameNote')}</p>
               </div>
 
               {/* 性別 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  性別 <span className="text-red-500">必須</span>
+                  {t('signup.gender')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
                 <div className="flex space-x-4">
                   <label className="flex items-center">
@@ -283,7 +386,7 @@ export default function SignupPage() {
                       onChange={(e) => handleGenderChange('male')}
                       className="mr-2"
                     />
-                    男性
+                    {t('signup.male')}
                   </label>
                   <label className="flex items-center">
                     <input
@@ -293,19 +396,19 @@ export default function SignupPage() {
                       onChange={(e) => handleGenderChange('female')}
                       className="mr-2"
                     />
-                    女性
+                    {t('signup.female')}
                   </label>
                 </div>
                 {errors.gender && (
                   <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">登録した性別は変更できません</p>
+                <p className="text-xs text-gray-500 mt-1">{t('signup.genderNote')}</p>
               </div>
 
               {/* 生年月日 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  生年月日 <span className="text-red-500">必須</span>
+                  {t('signup.birthDate')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
                 <Input
                   type="date"
@@ -317,26 +420,26 @@ export default function SignupPage() {
                 {errors.birth_date && (
                   <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                <p className="text-xs text-gray-400 mt-1">{t('signup.birthDateNote')}</p>
               </div>
 
               {/* 居住地・国籍 */}
               {selectedGender && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {selectedGender === 'male' ? '国籍' : '居住地'} <span className="text-red-500">必須</span>
+                    {selectedGender === 'male' ? t('signup.nationality') : t('signup.residence')} <span className="text-red-500">{t('signup.required')}</span>
                   </label>
                   <Select 
                     value={watch('prefecture') || ''} 
                     onValueChange={(value) => setValue('prefecture', value)}
                   >
                     <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={selectedGender === 'male' ? '国籍を選択' : '都道府県を選択'} />
+                      <SelectValue placeholder={selectedGender === 'male' ? t('signup.selectNationality') : t('signup.selectPrefecture')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(selectedGender === 'male' ? NATIONALITIES : PREFECTURES).map((option) => (
                         <SelectItem key={option} value={option}>
-                          {option}
+                          {selectedGender === 'male' ? getNationalityLabel(option) : getPrefectureLabel(option)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -345,7 +448,7 @@ export default function SignupPage() {
                     <p className="text-red-500 text-sm mt-1">{errors.prefecture.message}</p>
                   )}
                   {selectedGender === 'female' && (
-                    <p className="text-xs text-gray-500 mt-1">現在お住まいの都道府県を選択してください</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('signup.residenceNote')}</p>
                   )}
                 </div>
               )}
@@ -353,7 +456,7 @@ export default function SignupPage() {
               {/* 性別未選択時のメッセージ */}
               {!selectedGender && (
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                  <p className="text-gray-600 text-sm">まず性別を選択してください</p>
+                  <p className="text-gray-600 text-sm">{t('signup.genderSelectPrompt')}</p>
                 </div>
               )}
 
@@ -366,28 +469,26 @@ export default function SignupPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    登録中...
+                    {t('signup.signingUp')}
                   </>
                 ) : (
-                  '無料で登録する'
+                  t('signup.signupButton')
                 )}
               </Button>
 
               {/* プライバシー情報 */}
               <div className="text-center">
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  ご利用者様の個人情報は厳重に管理いたします。<br />
-                  このサイトはreCAPTCHAによって保護されており、<br />
-                  Googleのプライバシーポリシーと利用規約が適用されます。
+                <p className="text-xs text-gray-500 leading-relaxed whitespace-pre-line">
+                  {t('signup.privacyNote')}
                 </p>
               </div>
 
               {/* ログインリンク */}
               <div className="text-center">
                 <p className="text-sm text-gray-600">
-                  既にアカウントをお持ちの方は{' '}
+                  {t('signup.loginPrompt')}{' '}
                   <Link href="/login" className="text-sakura-600 hover:text-sakura-700 font-medium">
-                    ログイン
+                    {t('signup.loginLink')}
                   </Link>
                 </p>
               </div>
