@@ -1323,6 +1323,94 @@ function ProfileEditContent() {
     return prefectureMap[value]?.[currentLanguage] || value
   }
 
+  // Visit Scheduleの翻訳関数
+  const getVisitScheduleLabel = (value: string): string => {
+    // 基本的な選択肢の翻訳
+    const basicLabels: { [key: string]: { [lang: string]: string } } = {
+      'no-entry': { ja: '記入しない', en: 'Not specified', ko: '기입하지 않음', 'zh-tw': '不填寫' },
+      'undecided': { ja: 'まだ決まっていない', en: 'Not decided yet', ko: '아직 정하지 않음', 'zh-tw': '尚未決定' },
+    }
+
+    // 基本的な選択肢の場合
+    if (basicLabels[value]) {
+      return basicLabels[value][currentLanguage] || value
+    }
+
+    // beyond-YYYY 形式の処理
+    if (value.startsWith('beyond-')) {
+      const year = value.split('-')[1]
+      const labels = {
+        ja: `${year}年以降`,
+        en: `${year} or later`,
+        ko: `${year}년 이후`,
+        'zh-tw': `${year}年以後`
+      }
+      return labels[currentLanguage] || value
+    }
+
+    // YYYY-season 形式の処理
+    const seasonMatch = value.match(/^(\d{4})-(spring|summer|autumn|winter)$/)
+    if (seasonMatch) {
+      const [, year, season] = seasonMatch
+      const seasonLabels: { [key: string]: { [lang: string]: string } } = {
+        spring: { ja: '春（3-5月）', en: 'Spring (Mar-May)', ko: '봄 (3-5월)', 'zh-tw': '春季（3-5月）' },
+        summer: { ja: '夏（6-8月）', en: 'Summer (Jun-Aug)', ko: '여름 (6-8월)', 'zh-tw': '夏季（6-8月）' },
+        autumn: { ja: '秋（9-11月）', en: 'Autumn (Sep-Nov)', ko: '가을 (9-11월)', 'zh-tw': '秋季（9-11月）' },
+        winter: { ja: '冬（12-2月）', en: 'Winter (Dec-Feb)', ko: '겨울 (12-2월)', 'zh-tw': '冬季（12-2月）' }
+      }
+      const seasonLabel = seasonLabels[season]?.[currentLanguage] || season
+      return `${year}年${seasonLabel}`
+    }
+
+    return value
+  }
+
+  // Visit Schedule選択肢の動的生成（4言語対応）
+  const getVisitScheduleOptionsTranslated = () => {
+    const options = [
+      { value: 'no-entry', label: getVisitScheduleLabel('no-entry') },
+      { value: 'undecided', label: getVisitScheduleLabel('undecided') }
+    ]
+
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear()
+    const currentMonth = currentDate.getMonth() // 0-11
+
+    // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+    const getCurrentSeason = () => {
+      if (currentMonth >= 2 && currentMonth <= 4) return 'spring'
+      if (currentMonth >= 5 && currentMonth <= 7) return 'summer'
+      if (currentMonth >= 8 && currentMonth <= 10) return 'autumn'
+      return 'winter'
+    }
+
+    const currentSeason = getCurrentSeason()
+    const seasons = ['spring', 'summer', 'autumn', 'winter'] as const
+
+    // 今後2年分の選択肢を生成
+    for (let year = currentYear; year <= currentYear + 2; year++) {
+      seasons.forEach((season, index) => {
+        // 現在年の場合、過去の季節は除外
+        if (year === currentYear) {
+          const currentSeasonIndex = seasons.indexOf(currentSeason)
+          if (index <= currentSeasonIndex) return // 現在季節以前は除外
+        }
+
+        const value = `${year}-${season}`
+        const label = getVisitScheduleLabel(value)
+        options.push({ value, label })
+      })
+    }
+
+    // 2年以降の選択肢
+    options.push({
+      value: `beyond-${currentYear + 2}`,
+      label: getVisitScheduleLabel(`beyond-${currentYear + 2}`)
+    })
+
+    return options
+  }
+
   const getNationalities = () => {
     if (isJapaneseFemale) {
       // 日本人女性の場合、日本を最初に
@@ -3255,7 +3343,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
                           </SelectTrigger>
                           <SelectContent>
-                            {getVisitScheduleOptions(t).map((option) => (
+                            {getVisitScheduleOptionsTranslated().map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
