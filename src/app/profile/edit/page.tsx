@@ -64,14 +64,14 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['nationality']
         }])
       }
-      // At least one planned prefecture is required
-      if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
-        throw new z.ZodError([{
-          code: z.ZodIssueCode.custom,
-          message: t('errors.prefecturesMinimum'),
-          path: ['planned_prefectures']
-        }])
-      }
+      // 行く予定の都道府県は任意項目のため、必須チェックを削除
+      // if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
+      //   throw new z.ZodError([{
+      //     code: z.ZodIssueCode.custom,
+      //     message: t('errors.prefecturesMinimum'),
+      //     path: ['planned_prefectures']
+      //   }])
+      // }
       return true
     })
   } else {

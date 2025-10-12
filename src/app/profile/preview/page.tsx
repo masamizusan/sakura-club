@@ -382,9 +382,10 @@ function ProfilePreviewContent() {
                       if (!nationality) {
                         validationErrors.push('国籍を選択してください')
                       }
-                      if (!planned_prefectures || planned_prefectures.length === 0) {
-                        validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
-                      }
+                      // 行く予定の都道府県は任意項目のため、チェックから除外
+                      // if (!planned_prefectures || planned_prefectures.length === 0) {
+                      //   validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                      // }
                     } else {
                       // 日本人女性の場合
                       if (!prefecture) {
