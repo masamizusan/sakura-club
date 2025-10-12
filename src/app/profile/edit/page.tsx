@@ -1041,6 +1041,8 @@ function ProfileEditContent() {
           height?: number;
           body_type?: string;
           marital_status?: string;
+          english_level?: string;
+          japanese_level?: string;
         } = {}
         
         console.log('🔍 CITY FIELD PARSING ANALYSIS:')
@@ -1767,6 +1769,8 @@ function ProfileEditContent() {
           height?: number;
           body_type?: string;
           marital_status?: string;
+          english_level?: string;
+          japanese_level?: string;
         } = {}
         
         console.log('🔍 CITY FIELD PARSING ANALYSIS:')
