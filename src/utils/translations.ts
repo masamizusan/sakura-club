@@ -44,6 +44,14 @@ type TranslationKeys = {
     selfIntroduction: string
     selfIntroPlaceholder: string
     selfIntroNote: string
+    // プロフィール完成度メッセージ
+    itemsCompleted: string
+    calculating: string
+    completionLow: string
+    completionMedium: string
+    completionHigh: string
+    completionPerfect: string
+    requiredForPublication: string
   }
 
   // プレースホルダーテキスト
@@ -382,6 +390,19 @@ type TranslationKeys = {
     optional: string
     required: string
   }
+
+  // 写真アップロード関連
+  photos: {
+    profilePhotos: string
+    maxPhotos: string
+    main: string
+    addPhoto: string
+    mainPhotoNote: string
+    fileSizeNote: string
+    editingNote: string
+    fileSizeError: string
+    fileTypeError: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -422,7 +443,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: 'あなたの情報を更新してください',
       selfIntroduction: '自己紹介文',
       selfIntroPlaceholder: 'あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）',
-      selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。'
+      selfIntroNote: '自己紹介は100文字以上1000文字以内で入力してください。',
+      // プロフィール完成度メッセージ
+      itemsCompleted: '項目入力済み',
+      calculating: '計算中...',
+      completionLow: '基本情報をもう少し入力してみましょう',
+      completionMedium: '詳細情報を追加してプロフィールを充実させましょう',
+      completionHigh: 'あと少しで完璧なプロフィールです！',
+      completionPerfect: '素晴らしい！完璧なプロフィールです✨',
+      requiredForPublication: '（プロフィール公開に必要な項目）'
     },
 
     placeholders: {
@@ -715,6 +744,18 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       complete: '完了',
       optional: '任意',
       required: '必須'
+    },
+    
+    photos: {
+      profilePhotos: 'プロフィール写真',
+      maxPhotos: '最大',
+      main: 'メイン',
+      addPhoto: '写真を追加',
+      mainPhotoNote: '1枚目がメイン写真として表示されます',
+      fileSizeNote: '各写真は5MB以下にしてください',
+      editingNote: 'トリミングやぼかし加工ができます',
+      fileSizeError: '画像ファイルは5MB以下にしてください',
+      fileTypeError: '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)'
     }
   },
 
@@ -755,7 +796,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: 'Update your information',
       selfIntroduction: 'Self Introduction',
       selfIntroPlaceholder: 'Tell us about your charm and interest in Japanese culture (100-1000 characters)',
-      selfIntroNote: 'Please write your self-introduction in 100-1000 characters.'
+      selfIntroNote: 'Please write your self-introduction in 100-1000 characters.',
+      // プロフィール完成度メッセージ
+      itemsCompleted: 'items completed',
+      calculating: 'Calculating...',
+      completionLow: 'Please fill in a bit more basic information',
+      completionMedium: 'Add more details to enhance your profile',
+      completionHigh: 'Almost there! Just a few more details',
+      completionPerfect: 'Excellent! You have a perfect profile ✨',
+      requiredForPublication: '(Required for profile publication)'
     },
 
     placeholders: {
@@ -1048,6 +1097,18 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       complete: 'Complete',
       optional: 'Optional',
       required: 'Required'
+    },
+    
+    photos: {
+      profilePhotos: 'Profile Photos',
+      maxPhotos: 'Max',
+      main: 'Main',
+      addPhoto: 'Add Photo',
+      mainPhotoNote: 'The first photo will be displayed as your main photo',
+      fileSizeNote: 'Please keep each photo under 5MB',
+      editingNote: 'You can crop and blur your photos',
+      fileSizeError: 'Please keep image files under 5MB',
+      fileTypeError: 'Please select a supported image file (JPEG, PNG, WebP, HEIC)'
     }
   },
 
@@ -1088,7 +1149,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: '정보를 업데이트하세요',
       selfIntroduction: '자기소개',
       selfIntroPlaceholder: '당신의 매력과 일본 문화에 대한 관심에 대해 알려주세요 (100자 이상 1000자 이내)',
-      selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.'
+      selfIntroNote: '자기소개는 100자 이상 1000자 이내로 작성해 주세요.',
+      // 프로필 완성도 메시지
+      itemsCompleted: '항목 완료',
+      calculating: '계산 중...',
+      completionLow: '기본 정보를 조금 더 입력해 주세요',
+      completionMedium: '세부 정보를 추가하여 프로필을 충실하게 만들어 주세요',
+      completionHigh: '조금만 더! 몇 가지 세부사항만 남았습니다',
+      completionPerfect: '훌륭합니다! 완벽한 프로필입니다 ✨',
+      requiredForPublication: '(프로필 공개에 필요한 항목)'
     },
 
     placeholders: {
@@ -1381,6 +1450,18 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       complete: '완료',
       optional: '선택사항',
       required: '필수'
+    },
+    
+    photos: {
+      profilePhotos: '프로필 사진',
+      maxPhotos: '최대',
+      main: '메인',
+      addPhoto: '사진 추가',
+      mainPhotoNote: '첫 번째 사진이 메인 사진으로 표시됩니다',
+      fileSizeNote: '각 사진은 5MB 이하로 해주세요',
+      editingNote: '크롭 및 흐림 효과 편집이 가능합니다',
+      fileSizeError: '이미지 파일은 5MB 이하로 해주세요',
+      fileTypeError: '지원하는 이미지 파일을 선택해 주세요 (JPEG, PNG, WebP, HEIC)'
     }
   },
 
@@ -1421,7 +1502,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       defaultSubtitle: '請更新您的資訊',
       selfIntroduction: '自我介紹',
       selfIntroPlaceholder: '請介紹您的魅力和對日本文化的興趣（100-1000字）',
-      selfIntroNote: '請在100-1000字內寫自我介紹。'
+      selfIntroNote: '請在100-1000字內寫自我介紹。',
+      // 個人資料完成度訊息
+      itemsCompleted: '項目已完成',
+      calculating: '計算中...',
+      completionLow: '請再多填寫一些基本資訊',
+      completionMedium: '請增加詳細資訊來豐富您的個人資料',
+      completionHigh: '就快完成了！還差一些細節',
+      completionPerfect: '太棒了！您有一個完美的個人資料 ✨',
+      requiredForPublication: '（個人資料公開所需項目）'
     },
 
     placeholders: {
@@ -1714,6 +1803,18 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       complete: '完成',
       optional: '選填',
       required: '必填'
+    },
+    
+    photos: {
+      profilePhotos: '個人資料照片',
+      maxPhotos: '最多',
+      main: '主要',
+      addPhoto: '新增照片',
+      mainPhotoNote: '第一張照片將顯示為您的主要照片',
+      fileSizeNote: '請將每張照片保持在5MB以下',
+      editingNote: '您可以裁剪和模糊您的照片',
+      fileSizeError: '請將圖片檔案保持在5MB以下',
+      fileTypeError: '請選擇支援的圖片檔案 (JPEG, PNG, WebP, HEIC)'
     }
   }
 }

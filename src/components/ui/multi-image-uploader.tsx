@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import ImageEditor from './image-editor'
 import { Upload, X, Edit, Camera, User } from 'lucide-react'
+import { useTranslation } from '@/utils/translations'
+import { type SupportedLanguage } from '@/utils/language'
 
 interface ProfileImage {
   id: string
@@ -17,15 +19,16 @@ interface MultiImageUploaderProps {
   images: ProfileImage[]
   onImagesChange: (images: ProfileImage[]) => void
   maxImages?: number
-  isForeignMale?: boolean
+  currentLanguage: SupportedLanguage
 }
 
 export default function MultiImageUploader({ 
   images, 
   onImagesChange, 
   maxImages = 3,
-  isForeignMale = false
+  currentLanguage
 }: MultiImageUploaderProps) {
+  const { t } = useTranslation(currentLanguage)
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [showImageEditor, setShowImageEditor] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,7 +38,7 @@ export default function MultiImageUploader({
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert(isForeignMale ? 'Please keep image files under 5MB' : '画像ファイルは5MB以下にしてください')
+      alert(t('photos.fileSizeError'))
       return
     }
 
@@ -46,7 +49,7 @@ export default function MultiImageUploader({
                         /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
     
     if (!isValidImage) {
-      alert(isForeignMale ? 'Please select a supported image file (JPEG, PNG, WebP, HEIC)' : '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)')
+      alert(t('photos.fileTypeError'))
       return
     }
 
@@ -135,7 +138,7 @@ export default function MultiImageUploader({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
-        {isForeignMale ? `Profile Photos (Max ${maxImages})` : `プロフィール写真（最大${maxImages}枚）`}
+        {t('photos.profilePhotos')} ({t('photos.maxPhotos')} {maxImages}{currentLanguage === 'ja' ? '枚' : ''})
       </h3>
 
       {/* 画像グリッド */}
@@ -154,7 +157,7 @@ export default function MultiImageUploader({
             {/* メインバッジ */}
             {image.isMain && (
               <div className="absolute top-2 left-2 bg-sakura-600 text-white text-xs px-2 py-1 rounded-full">
-                {isForeignMale ? 'Main' : 'メイン'}
+                {t('photos.main')}
               </div>
             )}
             
@@ -219,7 +222,7 @@ export default function MultiImageUploader({
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500 text-center">
-              {isForeignMale ? 'Add Photo' : '写真を追加'}<br />
+              {t('photos.addPhoto')}<br />
               ({images.length}/{maxImages})
             </span>
           </div>
@@ -247,9 +250,9 @@ export default function MultiImageUploader({
 
       {/* 注意事項 */}
       <div className="text-sm text-gray-600 space-y-1">
-        <p>• {isForeignMale ? 'The first photo will be displayed as your main photo' : '1枚目がメイン写真として表示されます'}</p>
-        <p>• {isForeignMale ? 'Please keep each photo under 5MB' : '各写真は5MB以下にしてください'}</p>
-        <p>• {isForeignMale ? 'You can crop and blur your photos' : 'トリミングやぼかし加工ができます'}</p>
+        <p>• {t('photos.mainPhotoNote')}</p>
+        <p>• {t('photos.fileSizeNote')}</p>
+        <p>• {t('photos.editingNote')}</p>
       </div>
 
       {/* 画像エディター */}
