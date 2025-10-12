@@ -63,6 +63,7 @@ type TranslationKeys = {
     japanVisitPlan: string
     cultureExperience: string
     cultureExperienceWant: string
+    nicknameDescription: string
     previewCheckButton: string
     previewAdvice: string
   }
@@ -476,7 +477,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '日本訪問計画',
       cultureExperience: '共有したい日本文化',
       cultureExperienceWant: '体験したい日本文化',
-      previewCheckButton: 'で内容を確認する',
+      nicknameDescription: 'プロフィールに表示される名前です',
+      previewCheckButton: '',
       previewAdvice: '上のボタンでプレビューを確認してから保存してください'
     },
 
@@ -842,7 +844,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: 'Japan Visit Plan',
       cultureExperience: 'Japanese Culture to Share',
       cultureExperienceWant: 'Japanese Culture to Experience',
-      previewCheckButton: 'to check content',
+      nicknameDescription: 'This is the name that will be displayed on your profile',
+      previewCheckButton: '',
       previewAdvice: 'Please check preview with the button above before saving'
     },
 
@@ -1208,7 +1211,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '일본 방문 계획',
       cultureExperience: '공유하고 싶은 일본 문화',
       cultureExperienceWant: '체험하고 싶은 일본 문화',
-      previewCheckButton: '로 내용 확인하기',
+      nicknameDescription: '프로필에 표시될 이름입니다',
+      previewCheckButton: '',
       previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요'
     },
 
@@ -1574,7 +1578,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanVisitPlan: '日本拜訪計畫',
       cultureExperience: '想分享的日本文化',
       cultureExperienceWant: '想體驗的日本文化',
-      previewCheckButton: '來確認內容',
+      nicknameDescription: '這是將在您的個人資料上顯示的名稱',
+      previewCheckButton: '',
       previewAdvice: '請用上方按鈕確認預覽後再儲存'
     },
 

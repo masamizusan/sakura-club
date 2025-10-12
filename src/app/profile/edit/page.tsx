@@ -2872,7 +2872,7 @@ function ProfileEditContent() {
                   {errors.nickname && (
                     <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('profile.nicknameDescription')}</p>
                 </div>
 
                 {/* 生年月日と年齢 */}
@@ -3420,7 +3420,7 @@ function ProfileEditContent() {
                     }}
                   >
                     <User className="w-5 h-5 mr-3" />
-                    {t('buttons.preview')}{t('profile.previewCheckButton')}
+                    {t('buttons.preview')}
                   </Button>
                 </div>
 
