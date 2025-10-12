@@ -52,6 +52,10 @@ type TranslationKeys = {
     completionHigh: string
     completionPerfect: string
     requiredForPublication: string
+    // 選択項目の説明
+    selectPersonalityNote: string
+    selectCultureNote: string
+    otherCultureLabel: string
   }
 
   // プレースホルダーテキスト
@@ -451,7 +455,11 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionMedium: '詳細情報を追加してプロフィールを充実させましょう',
       completionHigh: 'あと少しで完璧なプロフィールです！',
       completionPerfect: '素晴らしい！完璧なプロフィールです✨',
-      requiredForPublication: '（プロフィール公開に必要な項目）'
+      requiredForPublication: '（プロフィール公開に必要な項目）',
+      // 選択項目の説明
+      selectPersonalityNote: 'あなたの性格を選択してください（最大5つまで）',
+      selectCultureNote: '興味のある日本文化を選択してください（1つ以上8つまで）',
+      otherCultureLabel: '上記にない日本文化があれば自由に記入してください（100文字以内）'
     },
 
     placeholders: {
@@ -804,7 +812,11 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionMedium: 'Add more details to enhance your profile',
       completionHigh: 'Almost there! Just a few more details',
       completionPerfect: 'Excellent! You have a perfect profile ✨',
-      requiredForPublication: '(Required for profile publication)'
+      requiredForPublication: '(Required for profile publication)',
+      // 選択項目の説明
+      selectPersonalityNote: 'Select your personality traits (max 5)',
+      selectCultureNote: 'Select Japanese culture you want to experience (1-8 items)',
+      otherCultureLabel: 'Other Japanese culture you want to experience (max 100 characters)'
     },
 
     placeholders: {
@@ -1157,7 +1169,11 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionMedium: '세부 정보를 추가하여 프로필을 충실하게 만들어 주세요',
       completionHigh: '조금만 더! 몇 가지 세부사항만 남았습니다',
       completionPerfect: '훌륭합니다! 완벽한 프로필입니다 ✨',
-      requiredForPublication: '(프로필 공개에 필요한 항목)'
+      requiredForPublication: '(프로필 공개에 필요한 항목)',
+      // 선택 항목 설명
+      selectPersonalityNote: '귀하의 성격 특성을 선택해 주세요 (최대 5개)',
+      selectCultureNote: '체험하고 싶은 일본 문화를 선택해 주세요 (1-8개 항목)',
+      otherCultureLabel: '체험하고 싶은 기타 일본 문화 (최대 100자)'
     },
 
     placeholders: {
@@ -1510,7 +1526,11 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionMedium: '請增加詳細資訊來豐富您的個人資料',
       completionHigh: '就快完成了！還差一些細節',
       completionPerfect: '太棒了！您有一個完美的個人資料 ✨',
-      requiredForPublication: '（個人資料公開所需項目）'
+      requiredForPublication: '（個人資料公開所需項目）',
+      // 選擇項目說明
+      selectPersonalityNote: '請選擇您的個性特質（最多5個）',
+      selectCultureNote: '請選擇您想體驗的日本文化（1-8項）',
+      otherCultureLabel: '您想體驗的其他日本文化（最多100字）'
     },
 
     placeholders: {

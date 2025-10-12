@@ -3134,10 +3134,7 @@ function ProfileEditContent() {
                     {t('profile.personality')}
                   </label>
                   <p className="text-xs text-gray-500 mb-3">
-                    {isForeignMale 
-                      ? "Select your personality traits (max 5)" 
-                      : "あなたの性格を選択してください（最大5つまで）"
-                    }
+                    {t('profile.selectPersonalityNote')}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {getPersonalityOptions(t).map((option) => (
@@ -3278,10 +3275,7 @@ function ProfileEditContent() {
                     {isForeignMale ? '体験したい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
-                    {isForeignMale 
-                      ? "Select Japanese culture you want to experience (1-8 items)" 
-                      : "興味のある日本文化を選択してください（1つ以上8つまで）"
-                    }
+                    {t('profile.selectCultureNote')}
                   </p>
                   <Accordion type="multiple" className="w-full">
                     {getCultureCategories(t).map((category) => (
@@ -3324,10 +3318,7 @@ function ProfileEditContent() {
                   {/* カスタム日本文化 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {isForeignMale
-                        ? "Other Japanese culture you want to experience (max 100 characters)"
-                        : "上記にない日本文化があれば自由に記入してください（100文字以内）"
-                      }
+                      {t('profile.otherCultureLabel')}
                     </label>
                     <Input
                       placeholder={t('placeholders.enterCustomCulture')}
