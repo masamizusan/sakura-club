@@ -227,6 +227,8 @@ function MyPageContent() {
             height?: number;
             body_type?: string;
             marital_status?: string;
+            english_level?: string;
+            japanese_level?: string;
           } = {}
           if (profileData.city && typeof profileData.city === 'string' && profileData.city.startsWith('{')) {
             try {
