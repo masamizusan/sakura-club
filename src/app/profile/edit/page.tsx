@@ -2098,6 +2098,10 @@ function ProfileEditContent() {
         console.log('  - parsedOptionalData.height:', parsedOptionalData.height)
         console.log('  - parsedOptionalData.body_type:', parsedOptionalData.body_type)
         console.log('  - parsedOptionalData.marital_status:', parsedOptionalData.marital_status)
+        console.log('  - parsedOptionalData.english_level:', parsedOptionalData.english_level)
+        console.log('  - parsedOptionalData.japanese_level:', parsedOptionalData.japanese_level)
+        console.log('  - profile.english_level:', profile.english_level)
+        console.log('  - profile.japanese_level:', profile.japanese_level)
         console.log('  - existingHobbies:', existingHobbies)
         console.log('  - existingPersonality:', existingPersonality)
         console.log('  - existingCustomCulture:', existingCustomCulture)
@@ -2118,6 +2122,9 @@ function ProfileEditContent() {
           height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
           marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
+          // 言語レベル（JSON保存データを優先）
+          english_level: isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none'),
+          japanese_level: isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none'),
           hobbies: isNewUser ? [] : existingHobbies,
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
