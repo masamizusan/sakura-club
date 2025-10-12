@@ -114,9 +114,12 @@ function MyPageContent() {
               if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
               if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
               if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
-              console.log('✅ MyPage: 外国人男性専用フィールドを追加しました')
+              if (completeData.japanese_level) updateData.japanese_level = completeData.japanese_level
+              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level含む）を追加しました')
             } else {
-              console.log('🚫 MyPage: 外国人男性以外のため、専用フィールドをスキップしました')
+              // 日本人女性の場合はenglish_levelを追加
+              if (completeData.english_level) updateData.english_level = completeData.english_level
+              console.log('✅ MyPage: 日本人女性のenglish_levelを追加しました')
             }
             
             console.log('🚨 MyPage: Complete update data prepared', updateData)
@@ -266,6 +269,9 @@ function MyPageContent() {
             personality: extendedPersonality.length > 0 ? extendedPersonality : null,
             custom_culture: extendedCustomCulture,
             hobbies: regularInterests, // compatibilityのため
+            // 言語レベル（日本人女性: english_level、外国人男性: japanese_level）
+            english_level: profileData.english_level,
+            japanese_level: profileData.japanese_level,
             // 外国人男性専用フィールドを明示的に含める
             visit_schedule: profileData.visit_schedule,
             travel_companion: profileData.travel_companion,
@@ -287,6 +293,8 @@ function MyPageContent() {
           console.log('  - occupation:', normalizedProfileData.occupation)
           console.log('  - body_type:', normalizedProfileData.body_type)
           console.log('  - marital_status:', normalizedProfileData.marital_status)
+          console.log('  - english_level:', normalizedProfileData.english_level)
+          console.log('  - japanese_level:', normalizedProfileData.japanese_level)
           console.log('  - custom_culture:', normalizedProfileData.custom_culture)
           console.log('  - visit_schedule:', normalizedProfileData.visit_schedule, typeof normalizedProfileData.visit_schedule)
           console.log('  - travel_companion:', normalizedProfileData.travel_companion, typeof normalizedProfileData.travel_companion)
