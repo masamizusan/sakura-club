@@ -22,16 +22,16 @@ const getBodyTypeLabel = (value: string): string => {
   return bodyTypeMap[value] || value
 }
 
-// 言語レベルの英語値を日本語に変換
+// 言語レベルの英語値を日本語に変換（詳細説明付き）
 const getLanguageLevelLabel = (value: string): string => {
   const levelMap: { [key: string]: string } = {
     'none': '記入しない',
-    'beginner': '初級',
-    'elementary': '初級',
-    'intermediate': '中級',
-    'upperIntermediate': '中上級',
-    'advanced': '上級',
-    'native': 'ネイティブ'
+    'beginner': '初級（基本的な挨拶程度）',
+    'elementary': '初級（基本的な挨拶程度）',
+    'intermediate': '中級（日常会話ができる）',
+    'upperIntermediate': '中上級（複雑な話題も理解できる）',
+    'advanced': '上級（流暢に話せる）',
+    'native': 'ネイティブ（母国語レベル）'
   }
   return levelMap[value] || value
 }
