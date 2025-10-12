@@ -227,12 +227,12 @@ function checkImagePresence(
   // 1. 引数で渡された画像配列
   const hasImagesInArray = imageArray && imageArray.length > 0
 
-  // 2. プロフィールデータの avatar_url
-  const hasImagesInProfile = profileData && profileData.avatar_url &&
+  // 2. プロフィールデータの avatar_url（新規ユーザーは除外）
+  const hasImagesInProfile = !isNewUser && profileData && profileData.avatar_url &&
     profileData.avatar_url !== null && profileData.avatar_url !== ''
 
-  // 3. user.avatarUrl（フォールバック）
-  const hasImagesInUser = profileData.avatarUrl &&
+  // 3. user.avatarUrl（フォールバック、新規ユーザーは除外）
+  const hasImagesInUser = !isNewUser && profileData.avatarUrl &&
     profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 
   // 4. セッションストレージからの画像（ブラウザ環境でのみ、新規ユーザーは除外）
@@ -255,11 +255,12 @@ function checkImagePresence(
   console.log('🖼️ 画像検出デバッグ:', {
     imageArray: imageArray ? `${imageArray.length} images` : 'undefined',
     hasImagesInArray,
-    hasImagesInProfile,
-    hasImagesInUser,
+    hasImagesInProfile: isNewUser ? `SKIPPED (new user)` : hasImagesInProfile,
+    hasImagesInUser: isNewUser ? `SKIPPED (new user)` : hasImagesInUser,
     hasImagesInSession,
     isNewUser,
     sessionStorageSkipped: isNewUser ? 'YES (new user)' : 'NO',
+    profileDataSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileData_avatar_url: profileData?.avatar_url,
     profileData_avatarUrl: profileData?.avatarUrl,
     finalResult: result

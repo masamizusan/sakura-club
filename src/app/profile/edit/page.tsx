@@ -2371,9 +2371,9 @@ function ProfileEditContent() {
           bio: profile.bio || profile.self_introduction || '',
           hobbies: existingHobbies,
           personality: existingPersonality,
-          // ユーザー画像情報を追加
-          avatarUrl: user?.avatarUrl || profile.avatarUrl,
-          avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
+          // ユーザー画像情報を追加（新規ユーザーの場合はクリア）
+          avatarUrl: isNewUser ? null : (user?.avatarUrl || profile.avatarUrl),
+          avatar_url: isNewUser ? null : (user?.avatarUrl || profile.avatar_url), // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
         calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
@@ -2387,11 +2387,11 @@ function ProfileEditContent() {
             form_nationality: currentValues.nationality,
             are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
           })
-          // ❌ 問題: currentValues にはユーザー画像情報が含まれていない
+          // ユーザー画像情報を追加（新規ユーザーの場合はクリア）
           const currentValuesWithUserData = {
             ...currentValues,
-            avatarUrl: user?.avatarUrl,
-            avatar_url: user?.avatarUrl
+            avatarUrl: isNewUser ? null : user?.avatarUrl,
+            avatar_url: isNewUser ? null : user?.avatarUrl
           }
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
         }, 2000);
