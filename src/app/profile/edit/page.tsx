@@ -2886,8 +2886,8 @@ function ProfileEditContent() {
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
-                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.birthDateReadonly')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('profile.birthDatePrivacy')}</p>
                   </div>
 
                   <div>
@@ -2906,7 +2906,7 @@ function ProfileEditContent() {
                     {errors.age && (
                       <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.ageAutoCalculation')}</p>
                   </div>
                 </div>
 
@@ -3168,7 +3168,7 @@ function ProfileEditContent() {
                   <>
                     {/* 日本訪問計画 */}
                     <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">日本訪問計画</h4>
+                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">{t('profile.japanVisitPlan')}</h4>
 
                       {/* 訪問予定時期 */}
                       <div>
@@ -3272,7 +3272,7 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? '体験したい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
+                    {isForeignMale ? t('profile.cultureExperienceWant') : t('profile.cultureExperience')} <span className="text-red-500">*</span>
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {t('profile.selectCultureNote')}
@@ -3420,14 +3420,14 @@ function ProfileEditContent() {
                     }}
                   >
                     <User className="w-5 h-5 mr-3" />
-{t('buttons.preview')}で内容を確認する
+                    {t('buttons.preview')}{t('profile.previewCheckButton')}
                   </Button>
                 </div>
 
                 {/* 注意メッセージ */}
                 <div className="pt-2 text-center">
                   <p className="text-sm text-blue-600 font-medium">
-💡 上のボタンで{t('buttons.preview')}を確認してから{t('buttons.save')}してください
+💡 {t('profile.previewAdvice')}
                   </p>
                 </div>
               </div>

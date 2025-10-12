@@ -56,6 +56,15 @@ type TranslationKeys = {
     selectPersonalityNote: string
     selectCultureNote: string
     otherCultureLabel: string
+    // 入力フィールドの説明
+    birthDateReadonly: string
+    birthDatePrivacy: string
+    ageAutoCalculation: string
+    japanVisitPlan: string
+    cultureExperience: string
+    cultureExperienceWant: string
+    previewCheckButton: string
+    previewAdvice: string
   }
 
   // プレースホルダーテキスト
@@ -459,7 +468,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       // 選択項目の説明
       selectPersonalityNote: 'あなたの性格を選択してください（最大5つまで）',
       selectCultureNote: '興味のある日本文化を選択してください（1つ以上8つまで）',
-      otherCultureLabel: '上記にない日本文化があれば自由に記入してください（100文字以内）'
+      otherCultureLabel: '上記にない日本文化があれば自由に記入してください（100文字以内）',
+      // 入力フィールドの説明
+      birthDateReadonly: '生年月日は仮登録時に設定済みのため変更できません',
+      birthDatePrivacy: '※生年月日はお相手には表示されません。',
+      ageAutoCalculation: '年齢は生年月日から自動計算されます',
+      japanVisitPlan: '日本訪問計画',
+      cultureExperience: '共有したい日本文化',
+      cultureExperienceWant: '体験したい日本文化',
+      previewCheckButton: 'で内容を確認する',
+      previewAdvice: '上のボタンでプレビューを確認してから保存してください'
     },
 
     placeholders: {
@@ -816,7 +834,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       // 選択項目の説明
       selectPersonalityNote: 'Select your personality traits (max 5)',
       selectCultureNote: 'Select Japanese culture you want to experience (1-8 items)',
-      otherCultureLabel: 'Other Japanese culture you want to experience (max 100 characters)'
+      otherCultureLabel: 'Other Japanese culture you want to experience (max 100 characters)',
+      // 入力フィールドの説明
+      birthDateReadonly: 'Birth date was set during temporary registration and cannot be changed',
+      birthDatePrivacy: '※Birth date will not be displayed to others.',
+      ageAutoCalculation: 'Age is automatically calculated from birth date',
+      japanVisitPlan: 'Japan Visit Plan',
+      cultureExperience: 'Japanese Culture to Share',
+      cultureExperienceWant: 'Japanese Culture to Experience',
+      previewCheckButton: 'to check content',
+      previewAdvice: 'Please check preview with the button above before saving'
     },
 
     placeholders: {
@@ -1173,7 +1200,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       // 선택 항목 설명
       selectPersonalityNote: '귀하의 성격 특성을 선택해 주세요 (최대 5개)',
       selectCultureNote: '체험하고 싶은 일본 문화를 선택해 주세요 (1-8개 항목)',
-      otherCultureLabel: '체험하고 싶은 기타 일본 문화 (최대 100자)'
+      otherCultureLabel: '체험하고 싶은 기타 일본 문화 (최대 100자)',
+      // 입력 필드 설명
+      birthDateReadonly: '생년월일은 임시 등록 시 설정되어 변경할 수 없습니다',
+      birthDatePrivacy: '※생년월일은 상대방에게 표시되지 않습니다.',
+      ageAutoCalculation: '나이는 생년월일에서 자동으로 계산됩니다',
+      japanVisitPlan: '일본 방문 계획',
+      cultureExperience: '공유하고 싶은 일본 문화',
+      cultureExperienceWant: '체험하고 싶은 일본 문화',
+      previewCheckButton: '로 내용 확인하기',
+      previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요'
     },
 
     placeholders: {
@@ -1530,7 +1566,16 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       // 選擇項目說明
       selectPersonalityNote: '請選擇您的個性特質（最多5個）',
       selectCultureNote: '請選擇您想體驗的日本文化（1-8項）',
-      otherCultureLabel: '您想體驗的其他日本文化（最多100字）'
+      otherCultureLabel: '您想體驗的其他日本文化（最多100字）',
+      // 輸入欄位說明
+      birthDateReadonly: '出生日期在臨時註冊時已設定，無法更改',
+      birthDatePrivacy: '※出生日期不會顯示給其他人。',
+      ageAutoCalculation: '年齡會從出生日期自動計算',
+      japanVisitPlan: '日本拜訪計畫',
+      cultureExperience: '想分享的日本文化',
+      cultureExperienceWant: '想體驗的日本文化',
+      previewCheckButton: '來確認內容',
+      previewAdvice: '請用上方按鈕確認預覽後再儲存'
     },
 
     placeholders: {
