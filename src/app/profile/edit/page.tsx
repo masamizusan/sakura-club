@@ -2546,12 +2546,14 @@ function ProfileEditContent() {
         updateData.visit_schedule = (data.visit_schedule && data.visit_schedule !== 'no-entry') ? data.visit_schedule : null
         updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry') ? data.travel_companion : null
         updateData.planned_prefectures = (data.planned_prefectures && Array.isArray(data.planned_prefectures) && data.planned_prefectures.length > 0) ? data.planned_prefectures : null
+        updateData.japanese_level = (data.japanese_level && data.japanese_level !== 'none') ? data.japanese_level : null
 
         console.log('🌍 外国人男性保存フィールド追加:', {
           nationality: updateData.nationality,
           visit_schedule: updateData.visit_schedule,
           travel_companion: updateData.travel_companion,
           planned_prefectures: updateData.planned_prefectures,
+          japanese_level: updateData.japanese_level,
         })
       } else {
         console.log('❌ Foreign male determination is false, dedicated fields will not be saved')
