@@ -2815,13 +2815,20 @@ function ProfileEditContent() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <p className="text-xs text-gray-500">
-                  {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
+                  {totalItems > 0 ? `${completedItems}/${totalItems}${isForeignMale ? ' items completed' : '項目入力済み'}` : (isForeignMale ? 'Calculating...' : '計算中...')}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
-                   profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
-                   profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
-                   '素晴らしい！完璧なプロフィールです✨'}
+                  {isForeignMale ? (
+                    profileCompletion < 50 ? 'Please fill in a bit more basic information' :
+                    profileCompletion < 80 ? 'Add more details to enhance your profile' :
+                    profileCompletion < 100 ? 'Almost there! Just a few more details' :
+                    'Excellent! You have a perfect profile ✨'
+                  ) : (
+                    profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
+                    profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
+                    profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
+                    '素晴らしい！完璧なプロフィールです✨'
+                  )}
                 </p>
               </div>
             </div>
@@ -2832,6 +2839,7 @@ function ProfileEditContent() {
                 images={profileImages}
                 onImagesChange={handleImagesChange}
                 maxImages={3}
+                isForeignMale={isForeignMale}
               />
 
               {/* 必須情報 */}
@@ -2839,7 +2847,7 @@ function ProfileEditContent() {
                 <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
                   <span className="text-red-500 mr-2">*</span>
                   {t('profile.requiredInfo')}
-                  <span className="text-sm font-normal text-gray-500 ml-2">（プロフィール公開に必要な項目）</span>
+                  <span className="text-sm font-normal text-gray-500 ml-2">{isForeignMale ? '(Required for profile publication)' : '（プロフィール公開に必要な項目）'}</span>
                 </h3>
                 
                 {/* 自己紹介 */}

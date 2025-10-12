@@ -17,12 +17,14 @@ interface MultiImageUploaderProps {
   images: ProfileImage[]
   onImagesChange: (images: ProfileImage[]) => void
   maxImages?: number
+  isForeignMale?: boolean
 }
 
 export default function MultiImageUploader({ 
   images, 
   onImagesChange, 
-  maxImages = 3 
+  maxImages = 3,
+  isForeignMale = false
 }: MultiImageUploaderProps) {
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [showImageEditor, setShowImageEditor] = useState(false)
@@ -33,7 +35,7 @@ export default function MultiImageUploader({
     if (!file) return
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('画像ファイルは5MB以下にしてください')
+      alert(isForeignMale ? 'Please keep image files under 5MB' : '画像ファイルは5MB以下にしてください')
       return
     }
 
@@ -44,7 +46,7 @@ export default function MultiImageUploader({
                         /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
     
     if (!isValidImage) {
-      alert('対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)')
+      alert(isForeignMale ? 'Please select a supported image file (JPEG, PNG, WebP, HEIC)' : '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)')
       return
     }
 
@@ -133,7 +135,7 @@ export default function MultiImageUploader({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
-        プロフィール写真（最大{maxImages}枚）
+        {isForeignMale ? `Profile Photos (Max ${maxImages})` : `プロフィール写真（最大${maxImages}枚）`}
       </h3>
 
       {/* 画像グリッド */}
@@ -152,7 +154,7 @@ export default function MultiImageUploader({
             {/* メインバッジ */}
             {image.isMain && (
               <div className="absolute top-2 left-2 bg-sakura-600 text-white text-xs px-2 py-1 rounded-full">
-                メイン
+                {isForeignMale ? 'Main' : 'メイン'}
               </div>
             )}
             
@@ -217,7 +219,7 @@ export default function MultiImageUploader({
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500 text-center">
-              写真を追加<br />
+              {isForeignMale ? 'Add Photo' : '写真を追加'}<br />
               ({images.length}/{maxImages})
             </span>
           </div>
@@ -245,9 +247,9 @@ export default function MultiImageUploader({
 
       {/* 注意事項 */}
       <div className="text-sm text-gray-600 space-y-1">
-        <p>• 1枚目がメイン写真として表示されます</p>
-        <p>• 各写真は5MB以下にしてください</p>
-        <p>• トリミングやぼかし加工ができます</p>
+        <p>• {isForeignMale ? 'The first photo will be displayed as your main photo' : '1枚目がメイン写真として表示されます'}</p>
+        <p>• {isForeignMale ? 'Please keep each photo under 5MB' : '各写真は5MB以下にしてください'}</p>
+        <p>• {isForeignMale ? 'You can crop and blur your photos' : 'トリミングやぼかし加工ができます'}</p>
       </div>
 
       {/* 画像エディター */}
