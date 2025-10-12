@@ -417,6 +417,71 @@ type TranslationKeys = {
     fileSizeError: string
     fileTypeError: string
   }
+
+  // 国籍・都道府県選択肢
+  nationalities: {
+    japan: string
+    usa: string
+    uk: string
+    canada: string
+    australia: string
+    germany: string
+    france: string
+    netherlands: string
+    italy: string
+    spain: string
+    sweden: string
+    norway: string
+    denmark: string
+    korea: string
+    china: string
+    taiwan: string
+    thailand: string
+    singapore: string
+    other: string
+  }
+
+  prefectures: {
+    tokyo: string
+    kanagawa: string
+    chiba: string
+    saitama: string
+    osaka: string
+    kyoto: string
+    hyogo: string
+    aichi: string
+    fukuoka: string
+    hokkaido: string
+    miyagi: string
+    hiroshima: string
+    shizuoka: string
+    ibaraki: string
+    tochigi: string
+    gunma: string
+    niigata: string
+    nagano: string
+    yamanashi: string
+    gifu: string
+    mie: string
+    shiga: string
+    nara: string
+    wakayama: string
+    tottori: string
+    shimane: string
+    okayama: string
+    yamaguchi: string
+    tokushima: string
+    kagawa: string
+    ehime: string
+    kochi: string
+    saga: string
+    nagasaki: string
+    kumamoto: string
+    oita: string
+    miyazaki: string
+    kagoshima: string
+    okinawa: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -784,6 +849,70 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       editingNote: 'トリミングやぼかし加工ができます',
       fileSizeError: '画像ファイルは5MB以下にしてください',
       fileTypeError: '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)'
+    },
+
+    nationalities: {
+      japan: '日本',
+      usa: 'アメリカ',
+      uk: 'イギリス',
+      canada: 'カナダ',
+      australia: 'オーストラリア',
+      germany: 'ドイツ',
+      france: 'フランス',
+      netherlands: 'オランダ',
+      italy: 'イタリア',
+      spain: 'スペイン',
+      sweden: 'スウェーデン',
+      norway: 'ノルウェー',
+      denmark: 'デンマーク',
+      korea: '韓国',
+      china: '中国',
+      taiwan: '台湾',
+      thailand: 'タイ',
+      singapore: 'シンガポール',
+      other: 'その他'
+    },
+
+    prefectures: {
+      tokyo: '東京都',
+      kanagawa: '神奈川県',
+      chiba: '千葉県',
+      saitama: '埼玉県',
+      osaka: '大阪府',
+      kyoto: '京都府',
+      hyogo: '兵庫県',
+      aichi: '愛知県',
+      fukuoka: '福岡県',
+      hokkaido: '北海道',
+      miyagi: '宮城県',
+      hiroshima: '広島県',
+      shizuoka: '静岡県',
+      ibaraki: '茨城県',
+      tochigi: '栃木県',
+      gunma: '群馬県',
+      niigata: '新潟県',
+      nagano: '長野県',
+      yamanashi: '山梨県',
+      gifu: '岐阜県',
+      mie: '三重県',
+      shiga: '滋賀県',
+      nara: '奈良県',
+      wakayama: '和歌山県',
+      tottori: '鳥取県',
+      shimane: '島根県',
+      okayama: '岡山県',
+      yamaguchi: '山口県',
+      tokushima: '徳島県',
+      kagawa: '香川県',
+      ehime: '愛媛県',
+      kochi: '高知県',
+      saga: '佐賀県',
+      nagasaki: '長崎県',
+      kumamoto: '熊本県',
+      oita: '大分県',
+      miyazaki: '宮崎県',
+      kagoshima: '鹿児島県',
+      okinawa: '沖縄県'
     }
   },
 
@@ -1151,6 +1280,70 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       editingNote: 'You can crop and blur your photos',
       fileSizeError: 'Please keep image files under 5MB',
       fileTypeError: 'Please select a supported image file (JPEG, PNG, WebP, HEIC)'
+    },
+
+    nationalities: {
+      japan: 'Japan',
+      usa: 'United States',
+      uk: 'United Kingdom',
+      canada: 'Canada',
+      australia: 'Australia',
+      germany: 'Germany',
+      france: 'France',
+      netherlands: 'Netherlands',
+      italy: 'Italy',
+      spain: 'Spain',
+      sweden: 'Sweden',
+      norway: 'Norway',
+      denmark: 'Denmark',
+      korea: 'South Korea',
+      china: 'China',
+      taiwan: 'Taiwan',
+      thailand: 'Thailand',
+      singapore: 'Singapore',
+      other: 'Other'
+    },
+
+    prefectures: {
+      tokyo: 'Tokyo',
+      kanagawa: 'Kanagawa',
+      chiba: 'Chiba',
+      saitama: 'Saitama',
+      osaka: 'Osaka',
+      kyoto: 'Kyoto',
+      hyogo: 'Hyogo',
+      aichi: 'Aichi',
+      fukuoka: 'Fukuoka',
+      hokkaido: 'Hokkaido',
+      miyagi: 'Miyagi',
+      hiroshima: 'Hiroshima',
+      shizuoka: 'Shizuoka',
+      ibaraki: 'Ibaraki',
+      tochigi: 'Tochigi',
+      gunma: 'Gunma',
+      niigata: 'Niigata',
+      nagano: 'Nagano',
+      yamanashi: 'Yamanashi',
+      gifu: 'Gifu',
+      mie: 'Mie',
+      shiga: 'Shiga',
+      nara: 'Nara',
+      wakayama: 'Wakayama',
+      tottori: 'Tottori',
+      shimane: 'Shimane',
+      okayama: 'Okayama',
+      yamaguchi: 'Yamaguchi',
+      tokushima: 'Tokushima',
+      kagawa: 'Kagawa',
+      ehime: 'Ehime',
+      kochi: 'Kochi',
+      saga: 'Saga',
+      nagasaki: 'Nagasaki',
+      kumamoto: 'Kumamoto',
+      oita: 'Oita',
+      miyazaki: 'Miyazaki',
+      kagoshima: 'Kagoshima',
+      okinawa: 'Okinawa'
     }
   },
 
@@ -1518,6 +1711,70 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       editingNote: '크롭 및 흐림 효과 편집이 가능합니다',
       fileSizeError: '이미지 파일은 5MB 이하로 해주세요',
       fileTypeError: '지원하는 이미지 파일을 선택해 주세요 (JPEG, PNG, WebP, HEIC)'
+    },
+
+    nationalities: {
+      japan: '일본',
+      usa: '미국',
+      uk: '영국',
+      canada: '캐나다',
+      australia: '호주',
+      germany: '독일',
+      france: '프랑스',
+      netherlands: '네덜란드',
+      italy: '이탈리아',
+      spain: '스페인',
+      sweden: '스웨덴',
+      norway: '노르웨이',
+      denmark: '덴마크',
+      korea: '한국',
+      china: '중국',
+      taiwan: '대만',
+      thailand: '태국',
+      singapore: '싱가포르',
+      other: '기타'
+    },
+
+    prefectures: {
+      tokyo: '도쿄도',
+      kanagawa: '가나가와현',
+      chiba: '치바현',
+      saitama: '사이타마현',
+      osaka: '오사카부',
+      kyoto: '교토부',
+      hyogo: '효고현',
+      aichi: '아이치현',
+      fukuoka: '후쿠오카현',
+      hokkaido: '홋카이도',
+      miyagi: '미야기현',
+      hiroshima: '히로시마현',
+      shizuoka: '시즈오카현',
+      ibaraki: '이바라키현',
+      tochigi: '도치기현',
+      gunma: '군마현',
+      niigata: '니가타현',
+      nagano: '나가노현',
+      yamanashi: '야마나시현',
+      gifu: '기후현',
+      mie: '미에현',
+      shiga: '시가현',
+      nara: '나라현',
+      wakayama: '와카야마현',
+      tottori: '돗토리현',
+      shimane: '시마네현',
+      okayama: '오카야마현',
+      yamaguchi: '야마구치현',
+      tokushima: '도쿠시마현',
+      kagawa: '가가와현',
+      ehime: '에히메현',
+      kochi: '고치현',
+      saga: '사가현',
+      nagasaki: '나가사키현',
+      kumamoto: '구마모토현',
+      oita: '오이타현',
+      miyazaki: '미야자키현',
+      kagoshima: '가고시마현',
+      okinawa: '오키나와현'
     }
   },
 
@@ -1885,6 +2142,70 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       editingNote: '您可以裁剪和模糊您的照片',
       fileSizeError: '請將圖片檔案保持在5MB以下',
       fileTypeError: '請選擇支援的圖片檔案 (JPEG, PNG, WebP, HEIC)'
+    },
+
+    nationalities: {
+      japan: '日本',
+      usa: '美國',
+      uk: '英國',
+      canada: '加拿大',
+      australia: '澳洲',
+      germany: '德國',
+      france: '法國',
+      netherlands: '荷蘭',
+      italy: '義大利',
+      spain: '西班牙',
+      sweden: '瑞典',
+      norway: '挪威',
+      denmark: '丹麥',
+      korea: '韓國',
+      china: '中國',
+      taiwan: '台灣',
+      thailand: '泰國',
+      singapore: '新加坡',
+      other: '其他'
+    },
+
+    prefectures: {
+      tokyo: '東京都',
+      kanagawa: '神奈川縣',
+      chiba: '千葉縣',
+      saitama: '埼玉縣',
+      osaka: '大阪府',
+      kyoto: '京都府',
+      hyogo: '兵庫縣',
+      aichi: '愛知縣',
+      fukuoka: '福岡縣',
+      hokkaido: '北海道',
+      miyagi: '宮城縣',
+      hiroshima: '廣島縣',
+      shizuoka: '靜岡縣',
+      ibaraki: '茨城縣',
+      tochigi: '栃木縣',
+      gunma: '群馬縣',
+      niigata: '新潟縣',
+      nagano: '長野縣',
+      yamanashi: '山梨縣',
+      gifu: '岐阜縣',
+      mie: '三重縣',
+      shiga: '滋賀縣',
+      nara: '奈良縣',
+      wakayama: '和歌山縣',
+      tottori: '鳥取縣',
+      shimane: '島根縣',
+      okayama: '岡山縣',
+      yamaguchi: '山口縣',
+      tokushima: '德島縣',
+      kagawa: '香川縣',
+      ehime: '愛媛縣',
+      kochi: '高知縣',
+      saga: '佐賀縣',
+      nagasaki: '長崎縣',
+      kumamoto: '熊本縣',
+      oita: '大分縣',
+      miyazaki: '宮崎縣',
+      kagoshima: '鹿兒島縣',
+      okinawa: '沖繩縣'
     }
   }
 }

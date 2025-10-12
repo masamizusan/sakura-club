@@ -1251,44 +1251,116 @@ function ProfileEditContent() {
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍オプション（プロフィールタイプに応じて順序変更）
+  // 国籍の翻訳関数
+  const getNationalityLabel = (value: string): string => {
+    const nationalityMap: { [key: string]: { [lang: string]: string } } = {
+      '日本': { ja: '日本', en: 'Japan', ko: '일본', 'zh-tw': '日本' },
+      'アメリカ': { ja: 'アメリカ', en: 'United States', ko: '미국', 'zh-tw': '美國' },
+      'イギリス': { ja: 'イギリス', en: 'United Kingdom', ko: '영국', 'zh-tw': '英國' },
+      'カナダ': { ja: 'カナダ', en: 'Canada', ko: '캐나다', 'zh-tw': '加拿大' },
+      'オーストラリア': { ja: 'オーストラリア', en: 'Australia', ko: '호주', 'zh-tw': '澳洲' },
+      'ドイツ': { ja: 'ドイツ', en: 'Germany', ko: '독일', 'zh-tw': '德國' },
+      'フランス': { ja: 'フランス', en: 'France', ko: '프랑스', 'zh-tw': '法國' },
+      'オランダ': { ja: 'オランダ', en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' },
+      'イタリア': { ja: 'イタリア', en: 'Italy', ko: '이탈리아', 'zh-tw': '義大利' },
+      'スペイン': { ja: 'スペイン', en: 'Spain', ko: '스페인', 'zh-tw': '西班牙' },
+      'スウェーデン': { ja: 'スウェーデン', en: 'Sweden', ko: '스웨덴', 'zh-tw': '瑞典' },
+      'ノルウェー': { ja: 'ノルウェー', en: 'Norway', ko: '노르웨이', 'zh-tw': '挪威' },
+      'デンマーク': { ja: 'デンマーク', en: 'Denmark', ko: '덴마크', 'zh-tw': '丹麥' },
+      '韓国': { ja: '韓国', en: 'South Korea', ko: '한국', 'zh-tw': '韓國' },
+      '中国': { ja: '中国', en: 'China', ko: '중국', 'zh-tw': '中國' },
+      '台湾': { ja: '台湾', en: 'Taiwan', ko: '대만', 'zh-tw': '台灣' },
+      'タイ': { ja: 'タイ', en: 'Thailand', ko: '태국', 'zh-tw': '泰國' },
+      'シンガポール': { ja: 'シンガポール', en: 'Singapore', ko: '싱가포르', 'zh-tw': '新加坡' },
+      'その他': { ja: 'その他', en: 'Other', ko: '기타', 'zh-tw': '其他' },
+    }
+    return nationalityMap[value]?.[currentLanguage] || value
+  }
+
+  // 都道府県の翻訳関数
+  const getPrefectureLabel = (value: string): string => {
+    const prefectureMap: { [key: string]: { [lang: string]: string } } = {
+      '東京都': { ja: '東京都', en: 'Tokyo', ko: '도쿄도', 'zh-tw': '東京都' },
+      '神奈川県': { ja: '神奈川県', en: 'Kanagawa', ko: '가나가와현', 'zh-tw': '神奈川縣' },
+      '千葉県': { ja: '千葉県', en: 'Chiba', ko: '치바현', 'zh-tw': '千葉縣' },
+      '埼玉県': { ja: '埼玉県', en: 'Saitama', ko: '사이타마현', 'zh-tw': '埼玉縣' },
+      '大阪府': { ja: '大阪府', en: 'Osaka', ko: '오사카부', 'zh-tw': '大阪府' },
+      '京都府': { ja: '京都府', en: 'Kyoto', ko: '교토부', 'zh-tw': '京都府' },
+      '兵庫県': { ja: '兵庫県', en: 'Hyogo', ko: '효고현', 'zh-tw': '兵庫縣' },
+      '愛知県': { ja: '愛知県', en: 'Aichi', ko: '아이치현', 'zh-tw': '愛知縣' },
+      '福岡県': { ja: '福岡県', en: 'Fukuoka', ko: '후쿠오카현', 'zh-tw': '福岡縣' },
+      '北海道': { ja: '北海道', en: 'Hokkaido', ko: '홋카이도', 'zh-tw': '北海道' },
+      '宮城県': { ja: '宮城県', en: 'Miyagi', ko: '미야기현', 'zh-tw': '宮城縣' },
+      '広島県': { ja: '広島県', en: 'Hiroshima', ko: '히로시마현', 'zh-tw': '廣島縣' },
+      '静岡県': { ja: '静岡県', en: 'Shizuoka', ko: '시즈오카현', 'zh-tw': '靜岡縣' },
+      '茨城県': { ja: '茨城県', en: 'Ibaraki', ko: '이바라키현', 'zh-tw': '茨城縣' },
+      '栃木県': { ja: '栃木県', en: 'Tochigi', ko: '도치기현', 'zh-tw': '栃木縣' },
+      '群馬県': { ja: '群馬県', en: 'Gunma', ko: '군마현', 'zh-tw': '群馬縣' },
+      '新潟県': { ja: '新潟県', en: 'Niigata', ko: '니가타현', 'zh-tw': '新潟縣' },
+      '長野県': { ja: '長野県', en: 'Nagano', ko: '나가노현', 'zh-tw': '長野縣' },
+      '山梨県': { ja: '山梨県', en: 'Yamanashi', ko: '야마나시현', 'zh-tw': '山梨縣' },
+      '岐阜県': { ja: '岐阜県', en: 'Gifu', ko: '기후현', 'zh-tw': '岐阜縣' },
+      '三重県': { ja: '三重県', en: 'Mie', ko: '미에현', 'zh-tw': '三重縣' },
+      '滋賀県': { ja: '滋賀県', en: 'Shiga', ko: '시가현', 'zh-tw': '滋賀縣' },
+      '奈良県': { ja: '奈良県', en: 'Nara', ko: '나라현', 'zh-tw': '奈良縣' },
+      '和歌山県': { ja: '和歌山県', en: 'Wakayama', ko: '와카야마현', 'zh-tw': '和歌山縣' },
+      '鳥取県': { ja: '鳥取県', en: 'Tottori', ko: '돗토리현', 'zh-tw': '鳥取縣' },
+      '島根県': { ja: '島根県', en: 'Shimane', ko: '시마네현', 'zh-tw': '島根縣' },
+      '岡山県': { ja: '岡山県', en: 'Okayama', ko: '오카야마현', 'zh-tw': '岡山縣' },
+      '山口県': { ja: '山口県', en: 'Yamaguchi', ko: '야마구치현', 'zh-tw': '山口縣' },
+      '徳島県': { ja: '徳島県', en: 'Tokushima', ko: '도쿠시마현', 'zh-tw': '德島縣' },
+      '香川県': { ja: '香川県', en: 'Kagawa', ko: '가가와현', 'zh-tw': '香川縣' },
+      '愛媛県': { ja: '愛媛県', en: 'Ehime', ko: '에히메현', 'zh-tw': '愛媛縣' },
+      '高知県': { ja: '高知県', en: 'Kochi', ko: '고치현', 'zh-tw': '高知縣' },
+      '佐賀県': { ja: '佐賀県', en: 'Saga', ko: '사가현', 'zh-tw': '佐賀縣' },
+      '長崎県': { ja: '長崎県', en: 'Nagasaki', ko: '나가사키현', 'zh-tw': '長崎縣' },
+      '熊本県': { ja: '熊本県', en: 'Kumamoto', ko: '구마모토현', 'zh-tw': '熊本縣' },
+      '大分県': { ja: '大分県', en: 'Oita', ko: '오이타현', 'zh-tw': '大分縣' },
+      '宮崎県': { ja: '宮崎県', en: 'Miyazaki', ko: '미야자키현', 'zh-tw': '宮崎縣' },
+      '鹿児島県': { ja: '鹿児島県', en: 'Kagoshima', ko: '가고시마현', 'zh-tw': '鹿兒島縣' },
+      '沖縄県': { ja: '沖縄県', en: 'Okinawa', ko: '오키나와현', 'zh-tw': '沖繩縣' },
+    }
+    return prefectureMap[value]?.[currentLanguage] || value
+  }
+
   const getNationalities = () => {
     if (isJapaneseFemale) {
       // 日本人女性の場合、日本を最初に
       return [
-        { value: '日本', label: '日本' },
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: '韓国', label: '韓国' },
-        { value: '中国', label: '中国' },
-        { value: 'その他', label: 'その他' },
+        { value: '日本', label: getNationalityLabel('日本') },
+        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
+        { value: 'イギリス', label: getNationalityLabel('イギリス') },
+        { value: 'カナダ', label: getNationalityLabel('カナダ') },
+        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
+        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
+        { value: 'フランス', label: getNationalityLabel('フランス') },
+        { value: 'オランダ', label: getNationalityLabel('オランダ') },
+        { value: 'イタリア', label: getNationalityLabel('イタリア') },
+        { value: 'スペイン', label: getNationalityLabel('スペイン') },
+        { value: '韓国', label: getNationalityLabel('韓国') },
+        { value: '中国', label: getNationalityLabel('中国') },
+        { value: 'その他', label: getNationalityLabel('その他') },
       ]
     } else {
       // 外国人男性の場合、よくある国を最初に
       return [
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'スウェーデン', label: 'スウェーデン' },
-        { value: 'ノルウェー', label: 'ノルウェー' },
-        { value: 'デンマーク', label: 'デンマーク' },
-        { value: '韓国', label: '韓国' },
-        { value: '台湾', label: '台湾' },
-        { value: 'タイ', label: 'タイ' },
-        { value: 'シンガポール', label: 'シンガポール' },
-        { value: 'その他', label: 'その他' },
+        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
+        { value: 'イギリス', label: getNationalityLabel('イギリス') },
+        { value: 'カナダ', label: getNationalityLabel('カナダ') },
+        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
+        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
+        { value: 'フランス', label: getNationalityLabel('フランス') },
+        { value: 'イタリア', label: getNationalityLabel('イタリア') },
+        { value: 'スペイン', label: getNationalityLabel('スペイン') },
+        { value: 'オランダ', label: getNationalityLabel('オランダ') },
+        { value: 'スウェーデン', label: getNationalityLabel('スウェーデン') },
+        { value: 'ノルウェー', label: getNationalityLabel('ノルウェー') },
+        { value: 'デンマーク', label: getNationalityLabel('デンマーク') },
+        { value: '韓国', label: getNationalityLabel('韓国') },
+        { value: '台湾', label: getNationalityLabel('台湾') },
+        { value: 'タイ', label: getNationalityLabel('タイ') },
+        { value: 'シンガポール', label: getNationalityLabel('シンガポール') },
+        { value: 'その他', label: getNationalityLabel('その他') },
       ]
     }
   }
@@ -2966,7 +3038,7 @@ function ProfileEditContent() {
                         <SelectContent>
                           {PREFECTURES.map((prefecture) => (
                             <SelectItem key={prefecture} value={prefecture}>
-                              {prefecture}
+                              {getPrefectureLabel(prefecture)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -3252,7 +3324,7 @@ function ProfileEditContent() {
                                       }
                                     `}
                                   >
-                                    {prefecture}
+                                    {getPrefectureLabel(prefecture)}
                                   </button>
                                 ))}
                               </div>
