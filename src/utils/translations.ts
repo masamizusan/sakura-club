@@ -523,6 +523,32 @@ type TranslationKeys = {
     japaneseNationalityConfirm: string
     required: string
   }
+
+  // トップページ
+  homepage: {
+    // ヘッダー
+    aboutService: string
+    howItWorks: string
+    safetyAndSecurity: string
+    culturalExperience: string
+    login: string
+    signup: string
+    
+    // ヒーローセクション
+    heroTitle: string
+    heroSubtitle: string
+    heroDescription: string
+    getStartedFree: string
+    loginHere: string
+    
+    // フィーチャーセクション
+    safetyTitle: string
+    safetyDescription: string
+    culturalExchangeTitle: string
+    culturalExchangeDescription: string
+    internationalExchangeTitle: string
+    internationalExchangeDescription: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -994,6 +1020,31 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: '登録に失敗しました。もう一度お試しください。',
       japaneseNationalityConfirm: '私は日本国籍の女性です',
       required: '必須'
+    },
+
+    homepage: {
+      // ヘッダー
+      aboutService: 'サービスについて',
+      howItWorks: '仕組み',
+      safetyAndSecurity: '安心・安全',
+      culturalExperience: '文化体験',
+      login: 'ログイン',
+      signup: '新規登録',
+      
+      // ヒーローセクション
+      heroTitle: '文化体験を通じた',
+      heroSubtitle: '真の出会い',
+      heroDescription: '訪日外国人男性と日本人女性が、\n日本の食文化や伝統文化の体験を通じて\n自然な出会いを楽しめる、安心・安全なプラットフォームです。',
+      getStartedFree: '無料で始める（女性無料）',
+      loginHere: 'ログインはこちら',
+      
+      // フィーチャーセクション
+      safetyTitle: '安心・安全',
+      safetyDescription: '本人確認と審査制で\n安全な出会いを保証',
+      culturalExchangeTitle: '文化交流',
+      culturalExchangeDescription: '茶道・書道・料理など\n本物の日本文化を体験',
+      internationalExchangeTitle: '国際交流',
+      internationalExchangeDescription: '言語を学び合い\n国境を越えたつながり'
     }
   },
 
@@ -1464,6 +1515,31 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: 'Registration failed. Please try again.',
       japaneseNationalityConfirm: 'I am a Japanese national female',
       required: 'Required'
+    },
+
+    homepage: {
+      // ヘッダー
+      aboutService: 'About Service',
+      howItWorks: 'How It Works',
+      safetyAndSecurity: 'Safety & Security',
+      culturalExperience: 'Cultural Experience',
+      login: 'Login',
+      signup: 'Sign Up',
+      
+      // ヒーローセクション
+      heroTitle: 'Authentic Connections Through',
+      heroSubtitle: 'Cultural Experiences',
+      heroDescription: 'A safe and secure platform where foreign men visiting Japan\nand Japanese women can enjoy natural encounters through\nexperiences of Japanese food culture and traditional culture.',
+      getStartedFree: 'Get Started Free (Free for Women)',
+      loginHere: 'Login Here',
+      
+      // フィーチャーセクション
+      safetyTitle: 'Safety & Security',
+      safetyDescription: 'Identity verification and\nscreening system ensures\nsafe encounters',
+      culturalExchangeTitle: 'Cultural Exchange',
+      culturalExchangeDescription: 'Experience authentic\nJapanese culture through\ntea ceremony, calligraphy, cooking',
+      internationalExchangeTitle: 'International Exchange',
+      internationalExchangeDescription: 'Learn languages together\nand build connections\nacross borders'
     }
   },
 
@@ -1934,6 +2010,31 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: '가입에 실패했습니다. 다시 시도해 주세요.',
       japaneseNationalityConfirm: '저는 일본 국적의 여성입니다',
       required: '필수'
+    },
+
+    homepage: {
+      // ヘッダー
+      aboutService: '서비스 소개',
+      howItWorks: '이용 방법',
+      safetyAndSecurity: '안심·안전',
+      culturalExperience: '문화 체험',
+      login: '로그인',
+      signup: '회원가입',
+      
+      // ヒーローセクション
+      heroTitle: '문화 체험을 통한',
+      heroSubtitle: '진정한 만남',
+      heroDescription: '일본 방문 외국인 남성과 일본인 여성이\n일본의 음식 문화와 전통 문화 체험을 통해\n자연스러운 만남을 즐길 수 있는 안심·안전한 플랫폼입니다.',
+      getStartedFree: '무료로 시작하기 (여성 무료)',
+      loginHere: '로그인 하기',
+      
+      // フィーチャーセクション
+      safetyTitle: '안심·안전',
+      safetyDescription: '본인 확인과 심사제로\n안전한 만남을 보장',
+      culturalExchangeTitle: '문화 교류',
+      culturalExchangeDescription: '다도·서도·요리 등\n진짜 일본 문화를 체험',
+      internationalExchangeTitle: '국제 교류',
+      internationalExchangeDescription: '언어를 서로 배우며\n국경을 넘는 인연'
     }
   },
 
@@ -2403,6 +2504,31 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: '註冊失敗。請再試一次。',
       japaneseNationalityConfirm: '我是日本國籍的女性',
       required: '必填'
+    },
+
+    homepage: {
+      // ヘッダー
+      aboutService: '服務介紹',
+      howItWorks: '使用方法',
+      safetyAndSecurity: '安心·安全',
+      culturalExperience: '文化體驗',
+      login: '登入',
+      signup: '註冊',
+      
+      // ヒーローセクション
+      heroTitle: '透過文化體驗的',
+      heroSubtitle: '真摯相遇',
+      heroDescription: '讓訪日外國男性與日本女性透過\n日本飲食文化和傳統文化體驗\n享受自然相遇的安心·安全平台。',
+      getStartedFree: '免費開始 (女性免費)',
+      loginHere: '前往登入',
+      
+      // フィーチャーセクション
+      safetyTitle: '安心·安全',
+      safetyDescription: '透過身份驗證和審查制\n保證安全的相遇',
+      culturalExchangeTitle: '文化交流',
+      culturalExchangeDescription: '透過茶道·書道·料理等\n體驗真正的日本文化',
+      internationalExchangeTitle: '國際交流',
+      internationalExchangeDescription: '互相學習語言\n跨越國界的連結'
     }
   }
 }
