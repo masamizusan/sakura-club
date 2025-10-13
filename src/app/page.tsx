@@ -62,11 +62,11 @@ function HeroSection() {
                 <span className="text-red-500">真の出会い</span>
               </h1>
               <p className="text-lg text-gray-600 leading-relaxed">
-                訪日外国人男性と日本人女性が、茶道・書道・料理教室
+                訪日外国人男性と日本人女性が、
                 <br />
-                などの文化体験を通じて自然な出会いを楽しめる、安
+                日本の食文化や伝統文化の体験を通じて
                 <br />
-                心・安全なプラットフォームです。
+                自然な出会いを楽しめる、安心・安全なプラットフォームです。
               </p>
             </div>
 
