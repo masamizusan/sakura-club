@@ -22,6 +22,17 @@ const createSignupSchema = (t: any) => z.object({
   gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
   birth_date: z.string().min(1, t('errors.birthDateRequired')),
   prefecture: z.string().min(1, t('errors.locationRequired')),
+  // 日本国籍確認（女性のみ必須）
+  japaneseNationalityConfirm: z.boolean().optional(),
+}).refine((data) => {
+  // 女性の場合は日本国籍確認が必須
+  if (data.gender === 'female') {
+    return data.japaneseNationalityConfirm === true
+  }
+  return true
+}, {
+  message: t('errors.japaneseNationalityRequired'),
+  path: ['japaneseNationalityConfirm']
 })
 
 type SimpleSignupFormData = z.infer<ReturnType<typeof createSignupSchema>>
@@ -35,8 +46,8 @@ const PREFECTURES = [
   '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ]
 
-// 国籍オプション（男性向け）
-const NATIONALITIES = [
+// 対象外国籍（外国人男性向け - 日本は除外）
+const FOREIGN_NATIONALITIES = [
   'アメリカ', 'イギリス', 'カナダ', 'オーストラリア', 'ドイツ', 'フランス',
   'イタリア', 'スペイン', 'オランダ', 'スウェーデン', 'ノルウェー', 'デンマーク',
   '韓国', '台湾', 'タイ', 'シンガポール', 'その他'
@@ -437,7 +448,7 @@ export default function SignupPage() {
                       <SelectValue placeholder={selectedGender === 'male' ? t('signup.selectNationality') : t('signup.selectPrefecture')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {(selectedGender === 'male' ? NATIONALITIES : PREFECTURES).map((option) => (
+                      {(selectedGender === 'male' ? FOREIGN_NATIONALITIES : PREFECTURES).map((option) => (
                         <SelectItem key={option} value={option}>
                           {selectedGender === 'male' ? getNationalityLabel(option) : getPrefectureLabel(option)}
                         </SelectItem>
@@ -450,6 +461,31 @@ export default function SignupPage() {
                   {selectedGender === 'female' && (
                     <p className="text-xs text-gray-500 mt-1">{t('signup.residenceNote')}</p>
                   )}
+                </div>
+              )}
+
+              {/* 日本国籍確認チェックボックス（女性のみ） */}
+              {selectedGender === 'female' && (
+                <div>
+                  <div className="flex items-start space-x-2">
+                    <input
+                      type="checkbox"
+                      {...register('japaneseNationalityConfirm')}
+                      className="mt-1 h-4 w-4 text-sakura-600 border-gray-300 rounded focus:ring-sakura-500"
+                    />
+                    <label className="text-sm font-medium text-gray-700">
+                      {t('signup.japaneseNationalityConfirm')} <span className="text-red-500">{t('signup.required')}</span>
+                    </label>
+                  </div>
+                  {errors.japaneseNationalityConfirm && (
+                    <p className="text-red-500 text-sm mt-1">{errors.japaneseNationalityConfirm.message}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {currentLanguage === 'ja' ? 'このサービスは日本国籍の女性と外国人男性の文化交流を目的としています' :
+                     currentLanguage === 'en' ? 'This service is for cultural exchange between Japanese women and foreign men' :
+                     currentLanguage === 'ko' ? '이 서비스는 일본 국적 여성과 외국인 남성의 문화 교류를 목적으로 합니다' :
+                     '本服務旨在促進日本國籍女性與外國男性之間的文化交流'}
+                  </p>
                 </div>
               )}
 

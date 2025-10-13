@@ -130,6 +130,7 @@ type TranslationKeys = {
     passwordMinLength: string
     passwordFormat: string
     locationRequired: string
+    japaneseNationalityRequired: string
   }
 
   // 言語レベル
@@ -519,6 +520,7 @@ type TranslationKeys = {
     loginLink: string
     ageRestriction: string
     signupFailed: string
+    japaneseNationalityConfirm: string
     required: string
   }
 }
@@ -644,7 +646,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       emailInvalid: '有効なメールアドレスを入力してください',
       passwordMinLength: 'パスワードは8文字以上で入力してください',
       passwordFormat: '半角英字と数字をどちらも含む必要があります',
-      locationRequired: '居住地を選択してください'
+      locationRequired: '居住地を選択してください',
+      japaneseNationalityRequired: '日本国籍の確認が必要です'
     },
     levels: {
       none: '記入しない',
@@ -989,6 +992,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginLink: 'ログイン',
       ageRestriction: '18歳以上の方のみご利用いただけます',
       signupFailed: '登録に失敗しました。もう一度お試しください。',
+      japaneseNationalityConfirm: '私は日本国籍の女性です',
       required: '必須'
     }
   },
@@ -1113,7 +1117,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       emailInvalid: 'Please enter a valid email address',
       passwordMinLength: 'Password must be at least 8 characters',
       passwordFormat: 'Must contain both letters and numbers',
-      locationRequired: 'Please select your location'
+      locationRequired: 'Please select your location',
+      japaneseNationalityRequired: 'Japanese nationality confirmation is required'
     },
     levels: {
       none: 'Not specified',
@@ -1457,6 +1462,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginLink: 'Log in',
       ageRestriction: 'Must be 18 years or older',
       signupFailed: 'Registration failed. Please try again.',
+      japaneseNationalityConfirm: 'I am a Japanese national female',
       required: 'Required'
     }
   },
@@ -1581,7 +1587,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       emailInvalid: '유효한 이메일 주소를 입력해 주세요',
       passwordMinLength: '비밀번호는 8자 이상으로 입력해 주세요',
       passwordFormat: '영문자와 숫자를 모두 포함해야 합니다',
-      locationRequired: '거주지를 선택해 주세요'
+      locationRequired: '거주지를 선택해 주세요',
+      japaneseNationalityRequired: '일본 국적 확인이 필요합니다'
     },
     levels: {
       none: '기입하지 않음',
@@ -1925,6 +1932,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginLink: '로그인',
       ageRestriction: '18세 이상만 이용할 수 있습니다',
       signupFailed: '가입에 실패했습니다. 다시 시도해 주세요.',
+      japaneseNationalityConfirm: '저는 일본 국적의 여성입니다',
       required: '필수'
     }
   },
@@ -2048,7 +2056,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       emailInvalid: '請輸入正確的電子郵件地址',
       passwordMinLength: '密碼至少需要8個字符',
       passwordFormat: '密碼必須包含英文字母和數字',
-      locationRequired: '請選擇居住地'
+      locationRequired: '請選擇居住地',
+      japaneseNationalityRequired: '需要確認日本國籍'
     },
     levels: {
       none: '不填寫',
@@ -2392,6 +2401,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginLink: '登入',
       ageRestriction: '僅限18歲以上使用',
       signupFailed: '註冊失敗。請再試一次。',
+      japaneseNationalityConfirm: '我是日本國籍的女性',
       required: '必填'
     }
   }
