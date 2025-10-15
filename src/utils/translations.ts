@@ -570,6 +570,24 @@ type TranslationKeys = {
     backToSignup: string
   }
 
+  // パスワードリセット画面
+  resetPassword: {
+    title: string
+    subtitle: string
+    newPassword: string
+    newPasswordPlaceholder: string
+    confirmPassword: string
+    confirmPasswordPlaceholder: string
+    updateButton: string
+    updating: string
+    successMessage: string
+    invalidLinkError: string
+    passwordMismatchError: string
+    passwordTooShortError: string
+    updateFailedError: string
+    loadingText: string
+  }
+
   // トップページ
   homepage: {
     // ヘッダー
@@ -1112,6 +1130,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       backToSignup: '登録画面に戻る'
     },
 
+    resetPassword: {
+      title: 'パスワードリセット',
+      subtitle: '新しいパスワードを設定してください。',
+      newPassword: '新しいパスワード',
+      newPasswordPlaceholder: '新しいパスワードを入力',
+      confirmPassword: 'パスワード確認',
+      confirmPasswordPlaceholder: 'パスワードを再入力',
+      updateButton: 'パスワードを更新',
+      updating: 'パスワード更新中...',
+      successMessage: 'パスワードが正常に更新されました。',
+      invalidLinkError: '無効なリセットリンクです。',
+      passwordMismatchError: 'パスワードが一致しません。',
+      passwordTooShortError: 'パスワードは8文字以上で入力してください。',
+      updateFailedError: 'パスワードの更新に失敗しました。',
+      loadingText: '読み込み中...'
+    },
+
     homepage: {
       // ヘッダー
       aboutService: 'サービスについて',
@@ -1649,6 +1684,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       errorTitle: 'An Error Occurred',
       errorDescription: 'Registration information not found.\nPlease register again.',
       backToSignup: 'Back to Registration'
+    },
+
+    resetPassword: {
+      title: 'Password Reset',
+      subtitle: 'Please set a new password.',
+      newPassword: 'New Password',
+      newPasswordPlaceholder: 'Enter new password',
+      confirmPassword: 'Confirm Password',
+      confirmPasswordPlaceholder: 'Re-enter password',
+      updateButton: 'Update Password',
+      updating: 'Updating password...',
+      successMessage: 'Password has been successfully updated.',
+      invalidLinkError: 'Invalid reset link.',
+      passwordMismatchError: 'Passwords do not match.',
+      passwordTooShortError: 'Password must be at least 8 characters long.',
+      updateFailedError: 'Failed to update password.',
+      loadingText: 'Loading...'
     },
 
     homepage: {
@@ -2190,6 +2242,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       backToSignup: '등록 화면으로 돌아가기'
     },
 
+    resetPassword: {
+      title: '비밀번호 재설정',
+      subtitle: '새로운 비밀번호를 설정해 주세요.',
+      newPassword: '새로운 비밀번호',
+      newPasswordPlaceholder: '새로운 비밀번호를 입력하세요',
+      confirmPassword: '비밀번호 확인',
+      confirmPasswordPlaceholder: '비밀번호를 다시 입력하세요',
+      updateButton: '비밀번호 업데이트',
+      updating: '비밀번호 업데이트 중...',
+      successMessage: '비밀번호가 성공적으로 업데이트되었습니다.',
+      invalidLinkError: '잘못된 재설정 링크입니다.',
+      passwordMismatchError: '비밀번호가 일치하지 않습니다.',
+      passwordTooShortError: '비밀번호는 8자 이상이어야 합니다.',
+      updateFailedError: '비밀번호 업데이트에 실패했습니다.',
+      loadingText: '로딩 중...'
+    },
+
     homepage: {
       // ヘッダー
       aboutService: '서비스 소개',
@@ -2726,6 +2795,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       errorTitle: '發生錯誤',
       errorDescription: '找不到註冊資訊。\n請重新註冊。',
       backToSignup: '返回註冊'
+    },
+
+    resetPassword: {
+      title: '密碼重設',
+      subtitle: '請設定新密碼。',
+      newPassword: '新密碼',
+      newPasswordPlaceholder: '輸入新密碼',
+      confirmPassword: '確認密碼',
+      confirmPasswordPlaceholder: '重新輸入密碼',
+      updateButton: '更新密碼',
+      updating: '更新密碼中...',
+      successMessage: '密碼已成功更新。',
+      invalidLinkError: '無效的重設連結。',
+      passwordMismatchError: '密碼不一致。',
+      passwordTooShortError: '密碼必須至少8個字元。',
+      updateFailedError: '密碼更新失敗。',
+      loadingText: '載入中...'
     },
 
     homepage: {
