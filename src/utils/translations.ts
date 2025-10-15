@@ -588,6 +588,34 @@ type TranslationKeys = {
     loadingText: string
   }
 
+  verifyEmail: {
+    loading: {
+      title: string
+      description: string
+    }
+    success: {
+      title: string
+      subtitle: string
+      autoRedirectNotice: string
+      autoRedirectTime: string
+      proceedButton: string
+    }
+    error: {
+      title: string
+      expiredTitle: string
+      description: string
+      expiredDescription: string
+      invalidUrlError: string
+      verificationFailedError: string
+      signupButton: string
+      loginButton: string
+    }
+    loadingFallback: {
+      title: string
+      description: string
+    }
+  }
+
   // トップページ
   homepage: {
     // ヘッダー
@@ -1147,6 +1175,34 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loadingText: '読み込み中...'
     },
 
+    verifyEmail: {
+      loading: {
+        title: 'メール認証中',
+        description: '認証処理を行っています...\nしばらくお待ちください。'
+      },
+      success: {
+        title: '本登録完了',
+        subtitle: 'メールアドレスの認証が完了しました！\nSakura Clubへようこそ🌸',
+        autoRedirectNotice: 'プロフィール編集画面に自動で移動します...',
+        autoRedirectTime: '3秒後に自動転送',
+        proceedButton: 'プロフィール編集へ進む'
+      },
+      error: {
+        title: '認証エラー',
+        expiredTitle: '認証期限切れ',
+        description: '認証に失敗しました。もう一度お試しください。',
+        expiredDescription: '認証URLの有効期限が切れています。再度登録を行ってください。',
+        invalidUrlError: '認証URLが無効です',
+        verificationFailedError: '認証に失敗しました。URLが無効または期限切れの可能性があります。',
+        signupButton: '再登録する',
+        loginButton: 'ログイン画面へ'
+      },
+      loadingFallback: {
+        title: '読み込み中',
+        description: 'しばらくお待ちください...'
+      }
+    },
+
     homepage: {
       // ヘッダー
       aboutService: 'サービスについて',
@@ -1701,6 +1757,34 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordTooShortError: 'Password must be at least 8 characters long.',
       updateFailedError: 'Failed to update password.',
       loadingText: 'Loading...'
+    },
+
+    verifyEmail: {
+      loading: {
+        title: 'Verifying Email',
+        description: 'Processing verification...\nPlease wait.'
+      },
+      success: {
+        title: 'Registration Complete',
+        subtitle: 'Email verification completed!\nWelcome to Sakura Club🌸',
+        autoRedirectNotice: 'Automatically redirecting to profile editing...',
+        autoRedirectTime: 'Redirecting in 3 seconds',
+        proceedButton: 'Proceed to Profile Edit'
+      },
+      error: {
+        title: 'Verification Error',
+        expiredTitle: 'Verification Expired',
+        description: 'Verification failed. Please try again.',
+        expiredDescription: 'Verification URL has expired. Please register again.',
+        invalidUrlError: 'Invalid verification URL',
+        verificationFailedError: 'Verification failed. URL may be invalid or expired.',
+        signupButton: 'Register Again',
+        loginButton: 'Go to Login'
+      },
+      loadingFallback: {
+        title: 'Loading',
+        description: 'Please wait...'
+      }
     },
 
     homepage: {
@@ -2259,6 +2343,34 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loadingText: '로딩 중...'
     },
 
+    verifyEmail: {
+      loading: {
+        title: '이메일 인증 중',
+        description: '인증 처리 중입니다...\n잠시만 기다려 주세요.'
+      },
+      success: {
+        title: '본등록 완료',
+        subtitle: '이메일 주소 인증이 완료되었습니다!\n사쿠라 클럽에 오신 것을 환영합니다🌸',
+        autoRedirectNotice: '프로필 편집 화면으로 자동 이동합니다...',
+        autoRedirectTime: '3초 후 자동 전환',
+        proceedButton: '프로필 편집으로 진행'
+      },
+      error: {
+        title: '인증 오류',
+        expiredTitle: '인증 기간 만료',
+        description: '인증에 실패했습니다. 다시 시도해 주세요.',
+        expiredDescription: '인증 URL의 유효기간이 만료되었습니다. 다시 등록해 주세요.',
+        invalidUrlError: '인증 URL이 유효하지 않습니다',
+        verificationFailedError: '인증에 실패했습니다. URL이 유효하지 않거나 기간이 만료되었을 가능성이 있습니다.',
+        signupButton: '재등록하기',
+        loginButton: '로그인 화면으로'
+      },
+      loadingFallback: {
+        title: '로딩 중',
+        description: '잠시만 기다려 주세요...'
+      }
+    },
+
     homepage: {
       // ヘッダー
       aboutService: '서비스 소개',
@@ -2812,6 +2924,34 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordTooShortError: '密碼必須至少8個字元。',
       updateFailedError: '密碼更新失敗。',
       loadingText: '載入中...'
+    },
+
+    verifyEmail: {
+      loading: {
+        title: '郵件認證中',
+        description: '正在處理認證...\n請稍候。'
+      },
+      success: {
+        title: '註冊完成',
+        subtitle: '電子郵件地址認證已完成！\n歡迎加入櫻花俱樂部🌸',
+        autoRedirectNotice: '自動跳轉到個人資料編輯頁面...',
+        autoRedirectTime: '3秒後自動跳轉',
+        proceedButton: '前往個人資料編輯'
+      },
+      error: {
+        title: '認證錯誤',
+        expiredTitle: '認證已過期',
+        description: '認證失敗，請重試。',
+        expiredDescription: '認證連結已過期，請重新註冊。',
+        invalidUrlError: '認證連結無效',
+        verificationFailedError: '認證失敗。連結可能無效或已過期。',
+        signupButton: '重新註冊',
+        loginButton: '前往登入頁面'
+      },
+      loadingFallback: {
+        title: '載入中',
+        description: '請稍候...'
+      }
     },
 
     homepage: {
