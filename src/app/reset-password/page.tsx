@@ -36,7 +36,7 @@ function ResetPasswordForm() {
     if (!accessToken || !refreshToken) {
       setError(t('resetPassword.invalidLinkError'))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
