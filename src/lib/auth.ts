@@ -31,32 +31,22 @@ export const authService = {
     
     try {
       // 0. 既存ユーザーのクリーンアップ（「新しい紙」方式）
-      console.log('🧹 新規登録開始 - 既存データクリーンアップ中...')
+      console.log('🧹 新規登録開始 - 管理者権限チェックをスキップ')
       
-      // 既存の認証ユーザーがいる場合は削除
-      try {
-        const { data: existingUsers } = await supabase.auth.admin.listUsers()
-        const existingUser = existingUsers.users.find(user => user.email === data.email)
-        
-        if (existingUser) {
-          console.log('🗑️ 既存ユーザー発見 - 削除中:', existingUser.id)
-          
-          // プロフィールデータを先に削除
-          await supabase.from('profiles').delete().eq('id', existingUser.id)
-          
-          // 認証ユーザーを削除
-          await supabase.auth.admin.deleteUser(existingUser.id)
-          
-          console.log('✅ 既存ユーザー完全削除完了')
-        }
-      } catch (cleanupError) {
-        console.log('⚠️ クリーンアップエラー（続行）:', cleanupError)
-        // クリーンアップに失敗しても新規登録は続行
-      }
+      // 注意: 管理者権限が必要な既存ユーザー削除は本番環境では無効
+      // 開発環境のみで有効にする場合は、SERVICE_ROLE_KEYが必要
+      console.log('📋 既存ユーザークリーンアップをスキップして新規登録を続行')
       
       // 1. Create auth user (完全に新しいユーザー)
       console.log('👤 新しいユーザー作成中...')
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const redirectUrl = `${window.location.origin}/verify-email`
+      console.log('📧 メール認証リダイレクトURL:', redirectUrl)
+      console.log('📧 Supabase接続情報:', {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      })
+      
+      const signUpOptions = {
         email: data.email,
         password: data.password,
         options: {
@@ -65,11 +55,42 @@ export const authService = {
             last_name: data.lastName,
             gender: data.gender,
           },
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          emailRedirectTo: redirectUrl
         }
+      }
+      
+      console.log('📧 新規登録パラメーター:', {
+        email: signUpOptions.email,
+        hasPassword: !!signUpOptions.password,
+        redirectUrl: signUpOptions.options.emailRedirectTo,
+        metaData: signUpOptions.options.data
+      })
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp(signUpOptions)
+
+      console.log('📧 Supabase認証結果:', {
+        hasUser: !!authData?.user,
+        hasSession: !!authData?.session,
+        needsConfirmation: !authData?.session,
+        error: authError?.message,
+        userEmail: authData?.user?.email,
+        userConfirmedAt: authData?.user?.email_confirmed_at
       })
 
       if (authError) {
+        console.error('❌ Supabase認証エラー詳細:', {
+          message: authError.message,
+          code: authError.status,
+          details: authError
+        })
+        
+        // メール送信エラーの場合の特別処理
+        if (authError.message.includes('Error sending confirmation email') || 
+            authError.message.includes('email') ||
+            authError.status === 500) {
+          throw new AuthError('メール認証の設定に問題があります。テストモードをご利用ください。', 'email_config_error')
+        }
+        
         throw new AuthError(authError.message, authError.message)
       }
 
@@ -169,9 +190,33 @@ export const authService = {
       })
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new AuthError('メールアドレスまたはパスワードが正しくありません')
+        console.error('認証エラー詳細:', error)
+        
+        // メール認証未完了の場合
+        if (error.message.includes('Email not confirmed')) {
+          throw new AuthError('メール認証が完了していません。登録時に送信されたメールを確認し、認証リンクをクリックしてください。', 'email_not_confirmed')
         }
+        
+        // 無効な認証情報の場合
+        if (error.message.includes('Invalid login credentials')) {
+          // ユーザーが存在するかチェック
+          try {
+            const { data: adminAuth } = await supabase.auth.admin.listUsers()
+            const userExists = adminAuth.users.some(user => user.email === data.email)
+            
+            if (userExists) {
+              const user = adminAuth.users.find(user => user.email === data.email)
+              if (!user?.email_confirmed_at) {
+                throw new AuthError('メール認証が完了していません。登録時に送信されたメールを確認し、認証リンクをクリックしてください。', 'email_not_confirmed')
+              }
+            }
+          } catch (adminError) {
+            console.log('管理者チェック失敗（通常の動作）:', adminError)
+          }
+          
+          throw new AuthError('メールアドレスまたはパスワードが正しくありません', 'invalid_credentials')
+        }
+        
         throw new AuthError(error.message)
       }
 
@@ -323,6 +368,31 @@ export const authService = {
         throw error
       }
       throw new AuthError('OTP確認処理中にエラーが発生しました')
+    }
+  },
+
+  async resendEmailConfirmation(email: string) {
+    const supabase = createClient()
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/verify-email`
+        }
+      })
+
+      if (error) {
+        throw new AuthError(error.message)
+      }
+
+      return { success: true }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('メール再送処理中にエラーが発生しました')
     }
   },
 

@@ -18,6 +18,10 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const [errorCode, setErrorCode] = useState('')
+  const [isResendingEmail, setIsResendingEmail] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [lastEmailAttempt, setLastEmailAttempt] = useState('')
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -42,6 +46,7 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setLoginError('')
+    setErrorCode('')
     
     try {
       console.log('Attempting login with:', { email: data.email })
@@ -68,7 +73,15 @@ function LoginForm() {
       console.error('Login error:', error)
       
       if (error instanceof AuthError) {
-        setLoginError(error.message)
+        // メール認証未完了の場合の特別な処理
+        if (error.code === 'email_not_confirmed') {
+          setLoginError(error.message)
+          setErrorCode('email_not_confirmed')
+          setLastEmailAttempt(data.email)
+        } else {
+          setLoginError(error.message)
+          setErrorCode(error.code || '')
+        }
       } else if (error instanceof Error) {
         if (error.message.includes('fetch') || error.message.includes('Invalid value')) {
           setLoginError(t('login.serverError'))
@@ -80,6 +93,29 @@ function LoginForm() {
       }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleResendEmail = async () => {
+    if (!lastEmailAttempt) return
+    
+    setIsResendingEmail(true)
+    setResendSuccess(false)
+    
+    try {
+      await authService.resendEmailConfirmation(lastEmailAttempt)
+      setResendSuccess(true)
+      setLoginError('認証メールを再送しました。メールボックスを確認してください。')
+      setErrorCode('')
+    } catch (error) {
+      console.error('Email resend error:', error)
+      if (error instanceof AuthError) {
+        setLoginError(error.message)
+      } else {
+        setLoginError('メール再送中にエラーが発生しました')
+      }
+    } finally {
+      setIsResendingEmail(false)
     }
   }
 
@@ -120,9 +156,43 @@ function LoginForm() {
 
         <div className="bg-white rounded-lg shadow-lg p-8">
           {loginError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-              <p className="text-red-700 text-sm">{loginError}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-red-700 text-sm whitespace-pre-line">{loginError}</p>
+                  {errorCode === 'email_not_confirmed' && !resendSuccess && (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={handleResendEmail}
+                          disabled={isResendingEmail}
+                          className="text-sakura-600 border-sakura-600 hover:bg-sakura-50"
+                        >
+                          {isResendingEmail ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              送信中...
+                            </>
+                          ) : (
+                            'メールを再送'
+                          )}
+                        </Button>
+                        <Link href="/signup">
+                          <Button size="sm" className="bg-sakura-600 hover:bg-sakura-700 text-white">
+                            新規登録をやり直す
+                          </Button>
+                        </Link>
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        メールが届かない場合は、迷惑メールフォルダもご確認ください
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

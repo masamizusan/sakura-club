@@ -269,7 +269,12 @@ export default function SignupPage() {
     } catch (error) {
       console.error('Signup error:', error)
       if (error instanceof AuthError) {
-        setSignupError(error.message)
+        // メール設定エラーの場合の特別処理
+        if (error.code === 'email_config_error') {
+          setSignupError(error.message + '\n\n仮登録完了画面の「テストモード」をご利用ください。')
+        } else {
+          setSignupError(error.message)
+        }
       } else {
         setSignupError(t('signup.signupFailed'))
       }
