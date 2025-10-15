@@ -112,9 +112,45 @@ export type Database = {
       matches: {
         Row: {
           id: string
+          liker_user_id: string
+          liked_user_id: string
+          matched_user_id?: string
+          action: 'like' | 'pass'
+          is_matched: boolean
+          matched_at?: string
+          created_at: string
+          updated_at?: string
+        }
+        Insert: {
+          id?: string
+          liker_user_id: string
+          liked_user_id: string
+          matched_user_id?: string
+          action: 'like' | 'pass'
+          is_matched?: boolean
+          matched_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          liker_user_id?: string
+          liked_user_id?: string
+          matched_user_id?: string
+          action?: 'like' | 'pass'
+          is_matched?: boolean
+          matched_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      conversations: {
+        Row: {
+          id: string
           user1_id: string
           user2_id: string
-          status: 'pending' | 'accepted' | 'rejected'
+          last_message?: string
+          last_message_at?: string
           created_at: string
           updated_at: string
         }
@@ -122,7 +158,8 @@ export type Database = {
           id?: string
           user1_id: string
           user2_id: string
-          status?: 'pending' | 'accepted' | 'rejected'
+          last_message?: string
+          last_message_at?: string
           created_at?: string
           updated_at?: string
         }
@@ -130,7 +167,8 @@ export type Database = {
           id?: string
           user1_id?: string
           user2_id?: string
-          status?: 'pending' | 'accepted' | 'rejected'
+          last_message?: string
+          last_message_at?: string
           created_at?: string
           updated_at?: string
         }
