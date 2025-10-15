@@ -547,6 +547,29 @@ type TranslationKeys = {
     errorPrefix: string
   }
 
+  // 仮登録完了画面
+  registerComplete: {
+    title: string
+    subtitle: string
+    emailVerificationTitle: string
+    emailVerificationDescription: string
+    sentTo: string
+    instructions: string
+    troubleshootingTitle: string
+    troubleshootingSpam: string
+    troubleshootingEmailCheck: string
+    troubleshootingDomain: string
+    testModeTitle: string
+    testModeDescription: string
+    testModeButton: string
+    loginButton: string
+    backToHome: string
+    helpNote: string
+    errorTitle: string
+    errorDescription: string
+    backToSignup: string
+  }
+
   // トップページ
   homepage: {
     // ヘッダー
