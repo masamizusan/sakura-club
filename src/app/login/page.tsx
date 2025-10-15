@@ -1,22 +1,35 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
-import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle } from 'lucide-react'
+import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
+import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
+import { useTranslation } from '@/utils/translations'
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const router = useRouter()
   const searchParams = useSearchParams()
+  
+  // 翻訳関数の取得
+  const { t } = useTranslation(currentLanguage)
+
+  // ページ読み込み時の言語検出
+  useEffect(() => {
+    const detectedLanguage = determineLanguage()
+    setCurrentLanguage(detectedLanguage)
+  }, [])
 
   const {
     register,
@@ -58,12 +71,12 @@ function LoginForm() {
         setLoginError(error.message)
       } else if (error instanceof Error) {
         if (error.message.includes('fetch') || error.message.includes('Invalid value')) {
-          setLoginError('サーバー接続エラーです。環境設定を確認してください。')
+          setLoginError(t('login.serverError'))
         } else {
-          setLoginError(`エラー: ${error.message}`)
+          setLoginError(`${t('login.errorPrefix')}${error.message}`)
         }
       } else {
-        setLoginError('ログインに失敗しました。もう一度お試しください。')
+        setLoginError(t('login.loginFailed'))
       }
     } finally {
       setIsLoading(false)
@@ -74,14 +87,35 @@ function LoginForm() {
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
-              <Heart className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
+                <Heart className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold sakura-text-gradient">Sakura Club</h1>
             </div>
-            <h1 className="text-2xl font-bold sakura-text-gradient">Sakura Club</h1>
+            
+            {/* Language Switcher */}
+            <div className="flex items-center space-x-2">
+              <Globe className="w-4 h-4 text-gray-500" />
+              <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
+                setCurrentLanguage(value)
+                saveLanguagePreference(value)
+              }}>
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="zh-tw">繁體中文</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">ログイン</h2>
-          <p className="text-gray-600">アカウントにログインして文化体験を楽しみましょう</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('login.title')}</h2>
+          <p className="text-gray-600">{t('login.subtitle')}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
@@ -95,11 +129,11 @@ function LoginForm() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス
+                {t('login.emailAddress')}
               </label>
               <Input
                 type="email"
-                placeholder="your-email@example.com"
+                placeholder={t('login.emailPlaceholder')}
                 {...register('email')}
                 className={errors.email ? 'border-red-500' : ''}
               />
@@ -110,12 +144,12 @@ function LoginForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                パスワード
+                {t('login.password')}
               </label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="パスワードを入力"
+                  placeholder={t('login.passwordPlaceholder')}
                   {...register('password')}
                   className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                 />
@@ -141,7 +175,7 @@ function LoginForm() {
                   className="h-4 w-4 text-sakura-600 focus:ring-sakura-500 border-gray-300 rounded"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
-                  ログイン状態を保持する
+                  {t('login.rememberMe')}
                 </label>
               </div>
 
@@ -149,7 +183,7 @@ function LoginForm() {
                 href="/reset-password" 
                 className="text-sm text-sakura-600 hover:underline"
               >
-                パスワードを忘れた方
+                {t('login.forgotPassword')}
               </Link>
             </div>
 
@@ -165,7 +199,7 @@ function LoginForm() {
               ) : (
                 <LogIn className="w-4 h-4 mr-2" />
               )}
-              {isLoading ? 'ログイン中...' : 'ログイン'}
+              {isLoading ? t('login.loggingIn') : t('login.loginButton')}
             </Button>
           </form>
 
@@ -175,7 +209,7 @@ function LoginForm() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">または</span>
+                <span className="px-2 bg-white text-gray-500">{t('login.orDivider')}</span>
               </div>
             </div>
 
@@ -187,32 +221,31 @@ function LoginForm() {
                   <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                Googleでログイン
+                {t('login.googleLogin')}
               </Button>
 
               <Button variant="outline" className="w-full" type="button">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
-                Facebookでログイン
+                {t('login.facebookLogin')}
               </Button>
             </div>
           </div>
 
           <div className="mt-8 text-center">
             <p className="text-gray-600">
-              アカウントをお持ちでない方は{' '}
+              {t('login.signupPrompt')}{' '}
               <Link href="/signup" className="text-sakura-600 hover:underline font-medium">
-                新規登録
+                {t('login.signupLink')}
               </Link>
             </p>
           </div>
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            このサイトは安全性とプライバシーを重視しています。<br />
-            ログイン情報は暗号化されて保護されます。
+          <p className="text-xs text-gray-500 whitespace-pre-line">
+            {t('login.securityNote')}
           </p>
         </div>
       </div>

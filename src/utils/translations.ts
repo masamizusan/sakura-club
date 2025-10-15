@@ -524,6 +524,29 @@ type TranslationKeys = {
     required: string
   }
 
+  // ログイン画面
+  login: {
+    title: string
+    subtitle: string
+    emailAddress: string
+    emailPlaceholder: string
+    password: string
+    passwordPlaceholder: string
+    rememberMe: string
+    forgotPassword: string
+    loginButton: string
+    loggingIn: string
+    orDivider: string
+    googleLogin: string
+    facebookLogin: string
+    signupPrompt: string
+    signupLink: string
+    securityNote: string
+    loginFailed: string
+    serverError: string
+    errorPrefix: string
+  }
+
   // トップページ
   homepage: {
     // ヘッダー
@@ -1022,6 +1045,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       required: '必須'
     },
 
+    login: {
+      title: 'ログイン',
+      subtitle: 'アカウントにログインして文化体験を楽しみましょう',
+      emailAddress: 'メールアドレス',
+      emailPlaceholder: 'your-email@example.com',
+      password: 'パスワード',
+      passwordPlaceholder: 'パスワードを入力',
+      rememberMe: 'ログイン状態を保持する',
+      forgotPassword: 'パスワードを忘れた方',
+      loginButton: 'ログイン',
+      loggingIn: 'ログイン中...',
+      orDivider: 'または',
+      googleLogin: 'Googleでログイン',
+      facebookLogin: 'Facebookでログイン',
+      signupPrompt: 'アカウントをお持ちでない方は',
+      signupLink: '新規登録',
+      securityNote: 'このサイトは安全性とプライバシーを重視しています。\nログイン情報は暗号化されて保護されます。',
+      loginFailed: 'ログインに失敗しました。もう一度お試しください。',
+      serverError: 'サーバー接続エラーです。環境設定を確認してください。',
+      errorPrefix: 'エラー: '
+    },
+
     homepage: {
       // ヘッダー
       aboutService: 'サービスについて',
@@ -1515,6 +1560,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: 'Registration failed. Please try again.',
       japaneseNationalityConfirm: 'I am a Japanese national female',
       required: 'Required'
+    },
+
+    login: {
+      title: 'Login',
+      subtitle: 'Log in to your account to enjoy cultural experiences',
+      emailAddress: 'Email Address',
+      emailPlaceholder: 'your-email@example.com',
+      password: 'Password',
+      passwordPlaceholder: 'Enter your password',
+      rememberMe: 'Keep me signed in',
+      forgotPassword: 'Forgot your password?',
+      loginButton: 'Log In',
+      loggingIn: 'Logging in...',
+      orDivider: 'or',
+      googleLogin: 'Sign in with Google',
+      facebookLogin: 'Sign in with Facebook',
+      signupPrompt: 'Don\'t have an account?',
+      signupLink: 'Sign Up',
+      securityNote: 'This site prioritizes safety and privacy.\nYour login information is encrypted and protected.',
+      loginFailed: 'Login failed. Please try again.',
+      serverError: 'Server connection error. Please check environment settings.',
+      errorPrefix: 'Error: '
     },
 
     homepage: {
@@ -2012,6 +2079,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       required: '필수'
     },
 
+    login: {
+      title: '로그인',
+      subtitle: '계정에 로그인하여 문화 체험을 즐겨보세요',
+      emailAddress: '이메일 주소',
+      emailPlaceholder: 'your-email@example.com',
+      password: '비밀번호',
+      passwordPlaceholder: '비밀번호를 입력하세요',
+      rememberMe: '로그인 상태 유지',
+      forgotPassword: '비밀번호를 잊으셨나요?',
+      loginButton: '로그인',
+      loggingIn: '로그인 중...',
+      orDivider: '또는',
+      googleLogin: 'Google로 로그인',
+      facebookLogin: 'Facebook으로 로그인',
+      signupPrompt: '계정이 없으신가요?',
+      signupLink: '회원가입',
+      securityNote: '이 사이트는 안전성과 개인정보 보호를 중시합니다.\n로그인 정보는 암호화되어 보호됩니다.',
+      loginFailed: '로그인에 실패했습니다. 다시 시도해 주세요.',
+      serverError: '서버 연결 오류입니다. 환경 설정을 확인해 주세요.',
+      errorPrefix: '오류: '
+    },
+
     homepage: {
       // ヘッダー
       aboutService: '서비스 소개',
@@ -2504,6 +2593,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       signupFailed: '註冊失敗。請再試一次。',
       japaneseNationalityConfirm: '我是日本國籍的女性',
       required: '必填'
+    },
+
+    login: {
+      title: '登入',
+      subtitle: '登入您的帳戶以享受文化體驗',
+      emailAddress: '電子郵件地址',
+      emailPlaceholder: 'your-email@example.com',
+      password: '密碼',
+      passwordPlaceholder: '輸入您的密碼',
+      rememberMe: '保持登入狀態',
+      forgotPassword: '忘記密碼？',
+      loginButton: '登入',
+      loggingIn: '登入中...',
+      orDivider: '或',
+      googleLogin: '使用 Google 登入',
+      facebookLogin: '使用 Facebook 登入',
+      signupPrompt: '還沒有帳戶？',
+      signupLink: '註冊',
+      securityNote: '本網站重視安全性和隱私保護。\n您的登入資訊會被加密保護。',
+      loginFailed: '登入失敗。請再試一次。',
+      serverError: '伺服器連線錯誤。請檢查環境設定。',
+      errorPrefix: '錯誤：'
     },
 
     homepage: {
