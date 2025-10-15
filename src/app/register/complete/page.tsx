@@ -1,15 +1,28 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Mail, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CheckCircle, Mail, ArrowLeft, AlertCircle, Loader2, Globe } from 'lucide-react'
 import Link from 'next/link'
+import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
+import { useTranslation } from '@/utils/translations'
 
 function RegisterCompleteContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const email = searchParams.get('email')
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
+  
+  // 翻訳関数の取得
+  const { t } = useTranslation(currentLanguage)
+
+  // ページ読み込み時の言語検出
+  useEffect(() => {
+    const detectedLanguage = determineLanguage()
+    setCurrentLanguage(detectedLanguage)
+  }, [])
 
   if (!email) {
     return (
@@ -19,14 +32,13 @@ function RegisterCompleteContent() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">エラーが発生しました</h2>
-            <p className="text-gray-600 mb-6">
-              登録情報が見つかりません。<br />
-              再度登録を行ってください。
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('registerComplete.errorTitle')}</h2>
+            <p className="text-gray-600 mb-6 whitespace-pre-line">
+              {t('registerComplete.errorDescription')}
             </p>
             <Link href="/signup">
               <Button className="w-full bg-sakura-600 hover:bg-sakura-700 text-white">
-                登録画面に戻る
+                {t('registerComplete.backToSignup')}
               </Button>
             </Link>
           </div>
@@ -41,7 +53,28 @@ function RegisterCompleteContent() {
         <div className="max-w-md mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">仮登録完了</h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl font-bold text-gray-900">{t('registerComplete.title')}</h1>
+              
+              {/* Language Switcher */}
+              <div className="flex items-center space-x-2">
+                <Globe className="w-4 h-4 text-gray-500" />
+                <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
+                  setCurrentLanguage(value)
+                  saveLanguagePreference(value)
+                }}>
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ja">日本語</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ko">한국어</SelectItem>
+                    <SelectItem value="zh-tw">繁體中文</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {/* Main Content */}
@@ -50,9 +83,9 @@ function RegisterCompleteContent() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">仮登録完了</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('registerComplete.title')}</h2>
               <p className="text-gray-600 mb-6">
-                このたびはご登録いただき、誠にありがとうございます。
+                {t('registerComplete.subtitle')}
               </p>
             </div>
 
@@ -61,12 +94,12 @@ function RegisterCompleteContent() {
               <div className="flex items-start">
                 <Mail className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">メール認証のお願い</h3>
+                  <h3 className="font-semibold text-blue-900 mb-2">{t('registerComplete.emailVerificationTitle')}</h3>
                   <p className="text-blue-800 text-sm mb-2">
-                    ご本人確認のため、メールアドレスに本登録URL を送らせていただいております。
+                    {t('registerComplete.emailVerificationDescription')}
                   </p>
                   <p className="font-medium text-blue-900 text-sm">
-                    送信先: {email}
+                    {t('registerComplete.sentTo')}{email}
                   </p>
                 </div>
               </div>
@@ -74,18 +107,18 @@ function RegisterCompleteContent() {
 
             <div className="space-y-4 text-sm text-gray-600">
               <p>
-                メール本文に記載のあるURLにアクセスして本登録を完了させてください。
+                {t('registerComplete.instructions')}
               </p>
               
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="flex items-start">
                   <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-gray-700 mb-2">メールが確認できない場合</h4>
+                    <h4 className="font-medium text-gray-700 mb-2">{t('registerComplete.troubleshootingTitle')}</h4>
                     <ul className="space-y-1 text-gray-600">
-                      <li>• 迷惑メールフォルダ等をご確認ください。</li>
-                      <li>• 再度ご登録のメールアドレスをご確認ください。</li>
-                      <li>• ドメイン指定や迷惑メール設定をしている場合は解除後、お問い合わせフォームよりご連絡ください。</li>
+                      <li>• {t('registerComplete.troubleshootingSpam')}</li>
+                      <li>• {t('registerComplete.troubleshootingEmailCheck')}</li>
+                      <li>• {t('registerComplete.troubleshootingDomain')}</li>
                     </ul>
                   </div>
                 </div>
@@ -99,9 +132,9 @@ function RegisterCompleteContent() {
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-yellow-900 mb-2">開発者向けテスト機能</h4>
+                      <h4 className="font-medium text-yellow-900 mb-2">{t('registerComplete.testModeTitle')}</h4>
                       <p className="text-yellow-800 text-sm mb-3">
-                        メール認証をスキップしてプロフィール編集に進むことができます
+                        {t('registerComplete.testModeDescription')}
                       </p>
                       <Button 
                         onClick={() => {
@@ -131,7 +164,7 @@ function RegisterCompleteContent() {
                         }}
                         className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
                       >
-                        認証をスキップして続行（テスト用）
+                        {t('registerComplete.testModeButton')}
                       </Button>
                     </div>
                   </div>
@@ -143,13 +176,13 @@ function RegisterCompleteContent() {
             <div className="mt-8 space-y-3">
               <Link href="/login">
                 <Button variant="outline" className="w-full">
-                  ログイン画面へ
+                  {t('registerComplete.loginButton')}
                 </Button>
               </Link>
               <Link href="/">
                 <Button variant="outline" className="w-full">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  トップページへ
+                  {t('registerComplete.backToHome')}
                 </Button>
               </Link>
             </div>
@@ -157,7 +190,7 @@ function RegisterCompleteContent() {
             {/* Help */}
             <div className="mt-6 text-center">
               <p className="text-xs text-gray-500">
-                ※ メール認証は24時間以内に完了してください
+                {t('registerComplete.helpNote')}
               </p>
             </div>
           </div>
@@ -176,9 +209,9 @@ export default function RegisterCompletePage() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">読み込み中</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
             <p className="text-gray-600">
-              しばらくお待ちください...
+              Please wait...
             </p>
           </div>
         </div>

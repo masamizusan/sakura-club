@@ -1067,6 +1067,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       errorPrefix: 'エラー: '
     },
 
+    registerComplete: {
+      title: '仮登録完了',
+      subtitle: 'このたびはご登録いただき、誠にありがとうございます。',
+      emailVerificationTitle: 'メール認証のお願い',
+      emailVerificationDescription: 'ご本人確認のため、メールアドレスに本登録URLを送らせていただいております。',
+      sentTo: '送信先: ',
+      instructions: 'メール本文に記載のあるURLにアクセスして本登録を完了させてください。',
+      troubleshootingTitle: 'メールが確認できない場合',
+      troubleshootingSpam: '迷惑メールフォルダ等をご確認ください。',
+      troubleshootingEmailCheck: '再度ご登録のメールアドレスをご確認ください。',
+      troubleshootingDomain: 'ドメイン指定や迷惑メール設定をしている場合は解除後、お問い合わせフォームよりご連絡ください。',
+      testModeTitle: '開発者向けテスト機能',
+      testModeDescription: 'メール認証をスキップしてプロフィール編集に進むことができます',
+      testModeButton: '認証をスキップして続行（テスト用）',
+      loginButton: 'ログイン画面へ',
+      backToHome: 'トップページへ',
+      helpNote: '※ メール認証は24時間以内に完了してください',
+      errorTitle: 'エラーが発生しました',
+      errorDescription: '登録情報が見つかりません。\n再度登録を行ってください。',
+      backToSignup: '登録画面に戻る'
+    },
+
     homepage: {
       // ヘッダー
       aboutService: 'サービスについて',
@@ -1582,6 +1604,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginFailed: 'Login failed. Please try again.',
       serverError: 'Server connection error. Please check environment settings.',
       errorPrefix: 'Error: '
+    },
+
+    registerComplete: {
+      title: 'Registration Complete',
+      subtitle: 'Thank you for registering with us.',
+      emailVerificationTitle: 'Email Verification Required',
+      emailVerificationDescription: 'For identity verification, we have sent a registration URL to your email address.',
+      sentTo: 'Sent to: ',
+      instructions: 'Please access the URL in the email to complete your registration.',
+      troubleshootingTitle: 'If you cannot find the email',
+      troubleshootingSpam: 'Please check your spam/junk folder.',
+      troubleshootingEmailCheck: 'Please check your registered email address again.',
+      troubleshootingDomain: 'If you have domain restrictions or spam filters, please disable them and contact us through the inquiry form.',
+      testModeTitle: 'Developer Test Feature',
+      testModeDescription: 'You can skip email verification and proceed to profile editing',
+      testModeButton: 'Skip Verification and Continue (Test Only)',
+      loginButton: 'Go to Login',
+      backToHome: 'Back to Home',
+      helpNote: '※ Please complete email verification within 24 hours',
+      errorTitle: 'An Error Occurred',
+      errorDescription: 'Registration information not found.\nPlease register again.',
+      backToSignup: 'Back to Registration'
     },
 
     homepage: {
@@ -2101,6 +2145,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       errorPrefix: '오류: '
     },
 
+    registerComplete: {
+      title: '가입 완료',
+      subtitle: '등록해 주셔서 감사합니다.',
+      emailVerificationTitle: '이메일 인증 요청',
+      emailVerificationDescription: '본인 확인을 위해 이메일 주소로 본 등록 URL을 보내드렸습니다.',
+      sentTo: '송신처: ',
+      instructions: '이메일 본문에 기재된 URL에 접속하여 본 등록을 완료해 주세요.',
+      troubleshootingTitle: '이메일을 확인할 수 없는 경우',
+      troubleshootingSpam: '스팸 메일함 등을 확인해 주세요.',
+      troubleshootingEmailCheck: '등록하신 이메일 주소를 다시 확인해 주세요.',
+      troubleshootingDomain: '도메인 지정이나 스팸 메일 설정을 하고 있는 경우 해제 후 문의 양식으로 연락해 주세요.',
+      testModeTitle: '개발자용 테스트 기능',
+      testModeDescription: '이메일 인증을 건너뛰고 프로필 편집으로 진행할 수 있습니다',
+      testModeButton: '인증을 건너뛰고 계속 (테스트용)',
+      loginButton: '로그인 화면으로',
+      backToHome: '홈페이지로',
+      helpNote: '※ 이메일 인증은 24시간 이내에 완료해 주세요',
+      errorTitle: '오류가 발생했습니다',
+      errorDescription: '등록 정보를 찾을 수 없습니다.\n다시 등록해 주세요.',
+      backToSignup: '등록 화면으로 돌아가기'
+    },
+
     homepage: {
       // ヘッダー
       aboutService: '서비스 소개',
@@ -2615,6 +2681,28 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       loginFailed: '登入失敗。請再試一次。',
       serverError: '伺服器連線錯誤。請檢查環境設定。',
       errorPrefix: '錯誤：'
+    },
+
+    registerComplete: {
+      title: '註冊完成',
+      subtitle: '感謝您的註冊。',
+      emailVerificationTitle: '電子郵件驗證要求',
+      emailVerificationDescription: '為了身份驗證，我們已將註冊URL發送至您的電子郵件地址。',
+      sentTo: '發送至：',
+      instructions: '請點擊電子郵件中的URL以完成註冊。',
+      troubleshootingTitle: '如果找不到電子郵件',
+      troubleshootingSpam: '請檢查您的垃圾郵件資料夾。',
+      troubleshootingEmailCheck: '請再次確認您註冊的電子郵件地址。',
+      troubleshootingDomain: '如果您設定了網域限制或垃圾郵件過濾，請解除後透過聯絡表單與我們聯繫。',
+      testModeTitle: '開發者測試功能',
+      testModeDescription: '您可以跳過電子郵件驗證，直接進入個人資料編輯',
+      testModeButton: '跳過驗證繼續（僅限測試）',
+      loginButton: '前往登入',
+      backToHome: '返回首頁',
+      helpNote: '※ 請在24小時內完成電子郵件驗證',
+      errorTitle: '發生錯誤',
+      errorDescription: '找不到註冊資訊。\n請重新註冊。',
+      backToSignup: '返回註冊'
     },
 
     homepage: {
