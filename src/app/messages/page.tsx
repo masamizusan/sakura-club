@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
@@ -14,10 +14,14 @@ import {
   Heart,
   Calendar,
   Globe,
-  Circle
+  Circle,
+  Wifi,
+  WifiOff
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
+import { createClient } from '@/lib/supabase'
 
 // メッセージの型定義
 interface Message {
@@ -175,6 +179,60 @@ export default function MessagesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [messagesEndRef, setMessagesEndRef] = useState<HTMLDivElement | null>(null)
+  const supabase = createClient()
+
+  // メッセージリストの最下部にスクロール
+  const scrollToBottom = () => {
+    messagesEndRef?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // 新しいメッセージが追加されたら最下部にスクロール
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  // 新しいメッセージ受信時のコールバック
+  const handleNewMessage = useCallback((newMessage: Message) => {
+    setMessages(prev => [...prev, newMessage])
+    
+    // 会話リストの未読数を更新
+    setConversations(prev => prev.map(conv => 
+      conv.id === selectedConversation?.id 
+        ? { ...conv, unreadCount: conv.unreadCount + 1, lastMessage: newMessage }
+        : conv
+    ))
+  }, [selectedConversation])
+
+  // メッセージ更新時のコールバック
+  const handleMessageUpdate = useCallback((updatedMessage: Message) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === updatedMessage.id ? updatedMessage : msg
+    ))
+  }, [])
+
+  // リアルタイムメッセージング
+  const { isConnected, connectionError } = useRealtimeMessages({
+    conversationId: selectedConversation?.id || null,
+    userId: currentUser?.id || null,
+    onNewMessage: handleNewMessage,
+    onMessageUpdate: handleMessageUpdate,
+  })
+
+  // 現在のユーザー情報を取得
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setCurrentUser(user)
+      } catch (error) {
+        console.error('Error getting current user:', error)
+      }
+    }
+
+    getCurrentUser()
+  }, [])
 
   // 会話一覧の取得
   useEffect(() => {
@@ -404,7 +462,7 @@ export default function MessagesPage() {
                         {/* 最新メッセージ */}
                         <div className="flex items-center justify-between">
                           <p className="text-sm text-gray-600 truncate flex-1">
-                            {conversation.lastMessage.senderId === 'current_user' && 'あなた: '}
+                            {conversation.lastMessage.senderId === currentUser?.id && 'あなた: '}
                             {conversation.lastMessage.content}
                           </p>
                           {conversation.unreadCount > 0 && (
@@ -427,6 +485,25 @@ export default function MessagesPage() {
               <>
                 {/* チャットヘッダー */}
                 <div className="p-4 border-b border-gray-200 bg-white">
+                  {/* リアルタイム接続状態 */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2 text-xs">
+                      {isConnected ? (
+                        <>
+                          <Wifi className="w-3 h-3 text-green-500" />
+                          <span className="text-green-600">リアルタイム接続中</span>
+                        </>
+                      ) : (
+                        <>
+                          <WifiOff className="w-3 h-3 text-red-500" />
+                          <span className="text-red-600">
+                            {connectionError || 'リアルタイム接続なし'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="relative">
@@ -480,22 +557,25 @@ export default function MessagesPage() {
                       {messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.senderId === 'current_user' ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.senderId === currentUser?.id ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.senderId === 'current_user'
+                        message.senderId === currentUser?.id
                           ? 'bg-sakura-600 text-white'
                           : 'bg-gray-100 text-gray-900'
                       }`}>
                         <p className="text-sm">{message.content}</p>
                         <p className={`text-xs mt-1 ${
-                          message.senderId === 'current_user' ? 'text-sakura-100' : 'text-gray-500'
+                          message.senderId === currentUser?.id ? 'text-sakura-100' : 'text-gray-500'
                         }`}>
                           {formatMessageTime(message.timestamp)}
                         </p>
                       </div>
                     </div>
                       ))}
+                      
+                      {/* メッセージ末尾の参照要素 */}
+                      <div ref={setMessagesEndRef} />
                     </>
                   )}
                 </div>

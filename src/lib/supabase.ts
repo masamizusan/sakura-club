@@ -69,6 +69,8 @@ export type Database = {
           avatar_url?: string
           is_verified: boolean
           membership_type: 'free' | 'premium'
+          is_online?: boolean
+          last_seen?: string
           created_at: string
           updated_at: string
         }
@@ -87,6 +89,8 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
+          is_online?: boolean
+          last_seen?: string
           created_at?: string
           updated_at?: string
         }
@@ -105,6 +109,8 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
+          is_online?: boolean
+          last_seen?: string
           created_at?: string
           updated_at?: string
         }
@@ -264,27 +270,30 @@ export type Database = {
       messages: {
         Row: {
           id: string
+          conversation_id: string
           sender_id: string
-          receiver_id: string
           content: string
+          is_read: boolean
           read_at?: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
+          conversation_id: string
           sender_id: string
-          receiver_id: string
           content: string
+          is_read?: boolean
           read_at?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          conversation_id?: string
           sender_id?: string
-          receiver_id?: string
           content?: string
+          is_read?: boolean
           read_at?: string
           created_at?: string
           updated_at?: string
