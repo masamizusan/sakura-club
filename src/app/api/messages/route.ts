@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
         // パートナーのプロフィール情報を取得（自分自身の場合も含む）
         const { data: partner } = await supabase
           .from('profiles')
-          .select('id, name, last_name, age, nationality, residence, city, updated_at')
+          .select('id, first_name, last_name, age, nationality, residence, city, updated_at')
           .eq('id', partnerId)
           .single()
 
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         return {
           id: conv.id,
           partnerId,
-          partnerName: `${partner.name || ''} ${partner.last_name || ''}`.trim() || 'テストユーザー',
+          partnerName: `${partner.first_name || ''} ${partner.last_name || ''}`.trim() || 'テストユーザー',
           partnerAge: partner.age || 25,
           partnerNationality: getNationalityLabel(partner.nationality || 'JP'),
           partnerLocation: `${partner.residence || '東京都'}${partner.city || ''}`,
