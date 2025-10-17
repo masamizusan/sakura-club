@@ -138,18 +138,32 @@ export function useRealtimeMessages({
     }
   }, [conversationId, userId, onNewMessage, onMessageUpdate, supabase])
 
-  // オンライン状態の更新
+  // オンライン状態の更新（一時的に無効化）
   const updateOnlineStatus = async (isOnline: boolean) => {
     if (!userId) return
 
+    // 一時的にオンライン状態更新を無効化して400エラーを回避
+    console.log('Online status update skipped (temporarily disabled):', { userId, isOnline })
+    return
+
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ 
           last_seen: new Date().toISOString(),
           is_online: isOnline
         })
         .eq('id', userId)
+
+      if (error) {
+        console.error('Online status update error:', error)
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        })
+      }
     } catch (error) {
       console.error('Failed to update online status:', error)
     }
