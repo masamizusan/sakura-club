@@ -57,7 +57,7 @@ export type Database = {
         Row: {
           id: string
           email: string
-          first_name: string
+          name: string
           last_name: string
           gender: 'male' | 'female'
           age: number
@@ -77,7 +77,7 @@ export type Database = {
         Insert: {
           id: string
           email: string
-          first_name: string
+          name: string
           last_name: string
           gender: 'male' | 'female'
           age: number
@@ -97,7 +97,7 @@ export type Database = {
         Update: {
           id?: string
           email?: string
-          first_name?: string
+          name?: string
           last_name?: string
           gender?: 'male' | 'female'
           age?: number
