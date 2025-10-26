@@ -542,6 +542,7 @@ function ProfileEditContent() {
     }
   }, [searchParams])
   const [isLoading, setIsLoading] = useState(false)
+  const [testModeInitialized, setTestModeInitialized] = useState(false)
   const [error, setError] = useState('')
   const [initializationError, setInitializationError] = useState('')
   const [success, setSuccess] = useState('')
@@ -3716,7 +3717,6 @@ const isTestMode = () => {
 export default function ProfileEditPage() {
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [testModeInitialized, setTestModeInitialized] = useState(false)
 
   // エラー状態のUI
   if (hasError) {
