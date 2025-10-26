@@ -26,40 +26,28 @@ function ProfilePreviewContent() {
       const userId = urlParams.get('userId') // URLパラメータからユーザーIDを取得
       const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
       
-      console.log('🔍 Debug - Preview data loading:', {
-        userId,
-        previewDataKey,
-        availableKeys: Object.keys(sessionStorage),
-        allSessionStorageData: Object.fromEntries(
-          Object.keys(sessionStorage).map(key => [key, sessionStorage.getItem(key)])
-        )
-      })
       
       let savedData = sessionStorage.getItem(previewDataKey)
       
       // 新形式がない場合は旧形式も試す（後方互換性）
       if (!savedData && previewDataKey !== 'previewData') {
         savedData = sessionStorage.getItem('previewData')
-        console.log('🔄 旧形式のプレビューデータを使用（後方互換性）')
       }
       
       // それでもない場合は全てのpreviewData関連キーを探す
       if (!savedData) {
         const allKeys = Object.keys(sessionStorage)
         const previewKeys = allKeys.filter(key => key.startsWith('previewData'))
-        console.log('🔍 Found preview keys:', previewKeys)
         
         if (previewKeys.length > 0) {
           // 最初に見つかったpreviewDataキーを使用
           savedData = sessionStorage.getItem(previewKeys[0])
-          console.log('🔄 Using first available preview key:', previewKeys[0])
         }
       }
       
       if (savedData) {
         const parsedData = JSON.parse(savedData)
         setPreviewData(parsedData)
-        console.log('📋 Preview data loaded from sessionStorage:', previewDataKey, parsedData)
       } else {
         // フォールバック：URLパラメータから取得
         const fallbackData = {
@@ -89,7 +77,6 @@ function ProfilePreviewContent() {
           travel_companion: searchParams.get('travel_companion') || ''
         }
         setPreviewData(fallbackData)
-        console.log('📋 Using fallback data from URL params')
       }
     } catch (error) {
       console.error('❌ Error loading preview data:', error)
