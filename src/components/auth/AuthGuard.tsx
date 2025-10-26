@@ -15,18 +15,32 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const router = useRouter()
   const [timeoutReached, setTimeoutReached] = useState(false)
   
-  // テストモードの即座な検出
+  // テストモードの即座な検出（より確実に）
   const [isTestMode, setIsTestMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
-      const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')
-      return isProfileEditPage && !!hasTestParams
+      const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
+      const detected = isProfileEditPage && !!hasTestParams
+      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, hasTestParams, detected })
+      return detected
     }
     return false
   })
   
   const hasRedirected = useRef(false)
+  
+  // テストモード時はルーターのpushメソッドを無効化
+  const safeRouter = {
+    ...router,
+    push: (url: string) => {
+      if (isTestMode) {
+        console.log('🧪 Router push blocked in test mode:', url)
+        return Promise.resolve(true)
+      }
+      return router.push(url)
+    }
+  }
 
   // テストモード検出
   useEffect(() => {
@@ -63,12 +77,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         searchParams: window.location.search
       })
       
-      if (testModeDetected) {
-        console.log('🧪 Test mode detected in AuthGuard!')
+      if (testModeDetected && !isTestMode) {
+        console.log('🧪 Test mode detected in AuthGuard - updating state!')
         setIsTestMode(true)
+      } else if (!testModeDetected && isTestMode) {
+        console.log('❌ Test mode no longer detected - disabling')
+        setIsTestMode(false)
       }
     }
-  }, [])
+  }, [isTestMode])
 
   useEffect(() => {
     console.log('AuthGuard state:', { 
@@ -90,9 +107,9 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     if (isInitialized && !user && !isLoading && !hasRedirected.current) {
       hasRedirected.current = true
       console.log('Redirecting to login - no user found')
-      router.push('/login')
+      safeRouter.push('/login')
     }
-  }, [user, isLoading, isInitialized, isTestMode, router])
+  }, [user, isLoading, isInitialized, isTestMode, safeRouter])
 
   // タイムアウト処理
   useEffect(() => {
