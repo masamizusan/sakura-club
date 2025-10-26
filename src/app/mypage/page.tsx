@@ -42,7 +42,17 @@ function MyPageContent() {
     const loadProfile = async () => {
       console.log('MyPage loadProfile called, user:', !!user, user?.id)
       
-      if (!user) {
+      // テストモード時はlocalStorageデータの処理を先に実行
+      const hasPreviewData = localStorage.getItem('previewCompleteData') || 
+                           localStorage.getItem('updateProfile')
+      
+      console.log('🔍 MyPage: Test mode preview data check:', {
+        hasUser: !!user,
+        hasPreviewData: !!hasPreviewData
+      })
+      
+      if (!user && !hasPreviewData) {
+        console.log('⏸️ MyPage: No user and no preview data, stopping')
         setIsLoading(false)
         return
       }
@@ -133,15 +143,26 @@ function MyPageContent() {
               'birth_date type': typeof completeData.birth_date
             })
             
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update(updateData)
-              .eq('id', user.id)
-            
-            if (updateError) {
-              console.error('❌ Profile update error:', updateError)
+            // データベース更新（ユーザーが存在する場合のみ）
+            if (user?.id) {
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id)
+              
+              if (updateError) {
+                console.error('❌ Profile update error:', updateError)
+              } else {
+                console.log('✅ Profile updated successfully with complete data from preview')
+              }
             } else {
-              console.log('✅ Profile updated successfully with complete data from preview')
+              console.log('⚠️ MyPage: No user ID, skipping database update (test mode)')
+            }
+            
+            // テストモード時：profileDataに表示用データを設定
+            if (!user?.id) {
+              console.log('🎯 MyPage: Test mode - setting profile data for display')
+              setProfileData(completeData)
             }
             
             // localStorage クリア
@@ -151,8 +172,10 @@ function MyPageContent() {
             localStorage.removeItem('previewExtendedInterests')
             
             // データベース更新後少し待機してからデータを取得（キャッシュ問題対策）
-            console.log('⏳ Waiting for complete database update to complete...')
-            await new Promise(resolve => setTimeout(resolve, 500))
+            if (user?.id) {
+              console.log('⏳ Waiting for complete database update to complete...')
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
             
           } catch (error) {
             console.error('❌ Error processing complete preview update:', error)
