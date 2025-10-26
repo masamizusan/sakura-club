@@ -104,6 +104,20 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       return
     }
     
+    // マイページでプレビューデータがある場合は特別処理
+    const isMyPage = typeof window !== 'undefined' && window.location.pathname.includes('/mypage')
+    const hasPreviewData = typeof window !== 'undefined' && (
+      localStorage.getItem('previewCompleteData') || 
+      localStorage.getItem('updateProfile') ||
+      sessionStorage.getItem('previewData') ||
+      Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
+    )
+    
+    if (isMyPage && hasPreviewData && !user) {
+      console.log('🎯 MyPage with preview data - allowing access without full authentication')
+      return
+    }
+    
     // 認証が必要で、初期化済み、ユーザーなし、読み込み中でない、まだリダイレクトしていない場合のみリダイレクト
     if (isInitialized && !user && !isLoading && !hasRedirected.current) {
       hasRedirected.current = true
@@ -165,8 +179,21 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     return <>{children}</>
   }
 
-  // 通常モード：認証済みユーザーの場合のみ子コンポーネントを表示
+  // 通常モード：認証済みユーザーまたはマイページ+プレビューデータの場合のみ子コンポーネントを表示
   if (!user) {
+    const isMyPage = typeof window !== 'undefined' && window.location.pathname.includes('/mypage')
+    const hasPreviewData = typeof window !== 'undefined' && (
+      localStorage.getItem('previewCompleteData') || 
+      localStorage.getItem('updateProfile') ||
+      sessionStorage.getItem('previewData') ||
+      Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
+    )
+    
+    if (isMyPage && hasPreviewData) {
+      console.log('🎯 MyPage with preview data - rendering without full authentication')
+      return <>{children}</>
+    }
+    
     console.log('❌ No user and not test mode - will redirect')
     return null // Will redirect to login
   }
