@@ -512,6 +512,22 @@ function ProfilePreviewContent() {
                         })
                         
                         console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
+                        console.log('🔍 DEBUG: Individual data fields:', {
+                          nickname,
+                          selfIntroduction,
+                          age,
+                          birth_date,
+                          gender,
+                          nationality,
+                          prefecture,
+                          profileImage,
+                          hobbies,
+                          personality,
+                          customCulture,
+                          planned_prefectures,
+                          visit_schedule,
+                          travel_companion
+                        })
                         
                         // localStorageに完全なプロフィールデータを保存
                         localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
@@ -536,11 +552,14 @@ function ProfilePreviewContent() {
                           updateProfile: savedUpdateFlag,
                           hasCompleteData: !!savedCompleteData,
                           hasOptionalData: !!savedOptionalData,
-                          hasInterestsData: !!savedInterestsData,
-                          completeData: savedCompleteData,
-                          optionalData: savedOptionalData,
-                          interestsData: savedInterestsData
+                          hasInterestsData: !!savedInterestsData
                         })
+                        
+                        if (savedCompleteData) {
+                          console.log('✅ Complete data saved successfully:', JSON.parse(savedCompleteData))
+                        } else {
+                          console.error('❌ Complete data NOT saved!')
+                        }
                         
                         // localStorage保存が完了するまで少し待機
                         await new Promise(resolve => setTimeout(resolve, 100))
