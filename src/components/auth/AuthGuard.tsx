@@ -14,7 +14,18 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { user, isLoading, isInitialized } = useAuth()
   const router = useRouter()
   const [timeoutReached, setTimeoutReached] = useState(false)
-  const [isTestMode, setIsTestMode] = useState(false)
+  
+  // テストモードの即座な検出
+  const [isTestMode, setIsTestMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+      const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')
+      return isProfileEditPage && hasTestParams
+    }
+    return false
+  })
+  
   const hasRedirected = useRef(false)
 
   // テストモード検出
@@ -24,12 +35,36 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       const hasTestModeParams = urlParams.get('type') === 'foreign-male' || urlParams.get('type') === 'japanese-female'
       const hasGender = urlParams.get('gender')
       const hasNickname = urlParams.get('nickname')
+      const hasBirthDate = urlParams.get('birth_date')
+      const hasAge = urlParams.get('age')
+      const hasNationality = urlParams.get('nationality')
+      const hasPrefecture = urlParams.get('prefecture')
       
-      // テストモードの条件：プロフィール編集画面で必要なパラメータが存在する
-      const testModeDetected = hasTestModeParams && (hasGender || hasNickname)
+      // プロフィール編集画面の判定
+      const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+      
+      // テストモードの条件を拡張：より多くのパラメータをチェック
+      const testModeDetected = isProfileEditPage && (
+        hasTestModeParams || 
+        (hasGender && (hasNickname || hasBirthDate || hasAge || hasNationality || hasPrefecture))
+      )
+      
+      console.log('🔍 AuthGuard test mode check:', {
+        isProfileEditPage,
+        hasTestModeParams,
+        hasGender,
+        hasNickname,
+        hasBirthDate,
+        hasAge,
+        hasNationality,
+        hasPrefecture,
+        testModeDetected,
+        currentPath: window.location.pathname,
+        searchParams: window.location.search
+      })
       
       if (testModeDetected) {
-        console.log('🧪 Test mode detected in AuthGuard:', { hasTestModeParams, hasGender, hasNickname })
+        console.log('🧪 Test mode detected in AuthGuard!')
         setIsTestMode(true)
       }
     }
@@ -50,7 +85,8 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       return
     }
     
-    if (isInitialized && !user && !isLoading && !hasRedirected.current) {
+    // 認証が必要で、初期化済み、ユーザーなし、読み込み中でない、まだリダイレクトしていない場合のみリダイレクト
+    if (isInitialized && !user && !isLoading && !hasRedirected.current && !isTestMode) {
       hasRedirected.current = true
       console.log('Redirecting to login - no user found')
       router.push('/login')
