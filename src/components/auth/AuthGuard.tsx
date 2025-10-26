@@ -81,12 +81,13 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     
     // テストモードの場合は認証チェックをスキップ
     if (isTestMode) {
-      console.log('🧪 Test mode active - skipping authentication')
+      console.log('🧪 Test mode active - skipping authentication completely')
+      hasRedirected.current = false // リダイレクトフラグをリセット
       return
     }
     
     // 認証が必要で、初期化済み、ユーザーなし、読み込み中でない、まだリダイレクトしていない場合のみリダイレクト
-    if (isInitialized && !user && !isLoading && !hasRedirected.current && !isTestMode) {
+    if (isInitialized && !user && !isLoading && !hasRedirected.current) {
       hasRedirected.current = true
       console.log('Redirecting to login - no user found')
       router.push('/login')
@@ -140,8 +141,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     )
   }
 
-  // テストモードまたは認証済みユーザーの場合のみ子コンポーネントを表示
-  if (!user && !isTestMode) {
+  // テストモードの場合は即座にコンポーネントを表示
+  if (isTestMode) {
+    console.log('🧪 Test mode - rendering children directly')
+    return <>{children}</>
+  }
+
+  // 通常モード：認証済みユーザーの場合のみ子コンポーネントを表示
+  if (!user) {
+    console.log('❌ No user and not test mode - will redirect')
     return null // Will redirect to login
   }
 
