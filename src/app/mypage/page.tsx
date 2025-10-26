@@ -159,10 +159,10 @@ function MyPageContent() {
               console.log('⚠️ MyPage: No user ID, skipping database update (test mode)')
             }
             
-            // テストモード時：profileDataに表示用データを設定
+            // テストモード時：profileに表示用データを設定
             if (!user?.id) {
               console.log('🎯 MyPage: Test mode - setting profile data for display')
-              setProfileData(completeData)
+              setProfile(completeData)
             }
             
             // localStorage クリア
@@ -194,15 +194,20 @@ function MyPageContent() {
               interests: extendedInterests
             }
             
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update(updateData)
-              .eq('id', user.id)
-            
-            if (updateError) {
-              console.error('❌ Profile update error:', updateError)
+            // データベース更新（ユーザーが存在する場合のみ）
+            if (user?.id) {
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id)
+              
+              if (updateError) {
+                console.error('❌ Profile update error:', updateError)
+              } else {
+                console.log('✅ Profile updated successfully from preview (partial)')
+              }
             } else {
-              console.log('✅ Profile updated successfully from preview (partial)')
+              console.log('⚠️ MyPage: No user ID, skipping database update (partial, test mode)')
             }
             
             // localStorage クリア
@@ -219,13 +224,14 @@ function MyPageContent() {
           }
         }
         
-        // プロフィールデータを取得（プロフィール編集ページと同じ方式）
-        console.log('🔍 Fetching updated profile data from database...')
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
+        // プロフィールデータを取得（ユーザーが存在する場合のみ）
+        if (user?.id) {
+          console.log('🔍 Fetching updated profile data from database...')
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
 
         console.log('========== MYPAGE DEBUG START ==========')
         console.log('Profile data loaded:', !!profileData, error?.message)
@@ -388,6 +394,9 @@ function MyPageContent() {
           console.log('========== NORMALIZED DATA DEBUG END ==========')
           setProfile(normalizedProfileData)
           calculateProfileCompletion(normalizedProfileData)
+        }
+        } else {
+          console.log('⚠️ MyPage: No user, skipping database profile fetch (test mode)')
         }
       } catch (error) {
         console.error('Profile load error:', error)
