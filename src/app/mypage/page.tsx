@@ -159,10 +159,14 @@ function MyPageContent() {
               console.log('⚠️ MyPage: No user ID, skipping database update (test mode)')
             }
             
-            // テストモード時：profileに表示用データを設定
-            if (!user?.id) {
+            // 認証済みユーザーの場合：データベース更新後に再取得、未認証の場合：表示用データ設定
+            if (user?.id) {
+              console.log('🎯 MyPage: Authenticated user - database updated, will refetch')
+            } else {
               console.log('🎯 MyPage: Test mode - setting profile data for display')
               setProfile(completeData)
+              console.log('🎯 MyPage: Test mode - calculating profile completion')
+              calculateProfileCompletion(completeData)
             }
             
             // localStorage クリア

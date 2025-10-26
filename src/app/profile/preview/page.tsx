@@ -575,11 +575,11 @@ function ProfilePreviewContent() {
                           console.log('📡 Redirecting opener to mypage and closing preview')
                           window.opener.postMessage({ action: 'updateProfile' }, '*')
                           
-                          // localStorage保存完了後にマイページにリダイレクト
+                          // localStorage保存完了後にマイページにリダイレクト（認証済みユーザーとして）
                           window.opener.location.href = '/mypage'
                           window.close()
                         } else {
-                          // 直接マイページに遷移（プロフィール編集画面を経由しない）
+                          // 直接マイページに遷移（認証済みユーザーとして）
                           console.log('🔄 Direct redirect to mypage after localStorage confirmation')
                           window.location.href = '/mypage'
                         }

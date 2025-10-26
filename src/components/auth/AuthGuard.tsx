@@ -15,22 +15,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const router = useRouter()
   const [timeoutReached, setTimeoutReached] = useState(false)
   
-  // テストモードの即座な検出（より確実に）
+  // テストモードの即座な検出（プロフィール編集画面のみ）
   const [isTestMode, setIsTestMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
-      const isMyPage = window.location.pathname.includes('/mypage')
       const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
       
-      // プレビューからマイページへの遷移をチェック
-      const hasPreviewData = localStorage.getItem('previewCompleteData') || 
-                           localStorage.getItem('updateProfile') ||
-                           sessionStorage.getItem('previewData') ||
-                           Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
-      
-      const detected = (isProfileEditPage && !!hasTestParams) || (isMyPage && !!hasPreviewData)
-      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, isMyPage, hasTestParams, hasPreviewData, detected })
+      const detected = isProfileEditPage && !!hasTestParams
+      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, hasTestParams, detected })
       return detected
     }
     return false
@@ -50,7 +43,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     }
   }
 
-  // テストモード検出
+  // テストモード検出（プロフィール編集画面のみ）
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
@@ -62,25 +55,17 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       const hasNationality = urlParams.get('nationality')
       const hasPrefecture = urlParams.get('prefecture')
       
-      // プロフィール編集画面とマイページの判定
+      // プロフィール編集画面の判定のみ
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
-      const isMyPage = window.location.pathname.includes('/mypage')
       
-      // プレビューからマイページへの遷移をチェック
-      const hasPreviewData = localStorage.getItem('previewCompleteData') || 
-                           localStorage.getItem('updateProfile') ||
-                           sessionStorage.getItem('previewData') ||
-                           Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
-      
-      // テストモードの条件を拡張：プロフィール編集画面またはプレビューからのマイページ
-      const testModeDetected = (isProfileEditPage && (
+      // テストモードの条件：プロフィール編集画面のみ
+      const testModeDetected = isProfileEditPage && (
         hasTestModeParams || 
         (hasGender && (hasNickname || hasBirthDate || hasAge || hasNationality || hasPrefecture))
-      )) || (isMyPage && hasPreviewData)
+      )
       
       console.log('🔍 AuthGuard test mode check:', {
         isProfileEditPage,
-        isMyPage,
         hasTestModeParams,
         hasGender,
         hasNickname,
@@ -88,7 +73,6 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         hasAge,
         hasNationality,
         hasPrefecture,
-        hasPreviewData,
         testModeDetected,
         currentPath: window.location.pathname,
         searchParams: window.location.search
