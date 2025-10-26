@@ -967,7 +967,37 @@ function ProfileEditContent() {
     const loadUserData = async () => {
       // テストモードチェック
       if (isTestMode()) {
-        console.log('🧪 Profile Edit test mode detected - skipping user authentication (1st useEffect)')
+        console.log('🧪 Profile Edit test mode detected - initializing with URL parameters (1st useEffect)')
+        
+        // URLパラメータからデータを取得してフォームを初期化
+        const urlParams = new URLSearchParams(window.location.search)
+        const initialData = {
+          nickname: urlParams.get('nickname') || '',
+          gender: urlParams.get('gender') || 'male',
+          birth_date: urlParams.get('birth_date') || '',
+          age: Number(urlParams.get('age')) || 18,
+          nationality: urlParams.get('nationality') || '',
+          prefecture: urlParams.get('prefecture') || '',
+          self_introduction: '',
+          hobbies: [],
+          personality: []
+        }
+        
+        console.log('🧪 Test mode initialization data:', initialData)
+        
+        // フォームに初期値を設定
+        setValue('nickname', initialData.nickname)
+        setValue('gender', initialData.gender as 'male' | 'female')
+        setValue('birth_date', initialData.birth_date)
+        setValue('age', initialData.age)
+        setValue('nationality', initialData.nationality)
+        setValue('prefecture', initialData.prefecture)
+        setValue('self_introduction', initialData.self_introduction)
+        
+        setSelectedHobbies(initialData.hobbies)
+        setSelectedPersonality(initialData.personality)
+        setIsLoading(false)
+        
         return
       }
       
@@ -1871,7 +1901,37 @@ function ProfileEditContent() {
     const loadUserData = async () => {
       // テストモードチェック
       if (isTestMode()) {
-        console.log('🧪 Profile Edit test mode detected - skipping user authentication (2nd useEffect)')
+        console.log('🧪 Profile Edit test mode detected - initializing with URL parameters (2nd useEffect)')
+        
+        // URLパラメータからデータを取得してフォームを初期化
+        const urlParams = new URLSearchParams(window.location.search)
+        const initialData = {
+          nickname: urlParams.get('nickname') || '',
+          gender: urlParams.get('gender') || 'male',
+          birth_date: urlParams.get('birth_date') || '',
+          age: Number(urlParams.get('age')) || 18,
+          nationality: urlParams.get('nationality') || '',
+          prefecture: urlParams.get('prefecture') || '',
+          self_introduction: '',
+          hobbies: [],
+          personality: []
+        }
+        
+        console.log('🧪 Test mode initialization data (2nd):', initialData)
+        
+        // フォームに初期値を設定
+        setValue('nickname', initialData.nickname)
+        setValue('gender', initialData.gender as 'male' | 'female')
+        setValue('birth_date', initialData.birth_date)
+        setValue('age', initialData.age)
+        setValue('nationality', initialData.nationality)
+        setValue('prefecture', initialData.prefecture)
+        setValue('self_introduction', initialData.self_introduction)
+        
+        setSelectedHobbies(initialData.hobbies)
+        setSelectedPersonality(initialData.personality)
+        setIsLoading(false)
+        
         return
       }
       
