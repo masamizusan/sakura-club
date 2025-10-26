@@ -519,6 +519,9 @@ function ProfileEditContent() {
   
   // テストモード検出 - 最優先処理
   const isCurrentlyTestMode = isTestMode()
+  
+  // useState宣言 - useEffectより前に配置
+  const [testModeInitialized, setTestModeInitialized] = useState(false)
 
   // テストモード時の即座初期化
   useEffect(() => {
@@ -555,7 +558,6 @@ function ProfileEditContent() {
     }
   }, [searchParams])
   const [isLoading, setIsLoading] = useState(false)
-  const [testModeInitialized, setTestModeInitialized] = useState(false)
   const [error, setError] = useState('')
   const [initializationError, setInitializationError] = useState('')
   const [success, setSuccess] = useState('')
