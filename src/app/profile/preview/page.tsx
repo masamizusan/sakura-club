@@ -10,48 +10,6 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
 }
 
-// 体型の英語値を日本語に変換
-const getBodyTypeLabel = (value: string): string => {
-  const bodyTypeMap: { [key: string]: string } = {
-    'slim': 'スリム',
-    'average': '普通',
-    'muscular': '筋肉質',
-    'plump': 'ふくよか',
-    'none': '記入しない'
-  }
-  return bodyTypeMap[value] || value
-}
-
-// 言語レベルの英語値を日本語に変換（詳細説明付き）
-const getLanguageLevelLabel = (value: string): string => {
-  const levelMap: { [key: string]: string } = {
-    'none': '記入しない',
-    'beginner': '初級（基本的な挨拶程度）',
-    'elementary': '初級（基本的な挨拶程度）',
-    'intermediate': '中級（日常会話ができる）',
-    'upperIntermediate': '中上級（複雑な話題も理解できる）',
-    'advanced': '上級（流暢に話せる）',
-    'native': 'ネイティブ（母国語レベル）'
-  }
-  return levelMap[value] || value
-}
-
-// 同行者の英語値を日本語に変換
-const getTravelCompanionLabel = (value: string): string => {
-  const companionMap: { [key: string]: string } = {
-    'solo': '一人旅',
-    'couple': 'カップル（恋人・配偶者）',
-    'friends': '友達',
-    'friend': '友達',
-    'family': '家族',
-    'colleagues': '同僚・仕事仲間',
-    'group': 'グループ・団体',
-    'other': 'その他',
-    'no-entry': '記入しない'
-  }
-  return companionMap[value] || value
-}
-
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -104,6 +62,7 @@ function ProfilePreviewContent() {
           profile_image: searchParams.get('profile_image') || null,
           // 外国人男性特有のフィールド
           planned_prefectures: [],
+          planned_stations: [],
           visit_schedule: searchParams.get('visit_schedule') || '',
           travel_companion: searchParams.get('travel_companion') || ''
         }
@@ -146,6 +105,7 @@ function ProfilePreviewContent() {
     hobbies = [],
     // 外国人男性特有のフィールド
     planned_prefectures = [],
+    planned_stations = [],
     visit_schedule = '',
     travel_companion = '',
     personality = [],
@@ -187,15 +147,15 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* プロフィール画像 */}
-            <div className="relative min-h-80 max-h-96 bg-gray-100 flex items-center justify-center">
+            <div className="relative h-80 bg-gray-100">
               {profileImage ? (
                 <img
                   src={profileImage}
                   alt="プロフィール"
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                  className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full min-h-80 flex items-center justify-center bg-gray-200 rounded-lg">
+                <div className="w-full h-full flex items-center justify-center bg-gray-200">
                   <User className="w-24 h-24 text-gray-400" />
                 </div>
               )}
@@ -234,6 +194,13 @@ function ProfilePreviewContent() {
                   </div>
                 )}
 
+                {/* 外国人男性の場合：訪問予定の駅 */}
+                {gender === 'male' && planned_stations && planned_stations.length > 0 && (
+                  <div className="flex items-start">
+                    <span className="font-medium text-gray-700 w-20">訪問予定駅:</span>
+                    <span className="text-gray-600">{planned_stations.join(', ')}</span>
+                  </div>
+                )}
                 
                 {/* 外国人男性の場合：訪問予定 */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (
@@ -274,7 +241,16 @@ function ProfilePreviewContent() {
                 {gender === 'male' && shouldDisplayValue(travel_companion) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">同行者:</span>
-                    <span className="text-gray-600">{getTravelCompanionLabel(travel_companion)}</span>
+                    <span className="text-gray-600">
+                      {travel_companion === 'solo' ? '一人旅' :
+                       travel_companion === 'couple' ? 'カップル（恋人・配偶者）' :
+                       travel_companion === 'friends' ? '友達' :
+                       travel_companion === 'family' ? '家族' :
+                       travel_companion === 'colleagues' ? '同僚・仕事仲間' :
+                       travel_companion === 'group' ? 'グループ・団体' :
+                       travel_companion === 'other' ? 'その他' :
+                       travel_companion === 'no-entry' ? '記入しない' : travel_companion}
+                    </span>
                   </div>
                 )}
                 
@@ -300,7 +276,7 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(bodyType) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">体型:</span>
-                    <span className="text-gray-600">{getBodyTypeLabel(bodyType)}</span>
+                    <span className="text-gray-600">{bodyType}</span>
                   </div>
                 )}
                 {shouldDisplayValue(maritalStatus) && (
@@ -312,13 +288,13 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(englishLevel) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">英語:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(englishLevel)}</span>
+                    <span className="text-gray-600">{englishLevel}</span>
                   </div>
                 )}
                 {shouldDisplayValue(japaneseLevel) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">日本語:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(japaneseLevel)}</span>
+                    <span className="text-gray-600">{japaneseLevel}</span>
                   </div>
                 )}
               </div>
@@ -415,10 +391,9 @@ function ProfilePreviewContent() {
                       if (!nationality) {
                         validationErrors.push('国籍を選択してください')
                       }
-                      // 行く予定の都道府県は任意項目のため、チェックから除外
-                      // if (!planned_prefectures || planned_prefectures.length === 0) {
-                      //   validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
-                      // }
+                      if (!planned_prefectures || planned_prefectures.length === 0) {
+                        validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                      }
                     } else {
                       // 日本人女性の場合
                       if (!prefecture) {
@@ -513,6 +488,7 @@ function ProfilePreviewContent() {
                             visit_schedule: previewData.visit_schedule || visit_schedule || null,
                             travel_companion: previewData.travel_companion || travel_companion || null,
                             planned_prefectures: previewData.planned_prefectures || planned_prefectures || null,
+                            planned_stations: previewData.planned_stations || planned_stations || null
                           } : {})
                         }
                         
