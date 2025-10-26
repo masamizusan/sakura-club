@@ -516,6 +516,19 @@ function ProfileEditContent() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
+  
+  // テストモード検出 - 最優先処理
+  const isCurrentlyTestMode = isTestMode()
+
+  // テストモード時の即座初期化
+  useEffect(() => {
+    if (isCurrentlyTestMode && !testModeInitialized) {
+      console.log('🧪 IMMEDIATE test mode initialization')
+      setUserLoading(false)
+      setIsLoading(false)
+      setTestModeInitialized(true)
+    }
+  }, [isCurrentlyTestMode, testModeInitialized])
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
   useEffect(() => {
@@ -998,6 +1011,7 @@ function ProfileEditContent() {
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
         setIsLoading(false)
+        setUserLoading(false)  // 重要：userLoading も false にする
         setTestModeInitialized(true)
         
         return
@@ -1936,6 +1950,7 @@ function ProfileEditContent() {
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
         setIsLoading(false)
+        setUserLoading(false)  // 重要：userLoading も false にする
         setTestModeInitialized(true)
         
         return
@@ -2946,7 +2961,8 @@ function ProfileEditContent() {
 
 
   // Loading state
-  if (userLoading) {
+  // テストモード時は読み込み画面をスキップ
+  if (userLoading && !isCurrentlyTestMode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
