@@ -965,6 +965,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
+      // テストモードチェック
+      if (isTestMode()) {
+        console.log('🧪 Profile Edit test mode detected - skipping user authentication (1st useEffect)')
+        return
+      }
+      
       if (!user) {
         console.log('❌ No user - redirecting to login page')
         router.push('/login')
@@ -1863,6 +1869,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
+      // テストモードチェック
+      if (isTestMode()) {
+        console.log('🧪 Profile Edit test mode detected - skipping user authentication (2nd useEffect)')
+        return
+      }
+      
       if (!user) {
         console.log('❌ No user - redirecting to login page')
         router.push('/login')
@@ -3618,6 +3630,19 @@ function ProfileEditContent() {
       </div>
     </div>
   )
+}
+
+// テストモード検出関数
+const isTestMode = () => {
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search)
+    const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+    const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
+    const detected = isProfileEditPage && !!hasTestParams
+    console.log('🧪 Profile Edit test mode check:', { isProfileEditPage, hasTestParams, detected })
+    return detected
+  }
+  return false
 }
 
 export default function ProfileEditPage() {
