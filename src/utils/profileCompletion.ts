@@ -26,9 +26,9 @@ export function calculateProfileCompletion(
   let optionalFields = []
 
   if (isForeignMale) {
-    // 外国人男性の必須フィールド（6個）
+    // 外国人男性の必須フィールド（7個） - genderを追加
     requiredFields = [
-      'nickname', 'age', 'birth_date', 'nationality',
+      'nickname', 'gender', 'age', 'birth_date', 'nationality',
       'hobbies', 'self_introduction'
     ]
 
