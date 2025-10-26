@@ -16,12 +16,12 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const [timeoutReached, setTimeoutReached] = useState(false)
   
   // テストモードの即座な検出
-  const [isTestMode, setIsTestMode] = useState(() => {
+  const [isTestMode, setIsTestMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
       const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')
-      return isProfileEditPage && hasTestParams
+      return isProfileEditPage && !!hasTestParams
     }
     return false
   })
