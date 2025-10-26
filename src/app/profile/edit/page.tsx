@@ -966,7 +966,7 @@ function ProfileEditContent() {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
       // テストモードチェック
-      if (isTestMode()) {
+      if (isTestMode() && !testModeInitialized) {
         console.log('🧪 Profile Edit test mode detected - initializing with URL parameters (1st useEffect)')
         
         // URLパラメータからデータを取得してフォームを初期化
@@ -997,7 +997,11 @@ function ProfileEditContent() {
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
         setIsLoading(false)
+        setTestModeInitialized(true)
         
+        return
+      } else if (isTestMode() && testModeInitialized) {
+        console.log('🧪 Test mode already initialized - skipping')
         return
       }
       
@@ -1900,7 +1904,7 @@ function ProfileEditContent() {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     const loadUserData = async () => {
       // テストモードチェック
-      if (isTestMode()) {
+      if (isTestMode() && !testModeInitialized) {
         console.log('🧪 Profile Edit test mode detected - initializing with URL parameters (2nd useEffect)')
         
         // URLパラメータからデータを取得してフォームを初期化
@@ -1931,7 +1935,11 @@ function ProfileEditContent() {
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
         setIsLoading(false)
+        setTestModeInitialized(true)
         
+        return
+      } else if (isTestMode() && testModeInitialized) {
+        console.log('🧪 Test mode already initialized - skipping (2nd useEffect)')
         return
       }
       
@@ -3708,6 +3716,7 @@ const isTestMode = () => {
 export default function ProfileEditPage() {
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [testModeInitialized, setTestModeInitialized] = useState(false)
 
   // エラー状態のUI
   if (hasError) {
