@@ -536,7 +536,10 @@ function ProfilePreviewContent() {
                           updateProfile: savedUpdateFlag,
                           hasCompleteData: !!savedCompleteData,
                           hasOptionalData: !!savedOptionalData,
-                          hasInterestsData: !!savedInterestsData
+                          hasInterestsData: !!savedInterestsData,
+                          completeData: savedCompleteData,
+                          optionalData: savedOptionalData,
+                          interestsData: savedInterestsData
                         })
                         
                         // localStorage保存が完了するまで少し待機
