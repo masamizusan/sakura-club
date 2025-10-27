@@ -120,6 +120,10 @@ export function calculateProfileCompletion(
     switch (field) {
       case 'personality':
         value = profileData.personality || []
+        // nullまたはundefinedの場合は空配列に変換
+        if (!Array.isArray(value)) {
+          value = []
+        }
         break
       case 'visit_schedule':
         // 外国人男性の訪問予定時期

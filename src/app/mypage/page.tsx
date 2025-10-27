@@ -169,9 +169,63 @@ function MyPageContent() {
               localStorage.removeItem('previewExtendedInterests')
             } else {
               console.log('🎯 MyPage: Test mode - setting profile data for display')
-              setProfile(completeData)
+              
+              // テストモード時も同じ正規化処理を適用
+              let parsedOptionalData: {
+                city?: string;
+                occupation?: string;
+                height?: number;
+                body_type?: string;
+                marital_status?: string;
+                english_level?: string;
+                japanese_level?: string;
+              } = {}
+              
+              if (completeData.optionalData) {
+                parsedOptionalData = completeData.optionalData
+              }
+              
+              // interests配列からpersonalityとcustom_cultureを分離
+              const extendedPersonality: string[] = []
+              let extendedCustomCulture: string | null = null
+              const regularInterests: string[] = []
+              
+              if (Array.isArray(completeData.interests)) {
+                completeData.interests.forEach((item: any) => {
+                  if (typeof item === 'string') {
+                    if (item.startsWith('personality:')) {
+                      extendedPersonality.push(item.replace('personality:', ''))
+                    } else if (item.startsWith('custom_culture:')) {
+                      extendedCustomCulture = item.replace('custom_culture:', '')
+                    } else {
+                      regularInterests.push(item)
+                    }
+                  } else {
+                    regularInterests.push(item)
+                  }
+                })
+              }
+              
+              // 正規化されたテストデータを作成
+              const normalizedTestData = {
+                ...completeData,
+                ...parsedOptionalData,
+                interests: regularInterests,
+                personality: extendedPersonality.length > 0 ? extendedPersonality : [],
+                custom_culture: extendedCustomCulture,
+                hobbies: regularInterests,
+                // 外国人男性専用フィールドを明示的に含める
+                visit_schedule: completeData.visit_schedule,
+                travel_companion: completeData.travel_companion,
+                planned_prefectures: completeData.planned_prefectures,
+                japanese_level: parsedOptionalData.japanese_level || completeData.japanese_level,
+                english_level: parsedOptionalData.english_level || completeData.english_level
+              }
+              
+              console.log('🔄 Test mode: Normalized test data:', normalizedTestData)
+              setProfile(normalizedTestData)
               console.log('🎯 MyPage: Test mode - calculating profile completion')
-              calculateProfileCompletion(completeData)
+              calculateProfileCompletion(normalizedTestData)
               
               // テストモード時は即座にはクリアせず、次回訪問まで保持
               console.log('🧪 Test mode: Preserving localStorage for display consistency')
@@ -307,7 +361,7 @@ function MyPageContent() {
             ...profileData,
             ...parsedOptionalData,
             interests: regularInterests,
-            personality: extendedPersonality.length > 0 ? extendedPersonality : null,
+            personality: extendedPersonality.length > 0 ? extendedPersonality : [],
             custom_culture: extendedCustomCulture,
             hobbies: regularInterests, // compatibilityのため
             // 言語レベル（日本人女性: english_level、外国人男性: japanese_level）
