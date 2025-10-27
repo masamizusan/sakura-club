@@ -124,9 +124,8 @@ function MyPageContent() {
               if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
               if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
               if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
-              if (completeData.planned_stations) updateData.planned_stations = completeData.planned_stations
               if (completeData.japanese_level) updateData.japanese_level = completeData.japanese_level
-              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level+planned_stations含む）を追加しました')
+              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level含む）を追加しました')
             } else {
               // 日本人女性の場合はenglish_levelを追加
               if (completeData.english_level) updateData.english_level = completeData.english_level
@@ -341,7 +340,6 @@ function MyPageContent() {
           console.log('  - visit_schedule:', normalizedProfileData.visit_schedule, typeof normalizedProfileData.visit_schedule)
           console.log('  - travel_companion:', normalizedProfileData.travel_companion, typeof normalizedProfileData.travel_companion)
           console.log('  - planned_prefectures:', normalizedProfileData.planned_prefectures, typeof normalizedProfileData.planned_prefectures, Array.isArray(normalizedProfileData.planned_prefectures) ? `length: ${normalizedProfileData.planned_prefectures.length}` : 'not array')
-          console.log('  - planned_stations:', normalizedProfileData.planned_stations, typeof normalizedProfileData.planned_stations, Array.isArray(normalizedProfileData.planned_stations) ? `length: ${normalizedProfileData.planned_stations.length}` : 'not array')
 
           // 🔍 外国人男性専用フィールドの詳細デバッグ
           console.log('🌍 FOREIGN MALE FIELDS DETAILED DEBUG:')
