@@ -32,10 +32,10 @@ export function calculateProfileCompletion(
       'hobbies', 'self_introduction'
     ]
 
-    // 外国人男性のオプションフィールド（9個）
+    // 外国人男性のオプションフィールド（10個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'japanese_level'
+      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'japanese_level', 'planned_stations'
     ]
   } else {
     // 日本人女性の必須フィールド（6個）
@@ -235,6 +235,10 @@ function checkImagePresence(
   const hasImagesInUser = !isNewUser && profileData.avatarUrl &&
     profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 
+  // 5. テストモード専用: profile_image フィールド
+  const hasImagesInTestMode = profileData && profileData.profile_image &&
+    profileData.profile_image !== null && profileData.profile_image !== ''
+
   // 4. セッションストレージからの画像（ブラウザ環境でのみ、新規ユーザーは除外）
   let hasImagesInSession = false
   if (typeof window !== 'undefined' && !isNewUser) {
@@ -249,7 +253,7 @@ function checkImagePresence(
     }
   }
 
-  const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser)
+  const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode)
 
   // デバッグログ
   console.log('🖼️ 画像検出デバッグ:', {
@@ -257,12 +261,14 @@ function checkImagePresence(
     hasImagesInArray,
     hasImagesInProfile: isNewUser ? `SKIPPED (new user)` : hasImagesInProfile,
     hasImagesInUser: isNewUser ? `SKIPPED (new user)` : hasImagesInUser,
+    hasImagesInTestMode,
     hasImagesInSession,
     isNewUser,
     sessionStorageSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileDataSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileData_avatar_url: profileData?.avatar_url,
     profileData_avatarUrl: profileData?.avatarUrl,
+    profileData_profile_image: profileData?.profile_image,
     finalResult: result
   })
 

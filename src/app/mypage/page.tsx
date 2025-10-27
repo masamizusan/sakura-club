@@ -124,8 +124,9 @@ function MyPageContent() {
               if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
               if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
               if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
+              if (completeData.planned_stations) updateData.planned_stations = completeData.planned_stations
               if (completeData.japanese_level) updateData.japanese_level = completeData.japanese_level
-              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level含む）を追加しました')
+              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level+planned_stations含む）を追加しました')
             } else {
               // 日本人女性の場合はenglish_levelを追加
               if (completeData.english_level) updateData.english_level = completeData.english_level
@@ -162,18 +163,20 @@ function MyPageContent() {
             // 認証済みユーザーの場合：データベース更新後に再取得、未認証の場合：表示用データ設定
             if (user?.id) {
               console.log('🎯 MyPage: Authenticated user - database updated, will refetch')
+              // 認証済みユーザーの場合のみlocalStorageをクリア
+              localStorage.removeItem('updateProfile')
+              localStorage.removeItem('previewCompleteData')
+              localStorage.removeItem('previewOptionalData')
+              localStorage.removeItem('previewExtendedInterests')
             } else {
               console.log('🎯 MyPage: Test mode - setting profile data for display')
               setProfile(completeData)
               console.log('🎯 MyPage: Test mode - calculating profile completion')
               calculateProfileCompletion(completeData)
+              
+              // テストモード時は即座にはクリアせず、次回訪問まで保持
+              console.log('🧪 Test mode: Preserving localStorage for display consistency')
             }
-            
-            // localStorage クリア
-            localStorage.removeItem('updateProfile')
-            localStorage.removeItem('previewCompleteData')
-            localStorage.removeItem('previewOptionalData')
-            localStorage.removeItem('previewExtendedInterests')
             
             // データベース更新後少し待機してからデータを取得（キャッシュ問題対策）
             if (user?.id) {
@@ -214,10 +217,14 @@ function MyPageContent() {
               console.log('⚠️ MyPage: No user ID, skipping database update (partial, test mode)')
             }
             
-            // localStorage クリア
-            localStorage.removeItem('updateProfile')
-            localStorage.removeItem('previewOptionalData')
-            localStorage.removeItem('previewExtendedInterests')
+            // 認証済みユーザーの場合のみlocalStorageクリア
+            if (user?.id) {
+              localStorage.removeItem('updateProfile')
+              localStorage.removeItem('previewOptionalData')
+              localStorage.removeItem('previewExtendedInterests')
+            } else {
+              console.log('🧪 Test mode: Preserving partial localStorage for consistency')
+            }
             
             // データベース更新後少し待機してからデータを取得（キャッシュ問題対策）
             console.log('⏳ Waiting for database update to complete...')
@@ -334,6 +341,7 @@ function MyPageContent() {
           console.log('  - visit_schedule:', normalizedProfileData.visit_schedule, typeof normalizedProfileData.visit_schedule)
           console.log('  - travel_companion:', normalizedProfileData.travel_companion, typeof normalizedProfileData.travel_companion)
           console.log('  - planned_prefectures:', normalizedProfileData.planned_prefectures, typeof normalizedProfileData.planned_prefectures, Array.isArray(normalizedProfileData.planned_prefectures) ? `length: ${normalizedProfileData.planned_prefectures.length}` : 'not array')
+          console.log('  - planned_stations:', normalizedProfileData.planned_stations, typeof normalizedProfileData.planned_stations, Array.isArray(normalizedProfileData.planned_stations) ? `length: ${normalizedProfileData.planned_stations.length}` : 'not array')
 
           // 🔍 外国人男性専用フィールドの詳細デバッグ
           console.log('🌍 FOREIGN MALE FIELDS DETAILED DEBUG:')
@@ -736,9 +744,9 @@ function MyPageContent() {
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex items-center mb-6">
             <div className="relative">
-              {profile?.avatar_url ? (
+              {(profile?.avatar_url || profile?.profile_image) ? (
                 <img
-                  src={profile.avatar_url}
+                  src={profile.avatar_url || profile.profile_image}
                   alt="プロフィール写真"
                   className="w-20 h-20 rounded-full object-cover border-2 border-sakura-200"
                 />
