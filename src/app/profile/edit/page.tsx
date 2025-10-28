@@ -2565,6 +2565,28 @@ function ProfileEditContent() {
         setSelectedPersonality(finalPersonality)
         
         console.log('✅ STATE SETTING COMPLETED')
+        
+        // 🔧 IMMEDIATE FIX: Calculate completion immediately after all setValue calls
+        if (isFromMyPage) {
+          setTimeout(() => {
+            const immediateValues = getValues()
+            console.log('🚀 IMMEDIATE MyPage completion calculation:', {
+              immediateValues,
+              finalHobbies,
+              finalPersonality,
+              selectedHobbiesLength: finalHobbies.length,
+              selectedPersonalityLength: finalPersonality.length
+            })
+            const immediateValuesWithUserData = {
+              ...immediateValues,
+              hobbies: finalHobbies,
+              personality: finalPersonality,
+              avatarUrl: user?.avatarUrl,
+              avatar_url: user?.avatarUrl
+            }
+            calculateProfileCompletion(immediateValuesWithUserData, currentImageArray, 'IMMEDIATE_MYPAGE_FIX', false)
+          }, 100) // Very short delay to ensure setValue calls complete
+        }
 
         // 🌐 言語設定の初期化
         const nationality = profile.nationality || ((signupData as any)?.nationality)
@@ -2691,14 +2713,21 @@ function ProfileEditContent() {
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
         calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
         
-        // フォーム設定完了後の完成度再計算
+        // フォーム設定完了後の完成度再計算（MyPageからの遷移時は更に遅延）
+        const recalculationDelay = isFromMyPage ? 3000 : 2000 // MyPageからの遷移時は3秒待機
         setTimeout(() => {
           const currentValues = getValues()
           console.log('📊 Post-form-setup completion recalculation with current values:', currentValues)
-          console.log('🔍 Nationality comparison:', {
-            initial_cleanup_nationality: urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : ''),
+          console.log('🔍 MyPage transition - Final form values check:', {
+            isFromMyPage,
             form_nationality: currentValues.nationality,
-            are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
+            form_occupation: currentValues.occupation,
+            form_height: currentValues.height,
+            form_body_type: currentValues.body_type,
+            form_marital_status: currentValues.marital_status,
+            form_japanese_level: currentValues.japanese_level,
+            form_hobbies: currentValues.hobbies,
+            form_personality: currentValues.personality
           })
           // ユーザー画像情報を追加（新規ユーザーの場合はクリア）
           const currentValuesWithUserData = {
@@ -2706,8 +2735,8 @@ function ProfileEditContent() {
             avatarUrl: isNewUser ? null : user?.avatarUrl,
             avatar_url: isNewUser ? null : user?.avatarUrl
           }
-          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
-        }, 2000);
+          calculateProfileCompletion(currentValuesWithUserData, profileImages, `DELAYED_${recalculationDelay}MS_FROM_MYPAGE`, isNewUser)
+        }, recalculationDelay);
 
       } catch (error) {
         console.error('Error loading user data:', error)
