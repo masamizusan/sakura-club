@@ -987,16 +987,81 @@ function ProfileEditContent() {
         
         // URLパラメータからデータを取得してフォームを初期化
         const urlParams = new URLSearchParams(window.location.search)
-        const initialData = {
-          nickname: urlParams.get('nickname') || '',
-          gender: urlParams.get('gender') || 'male',
-          birth_date: urlParams.get('birth_date') || '',
-          age: Number(urlParams.get('age')) || 18,
-          nationality: urlParams.get('nationality') || '',
-          prefecture: urlParams.get('prefecture') || '',
-          self_introduction: '',
-          hobbies: [],
-          personality: []
+        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+        
+        let initialData
+        if (isFromMyPage) {
+          // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
+          console.log('🔄 MyPage transition - loading data from localStorage')
+          const storedData = localStorage.getItem('completeProfileData')
+          if (storedData) {
+            try {
+              const parsedData = JSON.parse(storedData)
+              initialData = {
+                nickname: parsedData.nickname || parsedData.name || '',
+                gender: parsedData.gender || 'male',
+                birth_date: parsedData.birth_date || '',
+                age: Number(parsedData.age) || 18,
+                nationality: parsedData.nationality || '',
+                prefecture: parsedData.prefecture || parsedData.residence || '',
+                self_introduction: parsedData.self_introduction || parsedData.bio || '',
+                hobbies: Array.isArray(parsedData.hobbies) ? parsedData.hobbies : [],
+                personality: Array.isArray(parsedData.personality) ? parsedData.personality : [],
+                // オプションフィールド
+                occupation: parsedData.occupation || 'none',
+                height: parsedData.height || undefined,
+                body_type: parsedData.body_type || 'none',
+                marital_status: parsedData.marital_status || 'none',
+                japanese_level: parsedData.japanese_level || 'none',
+                english_level: parsedData.english_level || 'none',
+                city: parsedData.city || '',
+                planned_prefectures: Array.isArray(parsedData.planned_prefectures) ? parsedData.planned_prefectures : [],
+                visit_schedule: parsedData.visit_schedule || 'no-entry',
+                travel_companion: parsedData.travel_companion || 'no-entry'
+              }
+              console.log('✅ MyPage data loaded from localStorage:', initialData)
+            } catch (error) {
+              console.error('❌ Error parsing localStorage data:', error)
+              // フォールバック: URLパラメータから初期化
+              initialData = {
+                nickname: urlParams.get('nickname') || '',
+                gender: urlParams.get('gender') || 'male',
+                birth_date: urlParams.get('birth_date') || '',
+                age: Number(urlParams.get('age')) || 18,
+                nationality: urlParams.get('nationality') || '',
+                prefecture: urlParams.get('prefecture') || '',
+                self_introduction: '',
+                hobbies: [],
+                personality: []
+              }
+            }
+          } else {
+            console.log('⚠️ No localStorage data found for MyPage transition')
+            initialData = {
+              nickname: urlParams.get('nickname') || '',
+              gender: urlParams.get('gender') || 'male',
+              birth_date: urlParams.get('birth_date') || '',
+              age: Number(urlParams.get('age')) || 18,
+              nationality: urlParams.get('nationality') || '',
+              prefecture: urlParams.get('prefecture') || '',
+              self_introduction: '',
+              hobbies: [],
+              personality: []
+            }
+          }
+        } else {
+          // 通常の新規登録フロー: URLパラメータから初期化
+          initialData = {
+            nickname: urlParams.get('nickname') || '',
+            gender: urlParams.get('gender') || 'male',
+            birth_date: urlParams.get('birth_date') || '',
+            age: Number(urlParams.get('age')) || 18,
+            nationality: urlParams.get('nationality') || '',
+            prefecture: urlParams.get('prefecture') || '',
+            self_introduction: '',
+            hobbies: [],
+            personality: []
+          }
         }
         
         console.log('🧪 Test mode initialization data:', initialData)
@@ -1009,6 +1074,23 @@ function ProfileEditContent() {
         setValue('nationality', initialData.nationality)
         setValue('prefecture', initialData.prefecture)
         setValue('self_introduction', initialData.self_introduction)
+        
+        // オプションフィールドの設定（MyPageからの遷移時）
+        if (isFromMyPage) {
+          setValue('occupation', initialData.occupation || 'none')
+          setValue('height', initialData.height || undefined)
+          setValue('body_type', initialData.body_type || 'none')
+          setValue('marital_status', (initialData.marital_status || 'none') as 'none' | 'single' | 'married')
+          setValue('japanese_level', initialData.japanese_level || 'none')
+          setValue('english_level', initialData.english_level || 'none')
+          setValue('city', initialData.city || '')
+          setValue('planned_prefectures', initialData.planned_prefectures || [])
+          setValue('visit_schedule', initialData.visit_schedule || 'no-entry')
+          setValue('travel_companion', initialData.travel_companion || 'no-entry')
+          
+          // State設定
+          setSelectedPlannedPrefectures(initialData.planned_prefectures || [])
+        }
         
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
@@ -1926,16 +2008,79 @@ function ProfileEditContent() {
         
         // URLパラメータからデータを取得してフォームを初期化
         const urlParams = new URLSearchParams(window.location.search)
-        const initialData = {
-          nickname: urlParams.get('nickname') || '',
-          gender: urlParams.get('gender') || 'male',
-          birth_date: urlParams.get('birth_date') || '',
-          age: Number(urlParams.get('age')) || 18,
-          nationality: urlParams.get('nationality') || '',
-          prefecture: urlParams.get('prefecture') || '',
-          self_introduction: '',
-          hobbies: [],
-          personality: []
+        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+        
+        let initialData
+        if (isFromMyPage) {
+          // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
+          console.log('🔄 MyPage transition - loading data from localStorage (2nd)')
+          const storedData = localStorage.getItem('completeProfileData')
+          if (storedData) {
+            try {
+              const parsedData = JSON.parse(storedData)
+              initialData = {
+                nickname: parsedData.nickname || parsedData.name || '',
+                gender: parsedData.gender || 'male',
+                birth_date: parsedData.birth_date || '',
+                age: Number(parsedData.age) || 18,
+                nationality: parsedData.nationality || '',
+                prefecture: parsedData.prefecture || parsedData.residence || '',
+                self_introduction: parsedData.self_introduction || parsedData.bio || '',
+                hobbies: Array.isArray(parsedData.hobbies) ? parsedData.hobbies : [],
+                personality: Array.isArray(parsedData.personality) ? parsedData.personality : [],
+                // オプションフィールド
+                occupation: parsedData.occupation || 'none',
+                height: parsedData.height || undefined,
+                body_type: parsedData.body_type || 'none',
+                marital_status: parsedData.marital_status || 'none',
+                japanese_level: parsedData.japanese_level || 'none',
+                english_level: parsedData.english_level || 'none',
+                city: parsedData.city || '',
+                planned_prefectures: Array.isArray(parsedData.planned_prefectures) ? parsedData.planned_prefectures : [],
+                visit_schedule: parsedData.visit_schedule || 'no-entry',
+                travel_companion: parsedData.travel_companion || 'no-entry'
+              }
+              console.log('✅ MyPage data loaded from localStorage (2nd):', initialData)
+            } catch (error) {
+              console.error('❌ Error parsing localStorage data (2nd):', error)
+              initialData = {
+                nickname: urlParams.get('nickname') || '',
+                gender: urlParams.get('gender') || 'male',
+                birth_date: urlParams.get('birth_date') || '',
+                age: Number(urlParams.get('age')) || 18,
+                nationality: urlParams.get('nationality') || '',
+                prefecture: urlParams.get('prefecture') || '',
+                self_introduction: '',
+                hobbies: [],
+                personality: []
+              }
+            }
+          } else {
+            console.log('⚠️ No localStorage data found for MyPage transition (2nd)')
+            initialData = {
+              nickname: urlParams.get('nickname') || '',
+              gender: urlParams.get('gender') || 'male',
+              birth_date: urlParams.get('birth_date') || '',
+              age: Number(urlParams.get('age')) || 18,
+              nationality: urlParams.get('nationality') || '',
+              prefecture: urlParams.get('prefecture') || '',
+              self_introduction: '',
+              hobbies: [],
+              personality: []
+            }
+          }
+        } else {
+          initialData = {
+            nickname: urlParams.get('nickname') || '',
+            gender: urlParams.get('gender') || 'male',
+            birth_date: urlParams.get('birth_date') || '',
+            age: Number(urlParams.get('age')) || 18,
+            nationality: urlParams.get('nationality') || '',
+            prefecture: urlParams.get('prefecture') || '',
+            self_introduction: '',
+            hobbies: [],
+            personality: []
+          }
         }
         
         console.log('🧪 Test mode initialization data (2nd):', initialData)
@@ -1948,6 +2093,23 @@ function ProfileEditContent() {
         setValue('nationality', initialData.nationality)
         setValue('prefecture', initialData.prefecture)
         setValue('self_introduction', initialData.self_introduction)
+        
+        // オプションフィールドの設定（MyPageからの遷移時）
+        if (isFromMyPage) {
+          setValue('occupation', initialData.occupation || 'none')
+          setValue('height', initialData.height || undefined)
+          setValue('body_type', initialData.body_type || 'none')
+          setValue('marital_status', (initialData.marital_status || 'none') as 'none' | 'single' | 'married')
+          setValue('japanese_level', initialData.japanese_level || 'none')
+          setValue('english_level', initialData.english_level || 'none')
+          setValue('city', initialData.city || '')
+          setValue('planned_prefectures', initialData.planned_prefectures || [])
+          setValue('visit_schedule', initialData.visit_schedule || 'no-entry')
+          setValue('travel_companion', initialData.travel_companion || 'no-entry')
+          
+          // State設定
+          setSelectedPlannedPrefectures(initialData.planned_prefectures || [])
+        }
         
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
@@ -3789,17 +3951,9 @@ const isTestMode = () => {
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search)
     const isProfileEditPage = window.location.pathname.includes('/profile/edit')
-    
-    // 🔧 CRITICAL FIX: MyPageからの遷移時はテストモードを無効にする
-    const isFromMyPage = urlParams.get('fromMyPage') === 'true'
-    if (isFromMyPage) {
-      console.log('🔄 MyPage transition detected - disabling test mode')
-      return false
-    }
-    
     const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
     const detected = isProfileEditPage && !!hasTestParams
-    console.log('🧪 Profile Edit test mode check:', { isProfileEditPage, hasTestParams, detected, isFromMyPage })
+    console.log('🧪 Profile Edit test mode check:', { isProfileEditPage, hasTestParams, detected })
     return detected
   }
   return false
