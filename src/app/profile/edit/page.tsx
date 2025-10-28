@@ -3789,9 +3789,17 @@ const isTestMode = () => {
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search)
     const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+    
+    // 🔧 CRITICAL FIX: MyPageからの遷移時はテストモードを無効にする
+    const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+    if (isFromMyPage) {
+      console.log('🔄 MyPage transition detected - disabling test mode')
+      return false
+    }
+    
     const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
     const detected = isProfileEditPage && !!hasTestParams
-    console.log('🧪 Profile Edit test mode check:', { isProfileEditPage, hasTestParams, detected })
+    console.log('🧪 Profile Edit test mode check:', { isProfileEditPage, hasTestParams, detected, isFromMyPage })
     return detected
   }
   return false
