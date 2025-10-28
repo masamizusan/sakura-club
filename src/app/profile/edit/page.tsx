@@ -2480,6 +2480,42 @@ function ProfileEditContent() {
         console.log('Setting custom_culture:', customCultureValue)
         setValue('custom_culture', customCultureValue)
         
+        // 🔧 CRITICAL FIX: Optional fields must be explicitly set with setValue() after reset()
+        // These fields were set in resetData but need explicit setValue() calls to persist
+        const occupationValue = isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none')
+        console.log('Setting occupation:', occupationValue)
+        setValue('occupation', occupationValue)
+        
+        const heightValue = isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined)
+        console.log('Setting height:', heightValue)
+        setValue('height', heightValue)
+        
+        const bodyTypeValue = isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none')
+        console.log('Setting body_type:', bodyTypeValue)
+        setValue('body_type', bodyTypeValue)
+        
+        const maritalStatusValue = isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none')
+        console.log('Setting marital_status:', maritalStatusValue)
+        setValue('marital_status', maritalStatusValue as 'none' | 'single' | 'married')
+        
+        // Language level fields
+        if (isForeignMale) {
+          const japaneseLevelValue = isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none')
+          console.log('Setting japanese_level:', japaneseLevelValue)
+          setValue('japanese_level', japaneseLevelValue)
+        }
+        
+        if (isJapaneseFemale) {
+          const englishLevelValue = isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none')
+          console.log('Setting english_level:', englishLevelValue)
+          setValue('english_level', englishLevelValue)
+          
+          // City field for Japanese females
+          const cityValue = isNewUser ? '' : (parsedOptionalData.city || '')
+          console.log('Setting city:', cityValue)
+          setValue('city', cityValue)
+        }
+        
         // 外国人男性向けフィールドの設定
         if (isForeignMale) {
           try {
