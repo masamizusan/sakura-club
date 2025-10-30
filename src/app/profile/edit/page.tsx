@@ -91,86 +91,75 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
 
 type ProfileEditFormData = z.infer<ReturnType<typeof baseProfileEditSchema>>
 
-// Personality options (based on married club references)
-const PERSONALITY_OPTIONS = [
-  '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
-  '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
-  '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
-  '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
-  'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
+// 性格オプション（翻訳対応）
+const getPersonalityOptions = (t: any) => [
+  { key: 'gentle', label: t('personality.gentle') },
+  { key: 'calm', label: t('personality.calm') },
+  { key: 'lonely', label: t('personality.lonely') },
+  { key: 'composed', label: t('personality.composed') },
+  { key: 'caring', label: t('personality.caring') },
+  { key: 'humble', label: t('personality.humble') },
+  { key: 'cool', label: t('personality.cool') },
+  { key: 'honest', label: t('personality.honest') },
+  { key: 'bright', label: t('personality.bright') },
+  { key: 'friendly', label: t('personality.friendly') },
+  { key: 'helpful', label: t('personality.helpful') },
+  { key: 'considerate', label: t('personality.considerate') },
+  { key: 'responsible', label: t('personality.responsible') },
+  { key: 'decisive', label: t('personality.decisive') },
+  { key: 'sociable', label: t('personality.sociable') },
+  { key: 'competitive', label: t('personality.competitive') },
+  { key: 'passionate', label: t('personality.passionate') },
+  { key: 'indoor', label: t('personality.indoor') },
+  { key: 'active', label: t('personality.active') },
+  { key: 'intellectual', label: t('personality.intellectual') },
+  { key: 'meticulous', label: t('personality.meticulous') },
+  { key: 'optimistic', label: t('personality.optimistic') },
+  { key: 'shy', label: t('personality.shy') },
+  { key: 'attentive', label: t('personality.attentive') },
+  { key: 'refreshing', label: t('personality.refreshing') },
+  { key: 'natural', label: t('personality.natural') },
+  { key: 'ownPace', label: t('personality.ownPace') }
 ]
 
-// 共有したい日本文化オプション（カテゴリ構造）
-const CULTURE_CATEGORIES = [
-  {
-    name: "伝統文化",
-    items: ["茶道", "華道", "書道", "着物・浴衣", "和菓子", "陶芸", "折り紙", "盆栽", "神社仏閣", "御朱印集め", "禅"]
-  },
-  {
-    name: "食文化",
-    items: ["寿司", "天ぷら", "うなぎ", "牛丼", "とんかつ", "ラーメン", "お好み焼き", "たこ焼き", "カレーライス", "コンビニフード", "ポテトチップス", "出汁", "味噌", "豆腐", "梅干し", "漬物", "日本酒", "焼酎", "そば", "うどん"]
-  },
-  {
-    name: "スイーツ",
-    items: ["抹茶スイーツ", "団子", "たい焼き", "大判焼き", "わらび餅", "りんご飴", "わたあめ", "駄菓子", "コンビニスイーツ"]
-  },
-  {
-    name: "芸能・スポーツ",
-    items: ["相撲", "剣道", "柔道", "空手", "弓道", "合気道", "薙刀", "歌舞伎", "能", "日本舞踊", "邦楽", "演歌", "太鼓"]
-  },
-  {
-    name: "季節・自然",
-    items: ["桜見物", "紅葉狩り", "花火大会", "祭り参加", "盆踊り", "雪景色", "日本庭園散策"]
-  },
-  {
-    name: "暮らし・空間",
-    items: ["障子", "襖の張り替え", "畳", "古民家カフェ", "銭湯", "昭和レトロ家電", "和モダンインテリア"]
-  },
-  {
-    name: "工芸・職人技",
-    items: ["漆器", "金箔貼り", "和紙漉き", "染物", "刀鍛冶", "木工", "飴細工"]
-  },
-  {
-    name: "現代カルチャー",
-    items: ["アニメ", "マンガ", "コスプレ", "日本のゲーム", "J-POP", "カラオケ", "日本映画", "ドラマ", "ボーカロイド", "アイドル文化"]
-  }
-]
 
-// 後方互換性のため、フラットな配列も保持
-const HOBBY_OPTIONS = CULTURE_CATEGORIES.flatMap(category => category.items)
+// 後方互換性のため、フラットな配列も保持（翻訳対応）
+const getHobbyOptions = (t: any) => getCultureCategories(t).flatMap(category => category.items)
 
 // 結婚状況オプション
-const MARITAL_STATUS_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: 'single', label: '未婚' },
-  { value: 'married', label: '既婚' }
+// 結婚状況選択肢（翻訳対応）
+const getMaritalStatusOptions = (t: any) => [
+  { value: 'none', label: t('maritalStatus.none') },
+  { value: 'single', label: t('maritalStatus.single') },
+  { value: 'married', label: t('maritalStatus.married') }
 ]
 
 // 職業オプション
-const OCCUPATION_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '主婦、主夫', label: '主婦、主夫' },
-  { value: '会社員', label: '会社員' },
-  { value: '公務員', label: '公務員' },
-  { value: '経営者・役員', label: '経営者・役員' },
-  { value: 'フリーランス', label: 'フリーランス' },
-  { value: '自営業', label: '自営業' },
-  { value: '医師', label: '医師' },
-  { value: '看護師', label: '看護師' },
-  { value: '教師・講師', label: '教師・講師' },
-  { value: 'エンジニア', label: 'エンジニア' },
-  { value: 'デザイナー', label: 'デザイナー' },
-  { value: '営業', label: '営業' },
-  { value: 'マーケティング', label: 'マーケティング' },
-  { value: '研究者', label: '研究者' },
-  { value: 'コンサルタント', label: 'コンサルタント' },
-  { value: '金融', label: '金融' },
-  { value: '法律関係', label: '法律関係' },
-  { value: 'サービス業', label: 'サービス業' },
-  { value: '小売業', label: '小売業' },
-  { value: '製造業', label: '製造業' },
-  { value: '学生', label: '学生' },
-  { value: 'その他', label: 'その他' }
+// 職業選択肢（翻訳対応）
+const getOccupationOptions = (t: any) => [
+  { value: 'none', label: t('occupations.noEntry') },
+  { value: '主婦、主夫', label: t('occupations.housewife') },
+  { value: '会社員', label: t('occupations.companyEmployee') },
+  { value: '公務員', label: t('occupations.publicServant') },
+  { value: '経営者・役員', label: t('occupations.executiveManager') },
+  { value: 'フリーランス', label: t('occupations.freelance') },
+  { value: '自営業', label: t('occupations.selfEmployed') },
+  { value: '医師', label: t('occupations.doctor') },
+  { value: '看護師', label: t('occupations.nurse') },
+  { value: '教師・講師', label: t('occupations.teacher') },
+  { value: 'エンジニア', label: t('occupations.engineer') },
+  { value: 'デザイナー', label: t('occupations.designer') },
+  { value: '営業', label: t('occupations.sales') },
+  { value: 'マーケティング', label: t('occupations.marketing') },
+  { value: '研究者', label: t('occupations.researcher') },
+  { value: 'コンサルタント', label: t('occupations.consultant') },
+  { value: '金融', label: t('occupations.finance') },
+  { value: '法律関係', label: t('occupations.legal') },
+  { value: 'サービス業', label: t('occupations.serviceIndustry') },
+  { value: '小売業', label: t('occupations.retail') },
+  { value: '製造業', label: t('occupations.manufacturing') },
+  { value: '学生', label: t('occupations.student') },
+  { value: 'その他', label: t('occupations.other') }
 ]
 
 // Body type options (with translation support)
@@ -213,46 +202,6 @@ const getTravelCompanionOptions = (t: any) => [
   { value: 'partner', label: t('companion.partner') }
 ]
 
-// 性格オプション（翻訳対応）
-const getPersonalityOptions = (t: any) => [
-  '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
-  '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
-  '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
-  '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
-  'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
-].map(trait => {
-  const traitMap: Record<string, string> = {
-    '優しい': 'gentle',
-    '穏やか': 'calm',
-    '寂しがりや': 'lonely',
-    '落ち着いている': 'composed',
-    '思いやりがある': 'caring',
-    '謙虚': 'humble',
-    '冷静': 'cool',
-    '素直': 'honest',
-    '明るい': 'bright',
-    '親しみやすい': 'friendly',
-    '面倒見が良い': 'helpful',
-    '気が利く': 'considerate',
-    '責任感がある': 'responsible',
-    '決断力がある': 'decisive',
-    '社交的': 'sociable',
-    '負けず嫌い': 'competitive',
-    '熱血': 'passionate',
-    'インドア': 'indoor',
-    'アクティブ': 'active',
-    '知的': 'intellectual',
-    '几帳面': 'meticulous',
-    '楽観的': 'optimistic',
-    'シャイ': 'shy',
-    'マメ': 'attentive',
-    'さわやか': 'refreshing',
-    '天然': 'natural',
-    'マイペース': 'ownPace'
-  }
-  const key = traitMap[trait] || trait
-  return { value: trait, label: t(`personality.${key}`) }
-})
 
 // Japanese culture categories (with translation support)
 const getCultureCategories = (t: any) => [
@@ -2986,10 +2935,10 @@ function ProfileEditContent() {
                         onValueChange={(value) => setValue('occupation', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="職業を選択" />
+                          <SelectValue placeholder={t('placeholders.selectOccupation')} />
                         </SelectTrigger>
                         <SelectContent>
-                          {OCCUPATION_OPTIONS.map((option) => (
+                          {getOccupationOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -3051,10 +3000,10 @@ function ProfileEditContent() {
                         onValueChange={(value) => setValue('marital_status', value as 'none' | 'single' | 'married')}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="結婚状況を選択" />
+                          <SelectValue placeholder={t('placeholders.selectMaritalStatus')} />
                         </SelectTrigger>
                         <SelectContent>
-                          {MARITAL_STATUS_OPTIONS.map((option) => (
+                          {getMaritalStatusOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -3116,25 +3065,25 @@ function ProfileEditContent() {
                   </label>
                   <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {PERSONALITY_OPTIONS.map((trait) => (
+                    {getPersonalityOptions(t).map((trait) => (
                       <button
-                        key={trait}
+                        key={trait.key}
                         type="button"
-                        onClick={() => togglePersonality(trait)}
-                        disabled={!selectedPersonality.includes(trait) && selectedPersonality.length >= 5}
+                        onClick={() => togglePersonality(trait.label)}
+                        disabled={!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5}
                         className={`
                           px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                          ${selectedPersonality.includes(trait)
+                          ${selectedPersonality.includes(trait.label)
                             ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                           }
-                          ${(!selectedPersonality.includes(trait) && selectedPersonality.length >= 5)
+                          ${(!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5)
                             ? 'opacity-50 cursor-not-allowed'
                             : 'cursor-pointer hover:shadow-md'
                           }
                         `}
                       >
-                        {trait}
+                        {trait.label}
                       </button>
                     ))}
                   </div>
@@ -3257,7 +3206,7 @@ function ProfileEditContent() {
                     {t('profile.selectCultureNote')}
                   </p>
                   <Accordion type="multiple" className="w-full">
-                    {CULTURE_CATEGORIES.map((category) => (
+                    {getCultureCategories(t).map((category) => (
                       <AccordionItem key={category.name} value={category.name}>
                         <AccordionTrigger className="text-lg font-semibold">
                           {category.name}
@@ -3266,23 +3215,23 @@ function ProfileEditContent() {
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-2">
                             {category.items.map((hobby) => (
                               <button
-                                key={hobby}
+                                key={hobby.value}
                                 type="button"
-                                onClick={() => toggleHobby(hobby)}
-                                disabled={!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8}
+                                onClick={() => toggleHobby(hobby.value)}
+                                disabled={!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8}
                                 className={`
                                   px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                  ${selectedHobbies.includes(hobby)
+                                  ${selectedHobbies.includes(hobby.value)
                                     ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                     : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                                   }
-                                  ${(!selectedHobbies.includes(hobby) && selectedHobbies.length >= 8)
+                                  ${(!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8)
                                     ? 'opacity-50 cursor-not-allowed'
                                     : 'cursor-pointer hover:shadow-md'
                                   }
                                 `}
                               >
-                                {hobby}
+                                {hobby.label}
                               </button>
                             ))}
                           </div>
@@ -3402,7 +3351,7 @@ function ProfileEditContent() {
                 {/* 注意メッセージ */}
                 <div className="pt-2 text-center text-gray-600">
                   <p className="text-sm">
-                    プレビューで内容を確認してから保存してください
+                    {t('profile.previewAdvice')}
                   </p>
                 </div>
               </div>
