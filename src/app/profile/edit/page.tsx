@@ -21,10 +21,10 @@ import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type
 import { useTranslation } from '@/utils/translations'
 
 const baseProfileEditSchema = (t: any) => z.object({
-  nickname: z.string().min(1, 'ニックネームを入力してください').max(20, 'ニックネームは20文字以内で入力してください'),
-  gender: z.enum(['male', 'female'], { required_error: '性別を選択してください' }),
-  birth_date: z.string().min(1, '生年月日を入力してください'),
-  age: z.number().min(18, '18歳以上である必要があります').max(99, '99歳以下で入力してください'),
+  nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
+  gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
+  birth_date: z.string().min(1, t('errors.birthDateRequired')),
+  age: z.number().min(18, t('errors.ageMinimum')).max(99, t('errors.ageMaximum')),
   nationality: z.string().optional(),
   prefecture: z.string().optional(),
   city: z.string().optional(),
@@ -39,16 +39,16 @@ const baseProfileEditSchema = (t: any) => z.object({
       const num = Number(val);
       return isNaN(num) ? undefined : num;
     },
-    z.number().min(120, '身長は120cm以上で入力してください').max(250, '身長は250cm以下で入力してください').optional()
+    z.number().min(120, t('errors.heightMinimum')).max(250, t('errors.heightMaximum')).optional()
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
   english_level: z.string().optional(),
   japanese_level: z.string().optional(),
-  hobbies: z.array(z.string()).min(1, '日本文化を1つ以上選択してください').max(8, '日本文化は8つまで選択できます'),
-  custom_culture: z.string().max(100, 'その他の日本文化は100文字以内で入力してください').optional(),
+  hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
+  custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
-  self_introduction: z.string().min(100, '自己紹介は100文字以上で入力してください').max(1000, '自己紹介は1000文字以内で入力してください'),
+  self_introduction: z.string().min(100, t('errors.selfIntroMinimum')).max(1000, t('errors.selfIntroMaximum')),
 })
 
 // 条件付きバリデーション関数
@@ -56,31 +56,31 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
   const baseSchema = baseProfileEditSchema(t)
   if (isForeignMale) {
     return baseSchema.refine((data) => {
-      // 外国人男性の場合は国籍が必須
+      // Nationality is required for foreign male users
       if (!data.nationality || data.nationality.trim() === '') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '国籍を選択してください',
+          message: t('errors.nationalityRequired'),
           path: ['nationality']
         }])
       }
-      // 行く予定の都道府県が少なくとも1つ必要
-      if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
-        throw new z.ZodError([{
-          code: z.ZodIssueCode.custom,
-          message: '行く予定の都道府県を少なくとも1つ選択してください',
-          path: ['planned_prefectures']
-        }])
-      }
+      // 行く予定の都道府県は任意項目のため、必須チェックを削除
+      // if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
+      //   throw new z.ZodError([{
+      //     code: z.ZodIssueCode.custom,
+      //     message: t('errors.prefecturesMinimum'),
+      //     path: ['planned_prefectures']
+      //   }])
+      // }
       return true
     })
   } else {
-    // 日本人女性の場合は都道府県が必須
+    // Prefecture is required for Japanese female users
     return baseSchema.refine((data) => {
       if (!data.prefecture || data.prefecture.trim() === '') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '都道府県を入力してください',
+          message: t('errors.cityRequired'),
           path: ['prefecture']
         }])
       }
@@ -91,7 +91,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
 
 type ProfileEditFormData = z.infer<ReturnType<typeof baseProfileEditSchema>>
 
-// 性格オプション（既婚者クラブを参考）
+// Personality options (based on married club references)
 const PERSONALITY_OPTIONS = [
   '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
   '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
@@ -173,40 +173,261 @@ const OCCUPATION_OPTIONS = [
   { value: 'その他', label: 'その他' }
 ]
 
-// 体型オプション
-const BODY_TYPE_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: 'スリム', label: 'スリム' },
-  { value: '普通', label: '普通' },
-  { value: 'ぽっちゃり', label: 'ぽっちゃり' },
-  { value: 'グラマー', label: 'グラマー' },
-  { value: 'アスリート体型', label: 'アスリート体型' }
+// Body type options (with translation support)
+const getBodyTypeOptions = (t: any) => [
+  { value: 'none', label: t('bodyType.noEntry') },
+  { value: 'slim', label: t('bodyType.slim') },
+  { value: 'average', label: t('bodyType.average') },
+  { value: 'muscular', label: t('bodyType.muscular') },
+  { value: 'plump', label: t('bodyType.plump') }
 ]
 
-// 英語レベルオプション
-const ENGLISH_LEVEL_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '初級', label: '初級（日常会話は難しい）' },
-  { value: '初中級', label: '初中級（簡単な日常会話）' },
-  { value: '中級', label: '中級（日常会話ができる）' },
-  { value: '中上級', label: '中上級（ビジネス会話も一部可能）' },
-  { value: '上級', label: '上級（ビジネス会話も流暢）' },
-  { value: 'ネイティブレベル', label: 'ネイティブレベル' }
+// 英語レベルオプション（翻訳対応）
+const getEnglishLevelOptions = (t: any) => [
+  { value: 'none', label: t('levels.none') },
+  { value: 'beginner', label: t('levels.beginner') },
+  { value: 'elementary', label: t('levels.elementary') },
+  { value: 'intermediate', label: t('levels.intermediate') },
+  { value: 'upperIntermediate', label: t('levels.upperIntermediate') },
+  { value: 'advanced', label: t('levels.advanced') },
+  { value: 'native', label: t('levels.native') }
 ]
 
-// 日本語レベルオプション
-const JAPANESE_LEVEL_OPTIONS = [
-  { value: 'none', label: '記入しない' },
-  { value: '初級', label: '初級（日常会話は難しい）' },
-  { value: '初中級', label: '初中級（簡単な日常会話）' },
-  { value: '中級', label: '中級（日常会話ができる）' },
-  { value: '中上級', label: '中上級（ビジネス会話も一部可能）' },
-  { value: '上級', label: '上級（ビジネス会話も流暢）' },
-  { value: 'ネイティブレベル', label: 'ネイティブレベル' }
+// 日本語レベルオプション（翻訳対応）
+const getJapaneseLevelOptions = (t: any) => [
+  { value: 'none', label: t('levels.none') },
+  { value: 'beginner', label: t('levels.beginner') },
+  { value: 'elementary', label: t('levels.elementary') },
+  { value: 'intermediate', label: t('levels.intermediate') },
+  { value: 'upperIntermediate', label: t('levels.upperIntermediate') },
+  { value: 'advanced', label: t('levels.advanced') },
+  { value: 'native', label: t('levels.native') }
 ]
 
+// 同行者選択肢（翻訳対応）
+const getTravelCompanionOptions = (t: any) => [
+  { value: 'noEntry', label: t('companion.noEntry') },
+  { value: 'alone', label: t('companion.alone') },
+  { value: 'friend', label: t('companion.friend') },
+  { value: 'family', label: t('companion.family') },
+  { value: 'partner', label: t('companion.partner') }
+]
 
-// 動的な訪問予定時期選択肢生成関数
+// 性格オプション（翻訳対応）
+const getPersonalityOptions = (t: any) => [
+  '優しい', '穏やか', '寂しがりや', '落ち着いている', '思いやりがある',
+  '謙虚', '冷静', '素直', '明るい', '親しみやすい', '面倒見が良い',
+  '気が利く', '責任感がある', '決断力がある', '社交的', '負けず嫌い',
+  '熱血', 'インドア', 'アクティブ', '知的', '几帳面', '楽観的',
+  'シャイ', 'マメ', 'さわやか', '天然', 'マイペース'
+].map(trait => {
+  const traitMap: Record<string, string> = {
+    '優しい': 'gentle',
+    '穏やか': 'calm',
+    '寂しがりや': 'lonely',
+    '落ち着いている': 'composed',
+    '思いやりがある': 'caring',
+    '謙虚': 'humble',
+    '冷静': 'cool',
+    '素直': 'honest',
+    '明るい': 'bright',
+    '親しみやすい': 'friendly',
+    '面倒見が良い': 'helpful',
+    '気が利く': 'considerate',
+    '責任感がある': 'responsible',
+    '決断力がある': 'decisive',
+    '社交的': 'sociable',
+    '負けず嫌い': 'competitive',
+    '熱血': 'passionate',
+    'インドア': 'indoor',
+    'アクティブ': 'active',
+    '知的': 'intellectual',
+    '几帳面': 'meticulous',
+    '楽観的': 'optimistic',
+    'シャイ': 'shy',
+    'マメ': 'attentive',
+    'さわやか': 'refreshing',
+    '天然': 'natural',
+    'マイペース': 'ownPace'
+  }
+  const key = traitMap[trait] || trait
+  return { value: trait, label: t(`personality.${key}`) }
+})
+
+// Japanese culture categories (with translation support)
+const getCultureCategories = (t: any) => [
+  {
+    name: t('cultureCategories.traditional'),
+    items: [
+      { value: '茶道', label: t('culture.teaCeremony') },
+      { value: '華道', label: t('culture.flowerArrangement') },
+      { value: '書道', label: t('culture.calligraphy') },
+      { value: '着物・浴衣', label: t('culture.kimono') },
+      { value: '和菓子', label: t('culture.wagashi') },
+      { value: '陶芸', label: t('culture.pottery') },
+      { value: '折り紙', label: t('culture.origami') },
+      { value: '盆栽', label: t('culture.bonsai') },
+      { value: '神社仏閣', label: t('culture.shrinesTemples') },
+      { value: '御朱印集め', label: t('culture.goshuin') },
+      { value: '禅', label: t('culture.zen') }
+    ]
+  },
+  {
+    name: t('cultureCategories.food'),
+    items: [
+      { value: '寿司', label: t('culture.sushi') },
+      { value: '天ぷら', label: t('culture.tempura') },
+      { value: 'うなぎ', label: t('culture.unagi') },
+      { value: '牛丼', label: t('culture.gyudon') },
+      { value: 'とんかつ', label: t('culture.tonkatsu') },
+      { value: 'ラーメン', label: t('culture.ramen') },
+      { value: 'お好み焼き', label: t('culture.okonomiyaki') },
+      { value: 'たこ焼き', label: t('culture.takoyaki') },
+      { value: 'カレーライス', label: t('culture.curry') },
+      { value: 'コンビニフード', label: t('culture.convenienceFood') },
+      { value: 'ポテトチップス', label: t('culture.potatoChips') },
+      { value: '出汁', label: t('culture.dashi') },
+      { value: '味噌', label: t('culture.miso') },
+      { value: '豆腐', label: t('culture.tofu') },
+      { value: '梅干し', label: t('culture.umeboshi') },
+      { value: '漬物', label: t('culture.pickles') },
+      { value: '日本酒', label: t('culture.sake') },
+      { value: '焼酎', label: t('culture.shochu') },
+      { value: 'そば', label: t('culture.soba') },
+      { value: 'うどん', label: t('culture.udon') }
+    ]
+  },
+  {
+    name: t('cultureCategories.sweets'),
+    items: [
+      { value: '抹茶スイーツ', label: t('culture.matchaSweets') },
+      { value: '団子', label: t('culture.dango') },
+      { value: 'たい焼き', label: t('culture.taiyaki') },
+      { value: '大判焼き', label: t('culture.obanYaki') },
+      { value: 'わらび餅', label: t('culture.warabiMochi') },
+      { value: 'りんご飴', label: t('culture.candiedApple') },
+      { value: 'わたあめ', label: t('culture.cottonCandy') },
+      { value: '駄菓子', label: t('culture.dagashi') },
+      { value: 'コンビニスイーツ', label: t('culture.convenienceSweets') }
+    ]
+  },
+  {
+    name: t('cultureCategories.arts'),
+    items: [
+      { value: '相撲', label: t('culture.sumo') },
+      { value: '剣道', label: t('culture.kendo') },
+      { value: '柔道', label: t('culture.judo') },
+      { value: '空手', label: t('culture.karate') },
+      { value: '弓道', label: t('culture.kyudo') },
+      { value: '合気道', label: t('culture.aikido') },
+      { value: '薙刀', label: t('culture.naginata') },
+      { value: '歌舞伎', label: t('culture.kabuki') },
+      { value: '能', label: t('culture.noh') },
+      { value: '日本舞踊', label: t('culture.nihonBuyo') },
+      { value: '邦楽', label: t('culture.hogaku') },
+      { value: '演歌', label: t('culture.enka') },
+      { value: '太鼓', label: t('culture.taiko') }
+    ]
+  },
+  {
+    name: t('cultureCategories.seasonal'),
+    items: [
+      { value: '桜見物', label: t('culture.cherryBlossoms') },
+      { value: '紅葉狩り', label: t('culture.autumnLeaves') },
+      { value: '花火大会', label: t('culture.fireworks') },
+      { value: '祭り参加', label: t('culture.festivals') },
+      { value: '盆踊り', label: t('culture.bonOdori') },
+      { value: '雪景色', label: t('culture.snowScenery') },
+      { value: '日本庭園散策', label: t('culture.japaneseGarden') }
+    ]
+  },
+  {
+    name: t('cultureCategories.lifestyle'),
+    items: [
+      { value: '障子', label: t('culture.shoji') },
+      { value: '襖の張り替え', label: t('culture.fusuma') },
+      { value: '畳', label: t('culture.tatami') },
+      { value: '古民家カフェ', label: t('culture.oldHouseCafe') },
+      { value: '銭湯', label: t('culture.sento') },
+      { value: '昭和レトロ家電', label: t('culture.showaAppliances') },
+      { value: '和モダンインテリア', label: t('culture.waModern') }
+    ]
+  },
+  {
+    name: t('cultureCategories.crafts'),
+    items: [
+      { value: '漆器', label: t('culture.lacquerware') },
+      { value: '金箔貼り', label: t('culture.goldLeaf') },
+      { value: '和紙漉き', label: t('culture.washipaper') },
+      { value: '染物', label: t('culture.dyeing') },
+      { value: '刀鍛冶', label: t('culture.swordsmith') },
+      { value: '木工', label: t('culture.woodwork') },
+      { value: '飴細工', label: t('culture.candyArt') }
+    ]
+  },
+  {
+    name: t('cultureCategories.modern'),
+    items: [
+      { value: 'アニメ', label: t('culture.anime') },
+      { value: 'マンガ', label: t('culture.manga') },
+      { value: 'コスプレ', label: t('culture.cosplay') },
+      { value: '日本のゲーム', label: t('culture.japaneseGames') },
+      { value: 'J-POP', label: t('culture.jpop') },
+      { value: 'カラオケ', label: t('culture.karaoke') },
+      { value: '日本映画', label: t('culture.japaneseMov') },
+      { value: 'ドラマ', label: t('culture.drama') },
+      { value: 'ボーカロイド', label: t('culture.vocaloid') },
+      { value: 'アイドル文化', label: t('culture.idolCulture') }
+    ]
+  }
+]
+
+// 訪問予定時期選択肢（翻訳対応・動的生成）
+const getVisitScheduleOptions = (t: any) => {
+  const options = [
+    { value: 'no-entry', label: t('schedule.noEntry') },
+    { value: 'undecided', label: t('schedule.undecided') }
+  ];
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-11
+
+  // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+  const currentSeason =
+    currentMonth >= 2 && currentMonth <= 4 ? '春' :
+    currentMonth >= 5 && currentMonth <= 7 ? '夏' :
+    currentMonth >= 8 && currentMonth <= 10 ? '秋' : '冬';
+
+  // 今年の残りの季節
+  const seasons = ['春', '夏', '秋', '冬'];
+  const currentSeasonIndex = seasons.indexOf(currentSeason);
+
+  for (let i = currentSeasonIndex; i < seasons.length; i++) {
+    options.push({
+      value: `${currentYear}-${seasons[i]}`,
+      label: `${currentYear}年${seasons[i]}`
+    });
+  }
+
+  // 来年の全季節
+  for (const season of seasons) {
+    options.push({
+      value: `${currentYear + 1}-${season}`,
+      label: `${currentYear + 1}年${season}`
+    });
+  }
+
+  // 2年以降の選択肢
+  options.push({
+    value: `beyond-${currentYear + 2}`,
+    label: `${currentYear + 2}年以降`
+  });
+
+  return options;
+}
+
+// Dynamic visit schedule options generation function
 const generateVisitScheduleOptions = () => {
   const options = [
     { value: 'no-entry', label: '記入しない' },
@@ -258,17 +479,6 @@ const generateVisitScheduleOptions = () => {
 // 外国人男性向け選択肢
 const VISIT_SCHEDULE_OPTIONS = generateVisitScheduleOptions();
 
-const TRAVEL_COMPANION_OPTIONS = [
-  { value: 'no-entry', label: '記入しない' },
-  { value: 'solo', label: '一人旅' },
-  { value: 'couple', label: 'カップル（恋人・配偶者）' },
-  { value: 'friends', label: '友達' },
-  { value: 'family', label: '家族' },
-  { value: 'colleagues', label: '同僚・仕事仲間' },
-  { value: 'group', label: 'グループ・団体' },
-  { value: 'other', label: 'その他' }
-]
-
 // テストモード検出関数
 const isTestMode = () => {
   if (typeof window === 'undefined') return false
@@ -283,8 +493,8 @@ function ProfileEditContent() {
   const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
   
   // 言語設定
-  const currentLanguage = determineLanguage() as SupportedLanguage
-  const t = useTranslation(currentLanguage)
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
+  const { t } = useTranslation(currentLanguage)
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
   useEffect(() => {
@@ -778,60 +988,235 @@ function ProfileEditContent() {
     }, profileImages, 'selectedHobbies-change')
   }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletion, profileImages])
 
+  // 🌐 プロフィールタイプ変更時の言語設定
+  useEffect(() => {
+    // 日本人女性の場合は強制的に日本語に設定
+    if (isJapaneseFemale && currentLanguage !== 'ja') {
+      setCurrentLanguage('ja')
+      saveLanguagePreference('ja')
+      console.log('🌐 Language forced to Japanese for Japanese female user')
+    }
+  }, [isJapaneseFemale, currentLanguage])
+
   // Constants and helper functions (moved from top level to after hooks)
+  // 国籍の翻訳関数
+  const getNationalityLabel = (value: string): string => {
+    const nationalityMap: { [key: string]: { [lang: string]: string } } = {
+      '日本': { ja: '日本', en: 'Japan', ko: '일본', 'zh-tw': '日本' },
+      'アメリカ': { ja: 'アメリカ', en: 'United States', ko: '미국', 'zh-tw': '美國' },
+      'イギリス': { ja: 'イギリス', en: 'United Kingdom', ko: '영국', 'zh-tw': '英國' },
+      'カナダ': { ja: 'カナダ', en: 'Canada', ko: '캐나다', 'zh-tw': '加拿大' },
+      'オーストラリア': { ja: 'オーストラリア', en: 'Australia', ko: '호주', 'zh-tw': '澳洲' },
+      'ドイツ': { ja: 'ドイツ', en: 'Germany', ko: '독일', 'zh-tw': '德國' },
+      'フランス': { ja: 'フランス', en: 'France', ko: '프랑스', 'zh-tw': '法國' },
+      'オランダ': { ja: 'オランダ', en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' },
+      'イタリア': { ja: 'イタリア', en: 'Italy', ko: '이탈리아', 'zh-tw': '義大利' },
+      'スペイン': { ja: 'スペイン', en: 'Spain', ko: '스페인', 'zh-tw': '西班牙' },
+      'スウェーデン': { ja: 'スウェーデン', en: 'Sweden', ko: '스웨덴', 'zh-tw': '瑞典' },
+      'ノルウェー': { ja: 'ノルウェー', en: 'Norway', ko: '노르웨이', 'zh-tw': '挪威' },
+      'デンマーク': { ja: 'デンマーク', en: 'Denmark', ko: '덴마크', 'zh-tw': '丹麥' },
+      '韓国': { ja: '韓国', en: 'South Korea', ko: '한국', 'zh-tw': '韓國' },
+      '中国': { ja: '中国', en: 'China', ko: '중국', 'zh-tw': '中國' },
+      '台湾': { ja: '台湾', en: 'Taiwan', ko: '대만', 'zh-tw': '台灣' },
+      'タイ': { ja: 'タイ', en: 'Thailand', ko: '태국', 'zh-tw': '泰國' },
+      'シンガポール': { ja: 'シンガポール', en: 'Singapore', ko: '싱가포르', 'zh-tw': '新加坡' },
+      'その他': { ja: 'その他', en: 'Other', ko: '기타', 'zh-tw': '其他' },
+    }
+    return nationalityMap[value]?.[currentLanguage] || value
+  }
+
+  // 都道府県の翻訳関数
+  const getPrefectureLabel = (value: string): string => {
+    const prefectureMap: { [key: string]: { [lang: string]: string } } = {
+      '東京都': { ja: '東京都', en: 'Tokyo', ko: '도쿄도', 'zh-tw': '東京都' },
+      '神奈川県': { ja: '神奈川県', en: 'Kanagawa', ko: '가나가와현', 'zh-tw': '神奈川縣' },
+      '千葉県': { ja: '千葉県', en: 'Chiba', ko: '치바현', 'zh-tw': '千葉縣' },
+      '埼玉県': { ja: '埼玉県', en: 'Saitama', ko: '사이타마현', 'zh-tw': '埼玉縣' },
+      '大阪府': { ja: '大阪府', en: 'Osaka', ko: '오사카부', 'zh-tw': '大阪府' },
+      '京都府': { ja: '京都府', en: 'Kyoto', ko: '교토부', 'zh-tw': '京都府' },
+      '兵庫県': { ja: '兵庫県', en: 'Hyogo', ko: '효고현', 'zh-tw': '兵庫縣' },
+      '愛知県': { ja: '愛知県', en: 'Aichi', ko: '아이치현', 'zh-tw': '愛知縣' },
+      '福岡県': { ja: '福岡県', en: 'Fukuoka', ko: '후쿠오카현', 'zh-tw': '福岡縣' },
+      '北海道': { ja: '北海道', en: 'Hokkaido', ko: '홋카이도', 'zh-tw': '北海道' },
+      '宮城県': { ja: '宮城県', en: 'Miyagi', ko: '미야기현', 'zh-tw': '宮城縣' },
+      '広島県': { ja: '広島県', en: 'Hiroshima', ko: '히로시마현', 'zh-tw': '廣島縣' },
+      '静岡県': { ja: '静岡県', en: 'Shizuoka', ko: '시즈오카현', 'zh-tw': '靜岡縣' },
+      '茨城県': { ja: '茨城県', en: 'Ibaraki', ko: '이바라키현', 'zh-tw': '茨城縣' },
+      '栃木県': { ja: '栃木県', en: 'Tochigi', ko: '도치기현', 'zh-tw': '栃木縣' },
+      '群馬県': { ja: '群馬県', en: 'Gunma', ko: '군마현', 'zh-tw': '群馬縣' },
+      '新潟県': { ja: '新潟県', en: 'Niigata', ko: '니가타현', 'zh-tw': '新潟縣' },
+      '長野県': { ja: '長野県', en: 'Nagano', ko: '나가노현', 'zh-tw': '長野縣' },
+      '山梨県': { ja: '山梨県', en: 'Yamanashi', ko: '야마나시현', 'zh-tw': '山梨縣' },
+      '岐阜県': { ja: '岐阜県', en: 'Gifu', ko: '기후현', 'zh-tw': '岐阜縣' },
+      '三重県': { ja: '三重県', en: 'Mie', ko: '미에현', 'zh-tw': '三重縣' },
+      '滋賀県': { ja: '滋賀県', en: 'Shiga', ko: '시가현', 'zh-tw': '滋賀縣' },
+      '奈良県': { ja: '奈良県', en: 'Nara', ko: '나라현', 'zh-tw': '奈良縣' },
+      '和歌山県': { ja: '和歌山県', en: 'Wakayama', ko: '와카야마현', 'zh-tw': '和歌山縣' },
+      '鳥取県': { ja: '鳥取県', en: 'Tottori', ko: '돗토리현', 'zh-tw': '鳥取縣' },
+      '島根県': { ja: '島根県', en: 'Shimane', ko: '시마네현', 'zh-tw': '島根縣' },
+      '岡山県': { ja: '岡山県', en: 'Okayama', ko: '오카야마현', 'zh-tw': '岡山縣' },
+      '山口県': { ja: '山口県', en: 'Yamaguchi', ko: '야마구치현', 'zh-tw': '山口縣' },
+      '徳島県': { ja: '徳島県', en: 'Tokushima', ko: '도쿠시마현', 'zh-tw': '德島縣' },
+      '香川県': { ja: '香川県', en: 'Kagawa', ko: '가가와현', 'zh-tw': '香川縣' },
+      '愛媛県': { ja: '愛媛県', en: 'Ehime', ko: '에히메현', 'zh-tw': '愛媛縣' },
+      '高知県': { ja: '高知県', en: 'Kochi', ko: '고치현', 'zh-tw': '高知縣' },
+      '佐賀県': { ja: '佐賀県', en: 'Saga', ko: '사가현', 'zh-tw': '佐賀縣' },
+      '長崎県': { ja: '長崎県', en: 'Nagasaki', ko: '나가사키현', 'zh-tw': '長崎縣' },
+      '熊本県': { ja: '熊本県', en: 'Kumamoto', ko: '구마모토현', 'zh-tw': '熊本縣' },
+      '大分県': { ja: '大分県', en: 'Oita', ko: '오이타현', 'zh-tw': '大分縣' },
+      '宮崎県': { ja: '宮崎県', en: 'Miyazaki', ko: '미야자키현', 'zh-tw': '宮崎縣' },
+      '鹿児島県': { ja: '鹿児島県', en: 'Kagoshima', ko: '가고시마현', 'zh-tw': '鹿兒島縣' },
+      '沖縄県': { ja: '沖縄県', en: 'Okinawa', ko: '오키나와현', 'zh-tw': '沖繩縣' },
+    }
+    return prefectureMap[value]?.[currentLanguage] || value
+  }
+
+  // Visit Scheduleの翻訳関数
+  const getVisitScheduleLabel = (value: string): string => {
+    // 基本的な選択肢の翻訳
+    const basicLabels: { [key: string]: { [lang: string]: string } } = {
+      'no-entry': { ja: '記入しない', en: 'Not specified', ko: '기입하지 않음', 'zh-tw': '不填寫' },
+      'undecided': { ja: 'まだ決まっていない', en: 'Not decided yet', ko: '아직 정하지 않음', 'zh-tw': '尚未決定' },
+    }
+
+    // 基本的な選択肢の場合
+    if (basicLabels[value]) {
+      return basicLabels[value][currentLanguage] || value
+    }
+
+    // beyond-YYYY 形式の処理
+    if (value.startsWith('beyond-')) {
+      const year = value.split('-')[1]
+      const labels = {
+        ja: `${year}年以降`,
+        en: `${year} or later`,
+        ko: `${year}년 이후`,
+        'zh-tw': `${year}年以後`
+      }
+      return labels[currentLanguage] || value
+    }
+
+    // YYYY-season 形式の処理
+    const seasonMatch = value.match(/^(\d{4})-(spring|summer|autumn|winter)$/)
+    if (seasonMatch) {
+      const [, year, season] = seasonMatch
+      const seasonLabels: { [key: string]: { [lang: string]: string } } = {
+        spring: { ja: '春（3-5月）', en: 'Spring (Mar-May)', ko: '봄 (3-5월)', 'zh-tw': '春季（3-5月）' },
+        summer: { ja: '夏（6-8月）', en: 'Summer (Jun-Aug)', ko: '여름 (6-8월)', 'zh-tw': '夏季（6-8月）' },
+        autumn: { ja: '秋（9-11月）', en: 'Autumn (Sep-Nov)', ko: '가을 (9-11월)', 'zh-tw': '秋季（9-11月）' },
+        winter: { ja: '冬（12-2月）', en: 'Winter (Dec-Feb)', ko: '겨울 (12-2월)', 'zh-tw': '冬季（12-2月）' }
+      }
+      const seasonLabel = seasonLabels[season]?.[currentLanguage] || season
+      return `${year}年${seasonLabel}`
+    }
+
+    return value
+  }
+
+  // Visit Schedule選択肢の動的生成（4言語対応）
+  const getVisitScheduleOptionsTranslated = () => {
+    const options = [
+      { value: 'no-entry', label: getVisitScheduleLabel('no-entry') },
+      { value: 'undecided', label: getVisitScheduleLabel('undecided') }
+    ]
+
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear()
+    const currentMonth = currentDate.getMonth() // 0-11
+
+    // 現在の季節を判定（春:2-4月、夏:5-7月、秋:8-10月、冬:11-1月）
+    const getCurrentSeason = () => {
+      if (currentMonth >= 2 && currentMonth <= 4) return 'spring'
+      if (currentMonth >= 5 && currentMonth <= 7) return 'summer'
+      if (currentMonth >= 8 && currentMonth <= 10) return 'autumn'
+      return 'winter'
+    }
+
+    const currentSeason = getCurrentSeason()
+    const seasons = ['spring', 'summer', 'autumn', 'winter'] as const
+
+    // 今後2年分の選択肢を生成
+    for (let year = currentYear; year <= currentYear + 2; year++) {
+      seasons.forEach((season, index) => {
+        // 現在年の場合、過去の季節は除外
+        if (year === currentYear) {
+          const currentSeasonIndex = seasons.indexOf(currentSeason)
+          if (index <= currentSeasonIndex) return // 現在季節以前は除外
+        }
+
+        const value = `${year}-${season}`
+        const label = getVisitScheduleLabel(value)
+        options.push({ value, label })
+      })
+    }
+
+    // 2年以降の選択肢
+    options.push({
+      value: `beyond-${currentYear + 2}`,
+      label: getVisitScheduleLabel(`beyond-${currentYear + 2}`)
+    })
+
+    return options
+  }
+
   // 国籍オプション（プロフィールタイプに応じて順序変更）
   const getNationalities = () => {
     if (isJapaneseFemale) {
       // 日本人女性の場合、日本を最初に
       return [
-        { value: '日本', label: '日本' },
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: '韓国', label: '韓国' },
-        { value: '中国', label: '中国' },
-        { value: 'その他', label: 'その他' },
+        { value: '日本', label: getNationalityLabel('日本') },
+        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
+        { value: 'イギリス', label: getNationalityLabel('イギリス') },
+        { value: 'カナダ', label: getNationalityLabel('カナダ') },
+        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
+        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
+        { value: 'フランス', label: getNationalityLabel('フランス') },
+        { value: 'オランダ', label: getNationalityLabel('オランダ') },
+        { value: 'イタリア', label: getNationalityLabel('イタリア') },
+        { value: 'スペイン', label: getNationalityLabel('スペイン') },
+        { value: '韓国', label: getNationalityLabel('韓国') },
+        { value: '中国', label: getNationalityLabel('中国') },
+        { value: 'その他', label: getNationalityLabel('その他') },
       ]
     } else {
       // 外国人男性の場合、よくある国を最初に
       return [
-        { value: 'アメリカ', label: 'アメリカ' },
-        { value: 'イギリス', label: 'イギリス' },
-        { value: 'カナダ', label: 'カナダ' },
-        { value: 'オーストラリア', label: 'オーストラリア' },
-        { value: 'ドイツ', label: 'ドイツ' },
-        { value: 'フランス', label: 'フランス' },
-        { value: 'イタリア', label: 'イタリア' },
-        { value: 'スペイン', label: 'スペイン' },
-        { value: 'オランダ', label: 'オランダ' },
-        { value: 'スウェーデン', label: 'スウェーデン' },
-        { value: 'ノルウェー', label: 'ノルウェー' },
-        { value: 'デンマーク', label: 'デンマーク' },
-        { value: '韓国', label: '韓国' },
-        { value: '台湾', label: '台湾' },
-        { value: 'タイ', label: 'タイ' },
-        { value: 'シンガポール', label: 'シンガポール' },
-        { value: 'その他', label: 'その他' },
+        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
+        { value: 'イギリス', label: getNationalityLabel('イギリス') },
+        { value: 'カナダ', label: getNationalityLabel('カナダ') },
+        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
+        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
+        { value: 'フランス', label: getNationalityLabel('フランス') },
+        { value: 'イタリア', label: getNationalityLabel('イタリア') },
+        { value: 'スペイン', label: getNationalityLabel('スペイン') },
+        { value: 'オランダ', label: getNationalityLabel('オランダ') },
+        { value: 'スウェーデン', label: getNationalityLabel('スウェーデン') },
+        { value: 'ノルウェー', label: getNationalityLabel('ノルウェー') },
+        { value: 'デンマーク', label: getNationalityLabel('デンマーク') },
+        { value: '韓国', label: getNationalityLabel('韓国') },
+        { value: '台湾', label: getNationalityLabel('台湾') },
+        { value: 'タイ', label: getNationalityLabel('タイ') },
+        { value: 'シンガポール', label: getNationalityLabel('シンガポール') },
+        { value: 'その他', label: getNationalityLabel('その他') },
       ]
     }
   }
 
   const NATIONALITIES = getNationalities()
 
-  // 都道府県オプション
-  const PREFECTURES = [
+  // 都道府県オプション（翻訳対応）
+  const getPrefectures = () => [
     '東京都', '神奈川県', '千葉県', '埼玉県', '大阪府', '京都府', '兵庫県', '愛知県',
     '福岡県', '北海道', '宮城県', '広島県', '静岡県', '茨城県', '栃木県', '群馬県',
     '新潟県', '長野県', '山梨県', '岐阜県', '三重県', '滋賀県', '奈良県', '和歌山県',
     '鳥取県', '島根県', '岡山県', '山口県', '徳島県', '香川県', '愛媛県', '高知県',
     '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-  ]
+  ].map(prefecture => ({
+    value: prefecture,
+    label: getPrefectureLabel(prefecture)
+  }))
+  
+  const PREFECTURES = getPrefectures()
 
   // デバッグ用ログ
   console.log('Profile type debug:', {
@@ -1846,6 +2231,25 @@ function ProfileEditContent() {
         setSelectedPersonality(finalPersonality)
         
         console.log('✅ STATE SETTING COMPLETED')
+
+        // 🌐 言語設定の初期化
+        const nationality = profile.nationality || ((signupData as any)?.nationality)
+        let detectedLanguage: SupportedLanguage
+        
+        // 日本人女性の場合は強制的に日本語、外国人男性の場合は国籍から判定
+        if (isJapaneseFemale) {
+          detectedLanguage = 'ja'
+        } else {
+          detectedLanguage = determineLanguage(nationality)
+        }
+        
+        setCurrentLanguage(detectedLanguage)
+        console.log('🌐 Language initialization:', {
+          nationality,
+          detectedLanguage,
+          isJapaneseFemale,
+          source: 'profile load'
+        })
         
         console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
         console.log('  - isNewUser:', isNewUser)
@@ -2309,6 +2713,33 @@ function ProfileEditContent() {
       {/* Main Content */}
       <div className="md:ml-64 py-12 px-4">
         <div className="max-w-2xl mx-auto">
+          {/* 言語切り替えボタン（外国人男性のみ表示） */}
+          {isForeignMale && (
+            <div className="flex justify-end mb-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-gray-600" />
+                <Select
+                  value={currentLanguage}
+                  onValueChange={(value: SupportedLanguage) => {
+                    setCurrentLanguage(value)
+                    saveLanguagePreference(value)
+                    console.log('🌐 Language changed to:', value)
+                  }}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                    <SelectItem value="en">🇺🇸 English</SelectItem>
+                    <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                    <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-8">
             <Button
               variant="outline"
@@ -2316,39 +2747,18 @@ function ProfileEditContent() {
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              戻る
+              {t('common.cancel')}
             </Button>
-            
-            {/* 言語切り替え */}
-            <Select
-              value={currentLanguage}
-              onValueChange={(value: SupportedLanguage) => {
-                saveLanguagePreference(value)
-                window.location.reload()
-              }}
-            >
-              <SelectTrigger className="w-32">
-                <Globe className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ja">日本語</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="zh">中文</SelectItem>
-                <SelectItem value="ko">한국어</SelectItem>
-              </SelectContent>
-            </Select>
-            
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {isForeignMale ? '外国人男性プロフィール編集' : 
-                 isJapaneseFemale ? '日本人女性プロフィール編集' : 
-                 'プロフィール編集'}
+                {isForeignMale ? t('profile.foreignMaleTitle') :
+                 isJapaneseFemale ? t('profile.japaneseFemaleTitle') :
+                 t('profile.editTitle')}
               </h1>
               <p className="text-gray-600">
-                {isForeignMale ? '日本人女性との出会いに向けて、あなたの情報を更新してください' :
-                 isJapaneseFemale ? '外国人男性との出会いに向けて、あなたの情報を更新してください' :
-                 'あなたの情報を更新してください'}
+                {isForeignMale ? t('profile.foreignMaleSubtitle') :
+                 isJapaneseFemale ? t('profile.japaneseFemaleSubtitle') :
+                 t('profile.defaultSubtitle')}
               </p>
             </div>
           </div>
@@ -2375,7 +2785,7 @@ function ProfileEditContent() {
             {/* プロフィール完成度表示 */}
             <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
+                <span className="text-sm font-medium text-gray-700">{t('profile.profileCompletion')}</span>
                 <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
@@ -2386,13 +2796,13 @@ function ProfileEditContent() {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <p className="text-xs text-gray-500">
-                  {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
+                  {totalItems > 0 ? `${completedItems}/${totalItems} ${t('profile.itemsCompleted')}` : t('profile.calculating')}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {profileCompletion < 50 ? '基本情報をもう少し入力してみましょう' :
-                   profileCompletion < 80 ? '詳細情報を追加してプロフィールを充実させましょう' :
-                   profileCompletion < 100 ? 'あと少しで完璧なプロフィールです！' :
-                   '素晴らしい！完璧なプロフィールです✨'}
+                  {profileCompletion < 50 ? t('profile.completionLow') :
+                   profileCompletion < 80 ? t('profile.completionMedium') :
+                   profileCompletion < 100 ? t('profile.completionHigh') :
+                   t('profile.completionPerfect')}
                 </p>
               </div>
             </div>
@@ -2536,8 +2946,8 @@ function ProfileEditContent() {
                         </SelectTrigger>
                         <SelectContent>
                           {PREFECTURES.map((prefecture) => (
-                            <SelectItem key={prefecture} value={prefecture}>
-                              {prefecture}
+                            <SelectItem key={prefecture.value} value={prefecture.value}>
+                              {prefecture.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -2623,7 +3033,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder="体型を選択" />
                         </SelectTrigger>
                         <SelectContent>
-                          {BODY_TYPE_OPTIONS.map((option) => (
+                          {getBodyTypeOptions(t).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -2805,23 +3215,23 @@ function ProfileEditContent() {
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
                                 {PREFECTURES.map((prefecture) => (
                                   <button
-                                    key={prefecture}
+                                    key={prefecture.value}
                                     type="button"
-                                    onClick={() => togglePlannedPrefecture(prefecture)}
-                                    disabled={!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3}
+                                    onClick={() => togglePlannedPrefecture(prefecture.value)}
+                                    disabled={!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3}
                                     className={`
                                       px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                      ${selectedPlannedPrefectures.includes(prefecture)
+                                      ${selectedPlannedPrefectures.includes(prefecture.value)
                                         ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
                                         : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
                                       }
-                                      ${(!selectedPlannedPrefectures.includes(prefecture) && selectedPlannedPrefectures.length >= 3)
+                                      ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
                                         ? 'opacity-50 cursor-not-allowed'
                                         : 'cursor-pointer hover:shadow-md'
                                       }
                                     `}
                                   >
-                                    {prefecture}
+                                    {prefecture.label}
                                   </button>
                                 ))}
                               </div>
