@@ -993,7 +993,7 @@ function ProfileEditContent() {
         if (isFromMyPage) {
           // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
           console.log('🔄 MyPage transition - loading data from localStorage')
-          const storedData = localStorage.getItem('completeProfileData')
+          const storedData = localStorage.getItem('previewCompleteData')
           if (storedData) {
             try {
               const parsedData = JSON.parse(storedData)
@@ -2014,7 +2014,7 @@ function ProfileEditContent() {
         if (isFromMyPage) {
           // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
           console.log('🔄 MyPage transition - loading data from localStorage (2nd)')
-          const storedData = localStorage.getItem('completeProfileData')
+          const storedData = localStorage.getItem('previewCompleteData')
           if (storedData) {
             try {
               const parsedData = JSON.parse(storedData)
