@@ -994,9 +994,14 @@ function ProfileEditContent() {
           // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
           console.log('🔄 MyPage transition - loading data from localStorage')
           const storedData = localStorage.getItem('previewCompleteData')
+          const optionalData = localStorage.getItem('previewOptionalData')
+          const extendedInterests = localStorage.getItem('previewExtendedInterests')
+          
           if (storedData) {
             try {
               const parsedData = JSON.parse(storedData)
+              const parsedOptional = optionalData ? JSON.parse(optionalData) : {}
+              const parsedInterests = extendedInterests ? JSON.parse(extendedInterests) : {}
               initialData = {
                 nickname: parsedData.nickname || parsedData.name || '',
                 gender: parsedData.gender || 'male',
@@ -1005,16 +1010,16 @@ function ProfileEditContent() {
                 nationality: parsedData.nationality || '',
                 prefecture: parsedData.prefecture || parsedData.residence || '',
                 self_introduction: parsedData.self_introduction || parsedData.bio || '',
-                hobbies: Array.isArray(parsedData.hobbies) ? parsedData.hobbies : [],
-                personality: Array.isArray(parsedData.personality) ? parsedData.personality : [],
-                // オプションフィールド
-                occupation: parsedData.occupation || 'none',
-                height: parsedData.height || undefined,
-                body_type: parsedData.body_type || 'none',
-                marital_status: parsedData.marital_status || 'none',
-                japanese_level: parsedData.japanese_level || 'none',
-                english_level: parsedData.english_level || 'none',
-                city: parsedData.city || '',
+                hobbies: Array.isArray(parsedInterests.hobbies) ? parsedInterests.hobbies : (Array.isArray(parsedData.hobbies) ? parsedData.hobbies : []),
+                personality: Array.isArray(parsedInterests.personality) ? parsedInterests.personality : (Array.isArray(parsedData.personality) ? parsedData.personality : []),
+                // オプションフィールド（優先順位: optional > complete > default）
+                occupation: parsedOptional.occupation || parsedData.occupation || 'none',
+                height: parsedOptional.height || parsedData.height || undefined,
+                body_type: parsedOptional.body_type || parsedData.body_type || 'none',
+                marital_status: parsedOptional.marital_status || parsedData.marital_status || 'none',
+                japanese_level: parsedOptional.japanese_level || parsedData.japanese_level || 'none',
+                english_level: parsedOptional.english_level || parsedData.english_level || 'none',
+                city: parsedOptional.city || parsedData.city || '',
                 planned_prefectures: Array.isArray(parsedData.planned_prefectures) ? parsedData.planned_prefectures : [],
                 visit_schedule: parsedData.visit_schedule || 'no-entry',
                 travel_companion: parsedData.travel_companion || 'no-entry'
@@ -2015,9 +2020,14 @@ function ProfileEditContent() {
           // 🔄 MyPageからの遷移時: LocalStorageから既存データを読み込み
           console.log('🔄 MyPage transition - loading data from localStorage (2nd)')
           const storedData = localStorage.getItem('previewCompleteData')
+          const optionalData = localStorage.getItem('previewOptionalData')
+          const extendedInterests = localStorage.getItem('previewExtendedInterests')
+          
           if (storedData) {
             try {
               const parsedData = JSON.parse(storedData)
+              const parsedOptional = optionalData ? JSON.parse(optionalData) : {}
+              const parsedInterests = extendedInterests ? JSON.parse(extendedInterests) : {}
               initialData = {
                 nickname: parsedData.nickname || parsedData.name || '',
                 gender: parsedData.gender || 'male',
@@ -2026,16 +2036,16 @@ function ProfileEditContent() {
                 nationality: parsedData.nationality || '',
                 prefecture: parsedData.prefecture || parsedData.residence || '',
                 self_introduction: parsedData.self_introduction || parsedData.bio || '',
-                hobbies: Array.isArray(parsedData.hobbies) ? parsedData.hobbies : [],
-                personality: Array.isArray(parsedData.personality) ? parsedData.personality : [],
-                // オプションフィールド
-                occupation: parsedData.occupation || 'none',
-                height: parsedData.height || undefined,
-                body_type: parsedData.body_type || 'none',
-                marital_status: parsedData.marital_status || 'none',
-                japanese_level: parsedData.japanese_level || 'none',
-                english_level: parsedData.english_level || 'none',
-                city: parsedData.city || '',
+                hobbies: Array.isArray(parsedInterests.hobbies) ? parsedInterests.hobbies : (Array.isArray(parsedData.hobbies) ? parsedData.hobbies : []),
+                personality: Array.isArray(parsedInterests.personality) ? parsedInterests.personality : (Array.isArray(parsedData.personality) ? parsedData.personality : []),
+                // オプションフィールド（優先順位: optional > complete > default）
+                occupation: parsedOptional.occupation || parsedData.occupation || 'none',
+                height: parsedOptional.height || parsedData.height || undefined,
+                body_type: parsedOptional.body_type || parsedData.body_type || 'none',
+                marital_status: parsedOptional.marital_status || parsedData.marital_status || 'none',
+                japanese_level: parsedOptional.japanese_level || parsedData.japanese_level || 'none',
+                english_level: parsedOptional.english_level || parsedData.english_level || 'none',
+                city: parsedOptional.city || parsedData.city || '',
                 planned_prefectures: Array.isArray(parsedData.planned_prefectures) ? parsedData.planned_prefectures : [],
                 visit_schedule: parsedData.visit_schedule || 'no-entry',
                 travel_companion: parsedData.travel_companion || 'no-entry'
