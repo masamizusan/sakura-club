@@ -3075,7 +3075,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder="日本語レベルを選択" />
                           </SelectTrigger>
                           <SelectContent>
-                            {JAPANESE_LEVEL_OPTIONS.map((option) => (
+                            {getJapaneseLevelOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -3097,7 +3097,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder="英語レベルを選択" />
                           </SelectTrigger>
                           <SelectContent>
-                            {ENGLISH_LEVEL_OPTIONS.map((option) => (
+                            {getEnglishLevelOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -3162,7 +3162,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder="訪問予定を選択" />
                           </SelectTrigger>
                           <SelectContent>
-                            {VISIT_SCHEDULE_OPTIONS.map((option) => (
+                            {getVisitScheduleOptionsTranslated().map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -3187,7 +3187,7 @@ function ProfileEditContent() {
                             <SelectValue placeholder="同行者を選択" />
                           </SelectTrigger>
                           <SelectContent>
-                            {TRAVEL_COMPANION_OPTIONS.map((option) => (
+                            {getTravelCompanionOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
