@@ -2820,17 +2820,17 @@ function ProfileEditContent() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
                   <span className="text-red-500 mr-2">*</span>
-                  必須情報
-                  <span className="text-sm font-normal text-gray-500 ml-2">（プロフィール公開に必要な項目）</span>
+                  {t('profile.requiredSection')}
+                  <span className="text-sm font-normal text-gray-500 ml-2">{t('profile.requiredForPublication')}</span>
                 </h3>
                 
                 {/* 自己紹介 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    自己紹介文 <span className="text-red-500">*</span>
+                    {t('profile.selfIntroduction')} <span className="text-red-500">*</span>
                   </label>
                   <Textarea
-                    placeholder="あなたの魅力や日本文化への興味について教えてください（100文字以上1000文字以内で入力してください）"
+                    placeholder={t('profile.selfIntroPlaceholder')}
                     rows={4}
                     {...register('self_introduction')}
                     className={errors.self_introduction ? 'border-red-500' : ''}
@@ -2838,48 +2838,48 @@ function ProfileEditContent() {
                   {errors.self_introduction && (
                     <p className="text-red-500 text-sm mt-1">{errors.self_introduction.message}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">自己紹介は100文字以上1000文字以内で入力してください。</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('profile.selfIntroNote')}</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ニックネーム <span className="text-red-500">*</span>
+                    {t('profile.nickname')} <span className="text-red-500">*</span>
                   </label>
                   <Input
-                    placeholder="ニックネーム"
+                    placeholder={t('placeholders.nickname')}
                     {...register('nickname')}
                     className={errors.nickname ? 'border-red-500' : ''}
                   />
                   {errors.nickname && (
                     <p className="text-red-500 text-sm mt-1">{errors.nickname.message}</p>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">プロフィールに表示される名前です</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('profile.nicknameDescription')}</p>
                 </div>
 
                 {/* 生年月日と年齢 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      生年月日 <span className="text-red-500">*</span>
+                      {t('profile.birthDate')} <span className="text-red-500">*</span>
                     </label>
                     <Input
                       value={watch('birth_date') ? watch('birth_date') : ''}
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-500 mt-1">生年月日は仮登録時に設定済みのため変更できません</p>
-                    <p className="text-xs text-gray-400 mt-1">※生年月日はお相手には表示されません。</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.birthDateReadonly')}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('profile.birthDatePrivacy')}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      年齢 <span className="text-red-500">*</span>
+                      {t('profile.age')} <span className="text-red-500">*</span>
                     </label>
                     <Input
                       type="number"
                       min="18"
                       max="99"
-                      placeholder="25"
+                      placeholder={t('placeholders.age')}
                       {...register('age', { valueAsNumber: true })}
                       className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
                       readOnly
@@ -2887,7 +2887,7 @@ function ProfileEditContent() {
                     {errors.age && (
                       <p className="text-red-500 text-sm mt-1">{errors.age.message}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">年齢は生年月日から自動計算されます</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('profile.ageAutoCalculation')}</p>
                   </div>
                 </div>
 
@@ -2895,7 +2895,7 @@ function ProfileEditContent() {
                 {isForeignMale && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      国籍 <span className="text-red-500">*</span>
+                      {t('profile.nationality')} <span className="text-red-500">*</span>
                     </label>
                     <Select
                       value={(() => {
@@ -3112,9 +3112,9 @@ function ProfileEditContent() {
                 {/* 性格セクション - 独立したセクション */}
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    性格
+                    {t('profile.personalitySection')}
                   </label>
-                  <p className="text-xs text-gray-500 mb-3">あなたの性格を選択してください（最大5つまで）</p>
+                  <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {PERSONALITY_OPTIONS.map((trait) => (
                       <button
@@ -3251,13 +3251,10 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? '学びたい日本文化' : '共有したい日本文化'} <span className="text-red-500">*</span>
+                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
-                    {isForeignMale 
-                      ? "学習・体験したい日本文化を選択してください（1つ以上8つまで）" 
-                      : "興味のある日本文化を選択してください（1つ以上8つまで）"
-                    }
+                    {t('profile.selectCultureNote')}
                   </p>
                   <Accordion type="multiple" className="w-full">
                     {CULTURE_CATEGORIES.map((category) => (
@@ -3300,17 +3297,10 @@ function ProfileEditContent() {
                   {/* カスタム日本文化 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {isForeignMale
-                        ? "上記にない学びたい日本文化があれば自由に記入してください（100文字以内）"
-                        : "上記にない日本文化があれば自由に記入してください（100文字以内）"
-                      }
+                      {t('profile.otherCultureLabel')}
                     </label>
                     <Input
-                      placeholder={
-                        isForeignMale
-                          ? "例：日本の伝統工芸、地方の祭り など"
-                          : "例：地域の伝統行事、家庭料理 など"
-                      }
+                      placeholder={t('placeholders.enterCustomCulture')}
                       {...register('custom_culture')}
                       className={errors.custom_culture ? 'border-red-500' : ''}
                     />

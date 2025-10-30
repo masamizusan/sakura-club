@@ -52,6 +52,10 @@ type TranslationKeys = {
     completionHigh: string
     completionPerfect: string
     requiredForPublication: string
+    requiredSection: string
+    personalitySection: string
+    cultureSection: string
+    cultureSectionForeign: string
     // 選択項目の説明
     selectPersonalityNote: string
     selectCultureNote: string
@@ -690,6 +694,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: 'あと少しで完璧なプロフィールです！',
       completionPerfect: '素晴らしい！完璧なプロフィールです✨',
       requiredForPublication: '（プロフィール公開に必要な項目）',
+      requiredSection: '必須情報',
+      personalitySection: '性格',
+      cultureSection: '共有したい日本文化',
+      cultureSectionForeign: '学びたい日本文化',
       // 選択項目の説明
       selectPersonalityNote: 'あなたの性格を選択してください（最大5つまで）',
       selectCultureNote: '興味のある日本文化を選択してください（1つ以上8つまで）',
@@ -1275,6 +1283,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: 'Almost there! Just a few more details',
       completionPerfect: 'Excellent! You have a perfect profile ✨',
       requiredForPublication: '(Required for profile publication)',
+      requiredSection: 'Required Information',
+      personalitySection: 'Personality',
+      cultureSection: 'Japanese Culture to Share',
+      cultureSectionForeign: 'Japanese Culture to Learn',
       // 選択項目の説明
       selectPersonalityNote: 'Select your personality traits (max 5)',
       selectCultureNote: 'Select Japanese culture you want to experience (1-8 items)',
@@ -1859,6 +1871,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: '조금만 더! 몇 가지 세부사항만 남았습니다',
       completionPerfect: '훌륭합니다! 완벽한 프로필입니다 ✨',
       requiredForPublication: '(프로필 공개에 필요한 항목)',
+      requiredSection: '필수 정보',
+      personalitySection: '성격',
+      cultureSection: '공유하고 싶은 일본 문화',
+      cultureSectionForeign: '배우고 싶은 일본 문화',
       // 선택 항목 설명
       selectPersonalityNote: '귀하의 성격 특성을 선택해 주세요 (최대 5개)',
       selectCultureNote: '체험하고 싶은 일본 문화를 선택해 주세요 (1-8개 항목)',
@@ -2443,6 +2459,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: '就快完成了！還差一些細節',
       completionPerfect: '太棒了！您有一個完美的個人資料 ✨',
       requiredForPublication: '（個人資料公開所需項目）',
+      requiredSection: '必填資訊',
+      personalitySection: '個性',
+      cultureSection: '想分享的日本文化',
+      cultureSectionForeign: '想學習的日本文化',
       // 選擇項目說明
       selectPersonalityNote: '請選擇您的個性特質（最多5個）',
       selectCultureNote: '請選擇您想體驗的日本文化（1-8項）',
