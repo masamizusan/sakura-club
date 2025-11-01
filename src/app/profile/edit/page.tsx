@@ -1840,16 +1840,7 @@ function ProfileEditContent() {
         setIsLoading(false)
         setUserLoading(false)
         
-        // fromMyPageの場合でも遅延完成度計算を実行（画像データ反映のため）
-        setTimeout(() => {
-          console.log('🔄 fromMyPage遅延完成度計算を実行')
-          const currentValues = getValues()
-          const currentValuesWithUserData = {
-            ...currentValues
-          }
-          // 現在のprofileImagesを使用
-          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS_FROM_MYPAGE', false)
-        }, 2000)
+        // 初回完成度計算で画像データが正しく読み込まれているため、遅延計算は不要
         
         return
       }
@@ -2476,27 +2467,47 @@ function ProfileEditContent() {
         // 🔧 画像設定と完成度計算に使用する配列を決定
         let currentImageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }> = []
 
-        if (shouldUseStorageImages) {
-          console.log('✅ セッションストレージから画像状態を復元:', storageImages)
-          currentImageArray = storageImages
-          setProfileImages(storageImages)
-        } else {
-          // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
-          if (profile.avatar_url) {
-            console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
-            console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出')
-            currentImageArray = [{
-              id: '1',
-              url: profile.avatar_url,
-              originalUrl: profile.avatar_url,
-              isMain: true,
-              isEdited: false
-            }]
-            setProfileImages(currentImageArray)
+        // fromMyPageの場合は最優先でlocalStorageから画像データを読み込み
+        if (isFromMyPage) {
+          try {
+            const savedImages = localStorage.getItem('currentProfileImages')
+            if (savedImages) {
+              const parsedImages = JSON.parse(savedImages)
+              if (parsedImages && parsedImages.length > 0) {
+                currentImageArray = parsedImages
+                setProfileImages(parsedImages)
+                console.log('🎯 fromMyPage: localStorage画像データを完成度計算に使用:', parsedImages)
+              }
+            }
+          } catch (error) {
+            console.error('❌ fromMyPage: localStorage画像読み込みエラー:', error)
+          }
+        }
+
+        // fromMyPageで画像が取得できなかった場合、または通常のフローの場合
+        if (currentImageArray.length === 0) {
+          if (shouldUseStorageImages) {
+            console.log('✅ セッションストレージから画像状態を復元:', storageImages)
+            currentImageArray = storageImages
+            setProfileImages(storageImages)
           } else {
-            console.log('❌ 画像なしで初期化')
-            console.log('  - Reason: avatar_url=', !!profile.avatar_url)
-            currentImageArray = []
+            // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
+            if (profile.avatar_url) {
+              console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
+              console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出')
+              currentImageArray = [{
+                id: '1',
+                url: profile.avatar_url,
+                originalUrl: profile.avatar_url,
+                isMain: true,
+                isEdited: false
+              }]
+              setProfileImages(currentImageArray)
+            } else {
+              console.log('❌ 画像なしで初期化')
+              console.log('  - Reason: avatar_url=', !!profile.avatar_url)
+              currentImageArray = []
+            }
           }
         }
         
