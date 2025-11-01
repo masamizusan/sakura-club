@@ -1705,6 +1705,91 @@ function ProfileEditContent() {
       // fromMyPageの場合でユーザーが存在しない場合は、localStorageのみで処理
       if (!user && isFromMyPage) {
         console.log('🎯 fromMyPage=true + no user - using localStorage only')
+        
+        // localStorageからデータを読み込み
+        console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
+        
+        const savedProfile = localStorage.getItem('updateProfile') || localStorage.getItem('previewCompleteData')
+        if (savedProfile) {
+          try {
+            const profileData = JSON.parse(savedProfile)
+            console.log('📦 localStorage profile data (no user):', profileData)
+            
+            const initialData = {
+              nickname: profileData.name || profileData.nickname || '',
+              gender: profileData.gender || 'male',
+              birth_date: profileData.birth_date || '',
+              age: profileData.age || 18,
+              nationality: profileData.nationality || '',
+              prefecture: profileData.prefecture || profileData.residence || '',
+              self_introduction: profileData.bio || profileData.self_introduction || '',
+              hobbies: profileData.hobbies || profileData.interests || [],
+              personality: profileData.personality || [],
+              // 外国人男性向けフィールド
+              planned_prefectures: profileData.planned_prefectures || [],
+              visit_schedule: profileData.visit_schedule || 'no-entry',
+              travel_companion: profileData.travel_companion || 'noEntry',
+              japanese_level: profileData.japanese_level || 'none',
+              planned_stations: profileData.planned_stations || [],
+              // オプションフィールド
+              occupation: profileData.occupation || 'none',
+              height: profileData.height,
+              body_type: profileData.body_type || 'none',
+              marital_status: profileData.marital_status || 'none',
+              english_level: profileData.english_level || 'none',
+              city: profileData.city || ''
+            }
+            
+            console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
+            
+            // フォームを初期化
+            reset({
+              nickname: initialData.nickname,
+              gender: initialData.gender,
+              birth_date: initialData.birth_date,
+              age: initialData.age,
+              nationality: initialData.nationality,
+              prefecture: initialData.prefecture,
+              city: initialData.city,
+              planned_prefectures: initialData.planned_prefectures,
+              visit_schedule: initialData.visit_schedule,
+              travel_companion: initialData.travel_companion,
+              occupation: initialData.occupation,
+              height: initialData.height,
+              body_type: initialData.body_type,
+              marital_status: initialData.marital_status as 'none' | 'single' | 'married',
+              japanese_level: initialData.japanese_level,
+              english_level: initialData.english_level,
+              self_introduction: initialData.self_introduction,
+              hobbies: initialData.hobbies,
+              personality: initialData.personality,
+              custom_culture: ''
+            })
+            
+            // 状態も同期
+            setSelectedHobbies(initialData.hobbies)
+            setSelectedPersonality(initialData.personality)
+            setSelectedPlannedPrefectures(initialData.planned_prefectures)
+            
+            // 画像も設定（localStorageから取得）
+            try {
+              const savedImages = localStorage.getItem('currentProfileImages')
+              if (savedImages) {
+                const images = JSON.parse(savedImages)
+                setProfileImages(images)
+                console.log('🖼️ localStorage画像データを復元 (no user):', images)
+              }
+            } catch (error) {
+              console.error('❌ 画像データ復元エラー (no user):', error)
+            }
+            
+          } catch (error) {
+            console.error('❌ localStorage解析エラー (no user):', error)
+          }
+        } else {
+          console.log('⚠️ localStorageにプロフィールデータが見つかりません')
+        }
+        
         // ローディング状態を解除
         setIsLoading(false)
         setUserLoading(false)
