@@ -1560,30 +1560,78 @@ function ProfileEditContent() {
       if (isTestMode() && !user) {
         console.log('🧪 テストモード検出 - 認証をスキップして初期化処理を実行')
         
-        // URLパラメータからデータを取得してフォームを初期化
+        // マイページからの遷移の場合はlocalStorageからデータを読み込み
         const urlParams = new URLSearchParams(window.location.search)
-        const initialData = {
-          nickname: urlParams.get('nickname') || '',
-          gender: (urlParams.get('gender') as 'male' | 'female') || 'male',
-          birth_date: urlParams.get('birth_date') || '',
-          age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
-          nationality: urlParams.get('nationality') || '',
-          prefecture: urlParams.get('prefecture') || '',
-          self_introduction: '',
-          hobbies: [],
-          personality: [],
-          // 外国人男性向けフィールド
-          planned_prefectures: [],
-          visit_schedule: 'no-entry',
-          travel_companion: 'noEntry',
-          // オプションフィールド
-          occupation: 'none',
-          height: undefined,
-          body_type: 'none',
-          marital_status: 'none' as 'none' | 'single' | 'married',
-          japanese_level: 'none',
-          english_level: 'none',
-          city: ''
+        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+        
+        let initialData
+        if (isFromMyPage) {
+          console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
+          
+          // localStorageからデータを取得
+          const savedProfile = localStorage.getItem('updateProfile') || localStorage.getItem('previewCompleteData')
+          if (savedProfile) {
+            try {
+              const profileData = JSON.parse(savedProfile)
+              console.log('📦 localStorage from profile data:', profileData)
+              
+              initialData = {
+                nickname: profileData.name || profileData.nickname || '',
+                gender: profileData.gender || 'male',
+                birth_date: profileData.birth_date || '',
+                age: profileData.age || 18,
+                nationality: profileData.nationality || '',
+                prefecture: profileData.prefecture || profileData.residence || '',
+                self_introduction: profileData.bio || profileData.self_introduction || '',
+                hobbies: profileData.hobbies || profileData.interests || [],
+                personality: profileData.personality || [],
+                // 外国人男性向けフィールド
+                planned_prefectures: profileData.planned_prefectures || [],
+                visit_schedule: profileData.visit_schedule || 'no-entry',
+                travel_companion: profileData.travel_companion || 'noEntry',
+                japanese_level: profileData.japanese_level || 'none',
+                planned_stations: profileData.planned_stations || [],
+                // オプションフィールド
+                occupation: profileData.occupation || 'none',
+                height: profileData.height,
+                body_type: profileData.body_type || 'none',
+                marital_status: profileData.marital_status || 'none',
+                english_level: profileData.english_level || 'none',
+                city: profileData.city || ''
+              }
+            } catch (error) {
+              console.error('❌ localStorage解析エラー:', error)
+              initialData = null
+            }
+          }
+        }
+        
+        // localStorageにデータがない場合はURLパラメータから取得
+        if (!initialData) {
+          console.log('🌐 URLパラメータからデータを取得')
+          initialData = {
+            nickname: urlParams.get('nickname') || '',
+            gender: (urlParams.get('gender') as 'male' | 'female') || 'male',
+            birth_date: urlParams.get('birth_date') || '',
+            age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
+            nationality: urlParams.get('nationality') || '',
+            prefecture: urlParams.get('prefecture') || '',
+            self_introduction: '',
+            hobbies: [],
+            personality: [],
+            // 外国人男性向けフィールド
+            planned_prefectures: [],
+            visit_schedule: 'no-entry',
+            travel_companion: 'noEntry',
+            // オプションフィールド
+            occupation: 'none',
+            height: undefined,
+            body_type: 'none',
+            marital_status: 'none' as 'none' | 'single' | 'married',
+            japanese_level: 'none',
+            english_level: 'none',
+            city: ''
+          }
         }
         
         console.log('🧪 テストモード - フォーム値設定:', initialData)
@@ -1615,6 +1663,22 @@ function ProfileEditContent() {
         // 状態も同期
         setSelectedHobbies(initialData.hobbies)
         setSelectedPersonality(initialData.personality)
+        setSelectedPlannedPrefectures(initialData.planned_prefectures)
+        
+        // 画像も設定（localStorageから取得）
+        if (isFromMyPage) {
+          try {
+            const savedImages = localStorage.getItem('currentProfileImages')
+            if (savedImages) {
+              const images = JSON.parse(savedImages)
+              setProfileImages(images)
+              console.log('🖼️ localStorage画像データを復元:', images)
+            }
+          } catch (error) {
+            console.error('❌ 画像データ復元エラー:', error)
+          }
+        }
+        
         setIsLoading(false)
         setUserLoading(false)
         
