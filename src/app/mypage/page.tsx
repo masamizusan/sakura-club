@@ -962,9 +962,38 @@ function MyPageContent() {
                 isForeignMale
               })
 
+              // プロフィールデータをlocalStorageに保存してからプロフィール編集画面に遷移
+              console.log('💾 プロフィールデータをlocalStorageに保存')
+              console.log('📦 保存するプロフィールデータ:', profile)
+              
+              try {
+                // プロフィールデータをlocalStorageに保存
+                localStorage.setItem('updateProfile', JSON.stringify(profile))
+                console.log('✅ updateProfileに保存完了')
+                
+                // 画像データも保存（存在する場合）
+                if (profile?.avatar_url) {
+                  const imageData = [{
+                    id: 'main',
+                    url: profile.avatar_url,
+                    originalUrl: profile.avatar_url,
+                    isMain: true,
+                    isEdited: false
+                  }]
+                  localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
+                  console.log('✅ 画像データも保存完了:', imageData)
+                }
+              } catch (error) {
+                console.error('❌ localStorage保存エラー:', error)
+              }
+              
               // 🔧 修正: 外国人男性の場合はtype=foreign-maleパラメータを追加
               const profileType = isForeignMale ? 'foreign-male' : 'japanese-female'
-              window.location.href = `/profile/edit?fromMyPage=true&type=${profileType}`
+              
+              // 少し待ってから遷移（localStorage保存を確実にするため）
+              setTimeout(() => {
+                window.location.href = `/profile/edit?fromMyPage=true&type=${profileType}`
+              }, 100)
             }}
           >
             <Edit3 className="w-4 h-4 mr-2" />

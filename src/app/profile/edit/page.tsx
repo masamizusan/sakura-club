@@ -1709,6 +1709,13 @@ function ProfileEditContent() {
         // localStorageからデータを読み込み
         console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
         
+        // localStorage全体の確認
+        console.log('🔍 localStorage全体確認:')
+        console.log('  - updateProfile:', localStorage.getItem('updateProfile'))
+        console.log('  - previewCompleteData:', localStorage.getItem('previewCompleteData'))
+        console.log('  - currentProfileImages:', localStorage.getItem('currentProfileImages'))
+        console.log('  - localStorage keys:', Object.keys(localStorage))
+        
         const savedProfile = localStorage.getItem('updateProfile') || localStorage.getItem('previewCompleteData')
         if (savedProfile) {
           try {
