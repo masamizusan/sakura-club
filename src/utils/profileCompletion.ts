@@ -147,7 +147,7 @@ export function calculateProfileCompletion(
     }
 
     // 無効な値を除外（空文字、null、undefined、'none'、未選択系の値）
-    if (!value || value === '' || value === 'none' || value === 'no-entry' ||
+    if (!value || value === '' || value === 'none' || value === 'no-entry' || value === 'noEntry' ||
         value === '選択してください' || value === '未選択' ||
         value === '国籍を選択' || value === '都道府県を選択') {
       return false
