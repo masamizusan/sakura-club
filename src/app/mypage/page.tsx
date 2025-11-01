@@ -971,17 +971,31 @@ function MyPageContent() {
                 localStorage.setItem('updateProfile', JSON.stringify(profile))
                 console.log('✅ updateProfileに保存完了')
                 
-                // 画像データも保存（存在する場合）
-                if (profile?.avatar_url) {
-                  const imageData = [{
+                // 画像データも保存（複数のソースから確認）
+                console.log('🖼️ 画像データ確認:')
+                console.log('  - profile.avatar_url:', profile?.avatar_url)
+                console.log('  - userAvatarUrl:', user?.avatar_url)
+                console.log('  - user.user_metadata?.avatar_url:', user?.user_metadata?.avatar_url)
+                
+                let imageData = []
+                
+                // 複数のソースから画像URLを取得
+                const imageUrl = profile?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url
+                
+                if (imageUrl) {
+                  imageData = [{
                     id: 'main',
-                    url: profile.avatar_url,
-                    originalUrl: profile.avatar_url,
+                    url: imageUrl,
+                    originalUrl: imageUrl,
                     isMain: true,
                     isEdited: false
                   }]
                   localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
-                  console.log('✅ 画像データも保存完了:', imageData)
+                  console.log('✅ 画像データ保存完了:', imageData)
+                } else {
+                  console.log('⚠️ 画像データが見つかりませんでした')
+                  // 空の配列を保存（画像なし状態を明示）
+                  localStorage.setItem('currentProfileImages', JSON.stringify([]))
                 }
               } catch (error) {
                 console.error('❌ localStorage保存エラー:', error)

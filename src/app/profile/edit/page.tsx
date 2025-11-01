@@ -1778,14 +1778,40 @@ function ProfileEditContent() {
             setSelectedPersonality(initialData.personality)
             setSelectedPlannedPrefectures(initialData.planned_prefectures)
             
-            // 画像も設定（localStorageから取得）
+            // 画像も設定（localStorageとプロフィールデータから取得）
             try {
               const savedImages = localStorage.getItem('currentProfileImages')
+              console.log('🖼️ localStorage画像データ確認:', savedImages)
+              
+              let finalImages = []
+              
               if (savedImages) {
                 const images = JSON.parse(savedImages)
-                setProfileImages(images)
-                console.log('🖼️ localStorage画像データを復元 (no user):', images)
+                if (images && images.length > 0) {
+                  finalImages = images
+                  console.log('✅ localStorage画像データを使用:', images)
+                }
               }
+              
+              // localStorageに画像データがない場合、プロフィールデータから取得
+              if (finalImages.length === 0 && profileData.avatar_url) {
+                finalImages = [{
+                  id: 'main',
+                  url: profileData.avatar_url,
+                  originalUrl: profileData.avatar_url,
+                  isMain: true,
+                  isEdited: false
+                }]
+                console.log('✅ プロフィールデータから画像データを作成:', finalImages)
+              }
+              
+              if (finalImages.length > 0) {
+                setProfileImages(finalImages)
+                console.log('🖼️ 最終画像データを設定:', finalImages)
+              } else {
+                console.log('⚠️ 画像データが見つかりませんでした')
+              }
+              
             } catch (error) {
               console.error('❌ 画像データ復元エラー (no user):', error)
             }
