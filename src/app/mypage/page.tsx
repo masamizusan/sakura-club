@@ -974,13 +974,13 @@ function MyPageContent() {
                 // 画像データも保存（複数のソースから確認）
                 console.log('🖼️ 画像データ確認:')
                 console.log('  - profile.avatar_url:', profile?.avatar_url)
-                console.log('  - userAvatarUrl:', user?.avatar_url)
-                console.log('  - user.user_metadata?.avatar_url:', user?.user_metadata?.avatar_url)
+                console.log('  - user.avatarUrl:', user?.avatarUrl)
+                // user_metadataはAuthUserの型にないため削除
                 
                 let imageData = []
                 
                 // 複数のソースから画像URLを取得
-                const imageUrl = profile?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url
+                const imageUrl = profile?.avatar_url || user?.avatarUrl
                 
                 if (imageUrl) {
                   imageData = [{
