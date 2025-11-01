@@ -2299,6 +2299,19 @@ function ProfileEditContent() {
           bio: profile.bio || profile.self_introduction || '',
           hobbies: existingHobbies,
           personality: existingPersonality,
+          // 外国人男性専用フィールドを明示的に追加
+          visit_schedule: profile.visit_schedule,
+          travel_companion: profile.travel_companion,
+          planned_prefectures: profile.planned_prefectures || [],
+          japanese_level: profile.japanese_level,
+          planned_stations: (profile as any).planned_stations || [],
+          // その他のオプションフィールド
+          occupation: profile.occupation,
+          height: profile.height,
+          body_type: profile.body_type,
+          marital_status: profile.marital_status,
+          city: profile.city,
+          english_level: profile.english_level,
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
@@ -2315,11 +2328,21 @@ function ProfileEditContent() {
             form_nationality: currentValues.nationality,
             are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
           })
-          // ❌ 問題: currentValues にはユーザー画像情報が含まれていない
+          // ✅ 修正: currentValues + プロフィールデータ + ユーザー画像情報を統合
           const currentValuesWithUserData = {
-            ...currentValues,
-            avatarUrl: user?.avatarUrl,
-            avatar_url: user?.avatarUrl
+            ...profile, // 既存のプロフィールデータを基盤として使用
+            ...currentValues, // フォームの現在値で上書き
+            hobbies: existingHobbies, // 状態管理された趣味
+            personality: existingPersonality, // 状態管理された性格
+            // 外国人男性専用フィールドを確実に含める
+            visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
+            travel_companion: currentValues.travel_companion || profile.travel_companion,
+            planned_prefectures: currentValues.planned_prefectures || profile.planned_prefectures || [],
+            japanese_level: currentValues.japanese_level || profile.japanese_level,
+            planned_stations: (currentValues as any).planned_stations || (profile as any).planned_stations || [],
+            // ユーザー画像情報を追加
+            avatarUrl: user?.avatarUrl || profile.avatarUrl,
+            avatar_url: user?.avatarUrl || profile.avatar_url
           }
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
         }, 2000);
