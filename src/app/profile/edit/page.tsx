@@ -1845,9 +1845,7 @@ function ProfileEditContent() {
           console.log('🔄 fromMyPage遅延完成度計算を実行')
           const currentValues = getValues()
           const currentValuesWithUserData = {
-            ...currentValues,
-            avatarUrl: currentValues?.avatar_url,
-            avatar_url: currentValues?.avatar_url
+            ...currentValues
           }
           // 現在のprofileImagesを使用
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS_FROM_MYPAGE', false)
