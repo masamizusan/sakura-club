@@ -3104,7 +3104,7 @@ function ProfileEditContent() {
                           {t('profile.visitSchedule')}
                         </label>
                         <Select
-                          value={watch('visit_schedule') || ''}
+                          value={watch('visit_schedule') || 'no-entry'}
                           onValueChange={(value) => setValue('visit_schedule', value)}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
@@ -3129,7 +3129,7 @@ function ProfileEditContent() {
                           {t('profile.travelCompanion')}
                         </label>
                         <Select
-                          value={watch('travel_companion') || ''}
+                          value={watch('travel_companion') || 'noEntry'}
                           onValueChange={(value) => setValue('travel_companion', value)}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
