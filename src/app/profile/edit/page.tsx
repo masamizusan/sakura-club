@@ -217,7 +217,7 @@ const getCultureCategories = (t: any) => [
       { value: '折り紙', label: t('culture.origami') },
       { value: '盆栽', label: t('culture.bonsai') },
       { value: '神社仏閣', label: t('culture.shrinesTemples') },
-      { value: '御朱印集め', label: t('culture.goshuin') },
+      { value: '御朱印集め', label: t('culture.sealCollection') },
       { value: '禅', label: t('culture.zen') }
     ]
   },
@@ -281,13 +281,13 @@ const getCultureCategories = (t: any) => [
   {
     name: t('cultureCategories.seasonal'),
     items: [
-      { value: '桜見物', label: t('culture.cherryBlossoms') },
+      { value: '桜見物', label: t('culture.cherryBlossom') },
       { value: '紅葉狩り', label: t('culture.autumnLeaves') },
       { value: '花火大会', label: t('culture.fireworks') },
       { value: '祭り参加', label: t('culture.festivals') },
-      { value: '盆踊り', label: t('culture.bonOdori') },
-      { value: '雪景色', label: t('culture.snowScenery') },
-      { value: '日本庭園散策', label: t('culture.japaneseGarden') }
+      { value: '盆踊り', label: t('culture.bonDance') },
+      { value: '雪景色', label: t('culture.snowScape') },
+      { value: '日本庭園散策', label: t('culture.gardenWalk') }
     ]
   },
   {
@@ -298,24 +298,24 @@ const getCultureCategories = (t: any) => [
       { value: '畳', label: t('culture.tatami') },
       { value: '古民家カフェ', label: t('culture.oldHouseCafe') },
       { value: '銭湯', label: t('culture.sento') },
-      { value: '昭和レトロ家電', label: t('culture.showaAppliances') },
-      { value: '和モダンインテリア', label: t('culture.waModern') }
+      { value: '昭和レトロ家電', label: t('culture.showaRetro') },
+      { value: '和モダンインテリア', label: t('culture.waModernInterior') }
     ]
   },
   {
-    name: t('cultureCategories.crafts'),
+    name: t('cultureCategories.craftmanship'),
     items: [
       { value: '漆器', label: t('culture.lacquerware') },
       { value: '金箔貼り', label: t('culture.goldLeaf') },
-      { value: '和紙漉き', label: t('culture.washipaper') },
+      { value: '和紙漉き', label: t('culture.paperMaking') },
       { value: '染物', label: t('culture.dyeing') },
-      { value: '刀鍛冶', label: t('culture.swordsmith') },
-      { value: '木工', label: t('culture.woodwork') },
-      { value: '飴細工', label: t('culture.candyArt') }
+      { value: '刀鍛冶', label: t('culture.swordSmithing') },
+      { value: '木工', label: t('culture.woodworking') },
+      { value: '飴細工', label: t('culture.sugarCrafts') }
     ]
   },
   {
-    name: t('cultureCategories.modern'),
+    name: t('cultureCategories.modernCulture'),
     items: [
       { value: 'アニメ', label: t('culture.anime') },
       { value: 'マンガ', label: t('culture.manga') },
