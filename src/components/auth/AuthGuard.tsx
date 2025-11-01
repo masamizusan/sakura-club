@@ -27,10 +27,13 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         return false
       }
       
-      const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
+      // fromMyPageがある場合はtypeパラメータを除外してテストモード判定
+      const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+      const typeParam = !isFromMyPage ? urlParams.get('type') : null
+      const hasTestParams = typeParam || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
       
-      const detected = isProfileEditPage && !!hasTestParams
-      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, hasTestParams, detected })
+      const detected = isProfileEditPage && !isFromMyPage && !!hasTestParams
+      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, isFromMyPage, hasTestParams, detected })
       return detected
     }
     return false
@@ -64,7 +67,9 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         return
       }
       
-      const hasTestModeParams = urlParams.get('type') === 'foreign-male' || urlParams.get('type') === 'japanese-female'
+      // fromMyPageがある場合はtypeパラメータによるテストモード判定をスキップ
+      const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+      const hasTestModeParams = !isFromMyPage && (urlParams.get('type') === 'foreign-male' || urlParams.get('type') === 'japanese-female')
       const hasGender = urlParams.get('gender')
       const hasNickname = urlParams.get('nickname')
       const hasBirthDate = urlParams.get('birth_date')
@@ -75,14 +80,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       // プロフィール編集画面の判定のみ
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
       
-      // テストモードの条件：プロフィール編集画面のみ
-      const testModeDetected = isProfileEditPage && (
+      // テストモードの条件：プロフィール編集画面のみ、かつfromMyPageではない場合
+      const testModeDetected = isProfileEditPage && !isFromMyPage && (
         hasTestModeParams || 
         (hasGender && (hasNickname || hasBirthDate || hasAge || hasNationality || hasPrefecture))
       )
       
       console.log('🔍 AuthGuard test mode check:', {
         isProfileEditPage,
+        isFromMyPage,
         fromMyPage: urlParams.get('fromMyPage'),
         hasTestModeParams,
         hasGender,
