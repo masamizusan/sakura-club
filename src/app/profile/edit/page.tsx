@@ -233,7 +233,7 @@ const getCultureCategories = (t: any) => [
       { value: 'お好み焼き', label: t('culture.okonomiyaki') },
       { value: 'たこ焼き', label: t('culture.takoyaki') },
       { value: 'カレーライス', label: t('culture.curry') },
-      { value: 'コンビニフード', label: t('culture.convenienceFood') },
+      { value: 'コンビニフード', label: t('culture.conbiniFood') },
       { value: 'ポテトチップス', label: t('culture.potatoChips') },
       { value: '出汁', label: t('culture.dashi') },
       { value: '味噌', label: t('culture.miso') },
@@ -252,12 +252,12 @@ const getCultureCategories = (t: any) => [
       { value: '抹茶スイーツ', label: t('culture.matchaSweets') },
       { value: '団子', label: t('culture.dango') },
       { value: 'たい焼き', label: t('culture.taiyaki') },
-      { value: '大判焼き', label: t('culture.obanYaki') },
-      { value: 'わらび餅', label: t('culture.warabiMochi') },
+      { value: '大判焼き', label: t('culture.obanyaki') },
+      { value: 'わらび餅', label: t('culture.warabimochi') },
       { value: 'りんご飴', label: t('culture.candiedApple') },
       { value: 'わたあめ', label: t('culture.cottonCandy') },
       { value: '駄菓子', label: t('culture.dagashi') },
-      { value: 'コンビニスイーツ', label: t('culture.convenienceSweets') }
+      { value: 'コンビニスイーツ', label: t('culture.conbiniSweets') }
     ]
   },
   {
@@ -272,7 +272,7 @@ const getCultureCategories = (t: any) => [
       { value: '薙刀', label: t('culture.naginata') },
       { value: '歌舞伎', label: t('culture.kabuki') },
       { value: '能', label: t('culture.noh') },
-      { value: '日本舞踊', label: t('culture.nihonBuyo') },
+      { value: '日本舞踊', label: t('culture.japaneseDance') },
       { value: '邦楽', label: t('culture.hogaku') },
       { value: '演歌', label: t('culture.enka') },
       { value: '太鼓', label: t('culture.taiko') }
