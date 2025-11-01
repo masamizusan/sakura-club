@@ -1691,9 +1691,18 @@ function ProfileEditContent() {
         return
       }
       
-      // AuthGuardが認証確認中の場合は待機
-      if (!user) {
+      // AuthGuardが認証確認中の場合は待機（ただし、fromMyPageの場合は待機しない）
+      if (!user && !isFromMyPage) {
         console.log('⏳ ユーザー認証確認中 - AuthGuardの処理完了を待機')
+        return
+      }
+      
+      // fromMyPageの場合でユーザーが存在しない場合は、localStorageのみで処理
+      if (!user && isFromMyPage) {
+        console.log('🎯 fromMyPage=true + no user - using localStorage only')
+        // ローディング状態を解除
+        setIsLoading(false)
+        setUserLoading(false)
         return
       }
       
