@@ -432,6 +432,12 @@ const VISIT_SCHEDULE_OPTIONS = generateVisitScheduleOptions();
 const isTestMode = () => {
   if (typeof window === 'undefined') return false
   const urlParams = new URLSearchParams(window.location.search)
+  
+  // マイページからの遷移の場合はテストモードではない
+  if (urlParams.get('fromMyPage') === 'true') {
+    return false
+  }
+  
   return !!(urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality'))
 }
 
