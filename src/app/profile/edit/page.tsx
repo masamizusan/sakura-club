@@ -1295,7 +1295,7 @@ function ProfileEditContent() {
           // 外国人男性向け新フィールド
           planned_prefectures: [],
           visit_schedule: 'no-entry',
-          travel_companion: 'no-entry',
+          travel_companion: 'noEntry',
           occupation: 'none', // デフォルト値設定
           height: undefined, // 🔧 数値フィールドなのでundefined
           body_type: 'none', // デフォルト値設定
@@ -1538,8 +1538,8 @@ function ProfileEditContent() {
           gender: 'female',
           age: 18,
           planned_prefectures: [],
-          visit_schedule: '',
-          travel_companion: '',
+          visit_schedule: 'no-entry',
+          travel_companion: 'noEntry',
           hobbies: [],
           personality: [],
           custom_culture: ''
@@ -1575,7 +1575,7 @@ function ProfileEditContent() {
           // 外国人男性向けフィールド
           planned_prefectures: [],
           visit_schedule: 'no-entry',
-          travel_companion: 'no-entry',
+          travel_companion: 'noEntry',
           // オプションフィールド
           occupation: 'none',
           height: undefined,
@@ -2042,8 +2042,8 @@ function ProfileEditContent() {
           city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
           planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile.planned_prefectures || [])) : undefined,
-          visit_schedule: isForeignMale ? (isNewUser ? '' : (profile.visit_schedule || '')) : undefined,
-          travel_companion: isForeignMale ? (isNewUser ? '' : (profile.travel_companion || '')) : undefined,
+          visit_schedule: isForeignMale ? (isNewUser ? 'no-entry' : (profile.visit_schedule || 'no-entry')) : undefined,
+          travel_companion: isForeignMale ? (isNewUser ? 'noEntry' : (profile.travel_companion || 'noEntry')) : undefined,
           occupation: isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none'),
           height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
@@ -2147,9 +2147,9 @@ function ProfileEditContent() {
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
-            const travelCompanionValue = isNewUser ? 'no-entry' :
-              (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry'
-                ? profile.travel_companion : 'no-entry')
+            const travelCompanionValue = isNewUser ? 'noEntry' :
+              (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry'
+                ? profile.travel_companion : 'noEntry')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
@@ -2159,7 +2159,7 @@ function ProfileEditContent() {
             // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
             setValue('visit_schedule', 'no-entry', { shouldValidate: false })
-            setValue('travel_companion', 'no-entry', { shouldValidate: false })
+            setValue('travel_companion', 'noEntry', { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
         }
