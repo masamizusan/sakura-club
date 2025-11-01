@@ -20,6 +20,13 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+      
+      // マイページからの遷移の場合はテストモードではない
+      if (urlParams.get('fromMyPage') === 'true') {
+        console.log('🔍 INITIAL detection: fromMyPage=true, not test mode')
+        return false
+      }
+      
       const hasTestParams = urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
       
       const detected = isProfileEditPage && !!hasTestParams
@@ -47,6 +54,16 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
+      
+      // マイページからの遷移の場合はテストモードではない
+      if (urlParams.get('fromMyPage') === 'true') {
+        if (isTestMode) {
+          console.log('🔍 fromMyPage=true detected - disabling test mode')
+          setIsTestMode(false)
+        }
+        return
+      }
+      
       const hasTestModeParams = urlParams.get('type') === 'foreign-male' || urlParams.get('type') === 'japanese-female'
       const hasGender = urlParams.get('gender')
       const hasNickname = urlParams.get('nickname')
@@ -66,6 +83,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       
       console.log('🔍 AuthGuard test mode check:', {
         isProfileEditPage,
+        fromMyPage: urlParams.get('fromMyPage'),
         hasTestModeParams,
         hasGender,
         hasNickname,
