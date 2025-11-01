@@ -1816,7 +1816,8 @@ function ProfileEditContent() {
                   const result = calculateProfileCompletion(
                     currentValues,
                     finalImages,
-                    profileType === 'foreign-male'
+                    'IMAGE_SET_COMPLETION',
+                    false
                   )
                   console.log('✅ 画像設定後の完成度結果:', result)
                 }, 100)
