@@ -1808,6 +1808,18 @@ function ProfileEditContent() {
               if (finalImages.length > 0) {
                 setProfileImages(finalImages)
                 console.log('🖼️ 最終画像データを設定:', finalImages)
+                
+                // 画像設定後に完成度を再計算
+                setTimeout(() => {
+                  console.log('🔄 画像設定後の完成度再計算を実行')
+                  const currentValues = getValues()
+                  const result = calculateProfileCompletion(
+                    currentValues,
+                    finalImages,
+                    profileType === 'foreign-male'
+                  )
+                  console.log('✅ 画像設定後の完成度結果:', result)
+                }, 100)
               } else {
                 console.log('⚠️ 画像データが見つかりませんでした')
               }
@@ -1826,6 +1838,20 @@ function ProfileEditContent() {
         // ローディング状態を解除
         setIsLoading(false)
         setUserLoading(false)
+        
+        // fromMyPageの場合でも遅延完成度計算を実行（画像データ反映のため）
+        setTimeout(() => {
+          console.log('🔄 fromMyPage遅延完成度計算を実行')
+          const currentValues = getValues()
+          const currentValuesWithUserData = {
+            ...currentValues,
+            avatarUrl: profileData?.avatar_url,
+            avatar_url: profileData?.avatar_url
+          }
+          // 現在のprofileImagesを使用
+          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS_FROM_MYPAGE', false)
+        }, 2000)
+        
         return
       }
       
