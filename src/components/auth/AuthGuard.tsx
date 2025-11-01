@@ -128,6 +128,16 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       return
     }
     
+    // マイページからの遷移の場合は認証チェックをスキップ
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('fromMyPage') === 'true') {
+        console.log('🎯 fromMyPage=true - skipping authentication check')
+        hasRedirected.current = false // リダイレクトフラグをリセット
+        return
+      }
+    }
+    
     // マイページでプレビューデータがある場合は特別処理
     const isMyPage = typeof window !== 'undefined' && window.location.pathname.includes('/mypage')
     const hasPreviewData = typeof window !== 'undefined' && (
@@ -201,6 +211,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   if (isTestMode) {
     console.log('🧪 Test mode - rendering children directly')
     return <>{children}</>
+  }
+
+  // マイページからの遷移の場合は即座にコンポーネントを表示
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('fromMyPage') === 'true') {
+      console.log('🎯 fromMyPage=true - rendering children directly')
+      return <>{children}</>
+    }
   }
 
   // 通常モード：認証済みユーザーまたはマイページ+プレビューデータの場合のみ子コンポーネントを表示
