@@ -1561,14 +1561,17 @@ function ProfileEditContent() {
   // Load current user data
   useEffect(() => {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
+    
+    // fromMyPageパラメータの確認（useEffect内の最初で定義）
+    const urlParams = new URLSearchParams(window.location.search)
+    const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+    
     const loadUserData = async () => {
       // テストモードの場合は認証をスキップ
       if (isTestMode() && !user) {
         console.log('🧪 テストモード検出 - 認証をスキップして初期化処理を実行')
         
         // マイページからの遷移の場合はlocalStorageからデータを読み込み
-        const urlParams = new URLSearchParams(window.location.search)
-        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
         
         let initialData
         if (isFromMyPage) {
@@ -1691,6 +1694,8 @@ function ProfileEditContent() {
         return
       }
       
+      // fromMyPageパラメータは既に上で定義済み
+      
       // AuthGuardが認証確認中の場合は待機（ただし、fromMyPageの場合は待機しない）
       if (!user && !isFromMyPage) {
         console.log('⏳ ユーザー認証確認中 - AuthGuardの処理完了を待機')
@@ -1712,7 +1717,7 @@ function ProfileEditContent() {
         let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', user?.id)
           .single()
 
         if (profileError || !profile) {
@@ -2286,8 +2291,8 @@ function ProfileEditContent() {
         console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
         
         // 🔒 セキュリティ強化: ユーザー固有のセッションストレージチェック
-        const userImageKey = `currentProfileImages_${user.id}`
-        const userTimestampKey = `imageStateTimestamp_${user.id}`
+        const userImageKey = `currentProfileImages_${user?.id || 'anonymous'}`
+        const userTimestampKey = `imageStateTimestamp_${user?.id || 'anonymous'}`
         const currentImageState = sessionStorage.getItem(userImageKey)
         let shouldUseStorageImages = false
         let storageImages: any[] = []
