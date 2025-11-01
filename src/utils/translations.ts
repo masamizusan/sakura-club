@@ -70,6 +70,7 @@ type TranslationKeys = {
     nicknameDescription: string
     previewCheckButton: string
     previewAdvice: string
+    selectPrefecturesWithCount: string
   }
 
   // プレースホルダーテキスト
@@ -100,6 +101,7 @@ type TranslationKeys = {
     delete: string
     upload: string
     preview: string
+    previewCheck: string
     back: string
     next: string
     complete: string
@@ -711,7 +713,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperienceWant: '体験したい日本文化',
       nicknameDescription: 'プロフィールに表示される名前です',
       previewCheckButton: '',
-      previewAdvice: '上のボタンでプレビューを確認してから保存してください'
+      previewAdvice: '上のボタンでプレビューを確認してから保存してください',
+      selectPrefecturesWithCount: '都道府県を選択'
     },
 
     placeholders: {
@@ -740,6 +743,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       delete: '削除',
       upload: 'アップロード',
       preview: 'プレビュー',
+      previewCheck: 'プレビューで確認',
       back: '戻る',
       next: '次へ',
       complete: '完了',
@@ -1300,7 +1304,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperienceWant: 'Japanese Culture to Experience',
       nicknameDescription: 'This is the name that will be displayed on your profile',
       previewCheckButton: '',
-      previewAdvice: 'Please check preview with the button above before saving'
+      previewAdvice: 'Please check preview with the button above before saving',
+      selectPrefecturesWithCount: 'Select Prefectures'
     },
 
     placeholders: {
@@ -1329,6 +1334,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       delete: 'Delete',
       upload: 'Upload',
       preview: 'Preview',
+      previewCheck: 'Preview',
       back: 'Back',
       next: 'Next',
       complete: 'Complete',
@@ -1888,7 +1894,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperienceWant: '체험하고 싶은 일본 문화',
       nicknameDescription: '프로필에 표시될 이름입니다',
       previewCheckButton: '',
-      previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요'
+      previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요',
+      selectPrefecturesWithCount: '도도부현 선택'
     },
 
     placeholders: {
@@ -1917,6 +1924,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       delete: '삭제',
       upload: '업로드',
       preview: '미리보기',
+      previewCheck: '미리보기 확인',
       back: '뒤로',
       next: '다음',
       complete: '완료',
@@ -2476,7 +2484,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperienceWant: '想體驗的日本文化',
       nicknameDescription: '這是將在您的個人資料上顯示的名稱',
       previewCheckButton: '',
-      previewAdvice: '請用上方按鈕確認預覽後再儲存'
+      previewAdvice: '請用上方按鈕確認預覽後再儲存',
+      selectPrefecturesWithCount: '選擇都道府縣'
     },
 
     placeholders: {
@@ -2505,6 +2514,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       delete: '刪除',
       upload: '上傳',
       preview: '預覽',
+      previewCheck: '預覽確認',
       back: '返回',
       next: '下一步',
       complete: '完成',

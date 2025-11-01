@@ -2928,7 +2928,7 @@ function ProfileEditContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        職業
+                        {t('profile.occupation')}
                       </label>
                       <Select
                         value={watch('occupation') || 'none'}
@@ -2949,13 +2949,13 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        身長
+                        {t('profile.height')}
                       </label>
                       <Input
                         type="number"
                         min="120"
                         max="250"
-                        placeholder="160"
+                        placeholder={t('placeholders.height')}
                         step="1"
                         onFocus={(e) => {
                           if (!e.target.value) {
@@ -2972,14 +2972,14 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        体型
+                        {t('profile.bodyType')}
                       </label>
                       <Select
                         value={watch('body_type') || 'none'}
                         onValueChange={(value) => setValue('body_type', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="体型を選択" />
+                          <SelectValue placeholder={t('placeholders.selectBodyType')} />
                         </SelectTrigger>
                         <SelectContent>
                           {getBodyTypeOptions(t).map((option) => (
@@ -2993,7 +2993,7 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        結婚状況
+                        {t('profile.maritalStatus')}
                       </label>
                       <Select
                         value={watch('marital_status') || 'none'}
@@ -3014,14 +3014,14 @@ function ProfileEditContent() {
                     {isForeignMale && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          日本語レベル
+                          {t('profile.japaneseLevel')}
                         </label>
                         <Select
                           value={watch('japanese_level') || 'none'}
                           onValueChange={(value) => setValue('japanese_level', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="日本語レベルを選択" />
+                            <SelectValue placeholder={t('placeholders.selectJapaneseLevel')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getJapaneseLevelOptions(t).map((option) => (
@@ -3096,19 +3096,19 @@ function ProfileEditContent() {
                   <>
                     {/* 日本訪問計画 */}
                     <div className="space-y-4">
-                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">日本訪問計画</h4>
+                      <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">{t('profile.japanVisitPlan')}</h4>
 
                       {/* 訪問予定時期 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          訪問予定時期
+                          {t('profile.visitSchedule')}
                         </label>
                         <Select
                           value={watch('visit_schedule') || ''}
                           onValueChange={(value) => setValue('visit_schedule', value)}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="訪問予定を選択" />
+                            <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getVisitScheduleOptionsTranslated().map((option) => (
@@ -3126,14 +3126,14 @@ function ProfileEditContent() {
                       {/* 同行者 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          同行者
+                          {t('profile.travelCompanion')}
                         </label>
                         <Select
                           value={watch('travel_companion') || ''}
                           onValueChange={(value) => setValue('travel_companion', value)}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
-                            <SelectValue placeholder="同行者を選択" />
+                            <SelectValue placeholder={t('placeholders.selectTravelCompanion')} />
                           </SelectTrigger>
                           <SelectContent>
                             {getTravelCompanionOptions(t).map((option) => (
@@ -3151,14 +3151,14 @@ function ProfileEditContent() {
                       {/* 行く予定の都道府県 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          行く予定の都道府県
+                          {t('profile.plannedPrefectures')}
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">最大3つまで選択できます</p>
+                        <p className="text-xs text-gray-500 mb-3">{t('profile.maxSelection')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="prefectures">
                             <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
-                              都道府県を選択（{selectedPlannedPrefectures.length}/3 選択済み）
+                              {t('profile.selectPrefecturesWithCount')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
                             </AccordionTrigger>
                             <AccordionContent>
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
@@ -3344,7 +3344,7 @@ function ProfileEditContent() {
                     }}
                   >
                     <User className="w-4 h-4 mr-2" />
-                    プレビューで確認
+                    {t('buttons.previewCheck')}
                   </Button>
                 </div>
 
