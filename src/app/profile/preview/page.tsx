@@ -187,31 +187,67 @@ function ProfilePreviewContent() {
 
               {/* 基本プロフィール */}
               <div className="space-y-3 text-sm">
-                {/* 外国人男性の場合のみ国籍を表示 */}
+                {/* 1. 国籍（外国人男性の場合のみ）/ 居住地（日本人女性の場合） */}
                 {gender === 'male' && nationality && nationality !== '日本' && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">国籍:</span>
                     <span className="text-gray-600">{nationality}</span>
                   </div>
                 )}
-                
-                {/* 外国人男性の場合：行く予定の都道府県 */}
-                {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">行く予定:</span>
-                    <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
-                  </div>
-                )}
-
-                {/* 外国人男性の場合：訪問予定の駅 */}
-                {gender === 'male' && planned_stations && planned_stations.length > 0 && (
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">訪問予定駅:</span>
-                    <span className="text-gray-600">{planned_stations.join(', ')}</span>
+                {gender === 'female' && prefecture && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">居住地:</span>
+                    <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
                   </div>
                 )}
                 
-                {/* 外国人男性の場合：訪問予定 */}
+                {/* 2. 職業 */}
+                {shouldDisplayValue(occupation) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">職業:</span>
+                    <span className="text-gray-600">{occupation}</span>
+                  </div>
+                )}
+                
+                {/* 3. 身長 */}
+                {shouldDisplayValue(height) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">身長:</span>
+                    <span className="text-gray-600">{height}cm</span>
+                  </div>
+                )}
+                
+                {/* 4. 体型 */}
+                {shouldDisplayValue(bodyType) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">体型:</span>
+                    <span className="text-gray-600">{bodyType}</span>
+                  </div>
+                )}
+                
+                {/* 5. 婚姻状況 */}
+                {shouldDisplayValue(maritalStatus) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">結婚:</span>
+                    <span className="text-gray-600">{maritalStatus === 'single' ? '未婚' : '既婚'}</span>
+                  </div>
+                )}
+                
+                {/* 6. 日本語レベル（外国人男性）/ 英語レベル（日本人女性） */}
+                {shouldDisplayValue(japaneseLevel) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">日本語:</span>
+                    <span className="text-gray-600">{japaneseLevel}</span>
+                  </div>
+                )}
+                {shouldDisplayValue(englishLevel) && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 w-20">英語:</span>
+                    <span className="text-gray-600">{englishLevel}</span>
+                  </div>
+                )}
+                
+                {/* 7. 訪問予定（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">訪問予定:</span>
@@ -246,7 +282,7 @@ function ProfilePreviewContent() {
                   </div>
                 )}
                 
-                {/* 外国人男性の場合：同行者 */}
+                {/* 8. 同行者（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(travel_companion) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">同行者:</span>
@@ -263,52 +299,24 @@ function ProfilePreviewContent() {
                   </div>
                 )}
                 
-                {/* 日本人女性の場合：居住地 */}
-                {gender === 'female' && prefecture && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">居住地:</span>
-                    <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
+                {/* 9. 行く予定の都道府県（外国人男性の場合） */}
+                {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
+                  <div className="flex items-start">
+                    <span className="font-medium text-gray-700 w-20">行く予定:</span>
+                    <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
                   </div>
                 )}
-                {shouldDisplayValue(occupation) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">職業:</span>
-                    <span className="text-gray-600">{occupation}</span>
-                  </div>
-                )}
-                {shouldDisplayValue(height) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">身長:</span>
-                    <span className="text-gray-600">{height}cm</span>
-                  </div>
-                )}
-                {shouldDisplayValue(bodyType) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">体型:</span>
-                    <span className="text-gray-600">{bodyType}</span>
-                  </div>
-                )}
-                {shouldDisplayValue(maritalStatus) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">結婚:</span>
-                    <span className="text-gray-600">{maritalStatus === 'single' ? '未婚' : '既婚'}</span>
-                  </div>
-                )}
-                {shouldDisplayValue(englishLevel) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">英語:</span>
-                    <span className="text-gray-600">{englishLevel}</span>
-                  </div>
-                )}
-                {shouldDisplayValue(japaneseLevel) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">日本語:</span>
-                    <span className="text-gray-600">{japaneseLevel}</span>
+
+                {/* 訪問予定の駅（外国人男性の場合）- 順序は変更しない */}
+                {gender === 'male' && planned_stations && planned_stations.length > 0 && (
+                  <div className="flex items-start">
+                    <span className="font-medium text-gray-700 w-20">訪問予定駅:</span>
+                    <span className="text-gray-600">{planned_stations.join(', ')}</span>
                   </div>
                 )}
               </div>
 
-              {/* 自己紹介 */}
+              {/* 10. 自己紹介 */}
               {shouldDisplayValue(selfIntroduction) && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
@@ -318,10 +326,27 @@ function ProfilePreviewContent() {
                 </div>
               )}
 
-              {/* 共有したい日本文化 */}
+              {/* 11. 性格 */}
+              {personality.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">性格</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {personality.map((trait: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                      >
+                        {trait}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 12. 学びたい日本文化 */}
               {(hobbies.length > 0 || shouldDisplayValue(customCulture)) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">共有したい日本文化</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">学びたい日本文化</h3>
                   <div className="space-y-2">
                     {hobbies.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -340,23 +365,6 @@ function ProfilePreviewContent() {
                         <p className="text-gray-700 text-sm">{customCulture}</p>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* 性格 */}
-              {personality.length > 0 && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">性格</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {personality.map((trait: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                      >
-                        {trait}
-                      </span>
-                    ))}
                   </div>
                 </div>
               )}
