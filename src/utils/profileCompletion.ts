@@ -262,28 +262,13 @@ function checkImagePresence(
   if (typeof window !== 'undefined' && !isNewUser) {
     try {
       const localImages = window.localStorage.getItem('currentProfileImages')
-      console.log('🔍 localStorage画像データ確認:', {
-        localImages: localImages ? `Found: ${localImages.substring(0, 100)}...` : 'Not found',
-        localImagesLength: localImages ? localImages.length : 0
-      })
-      
       if (localImages) {
         const parsedLocalImages = JSON.parse(localImages)
         hasImagesInLocalStorage = Array.isArray(parsedLocalImages) && parsedLocalImages.length > 0
-        console.log('🔍 parsedLocalImages:', {
-          isArray: Array.isArray(parsedLocalImages),
-          length: parsedLocalImages?.length,
-          hasImagesInLocalStorage
-        })
       }
     } catch (e) {
-      console.error('❌ localStorage画像読み込みエラー:', e)
+      // localStorage読み込みエラーは無視
     }
-  } else {
-    console.log('🔍 localStorage読み込みスキップ:', {
-      windowUndefined: typeof window === 'undefined',
-      isNewUser
-    })
   }
 
   const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode || hasImagesInLocalStorage)

@@ -972,16 +972,7 @@ function MyPageContent() {
                 console.log('✅ updateProfileに保存完了')
                 
                 // 画像データ保存：複数の方法で画像URLを確実に取得
-                const displayedImageUrl = profile?.avatar_url || profile?.profile_image // マイページで実際に表示されている画像URL
-                
-                console.log('🖼️ 画像データ確認 (improved):', {
-                  'profile.avatar_url': profile?.avatar_url,
-                  'profile.profile_image': profile?.profile_image,
-                  'user.avatarUrl': user?.avatarUrl,
-                  'displayedImageUrl': displayedImageUrl
-                })
-                
-                // 優先順位: 表示画像 → user.avatarUrl
+                const displayedImageUrl = profile?.avatar_url || profile?.profile_image
                 const finalImageUrl = displayedImageUrl || user?.avatarUrl
                 
                 if (finalImageUrl) {
@@ -993,9 +984,7 @@ function MyPageContent() {
                     isEdited: false
                   }]
                   localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
-                  console.log('✅ 画像データ保存完了 (improved):', imageData)
                 } else {
-                  console.log('⚠️ 画像URLが見つかりません - 全ての方法で確認済み')
                   localStorage.setItem('currentProfileImages', JSON.stringify([]))
                 }
               } catch (error) {

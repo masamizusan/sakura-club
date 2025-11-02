@@ -1674,19 +1674,7 @@ function ProfileEditContent() {
         setSelectedPersonality(initialData.personality)
         setSelectedPlannedPrefectures(initialData.planned_prefectures)
         
-        // 画像も設定（localStorageから取得）
-        if (isFromMyPage) {
-          try {
-            const savedImages = localStorage.getItem('currentProfileImages')
-            if (savedImages) {
-              const images = JSON.parse(savedImages)
-              setProfileImages(images)
-              console.log('🖼️ localStorage画像データを復元:', images)
-            }
-          } catch (error) {
-            console.error('❌ 画像データ復元エラー:', error)
-          }
-        }
+        // 画像設定は後の統合処理で行う
         
         setIsLoading(false)
         setUserLoading(false)
@@ -1709,12 +1697,7 @@ function ProfileEditContent() {
         // localStorageからデータを読み込み
         console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
         
-        // localStorage全体の確認
-        console.log('🔍 localStorage全体確認:')
-        console.log('  - updateProfile:', localStorage.getItem('updateProfile'))
-        console.log('  - previewCompleteData:', localStorage.getItem('previewCompleteData'))
-        console.log('  - currentProfileImages:', localStorage.getItem('currentProfileImages'))
-        console.log('  - localStorage keys:', Object.keys(localStorage))
+        // localStorage確認
         
         const savedProfile = localStorage.getItem('updateProfile') || localStorage.getItem('previewCompleteData')
         if (savedProfile) {
@@ -1789,8 +1772,7 @@ function ProfileEditContent() {
                 const images = JSON.parse(savedImages)
                 if (images && images.length > 0) {
                   finalImages = images
-                  console.log('✅ localStorage画像データを使用:', images)
-                }
+                  }
               }
               
               // localStorageに画像データがない場合、プロフィールデータから取得
@@ -1802,27 +1784,10 @@ function ProfileEditContent() {
                   isMain: true,
                   isEdited: false
                 }]
-                console.log('✅ プロフィールデータから画像データを作成:', finalImages)
               }
               
               if (finalImages.length > 0) {
                 setProfileImages(finalImages)
-                console.log('🖼️ 最終画像データを設定:', finalImages)
-                
-                // 画像設定後に完成度を再計算
-                setTimeout(() => {
-                  console.log('🔄 画像設定後の完成度再計算を実行')
-                  const currentValues = getValues()
-                  const result = calculateProfileCompletion(
-                    currentValues,
-                    finalImages,
-                    'IMAGE_SET_COMPLETION',
-                    false
-                  )
-                  console.log('✅ 画像設定後の完成度結果:', result)
-                }, 100)
-              } else {
-                console.log('⚠️ 画像データが見つかりませんでした')
               }
               
             } catch (error) {
@@ -1840,7 +1805,7 @@ function ProfileEditContent() {
         setIsLoading(false)
         setUserLoading(false)
         
-        // 初回完成度計算で画像データが正しく読み込まれているため、遅延計算は不要
+        // fromMyPage遷移処理完了
         
         return
       }
@@ -2476,11 +2441,10 @@ function ProfileEditContent() {
               if (parsedImages && parsedImages.length > 0) {
                 currentImageArray = parsedImages
                 setProfileImages(parsedImages)
-                console.log('🎯 fromMyPage: localStorage画像データを完成度計算に使用:', parsedImages)
               }
             }
           } catch (error) {
-            console.error('❌ fromMyPage: localStorage画像読み込みエラー:', error)
+            console.error('fromMyPage画像読み込みエラー:', error)
           }
         }
 
