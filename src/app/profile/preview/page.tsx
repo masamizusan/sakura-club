@@ -10,6 +10,50 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
 }
 
+// 体型の英語値を日本語に変換するヘルパー関数
+const getBodyTypeLabel = (value: string): string => {
+  const bodyTypeLabels: Record<string, string> = {
+    'slim': 'スリム',
+    'average': '普通',
+    'muscular': '筋肉質',
+    'plump': 'ぽっちゃり'
+  }
+  return bodyTypeLabels[value] || value
+}
+
+// 言語レベルの英語値を日本語に変換するヘルパー関数
+const getLanguageLevelLabel = (value: string): string => {
+  const levelLabels: Record<string, string> = {
+    'none': '記入しない',
+    'beginner': '初級（日常会話は難しい）',
+    'elementary': '初級上（基本的な日常会話ができる）',
+    'intermediate': '中級（日常会話は問題ない）',
+    'upperIntermediate': '中級上（複雑な話題も理解できる）',
+    'advanced': '上級（流暢に話せる）',
+    'native': 'ネイティブレベル'
+  }
+  return levelLabels[value] || value
+}
+
+// 同行者の英語値を日本語に変換するヘルパー関数
+const getTravelCompanionLabel = (value: string): string => {
+  const companionLabels: Record<string, string> = {
+    'noEntry': '記入しない',
+    'alone': '一人旅',
+    'friend': '友達',
+    'family': '家族',
+    'partner': 'パートナー',
+    'solo': '一人旅',
+    'couple': 'カップル（恋人・配偶者）',
+    'friends': '友達',
+    'colleagues': '同僚・仕事仲間',
+    'group': 'グループ・団体',
+    'other': 'その他',
+    'no-entry': '記入しない'
+  }
+  return companionLabels[value] || value
+}
+
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -221,7 +265,7 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(bodyType) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">体型:</span>
-                    <span className="text-gray-600">{bodyType}</span>
+                    <span className="text-gray-600">{getBodyTypeLabel(bodyType)}</span>
                   </div>
                 )}
                 
@@ -237,13 +281,13 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(japaneseLevel) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">日本語:</span>
-                    <span className="text-gray-600">{japaneseLevel}</span>
+                    <span className="text-gray-600">{getLanguageLevelLabel(japaneseLevel)}</span>
                   </div>
                 )}
                 {shouldDisplayValue(englishLevel) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">英語:</span>
-                    <span className="text-gray-600">{englishLevel}</span>
+                    <span className="text-gray-600">{getLanguageLevelLabel(englishLevel)}</span>
                   </div>
                 )}
                 
@@ -286,16 +330,7 @@ function ProfilePreviewContent() {
                 {gender === 'male' && shouldDisplayValue(travel_companion) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">同行者:</span>
-                    <span className="text-gray-600">
-                      {travel_companion === 'solo' ? '一人旅' :
-                       travel_companion === 'couple' ? 'カップル（恋人・配偶者）' :
-                       travel_companion === 'friends' ? '友達' :
-                       travel_companion === 'family' ? '家族' :
-                       travel_companion === 'colleagues' ? '同僚・仕事仲間' :
-                       travel_companion === 'group' ? 'グループ・団体' :
-                       travel_companion === 'other' ? 'その他' :
-                       travel_companion === 'no-entry' ? '記入しない' : travel_companion}
-                    </span>
+                    <span className="text-gray-600">{getTravelCompanionLabel(travel_companion)}</span>
                   </div>
                 )}
                 
