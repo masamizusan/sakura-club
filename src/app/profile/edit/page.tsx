@@ -3291,37 +3291,6 @@ function ProfileEditContent() {
                   </div>
                 </div>
 
-                {/* 性格セクション - 独立したセクション */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('profile.personalitySection')}
-                  </label>
-                  <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {getPersonalityOptions(t).map((trait) => (
-                      <button
-                        key={trait.key}
-                        type="button"
-                        onClick={() => togglePersonality(trait.label)}
-                        disabled={!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5}
-                        className={`
-                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                          ${selectedPersonality.includes(trait.label)
-                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                          }
-                          ${(!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer hover:shadow-md'
-                          }
-                        `}
-                      >
-                        {trait.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
 
 
                 {/* 外国人男性向け専用フィールド */}
@@ -3429,6 +3398,37 @@ function ProfileEditContent() {
                     </div>
                   </>
                 )}
+
+                {/* 性格セクション - 日本文化の前に移動 */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('profile.personalitySection')}
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {getPersonalityOptions(t).map((trait) => (
+                      <button
+                        key={trait.key}
+                        type="button"
+                        onClick={() => togglePersonality(trait.label)}
+                        disabled={!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5}
+                        className={`
+                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                          ${selectedPersonality.includes(trait.label)
+                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                          }
+                          ${(!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5)
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'cursor-pointer hover:shadow-md'
+                          }
+                        `}
+                      >
+                        {trait.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
