@@ -257,7 +257,21 @@ function checkImagePresence(
     }
   }
 
-  const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode)
+  // 5. localStorageからの画像（fromMyPage遷移用、新規ユーザーは除外）
+  let hasImagesInLocalStorage = false
+  if (typeof window !== 'undefined' && !isNewUser) {
+    try {
+      const localImages = window.localStorage.getItem('currentProfileImages')
+      if (localImages) {
+        const parsedLocalImages = JSON.parse(localImages)
+        hasImagesInLocalStorage = Array.isArray(parsedLocalImages) && parsedLocalImages.length > 0
+      }
+    } catch (e) {
+      // localStorageエラーは無視
+    }
+  }
+
+  const result = !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode || hasImagesInLocalStorage)
 
   // デバッグログ
   console.log('🖼️ 画像検出デバッグ:', {
@@ -267,9 +281,11 @@ function checkImagePresence(
     hasImagesInUser: isNewUser ? `SKIPPED (new user)` : hasImagesInUser,
     hasImagesInTestMode,
     hasImagesInSession,
+    hasImagesInLocalStorage: isNewUser ? `SKIPPED (new user)` : hasImagesInLocalStorage,
     isNewUser,
     sessionStorageSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileDataSkipped: isNewUser ? 'YES (new user)' : 'NO',
+    localStorageSkipped: isNewUser ? 'YES (new user)' : 'NO',
     profileData_avatar_url: profileData?.avatar_url,
     profileData_avatarUrl: profileData?.avatarUrl,
     profileData_profile_image: profileData?.profile_image,
