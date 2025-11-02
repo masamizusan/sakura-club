@@ -455,23 +455,30 @@ function ProfileEditContent() {
   useEffect(() => {
     const isFromSignup = searchParams.get('from') === 'signup'
     if (isFromSignup && typeof window !== 'undefined') {
-      console.log('🧹 新規ユーザー: デプロイ直後対策でセッションストレージを早期クリア')
+      console.log('🧹 新規ユーザー: デプロイ直後対策でストレージを早期クリア')
       try {
-        // すべての画像関連セッションストレージを削除
+        // セッションストレージの画像関連データを削除
         sessionStorage.removeItem('currentProfileImages')
         sessionStorage.removeItem('imageStateTimestamp')
         sessionStorage.removeItem('imageEditHistory')
 
         // ユーザー固有キーも削除
-        const keys = Object.keys(sessionStorage)
-        keys.forEach(key => {
+        const sessionKeys = Object.keys(sessionStorage)
+        sessionKeys.forEach(key => {
           if (key.startsWith('currentProfileImages_') ||
               key.startsWith('imageStateTimestamp_')) {
             sessionStorage.removeItem(key)
           }
         })
+
+        // localStorageの画像関連データも削除（新規ユーザーの汚染防止）
+        localStorage.removeItem('currentProfileImages')
+        localStorage.removeItem('updateProfile')
+        localStorage.removeItem('previewCompleteData')
+        
+        console.log('✅ 新規ユーザー: ストレージクリア完了')
       } catch (e) {
-        console.warn('セッションストレージクリアエラー:', e)
+        console.warn('ストレージクリアエラー:', e)
       }
     }
   }, [searchParams])
@@ -1968,7 +1975,8 @@ function ProfileEditContent() {
         
         // 新規登録フローかどうかを判定（マイページからの遷移は除外）
         const hasSignupParams = urlParams.get('type') === 'japanese-female' || urlParams.get('type') === 'foreign-male'
-        const isFromSignup = hasSignupParams && !isFromMyPage
+        const hasSignupIdentifiers = urlParams.get('nickname') || urlParams.get('gender') || urlParams.get('birth_date')
+        const isFromSignup = (hasSignupParams || hasSignupIdentifiers) && !isFromMyPage
         
         console.log('=== Profile Edit Debug ===')
         console.log('Current URL:', window.location.href)

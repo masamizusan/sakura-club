@@ -257,17 +257,23 @@ function checkImagePresence(
     }
   }
 
-  // 5. localStorageからの画像（fromMyPage遷移用、新規ユーザーは除外）
+  // 5. localStorageからの画像（fromMyPage遷移用のみ、新規ユーザーは完全除外）
   let hasImagesInLocalStorage = false
   if (typeof window !== 'undefined' && !isNewUser) {
-    try {
-      const localImages = window.localStorage.getItem('currentProfileImages')
-      if (localImages) {
-        const parsedLocalImages = JSON.parse(localImages)
-        hasImagesInLocalStorage = Array.isArray(parsedLocalImages) && parsedLocalImages.length > 0
+    // fromMyPageフラグがある場合のみlocalStorageを確認
+    const urlParams = new URLSearchParams(window.location.search)
+    const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+    
+    if (isFromMyPage) {
+      try {
+        const localImages = window.localStorage.getItem('currentProfileImages')
+        if (localImages) {
+          const parsedLocalImages = JSON.parse(localImages)
+          hasImagesInLocalStorage = Array.isArray(parsedLocalImages) && parsedLocalImages.length > 0
+        }
+      } catch (e) {
+        // localStorage読み込みエラーは無視
       }
-    } catch (e) {
-      // localStorage読み込みエラーは無視
     }
   }
 
