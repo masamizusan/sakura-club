@@ -16,19 +16,20 @@
 - ✅ **外国人男性・日本人女性の言語レベル項目追加（2025-10-08完全実装）**
 - ✅ **外国人男性の「訪問予定の駅」項目追加（2025-10-08完全実装）**
 - ✅ **都道府県・駅選択のアコーディオンUI統一（2025-10-08完全実装）**
+- ✅ **🎯 マイページ→プロフィール編集画面の画像データ完成度計算問題（2025-11-02完全解決）**
 
 ### 🛡️ 保護すべき最新コミット情報
-- **🏆 最新の完璧なコミットID**: `5e3326c3`
-- **コミットメッセージ**: "UI: 訪問予定の駅もアコーディオン形式に統一"
-- **日付**: 2025-10-08
-- **解決内容**: 外国人男性機能拡張 + アコーディオンUI統一完了
+- **🏆 最新の完璧なコミットID**: `e4bdc882`
+- **コミットメッセージ**: "Fix: マイページで画像URLを確実に取得してlocalStorageに保存"
+- **日付**: 2025-11-02
+- **解決内容**: マイページ→プロフィール編集画面の完成度一貫性完全解決
 - **重要なコミット系譜**:
+  - `e4bdc882` (画像データ完成度計算完全修正)
+  - `c061d302` (localStorage詳細デバッグ追加)
+  - `35e61054` (fromMyPage画像検出修正)
   - `5e3326c3` (駅アコーディオン統一)
   - `84687113` (都道府県アコーディオン)
   - `2c708c02` (訪問予定の駅追加)
-  - `2b5e45e6` (日本語レベル修正)
-  - `991a922d` (英語レベル追加)
-  - `8f5bfaf0` (新規ユーザー完成度修正)
 
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
@@ -47,24 +48,31 @@ optionalFields = [
   'personality', 'city', 'english_level'
 ]
 
-// 4つのフォールバック画像検出方法
+// 5つのフォールバック画像検出方法（2025-11-02最新版）
 const hasImagesInArray = imageArray && imageArray.length > 0
 const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
 const hasImagesInUser = profileData.avatarUrl && profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 const hasImagesInSession = // セッションストレージから検出
+const hasImagesInLocalStorage = // localStorageから検出（fromMyPage遷移用）
 
-return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser)
+return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode || hasImagesInLocalStorage)
 ```
 
-#### 2. プロフィール編集画面の重要修正
+#### 2. プロフィール編集画面の重要修正（2025-11-02完全版）
 - **ファイル**: `src/app/profile/edit/page.tsx`
-- **初期計算**: `profileDataWithSignup` にユーザー画像情報を含める
-- **遅延計算**: `currentValuesWithUserData` でユーザー画像情報を保持
-- **キーポイント**: `user.avatarUrl`（`user.avatar_url`ではない）
+- **fromMyPage最優先処理**: localStorageから画像データを確実に読み込み
+- **初期計算**: `currentImageArray` に正しい画像配列を設定
+- **キーポイント**: 遅延処理なし、シンプルで確実な方法
 
-#### 3. 計算タイミングの完璧な制御
-- INITIAL_LOAD: ユーザーデータ含む完全データで100%計算
-- DELAYED_2000MS: ユーザー画像情報を追加したデータで100%維持
+#### 3. マイページ画像保存処理（2025-11-02完全版）
+- **ファイル**: `src/app/mypage/page.tsx`
+- **確実な画像URL取得**: `profile.avatar_url || profile.profile_image`
+- **フォールバック**: `user.avatarUrl`も含める
+- **localStorage保存**: 正しい形式で画像データを保存
+
+#### 4. 計算タイミングの完璧な制御（2025-11-02最新版）
+- **INITIAL_LOAD**: fromMyPage時にlocalStorageから画像データを確実に読み込んで100%計算
+- **遅延処理削除**: 複雑な遅延計算を排除、シンプルで確実な方法
 
 ### UI修正内容
 1. **国籍表示**: 日本人女性のプレビュー画面で非表示
@@ -78,41 +86,42 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 - コンソールで`userAvatarUrl: 'exists'`と`hasImagesInUser: true`を確認
 - 画像削除/追加時の正確な完成度計算
 
-### 🚨 緊急時の復旧コマンド（2025-10-08最新版）
+### 🚨 緊急時の復旧コマンド（2025-11-02最新版）
 ```bash
-# 最新の完璧な状態への復旧
-git checkout 5e3326c3 -- src/app/profile/edit/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx src/app/profile/preview/page.tsx
-git commit -m "緊急復旧: 完璧なプロフィール完成度システム+言語レベル+駅選択+アコーディオンUIに戻す (5e3326c3)"
+# 最新の完璧な状態への復旧（マイページ→プロフィール編集画面完成度一貫性問題解決済み）
+git checkout e4bdc882 -- src/app/mypage/page.tsx src/utils/profileCompletion.ts src/app/profile/edit/page.tsx
+git commit -m "緊急復旧: マイページ→プロフィール編集画面の完成度一貫性完全解決状態に戻す (e4bdc882)"
 
 # または、特定ファイルのみ復旧
-git checkout 5e3326c3 -- src/utils/profileCompletion.ts
-git checkout 5e3326c3 -- src/app/profile/edit/page.tsx
-git checkout 5e3326c3 -- src/app/mypage/page.tsx
-git checkout 5e3326c3 -- src/app/profile/preview/page.tsx
+git checkout e4bdc882 -- src/utils/profileCompletion.ts  # localStorage画像検出機能
+git checkout e4bdc882 -- src/app/profile/edit/page.tsx    # fromMyPage画像読み込み修正
+git checkout e4bdc882 -- src/app/mypage/page.tsx          # 画像URL確実取得
 ```
 
 ### 🛡️ 保護対象ファイル（絶対に変更禁止）
-1. **`src/utils/profileCompletion.ts`** - 共通完成度計算関数
-2. **`src/app/profile/edit/page.tsx`** - プロフィール編集画面（特に1978行目、1990-1995行目）
-3. **`src/app/mypage/page.tsx`** - マイページ（完成度計算部分 + localStorage処理の外国人男性フィールド）
+1. **`src/utils/profileCompletion.ts`** - 共通完成度計算関数（localStorage画像検出機能含む）
+2. **`src/app/profile/edit/page.tsx`** - プロフィール編集画面（fromMyPage画像読み込み処理含む）
+3. **`src/app/mypage/page.tsx`** - マイページ（画像URL確実取得・localStorage保存処理含む）
 4. **`src/app/profile/preview/page.tsx`** - プレビュー画面（completeProfileData の外国人男性フィールド）
 
 ### 🔍 今後の修正時の注意点
 1. **完成度計算関連は一切触らない**
 2. **ユーザー画像情報（avatarUrl）の扱いは変更しない**
-3. **遅延計算（setTimeout）で必ずユーザーデータを含める**
-4. **新機能追加時も既存の完成度ロジックは保護する**
-5. **外国人男性専用フィールド（visit_schedule、travel_companion、planned_prefectures、planned_stations）の処理は絶対に変更しない**
-6. **マイページのlocalStorage処理の外国人男性判定（103-120行目）は保護対象**
-7. **プレビュー画面の外国人男性判定（436-440行目）は保護対象**
-8. **🆕 toggleHobby/togglePersonality関数の空配列許可ロジックは保護対象**
-9. **🆕 新規ユーザー画像検出のisNewUserフラグ処理は保護対象**
-10. **🆕 セッションストレージ早期クリア処理（199-221行目）は保護対象**
-11. **🆕 外国人男性フィールド初期化でのisNewUser優先処理（1884-1900行目）は保護対象**
-12. **🆕 言語レベル選択（english_level、japanese_level）の実装は保護対象**
-13. **🆕 訪問予定の駅（planned_stations）の完全実装は保護対象**
-14. **🆕 アコーディオンUI（都道府県・駅）の統一実装は保護対象**
-15. **🆕 プロフィール完成度計算（外国人男性17項目、日本人女性15項目）は保護対象**
+3. **新機能追加時も既存の完成度ロジックは保護する**
+4. **外国人男性専用フィールド（visit_schedule、travel_companion、planned_prefectures、planned_stations）の処理は絶対に変更しない**
+5. **マイページのlocalStorage処理の外国人男性判定は保護対象**
+6. **プレビュー画面の外国人男性判定は保護対象**
+7. **🆕 toggleHobby/togglePersonality関数の空配列許可ロジックは保護対象**
+8. **🆕 新規ユーザー画像検出のisNewUserフラグ処理は保護対象**
+9. **🆕 セッションストレージ早期クリア処理は保護対象**
+10. **🆕 外国人男性フィールド初期化でのisNewUser優先処理は保護対象**
+11. **🆕 言語レベル選択（english_level、japanese_level）の実装は保護対象**
+12. **🆕 訪問予定の駅（planned_stations）の完全実装は保護対象**
+13. **🆕 アコーディオンUI（都道府県・駅）の統一実装は保護対象**
+14. **🆕 プロフィール完成度計算（外国人男性17項目、日本人女性15項目）は保護対象**
+15. **🎯 NEW: fromMyPage遷移時のlocalStorage画像読み込み処理は保護対象**
+16. **🎯 NEW: マイページでの画像URL確実取得（profile.avatar_url || profile.profile_image）は保護対象**
+17. **🎯 NEW: localStorage画像検出機能（hasImagesInLocalStorage）は保護対象**
 
 ## 開発コマンド
 - **開発サーバー**: `npm run dev`
