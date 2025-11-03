@@ -3,7 +3,10 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, User, Loader2 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
+import { type SupportedLanguage } from '@/utils/language'
+import { useTranslation } from '@/utils/translations'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -69,6 +72,10 @@ function ProfilePreviewContent() {
   // エラーハンドリング用の状態
   const [hasError, setHasError] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
+  
+  // 言語切り替え状態
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
+  const { t } = useTranslation(currentLanguage)
 
   // 🔒 セキュリティ強化: ユーザー固有のsessionStorageからデータを取得
   useEffect(() => {
@@ -191,15 +198,39 @@ function ProfilePreviewContent() {
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* ヘッダー */}
       <div className="bg-orange-500 text-white py-4 px-6">
-        <div className="max-w-4xl mx-auto flex items-center">
-          <Button
-            variant="ghost"
-            onClick={() => window.close()}
-            className="mr-4 text-white hover:bg-orange-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-          </Button>
-          <h1 className="text-xl font-bold">プレビュー | 相手からの見え方</h1>
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              onClick={() => window.close()}
+              className="mr-4 text-white hover:bg-orange-600"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+            </Button>
+            <h1 className="text-xl font-bold">プレビュー | 相手からの見え方</h1>
+          </div>
+          
+          {/* 言語切り替えボタン */}
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-white" />
+            <Select
+              value={currentLanguage}
+              onValueChange={(value: SupportedLanguage) => {
+                setCurrentLanguage(value)
+                console.log('🌐 Preview language changed to:', value)
+              }}
+            >
+              <SelectTrigger className="w-40 bg-orange-600 border-orange-400 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                <SelectItem value="en">🇺🇸 English</SelectItem>
+                <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

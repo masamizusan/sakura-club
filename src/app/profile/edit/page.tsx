@@ -2378,12 +2378,8 @@ function ProfileEditContent() {
         const nationality = profile.nationality || ((signupData as any)?.nationality)
         let detectedLanguage: SupportedLanguage
         
-        // 日本人女性の場合は強制的に日本語、外国人男性の場合は国籍から判定
-        if (isJapaneseFemale) {
-          detectedLanguage = 'ja'
-        } else {
-          detectedLanguage = determineLanguage(nationality)
-        }
+        // 国籍から言語を判定（日本人女性も選択可能に）
+        detectedLanguage = determineLanguage(nationality)
         
         setCurrentLanguage(detectedLanguage)
         console.log('🌐 Language initialization:', {
@@ -2897,32 +2893,30 @@ function ProfileEditContent() {
       {/* Main Content */}
       <div className="md:ml-64 py-12 px-4">
         <div className="max-w-2xl mx-auto">
-          {/* 言語切り替えボタン（外国人男性のみ表示） */}
-          {isForeignMale && (
-            <div className="flex justify-end mb-4">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-gray-600" />
-                <Select
-                  value={currentLanguage}
-                  onValueChange={(value: SupportedLanguage) => {
-                    setCurrentLanguage(value)
-                    saveLanguagePreference(value)
-                    console.log('🌐 Language changed to:', value)
-                  }}
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ja">🇯🇵 日本語</SelectItem>
-                    <SelectItem value="en">🇺🇸 English</SelectItem>
-                    <SelectItem value="ko">🇰🇷 한국어</SelectItem>
-                    <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* 言語切り替えボタン（全ユーザー対応） */}
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-gray-600" />
+              <Select
+                value={currentLanguage}
+                onValueChange={(value: SupportedLanguage) => {
+                  setCurrentLanguage(value)
+                  saveLanguagePreference(value)
+                  console.log('🌐 Language changed to:', value)
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                  <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+          </div>
 
           <div className="flex items-center justify-between mb-8">
             <Button
