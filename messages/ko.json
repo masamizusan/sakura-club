@@ -81,7 +81,23 @@
     "removeImage": "이미지 삭제",
     "hobbyLimit": "취미는 최대 5개까지 선택할 수 있습니다",
     "selfIntroductionMinLength": "자기소개는 50자 이상 입력해 주세요",
-    "profileUpdated": "프로필이 업데이트되었습니다"
+    "profileUpdated": "프로필이 업데이트되었습니다",
+    "profileCompletion": "프로필 완성도",
+    "itemsCompleted": "항목 완료",
+    "calculating": "계산 중...",
+    "completionLow": "시작하기",
+    "completionMedium": "진행 중",
+    "completionHigh": "거의 완료",
+    "completionPerfect": "완벽!",
+    "requiredSection": "필수 정보",
+    "requiredForPublication": "프로필 게시에 필요",
+    "nickname": "닉네임",
+    "birthDate": "생년월일",
+    "birthDateReadonly": "가입 후 변경 불가",
+    "birthDatePrivacy": "나이는 공개되지만 생년월일은 비공개입니다",
+    "selfIntroPlaceholder": "자신과 관심사, 찾고 있는 것에 대해 소개해 주세요...",
+    "selfIntroNote": "다른 사람들이 가장 먼저 보게 될 내용입니다",
+    "nicknameDescription": "다른 사람들에게 보여질 이름입니다"
   },
   "matching": {
     "title": "추천 매칭",
@@ -289,5 +305,17 @@
     "min": "{field}은(는) {min} 이상이어야 합니다",
     "max": "{field}은(는) {max} 이하여야 합니다",
     "pattern": "{field} 형식이 올바르지 않습니다"
+  },
+  "placeholders": {
+    "nickname": "닉네임을 입력하세요",
+    "selectNationality": "국적 선택",
+    "selectPrefecture": "현 선택",
+    "selectOccupation": "직업 선택",
+    "selectBodyType": "체형 선택",
+    "selectMaritalStatus": "결혼 상태 선택",
+    "selectJapaneseLevel": "일본어 수준 선택",
+    "selectEnglishLevel": "영어 수준 선택",
+    "selectVisitSchedule": "방문 일정 선택",
+    "selectTravelCompanion": "동행자 선택"
   }
 }

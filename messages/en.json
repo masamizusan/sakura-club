@@ -81,7 +81,23 @@
     "removeImage": "Remove Image",
     "hobbyLimit": "You can select up to 5 hobbies",
     "selfIntroductionMinLength": "Self introduction must be at least 50 characters",
-    "profileUpdated": "Profile updated successfully"
+    "profileUpdated": "Profile updated successfully",
+    "profileCompletion": "Profile Completion",
+    "itemsCompleted": "items completed",
+    "calculating": "Calculating...",
+    "completionLow": "Getting started",
+    "completionMedium": "Good progress", 
+    "completionHigh": "Almost done",
+    "completionPerfect": "Perfect!",
+    "requiredSection": "Required Information",
+    "requiredForPublication": "Required for profile publication",
+    "nickname": "Nickname",
+    "birthDate": "Date of Birth",
+    "birthDateReadonly": "Cannot be changed after registration",
+    "birthDatePrivacy": "Age will be displayed publicly, but date of birth will be kept private",
+    "selfIntroPlaceholder": "Tell us about yourself, your interests, and what you're looking for...",
+    "selfIntroNote": "This will be the first thing people see about you",
+    "nicknameDescription": "This is how others will see you"
   },
   "matching": {
     "title": "Recommended Matches",
@@ -289,5 +305,17 @@
     "min": "{field} must be {min} or more",
     "max": "{field} must be {max} or less",
     "pattern": "{field} format is incorrect"
+  },
+  "placeholders": {
+    "nickname": "Enter your nickname",
+    "selectNationality": "Select nationality",
+    "selectPrefecture": "Select prefecture",
+    "selectOccupation": "Select occupation",
+    "selectBodyType": "Select body type",
+    "selectMaritalStatus": "Select marital status",
+    "selectJapaneseLevel": "Select Japanese level",
+    "selectEnglishLevel": "Select English level",
+    "selectVisitSchedule": "Select visit schedule",
+    "selectTravelCompanion": "Select travel companion"
   }
 }

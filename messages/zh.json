@@ -81,7 +81,23 @@
     "removeImage": "删除图片",
     "hobbyLimit": "最多可选择5个兴趣爱好",
     "selfIntroductionMinLength": "自我介绍至少需要50个字符",
-    "profileUpdated": "个人资料更新成功"
+    "profileUpdated": "个人资料更新成功",
+    "profileCompletion": "资料完成度",
+    "itemsCompleted": "项已完成",
+    "calculating": "计算中...",
+    "completionLow": "开始填写",
+    "completionMedium": "进展良好",
+    "completionHigh": "即将完成",
+    "completionPerfect": "完美！",
+    "requiredSection": "必填信息",
+    "requiredForPublication": "发布资料所需",
+    "nickname": "昵称",
+    "birthDate": "出生日期",
+    "birthDateReadonly": "注册后无法更改",
+    "birthDatePrivacy": "年龄将公开显示，但出生日期保密",
+    "selfIntroPlaceholder": "介绍一下自己、兴趣爱好以及您在寻找什么...",
+    "selfIntroNote": "这是别人对您的第一印象",
+    "nicknameDescription": "这是别人看到的您的称呼"
   },
   "matching": {
     "title": "推荐匹配",
@@ -289,5 +305,17 @@
     "min": "{field}必须大于等于{min}",
     "max": "{field}必须小于等于{max}",
     "pattern": "{field}格式不正确"
+  },
+  "placeholders": {
+    "nickname": "输入您的昵称",
+    "selectNationality": "选择国籍",
+    "selectPrefecture": "选择都道府县",
+    "selectOccupation": "选择职业",
+    "selectBodyType": "选择体型",
+    "selectMaritalStatus": "选择婚姻状况",
+    "selectJapaneseLevel": "选择日语水平",
+    "selectEnglishLevel": "选择英语水平",
+    "selectVisitSchedule": "选择访问时间",
+    "selectTravelCompanion": "选择同行者"
   }
 }
