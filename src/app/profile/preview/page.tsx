@@ -208,7 +208,7 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* プロフィール画像 */}
-            <div className="relative h-80 bg-gray-100">
+            <div className="relative aspect-square bg-gray-100">
               {profileImage ? (
                 <img
                   src={profileImage}
@@ -307,6 +307,7 @@ function ProfilePreviewContent() {
                       {(() => {
                         if (visit_schedule === 'undecided') return 'まだ決まっていない';
                         if (visit_schedule === 'no-entry') return '記入しない';
+                        if (visit_schedule === 'currently-in-japan') return '現在日本にいる';
 
                         // beyond-YYYY 形式の処理
                         if (visit_schedule.startsWith('beyond-')) {

@@ -335,6 +335,7 @@ const getCultureCategories = (t: any) => [
 const getVisitScheduleOptions = (t: any) => {
   const options = [
     { value: 'no-entry', label: t('schedule.noEntry') },
+    { value: 'currently-in-japan', label: '現在日本にいる' },
     { value: 'undecided', label: t('schedule.undecided') }
   ];
 
