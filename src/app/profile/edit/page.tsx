@@ -3499,8 +3499,7 @@ function ProfileEditContent() {
                 <div className="pt-4">
                   <Button
                     type="button"
-                    variant="outline"
-                    className="w-full mb-4"
+                    className="w-full bg-red-800 hover:bg-red-900 text-white font-medium py-3 mb-4"
                     onClick={async () => {
                       try {
                         // 手動バリデーションを実行
