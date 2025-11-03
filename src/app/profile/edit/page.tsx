@@ -961,15 +961,7 @@ function ProfileEditContent() {
     }, profileImages, 'selectedHobbies-change')
   }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletion, profileImages])
 
-  // 🌐 プロフィールタイプ変更時の言語設定
-  useEffect(() => {
-    // 日本人女性の場合は強制的に日本語に設定
-    if (isJapaneseFemale && currentLanguage !== 'ja') {
-      setCurrentLanguage('ja')
-      saveLanguagePreference('ja')
-      console.log('🌐 Language forced to Japanese for Japanese female user')
-    }
-  }, [isJapaneseFemale, currentLanguage])
+  // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
   // Constants and helper functions (moved from top level to after hooks)
   // 国籍の翻訳関数
