@@ -451,6 +451,16 @@ function ProfileEditContent() {
   // 言語設定
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const { t } = useTranslation(currentLanguage)
+  
+  // デバッグ用：翻訳の動作確認
+  useEffect(() => {
+    console.log('🌐 Current language:', currentLanguage)
+    console.log('🌐 Translation test:', {
+      nickname: t('profile.nickname'),
+      profileCompletion: t('profile.profileCompletion'),
+      requiredSection: t('profile.requiredInfo')
+    })
+  }, [currentLanguage, t])
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
   useEffect(() => {
