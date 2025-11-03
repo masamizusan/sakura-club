@@ -135,10 +135,10 @@ const getMaritalStatusOptions = (t: any) => [
 ]
 
 // 職業オプション
-// 職業選択肢（翻訳対応）
-const getOccupationOptions = (t: any) => [
+// 職業選択肢（性別に応じて動的に変更）
+const getOccupationOptions = (t: any, isMale: boolean = false) => [
   { value: 'none', label: t('occupations.noEntry') },
-  { value: '主婦、主夫', label: t('occupations.housewife') },
+  { value: isMale ? '主夫' : '主婦', label: isMale ? '主夫' : '主婦' },
   { value: '会社員', label: t('occupations.companyEmployee') },
   { value: '公務員', label: t('occupations.publicServant') },
   { value: '経営者・役員', label: t('occupations.executiveManager') },
@@ -3171,7 +3171,7 @@ function ProfileEditContent() {
                           <SelectValue placeholder={t('placeholders.selectOccupation')} />
                         </SelectTrigger>
                         <SelectContent>
-                          {getOccupationOptions(t).map((option) => (
+                          {getOccupationOptions(t, isForeignMale).map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -3402,7 +3402,7 @@ function ProfileEditContent() {
                 {/* 性格セクション - 日本文化の前に移動 */}
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('profile.personalitySection')}
+                    {t('profile.personalitySection')}（{selectedPersonality.length}/5 選択済み）
                   </label>
                   <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -3433,7 +3433,7 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>
+                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>（{selectedHobbies.length}/8 選択済み）
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {t('profile.selectCultureNote')}

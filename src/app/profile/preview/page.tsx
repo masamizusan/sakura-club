@@ -54,6 +54,14 @@ const getTravelCompanionLabel = (value: string): string => {
   return companionLabels[value] || value
 }
 
+// 職業の表示を性別に応じて調整するヘルパー関数
+const getOccupationLabel = (value: string, isMale: boolean): string => {
+  if (value === '主婦、主夫' || value === '主婦' || value === '主夫') {
+    return isMale ? '主夫' : '主婦'
+  }
+  return value
+}
+
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -249,7 +257,7 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(occupation) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">職業:</span>
-                    <span className="text-gray-600">{occupation}</span>
+                    <span className="text-gray-600">{getOccupationLabel(occupation, gender === 'male')}</span>
                   </div>
                 )}
                 
