@@ -1080,6 +1080,7 @@ function ProfileEditContent() {
   const getVisitScheduleOptionsTranslated = () => {
     const options = [
       { value: 'no-entry', label: getVisitScheduleLabel('no-entry') },
+      { value: 'currently-in-japan', label: '現在日本にいる' },
       { value: 'undecided', label: getVisitScheduleLabel('undecided') }
     ]
 
