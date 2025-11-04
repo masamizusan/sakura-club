@@ -18,6 +18,7 @@ import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'luci
 import { z } from 'zod'
 import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
+import { useTranslations } from 'next-intl'
 import { useTranslation } from '@/utils/translations'
 
 const baseProfileEditSchema = (t: any) => z.object({
@@ -450,16 +451,12 @@ function ProfileEditContent() {
   
   // 言語設定
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
+  const tNextIntl = useTranslations()
   const { t } = useTranslation(currentLanguage)
   
-  // デバッグ用：翻訳の動作確認
+  // 翻訳システム初期化確認
   useEffect(() => {
-    console.log('🌐 Current language:', currentLanguage)
-    console.log('🌐 Translation test:', {
-      nickname: t('profile.nickname'),
-      profileCompletion: t('profile.profileCompletion'),
-      requiredSection: t('profile.requiredInfo')
-    })
+    // 翻訳システムの初期化を確認
   }, [currentLanguage, t])
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
@@ -900,11 +897,6 @@ function ProfileEditContent() {
         const urlParams = new URLSearchParams(window.location.search)
         const hasType = urlParams.get('type')
         
-        // 一時的に無効化
-        // if (hasType === 'japanese-female') {
-        //   console.log('⏰ 遅延チェック - 強制初期化実行')
-        //   forceCompleteReset()
-        // }
       }
     }, 2000)
     
@@ -1504,11 +1496,6 @@ function ProfileEditContent() {
         const urlParams = new URLSearchParams(window.location.search)
         const hasType = urlParams.get('type')
         
-        // 一時的に無効化
-        // if (hasType === 'japanese-female') {
-        //   console.log('⏰ 遅延チェック - 強制初期化実行')
-        //   forceCompleteReset()
-        // }
       }
     }, 2000)
     
