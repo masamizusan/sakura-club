@@ -18,7 +18,6 @@ import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'luci
 import { z } from 'zod'
 import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
-import { useTranslations } from 'next-intl'
 import { useTranslation } from '@/utils/translations'
 
 const baseProfileEditSchema = (t: any) => z.object({
@@ -451,7 +450,6 @@ function ProfileEditContent() {
   
   // 言語設定
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
-  const tNextIntl = useTranslations()
   const { t } = useTranslation(currentLanguage)
   
   // 翻訳システム初期化確認

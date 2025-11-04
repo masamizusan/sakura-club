@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
-import { useTranslations } from 'next-intl'
 import { useTranslation } from '@/utils/translations'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
@@ -76,7 +75,6 @@ function ProfilePreviewContent() {
   
   // 言語切り替え状態
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
-  const tNextIntl = useTranslations()
   const { t } = useTranslation(currentLanguage)
 
   // 🔒 セキュリティ強化: ユーザー固有のsessionStorageからデータを取得
