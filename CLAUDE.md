@@ -17,19 +17,25 @@
 - ✅ **外国人男性の「訪問予定の駅」項目追加（2025-10-08完全実装）**
 - ✅ **都道府県・駅選択のアコーディオンUI統一（2025-10-08完全実装）**
 - ✅ **🎯 マイページ→プロフィール編集画面の画像データ完成度計算問題（2025-11-02完全解決）**
+- ✅ **🌐 日本人女性向け多言語対応プロフィール編集機能（2025-11-04完全実装）**
+- ✅ **🌐 プレビュー画面言語切り替え機能（2025-11-04完全実装）**
+- ✅ **🖼️ プレビュー画面画像表示サイズ統一（2025-11-04完全実装）**
+- ✅ **🎨 プレビューボタン小豆色デザイン改善（2025-11-04完全実装）**
+- ✅ **📍 「現在日本にいる」訪問予定選択肢追加（2025-11-04完全実装）**
 
 ### 🛡️ 保護すべき最新コミット情報
-- **🏆 最新の完璧なコミットID**: `e4bdc882`
-- **コミットメッセージ**: "Fix: マイページで画像URLを確実に取得してlocalStorageに保存"
-- **日付**: 2025-11-02
-- **解決内容**: マイページ→プロフィール編集画面の完成度一貫性完全解決
+- **🏆 最新の完璧なコミットID**: `def6de2f`
+- **コミットメッセージ**: "Fix: 日本人女性の言語切り替え機能を有効化"
+- **日付**: 2025-11-04
+- **解決内容**: プロフィール編集→プレビュー→マイページ遷移の多言語対応完全実装
 - **重要なコミット系譜**:
+  - `def6de2f` (日本人女性言語切り替え完全修正)
+  - `e638b8c9` (多言語翻訳ファイル拡張)
+  - `043dc16c` (言語選択機能実装)
+  - `628e0bce` (プレビューボタン小豆色改善)
+  - `1429ffdf` (「現在日本にいる」選択肢追加)
+  - `d937d75c` (プレビュー画像サイズ統一)
   - `e4bdc882` (画像データ完成度計算完全修正)
-  - `c061d302` (localStorage詳細デバッグ追加)
-  - `35e61054` (fromMyPage画像検出修正)
-  - `5e3326c3` (駅アコーディオン統一)
-  - `84687113` (都道府県アコーディオン)
-  - `2c708c02` (訪問予定の駅追加)
 
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
@@ -80,29 +86,36 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 3. **言語レベル**: 外国人男性→日本語レベル、日本人女性→英語レベル（各7段階）
 4. **訪問予定の駅**: 外国人男性専用（30駅から最大5駅選択）
 5. **アコーディオンUI**: 都道府県・駅選択を統一されたアコーディオン形式で実装
+6. **🌐 多言語対応**: 日本人女性・外国人男性共通で4言語選択可能（2025-11-04追加）
+7. **🖼️ 画像表示統一**: プレビュー画面をaspect-square形式に変更（2025-11-04追加）
+8. **🎨 プレビューボタン**: 小豆色デザインで視認性向上（2025-11-04追加）
+9. **📍 訪問予定選択肢**: 「現在日本にいる」オプション追加（2025-11-04追加）
 
 ### テスト確認事項
 - マイページ（100%）からプロフィール編集画面への遷移でも100%維持
 - コンソールで`userAvatarUrl: 'exists'`と`hasImagesInUser: true`を確認
 - 画像削除/追加時の正確な完成度計算
 
-### 🚨 緊急時の復旧コマンド（2025-11-02最新版）
+### 🚨 緊急時の復旧コマンド（2025-11-04最新版）
 ```bash
-# 最新の完璧な状態への復旧（マイページ→プロフィール編集画面完成度一貫性問題解決済み）
-git checkout e4bdc882 -- src/app/mypage/page.tsx src/utils/profileCompletion.ts src/app/profile/edit/page.tsx
-git commit -m "緊急復旧: マイページ→プロフィール編集画面の完成度一貫性完全解決状態に戻す (e4bdc882)"
+# 最新の完璧な状態への復旧（多言語対応プロフィール編集→プレビュー→マイページ遷移完成版）
+git checkout def6de2f -- src/app/profile/edit/page.tsx src/app/profile/preview/page.tsx src/utils/profileCompletion.ts src/app/mypage/page.tsx
+git commit -m "緊急復旧: 多言語対応プロフィール遷移システム完成状態に戻す (def6de2f)"
 
-# または、特定ファイルのみ復旧
-git checkout e4bdc882 -- src/utils/profileCompletion.ts  # localStorage画像検出機能
-git checkout e4bdc882 -- src/app/profile/edit/page.tsx    # fromMyPage画像読み込み修正
-git checkout e4bdc882 -- src/app/mypage/page.tsx          # 画像URL確実取得
+# または、特定機能のみ復旧
+git checkout def6de2f -- src/app/profile/edit/page.tsx      # 多言語対応プロフィール編集
+git checkout def6de2f -- src/app/profile/preview/page.tsx   # 言語切り替えプレビュー
+git checkout def6de2f -- src/utils/profileCompletion.ts     # localStorage画像検出機能
+git checkout def6de2f -- messages/*.json                    # 4言語翻訳ファイル
 ```
 
 ### 🛡️ 保護対象ファイル（絶対に変更禁止）
 1. **`src/utils/profileCompletion.ts`** - 共通完成度計算関数（localStorage画像検出機能含む）
-2. **`src/app/profile/edit/page.tsx`** - プロフィール編集画面（fromMyPage画像読み込み処理含む）
+2. **`src/app/profile/edit/page.tsx`** - プロフィール編集画面（多言語対応 + fromMyPage画像読み込み処理含む）
 3. **`src/app/mypage/page.tsx`** - マイページ（画像URL確実取得・localStorage保存処理含む）
-4. **`src/app/profile/preview/page.tsx`** - プレビュー画面（completeProfileData の外国人男性フィールド）
+4. **`src/app/profile/preview/page.tsx`** - プレビュー画面（言語切り替え + completeProfileData処理含む）
+5. **`src/utils/translations.ts`** - 多言語翻訳システム（プロフィール編集専用）
+6. **`messages/*.json`** - 4言語翻訳ファイル（ja/en/ko/zh.json）
 
 ### 🔍 今後の修正時の注意点
 1. **完成度計算関連は一切触らない**
@@ -122,6 +135,9 @@ git checkout e4bdc882 -- src/app/mypage/page.tsx          # 画像URL確実取�
 15. **🎯 NEW: fromMyPage遷移時のlocalStorage画像読み込み処理は保護対象**
 16. **🎯 NEW: マイページでの画像URL確実取得（profile.avatar_url || profile.profile_image）は保護対象**
 17. **🎯 NEW: localStorage画像検出機能（hasImagesInLocalStorage）は保護対象**
+18. **🌐 NEW: 日本人女性向け多言語対応プロフィール編集機能は保護対象**
+19. **🌐 NEW: プレビュー画面言語切り替え機能は保護対象**
+20. **🌐 NEW: 4言語翻訳システム（utils/translations.ts + messages/*.json）は保護対象**
 
 ## 開発コマンド
 - **開発サーバー**: `npm run dev`
