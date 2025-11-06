@@ -256,11 +256,11 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  return (
+  const content = (
     <ErrorBoundary>
-      <AuthGuard>
-        <DashboardContent />
-      </AuthGuard>
+      <DashboardContent />
     </ErrorBoundary>
   )
+
+  return <AuthGuard>{content}</AuthGuard>
 }
