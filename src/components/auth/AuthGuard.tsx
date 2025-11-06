@@ -179,7 +179,8 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     }
     
     // 認証が必要で、初期化済み、ユーザーなし、読み込み中でない、まだリダイレクトしていない場合のみリダイレクト
-    if (isInitialized && !user && !isLoading && !hasRedirected.current) {
+    // ただし、テストモードの場合は認証チェックをスキップ
+    if (isInitialized && !user && !isLoading && !hasRedirected.current && !isTestMode) {
       hasRedirected.current = true
       console.log('Redirecting to login - no user found')
       safeRouter.push('/login')
