@@ -19,11 +19,23 @@ export async function GET(request: NextRequest) {
       const supabase = createClient(request)
       
       try {
-        // すべてのプロフィールを取得（本来は認証ユーザーとの互換性チェックが必要）
+        // デバッグ用：まずすべてのプロフィールを確認
+        console.log('🔍 Fetching all profiles for debugging...')
+        const { data: allProfiles, error: debugError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, gender, nationality, age')
+        
+        console.log('📋 All profiles in database:', allProfiles)
+        
+        // 性別による適切なフィルタリングを実装
+        // テストモードでは田中桜（日本人女性）の視点でダッシュボードを表示
+        // 従って外国人男性のみを表示する
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
           .not('first_name', 'is', null) // 名前が設定されているプロフィールのみ
+          .eq('gender', 'male') // 外国人男性のみ表示
+          .neq('nationality', '日本') // 日本国籍以外
           .limit(10)
         
         if (error) {
