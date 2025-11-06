@@ -13,70 +13,71 @@ export async function GET(request: NextRequest) {
     const devTestMode = searchParams.get('devTest') === 'true'
     
     if (devTestMode) {
-      console.log('🧪 Dev test mode detected - bypassing authentication for matches API')
-      // テストモードの場合はサンプルデータを直接返す
-      const sampleMatches = [
-        {
-          id: 'alex-johnson',
-          firstName: 'Alex',
-          lastName: 'Johnson',
-          age: 34,
-          nationality: 'アメリカ',
-          nationalityLabel: 'アメリカ',
-          prefecture: '東京都',
-          city: '渋谷区',
-          hobbies: ['旅行', '料理', 'スポーツ'],
-          selfIntroduction: 'こんにちは！アメリカ出身のAlexです。34歳でマーケティングの仕事をしています。\n\n日本の文化と美しい伝統にとても興味があり、11月に友人と一緒に東京、横浜、千葉を訪問予定です。日本語は中級レベルですが、もっと上達したいと思っています。\n\n趣味は旅行、料理、スポーツで、特に新しい文化を体験することが大好きです。日本の美味しい料理を学んだり、一緒に東京の街を探索したりできる素敵な日本人女性との出会いを楽しみにしています。\n\n外向的で冒険好きな性格なので、一緒に楽しい時間を過ごせると思います。文化交流を通じて、お互いのことを学び合えたら嬉しいです。\n\nよろしくお願いします！😊',
-          profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
-          lastSeen: '2025-11-06T01:30:00Z',
-          isOnline: true,
-          matchPercentage: 92,
-          commonInterests: ['料理', '旅行'],
-          distanceKm: 5.2
-        },
-        {
-          id: 'david-wilson',
-          firstName: 'David',
-          lastName: 'Wilson',
-          age: 32,
-          nationality: 'イギリス',
-          nationalityLabel: 'イギリス',
-          prefecture: '大阪府',
-          city: '大阪市',
-          hobbies: ['書道', '相撲', '和菓子', '日本酒', '温泉'],
-          selfIntroduction: 'イギリスから来ました。日本の伝統的な文化、特に書道と相撲に興味があります。和菓子作りも学んでみたいです。',
-          profileImage: null,
-          lastSeen: '2025-11-06T00:15:00Z',
-          isOnline: false,
-          matchPercentage: 85,
-          commonInterests: ['書道', '日本酒'],
-          distanceKm: 8.7
-        },
-        {
-          id: 'michael-brown',
-          firstName: 'Michael',
-          lastName: 'Brown',
-          age: 26,
-          nationality: 'カナダ',
-          nationalityLabel: 'カナダ',
-          prefecture: '京都府',
-          city: '京都市',
-          hobbies: ['着物', '祭り', '温泉', '料理', '写真撮影'],
-          selfIntroduction: 'カナダ出身です。日本の着物文化と季節の祭りに魅力を感じています。一緒に文化体験を楽しめる方と出会えたら嬉しいです。',
-          profileImage: null,
-          lastSeen: '2025-11-05T20:45:00Z',
-          isOnline: false,
-          matchPercentage: 78,
-          commonInterests: ['温泉', '料理'],
-          distanceKm: 12.3
-        }
-      ]
+      console.log('🧪 Dev test mode detected - connecting to real database with simulated auth')
       
-      return NextResponse.json({
-        matches: sampleMatches,
-        total: sampleMatches.length,
-        hasMore: false
-      })
+      // テストモードでも実際のデータベースに接続してプロフィールを取得
+      const supabase = createClient(request)
+      
+      try {
+        // すべてのプロフィールを取得（本来は認証ユーザーとの互換性チェックが必要）
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .not('first_name', 'is', null) // 名前が設定されているプロフィールのみ
+          .limit(10)
+        
+        if (error) {
+          console.error('Database fetch error in dev test mode:', error)
+          // エラー時はフォールバック用サンプルデータを返す
+          return NextResponse.json({
+            matches: [],
+            total: 0,
+            hasMore: false,
+            error: 'Database connection failed in test mode'
+          })
+        }
+
+        console.log('🔍 Found profiles in database:', profiles?.length || 0)
+        
+        // データベースから取得したプロフィールをマッチング形式に変換
+        const formattedMatches = profiles?.map((profile: any) => {
+          return {
+            id: profile.id,
+            firstName: profile.first_name || 'Unknown',
+            lastName: profile.last_name || '',
+            age: profile.age || 0,
+            nationality: profile.nationality || 'Unknown',
+            nationalityLabel: getNationalityLabel(profile.nationality),
+            prefecture: profile.prefecture || '',
+            city: profile.city || '',
+            hobbies: profile.hobbies || [],
+            selfIntroduction: profile.self_introduction || '',
+            profileImage: profile.avatar_url || profile.profile_image || null,
+            lastSeen: profile.updated_at,
+            isOnline: Math.random() > 0.5, // ランダムでオンライン状態をシミュレート
+            matchPercentage: Math.floor(Math.random() * 30) + 70, // 70-100%のランダムマッチ度
+            commonInterests: (profile.hobbies || []).slice(0, 2), // 最初の2つを共通趣味として表示
+            distanceKm: Math.floor(Math.random() * 20) + 1 // 1-20kmのランダム距離
+          }
+        }) || []
+
+        console.log('🎯 Formatted matches for dashboard:', formattedMatches.length)
+        
+        return NextResponse.json({
+          matches: formattedMatches,
+          total: formattedMatches.length,
+          hasMore: false
+        })
+        
+      } catch (dbError) {
+        console.error('Database connection error:', dbError)
+        return NextResponse.json({
+          matches: [],
+          total: 0,
+          hasMore: false,
+          error: 'Failed to connect to database'
+        })
+      }
     }
     
     // 通常モード：認証ユーザーの取得
