@@ -76,7 +76,7 @@ async function handleMatchingLogic(supabase: any, user: any, searchParams: URLSe
     .or(`liker_user_id.eq.${user.id},matched_user_id.eq.${user.id}`)
 
   const excludeUserIds = new Set([user.id]) // 自分自身を除外
-  existingLikes?.forEach(like => {
+  existingLikes?.forEach((like: any) => {
     excludeUserIds.add(like.liked_user_id)
     excludeUserIds.add(like.matched_user_id)
   })
@@ -123,7 +123,7 @@ async function handleMatchingLogic(supabase: any, user: any, searchParams: URLSe
   }
 
   // マッチング候補をフロントエンド用の形式に変換
-  const formattedCandidates = candidates?.map(candidate => {
+  const formattedCandidates = candidates?.map((candidate: any) => {
     // 共通の趣味を計算
     const currentHobbies = currentUserProfile.hobbies || []
     const candidateHobbies = candidate.hobbies || []
