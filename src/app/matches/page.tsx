@@ -132,11 +132,21 @@ export default function MatchesPage() {
         if (selectedNationality !== 'すべて') params.append('nationality', selectedNationality)
         if (selectedAge !== 'すべて') params.append('age', selectedAge)
         
+        // 開発テストモードの確認
+        const urlParams = new URLSearchParams(window.location.search)
+        const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
+        
+        if (devTestFlag) {
+          params.append('devTest', 'true')
+          console.log('🧪 Adding devTest parameter to matches API request')
+        }
+        
         const response = await fetch(`/api/matches?${params.toString()}`)
         const result = await response.json()
 
         if (response.ok) {
           setMatches(result.matches || [])
+          console.log('📊 Matches loaded successfully:', result.matches?.length || 0, 'candidates')
         } else {
           console.error('Failed to fetch matches:', result.error)
           // フォールバックとしてサンプルデータを使用

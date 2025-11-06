@@ -15,11 +15,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const router = useRouter()
   const [timeoutReached, setTimeoutReached] = useState(false)
   
-  // テストモードの即座な検出（プロフィール編集画面のみ）
+  // テストモードの即座な検出（拡張版：プロフィール編集 + マッチング画面）
   const [isTestMode, setIsTestMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+      const isMatchesPage = window.location.pathname.includes('/matches')
+      
+      // 開発者フラグの確認
+      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
       
       // マイページからの遷移の場合はテストモードではない
       if (urlParams.get('fromMyPage') === 'true') {
@@ -27,13 +31,19 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         return false
       }
       
+      // マッチング画面でのテストモード判定
+      if (isMatchesPage && devTestFlag) {
+        console.log('🔍 INITIAL detection: matches page with devTest flag')
+        return true
+      }
+      
       // fromMyPageがある場合はtypeパラメータを除外してテストモード判定
       const isFromMyPage = urlParams.get('fromMyPage') === 'true'
       const typeParam = !isFromMyPage ? urlParams.get('type') : null
       const hasTestParams = typeParam || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality')
       
-      const detected = isProfileEditPage && !isFromMyPage && !!hasTestParams
-      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, isFromMyPage, hasTestParams, detected })
+      const detected = (isProfileEditPage && !isFromMyPage && !!hasTestParams) || (isMatchesPage && devTestFlag)
+      console.log('🔍 INITIAL test mode detection:', { isProfileEditPage, isMatchesPage, isFromMyPage, hasTestParams, devTestFlag, detected })
       return detected
     }
     return false
@@ -53,10 +63,13 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     }
   }
 
-  // テストモード検出（プロフィール編集画面のみ）
+  // テストモード検出（拡張版：プロフィール編集 + マッチング画面）
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
+      
+      // 開発者フラグの確認
+      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
       
       // マイページからの遷移の場合はテストモードではない
       if (urlParams.get('fromMyPage') === 'true') {
@@ -66,6 +79,10 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         }
         return
       }
+      
+      // 現在のページ種別判定
+      const isProfileEditPage = window.location.pathname.includes('/profile/edit')
+      const isMatchesPage = window.location.pathname.includes('/matches')
       
       // fromMyPageがある場合はtypeパラメータによるテストモード判定をスキップ
       const isFromMyPage = urlParams.get('fromMyPage') === 'true'
@@ -77,19 +94,21 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       const hasNationality = urlParams.get('nationality')
       const hasPrefecture = urlParams.get('prefecture')
       
-      // プロフィール編集画面の判定のみ
-      const isProfileEditPage = window.location.pathname.includes('/profile/edit')
-      
-      // テストモードの条件：プロフィール編集画面のみ、かつfromMyPageではない場合
-      const testModeDetected = isProfileEditPage && !isFromMyPage && (
+      // テストモードの条件
+      const profileEditTestMode = isProfileEditPage && !isFromMyPage && (
         hasTestModeParams || 
         (hasGender && (hasNickname || hasBirthDate || hasAge || hasNationality || hasPrefecture))
       )
+      const matchesTestMode = isMatchesPage && devTestFlag
+      
+      const testModeDetected = profileEditTestMode || matchesTestMode
       
       console.log('🔍 AuthGuard test mode check:', {
         isProfileEditPage,
+        isMatchesPage,
         isFromMyPage,
         fromMyPage: urlParams.get('fromMyPage'),
+        devTestFlag,
         hasTestModeParams,
         hasGender,
         hasNickname,
@@ -97,6 +116,8 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         hasAge,
         hasNationality,
         hasPrefecture,
+        profileEditTestMode,
+        matchesTestMode,
         testModeDetected,
         currentPath: window.location.pathname,
         searchParams: window.location.search
