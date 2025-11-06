@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import AuthGuard from '@/components/auth/AuthGuard'
@@ -21,45 +21,65 @@ import {
   Calendar
 } from 'lucide-react'
 
+// ユーザープロフィールの型定義
+interface UserProfile {
+  id: string
+  firstName: string
+  lastName: string
+  age: number
+  nationality: string
+  nationalityLabel: string
+  prefecture: string
+  city: string
+  hobbies: string[]
+  selfIntroduction: string
+  profileImage?: string
+  lastSeen: string
+  isOnline: boolean
+}
+
 function DashboardContent() {
   const { user } = useAuth()
   const [activeSection, setActiveSection] = useState('matches')
+  const [matches, setMatches] = useState<UserProfile[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const mockMatches = [
-    {
-      id: 1,
-      name: 'Michael',
-      age: 29,
-      location: 'アメリカ',
-      image: '/api/placeholder/400/500',
-      isOnline: true,
-      lastActive: '24時間以内',
-      bio: 'こんにちは！アメリカから来たMichaelです🇺🇸 日本の文化が大好きで、特に茶道と書道に興味があります。日本語を勉強中で、お互いの言語を教え合いながら素敵な時間を過ごせたらと思います😊',
-      interests: ['茶道', '書道', '日本語学習']
-    },
-    {
-      id: 2,
-      name: 'David',
-      age: 32,
-      location: 'イギリス',
-      image: '/api/placeholder/400/500',
-      isOnline: false,
-      lastActive: '1時間以内',
-      bio: 'Hello! イギリス出身のDavidです🇬🇧 日本の料理と文化に魅了されています。和食作りを学びたいと思っています。一緒に日本の素晴らしい文化を体験しませんか？',
-      interests: ['和食料理', '日本酒', '旅行']
-    },
-    {
-      id: 3,
-      name: 'Marco',
-      age: 26,
-      location: 'イタリア',
-      image: '/api/placeholder/400/500',
-      isOnline: true,
-      lastActive: '30分以内',
-      bio: 'Ciao! イタリアから来ましたMarcoです🇮🇹 日本のアートと伝統工芸に深い関心があります。華道や陶芸を学びながら、日本の心を理解したいです。文化交流を通じて素敵な出会いがあれば嬉しいです✨',
-      interests: ['華道', '陶芸', '美術']
+  // データ取得
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        setIsLoading(true)
+        
+        // 開発テストモードの確認
+        const urlParams = new URLSearchParams(window.location.search)
+        const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
+        
+        const params = new URLSearchParams()
+        if (devTestFlag) {
+          params.append('devTest', 'true')
+          console.log('🧪 Dashboard: Adding devTest parameter to matches API request')
+        }
+        
+        const response = await fetch(`/api/matches?${params.toString()}`)
+        const result = await response.json()
+
+        if (response.ok) {
+          setMatches(result.matches || [])
+          console.log('📊 Dashboard matches loaded:', result.matches?.length || 0, 'candidates')
+        } else {
+          console.error('Failed to fetch dashboard matches:', result.error)
+          setMatches([])
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard matches:', error)
+        setMatches([])
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ]
+
+    fetchMatches()
+  }, [])
 
   const sidebarItems = [
     { id: 'search', icon: Search, label: 'さがす', isPage: false, href: undefined },
@@ -71,9 +91,39 @@ function DashboardContent() {
 
   const renderMainContent = () => {
     if (activeSection === 'matches') {
+      if (isLoading) {
+        return (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">お相手を探しています...</p>
+            </div>
+          </div>
+        )
+      }
+
+      if (matches.length === 0) {
+        return (
+          <div className="text-center py-12">
+            <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              まだお相手が見つかりませんでした
+            </h3>
+            <p className="text-gray-600 mb-4">
+              プロフィールを充実させて、より多くの方と出会いましょう
+            </p>
+            <Link href="/mypage">
+              <Button variant="sakura">
+                プロフィールを編集
+              </Button>
+            </Link>
+          </div>
+        )
+      }
+
       return (
         <div className="space-y-6">
-          {mockMatches.map((match) => (
+          {matches.map((match) => (
             <div key={match.id} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto">
               {/* Profile Image */}
               <div className="relative h-80 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
@@ -81,34 +131,50 @@ function DashboardContent() {
                 {match.isOnline && (
                   <div className="absolute top-4 left-4 flex items-center bg-green-500 text-white px-3 py-1 rounded-full text-sm">
                     <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
-                    {match.lastActive}
+                    オンライン中
                   </div>
                 )}
+                
+                {/* 国籍バッジ */}
+                <div className="absolute top-4 right-4">
+                  <div className="bg-white/90 px-2 py-1 rounded-full text-xs">
+                    {match.nationalityLabel}
+                  </div>
+                </div>
               </div>
 
               {/* Profile Info */}
               <div className="p-6">
                 <div className="flex items-center mb-3">
-                  <h3 className="text-2xl font-bold text-gray-900 mr-3">{match.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mr-3">
+                    {match.firstName} {match.lastName}
+                  </h3>
                   <span className="text-xl text-gray-600">{match.age}歳</span>
                 </div>
 
                 <div className="flex items-center text-gray-600 mb-4">
                   <MapPin className="w-4 h-4 mr-2" />
-                  <span>{match.location}</span>
+                  <span>{match.prefecture} {match.city}</span>
                 </div>
 
                 <p className="text-gray-700 mb-4 leading-relaxed">
-                  {match.bio}
+                  {match.selfIntroduction}
                 </p>
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {match.interests.map((interest, index) => (
-                    <span key={index} className="px-3 py-1 bg-sakura-100 text-sakura-700 text-sm rounded-full">
-                      {interest}
-                    </span>
-                  ))}
-                </div>
+                {match.hobbies && match.hobbies.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {match.hobbies.slice(0, 3).map((hobby, index) => (
+                      <span key={index} className="px-3 py-1 bg-sakura-100 text-sakura-700 text-sm rounded-full">
+                        {hobby}
+                      </span>
+                    ))}
+                    {match.hobbies.length > 3 && (
+                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                        +{match.hobbies.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex space-x-3">
                   <Link href={`/profile/${match.id}`} className="flex-1">
