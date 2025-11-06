@@ -40,7 +40,7 @@ interface UserProfile {
 
 function DashboardContent() {
   const { user } = useAuth()
-  const [activeSection, setActiveSection] = useState('matches')
+  const [activeSection, setActiveSection] = useState('search')
   const [matches, setMatches] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -90,7 +90,7 @@ function DashboardContent() {
   ]
 
   const renderMainContent = () => {
-    if (activeSection === 'matches') {
+    if (activeSection === 'search' || activeSection === 'matches') {
       if (isLoading) {
         return (
           <div className="flex items-center justify-center py-12">
@@ -195,11 +195,49 @@ function DashboardContent() {
       )
     }
 
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        <p>この機能は準備中です</p>
-      </div>
-    )
+    // その他のセクションの処理
+    if (activeSection === 'messages') {
+      return (
+        <div className="text-center py-12">
+          <MessageCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">メッセージ</h3>
+          <p className="text-gray-600 mb-4">まだメッセージがありません</p>
+          <Button variant="outline" onClick={() => setActiveSection('search')}>
+            お相手を探す
+          </Button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'liked') {
+      return (
+        <div className="text-center py-12">
+          <Heart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">お相手から</h3>
+          <p className="text-gray-600 mb-4">まだいいねがありません</p>
+          <Button variant="outline" onClick={() => setActiveSection('search')}>
+            お相手を探す
+          </Button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'footprints') {
+      return (
+        <div className="text-center py-12">
+          <History className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">足跡</h3>
+          <p className="text-gray-600 mb-4">まだ足跡がありません</p>
+          <Button variant="outline" onClick={() => setActiveSection('search')}>
+            お相手を探す
+          </Button>
+        </div>
+      )
+    }
+
+    // デフォルトは検索画面
+    setActiveSection('search')
+    return null
   }
 
   return (
