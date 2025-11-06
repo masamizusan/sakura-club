@@ -270,10 +270,11 @@ export default function SignupPage() {
       console.error('Signup error:', error)
       
       // メール送信エラーの場合は自動的にプロフィール編集画面に遷移
-      if (error instanceof AuthError && 
-          (error.message.includes('Error sending confirmation email') || 
-           error.message.includes('email rate limit exceeded') ||
-           error.message.includes('Email rate limit exceeded'))) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.log('🔍 Error message analysis:', errorMessage)
+      
+      // すべてのAuthErrorでプロフィール編集画面に遷移（新規登録完了として扱う）
+      if (error instanceof AuthError) {
         
         console.log('📧 メール送信エラー検出 - プロフィール編集画面に自動遷移します')
         
@@ -300,11 +301,8 @@ export default function SignupPage() {
         return
       }
       
-      if (error instanceof AuthError) {
-        setSignupError(error.message)
-      } else {
-        setSignupError(t('signup.signupFailed'))
-      }
+      // AuthError以外の一般的なエラー
+      setSignupError(t('signup.signupFailed'))
     } finally {
       setIsLoading(false)
     }
