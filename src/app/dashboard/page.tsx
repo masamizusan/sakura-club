@@ -127,7 +127,15 @@ function DashboardContent() {
             <div key={match.id} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto">
               {/* Profile Image */}
               <div className="relative h-80 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
-                <Users className="w-24 h-24 text-sakura-400" />
+                {match.profileImage ? (
+                  <img 
+                    src={match.profileImage} 
+                    alt={`${match.firstName} ${match.lastName}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Users className="w-24 h-24 text-sakura-400" />
+                )}
                 {match.isOnline && (
                   <div className="absolute top-4 left-4 flex items-center bg-green-500 text-white px-3 py-1 rounded-full text-sm">
                     <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
