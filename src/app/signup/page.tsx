@@ -268,6 +268,38 @@ export default function SignupPage() {
       
     } catch (error) {
       console.error('Signup error:', error)
+      
+      // メール送信エラーの場合は自動的にプロフィール編集画面に遷移
+      if (error instanceof AuthError && 
+          (error.message.includes('Error sending confirmation email') || 
+           error.message.includes('email rate limit exceeded') ||
+           error.message.includes('Email rate limit exceeded'))) {
+        
+        console.log('📧 メール送信エラー検出 - プロフィール編集画面に自動遷移します')
+        
+        // 年齢を再計算
+        const age = calculateAge(data.birth_date)
+        
+        // プロフィール編集画面に直接遷移（開発テストモード有効）
+        const profileParams = new URLSearchParams({
+          type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
+          nickname: data.nickname,
+          gender: data.gender,
+          birth_date: data.birth_date,
+          age: age.toString(),
+          nationality: data.prefecture,
+          prefecture: data.prefecture,
+          devTest: 'true' // 開発テストモードを有効化
+        })
+        
+        // localStorage にも開発テストモードを設定
+        localStorage.setItem('devTestMode', 'true')
+        
+        alert('メール送信でエラーが発生しましたが、プロフィール作成を続行できます。')
+        router.push(`/profile/edit?${profileParams.toString()}`)
+        return
+      }
+      
       if (error instanceof AuthError) {
         setSignupError(error.message)
       } else {
