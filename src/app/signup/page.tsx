@@ -297,7 +297,8 @@ export default function SignupPage() {
         localStorage.setItem('devTestMode', 'true')
         
         alert('メール送信でエラーが発生しましたが、プロフィール作成を続行できます。')
-        router.push(`/profile/edit?${profileParams.toString()}`)
+        // 確実な遷移のためwindow.location.hrefを使用
+        window.location.href = `/profile/edit?${profileParams.toString()}`
         return
       }
       
