@@ -14,14 +14,69 @@ export async function GET(request: NextRequest) {
     
     if (devTestMode) {
       console.log('🧪 Dev test mode detected - bypassing authentication for matches API')
-      // テストモードの場合は固定のテストユーザー情報を使用
-      const testUser = {
-        id: 'test-user-alex-johnson',
-        email: 'alex.johnson@test.com'
-      }
+      // テストモードの場合はサンプルデータを直接返す
+      const sampleMatches = [
+        {
+          id: 'alex-johnson',
+          firstName: 'Alex',
+          lastName: 'Johnson',
+          age: 28,
+          nationality: 'アメリカ',
+          nationalityLabel: 'アメリカ',
+          prefecture: '東京都',
+          city: '渋谷区',
+          hobbies: ['茶道', '書道', '神社巡り', '寿司', '料理'],
+          selfIntroduction: '日本の伝統文化に深い興味があり、特に茶道と書道を学びたいと思っています。日本での生活を通じて、多くの素晴らしい文化体験をしたいと考えています。',
+          profileImage: null,
+          lastSeen: '2025-11-06T01:30:00Z',
+          isOnline: true,
+          matchPercentage: 92,
+          commonInterests: ['茶道', '書道', '料理'],
+          distanceKm: 5.2
+        },
+        {
+          id: 'david-wilson',
+          firstName: 'David',
+          lastName: 'Wilson',
+          age: 32,
+          nationality: 'イギリス',
+          nationalityLabel: 'イギリス',
+          prefecture: '大阪府',
+          city: '大阪市',
+          hobbies: ['書道', '相撲', '和菓子', '日本酒', '温泉'],
+          selfIntroduction: 'イギリスから来ました。日本の伝統的な文化、特に書道と相撲に興味があります。和菓子作りも学んでみたいです。',
+          profileImage: null,
+          lastSeen: '2025-11-06T00:15:00Z',
+          isOnline: false,
+          matchPercentage: 85,
+          commonInterests: ['書道', '日本酒'],
+          distanceKm: 8.7
+        },
+        {
+          id: 'michael-brown',
+          firstName: 'Michael',
+          lastName: 'Brown',
+          age: 26,
+          nationality: 'カナダ',
+          nationalityLabel: 'カナダ',
+          prefecture: '京都府',
+          city: '京都市',
+          hobbies: ['着物', '祭り', '温泉', '料理', '写真撮影'],
+          selfIntroduction: 'カナダ出身です。日本の着物文化と季節の祭りに魅力を感じています。一緒に文化体験を楽しめる方と出会えたら嬉しいです。',
+          profileImage: null,
+          lastSeen: '2025-11-05T20:45:00Z',
+          isOnline: false,
+          matchPercentage: 78,
+          commonInterests: ['温泉', '料理'],
+          distanceKm: 12.3
+        }
+      ]
       
-      // テスト用の固定プロフィールデータでマッチング処理を実行
-      return handleMatchingLogic(supabase, testUser, searchParams)
+      return NextResponse.json({
+        matches: sampleMatches,
+        total: sampleMatches.length,
+        hasMore: false
+      })
     }
     
     // 通常モード：認証ユーザーの取得
