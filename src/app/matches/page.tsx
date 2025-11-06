@@ -186,7 +186,13 @@ export default function MatchesPage() {
 
   const handleLike = async (userId: string) => {
     try {
-      const response = await fetch('/api/matches/like', {
+      // 開発テストモードの確認
+      const urlParams = new URLSearchParams(window.location.search)
+      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
+      
+      const apiUrl = devTestFlag ? '/api/matches/like?devTest=true' : '/api/matches/like'
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +228,13 @@ export default function MatchesPage() {
 
   const handlePass = async (userId: string) => {
     try {
-      const response = await fetch('/api/matches/like', {
+      // 開発テストモードの確認
+      const urlParams = new URLSearchParams(window.location.search)
+      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
+      
+      const apiUrl = devTestFlag ? '/api/matches/like?devTest=true' : '/api/matches/like'
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

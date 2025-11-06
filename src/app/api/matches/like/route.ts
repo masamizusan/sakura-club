@@ -12,6 +12,26 @@ const likeSchema = z.object({
 // POST: いいね・パスの処理
 export async function POST(request: NextRequest) {
   try {
+    // 開発テストモードの確認
+    const url = new URL(request.url)
+    const devTestMode = url.searchParams.get('devTest') === 'true'
+    
+    if (devTestMode) {
+      console.log('🧪 Dev test mode detected - simulating like functionality')
+      
+      // リクエストボディの解析
+      const body = await request.json()
+      const { likedUserId, action } = body
+      
+      // サンプル応答
+      return NextResponse.json({
+        message: action === 'like' ? 'テストモード: いいねしました' : 'テストモード: パスしました',
+        matched: action === 'like' && Math.random() > 0.5, // 50%の確率でマッチ
+        matchId: action === 'like' ? 'test_match_id' : null,
+        testMode: true
+      })
+    }
+    
     const supabase = createClient(request)
     
     // 認証ユーザーの取得
