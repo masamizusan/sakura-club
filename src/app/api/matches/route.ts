@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
           .select('id, first_name, last_name, gender, nationality, age')
         
         console.log('📋 All profiles in database:', allProfiles)
+        console.log('📊 Total profiles found:', allProfiles?.length || 0)
+        
+        if (debugError) {
+          console.error('❌ Error fetching all profiles:', debugError)
+        }
         
         // 性別による適切なフィルタリングを実装
         // テストモードでは田中桜（日本人女性）の視点でダッシュボードを表示
