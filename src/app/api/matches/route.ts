@@ -39,9 +39,16 @@ export async function GET(request: NextRequest) {
           .from('profiles')
           .select('*')
           .not('first_name', 'is', null) // 名前が設定されているプロフィールのみ
-          .eq('gender', 'male') // 外国人男性のみ表示
-          .neq('nationality', '日本') // 日本国籍以外
+          .eq('gender', 'male') // 男性のみ表示
           .limit(10)
+        
+        console.log('🔍 Filtered profiles found:', profiles?.length || 0)
+        console.log('📋 Filtered profile details:', profiles?.map(p => ({ 
+          name: `${p.first_name} ${p.last_name}`, 
+          gender: p.gender, 
+          nationality: p.nationality,
+          age: p.age 
+        })) || [])
         
         if (error) {
           console.error('Database fetch error in dev test mode:', error)
