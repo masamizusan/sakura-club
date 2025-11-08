@@ -32,14 +32,11 @@ export async function GET(request: NextRequest) {
           console.error('❌ Error fetching all profiles:', debugError)
         }
         
-        // 性別による適切なフィルタリングを実装
-        // テストモードでは田中桜（日本人女性）の視点でダッシュボードを表示
-        // 従って外国人男性のみを表示する
+        // テストモードでは全プロフィールを表示（両方向のマッチングテスト用）
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
           .not('first_name', 'is', null) // 名前が設定されているプロフィールのみ
-          .eq('gender', 'male') // 男性のみ表示
           .limit(10)
         
         console.log('🔍 Filtered profiles found:', profiles?.length || 0)
@@ -52,12 +49,52 @@ export async function GET(request: NextRequest) {
         
         if (error) {
           console.error('Database fetch error in dev test mode:', error)
-          // エラー時はフォールバック用サンプルデータを返す
+          // RLSエラーの場合は、テスト用のサンプルデータを返す
+          const testMatches = [
+            {
+              id: 'alex-johnson-test',
+              firstName: 'Alex',
+              lastName: 'Johnson',
+              age: 28,
+              nationality: 'アメリカ',
+              nationalityLabel: 'アメリカ',
+              prefecture: 'アメリカ',
+              city: 'ニューヨーク',
+              hobbies: ['旅行', '料理', '映画鑑賞'],
+              selfIntroduction: 'こんにちは！アメリカから来ました。日本の文化にとても興味があります。一緒に文化交流を楽しみましょう！',
+              profileImage: 'https://via.placeholder.com/400x400/4F46E5/ffffff?text=Alex',
+              lastSeen: new Date().toISOString(),
+              isOnline: true,
+              matchPercentage: 85,
+              commonInterests: ['旅行', '料理'],
+              distanceKm: 15
+            },
+            {
+              id: 'sakura-tanaka-test',
+              firstName: '桜',
+              lastName: '田中',
+              age: 25,
+              nationality: '日本',
+              nationalityLabel: '日本',
+              prefecture: '東京都',
+              city: '渋谷区',
+              hobbies: ['料理', '読書', '映画鑑賞', 'カフェ巡り'],
+              selfIntroduction: 'はじめまして、桜です！東京で働いている25歳です。普段はオフィスワークをしていますが、休日は新しい文化に触れることが大好きです。',
+              profileImage: 'https://via.placeholder.com/400x400/EC4899/ffffff?text=Sakura',
+              lastSeen: new Date().toISOString(),
+              isOnline: false,
+              matchPercentage: 92,
+              commonInterests: ['料理', '映画鑑賞'],
+              distanceKm: 8
+            }
+          ]
+          
+          console.log('🎯 Using fallback test data due to database error')
+          
           return NextResponse.json({
-            matches: [],
-            total: 0,
-            hasMore: false,
-            error: 'Database connection failed in test mode'
+            matches: testMatches,
+            total: testMatches.length,
+            hasMore: false
           })
         }
 
