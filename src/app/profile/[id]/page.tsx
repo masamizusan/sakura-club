@@ -26,77 +26,50 @@ function ProfileDetailContent() {
   const router = useRouter()
   const profileId = params.id as string
 
-  // モックデータ（実際はAPIから取得）
+  // 実際のテストユーザーデータ（ダッシュボードと一致）
   const mockProfiles = {
-    '1': {
-      id: '1',
-      name: 'Michael',
-      age: 29,
+    'alex-johnson-test': {
+      id: 'alex-johnson-test',
+      name: 'Alex Johnson',
+      age: 28,
       location: 'アメリカ',
-      occupation: 'IT',
-      height: '178cm',
-      bodyType: 'ややぽっちゃり',
+      occupation: 'ソフトウェアエンジニア',
+      height: '180cm',
+      bodyType: '普通',
       images: [
-        '/api/placeholder/400/500',
-        '/api/placeholder/400/500', 
-        '/api/placeholder/400/500'
+        'https://via.placeholder.com/400x400/4F46E5/ffffff?text=Alex',
+        'https://via.placeholder.com/400x400/4F46E5/ffffff?text=Alex2'
       ],
-      bio: 'こんにちは！アメリカから来たMichaelです🇺🇸 日本の文化が大好きで、特に茶道と書道に興味があります。日本語を勉強中で、お互いの言語を教え合いながら素敵な時間を過ごせたらと思います😊\n\n仕事はソフトウェアエンジニアをしていて、リモートワークで世界中を旅しながら働いています。日本の四季の美しさと、おもてなしの心に感動しています。\n\n週末は新しい場所を探索したり、現地の人々と交流するのが好きです。一緒に日本の文化を体験しながら、お互いの国の文化も共有できたら嬉しいです！',
-      interests: ['茶道', '書道', '日本語学習', 'プログラミング', '旅行', '写真'],
-      languages: ['英語（ネイティブ）', '日本語（初級）', 'スペイン語（中級）'],
+      bio: 'こんにちは！アメリカから来ました。日本の文化にとても興味があります。一緒に文化交流を楽しみましょう！',
+      interests: ['旅行', '料理', '映画鑑賞'],
+      languages: ['英語（ネイティブ）', '日本語（初級）'],
       maritalStatus: '未婚',
       visitPurpose: '文化体験・言語交換',
       stayDuration: '3ヶ月',
       previousExperiences: [
-        { title: '書道体験', date: '2024年1月', rating: 5, comment: '素晴らしい体験でした！' },
-        { title: '茶道入門', date: '2024年2月', rating: 5, comment: '日本の心を学べました' }
+        { title: '日本文化体験', date: '2024年11月', rating: 5, comment: '素晴らしい体験でした！' }
       ]
     },
-    '2': {
-      id: '2',
-      name: 'David',
-      age: 32,
-      location: 'イギリス',
-      occupation: '自営業',
-      height: '182cm',
+    'sakura-tanaka-test': {
+      id: 'sakura-tanaka-test',
+      name: '田中 桜',
+      age: 25,
+      location: '東京都',
+      occupation: '会社員',
+      height: '158cm',
       bodyType: '普通',
       images: [
-        '/api/placeholder/400/500',
-        '/api/placeholder/400/500'
+        'https://via.placeholder.com/400x400/EC4899/ffffff?text=Sakura',
+        'https://via.placeholder.com/400x400/EC4899/ffffff?text=Sakura2'
       ],
-      bio: 'Hello! イギリス出身のDavidです🇬🇧 日本の料理と文化に魅了されています。和食作りを学びたいと思っています。一緒に日本の素晴らしい文化を体験しませんか？\n\n建築家として働いており、日本の伝統建築と現代建築の融合に興味があります。京都の古い寺院から東京の最新建築まで、すべてが学びになります。\n\n料理が趣味で、特に和食の奥深さに感動しています。一緒に料理を作りながら、文化交流ができれば最高ですね！',
-      interests: ['和食料理', '日本酒', '旅行', '建築', 'デザイン', '歴史'],
-      languages: ['英語（ネイティブ）', '日本語（中級）', 'フランス語（初級）'],
+      bio: 'はじめまして、桜です！東京で働いている25歳です。普段はオフィスワークをしていますが、休日は新しい文化に触れることが大好きです。特に海外の方との交流を通じて、お互いの文化を学び合えることにとても興味があります。',
+      interests: ['料理', '読書', '映画鑑賞', 'カフェ巡り'],
+      languages: ['日本語（ネイティブ）', '英語（初級）'],
       maritalStatus: '未婚',
-      visitPurpose: '文化研究・料理学習',
-      stayDuration: '6ヶ月',
+      visitPurpose: '文化交流・国際理解',
+      stayDuration: '東京在住',
       previousExperiences: [
-        { title: '和食料理教室', date: '2024年1月', rating: 5, comment: '本格的な技術を学べました' }
-      ]
-    },
-    '3': {
-      id: '3',
-      name: 'Marco',
-      age: 26,
-      location: 'イタリア',
-      occupation: '芸能・エンタメ',
-      height: '175cm',
-      bodyType: 'スリム',
-      images: [
-        '/api/placeholder/400/500',
-        '/api/placeholder/400/500',
-        '/api/placeholder/400/500',
-        '/api/placeholder/400/500'
-      ],
-      bio: 'Ciao! イタリアから来ましたMarcoです🇮🇹 日本のアートと伝統工芸に深い関心があります。華道や陶芸を学びながら、日本の心を理解したいです。文化交流を通じて素敵な出会いがあれば嬉しいです✨\n\nアーティストとして活動しており、日本の美意識を自分の作品に取り入れたいと考えています。特に「わび・さび」の概念に魅力を感じています。\n\n音楽も大好きで、ギターを弾きます。日本の伝統音楽と西洋音楽の融合にも興味があります。一緒に芸術について語り合いましょう！',
-      interests: ['華道', '陶芸', '美術', '音楽', 'ギター', '哲学'],
-      languages: ['イタリア語（ネイティブ）', '英語（上級）', '日本語（初級）'],
-      maritalStatus: '未婚',
-      visitPurpose: '芸術研究・文化体験',
-      stayDuration: '4ヶ月',
-      previousExperiences: [
-        { title: '華道体験', date: '2024年2月', rating: 5, comment: '美の真髄を学びました' },
-        { title: '陶芸教室', date: '2024年2月', rating: 4, comment: '難しいですが楽しい！' }
+        { title: '国際交流イベント', date: '2024年10月', rating: 5, comment: '楽しい文化交流でした！' }
       ]
     }
   }
@@ -234,22 +207,38 @@ function ProfileDetailContent() {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-6">
               {/* Main Image */}
               <div className="relative h-96 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
-                <Users className="w-24 h-24 text-sakura-400" />
+                {profile.images && profile.images[currentImageIndex] ? (
+                  <img 
+                    src={profile.images[currentImageIndex]} 
+                    alt={`${profile.name}のプロフィール写真`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Users className="w-24 h-24 text-sakura-400" />
+                )}
               </div>
 
               {/* Image Thumbnails */}
               {profile.images.length > 1 && (
                 <div className="p-4">
                   <div className="grid grid-cols-3 gap-2">
-                    {profile.images.map((_, index) => (
+                    {profile.images.map((image, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
-                        className={`aspect-square rounded-lg bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center ${
+                        className={`aspect-square rounded-lg bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center overflow-hidden ${
                           currentImageIndex === index ? 'ring-2 ring-sakura-500' : ''
                         }`}
                       >
-                        <Camera className="w-6 h-6 text-sakura-400" />
+                        {image ? (
+                          <img 
+                            src={image} 
+                            alt={`${profile.name}の写真 ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Camera className="w-6 h-6 text-sakura-400" />
+                        )}
                       </button>
                     ))}
                   </div>
