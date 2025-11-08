@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -25,56 +25,54 @@ function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
   const profileId = params.id as string
+  const [profile, setProfile] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // 実際のテストユーザーデータ（ダッシュボードと一致）
-  const mockProfiles = {
-    'alex-johnson-test': {
-      id: 'alex-johnson-test',
-      name: 'Alex Johnson',
-      age: 28,
-      location: 'アメリカ',
-      occupation: 'ソフトウェアエンジニア',
-      height: '180cm',
-      bodyType: '普通',
-      images: [
-        'https://via.placeholder.com/400x400/4F46E5/ffffff?text=Alex',
-        'https://via.placeholder.com/400x400/4F46E5/ffffff?text=Alex2'
-      ],
-      bio: 'こんにちは！アメリカから来ました。日本の文化にとても興味があります。一緒に文化交流を楽しみましょう！',
-      interests: ['旅行', '料理', '映画鑑賞'],
-      languages: ['英語（ネイティブ）', '日本語（初級）'],
-      maritalStatus: '未婚',
-      visitPurpose: '文化体験・言語交換',
-      stayDuration: '3ヶ月',
-      previousExperiences: [
-        { title: '日本文化体験', date: '2024年11月', rating: 5, comment: '素晴らしい体験でした！' }
-      ]
-    },
-    'sakura-tanaka-test': {
-      id: 'sakura-tanaka-test',
-      name: '田中 桜',
-      age: 25,
-      location: '東京都',
-      occupation: '会社員',
-      height: '158cm',
-      bodyType: '普通',
-      images: [
-        'https://via.placeholder.com/400x400/EC4899/ffffff?text=Sakura',
-        'https://via.placeholder.com/400x400/EC4899/ffffff?text=Sakura2'
-      ],
-      bio: 'はじめまして、桜です！東京で働いている25歳です。普段はオフィスワークをしていますが、休日は新しい文化に触れることが大好きです。特に海外の方との交流を通じて、お互いの文化を学び合えることにとても興味があります。',
-      interests: ['料理', '読書', '映画鑑賞', 'カフェ巡り'],
-      languages: ['日本語（ネイティブ）', '英語（初級）'],
-      maritalStatus: '未婚',
-      visitPurpose: '文化交流・国際理解',
-      stayDuration: '東京在住',
-      previousExperiences: [
-        { title: '国際交流イベント', date: '2024年10月', rating: 5, comment: '楽しい文化交流でした！' }
-      ]
+  // APIからプロフィールデータを取得
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/matches?devTest=true')
+        const data = await response.json()
+        
+        if (data.matches) {
+          // プロフィールIDに一致するデータを検索
+          const foundProfile = data.matches.find((match: any) => match.id === profileId)
+          
+          if (foundProfile) {
+            // APIデータをプロフィール詳細用の形式に変換
+            const profileData = {
+              id: foundProfile.id,
+              name: `${foundProfile.firstName} ${foundProfile.lastName}`.trim(),
+              age: foundProfile.age,
+              location: foundProfile.prefecture + (foundProfile.city ? ` ${foundProfile.city}` : ''),
+              occupation: 'ソフトウェアエンジニア', // TODO: APIに追加予定
+              height: '180cm', // TODO: APIに追加予定
+              bodyType: '普通', // TODO: APIに追加予定
+              images: foundProfile.profileImage ? [foundProfile.profileImage] : [],
+              bio: foundProfile.selfIntroduction,
+              interests: foundProfile.hobbies || [],
+              languages: foundProfile.nationality === 'アメリカ' ? ['英語（ネイティブ）', '日本語（初級）'] : ['日本語（ネイティブ）', '英語（初級）'],
+              maritalStatus: '未婚',
+              visitPurpose: foundProfile.nationality === 'アメリカ' ? '文化体験・言語交流' : '文化交流・国際理解',
+              stayDuration: foundProfile.nationality === 'アメリカ' ? '3ヶ月' : '東京在住',
+              previousExperiences: [
+                { title: '文化交流イベント', date: '2024年11月', rating: 5, comment: '素晴らしい体験でした！' }
+              ]
+            }
+            setProfile(profileData)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
-  const profile = mockProfiles[profileId as keyof typeof mockProfiles]
+    fetchProfile()
+  }, [profileId])
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [specialMessage, setSpecialMessage] = useState('')
   const [isSpecialApproachOpen, setIsSpecialApproachOpen] = useState(false)
@@ -172,6 +170,17 @@ function ProfileDetailContent() {
       </DialogContent>
     </Dialog>
   )
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">プロフィールを読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!profile) {
     return (

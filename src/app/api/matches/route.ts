@@ -13,10 +13,20 @@ export async function GET(request: NextRequest) {
     const devTestMode = searchParams.get('devTest') === 'true'
     
     if (devTestMode) {
-      console.log('🧪 Dev test mode detected - connecting to real database with simulated auth')
+      console.log('🧪 Dev test mode detected - using service role for database access')
       
-      // テストモードでも実際のデータベースに接続してプロフィールを取得
-      const supabase = createClient(request)
+      // テストモード用：service role を使用してRLSをバイパス
+      const { createClient: createServiceClient } = await import('@supabase/supabase-js')
+      const supabase = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
       
       try {
         // デバッグ用：まずすべてのプロフィールを確認
@@ -99,34 +109,48 @@ export async function GET(request: NextRequest) {
         }
 
         console.log('🔍 Found profiles in database:', profiles?.length || 0)
+        console.log('🔍 Raw profile data:', profiles)
         
-        // データベースから取得したプロフィールをマッチング形式に変換
-        const formattedMatches = profiles?.map((profile: any) => {
-          return {
-            id: profile.id,
-            firstName: profile.first_name || 'Unknown',
-            lastName: profile.last_name || '',
-            age: profile.age || 0,
-            nationality: profile.nationality || 'Unknown',
-            nationalityLabel: getNationalityLabel(profile.nationality),
-            prefecture: profile.prefecture || '',
-            city: profile.city || '',
-            hobbies: profile.hobbies || [],
-            selfIntroduction: profile.self_introduction || '',
-            profileImage: profile.avatar_url || profile.profile_image || null,
-            lastSeen: profile.updated_at,
-            isOnline: Math.random() > 0.5, // ランダムでオンライン状態をシミュレート
-            matchPercentage: Math.floor(Math.random() * 30) + 70, // 70-100%のランダムマッチ度
-            commonInterests: (profile.hobbies || []).slice(0, 2), // 最初の2つを共通趣味として表示
-            distanceKm: Math.floor(Math.random() * 20) + 1 // 1-20kmのランダム距離
-          }
-        }) || []
+        // データベースから正しくデータが取得された場合
+        if (profiles && profiles.length > 0) {
+          // データベースから取得したプロフィールをマッチング形式に変換
+          const formattedMatches = profiles.map((profile: any) => {
+            console.log('🔧 Processing profile:', profile.first_name, profile.last_name)
+            return {
+              id: profile.id,
+              firstName: profile.first_name || profile.nickname || 'Unknown',
+              lastName: profile.last_name || '',
+              age: profile.age || 0,
+              nationality: profile.nationality || 'Unknown',
+              nationalityLabel: getNationalityLabel(profile.nationality),
+              prefecture: profile.prefecture || '',
+              city: profile.city || '',
+              hobbies: Array.isArray(profile.hobbies) ? profile.hobbies : [],
+              selfIntroduction: profile.self_introduction || '',
+              profileImage: profile.avatar_url || profile.profile_image || null,
+              lastSeen: profile.updated_at,
+              isOnline: Math.random() > 0.5, // ランダムでオンライン状態をシミュレート
+              matchPercentage: Math.floor(Math.random() * 30) + 70, // 70-100%のランダムマッチ度
+              commonInterests: Array.isArray(profile.hobbies) ? profile.hobbies.slice(0, 2) : [],
+              distanceKm: Math.floor(Math.random() * 20) + 1 // 1-20kmのランダム距離
+            }
+          })
 
-        console.log('🎯 Formatted matches for dashboard:', formattedMatches.length)
+          console.log('🎯 Formatted matches for dashboard:', formattedMatches.length)
+          console.log('🎯 Sample formatted match:', formattedMatches[0])
+          
+          return NextResponse.json({
+            matches: formattedMatches,
+            total: formattedMatches.length,
+            hasMore: false
+          })
+        }
         
+        // データがない場合は空の結果を返す
+        console.log('⚠️ No profiles found in database')
         return NextResponse.json({
-          matches: formattedMatches,
-          total: formattedMatches.length,
+          matches: [],
+          total: 0,
           hasMore: false
         })
         
