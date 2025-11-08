@@ -231,7 +231,7 @@ function ProfileDetailContent() {
               {profile.images.length > 1 && (
                 <div className="p-4">
                   <div className="grid grid-cols-3 gap-2">
-                    {profile.images.map((image, index) => (
+                    {profile.images.map((image: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
@@ -300,7 +300,7 @@ function ProfileDetailContent() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">興味・関心</h3>
                   <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((interest, index) => (
+                    {profile.interests.map((interest: string, index: number) => (
                       <span key={index} className="px-3 py-1 bg-sakura-100 text-sakura-700 text-sm rounded-full">
                         {interest}
                       </span>
@@ -331,7 +331,7 @@ function ProfileDetailContent() {
               <div className="mt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">話せる言語</h4>
                 <div className="flex flex-wrap gap-2">
-                  {profile.languages.map((language, index) => (
+                  {profile.languages.map((language: string, index: number) => (
                     <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
                       {language}
                     </span>
@@ -344,7 +344,7 @@ function ProfileDetailContent() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">文化体験履歴</h3>
               <div className="space-y-4">
-                {profile.previousExperiences.map((exp, index) => (
+                {profile.previousExperiences.map((exp: any, index: number) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-900">{exp.title}</h4>
