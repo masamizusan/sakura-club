@@ -18,18 +18,36 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
 
-    // Supabase接続（service roleを使用）
+    // Supabase接続（service roleを使用、フォールバック対応）
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     
     console.log('🔧 Environment check:', {
       hasUrl: !!supabaseUrl,
       hasServiceRole: !!serviceRoleKey,
+      hasAnonKey: !!anonKey,
       urlLength: supabaseUrl?.length,
-      keyLength: serviceRoleKey?.length
+      serviceKeyLength: serviceRoleKey?.length || 0,
+      anonKeyLength: anonKey?.length || 0,
+      usingKey: serviceRoleKey ? 'SERVICE_ROLE' : 'ANON_KEY'
     })
     
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    // Service Roleキーがない場合はAnon Keyを使用
+    const keyToUse = serviceRoleKey || anonKey
+    
+    if (!keyToUse) {
+      console.error('❌ No Supabase keys available')
+      return NextResponse.json({
+        matches: [],
+        total: 0,
+        hasMore: false,
+        error: 'No Supabase keys configured',
+        dataSource: 'CONFIG_ERROR'
+      })
+    }
+    
+    const supabase = createClient(supabaseUrl, keyToUse, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
