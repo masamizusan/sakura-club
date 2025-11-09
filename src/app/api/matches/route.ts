@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     })
     
     if (devTestMode) {
-      console.log('🧪 Dev test mode detected - using service role for database access')
+      console.log('🧪 ENTERING DEV TEST MODE - using service role for database access')
+      console.log('🎯 DEV TEST MODE CONFIRMED - Will not reach normal authentication flow')
       
       // 🔧 Environment variables check
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -314,6 +315,8 @@ export async function GET(request: NextRequest) {
     }
     
     // 通常モード：認証ユーザーの取得
+    console.log('🚨 REACHED NORMAL MODE - devTest was NOT triggered')
+    console.log('🚨 This should not happen if devTest=true was passed correctly')
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
