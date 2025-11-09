@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
     console.log('🔍 DEVTEST MODE CHECK:', {
       devTestParam: searchParams.get('devTest'),
       devTestMode: devTestMode,
-      url: request.url
+      url: request.url,
+      searchParamsSize: searchParams.size,
+      allParams: Object.fromEntries(searchParams.entries())
     })
     
     if (devTestMode) {
