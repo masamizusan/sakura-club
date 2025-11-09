@@ -40,6 +40,13 @@ export async function GET(request: NextRequest) {
         }
       )
       
+      console.log('🔧 SUPABASE CLIENT DEBUG:', {
+        usingServiceRole: !!serviceRoleKey,
+        keyLength: serviceRoleKey ? serviceRoleKey.length : 0,
+        urlConfigured: !!supabaseUrl,
+        clientCreated: !!supabase
+      })
+      
       try {
         // 🔍 Step 1: Test simple connection
         console.log('🔗 Testing Supabase connection...')
@@ -79,6 +86,23 @@ export async function GET(request: NextRequest) {
           error: error?.message || 'No error',
           firstProfile: profiles?.[0] || null
         })
+        
+        // 🎯 CRITICAL DEBUG: 詳細なプロファイル情報をログ出力
+        if (profiles && profiles.length > 0) {
+          console.log('🎯 DETAILED PROFILE ANALYSIS:')
+          profiles.forEach((profile, index) => {
+            console.log(`Profile ${index + 1}:`, {
+              id: profile.id,
+              first_name: profile.first_name,
+              last_name: profile.last_name,
+              age: profile.age,
+              nationality: profile.nationality,
+              bio_length: profile.self_introduction?.length || 0,
+              has_avatar: !!profile.avatar_url,
+              created_at: profile.created_at
+            })
+          })
+        }
         
         // 🎯 常に実データを優先的に処理
         if (!error && profiles && profiles.length > 0) {
