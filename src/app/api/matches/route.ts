@@ -6,7 +6,7 @@ export const runtime = 'nodejs'
 
 // GET: マッチング候補の取得
 export async function GET(request: NextRequest) {
-  console.log('🚀 MATCHES API STARTED - New implementation')
+  console.log('🚀 MATCHES API STARTED - New implementation with matching logic')
   
   try {
     const { searchParams } = new URL(request.url)
@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
       devTestMode,
       timestamp: new Date().toISOString()
     })
+
+    // 現在のユーザーIDを取得
+    const currentUserId = searchParams.get('currentUserId')
+    console.log('📋 Current user ID:', currentUserId)
 
     // Supabase接続（service roleを使用、フォールバック対応）
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -56,18 +60,76 @@ export async function GET(request: NextRequest) {
     
     console.log('🔗 Supabase client created with service role')
     
-    // プロフィール取得（まずは全データを取得してカラム構造を確認）
-    const { data: profiles, error } = await supabase
+    let currentUserProfile: any = null
+
+    // 現在のユーザー情報を取得（マッチングロジック用）
+    if (currentUserId) {
+      const { data: userProfile, error: userError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUserId)
+        .single()
+
+      if (!userError && userProfile) {
+        currentUserProfile = userProfile
+        console.log('👤 Current user profile:', {
+          id: userProfile.id,
+          name: userProfile.name,
+          nationality: userProfile.nationality,
+          gender: userProfile.gender
+        })
+      }
+    }
+    
+    // マッチング候補取得（フィルタリングあり）
+    let profileQuery = supabase
       .from('profiles')
       .select('*')
-      .limit(10)
+
+    // マッチングロジック実装
+    if (currentUserProfile) {
+      const isCurrentUserForeignMale = currentUserProfile.nationality !== 'JP' && 
+                                       currentUserProfile.nationality !== '日本'
+      const isCurrentUserJapaneseFemale = (currentUserProfile.nationality === 'JP' || 
+                                          currentUserProfile.nationality === '日本') &&
+                                         currentUserProfile.gender === 'female'
+
+      console.log('🎯 Matching logic:', {
+        isCurrentUserForeignMale,
+        isCurrentUserJapaneseFemale,
+        currentUserNationality: currentUserProfile.nationality,
+        currentUserGender: currentUserProfile.gender
+      })
+
+      if (isCurrentUserForeignMale) {
+        // 外国人男性 → 日本人女性のみ表示
+        profileQuery = profileQuery
+          .in('nationality', ['JP', '日本'])
+          .neq('id', currentUserId) // 自分を除外
+        console.log('🔍 Foreign male → showing Japanese females only')
+      } else if (isCurrentUserJapaneseFemale) {
+        // 日本人女性 → 外国人男性のみ表示
+        profileQuery = profileQuery
+          .not('nationality', 'in', '("JP","日本")')
+          .neq('id', currentUserId) // 自分を除外
+        console.log('🔍 Japanese female → showing foreign males only')
+      } else {
+        // その他の場合は自分以外を表示
+        profileQuery = profileQuery.neq('id', currentUserId)
+        console.log('🔍 Other user → showing all except self')
+      }
+    }
+
+    const { data: profiles, error } = await profileQuery.limit(10)
       
     console.log('🔍 First profile structure check:', profiles?.[0] ? Object.keys(profiles[0]) : 'No profiles')
     
     console.log('📊 Database query result:', {
       profileCount: profiles?.length || 0,
       error: error?.message || null,
-      hasData: !!profiles && profiles.length > 0
+      hasData: !!profiles && profiles.length > 0,
+      currentUserNationality: currentUserProfile?.nationality,
+      filterApplied: !!currentUserProfile
     })
     
     if (error) {
@@ -186,7 +248,13 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    console.log('✅ SUCCESS: Returning real Supabase data:', formattedMatches.length, 'profiles')
+    console.log('✅ SUCCESS: Returning filtered Supabase data:', {
+      totalMatches: formattedMatches.length,
+      currentUserType: currentUserProfile ? 
+        (currentUserProfile.nationality !== 'JP' && currentUserProfile.nationality !== '日本' ? 'foreign_male' : 'japanese_female') : 
+        'unknown',
+      profiles: formattedMatches.map(p => ({ name: p.firstName, nationality: p.nationality }))
+    })
     
     return NextResponse.json({
       matches: formattedMatches,

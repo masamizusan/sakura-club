@@ -63,6 +63,17 @@ function DashboardContent() {
           params.append('devTest', 'true')
           console.log('🧪 Dashboard: Adding devTest parameter to matches API request')
         }
+
+        // ユーザー情報をAPIに送信（マッチングフィルタリング用）
+        if (user?.id) {
+          params.append('currentUserId', user.id)
+        }
+        
+        console.log('🔍 Dashboard: Current user info:', {
+          userId: user?.id,
+          userNationality: user?.nationality,
+          userGender: user?.gender
+        })
         
         const response = await fetch(`/api/matches?${params.toString()}`)
         const result = await response.json()
