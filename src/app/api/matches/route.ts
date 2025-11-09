@@ -80,6 +80,45 @@ export async function GET(request: NextRequest) {
           firstProfile: profiles?.[0] || null
         })
         
+        // データが正常に取得できた場合は処理を続行
+        if (!error && profiles && profiles.length > 0) {
+          console.log('✅ Successfully retrieved real profiles from Supabase!')
+          
+          // 🎯 実際のSupabaseデータを使用してマッチング結果を返す
+          const formattedMatches = profiles.map((profile: any) => {
+            console.log('🔧 Processing real profile:', profile.first_name, profile.last_name)
+            return {
+              id: profile.id,
+              firstName: profile.first_name || profile.nickname || 'Unknown',
+              lastName: profile.last_name || '',
+              age: profile.age || 0,
+              nationality: profile.nationality || 'Unknown',
+              nationalityLabel: getNationalityLabel(profile.nationality),
+              prefecture: profile.prefecture || '',
+              city: profile.city || '',
+              hobbies: Array.isArray(profile.hobbies) ? profile.hobbies : [],
+              selfIntroduction: profile.self_introduction || '',
+              profileImage: profile.avatar_url || profile.profile_image || null,
+              lastSeen: profile.updated_at,
+              isOnline: Math.random() > 0.5,
+              matchPercentage: Math.floor(Math.random() * 30) + 70,
+              commonInterests: Array.isArray(profile.hobbies) ? profile.hobbies.slice(0, 2) : [],
+              distanceKm: Math.floor(Math.random() * 20) + 1
+            }
+          })
+
+          console.log('🎯 Real formatted matches for dashboard:', formattedMatches.length)
+          console.log('🎯 Real sample formatted match:', formattedMatches[0])
+          
+          return NextResponse.json({
+            matches: formattedMatches,
+            total: formattedMatches.length,
+            hasMore: false
+          })
+        } else {
+          console.error('❌ Failed to retrieve profiles:', error?.message || 'No profiles found')
+        }
+        
         if (error) {
           console.error('Database fetch error in dev test mode:', error)
           // RLSエラーの場合は、テスト用のサンプルデータを返す
