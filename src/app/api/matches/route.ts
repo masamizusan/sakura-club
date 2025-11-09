@@ -114,11 +114,12 @@ export async function GET(request: NextRequest) {
 
       if (isCurrentUserForeignMale) {
         // 外国人男性 → 日本人女性のみ表示
+        // 国籍が'JP'、'日本'、またはNULL/空の場合を含める（日本人とみなす）
         profileQuery = profileQuery
-          .in('nationality', ['JP', '日本'])
+          .or('nationality.in.(JP,日本),nationality.is.null,nationality.eq.')
           .neq('id', currentUserId) // 自分を除外
-        console.log('🔍 Foreign male → showing Japanese females only')
-        console.log('🔍 Query filter: nationality IN ["JP", "日本"] AND id != ' + currentUserId)
+        console.log('🔍 Foreign male → showing Japanese females (including NULL nationality)')
+        console.log('🔍 Query filter: (nationality IN ["JP", "日本"] OR nationality IS NULL OR nationality = "") AND id != ' + currentUserId)
       } else if (isCurrentUserJapaneseFemale) {
         // 日本人女性 → 外国人男性のみ表示
         profileQuery = profileQuery
