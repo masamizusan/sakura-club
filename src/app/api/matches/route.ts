@@ -80,13 +80,12 @@ export async function GET(request: NextRequest) {
           firstProfile: profiles?.[0] || null
         })
         
-        // データが正常に取得できた場合は処理を続行
+        // 🎯 常に実データを優先的に処理
         if (!error && profiles && profiles.length > 0) {
-          console.log('✅ Successfully retrieved real profiles from Supabase!')
+          console.log('✅ SUCCESS: Retrieved real profiles from Supabase!', profiles.length)
           
-          // 🎯 実際のSupabaseデータを使用してマッチング結果を返す
           const formattedMatches = profiles.map((profile: any) => {
-            console.log('🔧 Processing real profile:', profile.first_name, profile.last_name)
+            console.log('🔧 Processing REAL profile:', profile.first_name, profile.last_name, profile.age)
             return {
               id: profile.id,
               firstName: profile.first_name || profile.nickname || 'Unknown',
@@ -107,17 +106,22 @@ export async function GET(request: NextRequest) {
             }
           })
 
-          console.log('🎯 Real formatted matches for dashboard:', formattedMatches.length)
-          console.log('🎯 Real sample formatted match:', formattedMatches[0])
+          console.log('🎯 REAL DATA RESPONSE:', formattedMatches.length, 'profiles formatted')
+          console.log('🎯 First real profile:', formattedMatches[0])
           
           return NextResponse.json({
             matches: formattedMatches,
             total: formattedMatches.length,
-            hasMore: false
+            hasMore: false,
+            dataSource: 'REAL_SUPABASE_DATA'
           })
-        } else {
-          console.error('❌ Failed to retrieve profiles:', error?.message || 'No profiles found')
         }
+        
+        console.error('❌ NO REAL DATA - Error or empty result:', {
+          hasError: !!error,
+          errorMessage: error?.message,
+          profileCount: profiles?.length || 0
+        })
         
         if (error) {
           console.error('Database fetch error in dev test mode:', error)
@@ -262,7 +266,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           matches: testMatches,
           total: testMatches.length,
-          hasMore: false
+          hasMore: false,
+          dataSource: 'FALLBACK_TEST_DATA'
         })
         
       } catch (dbError) {
