@@ -96,20 +96,42 @@ export async function GET(request: NextRequest) {
     const formattedMatches = profiles.map((profile: any) => {
       console.log('🔧 Processing profile:', {
         id: profile.id,
-        name: profile.name,  // first_nameではなくnameを使用
+        name: profile.name,
         age: profile.age,
-        nationality: profile.nationality
+        nationality: profile.nationality,
+        city: profile.city,
+        occupation: profile.occupation,
+        height: profile.height,
+        body_type: profile.body_type,
+        marital_status: profile.marital_status
       })
+
+      // JSONオブジェクトが文字列化されている場合の処理
+      const safeGetString = (value: any): string => {
+        if (typeof value === 'string') return value
+        if (value === null || value === undefined) return ''
+        if (typeof value === 'object') {
+          // オブジェクトの場合、主要なプロパティを確認
+          if (value.value) return String(value.value)
+          if (value.label) return String(value.label) 
+          return JSON.stringify(value)
+        }
+        return String(value)
+      }
       
       return {
         id: profile.id,
-        firstName: profile.name || 'Unknown',  // nameを使用
-        lastName: '',  // last_nameが存在しない場合は空文字
+        firstName: profile.name || 'Unknown',
+        lastName: '',
         age: profile.age || 0,
         nationality: profile.nationality || 'Unknown',
-        nationalityLabel: profile.nationality || 'Unknown',
-        prefecture: profile.prefecture || '',
-        city: profile.city || '',
+        nationalityLabel: profile.nationality || 'Unknown', 
+        prefecture: safeGetString(profile.prefecture),
+        city: safeGetString(profile.city),
+        occupation: safeGetString(profile.occupation),
+        height: safeGetString(profile.height),
+        bodyType: safeGetString(profile.body_type),
+        maritalStatus: safeGetString(profile.marital_status),
         hobbies: Array.isArray(profile.interests) ? profile.interests : [],
         selfIntroduction: profile.bio || profile.self_introduction || '',
         profileImage: profile.avatar_url || null,

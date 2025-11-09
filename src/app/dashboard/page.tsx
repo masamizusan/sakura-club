@@ -31,6 +31,10 @@ interface UserProfile {
   nationalityLabel: string
   prefecture: string
   city: string
+  occupation?: string
+  height?: string
+  bodyType?: string
+  maritalStatus?: string
   hobbies: string[]
   selfIntroduction: string
   profileImage?: string
@@ -164,6 +168,32 @@ function DashboardContent() {
                   <MapPin className="w-4 h-4 mr-2" />
                   <span>{match.prefecture} {match.city}</span>
                 </div>
+
+                {/* プロフィール詳細情報 */}
+                {(match.occupation || match.height || match.bodyType || match.maritalStatus) && (
+                  <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                    {match.occupation && (
+                      <div className="bg-blue-50 px-2 py-1 rounded text-blue-700">
+                        💼 {match.occupation}
+                      </div>
+                    )}
+                    {match.height && (
+                      <div className="bg-green-50 px-2 py-1 rounded text-green-700">
+                        📏 {match.height}
+                      </div>
+                    )}
+                    {match.bodyType && (
+                      <div className="bg-purple-50 px-2 py-1 rounded text-purple-700">
+                        💪 {match.bodyType}
+                      </div>
+                    )}
+                    {match.maritalStatus && (
+                      <div className="bg-orange-50 px-2 py-1 rounded text-orange-700">
+                        💐 {match.maritalStatus}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <p className="text-gray-700 mb-4 leading-relaxed">
                   {match.selfIntroduction}

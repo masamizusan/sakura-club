@@ -46,14 +46,14 @@ function ProfileDetailContent() {
               name: `${foundProfile.firstName} ${foundProfile.lastName}`.trim(),
               age: foundProfile.age,
               location: foundProfile.prefecture + (foundProfile.city ? ` ${foundProfile.city}` : ''),
-              occupation: 'ソフトウェアエンジニア', // TODO: APIに追加予定
-              height: '180cm', // TODO: APIに追加予定
-              bodyType: '普通', // TODO: APIに追加予定
+              occupation: foundProfile.occupation || 'ソフトウェアエンジニア',
+              height: foundProfile.height || '180cm',
+              bodyType: foundProfile.bodyType || '普通',
               images: foundProfile.profileImage ? [foundProfile.profileImage] : [],
               bio: foundProfile.selfIntroduction,
               interests: foundProfile.hobbies || [],
               languages: foundProfile.nationality === 'アメリカ' ? ['英語（ネイティブ）', '日本語（初級）'] : ['日本語（ネイティブ）', '英語（初級）'],
-              maritalStatus: '未婚',
+              maritalStatus: foundProfile.maritalStatus || '未婚',
               visitPurpose: foundProfile.nationality === 'アメリカ' ? '文化体験・言語交流' : '文化交流・国際理解',
               stayDuration: foundProfile.nationality === 'アメリカ' ? '3ヶ月' : '東京在住',
               previousExperiences: [
