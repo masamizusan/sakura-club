@@ -118,7 +118,50 @@ export async function GET(request: NextRequest) {
         }
         return String(value)
       }
+
+      // JSON文字列をパースする処理
+      const parseJSONField = (value: any, fieldName: string): string => {
+        if (typeof value === 'string' && value.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(value)
+            if (parsed[fieldName] !== undefined && parsed[fieldName] !== null) {
+              return String(parsed[fieldName])
+            }
+          } catch (e) {
+            console.log(`Failed to parse JSON field ${fieldName}:`, value)
+          }
+        }
+        return value ? String(value) : ''
+      }
       
+      // cityフィールドがJSONかどうか確認し、適切に処理
+      let cityValue = ''
+      let occupationValue = ''
+      let heightValue = ''
+      let bodyTypeValue = ''
+      let maritalStatusValue = ''
+
+      // cityフィールドがJSON形式かチェック
+      if (profile.city && typeof profile.city === 'string' && profile.city.startsWith('{')) {
+        try {
+          const cityData = JSON.parse(profile.city)
+          cityValue = cityData.city || ''
+          occupationValue = cityData.occupation || ''
+          heightValue = cityData.height ? String(cityData.height) : ''
+          bodyTypeValue = cityData.body_type || ''
+          maritalStatusValue = cityData.marital_status || ''
+        } catch (e) {
+          console.log('Failed to parse city JSON:', profile.city)
+          cityValue = profile.city
+        }
+      } else {
+        cityValue = safeGetString(profile.city)
+        occupationValue = safeGetString(profile.occupation)
+        heightValue = safeGetString(profile.height)
+        bodyTypeValue = safeGetString(profile.body_type)
+        maritalStatusValue = safeGetString(profile.marital_status)
+      }
+
       return {
         id: profile.id,
         firstName: profile.name || 'Unknown',
@@ -127,11 +170,11 @@ export async function GET(request: NextRequest) {
         nationality: profile.nationality || 'Unknown',
         nationalityLabel: profile.nationality || 'Unknown', 
         prefecture: safeGetString(profile.prefecture),
-        city: safeGetString(profile.city),
-        occupation: safeGetString(profile.occupation),
-        height: safeGetString(profile.height),
-        bodyType: safeGetString(profile.body_type),
-        maritalStatus: safeGetString(profile.marital_status),
+        city: cityValue,
+        occupation: occupationValue,
+        height: heightValue,
+        bodyType: bodyTypeValue,
+        maritalStatus: maritalStatusValue,
         hobbies: Array.isArray(profile.interests) ? profile.interests : [],
         selfIntroduction: profile.bio || profile.self_introduction || '',
         profileImage: profile.avatar_url || null,
