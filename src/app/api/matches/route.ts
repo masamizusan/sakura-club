@@ -15,11 +15,23 @@ export async function GET(request: NextRequest) {
     if (devTestMode) {
       console.log('🧪 Dev test mode detected - using service role for database access')
       
+      // 🔧 Environment variables check
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      
+      console.log('🔧 Environment check:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceRole: !!serviceRoleKey,
+        hasAnonKey: !!anonKey,
+        usingKey: serviceRoleKey ? 'SERVICE_ROLE' : 'ANON_KEY'
+      })
+      
       // テストモード用：service role を使用してRLSをバイパス
       const { createClient: createServiceClient } = await import('@supabase/supabase-js')
       const supabase = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        supabaseUrl!,
+        serviceRoleKey || anonKey!,
         {
           auth: {
             autoRefreshToken: false,
@@ -29,33 +41,44 @@ export async function GET(request: NextRequest) {
       )
       
       try {
-        // デバッグ用：まずすべてのプロフィールを確認
-        console.log('🔍 Fetching all profiles for debugging...')
-        const { data: allProfiles, error: debugError } = await supabase
+        // 🔍 Step 1: Test simple connection
+        console.log('🔗 Testing Supabase connection...')
+        const { data: connectionTest, error: connectionError } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, gender, nationality, age')
+          .select('count')
+          .limit(1)
         
-        console.log('📋 All profiles in database:', allProfiles)
-        console.log('📊 Total profiles found:', allProfiles?.length || 0)
+        console.log('🔗 Connection test result:', {
+          data: connectionTest,
+          error: connectionError?.message || 'No error'
+        })
         
-        if (debugError) {
-          console.error('❌ Error fetching all profiles:', debugError)
-        }
+        // 🔍 Step 2: Test basic profile fetch
+        console.log('📋 Testing basic profile fetch...')
+        const { data: basicProfiles, error: basicError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .limit(5)
         
-        // テストモードでは全プロフィールを表示（両方向のマッチングテスト用）
+        console.log('📋 Basic profiles:', {
+          count: basicProfiles?.length || 0,
+          profiles: basicProfiles || null,
+          error: basicError?.message || 'No error'
+        })
+        
+        // 🔍 Step 3: Test full profile fetch with filtering
+        console.log('🔍 Testing filtered profiles...')
         const { data: profiles, error } = await supabase
           .from('profiles')
           .select('*')
-          .not('first_name', 'is', null) // 名前が設定されているプロフィールのみ
+          .not('first_name', 'is', null)
           .limit(10)
         
-        console.log('🔍 Filtered profiles found:', profiles?.length || 0)
-        console.log('📋 Filtered profile details:', profiles?.map(p => ({ 
-          name: `${p.first_name} ${p.last_name}`, 
-          gender: p.gender, 
-          nationality: p.nationality,
-          age: p.age 
-        })) || [])
+        console.log('🔍 Filtered profiles:', {
+          count: profiles?.length || 0,
+          error: error?.message || 'No error',
+          firstProfile: profiles?.[0] || null
+        })
         
         if (error) {
           console.error('Database fetch error in dev test mode:', error)
@@ -111,7 +134,6 @@ export async function GET(request: NextRequest) {
         console.log('🔍 Found profiles in database:', profiles?.length || 0)
         console.log('🔍 Raw profile data:', profiles)
         console.log('🔍 Database query error:', error)
-        console.log('🔍 Debug error details:', debugError)
         
         // データベースから正しくデータが取得された場合
         if (!error && profiles && profiles.length > 0) {
