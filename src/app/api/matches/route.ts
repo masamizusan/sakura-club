@@ -56,12 +56,13 @@ export async function GET(request: NextRequest) {
     
     console.log('🔗 Supabase client created with service role')
     
-    // プロフィール取得
+    // プロフィール取得（まずは全データを取得してカラム構造を確認）
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
-      .not('first_name', 'is', null)
       .limit(10)
+      
+    console.log('🔍 First profile structure check:', profiles?.[0] ? Object.keys(profiles[0]) : 'No profiles')
     
     console.log('📊 Database query result:', {
       profileCount: profiles?.length || 0,
@@ -91,19 +92,19 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // データ変換
+    // データ変換（実際のカラム名に対応）
     const formattedMatches = profiles.map((profile: any) => {
       console.log('🔧 Processing profile:', {
         id: profile.id,
-        name: profile.first_name,
+        name: profile.name,  // first_nameではなくnameを使用
         age: profile.age,
         nationality: profile.nationality
       })
       
       return {
         id: profile.id,
-        firstName: profile.first_name || 'Unknown',
-        lastName: profile.last_name || '',
+        firstName: profile.name || 'Unknown',  // nameを使用
+        lastName: '',  // last_nameが存在しない場合は空文字
         age: profile.age || 0,
         nationality: profile.nationality || 'Unknown',
         nationalityLabel: profile.nationality || 'Unknown',
