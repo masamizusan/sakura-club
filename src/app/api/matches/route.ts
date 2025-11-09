@@ -115,6 +115,8 @@ export async function GET(request: NextRequest) {
         
         // データベースから正しくデータが取得された場合
         if (!error && profiles && profiles.length > 0) {
+          console.log('✅ Successfully retrieved profiles from database:', profiles.length)
+          
           // データベースから取得したプロフィールをマッチング形式に変換
           const formattedMatches = profiles.map((profile: any) => {
             console.log('🔧 Processing profile:', profile.first_name, profile.last_name)
@@ -199,12 +201,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           matches: testMatches,
           total: testMatches.length,
-          hasMore: false,
-          debug: {
-            error: error?.message || 'No error',
-            debugError: debugError?.message || 'No debug error',
-            profilesCount: profiles?.length || 0
-          }
+          hasMore: false
         })
         
       } catch (dbError) {
