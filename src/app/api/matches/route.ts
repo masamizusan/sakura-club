@@ -81,6 +81,17 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // デバッグ: 全ユーザーのリストを確認
+    const { data: allUsers, error: allUsersError } = await supabase
+      .from('profiles')
+      .select('id, name, nationality, gender')
+
+    console.log('🔍 All users in database:', allUsers?.map(u => ({
+      name: u.name,
+      nationality: u.nationality,
+      gender: u.gender
+    })))
+
     // マッチング候補取得（フィルタリングあり）
     let profileQuery = supabase
       .from('profiles')
@@ -107,6 +118,7 @@ export async function GET(request: NextRequest) {
           .in('nationality', ['JP', '日本'])
           .neq('id', currentUserId) // 自分を除外
         console.log('🔍 Foreign male → showing Japanese females only')
+        console.log('🔍 Query filter: nationality IN ["JP", "日本"] AND id != ' + currentUserId)
       } else if (isCurrentUserJapaneseFemale) {
         // 日本人女性 → 外国人男性のみ表示
         profileQuery = profileQuery
@@ -129,7 +141,12 @@ export async function GET(request: NextRequest) {
       error: error?.message || null,
       hasData: !!profiles && profiles.length > 0,
       currentUserNationality: currentUserProfile?.nationality,
-      filterApplied: !!currentUserProfile
+      filterApplied: !!currentUserProfile,
+      allProfiles: profiles?.map(p => ({
+        name: p.name,
+        nationality: p.nationality,
+        gender: p.gender
+      }))
     })
     
     if (error) {
