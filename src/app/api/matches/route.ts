@@ -12,6 +12,12 @@ export async function GET(request: NextRequest) {
     // 開発テストモードの確認
     const devTestMode = searchParams.get('devTest') === 'true'
     
+    console.log('🔍 DEVTEST MODE CHECK:', {
+      devTestParam: searchParams.get('devTest'),
+      devTestMode: devTestMode,
+      url: request.url
+    })
+    
     if (devTestMode) {
       console.log('🧪 Dev test mode detected - using service role for database access')
       
