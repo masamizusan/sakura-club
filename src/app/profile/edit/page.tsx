@@ -779,7 +779,7 @@ function ProfileEditContent() {
       })
       
       // 🚨 新規登録フロー検出時のみ既存データを完全クリア（MyPageからの遷移は除外）
-      const enableProfileDeletion = isSignupFlow && !isFromMyPageParam
+      const enableProfileDeletion = false  // 🛡️ 安全のため完全無効化
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
@@ -1205,6 +1205,9 @@ function ProfileEditContent() {
 
   // 新規登録時の安全なプロフィール初期化（セキュリティ強化版）
   const secureProfileInitialization = async () => {
+    console.log('🛡️ secureProfileInitialization は安全のため無効化されています')
+    return  // 🛡️ 安全のため処理を停止
+    
     if (!user?.id) {
       console.error('❌ User ID not available for profile initialization')
       return
@@ -1378,7 +1381,7 @@ function ProfileEditContent() {
       })
       
       // 🚨 新規登録フロー検出時のみ既存データを完全クリア（MyPageからの遷移は除外）
-      const enableProfileDeletion = isSignupFlow && !isFromMyPageParam
+      const enableProfileDeletion = false  // 🛡️ 安全のため完全無効化
       console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
@@ -1501,6 +1504,9 @@ function ProfileEditContent() {
   }, [user])
 
   const forceCompleteReset = async () => {
+    console.log('🛡️ forceCompleteReset は安全のため無効化されています')
+    return  // 🛡️ 安全のため処理を停止
+    
     if (!user) return
     
     try {
