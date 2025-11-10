@@ -54,19 +54,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // フロントエンド用のデータ形式に変換
+    // フロントエンド用のデータ形式に変換（nameとbioフィールドに対応）
+    const nameParts = profile.name ? profile.name.split(' ') : ['', '']
     const formattedProfile = {
       id: profile.id,
       email: user.email,
-      firstName: profile.first_name,
-      lastName: profile.last_name,
+      firstName: nameParts[0] || '',           // 🔧 修正: name → firstName
+      lastName: nameParts.slice(1).join(' '),  // 🔧 修正: name → lastName
       gender: profile.gender,
       age: profile.age,
       nationality: profile.nationality,
       prefecture: profile.prefecture,
       city: profile.city,
       hobbies: profile.hobbies || [],
-      selfIntroduction: profile.self_introduction,
+      selfIntroduction: profile.bio || '',     // 🔧 修正: bio → selfIntroduction
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
     }
@@ -126,15 +127,14 @@ export async function PUT(request: NextRequest) {
 
     // データベース用のフィールド名に変換
     const updateData = {
-      first_name: firstName,
-      last_name: lastName,
+      name: `${firstName} ${lastName}`,  // 🔧 修正: first_name + last_name → name
       gender,
       age,
       nationality,
       prefecture,
       city,
       hobbies,
-      self_introduction: selfIntroduction,
+      bio: selfIntroduction,  // 🔧 修正: self_introduction → bio
       updated_at: new Date().toISOString(),
     }
 
@@ -154,19 +154,20 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // 更新されたプロフィールをフロントエンド用の形式で返す
+    // 更新されたプロフィールをフロントエンド用の形式で返す（nameとbioフィールドに対応）
+    const nameParts = updatedProfile.name ? updatedProfile.name.split(' ') : ['', '']
     const formattedProfile = {
       id: updatedProfile.id,
       email: user.email,
-      firstName: updatedProfile.first_name,
-      lastName: updatedProfile.last_name,
+      firstName: nameParts[0] || '',           // 🔧 修正: name → firstName
+      lastName: nameParts.slice(1).join(' '),  // 🔧 修正: name → lastName  
       gender: updatedProfile.gender,
       age: updatedProfile.age,
       nationality: updatedProfile.nationality,
       prefecture: updatedProfile.prefecture,
       city: updatedProfile.city,
       hobbies: updatedProfile.hobbies || [],
-      selfIntroduction: updatedProfile.self_introduction,
+      selfIntroduction: updatedProfile.bio || '',  // 🔧 修正: bio → selfIntroduction
       createdAt: updatedProfile.created_at,
       updatedAt: updatedProfile.updated_at,
     }
