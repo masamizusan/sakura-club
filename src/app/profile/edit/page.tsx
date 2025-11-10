@@ -2060,14 +2060,15 @@ function ProfileEditContent() {
         
         console.log('🚨 CRITICAL: Test data clear condition check:')
         console.log('  - isTestData2:', isTestData2)
-        console.log('  - profile.name === "masamizu":', profile.name === 'masamizu')
+        console.log('  - profile.name:', profile.name)
         console.log('  - isFromMyPage:', isFromMyPage)
-        console.log('  - Should clear data:', (isTestData2 || profile.name === 'masamizu') && user?.id)
-        console.log('  - DANGER: This will clear data even from MyPage!')
+        console.log('  - Should clear data:', isTestData2 && user?.id)
+        console.log('  - 🛡️ SECURITY: Removed dangerous name-based condition')
         
         // 🚨 セキュリティ問題：MyPageからの遷移でもデータがクリアされる可能性
         // MyPageからの遷移時はデータクリアを防ぐ
-        const shouldClearData = (isTestData2 || profile.name === 'masamizu') && user?.id && !isFromMyPage
+        // 🔒 SECURITY FIX: 名前ベースの危険な条件を削除し、テストデータのみに限定
+        const shouldClearData = isTestData2 && user?.id && !isFromMyPage
         
         console.log('🛡️ SECURITY FIX: Modified condition:')
         console.log('  - shouldClearData (with MyPage protection):', shouldClearData)
@@ -2665,7 +2666,7 @@ function ProfileEditContent() {
 
       // プロフィール更新データを準備
       const updateData: any = {
-        nickname: data.nickname,
+        name: data.nickname,          // 🔧 修正: nickname → name
         gender: data.gender,
         age: data.age,
         birth_date: data.birth_date,
@@ -2677,7 +2678,7 @@ function ProfileEditContent() {
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
         english_level: data.english_level === 'none' ? null : data.english_level,
         japanese_level: data.japanese_level === 'none' ? null : data.japanese_level,
-        self_introduction: data.self_introduction,
+        bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
         avatar_url: avatarUrl,
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
@@ -2716,7 +2717,12 @@ function ProfileEditContent() {
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
 
-      console.log('📝 Final update data:', updateData)
+      console.log('📝 Final update data (field mapping fixed):', {
+        ...updateData,
+        name_source: `nickname="${data.nickname}"`,
+        bio_source: `self_introduction="${data.self_introduction}"`,
+        field_mapping_fix: 'nickname→name, self_introduction→bio'
+      })
       console.log('🔍 Consolidated interests debug:', {
         selectedHobbies,
         selectedPersonality,
