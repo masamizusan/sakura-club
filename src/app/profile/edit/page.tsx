@@ -1190,7 +1190,7 @@ function ProfileEditContent() {
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: null })
-        .eq('id', user.id)
+        .eq('id', user?.id)
       
       if (error) {
         console.error('Avatar削除エラー:', error)
@@ -1214,16 +1214,16 @@ function ProfileEditContent() {
     }
 
     try {
-      console.log('🔐 安全なプロフィール初期化開始 - User ID:', user.id)
+      console.log('🔐 安全なプロフィール初期化開始 - User ID:', user?.id)
       
       // 🛡️ セキュリティ強化: ユーザーID検証
       console.log('🔒 SECURITY: Validating user authentication')
       const { data: authUser, error: authError } = await supabase.auth.getUser()
-      if (authError || !authUser.user || authUser.user.id !== user.id) {
+      if (authError || !authUser?.user || authUser?.user?.id !== user?.id) {
         console.error('🚨 SECURITY BREACH: User ID mismatch or invalid auth', {
           authError,
           authUserId: authUser?.user?.id,
-          providedUserId: user.id
+          providedUserId: user?.id
         })
         return
       }
@@ -1233,10 +1233,10 @@ function ProfileEditContent() {
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id, created_at, email') // セキュリティ確認のためemailも取得
-        .eq('id', user.id) // 🛡️ 厳格なユーザーID一致確認
+        .eq('id', user?.id) // 🛡️ 厳格なユーザーID一致確認
         .single()
       
-      if (checkError && checkError.code !== 'PGRST116') {
+      if (checkError && checkError?.code !== 'PGRST116') {
         // PGRST116以外のエラーは処理停止
         console.error('❌ Profile existence check error:', checkError)
         return
@@ -1264,15 +1264,15 @@ function ProfileEditContent() {
             // 存在しない可能性があるため除外
             // profile_image, profile_images, images等も除外
           })
-          .eq('id', user.id)
+          .eq('id', user?.id)
         
         if (resetError) {
           console.error('❌ Failed to reset profile to NULL state:', resetError)
           console.error('🔍 Reset error details:', {
-            message: resetError.message,
-            details: resetError.details,
-            hint: resetError.hint,
-            code: resetError.code
+            message: resetError?.message,
+            details: resetError?.details,
+            hint: resetError?.hint,
+            code: resetError?.code
           })
           return
         }
@@ -1283,7 +1283,7 @@ function ProfileEditContent() {
           clearedFields: ['name', 'bio', 'interests', 'avatar_url', 'city'],
           note: 'Only existing columns updated to prevent schema errors',
           preservedFields: ['id', 'email', 'created_at'],
-          userId: user.id,
+          userId: user?.id,
           success: true
         })
       } else {
@@ -1526,7 +1526,7 @@ function ProfileEditContent() {
           hobbies: null,
           marital_status: null
         })
-        .eq('id', user.id)
+        .eq('id', user?.id)
       
       if (error) {
         console.error('❌ データクリアエラー:', error)
@@ -2042,13 +2042,13 @@ function ProfileEditContent() {
               avatar_url: null,
               personality: null
             })
-            .eq('id', user.id)
+            .eq('id', user?.id)
           
           // データベースからプロフィールを再取得してクリーンな状態にする
           const { data: cleanProfile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', user?.id)
             .single()
           
           if (cleanProfile) {
@@ -2093,13 +2093,13 @@ function ProfileEditContent() {
               height: null,
               avatar_url: null
             })
-            .eq('id', user.id) // 🛡️ 主要条件：ユーザーID一致
+            .eq('id', user?.id) // 🛡️ 主要条件：ユーザーID一致
             .eq('email', authUser?.user?.email) // 🛡️ 追加条件：email一致
           
           const { data: cleanProfile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user.id)
+            .eq('id', user?.id)
             .single()
           
           if (cleanProfile) {
