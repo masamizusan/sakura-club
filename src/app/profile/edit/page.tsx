@@ -624,7 +624,7 @@ function ProfileEditContent() {
       timestamp: new Date().toISOString()
     })
 
-  }, [isForeignMale, profileImages, calculateSharedProfileCompletion])
+  }, [isForeignMale, profileImages])
 
   // 簡素化された国籍設定（他のフィールドと同様にresetで処理）
 
