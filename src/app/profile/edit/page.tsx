@@ -2833,11 +2833,14 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
-        calculateProfileCompletion({
+        const result = calculateProfileCompletion({
           ...currentData,
           planned_prefectures: newPrefectures
-        })
-      }, 0)
+        }, profileImages, isForeignMale, isNewUser)
+        setProfileCompletion(result.completion)
+        setCompletedItems(result.completedFields)
+        setTotalItems(result.totalFields)
+      }, 100)
       
       return newPrefectures
     })
@@ -3164,7 +3167,17 @@ function ProfileEditContent() {
                       </label>
                       <Select
                         value={watch('occupation') || 'none'}
-                        onValueChange={(value) => setValue('occupation', value)}
+                        onValueChange={(value) => {
+                          setValue('occupation', value)
+                          // 職業変更時に完成度を再計算
+                          setTimeout(() => {
+                            const formData = getValues()
+                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            setProfileCompletion(result.completion)
+                            setCompletedItems(result.completedFields)
+                            setTotalItems(result.totalFields)
+                          }, 100)
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t('placeholders.selectOccupation')} />
@@ -3194,7 +3207,19 @@ function ProfileEditContent() {
                             e.target.value = '160'
                           }
                         }}
-                        {...register('height', { valueAsNumber: true })}
+                        {...register('height', { 
+                          valueAsNumber: true,
+                          onChange: () => {
+                            // 身長変更時に完成度を再計算
+                            setTimeout(() => {
+                              const formData = getValues()
+                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              setProfileCompletion(result.completion)
+                              setCompletedItems(result.completedFields)
+                              setTotalItems(result.totalFields)
+                            }, 100)
+                          }
+                        })}
                         className={errors.height ? 'border-red-500' : ''}
                       />
                       {errors.height && (
@@ -3208,7 +3233,17 @@ function ProfileEditContent() {
                       </label>
                       <Select
                         value={watch('body_type') || 'none'}
-                        onValueChange={(value) => setValue('body_type', value)}
+                        onValueChange={(value) => {
+                          setValue('body_type', value)
+                          // 体型変更時に完成度を再計算
+                          setTimeout(() => {
+                            const formData = getValues()
+                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            setProfileCompletion(result.completion)
+                            setCompletedItems(result.completedFields)
+                            setTotalItems(result.totalFields)
+                          }, 100)
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t('placeholders.selectBodyType')} />
@@ -3229,7 +3264,17 @@ function ProfileEditContent() {
                       </label>
                       <Select
                         value={watch('marital_status') || 'none'}
-                        onValueChange={(value) => setValue('marital_status', value as 'none' | 'single' | 'married')}
+                        onValueChange={(value) => {
+                          setValue('marital_status', value as 'none' | 'single' | 'married')
+                          // 婚姻状況変更時に完成度を再計算
+                          setTimeout(() => {
+                            const formData = getValues()
+                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            setProfileCompletion(result.completion)
+                            setCompletedItems(result.completedFields)
+                            setTotalItems(result.totalFields)
+                          }, 100)
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={t('placeholders.selectMaritalStatus')} />
@@ -3250,7 +3295,17 @@ function ProfileEditContent() {
                         </label>
                         <Select
                           value={watch('japanese_level') || 'none'}
-                          onValueChange={(value) => setValue('japanese_level', value)}
+                          onValueChange={(value) => {
+                            setValue('japanese_level', value)
+                            // 日本語レベル変更時に完成度を再計算
+                            setTimeout(() => {
+                              const formData = getValues()
+                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              setProfileCompletion(result.completion)
+                              setCompletedItems(result.completedFields)
+                              setTotalItems(result.totalFields)
+                            }, 100)
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t('placeholders.selectJapaneseLevel')} />
@@ -3306,7 +3361,17 @@ function ProfileEditContent() {
                         </label>
                         <Select
                           value={watch('visit_schedule') || 'no-entry'}
-                          onValueChange={(value) => setValue('visit_schedule', value)}
+                          onValueChange={(value) => {
+                            setValue('visit_schedule', value)
+                            // 訪問予定時期変更時に完成度を再計算
+                            setTimeout(() => {
+                              const formData = getValues()
+                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              setProfileCompletion(result.completion)
+                              setCompletedItems(result.completedFields)
+                              setTotalItems(result.totalFields)
+                            }, 100)
+                          }}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
                             <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
@@ -3331,7 +3396,17 @@ function ProfileEditContent() {
                         </label>
                         <Select
                           value={watch('travel_companion') || 'noEntry'}
-                          onValueChange={(value) => setValue('travel_companion', value)}
+                          onValueChange={(value) => {
+                            setValue('travel_companion', value)
+                            // 同行者変更時に完成度を再計算
+                            setTimeout(() => {
+                              const formData = getValues()
+                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              setProfileCompletion(result.completion)
+                              setCompletedItems(result.completedFields)
+                              setTotalItems(result.totalFields)
+                            }, 100)
+                          }}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
                             <SelectValue placeholder={t('placeholders.selectTravelCompanion')} />
