@@ -2779,7 +2779,7 @@ function ProfileEditContent() {
           hobbies: newHobbies,
           personality: selectedPersonality,
           avatar_url: profileImages.length > 0 ? 'has_images' : null
-        }, profileImages, 'hobby-checkbox-change')
+        }, profileImages, isForeignMale)
       }, 0)
       
       return newHobbies
