@@ -1,0 +1,17 @@
+tree 01f127a0cc66020c3fd2cb15c44646e3bf511270
+parent 87f5993b6a2b72a1fd2d0e63ad75af42932ca237
+author masamizusan <masamizusan@example.com> 1758924930 +0900
+committer masamizusan <masamizusan@example.com> 1758924930 +0900
+
+編集画面での画像削除時に完成度が正しく下がるよう修正
+
+- 空配列問題を修正: imageArrayが空の場合にprofileImagesを使用
+- 編集履歴追跡機能を追加: sessionStorageで画像編集履歴を記録
+- 編集状態優先ロジック: 編集履歴がある場合は現在の編集状態を最優先
+- フォールバック条件限定: 初期状態のみ他ソースから画像検出
+
+画像削除→完成度下がる、画像追加→完成度上がる動作を実現
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
