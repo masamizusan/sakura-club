@@ -16,7 +16,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
-import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
+import { calculateProfileCompletionLocal as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
 
@@ -553,7 +553,7 @@ function ProfileEditContent() {
       'selectedPersonality.length': selectedPersonality.length
     })
     const currentData = watch()
-    calculateProfileCompletion({
+    calculateProfileCompletionLocalLocal({
       ...currentData,
       hobbies: selectedHobbies,
       personality: selectedPersonality,
@@ -571,7 +571,7 @@ function ProfileEditContent() {
       const currentData = watch()
       // custom_culture は完成度計算から除外（コメント扱い）
       const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-      calculateProfileCompletion({
+      calculateProfileCompletionLocalLocal({
         ...currentDataWithoutCustomCulture,
         birth_date: birthDate,
         age: age,
@@ -583,7 +583,7 @@ function ProfileEditContent() {
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
   // 統一されたプロフィール完成度計算関数（共通utilsを使用）
-  const calculateProfileCompletion = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string, isNewUserOverride?: boolean) => {
+  const calculateProfileCompletionLocalLocal = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string, isNewUserOverride?: boolean) => {
     // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
     const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
 
@@ -729,7 +729,7 @@ function ProfileEditContent() {
     const isFromSignup = urlParams.get('from') === 'signup'
     const isNewUserForImage = isFromSignup
 
-    calculateProfileCompletion({
+    calculateProfileCompletionLocal({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
@@ -742,7 +742,7 @@ function ProfileEditContent() {
       setIsImageChanging(false)
       console.log('📸 写真変更完了：デバウンス計算を再有効化')
     }, 100)
-  }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletion])
+  }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletionLocal])
 
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
@@ -923,7 +923,7 @@ function ProfileEditContent() {
           const currentValues = getValues()
           // custom_culture は完成度計算から除外（コメント扱い）
           const { custom_culture, ...valueWithoutCustomCulture } = value || {}
-          calculateProfileCompletion({
+          calculateProfileCompletionLocal({
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
             hobbies: selectedHobbies, // 状態から直接取得
@@ -937,19 +937,19 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [watch, getValues, profileImages, selectedHobbies, selectedPersonality, calculateProfileCompletion, isImageChanging])
+  }, [watch, getValues, profileImages, selectedHobbies, selectedPersonality, calculateProfileCompletionLocal, isImageChanging])
 
   // selectedHobbies変更時の完成度再計算
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    calculateProfileCompletion({
+    calculateProfileCompletionLocal({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
     }, profileImages, 'selectedHobbies-change')
-  }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletion, profileImages])
+  }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletionLocal, profileImages])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -1338,7 +1338,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletion(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
+          calculateProfileCompletionLocal(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
@@ -2519,7 +2519,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
+        calculateProfileCompletionLocal(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -2570,7 +2570,10 @@ function ProfileEditContent() {
               avatar_url: user?.avatarUrl || profile.avatar_url
             }
           }
-          calculateProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
+          const result = calculateSharedProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
+          setProfileCompletion(result.completion)
+          setCompletedItems(result.completedFields)
+          setTotalItems(result.totalFields)
         }, 2000);
 
       } catch (error) {
@@ -2804,7 +2807,7 @@ function ProfileEditContent() {
         const currentData = watch()
         // custom_culture は完成度計算から除外（コメント扱い）
         const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-        calculateProfileCompletion({
+        calculateProfileCompletionLocal({
           ...currentDataWithoutCustomCulture,
           hobbies: newHobbies,
           personality: selectedPersonality,
@@ -2828,7 +2831,7 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
-        calculateProfileCompletion({
+        calculateProfileCompletionLocal({
           ...currentData,
           hobbies: selectedHobbies,
           personality: newTraits,
@@ -2856,7 +2859,7 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
-        calculateProfileCompletion({
+        calculateProfileCompletionLocal({
           ...currentData,
           planned_prefectures: newPrefectures
         })
@@ -3110,7 +3113,7 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          calculateProfileCompletion(formData, profileImages, 'nationality-change')
+                          calculateProfileCompletionLocal(formData, profileImages, 'nationality-change')
                         }, 100)
                       }}
                     >
