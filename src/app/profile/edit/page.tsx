@@ -2570,7 +2570,7 @@ function ProfileEditContent() {
               avatar_url: user?.avatarUrl || profile.avatar_url
             }
           }
-          calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
+          calculateProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
         }, 2000);
 
       } catch (error) {
