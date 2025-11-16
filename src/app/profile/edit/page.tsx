@@ -3080,7 +3080,7 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          calculateProfileCompletion(formData, profileImages, 'nationality-change')
+                          calculateProfileCompletion(formData, profileImages, isForeignMale)
                         }, 100)
                       }}
                     >
