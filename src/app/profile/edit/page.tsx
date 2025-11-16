@@ -16,7 +16,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
-import { calculateProfileCompletionLocal as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
+import { calculateProfileCompletion } from '@/utils/profileCompletion'
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
 
@@ -605,7 +605,7 @@ function ProfileEditContent() {
     })
 
     // 共通関数を使用して計算
-    const result = calculateSharedProfileCompletion(profileData, imageArrayToPass, isForeignMale, isNewUserOverride || false)
+    const result = calculateProfileCompletion(profileData, imageArrayToPass, isForeignMale, isNewUserOverride || false)
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
@@ -2570,7 +2570,8 @@ function ProfileEditContent() {
               avatar_url: user?.avatarUrl || profile.avatar_url
             }
           }
-          const result = calculateSharedProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
+          const result = calculateProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
+          // 既存のUI更新ロジックに戻り値を反映
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
           setTotalItems(result.totalFields)
