@@ -2530,21 +2530,45 @@ function ProfileEditContent() {
             form_nationality: currentValues.nationality,
             are_equal: (urlParams.get('nationality') || (isForeignMale ? 'アメリカ' : '')) === currentValues.nationality
           })
-          // ✅ 修正: currentValues + プロフィールデータ + ユーザー画像情報を統合
-          const currentValuesWithUserData = {
-            ...profile, // 既存のプロフィールデータを基盤として使用
-            ...currentValues, // フォームの現在値で上書き
-            hobbies: existingHobbies, // 状態管理された趣味
-            personality: existingPersonality, // 状態管理された性格
-            // 外国人男性専用フィールドを確実に含める
-            visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
-            travel_companion: currentValues.travel_companion || profile.travel_companion,
-            planned_prefectures: currentValues.planned_prefectures || profile.planned_prefectures || [],
-            japanese_level: currentValues.japanese_level || profile.japanese_level,
-            planned_stations: (currentValues as any).planned_stations || (profile as any).planned_stations || [],
-            // ユーザー画像情報を追加
-            avatarUrl: user?.avatarUrl || profile.avatarUrl,
-            avatar_url: user?.avatarUrl || profile.avatar_url
+          // ✅ 修正: 新規ユーザーの場合はURLパラメータデータを完成度計算から除外
+          let currentValuesWithUserData
+          if (isNewUser) {
+            // 新規ユーザー: 実際に入力されたデータのみを使用（URLパラメータは除外）
+            currentValuesWithUserData = {
+              ...profile, // DBの基本データ
+              hobbies: existingHobbies, // ユーザーが選択した趣味のみ
+              personality: existingPersonality, // ユーザーが選択した性格のみ
+              self_introduction: currentValues.self_introduction || '', // ユーザーが入力した自己紹介のみ
+              // その他のフィールドはデフォルト値または空で初期化
+              visit_schedule: currentValues.visit_schedule === 'no-entry' ? undefined : currentValues.visit_schedule,
+              travel_companion: currentValues.travel_companion === 'noEntry' ? undefined : currentValues.travel_companion,
+              planned_prefectures: Array.isArray(currentValues.planned_prefectures) && currentValues.planned_prefectures.length > 0 ? currentValues.planned_prefectures : [],
+              japanese_level: currentValues.japanese_level && currentValues.japanese_level !== 'none' ? currentValues.japanese_level : undefined,
+              occupation: currentValues.occupation === 'none' ? undefined : currentValues.occupation,
+              height: currentValues.height,
+              body_type: currentValues.body_type === 'none' ? undefined : currentValues.body_type,
+              marital_status: currentValues.marital_status === 'none' ? undefined : currentValues.marital_status,
+              // 画像情報は含める
+              avatarUrl: user?.avatarUrl || profile.avatarUrl,
+              avatar_url: user?.avatarUrl || profile.avatar_url
+            }
+          } else {
+            // 既存ユーザー: 従来通りの処理
+            currentValuesWithUserData = {
+              ...profile, // 既存のプロフィールデータを基盤として使用
+              ...currentValues, // フォームの現在値で上書き
+              hobbies: existingHobbies, // 状態管理された趣味
+              personality: existingPersonality, // 状態管理された性格
+              // 外国人男性専用フィールドを確実に含める
+              visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
+              travel_companion: currentValues.travel_companion || profile.travel_companion,
+              planned_prefectures: currentValues.planned_prefectures || profile.planned_prefectures || [],
+              japanese_level: currentValues.japanese_level || profile.japanese_level,
+              planned_stations: (currentValues as any).planned_stations || (profile as any).planned_stations || [],
+              // ユーザー画像情報を追加
+              avatarUrl: user?.avatarUrl || profile.avatarUrl,
+              avatar_url: user?.avatarUrl || profile.avatar_url
+            }
           }
           calculateProfileCompletion(currentValuesWithUserData, profileImages, 'DELAYED_2000MS', isNewUser)
         }, 2000);
