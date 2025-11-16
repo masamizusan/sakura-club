@@ -1304,7 +1304,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale)
+          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale, isNewUser)
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
           setTotalItems(result.totalFields)
@@ -3087,7 +3087,7 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale)
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
                           setProfileCompletion(result.completion)
                           setCompletedItems(result.completedFields)
                           setTotalItems(result.totalFields)
