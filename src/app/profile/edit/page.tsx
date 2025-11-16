@@ -2485,7 +2485,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
+        calculateProfileCompletion(profileDataWithSignup, currentImageArray, isForeignMale, isNewUser)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
