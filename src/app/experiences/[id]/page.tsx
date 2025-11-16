@@ -151,6 +151,8 @@ export default function ExperienceDetailPage() {
 
   useEffect(() => {
     const loadExperience = async () => {
+      if (!params?.id) return
+      
       try {
         const response = await fetch(`/api/experiences/${params.id}`)
         const result = await response.json()
