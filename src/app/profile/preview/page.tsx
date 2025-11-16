@@ -110,30 +110,30 @@ function ProfilePreviewContent() {
       } else {
         // フォールバック：URLパラメータから取得
         const fallbackData = {
-          nickname: searchParams.get('nickname') || 'ニックネーム未設定',
-          age: searchParams.get('age') || '18',
-          birth_date: searchParams.get('birth_date') || null,
-          gender: searchParams.get('gender') || '',
-          nationality: searchParams.get('nationality') || '',
-          prefecture: searchParams.get('prefecture') || '',
-          city: searchParams.get('city') || '',
-          occupation: searchParams.get('occupation') || '',
-          height: searchParams.get('height') || '',
-          body_type: searchParams.get('body_type') || '',
-          marital_status: searchParams.get('marital_status') || '',
-          english_level: searchParams.get('english_level') || '',
-          japanese_level: searchParams.get('japanese_level') || '',
-          self_introduction: searchParams.get('self_introduction') || '',
+          nickname: searchParams?.get('nickname') || 'ニックネーム未設定',
+          age: searchParams?.get('age') || '18',
+          birth_date: searchParams?.get('birth_date') || null,
+          gender: searchParams?.get('gender') || '',
+          nationality: searchParams?.get('nationality') || '',
+          prefecture: searchParams?.get('prefecture') || '',
+          city: searchParams?.get('city') || '',
+          occupation: searchParams?.get('occupation') || '',
+          height: searchParams?.get('height') || '',
+          body_type: searchParams?.get('body_type') || '',
+          marital_status: searchParams?.get('marital_status') || '',
+          english_level: searchParams?.get('english_level') || '',
+          japanese_level: searchParams?.get('japanese_level') || '',
+          self_introduction: searchParams?.get('self_introduction') || '',
           hobbies: [],
           personality: [],
-          custom_culture: searchParams.get('custom_culture') || '',
-          image: searchParams.get('image') || '',
-          profile_image: searchParams.get('profile_image') || null,
+          custom_culture: searchParams?.get('custom_culture') || '',
+          image: searchParams?.get('image') || '',
+          profile_image: searchParams?.get('profile_image') || null,
           // 外国人男性特有のフィールド
           planned_prefectures: [],
           planned_stations: [],
-          visit_schedule: searchParams.get('visit_schedule') || '',
-          travel_companion: searchParams.get('travel_companion') || ''
+          visit_schedule: searchParams?.get('visit_schedule') || '',
+          travel_companion: searchParams?.get('travel_companion') || ''
         }
         setPreviewData(fallbackData)
       }
@@ -550,9 +550,9 @@ function ProfilePreviewContent() {
                         const birth_date = previewData.birth_date || 
                                           previewData.birthday || 
                                           previewData.dob || 
-                                          searchParams.get('birth_date') || 
-                                          searchParams.get('birthday') || 
-                                          searchParams.get('dob') || 
+                                          searchParams?.get('birth_date') || 
+                                          searchParams?.get('birthday') || 
+                                          searchParams?.get('dob') || 
                                           null
                         
                         const completeProfileData = {
@@ -567,7 +567,7 @@ function ProfilePreviewContent() {
                           residence: prefecture || null, // compatibilityのため
 
                           // 写真データ（既存の写真を含める）
-                          profile_image: previewData.profile_image || profileImage || searchParams.get('profile_image') || null,
+                          profile_image: previewData.profile_image || profileImage || searchParams?.get('profile_image') || null,
 
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
@@ -588,9 +588,9 @@ function ProfilePreviewContent() {
                           'previewData.birth_date': previewData.birth_date,
                           'previewData.birthday': previewData.birthday,  
                           'previewData.dob': previewData.dob,
-                          'searchParams birth_date': searchParams.get('birth_date'),
-                          'searchParams birthday': searchParams.get('birthday'),
-                          'searchParams dob': searchParams.get('dob'),
+                          'searchParams birth_date': searchParams?.get('birth_date'),
+                          'searchParams birthday': searchParams?.get('birthday'),
+                          'searchParams dob': searchParams?.get('dob'),
                           'final birth_date': birth_date
                         })
                         

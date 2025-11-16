@@ -39,7 +39,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href || 
               (item.href === '/dashboard' && pathname === '/') ||
-              (pathname.startsWith('/profile') && item.id === 'profile')
+              (pathname?.startsWith('/profile') && item.id === 'profile')
             
             return (
               <Link

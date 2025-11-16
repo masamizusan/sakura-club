@@ -12,7 +12,7 @@ import { useTranslation } from '@/utils/translations'
 function RegisterCompleteContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const email = searchParams.get('email')
+  const email = searchParams?.get('email')
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   
   // 翻訳関数の取得

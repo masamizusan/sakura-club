@@ -21,7 +21,7 @@ export function LanguageSwitcher() {
 
   const switchLanguage = (newLocale: Locale) => {
     // パス名から現在のロケールを取り除く
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    const pathWithoutLocale = pathname?.replace(`/${locale}`, '') || '/'
     
     // 新しいロケールでのパスを構築
     const newPath = newLocale === 'ja' 
@@ -77,7 +77,7 @@ export function LanguageSwitcherCompact() {
   const pathname = usePathname()
 
   const switchLanguage = (newLocale: Locale) => {
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    const pathWithoutLocale = pathname?.replace(`/${locale}`, '') || '/'
     const newPath = newLocale === 'ja' 
       ? pathWithoutLocale === '/' ? '/' : pathWithoutLocale
       : `/${newLocale}${pathWithoutLocale}`

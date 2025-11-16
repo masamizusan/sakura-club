@@ -446,7 +446,7 @@ function ProfileEditContent() {
   // ALL HOOKS MUST BE AT THE VERY TOP - NO EARLY RETURNS BEFORE HOOKS
   const { user } = useAuth()
   const searchParams = useSearchParams()
-  const profileType = searchParams.get('type') // 'foreign-male' or 'japanese-female'
+  const profileType = searchParams?.get('type') // 'foreign-male' or 'japanese-female'
   
   // 言語設定
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
@@ -459,7 +459,7 @@ function ProfileEditContent() {
 
   // 新規ユーザーの早期セッションストレージクリア（デプロイ直後対策）
   useEffect(() => {
-    const isFromSignup = searchParams.get('from') === 'signup'
+    const isFromSignup = searchParams?.get('from') === 'signup'
     if (isFromSignup && typeof window !== 'undefined') {
       console.log('🧹 新規ユーザー: デプロイ直後対策でストレージを早期クリア')
       try {
@@ -1145,7 +1145,7 @@ function ProfileEditContent() {
     profileType,
     isForeignMale,
     isJapaneseFemale,
-    searchParams: searchParams.toString()
+    searchParams: searchParams?.toString() || ''
   })
 
   // 緊急対応：avatar_urlを強制削除
@@ -1299,12 +1299,15 @@ function ProfileEditContent() {
           // フォームの実際の値を取得して計算
           const actualFormValues = getValues()
           console.log('🚀 Initial completion calculation with actual form values:', actualFormValues)
+          // 新規ユーザー判定
+          const urlParamsLocal = new URLSearchParams(window.location.search)
           console.log('🔍 Form nationality vs URL nationality:', {
             form_nationality: actualFormValues.nationality,
-            url_nationality: urlParams.get('nationality'),
+            url_nationality: urlParamsLocal.get('nationality'),
             should_match: true
           })
-          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale, isNewUser)
+          const isFromSignupTimeout = urlParamsLocal.get('from') === 'signup'
+          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale, isFromSignupTimeout)
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
           setTotalItems(result.totalFields)
@@ -2833,10 +2836,13 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
+        // 新規ユーザー判定
+        const urlParams = new URLSearchParams(window.location.search)
+        const currentIsNewUser = urlParams.get('from') === 'signup'
         const result = calculateProfileCompletion({
           ...currentData,
           planned_prefectures: newPrefectures
-        }, profileImages, isForeignMale, isNewUser)
+        }, profileImages, isForeignMale, currentIsNewUser)
         setProfileCompletion(result.completion)
         setCompletedItems(result.completedFields)
         setTotalItems(result.totalFields)
@@ -3090,7 +3096,10 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                          // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                           setProfileCompletion(result.completion)
                           setCompletedItems(result.completedFields)
                           setTotalItems(result.totalFields)
@@ -3172,7 +3181,10 @@ function ProfileEditContent() {
                           // 職業変更時に完成度を再計算
                           setTimeout(() => {
                             const formData = getValues()
-                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                             setProfileCompletion(result.completion)
                             setCompletedItems(result.completedFields)
                             setTotalItems(result.totalFields)
@@ -3213,7 +3225,10 @@ function ProfileEditContent() {
                             // 身長変更時に完成度を再計算
                             setTimeout(() => {
                               const formData = getValues()
-                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                               setProfileCompletion(result.completion)
                               setCompletedItems(result.completedFields)
                               setTotalItems(result.totalFields)
@@ -3238,7 +3253,10 @@ function ProfileEditContent() {
                           // 体型変更時に完成度を再計算
                           setTimeout(() => {
                             const formData = getValues()
-                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                             setProfileCompletion(result.completion)
                             setCompletedItems(result.completedFields)
                             setTotalItems(result.totalFields)
@@ -3269,7 +3287,10 @@ function ProfileEditContent() {
                           // 婚姻状況変更時に完成度を再計算
                           setTimeout(() => {
                             const formData = getValues()
-                            const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                            // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                             setProfileCompletion(result.completion)
                             setCompletedItems(result.completedFields)
                             setTotalItems(result.totalFields)
@@ -3300,7 +3321,10 @@ function ProfileEditContent() {
                             // 日本語レベル変更時に完成度を再計算
                             setTimeout(() => {
                               const formData = getValues()
-                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                               setProfileCompletion(result.completion)
                               setCompletedItems(result.completedFields)
                               setTotalItems(result.totalFields)
@@ -3366,7 +3390,10 @@ function ProfileEditContent() {
                             // 訪問予定時期変更時に完成度を再計算
                             setTimeout(() => {
                               const formData = getValues()
-                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                               setProfileCompletion(result.completion)
                               setCompletedItems(result.completedFields)
                               setTotalItems(result.totalFields)
@@ -3401,7 +3428,10 @@ function ProfileEditContent() {
                             // 同行者変更時に完成度を再計算
                             setTimeout(() => {
                               const formData = getValues()
-                              const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUser)
+                              // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
                               setProfileCompletion(result.completion)
                               setCompletedItems(result.completedFields)
                               setTotalItems(result.totalFields)

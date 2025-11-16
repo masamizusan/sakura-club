@@ -30,8 +30,8 @@ function ResetPasswordForm() {
   }, [])
 
   useEffect(() => {
-    const accessToken = searchParams.get('access_token')
-    const refreshToken = searchParams.get('refresh_token')
+    const accessToken = searchParams?.get('access_token')
+    const refreshToken = searchParams?.get('refresh_token')
     
     if (!accessToken || !refreshToken) {
       setError(t('resetPassword.invalidLinkError'))
