@@ -239,8 +239,8 @@ function checkImagePresence(
   const hasImagesInUser = !isNewUser && profileData.avatarUrl &&
     profileData.avatarUrl !== null && profileData.avatarUrl !== ''
 
-  // 5. テストモード専用: profile_image フィールド
-  const hasImagesInTestMode = profileData && profileData.profile_image &&
+  // 5. テストモード専用: profile_image フィールド（新規ユーザーは除外）
+  const hasImagesInTestMode = !isNewUser && profileData && profileData.profile_image &&
     profileData.profile_image !== null && profileData.profile_image !== ''
 
   // 4. セッションストレージからの画像（ブラウザ環境でのみ、新規ユーザーは除外）
