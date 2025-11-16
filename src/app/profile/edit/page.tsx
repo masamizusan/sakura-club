@@ -914,7 +914,7 @@ function ProfileEditContent() {
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
-    }, profileImages, 'selectedHobbies-change')
+    }, profileImages, isForeignMale, false)
   }, [isForeignMale, profileImages, calculateProfileCompletion])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
