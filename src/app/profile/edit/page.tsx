@@ -553,11 +553,14 @@ function ProfileEditContent() {
       'selectedPersonality.length': selectedPersonality.length
     })
     const currentData = watch()
-    calculateProfileCompletionLocalLocal({
+    const result = calculateProfileCompletion({
       ...currentData,
       hobbies: selectedHobbies,
       personality: selectedPersonality,
-    }, profileImages)  // 🔧 現在の画像配列を明示的に渡す
+    }, profileImages, isForeignMale, false)
+    setProfileCompletion(result.completion)
+    setCompletedItems(result.completedFields)
+    setTotalItems(result.totalFields)
   }, [profileImages.length, selectedHobbies, selectedPersonality])
 
   // 生年月日変更時の年齢自動更新
@@ -571,60 +574,20 @@ function ProfileEditContent() {
       const currentData = watch()
       // custom_culture は完成度計算から除外（コメント扱い）
       const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-      calculateProfileCompletionLocalLocal({
+      const result = calculateProfileCompletion({
         ...currentDataWithoutCustomCulture,
         birth_date: birthDate,
         age: age,
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
         avatar_url: profileImages.length > 0 ? 'has_images' : null
-      })
+      }, profileImages, isForeignMale, false)
+      setProfileCompletion(result.completion)
+      setCompletedItems(result.completedFields)
+      setTotalItems(result.totalFields)
     }
   }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
 
-  // 統一されたプロフィール完成度計算関数（共通utilsを使用）
-  const calculateProfileCompletionLocalLocal = useCallback((profileData: any, imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>, source?: string, isNewUserOverride?: boolean) => {
-    // 画像配列が空の場合は undefined を渡して fallback 検出を有効にする
-    const imageArrayToPass = imageArray && imageArray.length > 0 ? imageArray : undefined
-
-    // 🔍 Profile Edit専用: profileDataの詳細デバッグ
-    console.log(`🔍 Profile Edit: profileData debug BEFORE shared function [${source || 'unknown'}]:`, {
-      avatar_url: profileData?.avatar_url,
-      avatarUrl: profileData?.avatarUrl,
-      hasAvatarUrl: !!profileData?.avatar_url,
-      hasAvatarUrlCamel: !!profileData?.avatarUrl,
-      profileDataKeys: Object.keys(profileData || {}),
-      nickname: profileData?.nickname || profileData?.name,
-      age: profileData?.age,
-      birth_date: profileData?.birth_date || profileData?.date_of_birth,
-      prefecture: profileData?.prefecture || profileData?.residence,
-      hobbies: profileData?.hobbies || profileData?.interests,
-      self_introduction: profileData?.self_introduction || profileData?.bio,
-      imageArrayLength: imageArray?.length || 0,
-      imageArrayToPassLength: imageArrayToPass?.length || 0
-    })
-
-    // 共通関数を使用して計算
-    const result = calculateProfileCompletion(profileData, imageArrayToPass, isForeignMale, isNewUserOverride || false)
-
-    // 既存のUI更新ロジックを維持
-    setProfileCompletion(result.completion)
-    setCompletedItems(result.completedFields)
-    setTotalItems(result.totalFields)
-
-    console.log(`📊 Profile Edit Completion [${source || 'unknown'}] (共通関数使用):`, {
-      required: `${result.requiredCompleted}/${result.requiredTotal}`,
-      optional: `${result.optionalCompleted}/${result.optionalTotal}`,
-      images: `${result.hasImages ? 1 : 0}/1`,
-      total: `${result.completedFields}/${result.totalFields}`,
-      percentage: `${result.completion}%`,
-      imageArrayPassed: imageArrayToPass ? `${imageArrayToPass.length} images` : 'undefined (using fallback)',
-      profileAvatarUrl: profileData?.avatar_url,
-      profileAvatarUrlExists: !!profileData?.avatarUrl,
-      timestamp: new Date().toISOString()
-    })
-
-  }, [isForeignMale, profileImages])
 
   // 簡素化された国籍設定（他のフィールドと同様にresetで処理）
 
@@ -729,20 +692,23 @@ function ProfileEditContent() {
     const isFromSignup = urlParams.get('from') === 'signup'
     const isNewUserForImage = isFromSignup
 
-    calculateProfileCompletionLocal({
+    const result = calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
       // 画像削除時はavatar_urlをnullに設定
       avatar_url: newImages.length > 0 ? 'has_images' : null
-    }, newImages, 'image-change', isNewUserForImage)
+    }, newImages, isForeignMale, isNewUserForImage)
+    setProfileCompletion(result.completion)
+    setCompletedItems(result.completedFields)
+    setTotalItems(result.totalFields)
     
     // 写真変更完了フラグをリセット
     setTimeout(() => {
       setIsImageChanging(false)
       console.log('📸 写真変更完了：デバウンス計算を再有効化')
     }, 100)
-  }, [user, supabase, profileImages, watch, selectedHobbies, selectedPersonality, calculateProfileCompletionLocal])
+  }, [isForeignMale, profileImages, calculateProfileCompletion])
 
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
@@ -923,7 +889,7 @@ function ProfileEditContent() {
           const currentValues = getValues()
           // custom_culture は完成度計算から除外（コメント扱い）
           const { custom_culture, ...valueWithoutCustomCulture } = value || {}
-          calculateProfileCompletionLocal({
+          calculateProfileCompletion({
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
             hobbies: selectedHobbies, // 状態から直接取得
@@ -937,19 +903,19 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [watch, getValues, profileImages, selectedHobbies, selectedPersonality, calculateProfileCompletionLocal, isImageChanging])
+  }, [isForeignMale, profileImages, calculateProfileCompletion])
 
   // selectedHobbies変更時の完成度再計算
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    calculateProfileCompletionLocal({
+    calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
     }, profileImages, 'selectedHobbies-change')
-  }, [selectedHobbies, watch, selectedPersonality, calculateProfileCompletionLocal, profileImages])
+  }, [isForeignMale, profileImages, calculateProfileCompletion])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -1338,7 +1304,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletionLocal(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
+          calculateProfileCompletion(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
@@ -2519,7 +2485,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletionLocal(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
+        calculateProfileCompletion(profileDataWithSignup, currentImageArray, 'INITIAL_LOAD', isNewUser)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -2808,7 +2774,7 @@ function ProfileEditContent() {
         const currentData = watch()
         // custom_culture は完成度計算から除外（コメント扱い）
         const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-        calculateProfileCompletionLocal({
+        calculateProfileCompletion({
           ...currentDataWithoutCustomCulture,
           hobbies: newHobbies,
           personality: selectedPersonality,
@@ -2832,7 +2798,7 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
-        calculateProfileCompletionLocal({
+        calculateProfileCompletion({
           ...currentData,
           hobbies: selectedHobbies,
           personality: newTraits,
@@ -2860,7 +2826,7 @@ function ProfileEditContent() {
       // リアルタイム完成度更新
       setTimeout(() => {
         const currentData = watch()
-        calculateProfileCompletionLocal({
+        calculateProfileCompletion({
           ...currentData,
           planned_prefectures: newPrefectures
         })
@@ -3114,7 +3080,7 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          calculateProfileCompletionLocal(formData, profileImages, 'nationality-change')
+                          calculateProfileCompletion(formData, profileImages, 'nationality-change')
                         }, 100)
                       }}
                     >
