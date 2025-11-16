@@ -1304,7 +1304,7 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletion(actualFormValues, profileImages, 'FORM_SETUP_1500MS')
+          calculateProfileCompletion(actualFormValues, profileImages, isForeignMale)
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
