@@ -1304,7 +1304,10 @@ function ProfileEditContent() {
             url_nationality: urlParams.get('nationality'),
             should_match: true
           })
-          calculateProfileCompletion(actualFormValues, profileImages, isForeignMale)
+          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale)
+          setProfileCompletion(result.completion)
+          setCompletedItems(result.completedFields)
+          setTotalItems(result.totalFields)
         }, 1500) // フォーム設定完了を確実に待つ
       }
       
@@ -2485,7 +2488,10 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        calculateProfileCompletion(profileDataWithSignup, currentImageArray, isForeignMale, isNewUser)
+        const result = calculateProfileCompletion(profileDataWithSignup, currentImageArray, isForeignMale, isNewUser)
+        setProfileCompletion(result.completion)
+        setCompletedItems(result.completedFields)
+        setTotalItems(result.totalFields)
         
         // フォーム設定完了後の完成度再計算
         setTimeout(() => {
@@ -3080,7 +3086,10 @@ function ProfileEditContent() {
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
                           const formData = getValues()
-                          calculateProfileCompletion(formData, profileImages, isForeignMale)
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale)
+                          setProfileCompletion(result.completion)
+                          setCompletedItems(result.completedFields)
+                          setTotalItems(result.totalFields)
                         }, 100)
                       }}
                     >
