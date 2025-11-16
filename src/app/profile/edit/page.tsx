@@ -2505,13 +2505,14 @@ function ProfileEditContent() {
           // ✅ 修正: 新規ユーザーの場合はURLパラメータデータを完成度計算から除外
           let currentValuesWithUserData
           if (isNewUser) {
-            // 新規ユーザー: 実際に入力されたデータのみを使用（URLパラメータは除外）
+            // 新規ユーザー: DBのprofileデータを一切使わず、実際にユーザーがフォームに入力した値のみ使用
             currentValuesWithUserData = {
-              ...profile, // DBの基本データ
+              // フォームの現在値のみ
+              ...currentValues,
               hobbies: existingHobbies, // ユーザーが選択した趣味のみ
               personality: existingPersonality, // ユーザーが選択した性格のみ
               self_introduction: currentValues.self_introduction || '', // ユーザーが入力した自己紹介のみ
-              // その他のフィールドはデフォルト値または空で初期化
+              // その他のフィールドはフォーム値またはundefinedで初期化（DBのprofileは使わない）
               visit_schedule: currentValues.visit_schedule === 'no-entry' ? undefined : currentValues.visit_schedule,
               travel_companion: currentValues.travel_companion === 'noEntry' ? undefined : currentValues.travel_companion,
               planned_prefectures: Array.isArray(currentValues.planned_prefectures) && currentValues.planned_prefectures.length > 0 ? currentValues.planned_prefectures : [],
@@ -2520,9 +2521,9 @@ function ProfileEditContent() {
               height: currentValues.height,
               body_type: currentValues.body_type === 'none' ? undefined : currentValues.body_type,
               marital_status: currentValues.marital_status === 'none' ? undefined : currentValues.marital_status,
-              // 画像情報は含める
-              avatarUrl: user?.avatarUrl || profile.avatarUrl,
-              avatar_url: user?.avatarUrl || profile.avatar_url
+              // 画像情報のみユーザーから取得（profileは使わない）
+              avatarUrl: user?.avatarUrl,
+              avatar_url: user?.avatarUrl
             }
           } else {
             // 既存ユーザー: 従来通りの処理
