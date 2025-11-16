@@ -73,7 +73,7 @@ export function calculateProfileCompletion(
         value = profileData.residence || profileData.prefecture
         break
       case 'hobbies':
-        value = profileData.interests || profileData.hobbies
+        value = profileData.hobbies || profileData.interests
         console.log(`🔍 hobbies フィールド検証:`, {
           field,
           'profileData.interests': profileData.interests,
