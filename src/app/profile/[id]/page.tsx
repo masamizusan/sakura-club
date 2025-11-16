@@ -24,7 +24,7 @@ import Link from 'next/link'
 function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
-  const profileId = params.id as string
+  const profileId = params?.id as string
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
