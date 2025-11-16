@@ -52,7 +52,7 @@ function LoginForm() {
       await new Promise(resolve => setTimeout(resolve, 500))
       
       // Check for redirect parameter
-      const redirectTo = searchParams.get('redirectTo')
+      const redirectTo = searchParams?.get('redirectTo')
       const destination = redirectTo || '/dashboard'
       
       console.log('Redirecting to:', destination)

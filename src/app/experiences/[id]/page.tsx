@@ -179,10 +179,10 @@ export default function ExperienceDetailPage() {
       }
     }
 
-    if (params.id) {
+    if (params?.id) {
       loadExperience()
     }
-  }, [params.id])
+  }, [params?.id])
 
   const formatPrice = (price: number, currency: string) => {
     return `¥${price.toLocaleString()}`
