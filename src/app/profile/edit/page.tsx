@@ -1577,7 +1577,7 @@ function ProfileEditContent() {
                 planned_prefectures: profileData.planned_prefectures || [],
                 visit_schedule: profileData.visit_schedule || 'no-entry',
                 travel_companion: profileData.travel_companion || 'noEntry',
-                japanese_level: profileData.japanese_level || 'none',
+                japanese_level: String(profileData.japanese_level || 'none'),
                 planned_stations: profileData.planned_stations || [],
                 // オプションフィールド
                 occupation: profileData.occupation || 'none',
@@ -1698,7 +1698,7 @@ function ProfileEditContent() {
               planned_prefectures: profileData.planned_prefectures || [],
               visit_schedule: profileData.visit_schedule || 'no-entry',
               travel_companion: profileData.travel_companion || 'noEntry',
-              japanese_level: profileData.japanese_level || 'none',
+              japanese_level: String(profileData.japanese_level || 'none'),
               planned_stations: profileData.planned_stations || [],
               // オプションフィールド
               occupation: profileData.occupation || 'none',
@@ -1711,9 +1711,13 @@ function ProfileEditContent() {
             
             console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
             console.log('🔍 [Profile Edit] japanese_level debug:', {
-              'profileData.japanese_level': profileData.japanese_level,
+              'raw profileData.japanese_level': profileData.japanese_level,
+              'typeof raw': typeof profileData.japanese_level,
+              'String() converted': String(profileData.japanese_level || 'none'),
               'initialData.japanese_level': initialData.japanese_level,
-              'typeof profileData.japanese_level': typeof profileData.japanese_level,
+              'typeof initialData': typeof initialData.japanese_level,
+              'is_undefined': profileData.japanese_level === undefined,
+              'is_null': profileData.japanese_level === null,
               'profileData keys': Object.keys(profileData)
             })
             
