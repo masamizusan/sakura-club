@@ -1722,7 +1722,7 @@ function ProfileEditContent() {
             })
             
             // フォームを初期化
-            reset({
+            const resetData = {
               nickname: initialData.nickname,
               gender: initialData.gender,
               birth_date: initialData.birth_date,
@@ -1743,7 +1743,24 @@ function ProfileEditContent() {
               hobbies: initialData.hobbies,
               personality: initialData.personality,
               custom_culture: ''
+            }
+            
+            console.log('🚨 [CRITICAL] Form reset data:', {
+              'resetData.japanese_level': resetData.japanese_level,
+              'initialData.japanese_level': initialData.japanese_level,
+              'resetData === initialData': resetData.japanese_level === initialData.japanese_level
             })
+            
+            reset(resetData)
+            
+            // reset直後の確認
+            setTimeout(() => {
+              console.log('🚨 [CRITICAL] Form after reset:', {
+                'watch(japanese_level)': watch('japanese_level'),
+                'getValues().japanese_level': getValues().japanese_level,
+                'form is reset correctly': watch('japanese_level') === initialData.japanese_level
+              })
+            }, 100)
             
             // 状態も同期
             setSelectedHobbies(initialData.hobbies)
@@ -2554,7 +2571,10 @@ function ProfileEditContent() {
               console.log('🔍 japanese_level values in fromMyPage completion:', {
                 'currentValues.japanese_level': currentValues.japanese_level,
                 'profile.japanese_level': profile.japanese_level,
-                'will use': currentValues.japanese_level
+                'will use': currentValues.japanese_level,
+                'watch_japanese_level': watch('japanese_level'),
+                'getValues_japanese_level': getValues().japanese_level,
+                'currentValues.japanese_level === none': currentValues.japanese_level === 'none'
               })
               currentValuesWithUserData = {
                 ...profile, // 既存のプロフィールデータを基盤として使用
