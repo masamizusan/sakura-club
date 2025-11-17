@@ -3019,7 +3019,21 @@ function ProfileEditContent() {
                   <Textarea
                     placeholder={t('profile.selfIntroPlaceholder')}
                     rows={4}
-                    {...register('self_introduction')}
+                    {...register('self_introduction', {
+                      onChange: () => {
+                        // 自己紹介変更時に完成度を再計算
+                        setTimeout(() => {
+                          // 新規ユーザー判定
+                          const urlParams = new URLSearchParams(window.location.search)
+                          const isNewUserLocal = urlParams.get('from') === 'signup'
+                          const formData = getValues()
+                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
+                          setProfileCompletion(result.completion)
+                          setCompletedItems(result.completedFields)
+                          setTotalItems(result.totalFields)
+                        }, 100)
+                      }
+                    })}
                     className={errors.self_introduction ? 'border-red-500' : ''}
                   />
                   {errors.self_introduction && (
