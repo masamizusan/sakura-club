@@ -1710,9 +1710,11 @@ function ProfileEditContent() {
             }
             
             console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
-            console.log('🔍 initialData japanese_level:', {
+            console.log('🔍 [Profile Edit] japanese_level debug:', {
+              'profileData.japanese_level': profileData.japanese_level,
               'initialData.japanese_level': initialData.japanese_level,
-              'original profileData.japanese_level': profileData.japanese_level
+              'typeof profileData.japanese_level': typeof profileData.japanese_level,
+              'profileData keys': Object.keys(profileData)
             })
             
             // フォームを初期化
@@ -2538,21 +2540,51 @@ function ProfileEditContent() {
               avatar_url: user?.avatarUrl
             }
           } else {
-            // 既存ユーザー: 従来通りの処理
-            currentValuesWithUserData = {
-              ...profile, // 既存のプロフィールデータを基盤として使用
-              ...currentValues, // フォームの現在値で上書き
-              hobbies: existingHobbies, // 状態管理された趣味
-              personality: existingPersonality, // 状態管理された性格
-              // 外国人男性専用フィールドを確実に含める
-              visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
-              travel_companion: currentValues.travel_companion || profile.travel_companion,
-              planned_prefectures: currentValues.planned_prefectures || profile.planned_prefectures || [],
-              japanese_level: currentValues.japanese_level || profile.japanese_level,
-              planned_stations: (currentValues as any).planned_stations || (profile as any).planned_stations || [],
-              // ユーザー画像情報を追加
-              avatarUrl: user?.avatarUrl || profile.avatarUrl,
-              avatar_url: user?.avatarUrl || profile.avatar_url
+            // 既存ユーザー: 従来通りの処理（ただし、fromMyPageの場合はlocalStorageデータを優先）
+            const urlParams = new URLSearchParams(window.location.search)
+            const isFromMyPageInTimeout = urlParams.get('fromMyPage') === 'true'
+            
+            if (isFromMyPageInTimeout) {
+              // fromMyPage遷移の場合: localStorageからのフォーム値を優先
+              console.log('🔄 fromMyPage完成度計算 - localStorageフォーム値を優先')
+              console.log('🔍 japanese_level values in fromMyPage completion:', {
+                'currentValues.japanese_level': currentValues.japanese_level,
+                'profile.japanese_level': profile.japanese_level,
+                'will use': currentValues.japanese_level
+              })
+              currentValuesWithUserData = {
+                ...profile, // 既存のプロフィールデータを基盤として使用
+                ...currentValues, // フォームの現在値で上書き（localStorageから読み込まれた値）
+                hobbies: existingHobbies, // 状態管理された趣味
+                personality: existingPersonality, // 状態管理された性格
+                // 外国人男性専用フィールド - フォーム値を優先
+                visit_schedule: currentValues.visit_schedule,
+                travel_companion: currentValues.travel_companion,
+                planned_prefectures: currentValues.planned_prefectures || [],
+                japanese_level: currentValues.japanese_level, // fromMyPageの場合はフォーム値を優先
+                english_level: currentValues.english_level, // 日本人女性の場合
+                planned_stations: (currentValues as any).planned_stations || [],
+                // ユーザー画像情報を追加
+                avatarUrl: user?.avatarUrl || profile.avatarUrl,
+                avatar_url: user?.avatarUrl || profile.avatar_url
+              }
+            } else {
+              // 通常の既存ユーザー処理
+              currentValuesWithUserData = {
+                ...profile, // 既存のプロフィールデータを基盤として使用
+                ...currentValues, // フォームの現在値で上書き
+                hobbies: existingHobbies, // 状態管理された趣味
+                personality: existingPersonality, // 状態管理された性格
+                // 外国人男性専用フィールドを確実に含める
+                visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
+                travel_companion: currentValues.travel_companion || profile.travel_companion,
+                planned_prefectures: currentValues.planned_prefectures || profile.planned_prefectures || [],
+                japanese_level: currentValues.japanese_level || profile.japanese_level,
+                planned_stations: (currentValues as any).planned_stations || (profile as any).planned_stations || [],
+                // ユーザー画像情報を追加
+                avatarUrl: user?.avatarUrl || profile.avatarUrl,
+                avatar_url: user?.avatarUrl || profile.avatar_url
+              }
             }
           }
           const result = calculateProfileCompletion(currentValuesWithUserData, profileImages, isForeignMale, isNewUser)
