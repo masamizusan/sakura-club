@@ -965,6 +965,11 @@ function MyPageContent() {
               // プロフィールデータをlocalStorageに保存してからプロフィール編集画面に遷移
               console.log('💾 プロフィールデータをlocalStorageに保存')
               console.log('📦 保存するプロフィールデータ:', profile)
+              console.log('🔍 japanese_level check:', {
+                'profile.japanese_level': profile?.japanese_level,
+                'profile.english_level': profile?.english_level,
+                'isForeignMale': isForeignMale
+              })
               
               try {
                 // プロフィールデータをlocalStorageに保存

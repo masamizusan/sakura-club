@@ -1557,6 +1557,11 @@ function ProfileEditContent() {
             try {
               const profileData = JSON.parse(savedProfile)
               console.log('📦 localStorage from profile data:', profileData)
+              console.log('🔍 ProfileEdit - japanese_level check:', {
+                'profileData.japanese_level': profileData.japanese_level,
+                'profileData.english_level': profileData.english_level,
+                'typeof japanese_level': typeof profileData.japanese_level
+              })
               
               initialData = {
                 nickname: profileData.name || profileData.nickname || '',
@@ -1705,6 +1710,10 @@ function ProfileEditContent() {
             }
             
             console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
+            console.log('🔍 initialData japanese_level:', {
+              'initialData.japanese_level': initialData.japanese_level,
+              'original profileData.japanese_level': profileData.japanese_level
+            })
             
             // フォームを初期化
             reset({
