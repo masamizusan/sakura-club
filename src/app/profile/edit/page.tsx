@@ -1886,6 +1886,8 @@ function ProfileEditContent() {
           height?: number;
           body_type?: string;
           marital_status?: string;
+          english_level?: string;
+          japanese_level?: string;
         } = {}
         
         console.log('🔍 CITY FIELD PARSING ANALYSIS:')
@@ -1904,7 +1906,9 @@ function ProfileEditContent() {
                 occupation: parsedOptionalData.occupation,
                 height: parsedOptionalData.height,
                 body_type: parsedOptionalData.body_type,
-                marital_status: parsedOptionalData.marital_status
+                marital_status: parsedOptionalData.marital_status,
+                english_level: parsedOptionalData.english_level,
+                japanese_level: parsedOptionalData.japanese_level
               })
             } else {
               // 通常の文字列の場合はそのまま使用
@@ -2219,6 +2223,8 @@ function ProfileEditContent() {
         console.log('  - parsedOptionalData.height:', parsedOptionalData.height)
         console.log('  - parsedOptionalData.body_type:', parsedOptionalData.body_type)
         console.log('  - parsedOptionalData.marital_status:', parsedOptionalData.marital_status)
+        console.log('  - parsedOptionalData.japanese_level:', parsedOptionalData.japanese_level)
+        console.log('  - parsedOptionalData.english_level:', parsedOptionalData.english_level)
         console.log('  - existingHobbies:', existingHobbies)
         console.log('  - existingPersonality:', existingPersonality)
         console.log('  - existingCustomCulture:', existingCustomCulture)
@@ -2243,9 +2249,19 @@ function ProfileEditContent() {
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
+          // 言語レベルフィールド
+          japanese_level: isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none')) : undefined,
+          english_level: !isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none')) : undefined,
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
+        console.log('🔍 CRITICAL - Japanese Level in resetData:', {
+          'resetData.japanese_level': resetData.japanese_level,
+          'parsedOptionalData.japanese_level': parsedOptionalData.japanese_level,
+          'profile.japanese_level': profile.japanese_level,
+          'isForeignMale': isForeignMale,
+          'isNewUser': isNewUser
+        })
         
         // フォームリセット前の詳細ログ
         console.log('🔍 FORM RESET DETAILED ANALYSIS:')
