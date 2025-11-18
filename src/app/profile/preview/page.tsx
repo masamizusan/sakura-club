@@ -216,8 +216,10 @@ function ProfilePreviewContent() {
             <Select
               value={currentLanguage}
               onValueChange={(value: SupportedLanguage) => {
+                console.log('Language switching to:', value)
                 setCurrentLanguage(value)
-                // 言語変更処理
+                // 強制的に再レンダリングを促す
+                setHasError(false)
               }}
             >
               <SelectTrigger className="w-40 bg-orange-600 border-orange-400 text-white">
@@ -227,7 +229,7 @@ function ProfilePreviewContent() {
                 <SelectItem value="ja">🇯🇵 日本語</SelectItem>
                 <SelectItem value="en">🇺🇸 English</SelectItem>
                 <SelectItem value="ko">🇰🇷 한국어</SelectItem>
-                <SelectItem value="zh-tw">🇹🇼 繁體中文</SelectItem>
+                <SelectItem value="zh-tw">🇹🇼 繁體中文（台湾）</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -273,13 +275,13 @@ function ProfilePreviewContent() {
                 {/* 1. 国籍（外国人男性の場合のみ）/ 居住地（日本人女性の場合） */}
                 {gender === 'male' && nationality && nationality !== '日本' && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">国籍:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.nationality')}:</span>
                     <span className="text-gray-600">{nationality}</span>
                   </div>
                 )}
                 {gender === 'female' && prefecture && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">居住地:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
                     <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
                   </div>
                 )}
@@ -287,7 +289,7 @@ function ProfilePreviewContent() {
                 {/* 2. 職業 */}
                 {shouldDisplayValue(occupation) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">職業:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.occupation')}:</span>
                     <span className="text-gray-600">{getOccupationLabel(occupation, gender === 'male')}</span>
                   </div>
                 )}
@@ -295,7 +297,7 @@ function ProfilePreviewContent() {
                 {/* 3. 身長 */}
                 {shouldDisplayValue(height) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">身長:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.height')}:</span>
                     <span className="text-gray-600">{height}cm</span>
                   </div>
                 )}
