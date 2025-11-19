@@ -154,6 +154,7 @@ type TranslationKeys = {
   schedule: {
     undecided: string
     noEntry: string
+    currentlyInJapan: string
     year2024: string
     year2025: string
     beyond2025: string
@@ -791,6 +792,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     schedule: {
       undecided: 'まだ決まっていない',
       noEntry: '記入しない',
+      currentlyInJapan: '現在日本にいる',
       year2024: '2024年',
       year2025: '2025年',
       beyond2025: '2025年以降',
@@ -1382,6 +1384,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     schedule: {
       undecided: 'Not decided yet',
       noEntry: 'Not specified',
+      currentlyInJapan: 'Currently in Japan',
       year2024: '2024',
       year2025: '2025',
       beyond2025: '2025 or later',
@@ -1972,6 +1975,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     schedule: {
       undecided: '아직 정하지 않음',
       noEntry: '기입하지 않음',
+      currentlyInJapan: '현재 일본에 있음',
       year2024: '2024년',
       year2025: '2025년',
       beyond2025: '2025년 이후',
@@ -2561,6 +2565,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     schedule: {
       undecided: '尚未決定',
       noEntry: '不填寫',
+      currentlyInJapan: '目前在日本',
       year2024: '2024年',
       year2025: '2025年',
       beyond2025: '2025年以後',
