@@ -335,7 +335,7 @@ const getCultureCategories = (t: any) => [
 const getVisitScheduleOptions = (t: any) => {
   const options = [
     { value: 'no-entry', label: t('schedule.noEntry') },
-    { value: 'currently-in-japan', label: '現在日本にいる' },
+    { value: 'currently-in-japan', label: t('schedule.currentlyInJapan') },
     { value: 'undecided', label: t('schedule.undecided') }
   ];
 
@@ -1038,7 +1038,7 @@ function ProfileEditContent() {
   const getVisitScheduleOptionsTranslated = () => {
     const options = [
       { value: 'no-entry', label: getVisitScheduleLabel('no-entry') },
-      { value: 'currently-in-japan', label: '現在日本にいる' },
+      { value: 'currently-in-japan', label: t('schedule.currentlyInJapan') },
       { value: 'undecided', label: getVisitScheduleLabel('undecided') }
     ]
 

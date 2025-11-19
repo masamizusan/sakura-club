@@ -306,6 +306,15 @@
     "max": "{field}必须小于等于{max}",
     "pattern": "{field}格式不正确"
   },
+  "schedule": {
+    "undecided": "還沒決定",
+    "noEntry": "不填寫",
+    "currentlyInJapan": "目前在日本",
+    "year2024": "2024年",
+    "year2025": "2025年",
+    "beyond2025": "2025年以後",
+    "beyond2026": "2026年以後"
+  },
   "placeholders": {
     "nickname": "输入您的昵称",
     "selectNationality": "选择国籍",

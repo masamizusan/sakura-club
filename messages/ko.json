@@ -306,6 +306,15 @@
     "max": "{field}은(는) {max} 이하여야 합니다",
     "pattern": "{field} 형식이 올바르지 않습니다"
   },
+  "schedule": {
+    "undecided": "아직 정하지 않음",
+    "noEntry": "기입하지 않음",
+    "currentlyInJapan": "현재 일본에 있음",
+    "year2024": "2024년",
+    "year2025": "2025년",
+    "beyond2025": "2025년 이후",
+    "beyond2026": "2026년 이후"
+  },
   "placeholders": {
     "nickname": "닉네임을 입력하세요",
     "selectNationality": "국적 선택",

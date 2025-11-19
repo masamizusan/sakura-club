@@ -306,6 +306,15 @@
     "max": "{field} must be {max} or less",
     "pattern": "{field} format is incorrect"
   },
+  "schedule": {
+    "undecided": "Not decided yet",
+    "noEntry": "Not specified",
+    "currentlyInJapan": "Currently in Japan",
+    "year2024": "2024",
+    "year2025": "2025",
+    "beyond2025": "After 2025",
+    "beyond2026": "After 2026"
+  },
   "placeholders": {
     "nickname": "Enter your nickname",
     "selectNationality": "Select nationality",

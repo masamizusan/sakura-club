@@ -338,9 +338,9 @@ function ProfilePreviewContent() {
                     <span className="font-medium text-gray-700 w-20">訪問予定:</span>
                     <span className="text-gray-600">
                       {(() => {
-                        if (visit_schedule === 'undecided') return 'まだ決まっていない';
-                        if (visit_schedule === 'no-entry') return '記入しない';
-                        if (visit_schedule === 'currently-in-japan') return '現在日本にいる';
+                        if (visit_schedule === 'undecided') return t('schedule.undecided');
+                        if (visit_schedule === 'no-entry') return t('schedule.noEntry');
+                        if (visit_schedule === 'currently-in-japan') return t('schedule.currentlyInJapan');
 
                         // beyond-YYYY 形式の処理
                         if (visit_schedule.startsWith('beyond-')) {

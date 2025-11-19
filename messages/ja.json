@@ -382,6 +382,7 @@
   "schedule": {
     "undecided": "まだ決まっていない",
     "noEntry": "記入しない",
+    "currentlyInJapan": "現在日本にいる",
     "year2024": "2024年",
     "year2025": "2025年",
     "beyond2025": "2025年以降",
