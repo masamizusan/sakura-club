@@ -136,24 +136,6 @@ export function calculateProfileCompletion(
       case 'planned_prefectures':
         // 外国人男性の行く予定の都道府県
         value = profileData.planned_prefectures || []
-        console.log(`🔍 planned_prefectures debug:`, {
-          field,
-          'raw_value': profileData.planned_prefectures,
-          'processed_value': value,
-          'is_array': Array.isArray(value),
-          'length': Array.isArray(value) ? value.length : 'not array'
-        })
-        break
-      case 'japanese_level':
-        // 外国人男性の日本語レベル
-        value = profileData.japanese_level
-        console.log(`🔍 japanese_level debug:`, {
-          field,
-          'raw_value': profileData.japanese_level,
-          'processed_value': value,
-          'is_none': value === 'none',
-          'is_valid': value && value !== 'none'
-        })
         break
       default:
         value = profileData[field]
@@ -161,30 +143,17 @@ export function calculateProfileCompletion(
 
     // 値の有効性チェック
     if (Array.isArray(value)) {
-      const isValid = value.length > 0
-      console.log(`🔍 Array field [${field}]:`, {
-        value,
-        length: value.length,
-        isValid
-      })
-      return isValid
+      return value.length > 0
     }
 
     // 無効な値を除外（空文字、null、undefined、'none'、未選択系の値）
-    const isInvalid = !value || value === '' || value === 'none' || value === 'no-entry' || value === 'noEntry' ||
+    if (!value || value === '' || value === 'none' || value === 'no-entry' || value === 'noEntry' ||
         value === '選択してください' || value === '未選択' ||
-        value === '国籍を選択' || value === '都道府県を選択'
-    
-    const isValid = !isInvalid
-    
-    console.log(`🔍 Optional field [${field}]:`, {
-      value,
-      type: typeof value,
-      isInvalid,
-      isValid
-    })
+        value === '国籍を選択' || value === '都道府県を選択') {
+      return false
+    }
 
-    return isValid
+    return true
   })
 
   // 画像の有無チェック
