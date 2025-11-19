@@ -13,46 +13,46 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
 }
 
-// 体型の英語値を日本語に変換するヘルパー関数
-const getBodyTypeLabel = (value: string): string => {
+// 体型の英語値を多言語対応で変換するヘルパー関数
+const getBodyTypeLabel = (value: string, t: any): string => {
   const bodyTypeLabels: Record<string, string> = {
-    'slim': 'スリム',
-    'average': '普通',
-    'muscular': '筋肉質',
-    'plump': 'ぽっちゃり'
+    'slim': t('bodyType.slim'),
+    'average': t('bodyType.average'),
+    'muscular': t('bodyType.muscular'),
+    'plump': t('bodyType.plump')
   }
   return bodyTypeLabels[value] || value
 }
 
-// 言語レベルの英語値を日本語に変換するヘルパー関数
-const getLanguageLevelLabel = (value: string): string => {
+// 言語レベルの英語値を多言語対応で変換するヘルパー関数
+const getLanguageLevelLabel = (value: string, t: any): string => {
   const levelLabels: Record<string, string> = {
-    'none': '記入しない',
-    'beginner': '初級（日常会話は難しい）',
-    'elementary': '初級上（基本的な日常会話ができる）',
-    'intermediate': '中級（日常会話は問題ない）',
-    'upperIntermediate': '中級上（複雑な話題も理解できる）',
-    'advanced': '上級（流暢に話せる）',
-    'native': 'ネイティブレベル'
+    'none': t('languageLevel.none'),
+    'beginner': t('languageLevel.beginner'),
+    'elementary': t('languageLevel.elementary'),
+    'intermediate': t('languageLevel.intermediate'),
+    'upperIntermediate': t('languageLevel.upperIntermediate'),
+    'advanced': t('languageLevel.advanced'),
+    'native': t('languageLevel.native')
   }
   return levelLabels[value] || value
 }
 
-// 同行者の英語値を日本語に変換するヘルパー関数
-const getTravelCompanionLabel = (value: string): string => {
+// 同行者の英語値を多言語対応で変換するヘルパー関数
+const getTravelCompanionLabel = (value: string, t: any): string => {
   const companionLabels: Record<string, string> = {
-    'noEntry': '記入しない',
-    'alone': '一人旅',
-    'friend': '友達',
-    'family': '家族',
-    'partner': 'パートナー',
-    'solo': '一人旅',
-    'couple': 'カップル（恋人・配偶者）',
-    'friends': '友達',
-    'colleagues': '同僚・仕事仲間',
-    'group': 'グループ・団体',
-    'other': 'その他',
-    'no-entry': '記入しない'
+    'noEntry': t('companion.noEntry'),
+    'alone': t('companion.alone'),
+    'friend': t('companion.friend'),
+    'family': t('companion.family'),
+    'partner': t('companion.partner'),
+    'solo': t('companion.alone'),
+    'couple': t('companion.partner'),
+    'friends': t('companion.friend'),
+    'colleagues': t('companion.friend'),
+    'group': t('companion.friend'),
+    'other': t('companion.noEntry'),
+    'no-entry': t('companion.noEntry')
   }
   return companionLabels[value] || value
 }
@@ -305,37 +305,37 @@ function ProfilePreviewContent() {
                 {/* 4. 体型 */}
                 {shouldDisplayValue(bodyType) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">体型:</span>
-                    <span className="text-gray-600">{getBodyTypeLabel(bodyType)}</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.bodyTypeLabel')}:</span>
+                    <span className="text-gray-600">{getBodyTypeLabel(bodyType, t)}</span>
                   </div>
                 )}
                 
                 {/* 5. 婚姻状況 */}
                 {shouldDisplayValue(maritalStatus) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">結婚:</span>
-                    <span className="text-gray-600">{maritalStatus === 'single' ? '未婚' : '既婚'}</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.marriageStatus')}:</span>
+                    <span className="text-gray-600">{maritalStatus === 'single' ? t('maritalStatus.single') : t('maritalStatus.married')}</span>
                   </div>
                 )}
                 
                 {/* 6. 日本語レベル（外国人男性）/ 英語レベル（日本人女性） */}
                 {shouldDisplayValue(japaneseLevel) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">日本語:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(japaneseLevel)}</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.japaneseLanguage')}:</span>
+                    <span className="text-gray-600">{getLanguageLevelLabel(japaneseLevel, t)}</span>
                   </div>
                 )}
                 {shouldDisplayValue(englishLevel) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">英語:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(englishLevel)}</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.englishLanguage')}:</span>
+                    <span className="text-gray-600">{getLanguageLevelLabel(englishLevel, t)}</span>
                   </div>
                 )}
                 
                 {/* 7. 訪問予定（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">訪問予定:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.visitPlan')}:</span>
                     <span className="text-gray-600">
                       {(() => {
                         if (visit_schedule === 'undecided') return t('schedule.undecided');
@@ -371,15 +371,15 @@ function ProfilePreviewContent() {
                 {/* 8. 同行者（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(travel_companion) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">同行者:</span>
-                    <span className="text-gray-600">{getTravelCompanionLabel(travel_companion)}</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.companion')}:</span>
+                    <span className="text-gray-600">{getTravelCompanionLabel(travel_companion, t)}</span>
                   </div>
                 )}
                 
                 {/* 9. 行く予定の都道府県（外国人男性の場合） */}
                 {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
                   <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">行く予定:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.plannedDestination')}:</span>
                     <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
                   </div>
                 )}
@@ -387,7 +387,7 @@ function ProfilePreviewContent() {
                 {/* 訪問予定の駅（外国人男性の場合）- 順序は変更しない */}
                 {gender === 'male' && planned_stations && planned_stations.length > 0 && (
                   <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">訪問予定駅:</span>
+                    <span className="font-medium text-gray-700 w-20">{t('profile.plannedStationsLabel')}:</span>
                     <span className="text-gray-600">{planned_stations.join(', ')}</span>
                   </div>
                 )}
@@ -396,7 +396,7 @@ function ProfilePreviewContent() {
               {/* 10. 自己紹介 */}
               {shouldDisplayValue(selfIntroduction) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.selfIntroduction')}</h3>
                   <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
                     {selfIntroduction}
                   </p>
@@ -406,7 +406,7 @@ function ProfilePreviewContent() {
               {/* 11. 性格 */}
               {personality.length > 0 && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">性格</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.personalityLabel')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {personality.map((trait: string, index: number) => (
                       <span
@@ -423,7 +423,7 @@ function ProfilePreviewContent() {
               {/* 12. 学びたい日本文化 */}
               {(hobbies.length > 0 || shouldDisplayValue(customCulture)) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">学びたい日本文化</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.learnJapaneseCulture')}</h3>
                   <div className="space-y-2">
                     {hobbies.length > 0 && (
                       <div className="flex flex-wrap gap-2">

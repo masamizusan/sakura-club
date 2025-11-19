@@ -71,6 +71,18 @@ type TranslationKeys = {
     previewCheckButton: string
     previewAdvice: string
     selectPrefecturesWithCount: string
+    // プレビュー画面用の翻訳
+    bodyTypeLabel: string
+    marriageStatus: string
+    japaneseLanguage: string
+    englishLanguage: string
+    visitPlan: string
+    companion: string
+    plannedDestination: string
+    plannedStationsLabel: string
+    personalityLabel: string
+    learnJapaneseCulture: string
+    residence: string
   }
 
   // プレースホルダーテキスト
@@ -697,6 +709,17 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: 'あと少しで完璧なプロフィールです！',
       completionPerfect: '素晴らしい！完璧なプロフィールです✨',
       requiredForPublication: '（プロフィール公開に必要な項目）',
+      // プレビュー画面用の翻訳
+      bodyTypeLabel: '体型',
+      marriageStatus: '結婚',
+      japaneseLanguage: '日本語',
+      englishLanguage: '英語',
+      visitPlan: '訪問予定',
+      companion: '同行者',
+      plannedDestination: '行く予定',
+      plannedStationsLabel: '訪問予定駅',
+      personalityLabel: '性格',
+      learnJapaneseCulture: '学びたい日本文化',
       requiredSection: '必須情報',
       personalitySection: '性格',
       cultureSection: '共有したい日本文化',
@@ -715,7 +738,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nicknameDescription: 'プロフィールに表示される名前です',
       previewCheckButton: '',
       previewAdvice: '上のボタンでプレビューを確認してから保存してください',
-      selectPrefecturesWithCount: '都道府県を選択'
+      selectPrefecturesWithCount: '都道府県を選択',
+      residence: '居住地'
     },
 
     placeholders: {
@@ -1289,6 +1313,17 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: 'Almost there! Just a few more details',
       completionPerfect: 'Excellent! You have a perfect profile ✨',
       requiredForPublication: '(Required for profile publication)',
+      // プレビュー画面用の翻訳
+      bodyTypeLabel: 'Body Type',
+      marriageStatus: 'Marriage',
+      japaneseLanguage: 'Japanese',
+      englishLanguage: 'English',
+      visitPlan: 'Visit Plan',
+      companion: 'Companion',
+      plannedDestination: 'Planned Destination',
+      plannedStationsLabel: 'Planned Stations',
+      personalityLabel: 'Personality',
+      learnJapaneseCulture: 'Japanese Culture to Learn',
       requiredSection: 'Required Information',
       personalitySection: 'Personality',
       cultureSection: 'Japanese Culture to Share',
@@ -1307,7 +1342,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nicknameDescription: 'This is the name that will be displayed on your profile',
       previewCheckButton: '',
       previewAdvice: 'Please check preview with the button above before saving',
-      selectPrefecturesWithCount: 'Select Prefectures'
+      selectPrefecturesWithCount: 'Select Prefectures',
+      residence: 'Residence'
     },
 
     placeholders: {
@@ -1880,6 +1916,17 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: '조금만 더! 몇 가지 세부사항만 남았습니다',
       completionPerfect: '훌륭합니다! 완벽한 프로필입니다 ✨',
       requiredForPublication: '(프로필 공개에 필요한 항목)',
+      // プレビュー画面用の翻訳
+      bodyTypeLabel: '체형',
+      marriageStatus: '결혼',
+      japaneseLanguage: '일본어',
+      englishLanguage: '영어',
+      visitPlan: '방문 예정',
+      companion: '동행자',
+      plannedDestination: '방문 예정',
+      plannedStationsLabel: '방문 예정 역',
+      personalityLabel: '성격',
+      learnJapaneseCulture: '배우고 싶은 일본 문화',
       requiredSection: '필수 정보',
       personalitySection: '성격',
       cultureSection: '공유하고 싶은 일본 문화',
@@ -1898,7 +1945,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nicknameDescription: '프로필에 표시될 이름입니다',
       previewCheckButton: '',
       previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요',
-      selectPrefecturesWithCount: '도도부현 선택'
+      selectPrefecturesWithCount: '도도부현 선택',
+      residence: '거주지'
     },
 
     placeholders: {
@@ -2471,6 +2519,17 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       completionHigh: '就快完成了！還差一些細節',
       completionPerfect: '太棒了！您有一個完美的個人資料 ✨',
       requiredForPublication: '（個人資料公開所需項目）',
+      // プレビュー画面用の翻訳
+      bodyTypeLabel: '體型',
+      marriageStatus: '婚姻',
+      japaneseLanguage: '日語',
+      englishLanguage: '英語',
+      visitPlan: '拜訪預定',
+      companion: '同行者',
+      plannedDestination: '預定前往',
+      plannedStationsLabel: '預定拜訪車站',
+      personalityLabel: '個性',
+      learnJapaneseCulture: '想學習的日本文化',
       requiredSection: '必填資訊',
       personalitySection: '個性',
       cultureSection: '想分享的日本文化',
@@ -2489,7 +2548,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nicknameDescription: '這是將在您的個人資料上顯示的名稱',
       previewCheckButton: '',
       previewAdvice: '請用上方按鈕確認預覽後再儲存',
-      selectPrefecturesWithCount: '選擇都道府縣'
+      selectPrefecturesWithCount: '選擇都道府縣',
+      residence: '居住地'
     },
 
     placeholders: {
