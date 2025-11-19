@@ -52,11 +52,6 @@ export function calculateProfileCompletion(
   }
 
   // 必須フィールドの完成チェック
-  console.log(`🔍 必須フィールドチェック開始:`, {
-    requiredFields,
-    profileDataKeys: Object.keys(profileData),
-    isForeignMale
-  })
 
   const completedRequired = requiredFields.filter(field => {
     let value
@@ -74,14 +69,6 @@ export function calculateProfileCompletion(
         break
       case 'hobbies':
         value = profileData.hobbies || profileData.interests
-        console.log(`🔍 hobbies フィールド検証:`, {
-          field,
-          'profileData.interests': profileData.interests,
-          'profileData.hobbies': profileData.hobbies,
-          'final value': value,
-          'isArray': Array.isArray(value),
-          'length': Array.isArray(value) ? value.length : 'not array'
-        })
         break
       case 'self_introduction':
         value = profileData.bio || profileData.self_introduction
@@ -101,11 +88,6 @@ export function calculateProfileCompletion(
     // 国籍の特別チェック：空文字、null、undefined、選択プレースホルダーを除外
     if (field === 'nationality') {
       const isValid = value && value !== '' && value !== '国籍を選択' && value !== 'none' && value !== null && value !== undefined
-      console.log(`🔍 国籍フィールド検証 [${field}]:`, {
-        value,
-        isValid,
-        type: typeof value
-      })
       return isValid
     }
 
@@ -165,48 +147,7 @@ export function calculateProfileCompletion(
   const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
   const completion = Math.round((completedFields / totalFields) * 100)
 
-  // 🔍 詳細デバッグ: どの項目が完成済みかを表示
-  console.log('🔍 完成度計算詳細:', {
-    '必須完成項目': completedRequired,
-    'オプション完成項目': completedOptional,
-    '画像完成': hasImages,
-    '必須完成数': completedRequired.length,
-    'オプション完成数': completedOptional.length,
-    '画像完成数': imageCompletionCount,
-    '総完成数': completedFields,
-    '総項目数': totalFields,
-    '完成度': `${completion}%`,
-    isNewUser
-  })
-
-  // 外国人男性の詳細デバッグ
-  if (isForeignMale) {
-    console.log('🌍 外国人男性プロフィール完成度詳細:', {
-      requiredFields,
-      optionalFields,
-      completedRequired: completedRequired,
-      completedOptional: completedOptional,
-      requiredTotal: requiredFields.length,
-      optionalTotal: optionalFields.length,
-      totalFields,
-      completedFields,
-      completion: `${completion}%`,
-      hasImages,
-      profileData_nationality: profileData?.nationality,
-      profileData_planned_prefectures: profileData?.planned_prefectures,
-      // 詳細データ確認
-      profileData_occupation: profileData?.occupation,
-      profileData_height: profileData?.height,
-      profileData_body_type: profileData?.body_type,
-      profileData_marital_status: profileData?.marital_status,
-      profileData_personality: profileData?.personality,
-      profileData_visit_schedule: profileData?.visit_schedule,
-      profileData_travel_companion: profileData?.travel_companion,
-      // どのフィールドが完成済みかの詳細
-      completedRequiredDetail: completedRequired.map(field => `${field}: ${JSON.stringify(profileData[field])}`),
-      completedOptionalDetail: completedOptional.map(field => `${field}: ${JSON.stringify(profileData[field])}`)
-    })
-  }
+  // 完成度計算完了
 
   return {
     completion,
