@@ -152,10 +152,11 @@ const getPrefectureLabel = (value: string, t: any): string => {
 // 日本文化の表示を多言語対応で変換するヘルパー関数
 const getCultureLabel = (value: string, t: any): string => {
   const cultureLabels: Record<string, string> = {
+    // 基本的な日本語マッピング
     'お茶': t('culture.tea'),
     '茶道': t('culture.teaCeremony'),
     '書道': t('culture.calligraphy'),
-    '華道': t('culture.ikebana'),
+    '華道': t('culture.flowerArrangement'),
     '着物': t('culture.kimono'),
     '武道': t('culture.martialArts'),
     '禅': t('culture.zen'),
@@ -164,7 +165,50 @@ const getCultureLabel = (value: string, t: any): string => {
     'マンガ': t('culture.manga'),
     '日本料理': t('culture.japaneseCuisine'),
     'ゲーム': t('culture.games'),
-    'その他': t('culture.other')
+    'その他': t('culture.other'),
+    // 英語キー形式のマッピング
+    'tea': t('culture.tea'),
+    'teaCeremony': t('culture.teaCeremony'),
+    'calligraphy': t('culture.calligraphy'),
+    'ikebana': t('culture.flowerArrangement'),
+    'kimono': t('culture.kimono'),
+    'martialArts': t('culture.martialArts'),
+    'zen': t('culture.zen'),
+    'jpop': t('culture.jpop'),
+    'anime': t('culture.anime'),
+    'manga': t('culture.manga'),
+    'japaneseCuisine': t('culture.japaneseCuisine'),
+    'games': t('culture.games'),
+    'other': t('culture.other'),
+    // 詳細版日本文化マッピング
+    '和菓子': t('culture.wagashi'),
+    '陶芸': t('culture.pottery'),
+    '折り紙': t('culture.origami'),
+    '盆栽': t('culture.bonsai'),
+    'wagashi': t('culture.wagashi'),
+    'pottery': t('culture.pottery'),
+    'origami': t('culture.origami'),
+    'bonsai': t('culture.bonsai'),
+    'flowerArrangement': t('culture.flowerArrangement'),
+    // プレフィックス付きキー（culture.の対応）
+    'culture.tea': t('culture.tea'),
+    'culture.teaCeremony': t('culture.teaCeremony'),
+    'culture.calligraphy': t('culture.calligraphy'),
+    'culture.ikebana': t('culture.flowerArrangement'),
+    'culture.kimono': t('culture.kimono'),
+    'culture.martialArts': t('culture.martialArts'),
+    'culture.zen': t('culture.zen'),
+    'culture.jpop': t('culture.jpop'),
+    'culture.anime': t('culture.anime'),
+    'culture.manga': t('culture.manga'),
+    'culture.japaneseCuisine': t('culture.japaneseCuisine'),
+    'culture.games': t('culture.games'),
+    'culture.other': t('culture.other'),
+    'culture.wagashi': t('culture.wagashi'),
+    'culture.pottery': t('culture.pottery'),
+    'culture.origami': t('culture.origami'),
+    'culture.bonsai': t('culture.bonsai'),
+    'culture.flowerArrangement': t('culture.flowerArrangement')
   }
   return cultureLabels[value] || value
 }
