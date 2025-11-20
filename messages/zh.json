@@ -375,6 +375,21 @@
     "houseHusband": "主夫",
     "other": "其他"
   },
+  "culture": {
+    "tea": "茶",
+    "teaCeremony": "茶道",
+    "calligraphy": "書法",
+    "ikebana": "插花",
+    "kimono": "和服",
+    "martialArts": "武道",
+    "zen": "禪",
+    "jpop": "日本流行音樂",
+    "anime": "動漫",
+    "manga": "漫畫",
+    "japaneseCuisine": "日本料理",
+    "games": "遊戲",
+    "other": "其他"
+  },
   "placeholders": {
     "nickname": "输入您的昵称",
     "selectNationality": "选择国籍",

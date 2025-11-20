@@ -416,6 +416,21 @@
     "china": "中国",
     "other": "その他"
   },
+  "culture": {
+    "tea": "お茶",
+    "teaCeremony": "茶道",
+    "calligraphy": "書道",
+    "ikebana": "華道",
+    "kimono": "着物",
+    "martialArts": "武道",
+    "zen": "禅",
+    "jpop": "J-POP",
+    "anime": "アニメ",
+    "manga": "マンガ",
+    "japaneseCuisine": "日本料理",
+    "games": "ゲーム",
+    "other": "その他"
+  },
   "occupations": {
     "noEntry": "記入しない",
     "housewife": "主婦",

@@ -375,6 +375,21 @@
     "houseHusband": "주부(남성)",
     "other": "기타"
   },
+  "culture": {
+    "tea": "차",
+    "teaCeremony": "다도",
+    "calligraphy": "서예",
+    "ikebana": "꽃꽂이",
+    "kimono": "기모노",
+    "martialArts": "무도",
+    "zen": "선",
+    "jpop": "J-POP",
+    "anime": "애니메이션",
+    "manga": "만화",
+    "japaneseCuisine": "일본 요리",
+    "games": "게임",
+    "other": "기타"
+  },
   "placeholders": {
     "nickname": "닉네임을 입력하세요",
     "selectNationality": "국적 선택",
