@@ -68,6 +68,7 @@ type TranslationKeys = {
     cultureExperience: string
     cultureExperienceWant: string
     nicknameDescription: string
+    updateProfile: string
     previewCheckButton: string
     previewAdvice: string
     selectPrefecturesWithCount: string
@@ -736,6 +737,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperience: '共有したい日本文化',
       cultureExperienceWant: '体験したい日本文化',
       nicknameDescription: 'プロフィールに表示される名前です',
+      updateProfile: 'この内容でプロフィールを更新する',
       previewCheckButton: '',
       previewAdvice: '上のボタンでプレビューを確認してから保存してください',
       selectPrefecturesWithCount: '都道府県を選択',
@@ -1340,6 +1342,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperience: 'Japanese Culture to Share',
       cultureExperienceWant: 'Japanese Culture to Experience',
       nicknameDescription: 'This is the name that will be displayed on your profile',
+      updateProfile: 'Update Profile with This Information',
       previewCheckButton: '',
       previewAdvice: 'Please check preview with the button above before saving',
       selectPrefecturesWithCount: 'Select Prefectures',
@@ -1943,6 +1946,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperience: '공유하고 싶은 일본 문화',
       cultureExperienceWant: '체험하고 싶은 일본 문화',
       nicknameDescription: '프로필에 표시될 이름입니다',
+      updateProfile: '이 내용으로 프로필 업데이트',
       previewCheckButton: '',
       previewAdvice: '위 버튼으로 미리보기를 확인한 후 저장해 주세요',
       selectPrefecturesWithCount: '도도부현 선택',
@@ -2546,6 +2550,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       cultureExperience: '想分享的日本文化',
       cultureExperienceWant: '想體驗的日本文化',
       nicknameDescription: '這是將在您的個人資料上顯示的名稱',
+      updateProfile: '使用此信息更新個人檔案',
       previewCheckButton: '',
       previewAdvice: '請用上方按鈕確認預覽後再儲存',
       selectPrefecturesWithCount: '選擇都道府縣',
