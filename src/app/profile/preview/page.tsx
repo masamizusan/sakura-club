@@ -474,7 +474,7 @@ function ProfilePreviewContent() {
                 {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
                   <div className="flex items-start">
                     <span className="font-medium text-gray-700 w-20">{t('profile.plannedDestination')}:</span>
-                    <span className="text-gray-600">{planned_prefectures.map(pref => getPrefectureLabel(pref, t)).join(', ')}</span>
+                    <span className="text-gray-600">{planned_prefectures.map((pref: string) => getPrefectureLabel(pref, t)).join(', ')}</span>
                   </div>
                 )}
 
