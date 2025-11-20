@@ -97,7 +97,8 @@
     "birthDatePrivacy": "年龄将公开显示，但出生日期保密",
     "selfIntroPlaceholder": "介绍一下自己、兴趣爱好以及您在寻找什么...",
     "selfIntroNote": "这是别人对您的第一印象",
-    "nicknameDescription": "这是别人看到的您的称呼"
+    "nicknameDescription": "这是别人看到的您的称呼",
+    "updateProfile": "使用此信息更新個人檔案"
   },
   "matching": {
     "title": "推荐匹配",
@@ -317,10 +318,10 @@
     "after": "年以後"
   },
   "seasons": {
-    "spring": "年春季 (3-5月)",
-    "summer": "年夏季 (6-8月)",
-    "autumn": "年秋季 (9-11月)",
-    "winter": "年冬季 (12-2月)"
+    "spring": "春季 (3-5月)",
+    "summer": "夏季 (6-8月)",
+    "autumn": "秋季 (9-11月)",
+    "winter": "冬季 (12-2月)"
   },
   "levels": {
     "none": "不填寫",
@@ -348,6 +349,19 @@
     "friend": "與朋友",
     "family": "與家人",
     "partner": "與伴侶"
+  },
+  "nationalities": {
+    "canada": "加拿大",
+    "usa": "美國",
+    "uk": "英國",
+    "australia": "澳洲",
+    "germany": "德國",
+    "france": "法國",
+    "italy": "義大利",
+    "spain": "西班牙",
+    "korea": "韓國",
+    "china": "中國",
+    "other": "其他"
   },
   "occupations": {
     "noEntry": "不填寫",

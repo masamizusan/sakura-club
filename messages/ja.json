@@ -143,6 +143,7 @@
     "cultureExperience": "共有したい日本文化",
     "cultureExperienceWant": "体験したい日本文化",
     "nicknameDescription": "プロフィールに表示される名前です",
+    "updateProfile": "この内容でプロフィールを更新する",
     "previewCheckButton": "",
     "previewAdvice": "上のボタンでプレビューを確認してから保存してください",
     "selectPrefecturesWithCount": "都道府県を選択"
@@ -401,6 +402,19 @@
     "friend": "友人と",
     "family": "家族と",
     "partner": "パートナーと"
+  },
+  "nationalities": {
+    "canada": "カナダ",
+    "usa": "アメリカ",
+    "uk": "イギリス",
+    "australia": "オーストラリア",
+    "germany": "ドイツ",
+    "france": "フランス",
+    "italy": "イタリア",
+    "spain": "スペイン",
+    "korea": "韓国",
+    "china": "中国",
+    "other": "その他"
   },
   "occupations": {
     "noEntry": "記入しない",

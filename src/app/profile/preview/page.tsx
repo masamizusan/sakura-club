@@ -169,6 +169,24 @@ const getCultureLabel = (value: string, t: any): string => {
   return cultureLabels[value] || value
 }
 
+// 国籍の表示を多言語対応で変換するヘルパー関数
+const getNationalityLabel = (value: string, t: any): string => {
+  const nationalityLabels: Record<string, string> = {
+    'カナダ': t('nationalities.canada'),
+    'アメリカ': t('nationalities.usa'),
+    'イギリス': t('nationalities.uk'),
+    'オーストラリア': t('nationalities.australia'),
+    'ドイツ': t('nationalities.germany'),
+    'フランス': t('nationalities.france'),
+    'イタリア': t('nationalities.italy'),
+    'スペイン': t('nationalities.spain'),
+    '韓国': t('nationalities.korea'),
+    '中国': t('nationalities.china'),
+    'その他': t('nationalities.other')
+  }
+  return nationalityLabels[value] || value
+}
+
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -375,7 +393,7 @@ function ProfilePreviewContent() {
                 {gender === 'male' && nationality && nationality !== '日本' && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">{t('profile.nationality')}:</span>
-                    <span className="text-gray-600">{nationality}</span>
+                    <span className="text-gray-600">{getNationalityLabel(nationality, t)}</span>
                   </div>
                 )}
                 {gender === 'female' && prefecture && (
@@ -768,7 +786,7 @@ function ProfilePreviewContent() {
                     }
                   }}
                 >
-                  この内容でプロフィールを更新する
+                  {t('profile.updateProfile')}
                 </Button>
               </div>
 

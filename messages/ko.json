@@ -97,7 +97,8 @@
     "birthDatePrivacy": "나이는 공개되지만 생년월일은 비공개입니다",
     "selfIntroPlaceholder": "자신과 관심사, 찾고 있는 것에 대해 소개해 주세요...",
     "selfIntroNote": "다른 사람들이 가장 먼저 보게 될 내용입니다",
-    "nicknameDescription": "다른 사람들에게 보여질 이름입니다"
+    "nicknameDescription": "다른 사람들에게 보여질 이름입니다",
+    "updateProfile": "이 내용으로 프로필 업데이트"
   },
   "matching": {
     "title": "추천 매칭",
@@ -317,10 +318,10 @@
     "after": "년 이후"
   },
   "seasons": {
-    "spring": "년 봄 (3-5월)",
-    "summer": "년 여름 (6-8월)",
-    "autumn": "년 가을 (9-11월)",
-    "winter": "년 겨울 (12-2월)"
+    "spring": "봄 (3-5월)",
+    "summer": "여름 (6-8월)",
+    "autumn": "가을 (9-11월)",
+    "winter": "겨울 (12-2월)"
   },
   "levels": {
     "none": "기입하지 않음",
@@ -348,6 +349,19 @@
     "friend": "친구와 함께",
     "family": "가족과 함께",
     "partner": "파트너와 함께"
+  },
+  "nationalities": {
+    "canada": "캐나다",
+    "usa": "미국",
+    "uk": "영국",
+    "australia": "호주",
+    "germany": "독일",
+    "france": "프랑스",
+    "italy": "이탈리아",
+    "spain": "스페인",
+    "korea": "한국",
+    "china": "중국",
+    "other": "기타"
   },
   "occupations": {
     "noEntry": "기입하지 않음",
