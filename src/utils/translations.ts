@@ -192,38 +192,6 @@ type TranslationKeys = {
     partner: string
   }
 
-  // 国籍
-  nationalities: {
-    canada: string
-    usa: string
-    uk: string
-    australia: string
-    germany: string
-    france: string
-    italy: string
-    spain: string
-    korea: string
-    china: string
-    other: string
-  }
-
-  // 日本文化
-  culture: {
-    tea: string
-    teaCeremony: string
-    calligraphy: string
-    ikebana: string
-    kimono: string
-    martialArts: string
-    zen: string
-    jpop: string
-    anime: string
-    manga: string
-    japaneseCuisine: string
-    games: string
-    other: string
-  }
-
   // 性別
   gender: {
     male: string
@@ -880,36 +848,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       family: '家族と',
       partner: 'パートナーと'
     },
-
-    nationalities: {
-      canada: 'カナダ',
-      usa: 'アメリカ',
-      uk: 'イギリス',
-      australia: 'オーストラリア',
-      germany: 'ドイツ',
-      france: 'フランス',
-      italy: 'イタリア',
-      spain: 'スペイン',
-      korea: '韓国',
-      china: '中国',
-      other: 'その他'
-    },
-
-    culture: {
-      tea: 'お茶',
-      teaCeremony: '茶道',
-      calligraphy: '書道',
-      ikebana: '華道',
-      kimono: '着物',
-      martialArts: '武道',
-      zen: '禅',
-      jpop: 'J-POP',
-      anime: 'アニメ',
-      manga: 'マンガ',
-      japaneseCuisine: '日本料理',
-      games: 'ゲーム',
-      other: 'その他'
-    },
     gender: {
       male: '男性',
       female: '女性'
@@ -1523,36 +1461,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       family: 'With family',
       partner: 'With partner'
     },
-
-    nationalities: {
-      canada: 'Canada',
-      usa: 'United States',
-      uk: 'United Kingdom',
-      australia: 'Australia',
-      germany: 'Germany',
-      france: 'France',
-      italy: 'Italy',
-      spain: 'Spain',
-      korea: 'South Korea',
-      china: 'China',
-      other: 'Other'
-    },
-
-    culture: {
-      tea: 'Tea',
-      teaCeremony: 'Tea Ceremony',
-      calligraphy: 'Calligraphy',
-      ikebana: 'Ikebana',
-      kimono: 'Kimono',
-      martialArts: 'Martial Arts',
-      zen: 'Zen',
-      jpop: 'J-POP',
-      anime: 'Anime',
-      manga: 'Manga',
-      japaneseCuisine: 'Japanese Cuisine',
-      games: 'Games',
-      other: 'Other'
-    },
     gender: {
       male: 'Male',
       female: 'Female'
@@ -2165,36 +2073,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       family: '가족과',
       partner: '파트너와'
     },
-
-    nationalities: {
-      canada: '캐나다',
-      usa: '미국',
-      uk: '영국',
-      australia: '호주',
-      germany: '독일',
-      france: '프랑스',
-      italy: '이탈리아',
-      spain: '스페인',
-      korea: '한국',
-      china: '중국',
-      other: '기타'
-    },
-
-    culture: {
-      tea: '차',
-      teaCeremony: '다도',
-      calligraphy: '서예',
-      ikebana: '꽃꽂이',
-      kimono: '기모노',
-      martialArts: '무도',
-      zen: '선',
-      jpop: 'J-POP',
-      anime: '애니메이션',
-      manga: '만화',
-      japaneseCuisine: '일본 요리',
-      games: '게임',
-      other: '기타'
-    },
     gender: {
       male: '남성',
       female: '여성'
@@ -2789,7 +2667,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       year2024: '2024年',
       year2025: '2025年',
       beyond2025: '2025年以後',
-      beyond2026: '2026年以後'
+      beyond2026: '2026年以後',
+      after: '年以後'
     },
     companion: {
       noEntry: '不填寫',
@@ -2804,36 +2683,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       summer: '夏季 (6-8月)',
       autumn: '秋季 (9-11月)',
       winter: '冬季 (12-2月)'
-    },
-
-    nationalities: {
-      canada: '加拿大',
-      usa: '美國',
-      uk: '英國',
-      australia: '澳洲',
-      germany: '德國',
-      france: '法國',
-      italy: '義大利',
-      spain: '西班牙',
-      korea: '韓國',
-      china: '中國',
-      other: '其他'
-    },
-
-    culture: {
-      tea: '茶',
-      teaCeremony: '茶道',
-      calligraphy: '書法',
-      ikebana: '插花',
-      kimono: '和服',
-      martialArts: '武道',
-      zen: '禪',
-      jpop: '日本流行音樂',
-      anime: '動漫',
-      manga: '漫畫',
-      japaneseCuisine: '日本料理',
-      games: '遊戲',
-      other: '其他'
     },
     gender: {
       male: '男性',
