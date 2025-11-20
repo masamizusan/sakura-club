@@ -78,6 +78,7 @@ const getOccupationLabel = (value: string, t: any): string => {
 // 性格の表示を多言語対応で変換するヘルパー関数
 const getPersonalityLabel = (value: string, t: any): string => {
   const personalityLabels: Record<string, string> = {
+    // 日本語マッピング
     '優しい': t('personality.gentle'),
     '穏やか': t('personality.calm'),
     '寂しがりや': t('personality.lonely'),
@@ -90,7 +91,65 @@ const getPersonalityLabel = (value: string, t: any): string => {
     '親しみやすい': t('personality.friendly'),
     '面倒見が良い': t('personality.helpful'),
     '気が利く': t('personality.considerate'),
-    '責任感がある': t('personality.responsible')
+    '責任感がある': t('personality.responsible'),
+    '決断力がある': t('personality.decisive'),
+    '社交的': t('personality.sociable'),
+    '負けず嫌い': t('personality.competitive'),
+    '熱血': t('personality.passionate'),
+    'インドア': t('personality.indoor'),
+    'アクティブ': t('personality.active'),
+    '知的': t('personality.intellectual'),
+    '几帳面': t('personality.meticulous'),
+    '楽観的': t('personality.optimistic'),
+    'シャイ': t('personality.shy'),
+    'マメ': t('personality.attentive'),
+    'さわやか': t('personality.refreshing'),
+    '天然': t('personality.natural'),
+    'マイペース': t('personality.ownPace'),
+    // 英語キー形式マッピング
+    'gentle': t('personality.gentle'),
+    'calm': t('personality.calm'),
+    'lonely': t('personality.lonely'),
+    'composed': t('personality.composed'),
+    'caring': t('personality.caring'),
+    'humble': t('personality.humble'),
+    'cool': t('personality.cool'),
+    'honest': t('personality.honest'),
+    'bright': t('personality.bright'),
+    'friendly': t('personality.friendly'),
+    'helpful': t('personality.helpful'),
+    'considerate': t('personality.considerate'),
+    'responsible': t('personality.responsible'),
+    'decisive': t('personality.decisive'),
+    'sociable': t('personality.sociable'),
+    'competitive': t('personality.competitive'),
+    'passionate': t('personality.passionate'),
+    'indoor': t('personality.indoor'),
+    'active': t('personality.active'),
+    'intellectual': t('personality.intellectual'),
+    'meticulous': t('personality.meticulous'),
+    'optimistic': t('personality.optimistic'),
+    'shy': t('personality.shy'),
+    'attentive': t('personality.attentive'),
+    'refreshing': t('personality.refreshing'),
+    'natural': t('personality.natural'),
+    'ownPace': t('personality.ownPace'),
+    // 大文字英語マッピング
+    'Gentle': t('personality.gentle'),
+    'Calm': t('personality.calm'),
+    'Lonely': t('personality.lonely'),
+    'Composed': t('personality.composed'),
+    'Caring': t('personality.caring'),
+    'Humble': t('personality.humble'),
+    'Cool': t('personality.cool'),
+    'Honest': t('personality.honest'),
+    'Bright': t('personality.bright'),
+    'Friendly': t('personality.friendly'),
+    'Helpful': t('personality.helpful'),
+    'Considerate': t('personality.considerate'),
+    'Responsible': t('personality.responsible'),
+    'Decisive': t('personality.decisive'),
+    'Sociable': t('personality.sociable')
   }
   return personalityLabels[value] || value
 }
@@ -173,6 +232,15 @@ const getCultureLabel = (value: string, t: any): string => {
     '盆栽': t('culture.bonsai'),
     '神社仏閣': t('culture.shrinesTemples'),
     '御朱印集め': t('culture.sealCollection'),
+    // 食べ物系日本文化
+    '寿司': t('culture.sushi'),
+    '天ぷら': t('culture.tempura'),
+    'うなぎ': t('culture.unagi'),
+    '牛丼': t('culture.gyudon'),
+    'とんかつ': t('culture.tonkatsu'),
+    'ラーメン': t('culture.ramen'),
+    'お好み焼き': t('culture.okonomiyaki'),
+    'たこ焼き': t('culture.takoyaki'),
     // 英語キー形式のマッピング
     'tea': t('culture.tea'),
     'teaCeremony': t('culture.teaCeremony'),
@@ -207,6 +275,23 @@ const getCultureLabel = (value: string, t: any): string => {
     'Shrines & Temples': t('culture.shrinesTemples'),
     'sealCollection': t('culture.sealCollection'),
     'Temple Seal Collection': t('culture.sealCollection'),
+    // 英語版食べ物系文化
+    'sushi': t('culture.sushi'),
+    'Sushi': t('culture.sushi'),
+    'tempura': t('culture.tempura'),
+    'Tempura': t('culture.tempura'),
+    'unagi': t('culture.unagi'),
+    'Unagi': t('culture.unagi'),
+    'gyudon': t('culture.gyudon'),
+    'Gyudon': t('culture.gyudon'),
+    'tonkatsu': t('culture.tonkatsu'),
+    'Tonkatsu': t('culture.tonkatsu'),
+    'ramen': t('culture.ramen'),
+    'Ramen': t('culture.ramen'),
+    'okonomiyaki': t('culture.okonomiyaki'),
+    'Okonomiyaki': t('culture.okonomiyaki'),
+    'takoyaki': t('culture.takoyaki'),
+    'Takoyaki': t('culture.takoyaki'),
     // プレフィックス付きキー（culture.の対応）
     'culture.tea': t('culture.tea'),
     'culture.teaCeremony': t('culture.teaCeremony'),
@@ -227,7 +312,16 @@ const getCultureLabel = (value: string, t: any): string => {
     'culture.origami': t('culture.origami'),
     'culture.bonsai': t('culture.bonsai'),
     'culture.shrinesTemples': t('culture.shrinesTemples'),
-    'culture.sealCollection': t('culture.sealCollection')
+    'culture.sealCollection': t('culture.sealCollection'),
+    // プレフィックス付き食べ物系
+    'culture.sushi': t('culture.sushi'),
+    'culture.tempura': t('culture.tempura'),
+    'culture.unagi': t('culture.unagi'),
+    'culture.gyudon': t('culture.gyudon'),
+    'culture.tonkatsu': t('culture.tonkatsu'),
+    'culture.ramen': t('culture.ramen'),
+    'culture.okonomiyaki': t('culture.okonomiyaki'),
+    'culture.takoyaki': t('culture.takoyaki')
   }
   return cultureLabels[value] || value
 }
