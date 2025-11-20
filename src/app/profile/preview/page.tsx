@@ -57,12 +57,22 @@ const getTravelCompanionLabel = (value: string, t: any): string => {
   return companionLabels[value] || value
 }
 
-// 職業の表示を性別に応じて調整するヘルパー関数
-const getOccupationLabel = (value: string, isMale: boolean): string => {
-  if (value === '主婦、主夫' || value === '主婦' || value === '主夫') {
-    return isMale ? '主夫' : '主婦'
+// 職業の表示を多言語対応で変換するヘルパー関数
+const getOccupationLabel = (value: string, t: any): string => {
+  const occupationLabels: Record<string, string> = {
+    'noEntry': t('occupations.noEntry'),
+    '経営者・役員': t('occupations.executiveManager'),
+    '会社員': t('occupations.companyEmployee'),
+    '公務員': t('occupations.publicServant'),
+    '自営業': t('occupations.selfEmployed'),
+    'フリーランス': t('occupations.freelance'),
+    '学生': t('occupations.student'),
+    '主婦': t('occupations.housewife'),
+    '主夫': t('occupations.houseHusband'),
+    '主婦、主夫': t('occupations.housewife'),
+    'その他': t('occupations.other')
   }
-  return value
+  return occupationLabels[value] || value
 }
 
 function ProfilePreviewContent() {
@@ -285,7 +295,7 @@ function ProfilePreviewContent() {
                 {shouldDisplayValue(occupation) && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">{t('profile.occupation')}:</span>
-                    <span className="text-gray-600">{getOccupationLabel(occupation, gender === 'male')}</span>
+                    <span className="text-gray-600">{getOccupationLabel(occupation, t)}</span>
                   </div>
                 )}
                 
@@ -340,20 +350,15 @@ function ProfilePreviewContent() {
                         // beyond-YYYY 形式の処理
                         if (visit_schedule.startsWith('beyond-')) {
                           const year = visit_schedule.split('-')[1];
-                          return `${year}年以降`;
+                          return `${t('schedule.after')} ${year}`;
                         }
 
                         // YYYY-season 形式の処理
                         const match = visit_schedule.match(/^(\d{4})-(spring|summer|autumn|winter)$/);
                         if (match) {
                           const [, year, season] = match;
-                          const seasonLabels: Record<string, string> = {
-                            spring: '春（3-5月）',
-                            summer: '夏（6-8月）',
-                            autumn: '秋（9-11月）',
-                            winter: '冬（12-2月）'
-                          };
-                          return `${year}年${seasonLabels[season] || season}`;
+                          const seasonKey = `seasons.${season}`;
+                          return `${year} ${t(seasonKey)}`;
                         }
 
                         // フォールバック：そのまま表示

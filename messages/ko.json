@@ -313,7 +313,14 @@
     "year2024": "2024년",
     "year2025": "2025년",
     "beyond2025": "2025년 이후",
-    "beyond2026": "2026년 이후"
+    "beyond2026": "2026년 이후",
+    "after": "년 이후"
+  },
+  "seasons": {
+    "spring": "년 봄 (3-5월)",
+    "summer": "년 여름 (6-8월)",
+    "autumn": "년 가을 (9-11월)",
+    "winter": "년 겨울 (12-2월)"
   },
   "levels": {
     "none": "기입하지 않음",
@@ -341,6 +348,18 @@
     "friend": "친구와 함께",
     "family": "가족과 함께",
     "partner": "파트너와 함께"
+  },
+  "occupations": {
+    "noEntry": "기입하지 않음",
+    "executiveManager": "경영진/임원",
+    "companyEmployee": "회사원",
+    "publicServant": "공무원",
+    "selfEmployed": "자영업",
+    "freelance": "프리랜서",
+    "student": "학생",
+    "housewife": "주부",
+    "houseHusband": "주부(남성)",
+    "other": "기타"
   },
   "placeholders": {
     "nickname": "닉네임을 입력하세요",

@@ -313,7 +313,14 @@
     "year2024": "2024年",
     "year2025": "2025年",
     "beyond2025": "2025年以後",
-    "beyond2026": "2026年以後"
+    "beyond2026": "2026年以後",
+    "after": "年以後"
+  },
+  "seasons": {
+    "spring": "年春季 (3-5月)",
+    "summer": "年夏季 (6-8月)",
+    "autumn": "年秋季 (9-11月)",
+    "winter": "年冬季 (12-2月)"
   },
   "levels": {
     "none": "不填寫",
@@ -341,6 +348,18 @@
     "friend": "與朋友",
     "family": "與家人",
     "partner": "與伴侶"
+  },
+  "occupations": {
+    "noEntry": "不填寫",
+    "executiveManager": "經營者/主管",
+    "companyEmployee": "公司職員",
+    "publicServant": "公務員",
+    "selfEmployed": "自營業",
+    "freelance": "自由工作者",
+    "student": "學生",
+    "housewife": "主婦",
+    "houseHusband": "主夫",
+    "other": "其他"
   },
   "placeholders": {
     "nickname": "输入您的昵称",

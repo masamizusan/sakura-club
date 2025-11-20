@@ -313,7 +313,14 @@
     "year2024": "2024",
     "year2025": "2025",
     "beyond2025": "After 2025",
-    "beyond2026": "After 2026"
+    "beyond2026": "After 2026",
+    "after": "After"
+  },
+  "seasons": {
+    "spring": "Spring (Mar-May)",
+    "summer": "Summer (Jun-Aug)",
+    "autumn": "Autumn (Sep-Nov)",
+    "winter": "Winter (Dec-Feb)"
   },
   "levels": {
     "none": "Not specified",
@@ -341,6 +348,18 @@
     "friend": "With friends",
     "family": "With family",
     "partner": "With partner"
+  },
+  "occupations": {
+    "noEntry": "Not specified",
+    "executiveManager": "Executive/Manager",
+    "companyEmployee": "Company Employee",
+    "publicServant": "Public Servant",
+    "selfEmployed": "Self-employed",
+    "freelance": "Freelancer",
+    "student": "Student",
+    "housewife": "Housewife",
+    "houseHusband": "House Husband",
+    "other": "Other"
   },
   "placeholders": {
     "nickname": "Enter your nickname",
