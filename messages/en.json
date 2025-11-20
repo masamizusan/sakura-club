@@ -361,6 +361,36 @@
     "houseHusband": "House Husband",
     "other": "Other"
   },
+  "personality": {
+    "gentle": "Gentle",
+    "calm": "Calm",
+    "lonely": "Sociable",
+    "composed": "Composed",
+    "caring": "Caring",
+    "humble": "Humble",
+    "cool": "Cool-headed",
+    "honest": "Honest",
+    "bright": "Bright",
+    "friendly": "Friendly",
+    "helpful": "Helpful",
+    "considerate": "Considerate",
+    "responsible": "Responsible"
+  },
+  "prefectures": {
+    "tokyo": "Tokyo",
+    "kanagawa": "Kanagawa",
+    "osaka": "Osaka",
+    "kyoto": "Kyoto",
+    "hokkaido": "Hokkaido"
+  },
+  "culture": {
+    "zen": "Zen",
+    "teaCeremony": "Tea Ceremony", 
+    "calligraphy": "Calligraphy",
+    "anime": "Anime",
+    "manga": "Manga",
+    "other": "Other"
+  },
   "placeholders": {
     "nickname": "Enter your nickname",
     "selectNationality": "Select nationality",
