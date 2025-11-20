@@ -172,6 +172,15 @@ type TranslationKeys = {
     year2025: string
     beyond2025: string
     beyond2026: string
+    after: string
+  }
+
+  // 季節
+  seasons: {
+    spring: string
+    summer: string
+    autumn: string
+    winter: string
   }
 
   // 同行者
@@ -181,6 +190,38 @@ type TranslationKeys = {
     friend: string
     family: string
     partner: string
+  }
+
+  // 国籍
+  nationalities: {
+    canada: string
+    usa: string
+    uk: string
+    australia: string
+    germany: string
+    france: string
+    italy: string
+    spain: string
+    korea: string
+    china: string
+    other: string
+  }
+
+  // 日本文化
+  culture: {
+    tea: string
+    teaCeremony: string
+    calligraphy: string
+    ikebana: string
+    kimono: string
+    martialArts: string
+    zen: string
+    jpop: string
+    anime: string
+    manga: string
+    japaneseCuisine: string
+    games: string
+    other: string
   }
 
   // 性別
@@ -822,7 +863,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       year2024: '2024年',
       year2025: '2025年',
       beyond2025: '2025年以降',
-      beyond2026: '2026年以降'
+      beyond2026: '2026年以降',
+      after: '以降'
+    },
+
+    seasons: {
+      spring: '春（3-5月）',
+      summer: '夏（6-8月）',
+      autumn: '秋（9-11月）',
+      winter: '冬（12-2月）'
     },
     companion: {
       noEntry: '記入しない',
@@ -830,6 +879,36 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       friend: '友人と',
       family: '家族と',
       partner: 'パートナーと'
+    },
+
+    nationalities: {
+      canada: 'カナダ',
+      usa: 'アメリカ',
+      uk: 'イギリス',
+      australia: 'オーストラリア',
+      germany: 'ドイツ',
+      france: 'フランス',
+      italy: 'イタリア',
+      spain: 'スペイン',
+      korea: '韓国',
+      china: '中国',
+      other: 'その他'
+    },
+
+    culture: {
+      tea: 'お茶',
+      teaCeremony: '茶道',
+      calligraphy: '書道',
+      ikebana: '華道',
+      kimono: '着物',
+      martialArts: '武道',
+      zen: '禅',
+      jpop: 'J-POP',
+      anime: 'アニメ',
+      manga: 'マンガ',
+      japaneseCuisine: '日本料理',
+      games: 'ゲーム',
+      other: 'その他'
     },
     gender: {
       male: '男性',
@@ -1427,7 +1506,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       year2024: '2024',
       year2025: '2025',
       beyond2025: '2025 or later',
-      beyond2026: '2026 or later'
+      beyond2026: '2026 or later',
+      after: 'After'
+    },
+
+    seasons: {
+      spring: 'Spring (Mar-May)',
+      summer: 'Summer (Jun-Aug)',
+      autumn: 'Autumn (Sep-Nov)',
+      winter: 'Winter (Dec-Feb)'
     },
     companion: {
       noEntry: 'Not specified',
@@ -1435,6 +1522,36 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       friend: 'With friends',
       family: 'With family',
       partner: 'With partner'
+    },
+
+    nationalities: {
+      canada: 'Canada',
+      usa: 'United States',
+      uk: 'United Kingdom',
+      australia: 'Australia',
+      germany: 'Germany',
+      france: 'France',
+      italy: 'Italy',
+      spain: 'Spain',
+      korea: 'South Korea',
+      china: 'China',
+      other: 'Other'
+    },
+
+    culture: {
+      tea: 'Tea',
+      teaCeremony: 'Tea Ceremony',
+      calligraphy: 'Calligraphy',
+      ikebana: 'Ikebana',
+      kimono: 'Kimono',
+      martialArts: 'Martial Arts',
+      zen: 'Zen',
+      jpop: 'J-POP',
+      anime: 'Anime',
+      manga: 'Manga',
+      japaneseCuisine: 'Japanese Cuisine',
+      games: 'Games',
+      other: 'Other'
     },
     gender: {
       male: 'Male',
@@ -2031,7 +2148,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       year2024: '2024년',
       year2025: '2025년',
       beyond2025: '2025년 이후',
-      beyond2026: '2026년 이후'
+      beyond2026: '2026년 이후',
+      after: '년 이후'
+    },
+
+    seasons: {
+      spring: '봄 (3-5월)',
+      summer: '여름 (6-8월)',
+      autumn: '가을 (9-11월)',
+      winter: '겨울 (12-2월)'
     },
     companion: {
       noEntry: '기입하지 않음',
@@ -2039,6 +2164,36 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       friend: '친구와',
       family: '가족과',
       partner: '파트너와'
+    },
+
+    nationalities: {
+      canada: '캐나다',
+      usa: '미국',
+      uk: '영국',
+      australia: '호주',
+      germany: '독일',
+      france: '프랑스',
+      italy: '이탈리아',
+      spain: '스페인',
+      korea: '한국',
+      china: '중국',
+      other: '기타'
+    },
+
+    culture: {
+      tea: '차',
+      teaCeremony: '다도',
+      calligraphy: '서예',
+      ikebana: '꽃꽂이',
+      kimono: '기모노',
+      martialArts: '무도',
+      zen: '선',
+      jpop: 'J-POP',
+      anime: '애니메이션',
+      manga: '만화',
+      japaneseCuisine: '일본 요리',
+      games: '게임',
+      other: '기타'
     },
     gender: {
       male: '남성',
@@ -2642,6 +2797,43 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       friend: '與朋友',
       family: '與家人',
       partner: '與伴侶'
+    },
+
+    seasons: {
+      spring: '春季 (3-5月)',
+      summer: '夏季 (6-8月)',
+      autumn: '秋季 (9-11月)',
+      winter: '冬季 (12-2月)'
+    },
+
+    nationalities: {
+      canada: '加拿大',
+      usa: '美國',
+      uk: '英國',
+      australia: '澳洲',
+      germany: '德國',
+      france: '法國',
+      italy: '義大利',
+      spain: '西班牙',
+      korea: '韓國',
+      china: '中國',
+      other: '其他'
+    },
+
+    culture: {
+      tea: '茶',
+      teaCeremony: '茶道',
+      calligraphy: '書法',
+      ikebana: '插花',
+      kimono: '和服',
+      martialArts: '武道',
+      zen: '禪',
+      jpop: '日本流行音樂',
+      anime: '動漫',
+      manga: '漫畫',
+      japaneseCuisine: '日本料理',
+      games: '遊戲',
+      other: '其他'
     },
     gender: {
       male: '男性',
