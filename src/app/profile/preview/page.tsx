@@ -481,7 +481,6 @@ const getCultureLabel = (value: string, t: any): string => {
     'JapaneseGames': t('culture.japaneseGames'),
     'Jpop': t('culture.jpop'),
     'JPOP': t('culture.jpop'),
-    'J-POP': t('culture.jpop'),
     'Karaoke': t('culture.karaoke'),
     'JapaneseMov': t('culture.japaneseMov'),
     'Drama': t('culture.drama'),
