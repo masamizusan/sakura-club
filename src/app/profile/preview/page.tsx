@@ -27,13 +27,13 @@ const getBodyTypeLabel = (value: string, t: any): string => {
 // 言語レベルの英語値を多言語対応で変換するヘルパー関数
 const getLanguageLevelLabel = (value: string, t: any): string => {
   const levelLabels: Record<string, string> = {
-    'none': t('languageLevel.none'),
-    'beginner': t('languageLevel.beginner'),
-    'elementary': t('languageLevel.elementary'),
-    'intermediate': t('languageLevel.intermediate'),
-    'upperIntermediate': t('languageLevel.upperIntermediate'),
-    'advanced': t('languageLevel.advanced'),
-    'native': t('languageLevel.native')
+    'none': t('levels.none'),
+    'beginner': t('levels.beginner'),
+    'elementary': t('levels.elementary'),
+    'intermediate': t('levels.intermediate'),
+    'upperIntermediate': t('levels.upperIntermediate'),
+    'advanced': t('levels.advanced'),
+    'native': t('levels.native')
   }
   return levelLabels[value] || value
 }

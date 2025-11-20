@@ -315,6 +315,15 @@
     "beyond2025": "After 2025",
     "beyond2026": "After 2026"
   },
+  "levels": {
+    "none": "Not specified",
+    "beginner": "Beginner (Difficult for daily conversation)",
+    "elementary": "Elementary (Basic daily conversation possible)",
+    "intermediate": "Intermediate (No problem with daily conversation)",
+    "upperIntermediate": "Upper Intermediate (Can understand complex topics)",
+    "advanced": "Advanced (Fluent conversation)",
+    "native": "Native level"
+  },
   "placeholders": {
     "nickname": "Enter your nickname",
     "selectNationality": "Select nationality",

@@ -315,6 +315,15 @@
     "beyond2025": "2025年以後",
     "beyond2026": "2026年以後"
   },
+  "levels": {
+    "none": "不填寫",
+    "beginner": "初級（日常對話困難）",
+    "elementary": "初中級（基本日常對話可能）",
+    "intermediate": "中級（日常對話沒問題）",
+    "upperIntermediate": "中上級（能理解複雜話題）",
+    "advanced": "高級（流利對話）",
+    "native": "母語水準"
+  },
   "placeholders": {
     "nickname": "输入您的昵称",
     "selectNationality": "选择国籍",

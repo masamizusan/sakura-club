@@ -315,6 +315,15 @@
     "beyond2025": "2025년 이후",
     "beyond2026": "2026년 이후"
   },
+  "levels": {
+    "none": "기입하지 않음",
+    "beginner": "초급 (일상회화 어려움)",
+    "elementary": "초중급 (기본적인 일상회화 가능)",
+    "intermediate": "중급 (일상회화는 문제없음)",
+    "upperIntermediate": "중상급 (복잡한 주제도 이해 가능)",
+    "advanced": "고급 (유창하게 대화 가능)",
+    "native": "네이티브 수준"
+  },
   "placeholders": {
     "nickname": "닉네임을 입력하세요",
     "selectNationality": "국적 선택",
