@@ -75,6 +75,100 @@ const getOccupationLabel = (value: string, t: any): string => {
   return occupationLabels[value] || value
 }
 
+// 性格の表示を多言語対応で変換するヘルパー関数
+const getPersonalityLabel = (value: string, t: any): string => {
+  const personalityLabels: Record<string, string> = {
+    '優しい': t('personality.gentle'),
+    '穏やか': t('personality.calm'),
+    '寂しがりや': t('personality.lonely'),
+    '落ち着いている': t('personality.composed'),
+    '思いやりがある': t('personality.caring'),
+    '謙虚': t('personality.humble'),
+    '冷静': t('personality.cool'),
+    '素直': t('personality.honest'),
+    '明るい': t('personality.bright'),
+    '親しみやすい': t('personality.friendly'),
+    '面倒見が良い': t('personality.helpful'),
+    '気が利く': t('personality.considerate'),
+    '責任感がある': t('personality.responsible')
+  }
+  return personalityLabels[value] || value
+}
+
+// 都道府県の表示を多言語対応で変換するヘルパー関数
+const getPrefectureLabel = (value: string, t: any): string => {
+  const prefectureLabels: Record<string, string> = {
+    '北海道': t('prefectures.hokkaido'),
+    '青森県': t('prefectures.aomori'),
+    '岩手県': t('prefectures.iwate'),
+    '宮城県': t('prefectures.miyagi'),
+    '秋田県': t('prefectures.akita'),
+    '山形県': t('prefectures.yamagata'),
+    '福島県': t('prefectures.fukushima'),
+    '茨城県': t('prefectures.ibaraki'),
+    '栃木県': t('prefectures.tochigi'),
+    '群馬県': t('prefectures.gunma'),
+    '埼玉県': t('prefectures.saitama'),
+    '千葉県': t('prefectures.chiba'),
+    '東京都': t('prefectures.tokyo'),
+    '神奈川県': t('prefectures.kanagawa'),
+    '新潟県': t('prefectures.niigata'),
+    '富山県': t('prefectures.toyama'),
+    '石川県': t('prefectures.ishikawa'),
+    '福井県': t('prefectures.fukui'),
+    '山梨県': t('prefectures.yamanashi'),
+    '長野県': t('prefectures.nagano'),
+    '岐阜県': t('prefectures.gifu'),
+    '静岡県': t('prefectures.shizuoka'),
+    '愛知県': t('prefectures.aichi'),
+    '三重県': t('prefectures.mie'),
+    '滋賀県': t('prefectures.shiga'),
+    '京都府': t('prefectures.kyoto'),
+    '大阪府': t('prefectures.osaka'),
+    '兵庫県': t('prefectures.hyogo'),
+    '奈良県': t('prefectures.nara'),
+    '和歌山県': t('prefectures.wakayama'),
+    '鳥取県': t('prefectures.tottori'),
+    '島根県': t('prefectures.shimane'),
+    '岡山県': t('prefectures.okayama'),
+    '広島県': t('prefectures.hiroshima'),
+    '山口県': t('prefectures.yamaguchi'),
+    '徳島県': t('prefectures.tokushima'),
+    '香川県': t('prefectures.kagawa'),
+    '愛媛県': t('prefectures.ehime'),
+    '高知県': t('prefectures.kochi'),
+    '福岡県': t('prefectures.fukuoka'),
+    '佐賀県': t('prefectures.saga'),
+    '長崎県': t('prefectures.nagasaki'),
+    '熊本県': t('prefectures.kumamoto'),
+    '大分県': t('prefectures.oita'),
+    '宮崎県': t('prefectures.miyazaki'),
+    '鹿児島県': t('prefectures.kagoshima'),
+    '沖縄県': t('prefectures.okinawa')
+  }
+  return prefectureLabels[value] || value
+}
+
+// 日本文化の表示を多言語対応で変換するヘルパー関数
+const getCultureLabel = (value: string, t: any): string => {
+  const cultureLabels: Record<string, string> = {
+    'お茶': t('culture.tea'),
+    '茶道': t('culture.teaCeremony'),
+    '書道': t('culture.calligraphy'),
+    '華道': t('culture.ikebana'),
+    '着物': t('culture.kimono'),
+    '武道': t('culture.martialArts'),
+    '禅': t('culture.zen'),
+    'J-POP': t('culture.jpop'),
+    'アニメ': t('culture.anime'),
+    'マンガ': t('culture.manga'),
+    '日本料理': t('culture.japaneseCuisine'),
+    'ゲーム': t('culture.games'),
+    'その他': t('culture.other')
+  }
+  return cultureLabels[value] || value
+}
+
 function ProfilePreviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -380,7 +474,7 @@ function ProfilePreviewContent() {
                 {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
                   <div className="flex items-start">
                     <span className="font-medium text-gray-700 w-20">{t('profile.plannedDestination')}:</span>
-                    <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
+                    <span className="text-gray-600">{planned_prefectures.map(pref => getPrefectureLabel(pref, t)).join(', ')}</span>
                   </div>
                 )}
 
@@ -413,7 +507,7 @@ function ProfilePreviewContent() {
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
                       >
-                        {trait}
+                        {getPersonalityLabel(trait, t)}
                       </span>
                     ))}
                   </div>
@@ -432,7 +526,7 @@ function ProfilePreviewContent() {
                             key={index}
                             className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
                           >
-                            {hobby}
+                            {getCultureLabel(hobby, t)}
                           </span>
                         ))}
                       </div>
