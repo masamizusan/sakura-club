@@ -29,7 +29,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   prefecture: z.string().optional(),
   city: z.string().optional(),
   // 外国人男性向け新フィールド
-  planned_prefectures: z.array(z.string()).max(3, '行く予定の都道府県は3つまで選択できます').optional(),
+  planned_prefectures: z.array(z.string()).min(1, '行く予定の都道府県を1つ以上選択してください').max(3, '行く予定の都道府県は最大3つまで選択できます'),  // 必須項目に変更
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),
@@ -64,14 +64,14 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['nationality']
         }])
       }
-      // 行く予定の都道府県は任意項目のため、必須チェックを削除
-      // if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
-      //   throw new z.ZodError([{
-      //     code: z.ZodIssueCode.custom,
-      //     message: t('errors.prefecturesMinimum'),
-      //     path: ['planned_prefectures']
-      //   }])
-      // }
+      // 行く予定の都道府県は必須項目
+      if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: '行く予定の都道府県を1つ以上選択してください',
+          path: ['planned_prefectures']
+        }])
+      }
       return true
     })
   } else {
@@ -3553,8 +3553,9 @@ function ProfileEditContent() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('profile.plannedPrefectures')}
+                          <span className="text-red-500 ml-1">*</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">{t('profile.maxSelection')}</p>
+                        <p className="text-xs text-gray-500 mb-3">1つ以上選択してください（最大3つまで）</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="prefectures">
@@ -3726,7 +3727,7 @@ function ProfileEditContent() {
                         if (isForeignMale) {
                           if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
                           if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
-                            validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                            validationErrors.push('行く予定の都道府県を1つ以上選択してください')
                           }
                         } else {
                           // 日本人女性の場合
