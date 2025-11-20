@@ -97,7 +97,8 @@
     "birthDatePrivacy": "年龄将公开显示，但出生日期保密",
     "selfIntroPlaceholder": "介绍一下自己、兴趣爱好以及您在寻找什么...",
     "selfIntroNote": "这是别人对您的第一印象",
-    "nicknameDescription": "这是别人看到的您的称呼"
+    "nicknameDescription": "这是别人看到的您的称呼",
+    "yearsOld": "歲"
   },
   "matching": {
     "title": "推荐匹配",
@@ -323,6 +324,24 @@
     "upperIntermediate": "中上級（能理解複雜話題）",
     "advanced": "高級（流利對話）",
     "native": "母語水準"
+  },
+  "maritalStatus": {
+    "none": "不填寫",
+    "single": "未婚",
+    "married": "已婚"
+  },
+  "bodyType": {
+    "slim": "瘦",
+    "average": "普通",
+    "muscular": "肌肉型",
+    "plump": "豐滿"
+  },
+  "companion": {
+    "noEntry": "不填寫",
+    "alone": "獨自",
+    "friend": "與朋友",
+    "family": "與家人",
+    "partner": "與伴侶"
   },
   "placeholders": {
     "nickname": "输入您的昵称",

@@ -97,7 +97,8 @@
     "birthDatePrivacy": "나이는 공개되지만 생년월일은 비공개입니다",
     "selfIntroPlaceholder": "자신과 관심사, 찾고 있는 것에 대해 소개해 주세요...",
     "selfIntroNote": "다른 사람들이 가장 먼저 보게 될 내용입니다",
-    "nicknameDescription": "다른 사람들에게 보여질 이름입니다"
+    "nicknameDescription": "다른 사람들에게 보여질 이름입니다",
+    "yearsOld": "세"
   },
   "matching": {
     "title": "추천 매칭",
@@ -323,6 +324,24 @@
     "upperIntermediate": "중상급 (복잡한 주제도 이해 가능)",
     "advanced": "고급 (유창하게 대화 가능)",
     "native": "네이티브 수준"
+  },
+  "maritalStatus": {
+    "none": "기입하지 않음",
+    "single": "미혼",
+    "married": "기혼"
+  },
+  "bodyType": {
+    "slim": "슬림",
+    "average": "보통",
+    "muscular": "근육질",
+    "plump": "통통함"
+  },
+  "companion": {
+    "noEntry": "기입하지 않음",
+    "alone": "혼자서",
+    "friend": "친구와 함께",
+    "family": "가족과 함께",
+    "partner": "파트너와 함께"
   },
   "placeholders": {
     "nickname": "닉네임을 입력하세요",

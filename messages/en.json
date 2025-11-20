@@ -97,7 +97,8 @@
     "birthDatePrivacy": "Age will be displayed publicly, but date of birth will be kept private",
     "selfIntroPlaceholder": "Tell us about yourself, your interests, and what you're looking for...",
     "selfIntroNote": "This will be the first thing people see about you",
-    "nicknameDescription": "This is how others will see you"
+    "nicknameDescription": "This is how others will see you",
+    "yearsOld": " years old"
   },
   "matching": {
     "title": "Recommended Matches",
@@ -323,6 +324,24 @@
     "upperIntermediate": "Upper Intermediate (Can understand complex topics)",
     "advanced": "Advanced (Fluent conversation)",
     "native": "Native level"
+  },
+  "maritalStatus": {
+    "none": "Not specified",
+    "single": "Single",
+    "married": "Married"
+  },
+  "bodyType": {
+    "slim": "Slim",
+    "average": "Average",
+    "muscular": "Muscular",
+    "plump": "Plump"
+  },
+  "companion": {
+    "noEntry": "Not specified",
+    "alone": "Alone",
+    "friend": "With friends",
+    "family": "With family",
+    "partner": "With partner"
   },
   "placeholders": {
     "nickname": "Enter your nickname",
