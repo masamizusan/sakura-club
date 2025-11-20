@@ -97,8 +97,7 @@
     "birthDatePrivacy": "Age will be displayed publicly, but date of birth will be kept private",
     "selfIntroPlaceholder": "Tell us about yourself, your interests, and what you're looking for...",
     "selfIntroNote": "This will be the first thing people see about you",
-    "nicknameDescription": "This is how others will see you",
-    "yearsOld": " years old"
+    "nicknameDescription": "This is how others will see you"
   },
   "matching": {
     "title": "Recommended Matches",
