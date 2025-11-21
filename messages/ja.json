@@ -103,6 +103,7 @@
     "selectStations": "駅を選択",
     "selectedCount": "選択済み",
     "maxSelection": "まで選択できます",
+    "prefectureSelectionRule": "1つ以上選択してください（最大3つまで）",
     "gender": "性別",
     "birthDate": "生年月日",
     "occupation": "職業",

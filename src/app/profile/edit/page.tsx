@@ -3555,7 +3555,7 @@ function ProfileEditContent() {
                           {t('profile.plannedPrefectures')}
                           <span className="text-red-500 ml-1">*</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-3">1つ以上選択してください（最大3つまで）</p>
+                        <p className="text-xs text-gray-500 mb-3">{t('profile.prefectureSelectionRule')}</p>
 
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="prefectures">

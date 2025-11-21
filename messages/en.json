@@ -98,7 +98,8 @@
     "selfIntroPlaceholder": "Tell us about yourself, your interests, and what you're looking for...",
     "selfIntroNote": "This will be the first thing people see about you",
     "nicknameDescription": "This is how others will see you",
-    "updateProfile": "Update Profile with This Information"
+    "updateProfile": "Update Profile with This Information",
+    "prefectureSelectionRule": "Please select at least 1 (up to 3 prefectures)"
   },
   "matching": {
     "title": "Recommended Matches",

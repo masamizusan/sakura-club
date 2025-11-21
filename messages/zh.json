@@ -98,7 +98,8 @@
     "selfIntroPlaceholder": "介绍一下自己、兴趣爱好以及您在寻找什么...",
     "selfIntroNote": "这是别人对您的第一印象",
     "nicknameDescription": "这是别人看到的您的称呼",
-    "updateProfile": "使用此信息更新個人檔案"
+    "updateProfile": "使用此信息更新個人檔案",
+    "prefectureSelectionRule": "請選擇至少1個（最多3個都道府縣）"
   },
   "matching": {
     "title": "推荐匹配",

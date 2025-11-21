@@ -98,7 +98,8 @@
     "selfIntroPlaceholder": "자신과 관심사, 찾고 있는 것에 대해 소개해 주세요...",
     "selfIntroNote": "다른 사람들이 가장 먼저 보게 될 내용입니다",
     "nicknameDescription": "다른 사람들에게 보여질 이름입니다",
-    "updateProfile": "이 내용으로 프로필 업데이트"
+    "updateProfile": "이 내용으로 프로필 업데이트",
+    "prefectureSelectionRule": "최소 1개 이상 선택하세요 (최대 3개까지)"
   },
   "matching": {
     "title": "추천 매칭",
