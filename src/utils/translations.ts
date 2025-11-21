@@ -21,6 +21,7 @@ type TranslationKeys = {
     selectStations: string
     selectedCount: string
     maxSelection: string
+    prefectureSelectionRule: string
     gender: string
     birthDate: string
     prefecture: string
@@ -688,6 +689,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '駅を選択',
       selectedCount: '選択済み',
       maxSelection: 'まで選択できます',
+      prefectureSelectionRule: '1つ以上選択してください（最大3つまで）',
       gender: '性別',
       birthDate: '生年月日',
       prefecture: '都道府県',
@@ -1301,6 +1303,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: 'Select Stations',
       selectedCount: 'selected',
       maxSelection: 'can be selected',
+      prefectureSelectionRule: 'Please select at least 1 (up to 3 prefectures)',
       gender: 'Gender',
       birthDate: 'Date of Birth',
       prefecture: 'Prefecture',
@@ -1913,6 +1916,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '역 선택',
       selectedCount: '선택됨',
       maxSelection: '까지 선택 가능',
+      prefectureSelectionRule: '최소 1개 이상 선택하세요 (최대 3개까지)',
       gender: '성별',
       birthDate: '생년월일',
       prefecture: '현',
@@ -2525,6 +2529,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectStations: '選擇車站',
       selectedCount: '已選擇',
       maxSelection: '最多可選擇',
+      prefectureSelectionRule: '請選擇至少1個（最多3個都道府縣）',
       gender: '性別',
       birthDate: '出生日期',
       prefecture: '都道府縣',
