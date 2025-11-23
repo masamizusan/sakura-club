@@ -1932,9 +1932,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       profileCompletion: '프로필 완성도',
       requiredInfo: '필수 정보',
       optionalInfo: '선택 정보',
-      foreignMaleTitle: '외국인 남성 프로필 편집',
+      foreignMaleTitle: '프로필 편집',
       japaneseFemaleTitle: '일본인 여성 프로필 편집',
-      foreignMaleSubtitle: '일본 여성과의 만남을 위해 정보를 업데이트하세요',
+      foreignMaleSubtitle: '더 좋은 매칭을 위해 정보를 업데이트해 주세요',
       japaneseFemaleSubtitle: '외국인 남성과의 만남을 위해 정보를 업데이트하세요',
       defaultSubtitle: '정보를 업데이트하세요',
       selfIntroduction: '자기소개',
@@ -2045,7 +2045,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '일본 국적 확인이 필요합니다'
     },
     levels: {
-      none: '기입하지 않음',
+      none: '미입력',
       beginner: '초급 (일상 대화가 어려움)',
       elementary: '초급상 (기본적인 일상 대화 가능)',
       intermediate: '중급 (일상 대화는 문제없음)',
@@ -2055,7 +2055,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     schedule: {
       undecided: '아직 정하지 않음',
-      noEntry: '기입하지 않음',
+      noEntry: '미입력',
       currentlyInJapan: '현재 일본에 있음',
       year2024: '2024년',
       year2025: '2025년',
@@ -2071,7 +2071,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       winter: '겨울 (12-2월)'
     },
     companion: {
-      noEntry: '기입하지 않음',
+      noEntry: '미입력',
       alone: '혼자서',
       friend: '친구와',
       family: '가족과',
@@ -2082,19 +2082,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       female: '여성'
     },
     bodyType: {
-      noEntry: '기입하지 않음',
+      noEntry: '미입력',
       slim: '슬림',
       average: '보통',
       muscular: '근육질',
       plump: '통통'
     },
     maritalStatus: {
-      none: '기입하지 않음',
+      none: '미입력',
       single: '미혼',
       married: '기혼'
     },
     occupations: {
-      noEntry: '기입하지 않음',
+      noEntry: '미입력',
       housewife: '주부',
       houseHusband: '주부남',
       companyEmployee: '회사원',
@@ -2150,7 +2150,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     personality: {
       gentle: '상냥한',
       calm: '차분한',
-      lonely: '외로움을 타는',
+      lonely: '내향적인',
       composed: '침착한',
       caring: '배려하는',
       humble: '겸손한',
@@ -2165,7 +2165,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       sociable: '사교적인',
       competitive: '승부욕 강한',
       passionate: '열정적인',
-      indoor: '인도어',
+      indoor: '실내형',
       active: '활동적인',
       intellectual: '지적인',
       meticulous: '꼼꼼한',
@@ -2173,8 +2173,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       shy: '수줍은',
       attentive: '세심한',
       refreshing: '상쾌한',
-      natural: '천연',
-      ownPace: '마이페이스'
+      natural: '자연스러운 타입',
+      ownPace: '자기 스타일이 뚜렷한'
     },
     cultureCategories: {
       traditional: '전통 문화',
@@ -2296,8 +2296,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       main: '메인',
       addPhoto: '사진 추가',
       mainPhotoNote: '첫 번째 사진이 메인 사진으로 표시됩니다',
-      fileSizeNote: '각 사진은 5MB 이하로 해주세요',
-      editingNote: '크롭 및 흐림 효과 편집이 가능합니다',
+      fileSizeNote: '각 사진은 5MB 이내로 업로드해 주세요',
+      editingNote: '사진을 자르거나 흐림 효과를 적용할 수 있습니다',
       fileSizeError: '이미지 파일은 5MB 이하로 해주세요',
       fileTypeError: '지원하는 이미지 파일을 선택해 주세요 (JPEG, PNG, WebP, HEIC)'
     },
