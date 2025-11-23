@@ -838,7 +838,7 @@ function ProfilePreviewContent() {
                 {gender === 'female' && prefecture && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
-                    <span className="text-gray-600">{prefecture}{city ? `・${city}` : ''}</span>
+                    <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}{city ? `・${city}` : ''}</span>
                   </div>
                 )}
                 
