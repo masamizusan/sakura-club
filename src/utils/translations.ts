@@ -2519,7 +2519,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nickname: '暱稱',
       age: '年齡',
       nationality: '國籍',
-      plannedPrefectures: '預計前往的都道府縣',
+      plannedPrefectures: '預計前往的地區',
       plannedStations: '預計拜訪車站（選填）',
       visitSchedule: '預計拜訪時期',
       travelCompanion: '同行者',
@@ -2545,9 +2545,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       profileCompletion: '個人資料完成度',
       requiredInfo: '必填資訊',
       optionalInfo: '選填資訊',
-      foreignMaleTitle: '外國男性個人資料編輯',
+      foreignMaleTitle: '編輯個人資料',
       japaneseFemaleTitle: '日本女性個人資料編輯',
-      foreignMaleSubtitle: '為了與日本女性相遇，請更新您的資訊',
+      foreignMaleSubtitle: '為了更好的配對，請更新您的資訊',
       japaneseFemaleSubtitle: '為了與外國男性相遇，請更新您的資訊',
       defaultSubtitle: '請更新您的資訊',
       selfIntroduction: '自我介紹',
@@ -2657,7 +2657,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '需要確認日本國籍'
     },
     levels: {
-      none: '不填寫',
+      none: '未填寫',
       beginner: '初級（日常對話有困難）',
       elementary: '初級上（可進行基本日常對話）',
       intermediate: '中級（日常對話沒問題）',
@@ -2667,7 +2667,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     schedule: {
       undecided: '尚未決定',
-      noEntry: '不填寫',
+      noEntry: '未填寫',
       currentlyInJapan: '目前在日本',
       year2024: '2024年',
       year2025: '2025年',
@@ -2676,7 +2676,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       after: '年以後'
     },
     companion: {
-      noEntry: '不填寫',
+      noEntry: '未填寫',
       alone: '一個人',
       friend: '與朋友',
       family: '與家人',
@@ -2694,19 +2694,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       female: '女性'
     },
     bodyType: {
-      noEntry: '不填寫',
+      noEntry: '未填寫',
       slim: '瘦',
       average: '中等',
       muscular: '肌肉結實',
       plump: '豐滿'
     },
     maritalStatus: {
-      none: '不填寫',
+      none: '未填寫',
       single: '單身',
       married: '已婚'
     },
     occupations: {
-      noEntry: '不填寫',
+      noEntry: '未填寫',
       housewife: '家庭主婦',
       houseHusband: '家庭主夫',
       companyEmployee: '上班族',
@@ -2777,7 +2777,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       sociable: '社交能力強',
       competitive: '不服輸',
       passionate: '熱情',
-      indoor: '室內派',
+      indoor: '偏好室內活動',
       active: '活躍',
       intellectual: '知性',
       meticulous: '一絲不苟',
@@ -2785,8 +2785,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       shy: '害羞',
       attentive: '細心',
       refreshing: '清新',
-      natural: '天然',
-      ownPace: '按自己的節奏'
+      natural: '自然派',
+      ownPace: '我行我素'
     },
     cultureCategories: {
       traditional: '傳統文化',
@@ -2908,8 +2908,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       main: '主要',
       addPhoto: '新增照片',
       mainPhotoNote: '第一張照片將顯示為您的主要照片',
-      fileSizeNote: '請將每張照片保持在5MB以下',
-      editingNote: '您可以裁剪和模糊您的照片',
+      fileSizeNote: '每張照片請控制在 5MB 以內',
+      editingNote: '您可以裁剪或套用模糊效果',
       fileSizeError: '請將圖片檔案保持在5MB以下',
       fileTypeError: '請選擇支援的圖片檔案 (JPEG, PNG, WebP, HEIC)'
     },
