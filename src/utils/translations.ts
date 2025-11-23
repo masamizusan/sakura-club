@@ -1293,7 +1293,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       nickname: 'Nickname',
       age: 'Age',
       nationality: 'Nationality',
-      plannedPrefectures: 'Planned Prefectures',
+      plannedPrefectures: 'Prefectures You Plan to Visit',
       plannedStations: 'Planned Stations (Optional)',
       visitSchedule: 'Visit Schedule',
       travelCompanion: 'Travel Companion',
@@ -1319,9 +1319,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       profileCompletion: 'Profile Completion',
       requiredInfo: 'Required Information',
       optionalInfo: 'Optional Information',
-      foreignMaleTitle: 'Foreign Male Profile Edit',
+      foreignMaleTitle: 'Edit Profile',
       japaneseFemaleTitle: 'Japanese Female Profile Edit',
-      foreignMaleSubtitle: 'Update your information to meet Japanese women',
+      foreignMaleSubtitle: 'Update your information for better matches in Japan',
       japaneseFemaleSubtitle: 'Update your information to meet foreign men',
       defaultSubtitle: 'Update your information',
       selfIntroduction: 'Self Introduction',
@@ -1330,7 +1330,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       // プロフィール完成度メッセージ
       itemsCompleted: 'items completed',
       calculating: 'Calculating...',
-      completionLow: 'Please fill in a bit more basic information',
+      completionLow: 'Please provide a little more basic information.',
       completionMedium: 'Add more details to enhance your profile',
       completionHigh: 'Almost there! Just a few more details',
       completionPerfect: 'Excellent! You have a perfect profile ✨',
@@ -1356,8 +1356,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       otherCultureLabel: 'Other Japanese culture you want to experience (max 100 characters)',
       // 入力フィールドの説明
       birthDateReadonly: 'Birth date was set during temporary registration and cannot be changed',
-      birthDatePrivacy: '※Birth date will not be displayed to others.',
-      ageAutoCalculation: 'Age is automatically calculated from birth date',
+      birthDatePrivacy: '※Your date of birth will not be shown to others.',
+      ageAutoCalculation: 'Your age is automatically calculated from your date of birth.',
       japanVisitPlan: 'Japan Visit Plan',
       cultureExperience: 'Japanese Culture to Share',
       cultureExperienceWant: 'Japanese Culture to Experience',
@@ -1432,7 +1432,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: 'Japanese nationality confirmation is required'
     },
     levels: {
-      none: 'Not specified',
+      none: 'Not set',
       beginner: 'Beginner (Daily conversation is difficult)',
       elementary: 'Elementary (Basic daily conversation)',
       intermediate: 'Intermediate (Daily conversation is fine)',
@@ -1442,7 +1442,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     schedule: {
       undecided: 'Not decided yet',
-      noEntry: 'Not specified',
+      noEntry: 'Not set',
       currentlyInJapan: 'Currently in Japan',
       year2024: '2024',
       year2025: '2025',
@@ -1458,7 +1458,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       winter: 'Winter (Dec-Feb)'
     },
     companion: {
-      noEntry: 'Not specified',
+      noEntry: 'Not set',
       alone: 'Alone',
       friend: 'With friends',
       family: 'With family',
@@ -1469,19 +1469,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       female: 'Female'
     },
     bodyType: {
-      noEntry: 'Not specified',
+      noEntry: 'Not set',
       slim: 'Slim',
       average: 'Average',
       muscular: 'Muscular',
       plump: 'Plump'
     },
     maritalStatus: {
-      none: 'Not specified',
+      none: 'Not set',
       single: 'Single',
       married: 'Married'
     },
     occupations: {
-      noEntry: 'Not specified',
+      noEntry: 'Not set',
       housewife: 'Housewife',
       houseHusband: 'House Husband',
       companyEmployee: 'Company Employee',
@@ -1537,7 +1537,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     personality: {
       gentle: 'Gentle',
       calm: 'Calm',
-      lonely: 'Lonely',
+      lonely: 'Reserved',
       composed: 'Composed',
       caring: 'Caring',
       humble: 'Humble',
