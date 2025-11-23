@@ -2216,7 +2216,7 @@ function ProfileEditContent() {
           profile_nationality: profile.nationality,
           isNewUser,
           isForeignMale,
-          final_nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : undefined
+          final_nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : 'japan'
         })
         console.log('  - parsedOptionalData.city:', parsedOptionalData.city)
         console.log('  - parsedOptionalData.occupation:', parsedOptionalData.occupation)
@@ -2234,7 +2234,7 @@ function ProfileEditContent() {
           gender: defaults.gender,
           birth_date: resetBirthDate,
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
-          nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : undefined,
+          nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : 'japan',
           prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
           city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
