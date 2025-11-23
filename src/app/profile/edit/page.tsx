@@ -3602,7 +3602,7 @@ function ProfileEditContent() {
                 {/* 性格セクション - 日本文化の前に移動 */}
                 <div className="space-y-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('profile.personalitySection')}（{selectedPersonality.length}/5 選択済み）
+                    {t('profile.personalitySection')}（{selectedPersonality.length}/5 {t('profile.selectedCount')}）
                   </label>
                   <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -3633,7 +3633,7 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>（{selectedHobbies.length}/8 選択済み）
+                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>（{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {t('profile.selectCultureNote')}
