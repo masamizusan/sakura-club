@@ -364,9 +364,9 @@ function MyPageContent() {
             personality: extendedPersonality.length > 0 ? extendedPersonality : [],
             custom_culture: extendedCustomCulture,
             hobbies: regularInterests, // compatibilityのため
-            // 言語レベル（日本人女性: english_level、外国人男性: japanese_level）
-            english_level: parsedOptionalData.english_level || profileData.english_level,
-            japanese_level: parsedOptionalData.japanese_level || profileData.japanese_level,
+            // 🆕 言語レベル（専用カラム優先、JSONフォールバック）
+            english_level: profileData.english_level || parsedOptionalData.english_level,
+            japanese_level: profileData.japanese_level || parsedOptionalData.japanese_level,
             // 外国人男性専用フィールドを明示的に含める
             visit_schedule: profileData.visit_schedule,
             travel_companion: profileData.travel_companion,

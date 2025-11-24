@@ -2249,9 +2249,9 @@ function ProfileEditContent() {
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
-          // 言語レベルフィールド（両方を適切に設定）
-          japanese_level: isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none')) : 'none',
-          english_level: !isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none')) : 'none',
+          // 🆕 言語レベルフィールド（専用カラム優先、JSONフォールバック）
+          japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile.japanese_level || parsedOptionalData.japanese_level || 'none')) : 'none',
+          english_level: !isForeignMale ? (isNewUser ? 'none' : (profile.english_level || parsedOptionalData.english_level || 'none')) : 'none',
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -2765,11 +2765,21 @@ function ProfileEditContent() {
         age: data.age,
         birth_date: data.birth_date,
         prefecture: data.prefecture,
-        city: data.city === 'none' ? null : data.city,
+        // 🆕 言語レベルをcity(JSON)と専用カラムの両方に保存
+        city: JSON.stringify({
+          city: data.city === 'none' ? null : data.city,
+          occupation: data.occupation === 'none' ? null : data.occupation,
+          height: data.height ? data.height : null,
+          body_type: data.body_type === 'none' ? null : data.body_type,
+          marital_status: data.marital_status === 'none' ? null : data.marital_status,
+          english_level: data.english_level === 'none' ? null : data.english_level,
+          japanese_level: data.japanese_level === 'none' ? null : data.japanese_level
+        }),
         occupation: data.occupation === 'none' ? null : data.occupation,
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
+        // 🆕 専用カラムにも言語レベルを保存
         english_level: !isForeignMale ? (data.english_level === 'none' ? null : data.english_level) : null,
         japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
