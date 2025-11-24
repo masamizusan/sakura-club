@@ -2835,7 +2835,6 @@ function ProfileEditContent() {
       
       console.log('[Profile Submit] Supabase error:', updateError)
       console.log('[Profile Submit] Supabase result:', updateResult)
-        .select()
 
       if (updateError) {
         console.error('❌ プロフィール更新エラー:', updateError)
