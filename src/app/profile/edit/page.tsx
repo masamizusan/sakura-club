@@ -2249,9 +2249,9 @@ function ProfileEditContent() {
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
-          // 言語レベルフィールド
-          japanese_level: isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none')) : undefined,
-          english_level: !isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none')) : undefined,
+          // 言語レベルフィールド（両方を適切に設定）
+          japanese_level: isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.japanese_level || profile.japanese_level || 'none')) : 'none',
+          english_level: !isForeignMale ? (isNewUser ? 'none' : (parsedOptionalData.english_level || profile.english_level || 'none')) : 'none',
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -2649,6 +2649,9 @@ function ProfileEditContent() {
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     console.log('🚀 Form submission started')
     console.log('📋 提出されたデータ:', data)
+    console.log('[Profile Submit] values.japanese_level:', data.japanese_level)
+    console.log('[Profile Submit] values.english_level:', data.english_level)
+    console.log('[Profile Submit] full values:', data)
     console.log('📸 Current profile images:', profileImages)
 
     if (!user) {
@@ -2767,8 +2770,8 @@ function ProfileEditContent() {
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
-        english_level: data.english_level === 'none' ? null : data.english_level,
-        japanese_level: data.japanese_level === 'none' ? null : data.japanese_level,
+        english_level: !isForeignMale ? (data.english_level === 'none' ? null : data.english_level) : null,
+        japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
         avatar_url: avatarUrl,
@@ -2808,6 +2811,8 @@ function ProfileEditContent() {
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
 
+      console.log('[Profile Submit] updatePayload:', updateData)
+      console.log('[Profile Submit] updating user id:', user?.id)
       console.log('📝 Final update data (field mapping fixed):', {
         ...updateData,
         name_source: `nickname="${data.nickname}"`,
@@ -2827,6 +2832,9 @@ function ProfileEditContent() {
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
+      
+      console.log('[Profile Submit] Supabase error:', updateError)
+      console.log('[Profile Submit] Supabase result:', updateResult)
         .select()
 
       if (updateError) {
