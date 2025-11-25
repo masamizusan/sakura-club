@@ -108,6 +108,14 @@ function MyPageContent() {
             if (completeData.interests) {
               updateData.interests = completeData.interests
             }
+            
+            // 🆕 Triple-save: 新しいカラムに分離保存
+            if (completeData.personality_tags) {
+              updateData.personality_tags = completeData.personality_tags.length > 0 ? completeData.personality_tags : null
+            }
+            if (completeData.culture_tags) {
+              updateData.culture_tags = completeData.culture_tags.length > 0 ? completeData.culture_tags : null
+            }
 
             // 外国人男性専用フィールドを追加（外国人男性のみ）
             const isForeignMale = completeData.gender === 'male' &&
@@ -192,23 +200,46 @@ function MyPageContent() {
                 parsedOptionalData = completeData.optionalData
               }
               
-              // interests配列からpersonalityとcustom_cultureを分離
-              const extendedPersonality: string[] = []
+              // 🆕 Triple-save対応: 新しいカラム優先で性格・文化データを分離
+              let extendedPersonality: string[] = []
               let extendedCustomCulture: string | null = null
-              const regularInterests: string[] = []
+              let regularInterests: string[] = []
               
-              if (Array.isArray(completeData.interests)) {
+              // 1. personality_tagsカラムから性格データを取得（優先）
+              if (completeData.personality_tags && Array.isArray(completeData.personality_tags) && completeData.personality_tags.length > 0) {
+                extendedPersonality = completeData.personality_tags.filter((item: string) => item !== 'その他')
+              } else if (Array.isArray(completeData.interests)) {
+                // 2. interests配列からpersonalityプレフィックス付きを抽出（フォールバック）
+                completeData.interests.forEach((item: any) => {
+                  if (typeof item === 'string' && item.startsWith('personality:')) {
+                    extendedPersonality.push(item.replace('personality:', ''))
+                  }
+                })
+              }
+              
+              // 1. culture_tagsカラムから日本文化データを取得（優先）
+              if (completeData.culture_tags && Array.isArray(completeData.culture_tags) && completeData.culture_tags.length > 0) {
+                regularInterests = completeData.culture_tags.filter((item: string) => item !== 'その他')
+              } else if (Array.isArray(completeData.interests)) {
+                // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
                 completeData.interests.forEach((item: any) => {
                   if (typeof item === 'string') {
-                    if (item.startsWith('personality:')) {
-                      extendedPersonality.push(item.replace('personality:', ''))
-                    } else if (item.startsWith('custom_culture:')) {
-                      extendedCustomCulture = item.replace('custom_culture:', '')
-                    } else {
+                    if (!item.startsWith('personality:') && !item.startsWith('custom_culture:')) {
                       regularInterests.push(item)
                     }
                   } else {
                     regularInterests.push(item)
+                  }
+                })
+              }
+              
+              // custom_cultureは従来通り（direct fieldとinterests配列から）
+              if (completeData.custom_culture) {
+                extendedCustomCulture = completeData.custom_culture
+              } else if (Array.isArray(completeData.interests)) {
+                completeData.interests.forEach((item: any) => {
+                  if (typeof item === 'string' && item.startsWith('custom_culture:')) {
+                    extendedCustomCulture = item.replace('custom_culture:', '')
                   }
                 })
               }
@@ -342,23 +373,46 @@ function MyPageContent() {
             parsedOptionalData = { city: profileData.city }
           }
 
-          // interests配列からpersonalityとcustom_cultureを分離
-          const extendedPersonality: string[] = []
+          // 🆕 Triple-save対応: 新しいカラム優先で性格・文化データを分離
+          let extendedPersonality: string[] = []
           let extendedCustomCulture: string | null = null
-          const regularInterests: string[] = []
+          let regularInterests: string[] = []
           
-          if (Array.isArray(profileData.interests)) {
+          // 1. personality_tagsカラムから性格データを取得（優先）
+          if ((profileData as any).personality_tags && Array.isArray((profileData as any).personality_tags) && (profileData as any).personality_tags.length > 0) {
+            extendedPersonality = (profileData as any).personality_tags.filter((item: string) => item !== 'その他')
+          } else if (Array.isArray(profileData.interests)) {
+            // 2. interests配列からpersonalityプレフィックス付きを抽出（フォールバック）
+            profileData.interests.forEach((item: any) => {
+              if (typeof item === 'string' && item.startsWith('personality:')) {
+                extendedPersonality.push(item.replace('personality:', ''))
+              }
+            })
+          }
+          
+          // 1. culture_tagsカラムから日本文化データを取得（優先）
+          if ((profileData as any).culture_tags && Array.isArray((profileData as any).culture_tags) && (profileData as any).culture_tags.length > 0) {
+            regularInterests = (profileData as any).culture_tags.filter((item: string) => item !== 'その他')
+          } else if (Array.isArray(profileData.interests)) {
+            // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
             profileData.interests.forEach((item: any) => {
               if (typeof item === 'string') {
-                if (item.startsWith('personality:')) {
-                  extendedPersonality.push(item.replace('personality:', ''))
-                } else if (item.startsWith('custom_culture:')) {
-                  extendedCustomCulture = item.replace('custom_culture:', '')
-                } else {
+                if (!item.startsWith('personality:') && !item.startsWith('custom_culture:')) {
                   regularInterests.push(item)
                 }
               } else {
                 regularInterests.push(item)
+              }
+            })
+          }
+          
+          // custom_cultureは従来通り（direct fieldとinterests配列から）
+          if ((profileData as any).custom_culture) {
+            extendedCustomCulture = (profileData as any).custom_culture
+          } else if (Array.isArray(profileData.interests)) {
+            profileData.interests.forEach((item: any) => {
+              if (typeof item === 'string' && item.startsWith('custom_culture:')) {
+                extendedCustomCulture = item.replace('custom_culture:', '')
               }
             })
           }

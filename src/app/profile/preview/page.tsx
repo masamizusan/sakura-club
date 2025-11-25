@@ -1070,10 +1070,10 @@ function ProfilePreviewContent() {
                           japanese_level: japaneseLevel || null,
                         }
                         
-                        // personalityとhobbiesを拡張interests配列として準備
+                        // 🆕 Triple-save対応: interests配列構築（互換性維持）
                         const extendedInterests = [...hobbies]
                         
-                        // personalityを追加
+                        // personalityを追加（互換性のため）
                         if (personality && personality.length > 0) {
                           personality.forEach((p: string) => {
                             if (p && p.trim()) {
@@ -1082,10 +1082,16 @@ function ProfilePreviewContent() {
                           })
                         }
                         
-                        // custom_cultureを追加
+                        // custom_cultureを追加（互換性のため）
                         if (customCulture && customCulture.trim()) {
                           extendedInterests.push(`custom_culture:${customCulture.trim()}`)
                         }
+                        
+                        // 🆕 新しいカラム用のクリーンな配列を準備
+                        const cultureTags = hobbies && hobbies.length > 0 ? hobbies : null
+                        const personalityTags = personality && personality.length > 0 
+                          ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
+                          : null
                         
                         console.log('🚨 DIRECT SAVE: Prepared data', {
                           optionalData,
@@ -1126,10 +1132,14 @@ function ProfilePreviewContent() {
                           english_level: optionalData.english_level || null,
                           japanese_level: optionalData.japanese_level || null,
 
+                          // 🆕 Triple-save: 新しいカラム用の分離データ
+                          personality_tags: personalityTags,
+                          culture_tags: cultureTags,
+
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
 
-                          // interests配列
+                          // interests配列（互換性維持）
                           interests: extendedInterests,
 
                           // 外国人男性専用フィールドを追加（外国人男性のみ）

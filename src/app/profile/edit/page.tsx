@@ -2118,34 +2118,50 @@ function ProfileEditContent() {
         // ニックネーム（仮登録から）
         const nicknameValue = (signupData as any).nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
 
-        // 既存ユーザーの場合：interests配列から性格データを抽出
+        // 既存ユーザーの場合：新しいカラム優先でデータを抽出（Triple-save対応）
         let existingPersonality: string[] = []
         let existingHobbies: string[] = []
         let existingCustomCulture: string = ''
         
         if (!isNewUser) {
-          // interests配列から hobbies, personality, custom_culture を抽出
-          if (profile.interests && Array.isArray(profile.interests)) {
+          // 🆕 Triple-save対応: 新しいカラムを優先、フォールバックでinterests配列から抽出
+          
+          // 1. personality_tagsカラムから性格データを取得（優先）
+          if ((profile as any).personality_tags && Array.isArray((profile as any).personality_tags) && (profile as any).personality_tags.length > 0) {
+            existingPersonality = (profile as any).personality_tags.filter((item: string) => item !== 'その他')
+          } else if (profile.personality && Array.isArray(profile.personality) && profile.personality.length > 0) {
+            // 2. 従来のpersonalityカラムからフォールバック
+            existingPersonality = profile.personality.filter((item: string) => item !== 'その他')
+          } else if (profile.interests && Array.isArray(profile.interests)) {
+            // 3. interests配列からpersonalityプレフィックス付きを抽出（最終フォールバック）
             profile.interests.forEach((item: string) => {
               if (item.startsWith('personality:')) {
                 existingPersonality.push(item.replace('personality:', ''))
-              } else if (item.startsWith('custom_culture:')) {
-                existingCustomCulture = item.replace('custom_culture:', '')
-              } else if (item !== 'その他') {
+              }
+            })
+          }
+          
+          // 1. culture_tagsカラムから日本文化データを取得（優先）
+          if ((profile as any).culture_tags && Array.isArray((profile as any).culture_tags) && (profile as any).culture_tags.length > 0) {
+            existingHobbies = (profile as any).culture_tags.filter((item: string) => item !== 'その他')
+          } else if (profile.interests && Array.isArray(profile.interests)) {
+            // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
+            profile.interests.forEach((item: string) => {
+              if (!item.startsWith('personality:') && !item.startsWith('custom_culture:') && item !== 'その他') {
                 existingHobbies.push(item)
               }
             })
           }
           
-          // 🔧 修正: separate personality field が存在する場合（新しいデータ形式）
-          if (profile.personality && Array.isArray(profile.personality) && profile.personality.length > 0) {
-            // separate field からのデータで上書き（prefixなしのクリーンなデータ）
-            existingPersonality = profile.personality.filter((item: string) => item !== 'その他')
-          }
-          
-          // custom_culture は direct field も確認
-          if (!existingCustomCulture && profile.custom_culture) {
+          // custom_cultureは従来通り（direct fieldとinterests配列から）
+          if (profile.custom_culture) {
             existingCustomCulture = profile.custom_culture
+          } else if (profile.interests && Array.isArray(profile.interests)) {
+            profile.interests.forEach((item: string) => {
+              if (item.startsWith('custom_culture:')) {
+                existingCustomCulture = item.replace('custom_culture:', '')
+              }
+            })
           }
         }
         
@@ -2733,7 +2749,7 @@ function ProfileEditContent() {
         finalAvatarUrl: avatarUrl
       })
 
-      // 🔧 修正: interests配列に hobbies, personality, custom_culture を統合
+      // 🆕 Triple-save対応: interests配列の構築（互換性維持）
       const consolidatedInterests: string[] = []
       
       // hobbies (日本文化) を追加
@@ -2741,14 +2757,14 @@ function ProfileEditContent() {
         consolidatedInterests.push(...selectedHobbies)
       }
       
-      // personality を prefix付きで追加  
+      // personality を prefix付きで追加（互換性のため）  
       if (selectedPersonality.length > 0) {
         selectedPersonality.forEach(personality => {
           consolidatedInterests.push(`personality:${personality}`)
         })
       }
       
-      // custom_culture を prefix付きで追加
+      // custom_culture を prefix付きで追加（互換性のため）
       if (data.custom_culture && data.custom_culture.trim()) {
         consolidatedInterests.push(`custom_culture:${data.custom_culture.trim()}`)
       }
@@ -2757,6 +2773,10 @@ function ProfileEditContent() {
       if (consolidatedInterests.length === 0) {
         consolidatedInterests.push('その他')
       }
+      
+      // 🆕 新しいカラム用のクリーンな配列を準備
+      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : null
+      const personalityTags = selectedPersonality.length > 0 ? selectedPersonality : null
 
       // プロフィール更新データを準備
       const updateData: any = {
@@ -2784,6 +2804,9 @@ function ProfileEditContent() {
         japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
+        // 🆕 Triple-save: 新しいカラムに分離保存
+        personality_tags: personalityTags,
+        culture_tags: cultureTags,
         avatar_url: avatarUrl,
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
