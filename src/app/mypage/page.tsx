@@ -124,12 +124,19 @@ function MyPageContent() {
               if (completeData.visit_schedule) updateData.visit_schedule = completeData.visit_schedule
               if (completeData.travel_companion) updateData.travel_companion = completeData.travel_companion
               if (completeData.planned_prefectures) updateData.planned_prefectures = completeData.planned_prefectures
-              if (completeData.japanese_level) updateData.japanese_level = completeData.japanese_level
-              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level含む）を追加しました')
+              // 🆕 japanese_levelをnone条件判定で専用カラムに保存
+              updateData.japanese_level = completeData.japanese_level === 'none' ? null : completeData.japanese_level
+              console.log('✅ MyPage: 外国人男性専用フィールド（japanese_level含む）を追加しました', {
+                'completeData.japanese_level': completeData.japanese_level,
+                'updateData.japanese_level': updateData.japanese_level
+              })
             } else {
-              // 日本人女性の場合はenglish_levelを追加
-              if (completeData.english_level) updateData.english_level = completeData.english_level
-              console.log('✅ MyPage: 日本人女性のenglish_levelを追加しました')
+              // 🆕 english_levelをnone条件判定で専用カラムに保存  
+              updateData.english_level = completeData.english_level === 'none' ? null : completeData.english_level
+              console.log('✅ MyPage: 日本人女性のenglish_levelを追加しました', {
+                'completeData.english_level': completeData.english_level,
+                'updateData.english_level': updateData.english_level
+              })
             }
             
             console.log('🚨 MyPage: Complete update data prepared', updateData)
