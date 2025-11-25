@@ -1122,6 +1122,10 @@ function ProfilePreviewContent() {
                           // 写真データ（既存の写真を含める）
                           profile_image: previewData.profile_image || profileImage || searchParams?.get('profile_image') || null,
 
+                          // 🆕 言語レベル（MyPageでの専用カラム保存用）
+                          english_level: optionalData.english_level || null,
+                          japanese_level: optionalData.japanese_level || null,
+
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
 
