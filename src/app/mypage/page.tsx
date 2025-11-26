@@ -109,13 +109,13 @@ function MyPageContent() {
               updateData.interests = completeData.interests
             }
             
-            // 🆕 Triple-save: 新しいカラムに分離保存
-            if (completeData.personality_tags) {
-              updateData.personality_tags = completeData.personality_tags.length > 0 ? completeData.personality_tags : null
-            }
-            if (completeData.culture_tags) {
-              updateData.culture_tags = completeData.culture_tags.length > 0 ? completeData.culture_tags : null
-            }
+            // 🚨 EMERGENCY: Triple-save一時無効化（データベースマイグレーション待ち）
+            // if (completeData.personality_tags) {
+            //   updateData.personality_tags = completeData.personality_tags.length > 0 ? completeData.personality_tags : null
+            // }
+            // if (completeData.culture_tags) {
+            //   updateData.culture_tags = completeData.culture_tags.length > 0 ? completeData.culture_tags : null
+            // }
 
             // 外国人男性専用フィールドを追加（外国人男性のみ）
             const isForeignMale = completeData.gender === 'male' &&

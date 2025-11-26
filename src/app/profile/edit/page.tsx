@@ -2804,9 +2804,9 @@ function ProfileEditContent() {
         japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
-        // 🆕 Triple-save: 新しいカラムに分離保存
-        personality_tags: personalityTags,
-        culture_tags: cultureTags,
+        // 🚨 EMERGENCY: Triple-save一時無効化（データベースマイグレーション待ち）
+        // personality_tags: personalityTags,
+        // culture_tags: cultureTags,
         avatar_url: avatarUrl,
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()

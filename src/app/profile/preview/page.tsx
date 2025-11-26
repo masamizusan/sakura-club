@@ -1132,9 +1132,9 @@ function ProfilePreviewContent() {
                           english_level: optionalData.english_level || null,
                           japanese_level: optionalData.japanese_level || null,
 
-                          // 🆕 Triple-save: 新しいカラム用の分離データ
-                          personality_tags: personalityTags,
-                          culture_tags: cultureTags,
+                          // 🚨 EMERGENCY: Triple-save一時無効化（データベースマイグレーション待ち）
+                          // personality_tags: personalityTags,
+                          // culture_tags: cultureTags,
 
                           // オプション情報（city JSONに格納）
                           optionalData: optionalData,
