@@ -19,6 +19,15 @@ import { z } from 'zod'
 import { calculateProfileCompletion } from '@/utils/profileCompletion'
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
+import { 
+  type LanguageSkill, 
+  type LanguageCode, 
+  type LanguageLevelCode,
+  LANGUAGE_LABELS,
+  LANGUAGE_LEVEL_LABELS,
+  hasValidLanguageSkills,
+  generateLanguageSkillsFromLegacy 
+} from '@/types/profile'
 
 const baseProfileEditSchema = (t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
@@ -45,6 +54,11 @@ const baseProfileEditSchema = (t: any) => z.object({
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
   english_level: z.string().optional(),
   japanese_level: z.string().optional(),
+  // ✨ 新機能: 使用言語＋言語レベル
+  language_skills: z.array(z.object({
+    language: z.enum(['ja', 'en', 'ko', 'zh-TW']),
+    level: z.enum(['none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
+  })).min(1, '使用言語と言語レベルを少なくとも1つ選択してください').optional(),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -498,6 +512,8 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
+  // ✨ 新機能: 使用言語＋言語レベル状態管理
+  const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(0)
@@ -2286,6 +2302,8 @@ function ProfileEditContent() {
           // 🆕 言語レベルフィールド（専用カラム優先、JSONフォールバック）
           japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile.japanese_level || parsedOptionalData.japanese_level || 'none')) : 'none',
           english_level: !isForeignMale ? (isNewUser ? 'none' : (profile.english_level || parsedOptionalData.english_level || 'none')) : 'none',
+          // ✨ 新機能: 使用言語＋言語レベル
+          language_skills: isNewUser ? [] : (profile.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -2419,6 +2437,25 @@ function ProfileEditContent() {
         
         setSelectedHobbies(finalHobbies)
         setSelectedPersonality(finalPersonality)
+        // ✨ 新機能: languageSkillsを同期
+        let initialLanguageSkills: LanguageSkill[] = []
+        if (isNewUser) {
+          // 新規ユーザー: 国籍に基づくデフォルト言語を設定
+          const nationality = (signupData as any)?.nationality || profile.nationality
+          if (nationality === '日本' || !nationality) {
+            initialLanguageSkills = [{ language: 'ja', level: 'native' }]
+          } else {
+            // 外国人: 母国語（英語想定）+ 日本語初級
+            initialLanguageSkills = [
+              { language: 'en', level: 'native' },
+              { language: 'ja', level: 'beginner' }
+            ]
+          }
+        } else {
+          // 既存ユーザー: DBまたは既存カラムから生成
+          initialLanguageSkills = profile.language_skills || generateLanguageSkillsFromLegacy(profile)
+        }
+        setLanguageSkills(initialLanguageSkills)
         
         console.log('✅ STATE SETTING COMPLETED')
 
@@ -2814,6 +2851,8 @@ function ProfileEditContent() {
         // 🆕 専用カラムにも言語レベルを保存
         english_level: !isForeignMale ? (data.english_level === 'none' ? null : data.english_level) : null,
         japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
+        // ✨ 新機能: 使用言語＋言語レベル
+        language_skills: languageSkills && languageSkills.length > 0 ? languageSkills : null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
         // ✅ Triple-save機能復旧（personality/culture分離）
@@ -3456,63 +3495,128 @@ function ProfileEditContent() {
                         </SelectContent>
                       </Select>
                     </div>
-                    {isForeignMale && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {t('profile.japaneseLevel')}
+                    
+                    {/* ✨ 使用言語＋言語レベル（新機能） */}
+                    <div className="col-span-2">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          使用言語と言語レベル <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          value={watch('japanese_level') || 'none'}
-                          onValueChange={(value) => {
-                            setValue('japanese_level', value)
-                            // 日本語レベル変更時に完成度を再計算
-                            setTimeout(() => {
-                              const formData = getValues()
-                              // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                              setProfileCompletion(result.completion)
-                              setCompletedItems(result.completedFields)
-                              setTotalItems(result.totalFields)
-                            }, 100)
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('placeholders.selectJapaneseLevel')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {getJapaneseLevelOptions(t).map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <p className="text-xs text-gray-500 mb-3">
+                          あなたが使用できる言語とそのレベルを選択してください（最低1つ必須）
+                        </p>
+                        
+                        {/* 言語スキル一覧表示 */}
+                        <div className="space-y-3 mb-3">
+                          {languageSkills.map((skill, index) => (
+                            <div key={index} className="flex gap-3 items-center p-3 border rounded-lg bg-gray-50">
+                              <div className="flex-1">
+                                <Select
+                                  value={skill.language}
+                                  onValueChange={(value: LanguageCode) => {
+                                    const newSkills = [...languageSkills]
+                                    newSkills[index] = { ...skill, language: value }
+                                    setLanguageSkills(newSkills)
+                                    setValue('language_skills', newSkills)
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="言語を選択" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(LANGUAGE_LABELS).map(([code, label]) => (
+                                      <SelectItem key={code} value={code}>
+                                        {label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="flex-1">
+                                <Select
+                                  value={skill.level}
+                                  onValueChange={(value: LanguageLevelCode) => {
+                                    const newSkills = [...languageSkills]
+                                    newSkills[index] = { ...skill, level: value }
+                                    setLanguageSkills(newSkills)
+                                    setValue('language_skills', newSkills)
+                                    
+                                    // 完成度再計算
+                                    setTimeout(() => {
+                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const urlParams = new URLSearchParams(window.location.search)
+                                      const isNewUserLocal = urlParams.get('from') === 'signup'
+                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
+                                      setProfileCompletion(result.completion)
+                                      setCompletedItems(result.completedFields)
+                                      setTotalItems(result.totalFields)
+                                    }, 100)
+                                  }}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="レベルを選択" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(LANGUAGE_LEVEL_LABELS)
+                                      .filter(([code]) => code !== 'none') // UIでは'none'を除外
+                                      .map(([code, label]) => (
+                                      <SelectItem key={code} value={code}>
+                                        {label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {languageSkills.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newSkills = languageSkills.filter((_, i) => i !== index)
+                                    setLanguageSkills(newSkills)
+                                    setValue('language_skills', newSkills)
+                                  }}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  削除
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* 言語追加ボタン */}
+                        {languageSkills.length < 4 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newSkills = [...languageSkills, { language: 'ja' as LanguageCode, level: 'intermediate' as LanguageLevelCode }]
+                              setLanguageSkills(newSkills)
+                              setValue('language_skills', newSkills)
+                            }}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            + 使用言語を追加
+                          </Button>
+                        )}
+                        
+                        {/* エラーメッセージ表示 */}
+                        {errors.language_skills && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.language_skills.message}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    {!isForeignMale && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          英語レベル
-                        </label>
-                        <Select
-                          value={watch('english_level') || 'none'}
-                          onValueChange={(value) => setValue('english_level', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="英語レベルを選択" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {getEnglishLevelOptions(t).map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                    </div>
+                    
+                    {/* 既存システム（非表示・後方互換用） */}
+                    <input type="hidden" {...register('japanese_level')} />
+                    <input type="hidden" {...register('english_level')} />
                   </div>
                 </div>
 

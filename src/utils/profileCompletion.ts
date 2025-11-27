@@ -3,6 +3,22 @@
  * マイページとプロフィール編集画面で同じロジックを使用
  */
 
+// ✨ 新機能: 使用言語＋言語レベルのチェック関数
+const hasValidLanguageSkills = (profileData: any): boolean => {
+  // 1. 新しい language_skills を優先
+  if (profileData.language_skills && Array.isArray(profileData.language_skills) && profileData.language_skills.length > 0) {
+    return profileData.language_skills.some((skill: any) => 
+      skill.language && skill.level && skill.level !== 'none'
+    )
+  }
+  
+  // 2. 既存フィールドをフォールバックとして使用（後方互換性）
+  const hasJapaneseLevel = profileData.japanese_level && profileData.japanese_level !== 'none'
+  const hasEnglishLevel = profileData.english_level && profileData.english_level !== 'none'
+  
+  return hasJapaneseLevel || hasEnglishLevel
+}
+
 // 専用カラム優先、city JSONフォールバックのヘルパー関数
 function getFieldFromDedicatedColumnOrCity(profileData: any, fieldName: string): any {
   // 専用カラムの値を優先
@@ -68,7 +84,7 @@ export function calculateProfileCompletion(
     // 外国人男性のオプションフィールド（9個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'japanese_level'
+      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'language_skills'
     ]
   } else {
     // 日本人女性の必須フィールド（6個）
@@ -80,7 +96,7 @@ export function calculateProfileCompletion(
     // 日本人女性のオプションフィールド（7個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city', 'english_level'
+      'personality', 'city', 'language_skills'
     ]
   }
 
@@ -163,6 +179,9 @@ export function calculateProfileCompletion(
         // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
         value = getCityFromNewFormat(profileData.city)
         break
+      case 'language_skills':
+        // ✨ 新機能: 使用言語＋言語レベルのチェック
+        return hasValidLanguageSkills(profileData)
       default:
         value = profileData[field]
     }
