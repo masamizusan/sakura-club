@@ -563,7 +563,7 @@ function MyPageContent() {
       planned_prefectures: profileData.planned_prefectures
     })
 
-    // 🔍 MyPage専用: profileDataの詳細デバッグ
+    // 🔍 MyPage専用: profileDataの詳細デバッグ（専用カラム重点確認）
     console.log('🔍 MyPage: profileData debug BEFORE shared function:', {
       avatar_url: profileData?.avatar_url,
       avatarUrl: profileData?.avatarUrl,
@@ -575,7 +575,14 @@ function MyPageContent() {
       birth_date: profileData?.birth_date || profileData?.date_of_birth,
       prefecture: profileData?.prefecture || profileData?.residence,
       hobbies: profileData?.hobbies || profileData?.interests,
-      self_introduction: profileData?.self_introduction || profileData?.bio
+      self_introduction: profileData?.self_introduction || profileData?.bio,
+      // 🚨 専用カラムの値を重点確認
+      occupation: profileData?.occupation,
+      height: profileData?.height,
+      body_type: profileData?.body_type,
+      marital_status: profileData?.marital_status,
+      english_level: profileData?.english_level,
+      japanese_level: profileData?.japanese_level
     })
 
     const result = calculateSharedProfileCompletion(profileData, undefined, isForeignMale)
