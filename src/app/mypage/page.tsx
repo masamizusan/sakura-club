@@ -99,7 +99,21 @@ function MyPageContent() {
             })
             // prefecture は既存のresidenceフィールドを使用
             
-            // オプション情報（city JSONに格納）
+            // 専用カラム（occupation, height, body_type, marital_status）
+            if (completeData.occupation !== undefined) {
+              updateData.occupation = completeData.occupation || null
+            }
+            if (completeData.height !== undefined) {
+              updateData.height = completeData.height || null
+            }
+            if (completeData.body_type !== undefined) {
+              updateData.body_type = completeData.body_type || null
+            }
+            if (completeData.marital_status !== undefined) {
+              updateData.marital_status = completeData.marital_status || null
+            }
+
+            // オプション情報（新形式：cityのみのJSONに格納）
             if (completeData.optionalData) {
               updateData.city = JSON.stringify(completeData.optionalData)
             }

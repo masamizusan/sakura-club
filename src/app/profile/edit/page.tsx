@@ -1879,7 +1879,40 @@ function ProfileEditContent() {
           })
         }
 
-        // 🔍 cityフィールドからJSONデータをパースして各フィールドに分割
+        // 🔍 専用カラム優先でフィールド値を取得するヘルパー関数
+        const getFieldValue = (fieldName: string) => {
+          // 専用カラムの値を優先
+          if (profile[fieldName] !== null && profile[fieldName] !== undefined && profile[fieldName] !== '') {
+            return profile[fieldName]
+          }
+          
+          // フォールバック: city JSONから取得
+          try {
+            const cityData = typeof profile.city === 'string' ? JSON.parse(profile.city) : profile.city
+            if (cityData && cityData[fieldName]) {
+              return cityData[fieldName]
+            }
+          } catch (e) {
+            // JSON parse error - ignore
+          }
+          
+          return null
+        }
+
+        // 🔍 新形式のcity JSONから市区町村名を取得
+        const getCityValue = () => {
+          if (!profile.city) return ''
+          
+          try {
+            const cityData = typeof profile.city === 'string' ? JSON.parse(profile.city) : profile.city
+            return cityData?.city || ''
+          } catch (e) {
+            // JSON parse error - return as is if it's a simple string
+            return typeof profile.city === 'string' ? profile.city : ''
+          }
+        }
+
+        // 🔍 専用カラム優先でoptionalDataを構築
         let parsedOptionalData: {
           city?: string;
           occupation?: string;
@@ -1888,41 +1921,26 @@ function ProfileEditContent() {
           marital_status?: string;
           english_level?: string;
           japanese_level?: string;
-        } = {}
-        
-        console.log('🔍 CITY FIELD PARSING ANALYSIS:')
-        console.log('Raw city field:', profile.city)
-        console.log('City field type:', typeof profile.city)
-        console.log('Starts with {:', profile.city?.startsWith('{'))
-        
-        if (profile.city && typeof profile.city === 'string') {
-          try {
-            // JSONデータの場合はパース
-            if (profile.city.startsWith('{')) {
-              parsedOptionalData = JSON.parse(profile.city)
-              console.log('📋 Parsed optional data from city field:', parsedOptionalData)
-              console.log('📋 Individual parsed values:', {
-                city: parsedOptionalData.city,
-                occupation: parsedOptionalData.occupation,
-                height: parsedOptionalData.height,
-                body_type: parsedOptionalData.body_type,
-                marital_status: parsedOptionalData.marital_status,
-                english_level: parsedOptionalData.english_level,
-                japanese_level: parsedOptionalData.japanese_level
-              })
-            } else {
-              // 通常の文字列の場合はそのまま使用
-              parsedOptionalData = { city: profile.city }
-              console.log('📍 Using city as regular string:', parsedOptionalData)
-            }
-          } catch (e) {
-            console.log('⚠️ Could not parse city field as JSON, treating as regular city data')
-            console.log('Parse error:', e)
-            parsedOptionalData = { city: profile.city }
-          }
-        } else {
-          console.log('📍 No city field data to parse')
+        } = {
+          city: getCityValue(),
+          occupation: getFieldValue('occupation'),
+          height: getFieldValue('height'),
+          body_type: getFieldValue('body_type'),
+          marital_status: getFieldValue('marital_status'),
+          english_level: getFieldValue('english_level'),
+          japanese_level: getFieldValue('japanese_level')
         }
+        
+        console.log('🔍 DEDICATED COLUMN FIELD ANALYSIS:')
+        console.log('Profile dedicated columns:', {
+          occupation: profile.occupation,
+          height: profile.height,
+          body_type: profile.body_type,
+          marital_status: profile.marital_status,
+          english_level: profile.english_level,
+          japanese_level: profile.japanese_level
+        })
+        console.log('📋 Merged optional data:', parsedOptionalData)
         
         // マイページからの遷移かどうかを判定
         const urlParams = new URLSearchParams(window.location.search)
@@ -2785,15 +2803,9 @@ function ProfileEditContent() {
         age: data.age,
         birth_date: data.birth_date,
         prefecture: data.prefecture,
-        // 🆕 言語レベルをcity(JSON)と専用カラムの両方に保存
+        // 🆕 cityは新形式（市区町村のみ）で保存
         city: JSON.stringify({
-          city: data.city === 'none' ? null : data.city,
-          occupation: data.occupation === 'none' ? null : data.occupation,
-          height: data.height ? data.height : null,
-          body_type: data.body_type === 'none' ? null : data.body_type,
-          marital_status: data.marital_status === 'none' ? null : data.marital_status,
-          english_level: data.english_level === 'none' ? null : data.english_level,
-          japanese_level: data.japanese_level === 'none' ? null : data.japanese_level
+          city: data.city === 'none' ? null : data.city
         }),
         occupation: data.occupation === 'none' ? null : data.occupation,
         height: data.height ? data.height : null,

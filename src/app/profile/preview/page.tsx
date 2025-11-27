@@ -1059,15 +1059,19 @@ function ProfilePreviewContent() {
                     try {
                         console.log('🚨 DIRECT SAVE: Using sessionStorage data')
                         
-                        // オプションデータをJSONで準備
-                        const optionalData = {
-                          city: city || null,
+                        // 専用カラム用データ準備
+                        const dedicatedColumnData = {
                           occupation: occupation || null,
                           height: height ? Number(height) : null,
                           body_type: bodyType || null,
                           marital_status: maritalStatus || null,
                           english_level: englishLevel || null,
                           japanese_level: japaneseLevel || null,
+                        }
+
+                        // オプションデータをJSONで準備（新形式：cityのみ）
+                        const optionalData = {
+                          city: city || null
                         }
                         
                         // 🆕 Triple-save対応: interests配列構築（互換性維持）
@@ -1128,9 +1132,15 @@ function ProfilePreviewContent() {
                           // 写真データ（既存の写真を含める）
                           profile_image: previewData.profile_image || profileImage || searchParams?.get('profile_image') || null,
 
+                          // 🆕 専用カラム（occupation, height, body_type, marital_status）
+                          occupation: dedicatedColumnData.occupation || null,
+                          height: dedicatedColumnData.height || null,
+                          body_type: dedicatedColumnData.body_type || null,
+                          marital_status: dedicatedColumnData.marital_status || null,
+
                           // 🆕 言語レベル（MyPageでの専用カラム保存用）
-                          english_level: optionalData.english_level || null,
-                          japanese_level: optionalData.japanese_level || null,
+                          english_level: dedicatedColumnData.english_level || null,
+                          japanese_level: dedicatedColumnData.japanese_level || null,
 
                           // ✅ Triple-save機能復旧（personality/culture分離）
                           personality_tags: personalityTags,

@@ -3,6 +3,39 @@
  * マイページとプロフィール編集画面で同じロジックを使用
  */
 
+// 専用カラム優先、city JSONフォールバックのヘルパー関数
+function getFieldFromDedicatedColumnOrCity(profileData: any, fieldName: string): any {
+  // 専用カラムの値を優先
+  if (profileData[fieldName] !== null && profileData[fieldName] !== undefined && profileData[fieldName] !== '') {
+    return profileData[fieldName]
+  }
+
+  // フォールバック: city JSONから取得
+  try {
+    const cityData = typeof profileData.city === 'string' ? JSON.parse(profileData.city) : profileData.city
+    if (cityData && cityData[fieldName]) {
+      return cityData[fieldName]
+    }
+  } catch (e) {
+    // JSON parse error - ignore and return null
+  }
+
+  return null
+}
+
+// 新形式のcity JSONから市区町村名を取得
+function getCityFromNewFormat(cityJson: string | null): string | null {
+  if (!cityJson) return null
+  
+  try {
+    const cityData = typeof cityJson === 'string' ? JSON.parse(cityJson) : cityJson
+    return cityData?.city || null
+  } catch (e) {
+    // JSON parse error - try to return as is if it's a simple string
+    return typeof cityJson === 'string' && cityJson !== '' ? cityJson : null
+  }
+}
+
 export interface ProfileCompletionResult {
   completion: number
   completedFields: number
@@ -118,6 +151,17 @@ export function calculateProfileCompletion(
       case 'planned_prefectures':
         // 外国人男性の行く予定の都道府県
         value = profileData.planned_prefectures || []
+        break
+      case 'occupation':
+      case 'height':
+      case 'body_type':
+      case 'marital_status':
+        // 専用カラム優先、city JSONフォールバック
+        value = getFieldFromDedicatedColumnOrCity(profileData, field)
+        break
+      case 'city':
+        // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
+        value = getCityFromNewFormat(profileData.city)
         break
       default:
         value = profileData[field]
