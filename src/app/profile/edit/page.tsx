@@ -3518,6 +3518,17 @@ function ProfileEditContent() {
                                     newSkills[index] = { ...skill, language: value }
                                     setLanguageSkills(newSkills)
                                     setValue('language_skills', newSkills)
+                                    
+                                    // 完成度再計算
+                                    setTimeout(() => {
+                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const urlParams = new URLSearchParams(window.location.search)
+                                      const isNewUserLocal = urlParams.get('from') === 'signup'
+                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
+                                      setProfileCompletion(result.completion)
+                                      setCompletedItems(result.completedFields)
+                                      setTotalItems(result.totalFields)
+                                    }, 100)
                                   }}
                                 >
                                   <SelectTrigger>
@@ -3578,6 +3589,17 @@ function ProfileEditContent() {
                                     const newSkills = languageSkills.filter((_, i) => i !== index)
                                     setLanguageSkills(newSkills)
                                     setValue('language_skills', newSkills)
+                                    
+                                    // 完成度再計算
+                                    setTimeout(() => {
+                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const urlParams = new URLSearchParams(window.location.search)
+                                      const isNewUserLocal = urlParams.get('from') === 'signup'
+                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
+                                      setProfileCompletion(result.completion)
+                                      setCompletedItems(result.completedFields)
+                                      setTotalItems(result.totalFields)
+                                    }, 100)
                                   }}
                                   className="text-red-600 hover:text-red-700"
                                 >
@@ -3598,6 +3620,17 @@ function ProfileEditContent() {
                               const newSkills = [...languageSkills, { language: 'ja' as LanguageCode, level: 'intermediate' as LanguageLevelCode }]
                               setLanguageSkills(newSkills)
                               setValue('language_skills', newSkills)
+                              
+                              // 完成度再計算
+                              setTimeout(() => {
+                                const formData = { ...getValues(), language_skills: newSkills }
+                                const urlParams = new URLSearchParams(window.location.search)
+                                const isNewUserLocal = urlParams.get('from') === 'signup'
+                                const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
+                                setProfileCompletion(result.completion)
+                                setCompletedItems(result.completedFields)
+                                setTotalItems(result.totalFields)
+                              }, 100)
                             }}
                             className="text-blue-600 hover:text-blue-700"
                           >
