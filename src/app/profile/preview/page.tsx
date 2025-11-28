@@ -1141,6 +1141,18 @@ function ProfilePreviewContent() {
                           // 🆕 言語レベル（MyPageでの専用カラム保存用）
                           english_level: dedicatedColumnData.english_level || null,
                           japanese_level: dedicatedColumnData.japanese_level || null,
+                          // ✨ 新機能: 使用言語＋言語レベル
+                          language_skills: (() => {
+                            try {
+                              const languageSkillsParam = searchParams?.get('language_skills')
+                              if (languageSkillsParam) {
+                                return JSON.parse(decodeURIComponent(languageSkillsParam))
+                              }
+                            } catch (e) {
+                              console.warn('Language skills parse error:', e)
+                            }
+                            return null
+                          })(),
 
                           // ✅ Triple-save機能復旧（personality/culture分離）
                           personality_tags: personalityTags,

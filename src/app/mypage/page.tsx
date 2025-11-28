@@ -131,6 +131,13 @@ function MyPageContent() {
               updateData.culture_tags = completeData.culture_tags.length > 0 ? completeData.culture_tags : null
             }
 
+            // ✨ 新機能: 使用言語＋言語レベル
+            if (completeData.language_skills) {
+              updateData.language_skills = Array.isArray(completeData.language_skills) && completeData.language_skills.length > 0 
+                ? completeData.language_skills 
+                : null
+            }
+
             // 外国人男性専用フィールドを追加（外国人男性のみ）
             const isForeignMale = completeData.gender === 'male' &&
               completeData.nationality &&
@@ -271,7 +278,9 @@ function MyPageContent() {
                 travel_companion: completeData.travel_companion,
                 planned_prefectures: completeData.planned_prefectures,
                 japanese_level: parsedOptionalData.japanese_level || completeData.japanese_level,
-                english_level: parsedOptionalData.english_level || completeData.english_level
+                english_level: parsedOptionalData.english_level || completeData.english_level,
+                // ✨ 新機能: 使用言語＋言語レベル
+                language_skills: completeData.language_skills
               }
               
               console.log('🔄 Test mode: Normalized test data:', normalizedTestData)
@@ -442,6 +451,8 @@ function MyPageContent() {
             // 🆕 言語レベル（専用カラム優先、JSONフォールバック）
             english_level: profileData.english_level || parsedOptionalData.english_level,
             japanese_level: profileData.japanese_level || parsedOptionalData.japanese_level,
+            // ✨ 新機能: 使用言語＋言語レベル
+            language_skills: profileData.language_skills,
             // 外国人男性専用フィールドを明示的に含める
             visit_schedule: profileData.visit_schedule,
             travel_companion: profileData.travel_companion,
