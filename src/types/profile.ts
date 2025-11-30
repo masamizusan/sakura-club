@@ -121,7 +121,7 @@ export const generateLanguageSkillsFromLegacy = (
     profile.nationality && 
     !['日本', 'japan'].includes(profile.nationality.toLowerCase());
     
-  if (isForeignMale && profile.japanese_level && profile.japanese_level !== 'none' && profile.japanese_level !== '') {
+  if (isForeignMale && profile.japanese_level && profile.japanese_level !== 'none') {
     skills.push({
       language: 'ja',
       level: profile.japanese_level
@@ -132,7 +132,7 @@ export const generateLanguageSkillsFromLegacy = (
   const isJapanese = profile.nationality && 
     ['日本', 'japan'].includes(profile.nationality.toLowerCase());
     
-  if (isJapanese && profile.english_level && profile.english_level !== 'none' && profile.english_level !== '') {
+  if (isJapanese && profile.english_level && profile.english_level !== 'none') {
     skills.push({
       language: 'en',
       level: profile.english_level
