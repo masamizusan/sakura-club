@@ -52,8 +52,8 @@ const baseProfileEditSchema = (t: any) => z.object({
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
-  english_level: z.string().optional(),
-  japanese_level: z.string().optional(),
+  english_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
+  japanese_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   // ✨ 新機能: 使用言語＋言語レベル
   language_skills: z.array(z.object({
     language: z.enum(['', 'ja', 'en', 'ko', 'zh-TW']),
@@ -87,7 +87,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
         }])
       }
       // 日本語レベル必須
-      if (!data.japanese_level || data.japanese_level === '' || data.japanese_level === 'none') {
+      if (!data.japanese_level || data.japanese_level === 'none') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
           message: '日本語レベルを選択してください',
@@ -107,7 +107,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
         }])
       }
       // 英語レベル必須
-      if (!data.english_level || data.english_level === '' || data.english_level === 'none') {
+      if (!data.english_level || data.english_level === 'none') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
           message: 'Please select your English level.',
@@ -203,8 +203,7 @@ const getBodyTypeOptions = (t: any) => [
 
 // 英語レベルオプション（翻訳対応）
 const getEnglishLevelOptions = (t: any) => [
-  { value: '', label: 'Please select' }, // プレースホルダー
-  { value: 'none', label: t('levels.none') },
+  { value: 'none', label: 'Please select', disabled: true }, // プレースホルダー
   { value: 'beginner', label: t('levels.beginner') },
   { value: 'elementary', label: t('levels.elementary') },
   { value: 'intermediate', label: t('levels.intermediate') },
@@ -215,8 +214,7 @@ const getEnglishLevelOptions = (t: any) => [
 
 // 日本語レベルオプション（翻訳対応）
 const getJapaneseLevelOptions = (t: any) => [
-  { value: '', label: '選択してください' }, // プレースホルダー
-  { value: 'none', label: t('levels.none') },
+  { value: 'none', label: '選択してください', disabled: true }, // プレースホルダー
   { value: 'beginner', label: t('levels.beginner') },
   { value: 'elementary', label: t('levels.elementary') },
   { value: 'intermediate', label: t('levels.intermediate') },
@@ -1566,15 +1564,69 @@ function ProfileEditContent() {
     }
   }
 
+  // 🛡️ 安全な言語レベル取得ヘルパー関数（要件に従った実装）
+  const getSafeLanguageLevel = (profile: any, levelField: 'japanese_level' | 'english_level'): 'none' | 'beginner' | 'intermediate' | 'advanced' | 'native' | 'elementary' | 'upperIntermediate' => {
+    const value = profile?.[levelField]
+    if (value && value !== '' && value !== null && value !== undefined) {
+      // Type guard to ensure the value matches the expected union type
+      const validLevels = ['none', 'beginner', 'intermediate', 'advanced', 'native', 'elementary', 'upperIntermediate']
+      if (validLevels.includes(value)) {
+        return value as 'none' | 'beginner' | 'intermediate' | 'advanced' | 'native' | 'elementary' | 'upperIntermediate'
+      }
+    }
+    return 'none'
+  }
+
   // Load current user data
   useEffect(() => {
     console.log('🚀 useEffect開始 - ユーザー:', user?.id)
     
-    // fromMyPageパラメータの確認（useEffect内の最初で定義）
-    const urlParams = new URLSearchParams(window.location.search)
-    const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+    // 🚨 CRITICAL DEBUG: 包括的エラーハンドリング追加
+    const initializeProfileEdit = async () => {
+      try {
+        console.log('🔍 PROFILE EDIT INITIALIZATION START')
+        console.log('  - User:', user?.id)
+        console.log('  - Search params:', window.location.search)
+        
+        // fromMyPageパラメータの確認（useEffect内の最初で定義）
+        const urlParams = new URLSearchParams(window.location.search)
+        const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+        
+        console.log('  - isFromMyPage:', isFromMyPage)
+        
+        await loadUserData()
+        
+      } catch (error) {
+        console.error('🚨 CRITICAL: Profile Edit Initialization Error:', error)
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : typeof error,
+          userExists: !!user,
+          userId: user?.id,
+          currentURL: window.location.href
+        })
+        // エラーが発生した場合もページを表示するため、デフォルト初期化を実行
+        try {
+          console.log('🛡️ Fallback initialization starting...')
+          // 最小限の安全な初期化
+          const isForeignMale = profileType === 'foreign-male'
+          reset({
+            nickname: '',
+            japanese_level: 'none',
+            english_level: 'none'
+          })
+        } catch (fallbackError) {
+          console.error('🚨 Even fallback initialization failed:', fallbackError)
+        }
+      }
+    }
     
     const loadUserData = async () => {
+      // fromMyPageパラメータの確認（function全体で使用するため最初に定義）
+      const urlParams = new URLSearchParams(window.location.search)
+      const isFromMyPage = urlParams.get('fromMyPage') === 'true'
+      
       // テストモードの場合は認証をスキップ
       if (isTestMode() && !user) {
         console.log('🧪 テストモード検出 - 認証をスキップして初期化処理を実行')
@@ -1674,8 +1726,8 @@ function ProfileEditContent() {
           height: initialData.height,
           body_type: initialData.body_type,
           marital_status: initialData.marital_status as 'none' | 'single' | 'married',
-          japanese_level: initialData.japanese_level,
-          english_level: initialData.english_level,
+          japanese_level: initialData.japanese_level as 'none' | 'beginner' | 'intermediate' | 'advanced' | 'native' | 'elementary' | 'upperIntermediate' | undefined,
+          english_level: initialData.english_level as 'none' | 'beginner' | 'intermediate' | 'advanced' | 'native' | 'elementary' | 'upperIntermediate' | undefined,
           self_introduction: initialData.self_introduction,
           hobbies: initialData.hobbies,
           personality: initialData.personality,
@@ -1771,8 +1823,8 @@ function ProfileEditContent() {
               height: initialData.height,
               body_type: initialData.body_type,
               marital_status: initialData.marital_status as 'none' | 'single' | 'married',
-              japanese_level: initialData.japanese_level,
-              english_level: initialData.english_level,
+              japanese_level: getSafeLanguageLevel(initialData, 'japanese_level'),
+              english_level: getSafeLanguageLevel(initialData, 'english_level'),
               self_introduction: initialData.self_introduction,
               hobbies: initialData.hobbies,
               personality: initialData.personality,
@@ -2317,9 +2369,9 @@ function ProfileEditContent() {
           personality: isNewUser ? [] : existingPersonality,
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
-          // 🆕 言語レベルフィールド（専用カラム優先、JSONフォールバック）
-          japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile?.japanese_level || parsedOptionalData?.japanese_level || 'none')) : 'none',
-          english_level: !isForeignMale ? (isNewUser ? 'none' : (profile?.english_level || parsedOptionalData?.english_level || 'none')) : 'none',
+          // 🆕 言語レベルフィールド（安全なヘルパー関数使用）
+          japanese_level: isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'japanese_level')) : 'none',
+          english_level: !isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'english_level')) : 'none',
           // ✨ 新機能: 使用言語＋言語レベル
           language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
@@ -2734,7 +2786,7 @@ function ProfileEditContent() {
       }
     }
 
-    loadUserData()
+    initializeProfileEdit()
   }, [user, reset, router, setValue, supabase, isForeignMale, isJapaneseFemale])
 
   // Form submission handler
