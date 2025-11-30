@@ -111,12 +111,17 @@ export const generateLanguageSkillsFromLegacy = (
 ): LanguageSkill[] => {
   const skills: LanguageSkill[] = [];
   
+  // 基本情報がない場合は空配列を返す（新規ユーザー対応）
+  if (!profile.gender || !profile.nationality) {
+    return skills;
+  }
+  
   // 外国人男性の場合: japanese_level → 日本語スキル
   const isForeignMale = profile.gender === 'male' && 
     profile.nationality && 
     !['日本', 'japan'].includes(profile.nationality.toLowerCase());
     
-  if (isForeignMale && profile.japanese_level && profile.japanese_level !== 'none') {
+  if (isForeignMale && profile.japanese_level && profile.japanese_level !== 'none' && profile.japanese_level !== '') {
     skills.push({
       language: 'ja',
       level: profile.japanese_level
@@ -124,23 +129,17 @@ export const generateLanguageSkillsFromLegacy = (
   }
   
   // 日本人の場合: english_level → 英語スキル
-  const isJapanese = !profile.nationality || 
+  const isJapanese = profile.nationality && 
     ['日本', 'japan'].includes(profile.nationality.toLowerCase());
     
-  if (isJapanese && profile.english_level && profile.english_level !== 'none') {
+  if (isJapanese && profile.english_level && profile.english_level !== 'none' && profile.english_level !== '') {
     skills.push({
       language: 'en',
       level: profile.english_level
     });
   }
   
-  // 日本人でレベル未設定の場合: 日本語ネイティブをデフォルト
-  if (isJapanese && skills.length === 0) {
-    skills.push({
-      language: 'ja',
-      level: 'native'
-    });
-  }
+  // ⚠️ デフォルト自動設定は削除 - ユーザーが明示的に選択したもののみを尊重
   
   return skills;
 };

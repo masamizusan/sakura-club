@@ -2303,7 +2303,7 @@ function ProfileEditContent() {
           japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile.japanese_level || parsedOptionalData.japanese_level || 'none')) : 'none',
           english_level: !isForeignMale ? (isNewUser ? 'none' : (profile.english_level || parsedOptionalData.english_level || 'none')) : 'none',
           // ✨ 新機能: 使用言語＋言語レベル
-          language_skills: isNewUser ? [] : (profile.language_skills || generateLanguageSkillsFromLegacy(profile)),
+          language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -2450,6 +2450,14 @@ function ProfileEditContent() {
             initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
           }
         }
+        
+        console.log('🔍 Language Skills 初期化:', {
+          isNewUser,
+          'profile.language_skills': profile.language_skills,
+          'generated from legacy': isNewUser ? 'SKIPPED (new user)' : generateLanguageSkillsFromLegacy(profile),
+          'final initialLanguageSkills': initialLanguageSkills
+        })
+        
         setLanguageSkills(initialLanguageSkills)
         
         console.log('✅ STATE SETTING COMPLETED')
