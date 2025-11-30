@@ -75,28 +75,28 @@ export function calculateProfileCompletion(
   let optionalFields = []
 
   if (isForeignMale) {
-    // 外国人男性の必須フィールド（7個） - genderを追加
+    // 外国人男性の必須フィールド（8個） - japanese_level を追加
     requiredFields = [
       'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction'
+      'hobbies', 'self_introduction', 'japanese_level'
     ]
 
-    // 外国人男性のオプションフィールド（9個）
+    // 外国人男性のオプションフィールド（8個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures', 'language_skills'
+      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
     ]
   } else {
-    // 日本人女性の必須フィールド（6個）
+    // 日本人女性の必須フィールド（7個） - english_level を追加
     requiredFields = [
       'nickname', 'age', 'birth_date', 'prefecture',
-      'hobbies', 'self_introduction'
+      'hobbies', 'self_introduction', 'english_level'
     ]
 
-    // 日本人女性のオプションフィールド（7個）
+    // 日本人女性のオプションフィールド（6個）
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city', 'language_skills'
+      'personality', 'city'
     ]
   }
 
@@ -137,6 +137,12 @@ export function calculateProfileCompletion(
     // 国籍の特別チェック：空文字、null、undefined、選択プレースホルダーを除外
     if (field === 'nationality') {
       const isValid = value && value !== '' && value !== '国籍を選択' && value !== 'none' && value !== null && value !== undefined
+      return isValid
+    }
+
+    // 言語レベルの特別チェック：空文字、null、undefined、'none'、プレースホルダーを除外
+    if (field === 'japanese_level' || field === 'english_level') {
+      const isValid = value && value !== '' && value !== 'none' && value !== null && value !== undefined
       return isValid
     }
 

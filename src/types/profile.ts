@@ -107,9 +107,14 @@ export const hasValidLanguageSkills = (skills?: LanguageSkill[]): boolean => {
 
 // 既存言語レベルから言語スキルを生成するヘルパー
 export const generateLanguageSkillsFromLegacy = (
-  profile: Partial<Profile>
+  profile: Partial<Profile> | null | undefined
 ): LanguageSkill[] => {
   const skills: LanguageSkill[] = [];
+  
+  // プロフィールが存在しない場合は空配列を返す
+  if (!profile) {
+    return skills;
+  }
   
   // 基本情報がない場合は空配列を返す（新規ユーザー対応）
   if (!profile.gender || !profile.nationality) {

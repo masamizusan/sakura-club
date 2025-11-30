@@ -52,8 +52,8 @@ const baseProfileEditSchema = (t: any) => z.object({
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
-  english_level: z.string().optional(),
-  japanese_level: z.string().optional(),
+  english_level: z.string().min(1, 'Please select your English level.'),
+  japanese_level: z.string().min(1, '日本語レベルを選択してください'),
   // ✨ 新機能: 使用言語＋言語レベル
   language_skills: z.array(z.object({
     language: z.enum(['', 'ja', 'en', 'ko', 'zh-TW']),
@@ -187,6 +187,7 @@ const getBodyTypeOptions = (t: any) => [
 
 // 英語レベルオプション（翻訳対応）
 const getEnglishLevelOptions = (t: any) => [
+  { value: '', label: 'Please select' }, // プレースホルダー
   { value: 'none', label: t('levels.none') },
   { value: 'beginner', label: t('levels.beginner') },
   { value: 'elementary', label: t('levels.elementary') },
@@ -198,6 +199,7 @@ const getEnglishLevelOptions = (t: any) => [
 
 // 日本語レベルオプション（翻訳対応）
 const getJapaneseLevelOptions = (t: any) => [
+  { value: '', label: '選択してください' }, // プレースホルダー
   { value: 'none', label: t('levels.none') },
   { value: 'beginner', label: t('levels.beginner') },
   { value: 'elementary', label: t('levels.elementary') },
@@ -1864,34 +1866,34 @@ function ProfileEditContent() {
         
         console.log('🔍 DETAILED FIELD VALUES FOR MYPAGE COMPARISON:')
         console.log('Birth date related fields:', {
-          birth_date: profile.birth_date,
-          date_of_birth: profile.date_of_birth,
-          birthday: profile.birthday,
-          dob: profile.dob,
-          age: profile.age
+          birth_date: profile?.birth_date,
+          date_of_birth: profile?.date_of_birth,
+          birthday: profile?.birthday,
+          dob: profile?.dob,
+          age: profile?.age
         })
         console.log('All occupation related fields:', {
-          occupation: profile.occupation,
-          job: profile.job,
-          work: profile.work
+          occupation: profile?.occupation,
+          job: profile?.job,
+          work: profile?.work
         })
         console.log('All height related fields:', {
-          height: profile.height,
-          height_cm: profile.height_cm
+          height: profile?.height,
+          height_cm: profile?.height_cm
         })
         console.log('========== PROFILE EDIT DEBUG END ==========')
 
         // 👤 URLにtypeパラメータがない場合、プロフィールから判定
         if (!profileType) {
-          const detectedType = profile.gender === 'male' && profile.nationality && profile.nationality !== '日本'
+          const detectedType = profile?.gender === 'male' && profile?.nationality && profile?.nationality !== '日本'
             ? 'foreign-male'
             : 'japanese-female'
           setUserBasedType(detectedType)
           console.log('🔍 Auto-detected profile type:', {
-            gender: profile.gender,
-            nationality: profile.nationality,
+            gender: profile?.gender,
+            nationality: profile?.nationality,
             detectedType,
-            reasoning: profile.gender === 'male' ? 'Male gender detected' : 'Female or no gender detected'
+            reasoning: profile?.gender === 'male' ? 'Male gender detected' : 'Female or no gender detected'
           })
         }
 
@@ -1904,7 +1906,7 @@ function ProfileEditContent() {
           
           // フォールバック: city JSONから取得
           try {
-            const cityData = typeof profile.city === 'string' ? JSON.parse(profile.city) : profile.city
+            const cityData = typeof profile?.city === 'string' ? JSON.parse(profile.city) : profile?.city
             if (cityData && cityData[fieldName]) {
               return cityData[fieldName]
             }
@@ -1917,14 +1919,14 @@ function ProfileEditContent() {
 
         // 🔍 新形式のcity JSONから市区町村名を取得
         const getCityValue = () => {
-          if (!profile.city) return ''
+          if (!profile?.city) return ''
           
           try {
-            const cityData = typeof profile.city === 'string' ? JSON.parse(profile.city) : profile.city
+            const cityData = typeof profile?.city === 'string' ? JSON.parse(profile.city) : profile?.city
             return cityData?.city || ''
           } catch (e) {
             // JSON parse error - return as is if it's a simple string
-            return typeof profile.city === 'string' ? profile.city : ''
+            return typeof profile?.city === 'string' ? profile?.city : ''
           }
         }
 
@@ -2030,7 +2032,7 @@ function ProfileEditContent() {
         console.log('  - bio:', profile.bio) 
         console.log('  - age:', profile.age)
         console.log('  - birth_date:', profile.birth_date)
-        console.log('  - city (raw):', profile.city)
+        console.log('  - city (raw):', profile?.city)
         console.log('  - interests (raw):', profile.interests)
         console.log('  - height:', profile.height)
         console.log('  - occupation:', profile.occupation)
@@ -2300,10 +2302,10 @@ function ProfileEditContent() {
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
           // 🆕 言語レベルフィールド（専用カラム優先、JSONフォールバック）
-          japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile.japanese_level || parsedOptionalData.japanese_level || 'none')) : 'none',
-          english_level: !isForeignMale ? (isNewUser ? 'none' : (profile.english_level || parsedOptionalData.english_level || 'none')) : 'none',
+          japanese_level: isForeignMale ? (isNewUser ? '' : (profile?.japanese_level || parsedOptionalData?.japanese_level || 'none')) : 'none',
+          english_level: !isForeignMale ? (isNewUser ? '' : (profile?.english_level || parsedOptionalData?.english_level || 'none')) : 'none',
           // ✨ 新機能: 使用言語＋言語レベル
-          language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile.language_skills || generateLanguageSkillsFromLegacy(profile)),
+          language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -2444,7 +2446,7 @@ function ProfileEditContent() {
           initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
         } else {
           // 既存ユーザー: DBまたは既存カラムから生成
-          initialLanguageSkills = profile.language_skills || generateLanguageSkillsFromLegacy(profile)
+          initialLanguageSkills = profile?.language_skills || generateLanguageSkillsFromLegacy(profile)
           // 既存ユーザーでもデータがない場合は空で開始
           if (initialLanguageSkills.length === 0) {
             initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
@@ -2453,7 +2455,7 @@ function ProfileEditContent() {
         
         console.log('🔍 Language Skills 初期化:', {
           isNewUser,
-          'profile.language_skills': profile.language_skills,
+          'profile.language_skills': profile?.language_skills || null,
           'generated from legacy': isNewUser ? 'SKIPPED (new user)' : generateLanguageSkillsFromLegacy(profile),
           'final initialLanguageSkills': initialLanguageSkills
         })
@@ -2606,7 +2608,7 @@ function ProfileEditContent() {
           height: profile.height,
           body_type: profile.body_type,
           marital_status: profile.marital_status,
-          city: profile.city,
+          city: profile?.city,
           english_level: profile.english_level,
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
