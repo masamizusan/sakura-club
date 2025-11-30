@@ -2440,20 +2440,15 @@ function ProfileEditContent() {
         // ✨ 新機能: languageSkillsを同期
         let initialLanguageSkills: LanguageSkill[] = []
         if (isNewUser) {
-          // 新規ユーザー: 国籍に基づくデフォルト言語を設定
-          const nationality = (signupData as any)?.nationality || profile.nationality
-          if (nationality === '日本' || !nationality) {
-            initialLanguageSkills = [{ language: 'ja', level: 'native' }]
-          } else {
-            // 外国人: 母国語（英語想定）+ 日本語初級
-            initialLanguageSkills = [
-              { language: 'en', level: 'native' },
-              { language: 'ja', level: 'beginner' }
-            ]
-          }
+          // 新規ユーザー: 空の状態で開始（ユーザーが自分で選択する）
+          initialLanguageSkills = [{ language: '', level: '' }]
         } else {
           // 既存ユーザー: DBまたは既存カラムから生成
           initialLanguageSkills = profile.language_skills || generateLanguageSkillsFromLegacy(profile)
+          // 既存ユーザーでもデータがない場合は空で開始
+          if (initialLanguageSkills.length === 0) {
+            initialLanguageSkills = [{ language: '', level: '' }]
+          }
         }
         setLanguageSkills(initialLanguageSkills)
         
@@ -3532,7 +3527,7 @@ function ProfileEditContent() {
                                   }}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="言語を選択" />
+                                    <SelectValue placeholder="言語を選択してください" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {Object.entries(LANGUAGE_LABELS).map(([code, label]) => (
@@ -3566,7 +3561,7 @@ function ProfileEditContent() {
                                   }}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="レベルを選択" />
+                                    <SelectValue placeholder="レベルを選択してください" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {Object.entries(LANGUAGE_LEVEL_LABELS)
@@ -3617,7 +3612,7 @@ function ProfileEditContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newSkills = [...languageSkills, { language: 'ja' as LanguageCode, level: 'intermediate' as LanguageLevelCode }]
+                              const newSkills = [...languageSkills, { language: '', level: '' }]
                               setLanguageSkills(newSkills)
                               setValue('language_skills', newSkills)
                               

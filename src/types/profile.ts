@@ -4,10 +4,11 @@
  */
 
 // 言語コード
-export type LanguageCode = 'ja' | 'en' | 'ko' | 'zh-TW';
+export type LanguageCode = '' | 'ja' | 'en' | 'ko' | 'zh-TW';
 
 // 言語レベル（既存システムと統一）
 export type LanguageLevelCode =
+  | ''                // 未選択
   | 'none'            // 記入しない（UIでは必須項目なので基本選ばせない）
   | 'beginner'        // 初級
   | 'beginner_plus'   // 初級上

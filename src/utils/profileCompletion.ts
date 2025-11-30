@@ -5,16 +5,16 @@
 
 // ✨ 新機能: 使用言語＋言語レベルのチェック関数
 const hasValidLanguageSkills = (profileData: any): boolean => {
-  // 1. 新しい language_skills を優先
+  // 1. 新しい language_skills を優先（空文字・null・未選択を除外）
   if (profileData.language_skills && Array.isArray(profileData.language_skills) && profileData.language_skills.length > 0) {
     return profileData.language_skills.some((skill: any) => 
-      skill.language && skill.level && skill.level !== 'none'
+      skill.language && skill.language !== '' && skill.level && skill.level !== '' && skill.level !== 'none'
     )
   }
   
   // 2. 既存フィールドをフォールバックとして使用（後方互換性）
-  const hasJapaneseLevel = profileData.japanese_level && profileData.japanese_level !== 'none'
-  const hasEnglishLevel = profileData.english_level && profileData.english_level !== 'none'
+  const hasJapaneseLevel = profileData.japanese_level && profileData.japanese_level !== 'none' && profileData.japanese_level !== ''
+  const hasEnglishLevel = profileData.english_level && profileData.english_level !== 'none' && profileData.english_level !== ''
   
   return hasJapaneseLevel || hasEnglishLevel
 }
