@@ -3,22 +3,51 @@
  * マイページとプロフィール編集画面で同じロジックを使用
  */
 
-// ✨ 言語情報の完了判定（統一スロット）
-const hasLanguageInfo = (profileData: any): boolean => {
-  // (A) 既存の japanese_level または english_level のいずれかが 'none' 以外
-  const hasLanguageFromLegacy =
-    (profileData.japanese_level && profileData.japanese_level !== 'none') ||
-    (profileData.english_level && profileData.english_level !== 'none');
+// ✨ 言語情報の完了判定（統一スロット）- 言語＋レベルが両方セットされているときだけ true
+type LanguageSkill = {
+  language?: string
+  level?: string
+}
 
-  // (B) language_skills 配列の中に、language !== 'none' かつ level !== 'none' の要素が存在
-  const hasLanguageFromSkills =
-    Array.isArray(profileData.language_skills) &&
-    profileData.language_skills.some(
-      (skill: any) => skill.language !== 'none' && skill.level !== 'none'
-    );
+function hasLanguageInfo(profileData: any): boolean {
+  // 1. 新しい language_skills を優先して見る
+  const skills = profileData.language_skills as LanguageSkill[] | undefined
 
-  // いずれかを満たしていれば「言語スロットは完了」
-  return hasLanguageFromLegacy || hasLanguageFromSkills;
+  if (Array.isArray(skills) && skills.length > 0) {
+    const hasValidSkill = skills.some((skill) => {
+      if (!skill) return false
+
+      const lang = skill.language
+      const level = skill.level
+
+      return (
+        lang !== undefined &&
+        lang !== null &&
+        lang !== '' &&
+        lang !== 'none' &&
+        level !== undefined &&
+        level !== null &&
+        level !== '' &&
+        level !== 'none'
+      )
+    })
+
+    if (hasValidSkill) {
+      return true
+    }
+  }
+
+  // 2. フォールバック: 旧フィールド(japanese_level / english_level)を見る
+  const jl = profileData.japanese_level
+  const el = profileData.english_level
+
+  const isValidLevel = (value: any) =>
+    value !== undefined &&
+    value !== null &&
+    value !== '' &&
+    value !== 'none'
+
+  return isValidLevel(jl) || isValidLevel(el)
 }
 
 // 専用カラム優先、city JSONフォールバックのヘルパー関数
