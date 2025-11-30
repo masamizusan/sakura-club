@@ -320,7 +320,7 @@ export function calculateProfileCompletion(
     // 🎯 テストケース確認用
     testCaseResults: {
       caseA_allNone: skills && skills.length === 1 && skills[0]?.language === 'none' && skills[0]?.level === 'none',
-      caseB_validPair: skills && skills.some(s => s?.language !== 'none' && s?.level !== 'none'),
+      caseB_validPair: skills && skills.some((s: any) => s?.language !== 'none' && s?.level !== 'none'),
       caseC_shouldMaintain100: languageInfoResult && completedRequired.length === requiredFields.length && hasImages
     }
   })
