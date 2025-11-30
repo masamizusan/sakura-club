@@ -4,12 +4,11 @@
  */
 
 // 言語コード
-export type LanguageCode = '' | 'ja' | 'en' | 'ko' | 'zh-TW';
+export type LanguageCode = 'none' | 'ja' | 'en' | 'ko' | 'zh-TW';
 
 // 言語レベル（既存システムと統一）
 export type LanguageLevelCode =
-  | ''                // 未選択
-  | 'none'            // 記入しない（UIでは必須項目なので基本選ばせない）
+  | 'none'            // 未選択・記入しない
   | 'beginner'        // 初級
   | 'beginner_plus'   // 初級上
   | 'intermediate'    // 中級
@@ -25,7 +24,7 @@ export interface LanguageSkill {
 
 // 言語の表示ラベル
 export const LANGUAGE_LABELS: Record<LanguageCode, string> = {
-  '': '選択してください',
+  none: '選択してください',
   ja: '日本語',
   en: '英語',
   ko: '韓国語',
@@ -34,8 +33,7 @@ export const LANGUAGE_LABELS: Record<LanguageCode, string> = {
 
 // 言語レベルの表示ラベル
 export const LANGUAGE_LEVEL_LABELS: Record<LanguageLevelCode, string> = {
-  '': '選択してください',
-  none: '記入しない',
+  none: '選択してください',
   beginner: '初級（日常会話は難しい）',
   beginner_plus: '初級上（基本的な日常会話ができる）',
   intermediate: '中級（日常会話は問題ない）',

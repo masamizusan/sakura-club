@@ -51,13 +51,13 @@ const baseProfileEditSchema = (t: any) => z.object({
     z.number().min(120, t('errors.heightMinimum')).max(250, t('errors.heightMaximum')).optional()
   ),
   body_type: z.string().optional(),
-  marital_status: z.enum(['none', 'single', 'married', '']).optional(),
+  marital_status: z.enum(['none', 'single', 'married']).optional(),
   english_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   japanese_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   // ✨ 新機能: 使用言語＋言語レベル
   language_skills: z.array(z.object({
-    language: z.enum(['', 'ja', 'en', 'ko', 'zh-TW']),
-    level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
+    language: z.enum(['none', 'ja', 'en', 'ko', 'zh-TW']),
+    level: z.enum(['none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
   })).optional(),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
@@ -2373,7 +2373,7 @@ function ProfileEditContent() {
           japanese_level: isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'japanese_level')) : 'none',
           english_level: !isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'english_level')) : 'none',
           // ✨ 新機能: 使用言語＋言語レベル
-          language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
+          language_skills: isNewUser ? [{ language: 'none' as LanguageCode, level: 'none' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
         
         console.log('🚨 Final Reset Data for Form:', resetData)
@@ -3609,7 +3609,7 @@ function ProfileEditContent() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {Object.entries(LANGUAGE_LABELS).map(([code, label]) => (
-                                      <SelectItem key={code} value={code}>
+                                      <SelectItem key={code} value={code} disabled={code === 'none'}>
                                         {label}
                                       </SelectItem>
                                     ))}
@@ -3642,10 +3642,8 @@ function ProfileEditContent() {
                                     <SelectValue placeholder="レベルを選択してください" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {Object.entries(LANGUAGE_LEVEL_LABELS)
-                                      .filter(([code]) => code !== 'none') // UIでは'none'を除外
-                                      .map(([code, label]) => (
-                                      <SelectItem key={code} value={code}>
+                                    {Object.entries(LANGUAGE_LEVEL_LABELS).map(([code, label]) => (
+                                      <SelectItem key={code} value={code} disabled={code === 'none'}>
                                         {label}
                                       </SelectItem>
                                     ))}
@@ -3690,7 +3688,7 @@ function ProfileEditContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newSkills = [...languageSkills, { language: '' as LanguageCode, level: '' as LanguageLevelCode }]
+                              const newSkills = [...languageSkills, { language: 'none' as LanguageCode, level: 'none' as LanguageLevelCode }]
                               setLanguageSkills(newSkills)
                               setValue('language_skills', newSkills)
                               
