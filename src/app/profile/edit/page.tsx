@@ -52,8 +52,8 @@ const baseProfileEditSchema = (t: any) => z.object({
   ),
   body_type: z.string().optional(),
   marital_status: z.enum(['none', 'single', 'married', '']).optional(),
-  english_level: z.string().min(1, 'Please select your English level.'),
-  japanese_level: z.string().min(1, '日本語レベルを選択してください'),
+  english_level: z.string().optional(),
+  japanese_level: z.string().optional(),
   // ✨ 新機能: 使用言語＋言語レベル
   language_skills: z.array(z.object({
     language: z.enum(['', 'ja', 'en', 'ko', 'zh-TW']),
@@ -86,6 +86,14 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['planned_prefectures']
         }])
       }
+      // 日本語レベル必須
+      if (!data.japanese_level || data.japanese_level === '' || data.japanese_level === 'none') {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: '日本語レベルを選択してください',
+          path: ['japanese_level']
+        }])
+      }
       return true
     })
   } else {
@@ -96,6 +104,14 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           code: z.ZodIssueCode.custom,
           message: t('errors.cityRequired'),
           path: ['prefecture']
+        }])
+      }
+      // 英語レベル必須
+      if (!data.english_level || data.english_level === '' || data.english_level === 'none') {
+        throw new z.ZodError([{
+          code: z.ZodIssueCode.custom,
+          message: 'Please select your English level.',
+          path: ['english_level']
         }])
       }
       return true
@@ -2302,8 +2318,8 @@ function ProfileEditContent() {
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
           // 🆕 言語レベルフィールド（専用カラム優先、JSONフォールバック）
-          japanese_level: isForeignMale ? (isNewUser ? '' : (profile?.japanese_level || parsedOptionalData?.japanese_level || 'none')) : 'none',
-          english_level: !isForeignMale ? (isNewUser ? '' : (profile?.english_level || parsedOptionalData?.english_level || 'none')) : 'none',
+          japanese_level: isForeignMale ? (isNewUser ? 'none' : (profile?.japanese_level || parsedOptionalData?.japanese_level || 'none')) : 'none',
+          english_level: !isForeignMale ? (isNewUser ? 'none' : (profile?.english_level || parsedOptionalData?.english_level || 'none')) : 'none',
           // ✨ 新機能: 使用言語＋言語レベル
           language_skills: isNewUser ? [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
