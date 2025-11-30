@@ -56,9 +56,9 @@ const baseProfileEditSchema = (t: any) => z.object({
   japanese_level: z.string().optional(),
   // ✨ 新機能: 使用言語＋言語レベル
   language_skills: z.array(z.object({
-    language: z.enum(['ja', 'en', 'ko', 'zh-TW']),
-    level: z.enum(['none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
-  })).min(1, '使用言語と言語レベルを少なくとも1つ選択してください').optional(),
+    language: z.enum(['', 'ja', 'en', 'ko', 'zh-TW']),
+    level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
+  })).optional(),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -2441,13 +2441,13 @@ function ProfileEditContent() {
         let initialLanguageSkills: LanguageSkill[] = []
         if (isNewUser) {
           // 新規ユーザー: 空の状態で開始（ユーザーが自分で選択する）
-          initialLanguageSkills = [{ language: '', level: '' }]
+          initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
         } else {
           // 既存ユーザー: DBまたは既存カラムから生成
           initialLanguageSkills = profile.language_skills || generateLanguageSkillsFromLegacy(profile)
           // 既存ユーザーでもデータがない場合は空で開始
           if (initialLanguageSkills.length === 0) {
-            initialLanguageSkills = [{ language: '', level: '' }]
+            initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
           }
         }
         setLanguageSkills(initialLanguageSkills)
@@ -3612,7 +3612,7 @@ function ProfileEditContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newSkills = [...languageSkills, { language: '', level: '' }]
+                              const newSkills = [...languageSkills, { language: '' as LanguageCode, level: '' as LanguageLevelCode }]
                               setLanguageSkills(newSkills)
                               setValue('language_skills', newSkills)
                               

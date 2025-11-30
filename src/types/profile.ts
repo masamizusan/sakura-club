@@ -25,6 +25,7 @@ export interface LanguageSkill {
 
 // 言語の表示ラベル
 export const LANGUAGE_LABELS: Record<LanguageCode, string> = {
+  '': '選択してください',
   ja: '日本語',
   en: '英語',
   ko: '韓国語',
@@ -33,6 +34,7 @@ export const LANGUAGE_LABELS: Record<LanguageCode, string> = {
 
 // 言語レベルの表示ラベル
 export const LANGUAGE_LEVEL_LABELS: Record<LanguageLevelCode, string> = {
+  '': '選択してください',
   none: '記入しない',
   beginner: '初級（日常会話は難しい）',
   beginner_plus: '初級上（基本的な日常会話ができる）',
