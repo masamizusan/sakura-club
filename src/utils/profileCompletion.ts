@@ -3,20 +3,22 @@
  * マイページとプロフィール編集画面で同じロジックを使用
  */
 
-// ✨ 新機能: 使用言語＋言語レベルのチェック関数
-const hasValidLanguageSkills = (profileData: any): boolean => {
-  // 1. 新しい language_skills を優先（空文字・null・未選択を除外）
-  if (profileData.language_skills && Array.isArray(profileData.language_skills) && profileData.language_skills.length > 0) {
-    return profileData.language_skills.some((skill: any) => 
-      skill.language && skill.language !== '' && skill.level && skill.level !== '' && skill.level !== 'none'
-    )
-  }
-  
-  // 2. 既存フィールドをフォールバックとして使用（後方互換性）
-  const hasJapaneseLevel = profileData.japanese_level && profileData.japanese_level !== 'none' && profileData.japanese_level !== ''
-  const hasEnglishLevel = profileData.english_level && profileData.english_level !== 'none' && profileData.english_level !== ''
-  
-  return hasJapaneseLevel || hasEnglishLevel
+// ✨ 言語情報の完了判定（統一スロット）
+const hasLanguageInfo = (profileData: any): boolean => {
+  // (A) 既存の japanese_level または english_level のいずれかが 'none' 以外
+  const hasLanguageFromLegacy =
+    (profileData.japanese_level && profileData.japanese_level !== 'none') ||
+    (profileData.english_level && profileData.english_level !== 'none');
+
+  // (B) language_skills 配列の中に、language !== 'none' かつ level !== 'none' の要素が存在
+  const hasLanguageFromSkills =
+    Array.isArray(profileData.language_skills) &&
+    profileData.language_skills.some(
+      (skill: any) => skill.language !== 'none' && skill.level !== 'none'
+    );
+
+  // いずれかを満たしていれば「言語スロットは完了」
+  return hasLanguageFromLegacy || hasLanguageFromSkills;
 }
 
 // 専用カラム優先、city JSONフォールバックのヘルパー関数
@@ -75,10 +77,10 @@ export function calculateProfileCompletion(
   let optionalFields = []
 
   if (isForeignMale) {
-    // 外国人男性の必須フィールド（8個） - japanese_level を追加
+    // 外国人男性の必須フィールド（8個） - language_info を統一スロットとして追加
     requiredFields = [
       'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction', 'japanese_level'
+      'hobbies', 'self_introduction', 'language_info'
     ]
 
     // 外国人男性のオプションフィールド（8個）
@@ -87,10 +89,10 @@ export function calculateProfileCompletion(
       'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
     ]
   } else {
-    // 日本人女性の必須フィールド（7個） - english_level を追加
+    // 日本人女性の必須フィールド（8個） - language_info を統一スロットとして追加
     requiredFields = [
       'nickname', 'age', 'birth_date', 'prefecture',
-      'hobbies', 'self_introduction', 'english_level'
+      'hobbies', 'self_introduction', 'language_info'
     ]
 
     // 日本人女性のオプションフィールド（6個）
@@ -125,6 +127,9 @@ export function calculateProfileCompletion(
       case 'planned_prefectures':
         value = profileData.planned_prefectures
         break
+      case 'language_info':
+        // ✨ 統一された言語情報スロット
+        return hasLanguageInfo(profileData)
       default:
         value = profileData[field]
     }
@@ -140,11 +145,6 @@ export function calculateProfileCompletion(
       return isValid
     }
 
-    // 言語レベルの特別チェック：空文字、null、undefined、'none'、プレースホルダーを除外
-    if (field === 'japanese_level' || field === 'english_level') {
-      const isValid = value && value !== '' && value !== 'none' && value !== null && value !== undefined
-      return isValid
-    }
 
     return value !== null && value !== undefined && value !== ''
   })
@@ -185,9 +185,6 @@ export function calculateProfileCompletion(
         // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
         value = getCityFromNewFormat(profileData.city)
         break
-      case 'language_skills':
-        // ✨ 新機能: 使用言語＋言語レベルのチェック
-        return hasValidLanguageSkills(profileData)
       default:
         value = profileData[field]
     }
@@ -215,6 +212,62 @@ export function calculateProfileCompletion(
   const imageCompletionCount = hasImages ? 1 : 0
   const completedFields = completedRequired.length + completedOptional.length + imageCompletionCount
   const completion = Math.round((completedFields / totalFields) * 100)
+
+  // ✨ デバッグ用ログ（一時的）
+  const incompleteRequired = requiredFields.filter(field => {
+    if (field === 'language_info') return !hasLanguageInfo(profileData)
+    
+    let value
+    switch (field) {
+      case 'nickname': value = profileData.name || profileData.nickname; break
+      case 'birth_date': value = profileData.birth_date || profileData.date_of_birth; break
+      case 'prefecture': value = profileData.residence || profileData.prefecture; break
+      case 'hobbies': value = profileData.hobbies || profileData.interests; break
+      case 'self_introduction': value = profileData.bio || profileData.self_introduction; break
+      case 'planned_prefectures': value = profileData.planned_prefectures; break
+      default: value = profileData[field]
+    }
+    
+    if (Array.isArray(value)) return value.length === 0
+    if (field === 'nationality') return !value || value === '' || value === '国籍を選択' || value === 'none'
+    return !value || value === '' || value === null || value === undefined
+  })
+
+  const incompleteOptional = optionalFields.filter(field => {
+    let value = profileData[field]
+    
+    switch (field) {
+      case 'personality': 
+        value = profileData.personality || []
+        return !Array.isArray(value) || value.length === 0
+      case 'occupation':
+      case 'height':
+      case 'body_type':
+      case 'marital_status':
+        value = getFieldFromDedicatedColumnOrCity(profileData, field)
+        return !value || value === '' || value === 'none'
+      case 'city':
+        value = getCityFromNewFormat(profileData.city)
+        return !value
+      default:
+        return !value || value === '' || value === 'none'
+    }
+  })
+
+  console.log('🔍 ProfileCompletion Debug', {
+    completedRequired: completedRequired.length,
+    totalRequired: requiredFields.length,
+    completedOptional: completedOptional.length,  
+    totalOptional: optionalFields.length,
+    hasImages,
+    totalFields,
+    completedFields,
+    completion: `${completion}%`,
+    incompleteRequired,
+    incompleteOptional,
+    isForeignMale,
+    isNewUser
+  })
 
   // 完成度計算完了
 
