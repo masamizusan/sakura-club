@@ -118,16 +118,16 @@ export function calculateProfileCompletion(
       'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
     ]
   } else {
-    // 日本人女性の必須フィールド（8個） - language_info を統一スロットとして追加
+    // 日本人女性の必須フィールド（7個） - 言語情報は不要
     requiredFields = [
       'nickname', 'age', 'birth_date', 'prefecture',
-      'hobbies', 'self_introduction', 'language_info'
+      'hobbies', 'self_introduction'
     ]
 
-    // 日本人女性のオプションフィールド（6個）
+    // 日本人女性のオプションフィールド（7個）- 言語情報をオプションに追加
     optionalFields = [
       'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city'
+      'personality', 'city', 'language_info'
     ]
   }
 
@@ -214,6 +214,9 @@ export function calculateProfileCompletion(
         // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
         value = getCityFromNewFormat(profileData.city)
         break
+      case 'language_info':
+        // ✨ 日本人女性のオプション言語情報スロット
+        return hasLanguageInfo(profileData)
       default:
         value = profileData[field]
     }
@@ -278,10 +281,17 @@ export function calculateProfileCompletion(
       case 'city':
         value = getCityFromNewFormat(profileData.city)
         return !value
+      case 'language_info':
+        // ✨ 言語情報の完成度チェック（オプション用）
+        return !hasLanguageInfo(profileData)
       default:
         return !value || value === '' || value === 'none'
     }
   })
+
+  // ✨ 言語情報の詳細デバッグ情報を追加
+  const languageInfoDebug = hasLanguageInfo(profileData)
+  const languageSkillsDebug = profileData.language_skills
 
   console.log('🔍 ProfileCompletion Debug', {
     completedRequired: completedRequired.length,
@@ -292,6 +302,8 @@ export function calculateProfileCompletion(
     totalFields,
     completedFields,
     completion: `${completion}%`,
+    hasLanguageInfo: languageInfoDebug,
+    language_skills: languageSkillsDebug,
     incompleteRequired,
     incompleteOptional,
     isForeignMale,
