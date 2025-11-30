@@ -10,16 +10,30 @@ type LanguageSkill = {
 }
 
 function hasLanguageInfo(profileData: any): boolean {
-  // 1. 新しい language_skills を優先して見る
+  // 仕様4章に基づく言語情報の完成判定
+  // A. ベースの言語レベルを使う場合
+  const jl = profileData.japanese_level
+  const el = profileData.english_level
+  
+  const isValidLevel = (value: any) =>
+    value !== undefined &&
+    value !== null &&
+    value !== '' &&
+    value !== 'none'
+  
+  const hasValidLegacyLevel = isValidLevel(jl) || isValidLevel(el)
+  
+  // B. language_skills 配列を使う場合
   const skills = profileData.language_skills as LanguageSkill[] | undefined
-
+  let hasValidSkill = false
+  
   if (Array.isArray(skills) && skills.length > 0) {
-    const hasValidSkill = skills.some((skill) => {
+    hasValidSkill = skills.some((skill) => {
       if (!skill) return false
-
+      
       const lang = skill.language
       const level = skill.level
-
+      
       return (
         lang !== undefined &&
         lang !== null &&
@@ -31,23 +45,10 @@ function hasLanguageInfo(profileData: any): boolean {
         level !== 'none'
       )
     })
-
-    if (hasValidSkill) {
-      return true
-    }
   }
-
-  // 2. フォールバック: 旧フィールド(japanese_level / english_level)を見る
-  const jl = profileData.japanese_level
-  const el = profileData.english_level
-
-  const isValidLevel = (value: any) =>
-    value !== undefined &&
-    value !== null &&
-    value !== '' &&
-    value !== 'none'
-
-  return isValidLevel(jl) || isValidLevel(el)
+  
+  // A or B のいずれかを満たせば language_info は完成
+  return hasValidLegacyLevel || hasValidSkill
 }
 
 // 専用カラム優先、city JSONフォールバックのヘルパー関数
@@ -292,6 +293,16 @@ export function calculateProfileCompletion(
   // ✨ 言語情報の詳細デバッグ情報を追加
   const languageInfoDebug = hasLanguageInfo(profileData)
   const languageSkillsDebug = profileData.language_skills
+  
+  // 🔍 100%→88%問題の原因特定用の詳細ログ
+  const jl = profileData.japanese_level
+  const el = profileData.english_level
+  const skills = profileData.language_skills
+  
+  const hasValidLegacy = (jl && jl !== 'none') || (el && el !== 'none')
+  const hasValidSkills = Array.isArray(skills) && skills.some(skill => 
+    skill && skill.language !== 'none' && skill.level !== 'none'
+  )
 
   console.log('🔍 ProfileCompletion Debug', {
     completedRequired: completedRequired.length,
@@ -304,6 +315,14 @@ export function calculateProfileCompletion(
     completion: `${completion}%`,
     hasLanguageInfo: languageInfoDebug,
     language_skills: languageSkillsDebug,
+    // 🆕 言語情報の詳細分析
+    languageDebugDetails: {
+      japanese_level: jl,
+      english_level: el,
+      hasValidLegacyLevels: hasValidLegacy,
+      hasValidLanguageSkills: hasValidSkills,
+      combinedLanguageResult: hasValidLegacy || hasValidSkills
+    },
     incompleteRequired,
     incompleteOptional,
     isForeignMale,
