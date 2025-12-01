@@ -9,27 +9,27 @@ type LanguageSkill = {
   level?: string
 }
 
-// FIX: language info completion - シンプルに language_skills のみをチェック
+// FIX: language info completion - language_skills のみをチェック（legacy fields完全排除）
 function hasLanguageInfo(profileData: any): boolean {
-  // 望んでいる仕様: language_skills を優先して見る
-  // 最低 1件の language_skills 要素があり、language !== 'none' かつ level !== 'none' のペアが存在すれば「入力済み」
+  // 🚨 CRITICAL FIX: japanese_level/english_level を完全に無視
+  // language_skills配列のみを判定対象とする
   
   const skills = profileData.language_skills as LanguageSkill[] | undefined
   
   // language_skills が存在しない、または空配列の場合は未入力扱い
   if (!Array.isArray(skills) || skills.length === 0) {
+    console.log('🔍 hasLanguageInfo: language_skills が存在しないため false')
     return false
   }
   
   // 最低1つの有効なペア（language !== 'none' && level !== 'none'）があれば完成
-  return skills.some((skill) => {
+  const hasValidSkill = skills.some((skill) => {
     if (!skill) return false
     
     const lang = skill.language
     const level = skill.level
     
-    // FIX: none は常に「未入力扱い」
-    return (
+    const isValid = (
       lang !== undefined &&
       lang !== null &&
       lang !== '' &&
@@ -39,7 +39,13 @@ function hasLanguageInfo(profileData: any): boolean {
       level !== '' &&
       level !== 'none'
     )
+    
+    console.log(`🔍 hasLanguageInfo: スキル判定 - language:${lang}, level:${level} => ${isValid}`)
+    return isValid
   })
+  
+  console.log(`🔍 hasLanguageInfo: 最終結果 = ${hasValidSkill}`)
+  return hasValidSkill
 }
 
 // 専用カラム優先、city JSONフォールバックのヘルパー関数
@@ -93,6 +99,16 @@ export function calculateProfileCompletion(
   isNewUser: boolean = false
 ): ProfileCompletionResult {
 
+  // 🚨 CRITICAL FIX: japanese_level/english_level を完全に除外
+  // これらのlegacyフィールドが重複カウントを引き起こすため削除
+  const { japanese_level, english_level, ...cleanProfileData } = profileData || {}
+  
+  console.log('🚨 LEGACY FIELDS REMOVED:', {
+    removed_japanese_level: japanese_level,
+    removed_english_level: english_level,
+    remaining_language_skills: cleanProfileData.language_skills
+  })
+
   // 必須・オプションフィールドの定義
   let requiredFields = []
   let optionalFields = []
@@ -131,28 +147,28 @@ export function calculateProfileCompletion(
     // フィールド名のマッピング（マイページとプロフィール編集の差異を吸収）
     switch (field) {
       case 'nickname':
-        value = profileData.name || profileData.nickname
+        value = cleanProfileData.name || cleanProfileData.nickname
         break
       case 'birth_date':
-        value = profileData.birth_date || profileData.date_of_birth
+        value = cleanProfileData.birth_date || cleanProfileData.date_of_birth
         break
       case 'prefecture':
-        value = profileData.residence || profileData.prefecture
+        value = cleanProfileData.residence || cleanProfileData.prefecture
         break
       case 'hobbies':
-        value = profileData.hobbies || profileData.interests
+        value = cleanProfileData.hobbies || cleanProfileData.interests
         break
       case 'self_introduction':
-        value = profileData.bio || profileData.self_introduction
+        value = cleanProfileData.bio || cleanProfileData.self_introduction
         break
       case 'planned_prefectures':
-        value = profileData.planned_prefectures
+        value = cleanProfileData.planned_prefectures
         break
       case 'language_info':
-        // ✨ 統一された言語情報スロット
-        return hasLanguageInfo(profileData)
+        // ✨ 統一された言語情報スロット（cleanProfileDataを使用）
+        return hasLanguageInfo(cleanProfileData)
       default:
-        value = profileData[field]
+        value = cleanProfileData[field]
     }
 
     // 値の有効性チェック
@@ -173,12 +189,12 @@ export function calculateProfileCompletion(
 
   // オプションフィールドの完成チェック
   const completedOptional = optionalFields.filter(field => {
-    let value = profileData[field]
+    let value = cleanProfileData[field]
 
     // フィールド別の特別な処理
     switch (field) {
       case 'personality':
-        value = profileData.personality || []
+        value = cleanProfileData.personality || []
         // nullまたはundefinedの場合は空配列に変換
         if (!Array.isArray(value)) {
           value = []
@@ -186,32 +202,32 @@ export function calculateProfileCompletion(
         break
       case 'visit_schedule':
         // 外国人男性の訪問予定時期
-        value = profileData.visit_schedule
+        value = cleanProfileData.visit_schedule
         break
       case 'travel_companion':
         // 外国人男性の同行者
-        value = profileData.travel_companion
+        value = cleanProfileData.travel_companion
         break
       case 'planned_prefectures':
         // 外国人男性の行く予定の都道府県
-        value = profileData.planned_prefectures || []
+        value = cleanProfileData.planned_prefectures || []
         break
       case 'occupation':
       case 'height':
       case 'body_type':
       case 'marital_status':
-        // 専用カラム優先、city JSONフォールバック
-        value = getFieldFromDedicatedColumnOrCity(profileData, field)
+        // 専用カラム優先、city JSONフォールバック（cleanProfileDataを使用）
+        value = getFieldFromDedicatedColumnOrCity(cleanProfileData, field)
         break
       case 'city':
         // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
-        value = getCityFromNewFormat(profileData.city)
+        value = getCityFromNewFormat(cleanProfileData.city)
         break
       case 'language_info':
-        // ✨ 日本人女性のオプション言語情報スロット
-        return hasLanguageInfo(profileData)
+        // ✨ 日本人女性のオプション言語情報スロット（cleanProfileDataを使用）
+        return hasLanguageInfo(cleanProfileData)
       default:
-        value = profileData[field]
+        value = cleanProfileData[field]
     }
 
     // 値の有効性チェック
@@ -229,8 +245,8 @@ export function calculateProfileCompletion(
     return true
   })
 
-  // 画像の有無チェック
-  const hasImages = checkImagePresence(profileData, imageArray, isNewUser)
+  // 画像の有無チェック（cleanProfileDataを使用）
+  const hasImages = checkImagePresence(cleanProfileData, imageArray, isNewUser)
 
   // 完成度計算
   const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for images
@@ -282,9 +298,9 @@ export function calculateProfileCompletion(
     }
   })
 
-  // ✨ 言語情報の詳細デバッグ情報を追加
-  const languageInfoResult = hasLanguageInfo(profileData)
-  const skills = profileData.language_skills
+  // ✨ 言語情報の詳細デバッグ情報を追加（cleanProfileDataを使用）
+  const languageInfoResult = hasLanguageInfo(cleanProfileData)
+  const skills = cleanProfileData.language_skills
   
   // FIX: 修正済み仕様に基づくデバッグ情報
   // 各スキルの個別検証結果も表示
@@ -297,33 +313,26 @@ export function calculateProfileCompletion(
              skill.level !== undefined && skill.level !== null && skill.level !== ''
   })) : []
 
-  console.log('🔍 ProfileCompletion Debug', {
-    completedRequired: completedRequired.length,
-    totalRequired: requiredFields.length,
-    completedOptional: completedOptional.length,  
-    totalOptional: optionalFields.length,
-    hasImages,
-    totalFields,
-    completedFields,
-    completion: `${completion}%`,
-    // FIX: 修正済み言語情報の詳細分析
-    languageInfo: {
-      hasLanguageInfo: languageInfoResult,
-      language_skills: skills,
-      skillsValidationDetails: skillsValidationDetails,
-      validSkillsCount: skillsValidationDetails.filter(s => s.isValid).length
-    },
-    incompleteRequired,
-    incompleteOptional,
-    isForeignMale,
-    isNewUser,
-    // 🎯 テストケース確認用
-    testCaseResults: {
-      caseA_allNone: skills && skills.length === 1 && skills[0]?.language === 'none' && skills[0]?.level === 'none',
-      caseB_validPair: skills && skills.some((s: any) => s?.language !== 'none' && s?.level !== 'none'),
-      caseC_shouldMaintain100: languageInfoResult && completedRequired.length === requiredFields.length && hasImages
-    }
+  // 🚨 100% → 88% 問題の根本原因特定のため
+  console.log('🚨🚨🚨 CRITICAL ProfileCompletion Debug 🚨🚨🚨')
+  console.log('='.repeat(80))
+  console.log('📊 完成度計算結果:')
+  console.log(`   完成度: ${completion}%`)
+  console.log(`   完了フィールド: ${completedFields}/${totalFields}`)
+  console.log(`   必須完了: ${completedRequired.length}/${requiredFields.length}`)
+  console.log(`   オプション完了: ${completedOptional.length}/${optionalFields.length}`)
+  console.log(`   画像: ${hasImages ? 'あり' : 'なし'}`)
+  console.log('📋 必須フィールド一覧:')
+  requiredFields.forEach((field, index) => {
+    const isCompleted = completedRequired.includes(field)
+    console.log(`   ${index + 1}. ${field}: ${isCompleted ? '✅完了' : '❌未完了'}`)
   })
+  console.log('🔍 未完了必須フィールド詳細:', incompleteRequired)
+  console.log('🗣️ 言語情報詳細:')
+  console.log(`   hasLanguageInfo結果: ${languageInfoResult}`)
+  console.log(`   language_skills:`, skills)
+  console.log(`   各スキル検証結果:`, skillsValidationDetails)
+  console.log('='.repeat(80))
 
   // 完成度計算完了
 
