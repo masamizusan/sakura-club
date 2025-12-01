@@ -3622,6 +3622,20 @@ function ProfileEditContent() {
                                         'mergedHobbies.length': mergedHobbies.length
                                       })
                                       
+                                      // 🔥 OPTIONAL FIELDS CHECK: どのオプション項目が空になっているか特定
+                                      console.log('🔥 OPTIONAL FIELDS CHECK (Language change):', {
+                                        personality: formData.personality,
+                                        planned_prefectures: formData.planned_prefectures,
+                                        travel_companion: formData.travel_companion,
+                                        visit_schedule: formData.visit_schedule,
+                                        occupation: formData.occupation,
+                                        height: formData.height,
+                                        body_type: formData.body_type,
+                                        marital_status: formData.marital_status,
+                                        selectedPersonalityState: selectedPersonality,
+                                        selectedPlannedPrefecturesState: selectedPlannedPrefectures
+                                      })
+                                      
                                       const urlParams = new URLSearchParams(window.location.search)
                                       const isNewUserLocal = urlParams.get('from') === 'signup'
                                       const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
@@ -3674,6 +3688,20 @@ function ProfileEditContent() {
                                         selectedHobbiesState: selectedHobbies,
                                         mergedHobbies,
                                         'mergedHobbies.length': mergedHobbies.length
+                                      })
+                                      
+                                      // 🔥 OPTIONAL FIELDS CHECK: どのオプション項目が空になっているか特定
+                                      console.log('🔥 OPTIONAL FIELDS CHECK (Language LEVEL change):', {
+                                        personality: formData.personality,
+                                        planned_prefectures: formData.planned_prefectures,
+                                        travel_companion: formData.travel_companion,
+                                        visit_schedule: formData.visit_schedule,
+                                        occupation: formData.occupation,
+                                        height: formData.height,
+                                        body_type: formData.body_type,
+                                        marital_status: formData.marital_status,
+                                        selectedPersonalityState: selectedPersonality,
+                                        selectedPlannedPrefecturesState: selectedPlannedPrefectures
                                       })
                                       
                                       const urlParams = new URLSearchParams(window.location.search)
