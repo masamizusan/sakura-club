@@ -937,9 +937,16 @@ function ProfileEditContent() {
     }
   }, [isForeignMale, profileImages, calculateProfileCompletion])
 
-  // selectedHobbies変更時の完成度再計算
+  // selectedHobbies変更時のフォーム同期と完成度再計算
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
+    
+    // 🔧 フォームフィールドへの同期を追加
+    setValue('hobbies', selectedHobbies, { 
+      shouldDirty: true, 
+      shouldValidate: true 
+    })
+    
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
     calculateProfileCompletion({
@@ -947,7 +954,7 @@ function ProfileEditContent() {
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
     }, profileImages, isForeignMale, false)
-  }, [isForeignMale, profileImages, calculateProfileCompletion])
+  }, [selectedHobbies, isForeignMale, profileImages, calculateProfileCompletion])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -3594,7 +3601,27 @@ function ProfileEditContent() {
                                     
                                     // 完成度再計算
                                     setTimeout(() => {
-                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const currentValues = getValues()
+                                      
+                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
+                                      const mergedHobbies = 
+                                        selectedHobbies && selectedHobbies.length > 0
+                                          ? selectedHobbies
+                                          : currentValues.hobbies ?? []
+                                      
+                                      const formData = { 
+                                        ...currentValues, 
+                                        language_skills: newSkills,
+                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
+                                      }
+                                      
+                                      console.log('🔍 Language change completion debug:', {
+                                        rawHobbiesFromForm: currentValues.hobbies,
+                                        selectedHobbiesState: selectedHobbies,
+                                        mergedHobbies,
+                                        'mergedHobbies.length': mergedHobbies.length
+                                      })
+                                      
                                       const urlParams = new URLSearchParams(window.location.search)
                                       const isNewUserLocal = urlParams.get('from') === 'signup'
                                       const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
@@ -3628,7 +3655,27 @@ function ProfileEditContent() {
                                     
                                     // 完成度再計算
                                     setTimeout(() => {
-                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const currentValues = getValues()
+                                      
+                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
+                                      const mergedHobbies = 
+                                        selectedHobbies && selectedHobbies.length > 0
+                                          ? selectedHobbies
+                                          : currentValues.hobbies ?? []
+                                      
+                                      const formData = { 
+                                        ...currentValues, 
+                                        language_skills: newSkills,
+                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
+                                      }
+                                      
+                                      console.log('🔍 Language LEVEL change completion debug:', {
+                                        rawHobbiesFromForm: currentValues.hobbies,
+                                        selectedHobbiesState: selectedHobbies,
+                                        mergedHobbies,
+                                        'mergedHobbies.length': mergedHobbies.length
+                                      })
+                                      
                                       const urlParams = new URLSearchParams(window.location.search)
                                       const isNewUserLocal = urlParams.get('from') === 'signup'
                                       const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
@@ -3663,7 +3710,27 @@ function ProfileEditContent() {
                                     
                                     // 完成度再計算
                                     setTimeout(() => {
-                                      const formData = { ...getValues(), language_skills: newSkills }
+                                      const currentValues = getValues()
+                                      
+                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
+                                      const mergedHobbies = 
+                                        selectedHobbies && selectedHobbies.length > 0
+                                          ? selectedHobbies
+                                          : currentValues.hobbies ?? []
+                                      
+                                      const formData = { 
+                                        ...currentValues, 
+                                        language_skills: newSkills,
+                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
+                                      }
+                                      
+                                      console.log('🔍 Language DELETE completion debug:', {
+                                        rawHobbiesFromForm: currentValues.hobbies,
+                                        selectedHobbiesState: selectedHobbies,
+                                        mergedHobbies,
+                                        'mergedHobbies.length': mergedHobbies.length
+                                      })
+                                      
                                       const urlParams = new URLSearchParams(window.location.search)
                                       const isNewUserLocal = urlParams.get('from') === 'signup'
                                       const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
@@ -3694,7 +3761,27 @@ function ProfileEditContent() {
                               
                               // 完成度再計算
                               setTimeout(() => {
-                                const formData = { ...getValues(), language_skills: newSkills }
+                                const currentValues = getValues()
+                                
+                                // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
+                                const mergedHobbies = 
+                                  selectedHobbies && selectedHobbies.length > 0
+                                    ? selectedHobbies
+                                    : currentValues.hobbies ?? []
+                                
+                                const formData = { 
+                                  ...currentValues, 
+                                  language_skills: newSkills,
+                                  hobbies: mergedHobbies  // 復元されたhobbiesを使用
+                                }
+                                
+                                console.log('🔍 Language ADD completion debug:', {
+                                  rawHobbiesFromForm: currentValues.hobbies,
+                                  selectedHobbiesState: selectedHobbies,
+                                  mergedHobbies,
+                                  'mergedHobbies.length': mergedHobbies.length
+                                })
+                                
                                 const urlParams = new URLSearchParams(window.location.search)
                                 const isNewUserLocal = urlParams.get('from') === 'signup'
                                 const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
