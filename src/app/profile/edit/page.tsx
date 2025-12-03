@@ -576,7 +576,9 @@ function ProfileEditContent() {
     defaultValues: {
       nationality: typeof window !== 'undefined' && profileType === 'foreign-male'
         ? new URLSearchParams(window.location.search).get('nationality') || 'アメリカ'
-        : undefined
+        : undefined,
+      // ✨ language_skillsのデフォルト値を設定
+      language_skills: []
     }
   })
 
@@ -2619,26 +2621,24 @@ function ProfileEditContent() {
         
         setSelectedHobbies(finalHobbies)
         setSelectedPersonality(finalPersonality)
-        // ✨ 新機能: languageSkillsを同期（Supabase language_skills優先）
+        // ✨ 言語スキル初期化: Supabase language_skills → legacyフィールド → 空配列
         let initialLanguageSkills: LanguageSkill[] = []
+        
         if (isNewUser) {
-          // 新規ユーザー: 空の状態で開始（ユーザーが自分で選択する）
-          initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
+          // 新規ユーザー: 空配列で開始
+          initialLanguageSkills = []
+          console.log('🆕 New user: starting with empty language skills')
         } else {
-          // 既存ユーザー: Supabase language_skills → legacyフィールド → 空配列 の優先順位
+          // 既存ユーザー: Supabase language_skills → legacyフィールド の優先順位
           if (profile?.language_skills && Array.isArray(profile.language_skills) && profile.language_skills.length > 0) {
             // 🚀 Supabase language_skillsが存在する場合は優先使用
             initialLanguageSkills = profile.language_skills
             console.log('🔥 Using Supabase language_skills:', profile.language_skills)
           } else {
             // フォールバック: 旧式カラムから生成
-            initialLanguageSkills = generateLanguageSkillsFromLegacy(profile) || []
-            console.log('🔄 Fallback to legacy fields:', initialLanguageSkills)
-          }
-          
-          // 既存ユーザーでもデータがない場合は空で開始
-          if (initialLanguageSkills.length === 0) {
-            initialLanguageSkills = [{ language: '' as LanguageCode, level: '' as LanguageLevelCode }]
+            const legacySkills = generateLanguageSkillsFromLegacy(profile) || []
+            initialLanguageSkills = legacySkills
+            console.log('🔄 Fallback to legacy fields:', legacySkills)
           }
         }
         
@@ -3051,7 +3051,7 @@ function ProfileEditContent() {
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
-        // ✨ 新機能: 使用言語＋言語レベル（Stateから直接使用、'none'値を除外）
+        // ✨ 言語スキル: 常に現在のlanguageSkills stateを保存（'none'値のみ除外）
         language_skills: (() => {
           // 'none'値を除外したvalid skillsのみを保存
           const validSkills = languageSkills.filter(skill => 
@@ -3060,17 +3060,17 @@ function ProfileEditContent() {
             skill.language !== 'none' && skill.level !== 'none'
           )
           
-          console.log('🔥 onSubmit language_skills from state:', {
-            originalLanguageSkillsState: languageSkills,
-            validSkillsAfterFilter: validSkills,
-            willSave: validSkills.length > 0 ? validSkills : null,
-            formData: data,
-            japanese_level: data.japanese_level,
-            english_level: data.english_level
+          console.log('🔥 CRITICAL: language_skills保存処理:', {
+            'languageSkills_state': languageSkills,
+            'validSkills_after_filter': validSkills,
+            'will_save_to_supabase': validSkills,  // nullではなく配列を送信
+            'state_type': typeof languageSkills,
+            'state_isArray': Array.isArray(languageSkills),
+            'validSkills_length': validSkills.length
           })
           
-          // valid skillsがある場合のみ保存、空の場合はnull
-          return validSkills.length > 0 ? validSkills : null
+          // 🚀 FIX: 空配列でもnullではなく配列として保存
+          return validSkills
         })(),
         // レガシーフィールドは完全に無効化（常にnull）
         japanese_level: null,
