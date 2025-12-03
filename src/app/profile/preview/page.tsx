@@ -889,15 +889,35 @@ function ProfilePreviewContent() {
                     console.warn('Language skills parse error from URL:', e)
                   }
                   
-                  // sessionStorageからもフォールバック
+                  // 🚀 CRITICAL FIX: 正しいpreviewDataキーからsessionStorageを取得
                   if (!effectiveLanguageSkills.length && typeof window !== 'undefined') {
                     try {
-                      const sessionData = window.sessionStorage.getItem('currentProfileImages')
+                      // URLパラメータからユーザーIDを取得
+                      const urlParams = new URLSearchParams(window.location.search)
+                      const userId = urlParams.get('userId')
+                      const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
+                      
+                      console.log('🔍 Preview表示デバッグ:', {
+                        userId,
+                        previewDataKey,
+                        'sessionStorageKeys': Object.keys(sessionStorage).filter(k => k.includes('preview'))
+                      })
+                      
+                      const sessionData = window.sessionStorage.getItem(previewDataKey)
                       if (sessionData) {
                         const parsedData = JSON.parse(sessionData)
+                        console.log('🔍 Preview表示: sessionDataから取得:', {
+                          'parsedData.language_skills': parsedData.language_skills,
+                          'language_skills存在': !!parsedData.language_skills,
+                          'language_skills配列長': parsedData.language_skills?.length
+                        })
+                        
                         if (parsedData.language_skills) {
                           effectiveLanguageSkills = parsedData.language_skills
+                          console.log('🔥 Preview表示: language_skills取得成功:', effectiveLanguageSkills)
                         }
+                      } else {
+                        console.log('🚨 Preview表示: sessionDataが見つかりません')
                       }
                     } catch (e) {
                       console.warn('Language skills session parse error:', e)
@@ -1209,14 +1229,18 @@ function ProfilePreviewContent() {
                               console.warn('Language skills URL parse error:', e)
                             }
                             
-                            // 2. sessionStorageからフォールバック取得
+                            // 2. 正しいpreviewDataキーからsessionStorageフォールバック取得
                             if (typeof window !== 'undefined') {
                               try {
-                                const sessionData = window.sessionStorage.getItem('currentProfileImages')
+                                const urlParams = new URLSearchParams(window.location.search)
+                                const userId = urlParams.get('userId')
+                                const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
+                                
+                                const sessionData = window.sessionStorage.getItem(previewDataKey)
                                 if (sessionData) {
                                   const parsed = JSON.parse(sessionData)
                                   if (parsed.language_skills) {
-                                    console.log('🔥 Preview: language_skills from sessionStorage:', parsed.language_skills)
+                                    console.log('🔥 Preview保存: language_skills from sessionStorage:', parsed.language_skills)
                                     return parsed.language_skills
                                   }
                                 }
