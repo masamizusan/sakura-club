@@ -602,17 +602,16 @@ function ProfileEditContent() {
       'selectedPersonality.length': selectedPersonality.length
     })
     const currentData = watch()
-    const language_skills = extractLanguageSkillsForForm(currentData)
     const result = calculateProfileCompletion({
       ...currentData,
       hobbies: selectedHobbies,
       personality: selectedPersonality,
-      language_skills, // 構築されたlanguage_skillsを追加
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
     }, profileImages, isForeignMale, false)
     setProfileCompletion(result.completion)
     setCompletedItems(result.completedFields)
     setTotalItems(result.totalFields)
-  }, [profileImages.length, selectedHobbies, selectedPersonality])
+  }, [profileImages.length, selectedHobbies, selectedPersonality, languageSkills])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
@@ -625,14 +624,13 @@ function ProfileEditContent() {
       const currentData = watch()
       // custom_culture は完成度計算から除外（コメント扱い）
       const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-      const language_skills = extractLanguageSkillsForForm(currentData)
       const result = calculateProfileCompletion({
         ...currentDataWithoutCustomCulture,
         birth_date: birthDate,
         age: age,
         hobbies: selectedHobbies, // 状態から直接取得
         personality: selectedPersonality, // 状態から直接取得
-        language_skills, // 構築されたlanguage_skillsを追加
+        language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
         avatar_url: profileImages.length > 0 ? 'has_images' : null
       }, profileImages, isForeignMale, false)
       setProfileCompletion(result.completion)
@@ -745,12 +743,11 @@ function ProfileEditContent() {
     const isFromSignup = urlParams.get('from') === 'signup'
     const isNewUserForImage = isFromSignup
 
-    const language_skills = extractLanguageSkillsForForm(currentData)
     const result = calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
       personality: selectedPersonality, // 状態から直接取得
-      language_skills, // 構築されたlanguage_skillsを追加
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
       // 画像削除時はavatar_urlをnullに設定
       avatar_url: newImages.length > 0 ? 'has_images' : null
     }, newImages, isForeignMale, isNewUserForImage)
@@ -944,13 +941,12 @@ function ProfileEditContent() {
           const currentValues = getValues()
           // custom_culture は完成度計算から除外（コメント扱い）
           const { custom_culture, ...valueWithoutCustomCulture } = value || {}
-          const language_skills = extractLanguageSkillsForForm(currentValues)
           calculateProfileCompletion({
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
             hobbies: selectedHobbies, // 状態から直接取得
             personality: selectedPersonality, // 状態から直接取得
-            language_skills, // 構築されたlanguage_skillsを追加
+            language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
           }, profileImages)
         }, 500)
       }
@@ -974,15 +970,14 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
       planned_prefectures: selectedPlannedPrefectures,
-      language_skills, // 構築されたlanguage_skillsを追加
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
     }, profileImages, isForeignMale, false)
-  }, [selectedHobbies, isForeignMale, profileImages, calculateProfileCompletion])
+  }, [selectedHobbies, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -996,15 +991,14 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
       personality: selectedPersonality, // 最新のselectedPersonalityを使用
       planned_prefectures: selectedPlannedPrefectures,
-      language_skills, // 構築されたlanguage_skillsを追加
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
     }, profileImages, isForeignMale, false)
-  }, [selectedPersonality, isForeignMale, profileImages, calculateProfileCompletion])
+  }, [selectedPersonality, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1018,15 +1012,37 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
       personality: selectedPersonality,
       planned_prefectures: selectedPlannedPrefectures, // 最新のselectedPlannedPrefecturesを使用
-      language_skills, // 構築されたlanguage_skillsを追加
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
     }, profileImages, isForeignMale, false)
-  }, [selectedPlannedPrefectures, isForeignMale, profileImages, calculateProfileCompletion])
+  }, [selectedPlannedPrefectures, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
+
+  // 🗣️ languageSkills変更時の専用完成度再計算とフォーム同期
+  useEffect(() => {
+    console.log('🗣️ languageSkills changed:', languageSkills)
+    
+    // フォームのlanguage_skillsフィールドに同期
+    setValue('language_skills', languageSkills, { 
+      shouldDirty: true, 
+      shouldValidate: true 
+    })
+    
+    // 完成度再計算（languageSkills Stateを直接使用）
+    const currentData = watch()
+    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+    
+    calculateProfileCompletion({
+      ...currentDataWithoutCustomCulture,
+      hobbies: selectedHobbies,
+      personality: selectedPersonality, 
+      planned_prefectures: selectedPlannedPrefectures,
+      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
+    }, profileImages, isForeignMale, false)
+  }, [languageSkills, isForeignMale, profileImages, calculateProfileCompletion, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, setValue, watch])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -3008,16 +3024,15 @@ function ProfileEditContent() {
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
-        // ✨ 新機能: 使用言語＋言語レベル（フォームから構築）
+        // ✨ 新機能: 使用言語＋言語レベル（Stateから直接使用）
         language_skills: (() => {
-          const builtSkills = extractLanguageSkillsForForm(data)
-          console.log('🔥 onSubmit language_skills construction:', {
+          console.log('🔥 onSubmit language_skills from state:', {
+            languageSkillsState: languageSkills,
             formData: data,
-            builtSkills,
             japanese_level: data.japanese_level,
             english_level: data.english_level
           })
-          return builtSkills.length > 0 ? builtSkills : null
+          return languageSkills && languageSkills.length > 0 ? languageSkills : null // ✅ State直接使用（再構築を避ける）
         })(),
         // レガシーフィールドは完全に無効化（常にnull）
         japanese_level: null,
@@ -3843,13 +3858,12 @@ function ProfileEditContent() {
                                         }
                                       })
                                       
-                                      // フォームデータから言語スキルを構築
-                                      const formDataForLanguageSkills = { ...currentValues, language_skills: newSkills }
-                                      const builtLanguageSkills = extractLanguageSkillsForForm(formDataForLanguageSkills)
+                                      // ✅ 言語スキルを直接使用（再構築を避ける）
+                                      console.log('🔍 Using newSkills directly instead of reconstructing:', newSkills)
                                       
                                       const formData = { 
                                         ...currentValues, 
-                                        language_skills: builtLanguageSkills, // 構築された言語スキル
+                                        language_skills: newSkills, // ✅ 新スキルを直接使用（再構築を避ける）
                                         hobbies: mergedHobbies,  // 復元されたhobbiesを使用
                                         personality: mergedPersonality,  // 復元されたpersonalityを使用
                                         planned_prefectures: mergedPlannedPrefectures  // 復元されたplanned_prefecturesを使用
