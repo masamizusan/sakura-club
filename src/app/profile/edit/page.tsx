@@ -3746,53 +3746,15 @@ function ProfileEditContent() {
                                       newLanguage: value
                                     })
                                     
+                                    // 🚀 即座反映: setState → setValue の順序で同期実行
                                     setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills)
+                                    setValue('language_skills', newSkills, { 
+                                      shouldDirty: true, 
+                                      shouldValidate: true 
+                                    })
                                     
-                                    // 完成度再計算
-                                    setTimeout(() => {
-                                      const currentValues = getValues()
-                                      
-                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
-                                      const mergedHobbies = 
-                                        selectedHobbies && selectedHobbies.length > 0
-                                          ? selectedHobbies
-                                          : currentValues.hobbies ?? []
-                                      
-                                      const formData = { 
-                                        ...currentValues, 
-                                        language_skills: newSkills,
-                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
-                                      }
-                                      
-                                      console.log('🔍 Language change completion debug:', {
-                                        rawHobbiesFromForm: currentValues.hobbies,
-                                        selectedHobbiesState: selectedHobbies,
-                                        mergedHobbies,
-                                        'mergedHobbies.length': mergedHobbies.length
-                                      })
-                                      
-                                      // 🔥 OPTIONAL FIELDS CHECK: どのオプション項目が空になっているか特定
-                                      console.log('🔥 OPTIONAL FIELDS CHECK (Language change):', {
-                                        personality: formData.personality,
-                                        planned_prefectures: formData.planned_prefectures,
-                                        travel_companion: formData.travel_companion,
-                                        visit_schedule: formData.visit_schedule,
-                                        occupation: formData.occupation,
-                                        height: formData.height,
-                                        body_type: formData.body_type,
-                                        marital_status: formData.marital_status,
-                                        selectedPersonalityState: selectedPersonality,
-                                        selectedPlannedPrefecturesState: selectedPlannedPrefectures
-                                      })
-                                      
-                                      const urlParams = new URLSearchParams(window.location.search)
-                                      const isNewUserLocal = urlParams.get('from') === 'signup'
-                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                                      setProfileCompletion(result.completion)
-                                      setCompletedItems(result.completedFields)
-                                      setTotalItems(result.totalFields)
-                                    }, 100)
+                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                    console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
                                   }}
                                 >
                                   <SelectTrigger>
@@ -3822,81 +3784,15 @@ function ProfileEditContent() {
                                       newLevel: value
                                     })
                                     
+                                    // 🚀 即座反映: setState → setValue の順序で同期実行
                                     setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills)
+                                    setValue('language_skills', newSkills, { 
+                                      shouldDirty: true, 
+                                      shouldValidate: true 
+                                    })
                                     
-                                    console.log('[Scenario] LANGUAGE LEVEL CHANGED AFTER 100% - EXPECT 100%, but currently drops')
-                                    
-                                    // 完成度再計算
-                                    setTimeout(() => {
-                                      const currentValues = getValues()
-                                      
-                                      // 🔧 STATE FIX: selectedState群からフォームフィールドを復元
-                                      const mergedHobbies = 
-                                        selectedHobbies && selectedHobbies.length > 0
-                                          ? selectedHobbies
-                                          : currentValues.hobbies ?? []
-                                      
-                                      const mergedPersonality = 
-                                        selectedPersonality && selectedPersonality.length > 0
-                                          ? selectedPersonality
-                                          : currentValues.personality ?? []
-                                      
-                                      const mergedPlannedPrefectures = 
-                                        selectedPlannedPrefectures && selectedPlannedPrefectures.length > 0
-                                          ? selectedPlannedPrefectures
-                                          : currentValues.planned_prefectures ?? []
-                                      
-                                      console.log('🔍 FormData Debug for Language LEVEL change:', {
-                                        rawValuesFromForm: currentValues,
-                                        formDataForCompletion: {
-                                          ...currentValues,
-                                          language_skills: newSkills,
-                                          hobbies: mergedHobbies,
-                                          personality: mergedPersonality,
-                                          planned_prefectures: mergedPlannedPrefectures
-                                        }
-                                      })
-                                      
-                                      // ✅ 言語スキルを直接使用（再構築を避ける）
-                                      console.log('🔍 Using newSkills directly instead of reconstructing:', newSkills)
-                                      
-                                      const formData = { 
-                                        ...currentValues, 
-                                        language_skills: newSkills, // ✅ 新スキルを直接使用（再構築を避ける）
-                                        hobbies: mergedHobbies,  // 復元されたhobbiesを使用
-                                        personality: mergedPersonality,  // 復元されたpersonalityを使用
-                                        planned_prefectures: mergedPlannedPrefectures  // 復元されたplanned_prefecturesを使用
-                                      }
-                                      
-                                      console.log('🔍 Language LEVEL change completion debug:', {
-                                        rawHobbiesFromForm: currentValues.hobbies,
-                                        selectedHobbiesState: selectedHobbies,
-                                        mergedHobbies,
-                                        'mergedHobbies.length': mergedHobbies.length
-                                      })
-                                      
-                                      // 🔥 OPTIONAL FIELDS CHECK: どのオプション項目が空になっているか特定
-                                      console.log('🔥 OPTIONAL FIELDS CHECK (Language LEVEL change):', {
-                                        personality: formData.personality,
-                                        planned_prefectures: formData.planned_prefectures,
-                                        travel_companion: formData.travel_companion,
-                                        visit_schedule: formData.visit_schedule,
-                                        occupation: formData.occupation,
-                                        height: formData.height,
-                                        body_type: formData.body_type,
-                                        marital_status: formData.marital_status,
-                                        selectedPersonalityState: selectedPersonality,
-                                        selectedPlannedPrefecturesState: selectedPlannedPrefectures
-                                      })
-                                      
-                                      const urlParams = new URLSearchParams(window.location.search)
-                                      const isNewUserLocal = urlParams.get('from') === 'signup'
-                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                                      setProfileCompletion(result.completion)
-                                      setCompletedItems(result.completedFields)
-                                      setTotalItems(result.totalFields)
-                                    }, 100)
+                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                    console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
                                   }}
                                 >
                                   <SelectTrigger>
@@ -3919,39 +3815,16 @@ function ProfileEditContent() {
                                   size="sm"
                                   onClick={() => {
                                     const newSkills = languageSkills.filter((_, i) => i !== index)
-                                    setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills)
                                     
-                                    // 完成度再計算
-                                    setTimeout(() => {
-                                      const currentValues = getValues()
-                                      
-                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
-                                      const mergedHobbies = 
-                                        selectedHobbies && selectedHobbies.length > 0
-                                          ? selectedHobbies
-                                          : currentValues.hobbies ?? []
-                                      
-                                      const formData = { 
-                                        ...currentValues, 
-                                        language_skills: newSkills,
-                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
-                                      }
-                                      
-                                      console.log('🔍 Language DELETE completion debug:', {
-                                        rawHobbiesFromForm: currentValues.hobbies,
-                                        selectedHobbiesState: selectedHobbies,
-                                        mergedHobbies,
-                                        'mergedHobbies.length': mergedHobbies.length
-                                      })
-                                      
-                                      const urlParams = new URLSearchParams(window.location.search)
-                                      const isNewUserLocal = urlParams.get('from') === 'signup'
-                                      const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                                      setProfileCompletion(result.completion)
-                                      setCompletedItems(result.completedFields)
-                                      setTotalItems(result.totalFields)
-                                    }, 100)
+                                    // 🚀 即座反映: setState → setValue の順序で同期実行
+                                    setLanguageSkills(newSkills)
+                                    setValue('language_skills', newSkills, { 
+                                      shouldDirty: true, 
+                                      shouldValidate: true 
+                                    })
+                                    
+                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                    console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
                                   }}
                                   className="text-red-600 hover:text-red-700"
                                 >
@@ -3970,39 +3843,16 @@ function ProfileEditContent() {
                             size="sm"
                             onClick={() => {
                               const newSkills = [...languageSkills, { language: 'none' as LanguageCode, level: 'none' as LanguageLevelCode }]
-                              setLanguageSkills(newSkills)
-                              setValue('language_skills', newSkills)
                               
-                              // 完成度再計算
-                              setTimeout(() => {
-                                const currentValues = getValues()
-                                
-                                // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
-                                const mergedHobbies = 
-                                  selectedHobbies && selectedHobbies.length > 0
-                                    ? selectedHobbies
-                                    : currentValues.hobbies ?? []
-                                
-                                const formData = { 
-                                  ...currentValues, 
-                                  language_skills: newSkills,
-                                  hobbies: mergedHobbies  // 復元されたhobbiesを使用
-                                }
-                                
-                                console.log('🔍 Language ADD completion debug:', {
-                                  rawHobbiesFromForm: currentValues.hobbies,
-                                  selectedHobbiesState: selectedHobbies,
-                                  mergedHobbies,
-                                  'mergedHobbies.length': mergedHobbies.length
-                                })
-                                
-                                const urlParams = new URLSearchParams(window.location.search)
-                                const isNewUserLocal = urlParams.get('from') === 'signup'
-                                const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                                setProfileCompletion(result.completion)
-                                setCompletedItems(result.completedFields)
-                                setTotalItems(result.totalFields)
-                              }, 100)
+                              // 🚀 即座反映: setState → setValue の順序で同期実行
+                              setLanguageSkills(newSkills)
+                              setValue('language_skills', newSkills, { 
+                                shouldDirty: true, 
+                                shouldValidate: true 
+                              })
+                              
+                              // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                              console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
                             }}
                             className="text-blue-600 hover:text-blue-700"
                           >
