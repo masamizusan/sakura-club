@@ -114,16 +114,30 @@ export function calculateProfileCompletion(
   let optionalFields = []
 
   if (isForeignMale) {
-    // 外国人男性の必須フィールド（8個） - language_info を統一スロットとして追加
+    // 🏆 外国人男性の必須フィールド（8個）- 合計17フィールドのうち8個が必須
+    // UI上必ず表示され、100%達成には全て入力が必要
     requiredFields = [
-      'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction', 'language_info'
+      'nickname',         // ニックネーム
+      'gender',           // 性別
+      'age',              // 年齢  
+      'birth_date',       // 生年月日
+      'nationality',      // 国籍
+      'hobbies',          // 日本文化（配列、最低1個選択）
+      'self_introduction', // 自己紹介
+      'language_info'     // 言語情報（統一スロット、language_skillsベース）
     ]
 
-    // 外国人男性のオプションフィールド（8個）
+    // 🎯 外国人男性のオプションフィールド（8個）- 合計17フィールドのうち8個がオプション  
+    // UI上表示され、入力すると完成度向上、空でも100%達成可能
     optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
+      'occupation',         // 職業
+      'height',            // 身長
+      'body_type',         // 体型
+      'marital_status',    // 婚姻状況
+      'personality',       // 性格（配列、selectedPersonalityベース）
+      'visit_schedule',    // 訪問予定時期
+      'travel_companion',  // 同行者
+      'planned_prefectures' // 訪問予定都道府県（配列、selectedPlannedPrefecturesベース）
     ]
   } else {
     // 日本人女性の必須フィールド（7個） - 言語情報は不要
@@ -187,9 +201,13 @@ export function calculateProfileCompletion(
     return value !== null && value !== undefined && value !== '' && value !== 'none'
   })
 
-  // オプションフィールドの完成チェック
+  // オプションフィールドの完成チェック（詳細ログ付き）
+  const optionalFieldStatus: Array<{ key: string, value: any, completed: boolean, reason: string }> = []
+  
   const completedOptional = optionalFields.filter(field => {
     let value = cleanProfileData[field]
+    let completed = false
+    let reason = ''
 
     // フィールド別の特別な処理
     switch (field) {
@@ -199,18 +217,26 @@ export function calculateProfileCompletion(
         if (!Array.isArray(value)) {
           value = []
         }
+        completed = Array.isArray(value) && value.length > 0
+        reason = completed ? 'array has items' : `array empty or invalid: ${JSON.stringify(value)}`
         break
       case 'visit_schedule':
         // 外国人男性の訪問予定時期
         value = cleanProfileData.visit_schedule
+        completed = value && value !== '' && value !== 'none' && value !== 'no-entry' && value !== 'noEntry'
+        reason = completed ? 'valid schedule value' : `invalid schedule: ${value}`
         break
       case 'travel_companion':
         // 外国人男性の同行者
         value = cleanProfileData.travel_companion
+        completed = value && value !== '' && value !== 'none' && value !== 'no-entry' && value !== 'noEntry'
+        reason = completed ? 'valid companion value' : `invalid companion: ${value}`
         break
       case 'planned_prefectures':
         // 外国人男性の行く予定の都道府県
         value = cleanProfileData.planned_prefectures || []
+        completed = Array.isArray(value) && value.length > 0
+        reason = completed ? 'prefectures selected' : `no prefectures: ${JSON.stringify(value)}`
         break
       case 'occupation':
       case 'height':
@@ -218,31 +244,34 @@ export function calculateProfileCompletion(
       case 'marital_status':
         // 専用カラム優先、city JSONフォールバック（cleanProfileDataを使用）
         value = getFieldFromDedicatedColumnOrCity(cleanProfileData, field)
+        completed = value && value !== '' && value !== 'none'
+        reason = completed ? `valid ${field} value` : `invalid ${field}: ${value}`
         break
       case 'city':
         // cityフィールドは新形式（{"city": "武蔵野市"}）から取得
         value = getCityFromNewFormat(cleanProfileData.city)
+        completed = !!value
+        reason = completed ? 'city specified' : `no city: ${value}`
         break
       case 'language_info':
         // ✨ 日本人女性のオプション言語情報スロット（cleanProfileDataを使用）
-        return hasLanguageInfo(cleanProfileData)
+        completed = hasLanguageInfo(cleanProfileData)
+        value = cleanProfileData.language_skills
+        reason = completed ? 'valid language info' : 'no valid language info'
+        // 早期リターンのため、ここでstatusを追加してreturn
+        optionalFieldStatus.push({ key: field, value, completed, reason })
+        return completed
       default:
         value = cleanProfileData[field]
+        completed = value !== null && value !== undefined && value !== '' && value !== 'none'
+        reason = completed ? 'default validation passed' : `default validation failed: ${value}`
     }
+    
+    // optionalFieldStatusに追加
+    optionalFieldStatus.push({ key: field, value, completed, reason })
 
-    // 値の有効性チェック
-    if (Array.isArray(value)) {
-      return value.length > 0
-    }
-
-    // 無効な値を除外（空文字、null、undefined、'none'、未選択系の値）
-    if (!value || value === '' || value === 'none' || value === 'no-entry' || value === 'noEntry' ||
-        value === '選択してください' || value === '未選択' ||
-        value === '国籍を選択' || value === '都道府県を選択') {
-      return false
-    }
-
-    return true
+    // completedフラグを使用（上記のswitch文で設定済み）
+    return completed
   })
 
   // 画像の有無チェック（cleanProfileDataを使用）
@@ -313,26 +342,36 @@ export function calculateProfileCompletion(
              skill.level !== undefined && skill.level !== null && skill.level !== ''
   })) : []
 
-  // 🚨 100% → 88% 問題の根本原因特定のため
-  console.log('🚨🚨🚨 CRITICAL ProfileCompletion Debug 🚨🚨🚨')
-  console.log('='.repeat(80))
-  console.log('📊 完成度計算結果:')
-  console.log(`   完成度: ${completion}%`)
-  console.log(`   完了フィールド: ${completedFields}/${totalFields}`)
-  console.log(`   必須完了: ${completedRequired.length}/${requiredFields.length}`)
-  console.log(`   オプション完了: ${completedOptional.length}/${optionalFields.length}`)
-  console.log(`   画像: ${hasImages ? 'あり' : 'なし'}`)
-  console.log('📋 必須フィールド一覧:')
-  requiredFields.forEach((field, index) => {
-    const isCompleted = completedRequired.includes(field)
-    console.log(`   ${index + 1}. ${field}: ${isCompleted ? '✅完了' : '❌未完了'}`)
-  })
-  console.log('🔍 未完了必須フィールド詳細:', incompleteRequired)
-  console.log('🗣️ 言語情報詳細:')
-  console.log(`   hasLanguageInfo結果: ${languageInfoResult}`)
-  console.log(`   language_skills:`, skills)
-  console.log(`   各スキル検証結果:`, skillsValidationDetails)
-  console.log('='.repeat(80))
+  // 🚨 CRITICAL 100% → 94% 問題の詳細分析
+  if (isForeignMale) {
+    console.log('🚨🚨🚨 CRITICAL ProfileCompletion Debug - FOREIGN MALE 🚨🚨🚨')
+    console.log('='.repeat(80))
+    console.log('📊 完成度サマリ:')
+    console.log(`   対象ユーザータイプ: foreign-male`)
+    console.log(`   completion: ${completion}%`)
+    console.log(`   totalFields: ${totalFields}`)
+    console.log(`   completedFields: ${completedFields}`)
+    console.log(`   requiredCompleted: ${completedRequired.length}/${requiredFields.length}`)
+    console.log(`   optionalCompleted: ${completedOptional.length}/${optionalFields.length}`)
+    console.log(`   画像: ${hasImages ? 'あり' : 'なし'}`)
+    
+    console.log('📋 オプションフィールドごとのステータス一覧:')
+    optionalFieldStatus.forEach(({ key, value, completed, reason }) => {
+      console.log(`   ${key}: ${completed ? '✅' : '❌'} | ${reason}`)
+    })
+    
+    console.log('🔍 必須フィールド一覧:')
+    requiredFields.forEach((field, index) => {
+      const isCompleted = completedRequired.includes(field)
+      console.log(`   ${index + 1}. ${field}: ${isCompleted ? '✅完了' : '❌未完了'}`)
+    })
+    
+    console.log('🗣️ 言語情報詳細:')
+    console.log(`   hasLanguageInfo結果: ${languageInfoResult}`)
+    console.log(`   language_skills:`, skills)
+    console.log(`   各スキル検証結果:`, skillsValidationDetails)
+    console.log('='.repeat(80))
+  }
 
   // 完成度計算完了
 

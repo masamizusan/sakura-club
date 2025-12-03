@@ -953,8 +953,49 @@ function ProfileEditContent() {
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
       personality: selectedPersonality,
+      planned_prefectures: selectedPlannedPrefectures
     }, profileImages, isForeignMale, false)
   }, [selectedHobbies, isForeignMale, profileImages, calculateProfileCompletion])
+
+  // selectedPersonality変更時のフォーム同期と完成度再計算
+  useEffect(() => {
+    console.log('🔍 selectedPersonality changed:', selectedPersonality)
+    
+    // 🔧 フォームフィールドへの同期を追加
+    setValue('personality', selectedPersonality, { 
+      shouldDirty: true, 
+      shouldValidate: true 
+    })
+    
+    const currentData = watch()
+    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+    calculateProfileCompletion({
+      ...currentDataWithoutCustomCulture,
+      hobbies: selectedHobbies,
+      personality: selectedPersonality, // 最新のselectedPersonalityを使用
+      planned_prefectures: selectedPlannedPrefectures
+    }, profileImages, isForeignMale, false)
+  }, [selectedPersonality, isForeignMale, profileImages, calculateProfileCompletion])
+
+  // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
+  useEffect(() => {
+    console.log('🔍 selectedPlannedPrefectures changed:', selectedPlannedPrefectures)
+    
+    // 🔧 フォームフィールドへの同期を追加
+    setValue('planned_prefectures', selectedPlannedPrefectures, { 
+      shouldDirty: true, 
+      shouldValidate: true 
+    })
+    
+    const currentData = watch()
+    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+    calculateProfileCompletion({
+      ...currentDataWithoutCustomCulture,
+      hobbies: selectedHobbies,
+      personality: selectedPersonality,
+      planned_prefectures: selectedPlannedPrefectures // 最新のselectedPlannedPrefecturesを使用
+    }, profileImages, isForeignMale, false)
+  }, [selectedPlannedPrefectures, isForeignMale, profileImages, calculateProfileCompletion])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -3667,20 +3708,45 @@ function ProfileEditContent() {
                                     setLanguageSkills(newSkills)
                                     setValue('language_skills', newSkills)
                                     
+                                    console.log('[Scenario] LANGUAGE LEVEL CHANGED AFTER 100% - EXPECT 100%, but currently drops')
+                                    
                                     // 完成度再計算
                                     setTimeout(() => {
                                       const currentValues = getValues()
                                       
-                                      // 🔧 HOBBIES FIX: selectedHobbiesからhobbiesを復元
+                                      // 🔧 STATE FIX: selectedState群からフォームフィールドを復元
                                       const mergedHobbies = 
                                         selectedHobbies && selectedHobbies.length > 0
                                           ? selectedHobbies
                                           : currentValues.hobbies ?? []
                                       
+                                      const mergedPersonality = 
+                                        selectedPersonality && selectedPersonality.length > 0
+                                          ? selectedPersonality
+                                          : currentValues.personality ?? []
+                                      
+                                      const mergedPlannedPrefectures = 
+                                        selectedPlannedPrefectures && selectedPlannedPrefectures.length > 0
+                                          ? selectedPlannedPrefectures
+                                          : currentValues.planned_prefectures ?? []
+                                      
+                                      console.log('🔍 FormData Debug for Language LEVEL change:', {
+                                        rawValuesFromForm: currentValues,
+                                        formDataForCompletion: {
+                                          ...currentValues,
+                                          language_skills: newSkills,
+                                          hobbies: mergedHobbies,
+                                          personality: mergedPersonality,
+                                          planned_prefectures: mergedPlannedPrefectures
+                                        }
+                                      })
+                                      
                                       const formData = { 
                                         ...currentValues, 
                                         language_skills: newSkills,
-                                        hobbies: mergedHobbies  // 復元されたhobbiesを使用
+                                        hobbies: mergedHobbies,  // 復元されたhobbiesを使用
+                                        personality: mergedPersonality,  // 復元されたpersonalityを使用
+                                        planned_prefectures: mergedPlannedPrefectures  // 復元されたplanned_prefecturesを使用
                                       }
                                       
                                       console.log('🔍 Language LEVEL change completion debug:', {
