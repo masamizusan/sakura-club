@@ -3018,14 +3018,29 @@ function ProfileEditContent() {
 
       console.log('[Profile Submit] updatePayload:', updateData)
       console.log('[Profile Submit] updating user id:', user?.id)
-      console.log('🗣️ LANGUAGE SKILLS SAVE DEBUG:', {
+      console.log('🗣️ LANGUAGE SKILLS SAVE DEBUG - DETAILED:', {
         languageSkillsState: languageSkills,
+        languageSkillsType: typeof languageSkills,
+        languageSkillsIsArray: Array.isArray(languageSkills),
+        languageSkillsLength: languageSkills?.length,
         willSaveLanguageSkills: languageSkills && languageSkills.length > 0 ? languageSkills : null,
+        formDataLanguageSkills: data.language_skills,
+        languageSkillsStringified: JSON.stringify(languageSkills),
         legacyFieldsSetToNull: {
           japanese_level: null,
           english_level: null
         }
       })
+      
+      // 🔍 CRITICAL: languageSkillsが空の場合の原因調査
+      if (!languageSkills || languageSkills.length === 0) {
+        console.warn('🚨 CRITICAL: languageSkills is empty at save time!')
+        console.warn('🔍 Debugging languageSkills source:', {
+          stateLanguageSkills: languageSkills,
+          formLanguageSkills: data.language_skills,
+          watchLanguageSkills: watch('language_skills')
+        })
+      }
       console.log('📝 Final update data (field mapping fixed):', {
         ...updateData,
         name_source: `nickname="${data.nickname}"`,
@@ -3040,11 +3055,26 @@ function ProfileEditContent() {
         totalItems: consolidatedInterests.length
       })
 
+      // データベース更新直前のデバッグ
+      console.log('🔥 SUPABASE UPDATE - Pre-update debug:', {
+        updateData_language_skills: updateData.language_skills,
+        updateData_japanese_level: updateData.japanese_level,
+        updateData_english_level: updateData.english_level,
+        userId: user.id
+      })
+      
       // データベースを更新
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
+      
+      // データベース更新直後のデバッグ
+      console.log('🔥 SUPABASE UPDATE - Post-update debug:', {
+        updateResult,
+        updateError,
+        sentLanguageSkills: updateData.language_skills
+      })
       
       console.log('[Profile Submit] Supabase error:', updateError)
       console.log('[Profile Submit] Supabase result:', updateResult)
@@ -3645,6 +3675,14 @@ function ProfileEditContent() {
                                   onValueChange={(value: LanguageCode) => {
                                     const newSkills = [...languageSkills]
                                     newSkills[index] = { ...skill, language: value }
+                                    
+                                    console.log('🗣️ LANGUAGE CHANGE - State update:', {
+                                      oldSkills: languageSkills,
+                                      newSkills,
+                                      changedIndex: index,
+                                      newLanguage: value
+                                    })
+                                    
                                     setLanguageSkills(newSkills)
                                     setValue('language_skills', newSkills)
                                     
@@ -3713,6 +3751,14 @@ function ProfileEditContent() {
                                   onValueChange={(value: LanguageLevelCode) => {
                                     const newSkills = [...languageSkills]
                                     newSkills[index] = { ...skill, level: value }
+                                    
+                                    console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
+                                      oldSkills: languageSkills,
+                                      newSkills,
+                                      changedIndex: index,
+                                      newLevel: value
+                                    })
+                                    
                                     setLanguageSkills(newSkills)
                                     setValue('language_skills', newSkills)
                                     
