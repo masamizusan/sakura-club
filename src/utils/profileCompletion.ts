@@ -9,42 +9,52 @@ type LanguageSkill = {
   level?: string
 }
 
-// FIX: language info completion - language_skills のみをチェック（legacy fields完全排除）
-function hasLanguageInfo(profileData: any): boolean {
-  // 🚨 CRITICAL FIX: japanese_level/english_level を完全に無視
-  // language_skills配列のみを判定対象とする
-  
-  const skills = profileData.language_skills as LanguageSkill[] | undefined
-  
-  // language_skills が存在しない、または空配列の場合は未入力扱い
-  if (!Array.isArray(skills) || skills.length === 0) {
-    console.log('🔍 hasLanguageInfo: language_skills が存在しないため false')
-    return false
-  }
-  
-  // 最低1つの有効なペア（language !== 'none' && level !== 'none'）があれば完成
-  const hasValidSkill = skills.some((skill) => {
-    if (!skill) return false
-    
-    const lang = skill.language
-    const level = skill.level
-    
-    const isValid = (
-      lang !== undefined &&
-      lang !== null &&
-      lang !== '' &&
-      lang !== 'none' &&
-      level !== undefined &&
-      level !== null &&
-      level !== '' &&
-      level !== 'none'
+// 🔧 言語スキル抽出関数（フォールバック付き）
+function extractLanguageSkills(data: any): LanguageSkill[] {
+  // 1) まず新しい language_skills を優先
+  if (Array.isArray(data.language_skills) && data.language_skills.length > 0) {
+    const validSkills = data.language_skills.filter((skill: any) => 
+      skill && skill.language && skill.level && 
+      skill.language !== 'none' && skill.level !== 'none'
     )
-    
-    console.log(`🔍 hasLanguageInfo: スキル判定 - language:${lang}, level:${level} => ${isValid}`)
-    return isValid
+    if (validSkills.length > 0) {
+      console.log('🔍 extractLanguageSkills: using language_skills', validSkills)
+      return validSkills
+    }
+  }
+
+  // 2) レガシーフィールドからのフォールバック
+  const skills: LanguageSkill[] = []
+
+  if (data.japanese_level && data.japanese_level !== 'none') {
+    skills.push({ language: 'ja', level: data.japanese_level })
+    console.log('🔍 extractLanguageSkills: added japanese_level fallback', data.japanese_level)
+  }
+
+  if (data.english_level && data.english_level !== 'none') {
+    skills.push({ language: 'en', level: data.english_level })
+    console.log('🔍 extractLanguageSkills: added english_level fallback', data.english_level)
+  }
+
+  console.log('🔍 extractLanguageSkills: final skills', skills)
+  return skills
+}
+
+// 修正版: 言語情報完成度判定（フォールバック対応）
+function hasLanguageInfo(profileData: any): boolean {
+  const skills = extractLanguageSkills(profileData)
+  
+  // 有効なスキルがあるかチェック
+  const hasValidSkill = skills.length > 0
+  
+  console.log('🔍 hasLanguageInfo: 最終結果', {
+    extractedSkills: skills,
+    hasValidSkill,
+    originalLanguageSkills: profileData.language_skills,
+    japanese_level: profileData.japanese_level,
+    english_level: profileData.english_level
   })
   
-  console.log(`🔍 hasLanguageInfo: 最終結果 = ${hasValidSkill}`)
   return hasValidSkill
 }
 
