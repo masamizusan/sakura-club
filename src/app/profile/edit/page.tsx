@@ -4207,7 +4207,9 @@ function ProfileEditContent() {
                           visit_schedule: formData.visit_schedule || '',
                           travel_companion: formData.travel_companion || '',
                           image: previewImageUrl,
-                          profile_image: previewImageUrl
+                          profile_image: previewImageUrl,
+                          // 🚀 CRITICAL FIX: 最新のlanguageSkills stateを必ず含める
+                          language_skills: languageSkills
                         }
 
                         // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存

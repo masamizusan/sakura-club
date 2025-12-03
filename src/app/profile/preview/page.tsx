@@ -1195,16 +1195,37 @@ function ProfilePreviewContent() {
                           // 🆕 言語レベル（MyPageでの専用カラム保存用）
                           english_level: dedicatedColumnData.english_level || null,
                           japanese_level: dedicatedColumnData.japanese_level || null,
-                          // ✨ 新機能: 使用言語＋言語レベル
+                          // ✨ 新機能: 使用言語＋言語レベル（URLパラメータ + sessionStorage フォールバック）
                           language_skills: (() => {
+                            // 1. URLパラメータから取得を試行
                             try {
                               const languageSkillsParam = searchParams?.get('language_skills')
                               if (languageSkillsParam) {
-                                return JSON.parse(decodeURIComponent(languageSkillsParam))
+                                const parsedSkills = JSON.parse(decodeURIComponent(languageSkillsParam))
+                                console.log('🔥 Preview: language_skills from URL:', parsedSkills)
+                                return parsedSkills
                               }
                             } catch (e) {
-                              console.warn('Language skills parse error:', e)
+                              console.warn('Language skills URL parse error:', e)
                             }
+                            
+                            // 2. sessionStorageからフォールバック取得
+                            if (typeof window !== 'undefined') {
+                              try {
+                                const sessionData = window.sessionStorage.getItem('currentProfileImages')
+                                if (sessionData) {
+                                  const parsed = JSON.parse(sessionData)
+                                  if (parsed.language_skills) {
+                                    console.log('🔥 Preview: language_skills from sessionStorage:', parsed.language_skills)
+                                    return parsed.language_skills
+                                  }
+                                }
+                              } catch (e) {
+                                console.warn('Language skills session parse error:', e)
+                              }
+                            }
+                            
+                            console.log('🔥 Preview: No language_skills found, using null')
                             return null
                           })(),
 

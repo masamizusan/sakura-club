@@ -91,6 +91,13 @@ function MyPageContent() {
             if (completeData.gender) updateData.gender = completeData.gender
             if (completeData.nationality) updateData.nationality = completeData.nationality
             if (completeData.residence) updateData.residence = completeData.residence
+            
+            // 🚀 CRITICAL FIX: language_skillsを必ず含める
+            if (completeData.language_skills) {
+              updateData.language_skills = completeData.language_skills
+              console.log('🔥 MyPage: language_skills保存追加:', completeData.language_skills)
+            }
+            
             // 画像の更新：存在する場合は設定、削除された場合はnullを設定
             updateData.avatar_url = completeData.profile_image || null
             console.log('🖼️ MyPage: 画像データ更新:', {
