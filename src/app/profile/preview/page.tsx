@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
+import { LanguageSkill, LANGUAGE_LABELS, LANGUAGE_LEVEL_LABELS } from '@/types/profile'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -877,7 +878,7 @@ function ProfilePreviewContent() {
                 {/* 6. 使用言語情報（language_skills優先、レガシーフィールドは後方互換） */}
                 {(() => {
                   // language_skillsを取得（URLパラメータまたはsessionStorageから）
-                  let effectiveLanguageSkills: any[] = []
+                  let effectiveLanguageSkills: LanguageSkill[] = []
                   
                   try {
                     const languageSkillsParam = searchParams?.get('language_skills')
@@ -919,26 +920,20 @@ function ProfilePreviewContent() {
                     }
                   }
                   
-                  // 言語とレベルの表示名取得ヘルパー
-                  const getLanguageLabel = (lang: string): string => {
-                    const labels: Record<string, string> = {
-                      'ja': t('languages.japanese'),
-                      'en': t('languages.english'),
-                      'ko': t('languages.korean'),
-                      'zh-TW': t('languages.chinese')
-                    }
-                    return labels[lang] || lang
+                  // 統一された言語表示ラベルを使用
+                  const getLanguageDisplayLabel = (lang: string): string => {
+                    return LANGUAGE_LABELS[lang as keyof typeof LANGUAGE_LABELS] || lang
                   }
                   
                   return effectiveLanguageSkills.length > 0 ? (
                     <div>
                       <h3 className="font-medium text-gray-900 mb-2">{t('profile.languages')}</h3>
                       <div className="space-y-2">
-                        {effectiveLanguageSkills.map((skill: any, index: number) => (
+                        {effectiveLanguageSkills.map((skill: LanguageSkill, index: number) => (
                           skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
                             <div key={index} className="flex items-center">
-                              <span className="font-medium text-gray-700 w-20">{getLanguageLabel(skill.language)}:</span>
-                              <span className="text-gray-600">{getLanguageLevelLabel(skill.level, t)}</span>
+                              <span className="font-medium text-gray-700 w-20">{getLanguageDisplayLabel(skill.language)}:</span>
+                              <span className="text-gray-600">{LANGUAGE_LEVEL_LABELS[skill.level] || skill.level}</span>
                             </div>
                           ) : null
                         ))}

@@ -3,11 +3,8 @@
  * マイページとプロフィール編集画面で同じロジックを使用
  */
 
-// ✨ 言語情報の完了判定（統一スロット）- 言語＋レベルが両方セットされているときだけ true
-type LanguageSkill = {
-  language?: string
-  level?: string
-}
+// ✨ 統一された言語スキル型を使用
+import { LanguageSkill, hasValidLanguageSkills } from '@/types/profile'
 
 // 🔧 言語スキル抽出関数（フォールバック付き）- 一元化されたロジック
 function extractLanguageSkills(data: any): LanguageSkill[] {
@@ -50,8 +47,8 @@ function extractLanguageSkills(data: any): LanguageSkill[] {
 function hasLanguageInfo(profileData: any): boolean {
   const skills = extractLanguageSkills(profileData)
   
-  // 有効なスキルがあるかチェック
-  const hasValidSkill = skills.length > 0
+  // 統一されたヘルパー関数を使用して有効性をチェック
+  const hasValidSkill = hasValidLanguageSkills(skills)
   
   console.log('🔍 hasLanguageInfo: 最終結果', {
     extractedSkills: skills,

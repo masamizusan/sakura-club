@@ -71,7 +71,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   marital_status: z.enum(['none', 'single', 'married']).optional(),
   english_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   japanese_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
-  // ✨ 新機能: 使用言語＋言語レベル
+  // ✨ 新機能: 使用言語＋言語レベル（統一型定義使用）
   language_skills: z.array(z.object({
     language: z.enum(['none', 'ja', 'en', 'ko', 'zh-TW']),
     level: z.enum(['none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])

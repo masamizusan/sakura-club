@@ -1,4 +1,5 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
+import { LanguageSkill } from '@/types/profile'
 
 // シングルトンクライアント
 let supabaseInstance: SupabaseClient | null = null
@@ -69,8 +70,8 @@ export type Database = {
           avatar_url?: string
           is_verified: boolean
           membership_type: 'free' | 'premium'
-          // 2025年実装: 言語スキルJSONカラム
-          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 言語スキルJSONカラム（統一型定義使用）
+          language_skills?: LanguageSkill[]
           // 2025年実装: 外国人男性専用フィールド
           visit_schedule?: string
           travel_companion?: string
@@ -103,8 +104,8 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
-          // 2025年実装: 言語スキルJSONカラム
-          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 言語スキルJSONカラム（統一型定義使用）
+          language_skills?: LanguageSkill[]
           // 2025年実装: 外国人男性専用フィールド
           visit_schedule?: string
           travel_companion?: string
@@ -137,8 +138,8 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
-          // 2025年実装: 言語スキルJSONカラム
-          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 言語スキルJSONカラム（統一型定義使用）
+          language_skills?: LanguageSkill[]
           // 2025年実装: 外国人男性専用フィールド
           visit_schedule?: string
           travel_companion?: string
