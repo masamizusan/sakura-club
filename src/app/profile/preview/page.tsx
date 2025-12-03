@@ -874,19 +874,78 @@ function ProfilePreviewContent() {
                   </div>
                 )}
                 
-                {/* 6. 日本語レベル（外国人男性）/ 英語レベル（日本人女性） */}
-                {shouldDisplayValue(japaneseLevel) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.japaneseLanguage')}:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(japaneseLevel, t)}</span>
-                  </div>
-                )}
-                {shouldDisplayValue(englishLevel) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.englishLanguage')}:</span>
-                    <span className="text-gray-600">{getLanguageLevelLabel(englishLevel, t)}</span>
-                  </div>
-                )}
+                {/* 6. 使用言語情報（language_skills優先、レガシーフィールドは後方互換） */}
+                {(() => {
+                  // language_skillsを取得（URLパラメータまたはsessionStorageから）
+                  let effectiveLanguageSkills: any[] = []
+                  
+                  try {
+                    const languageSkillsParam = searchParams?.get('language_skills')
+                    if (languageSkillsParam) {
+                      effectiveLanguageSkills = JSON.parse(decodeURIComponent(languageSkillsParam))
+                    }
+                  } catch (e) {
+                    console.warn('Language skills parse error from URL:', e)
+                  }
+                  
+                  // sessionStorageからもフォールバック
+                  if (!effectiveLanguageSkills.length && typeof window !== 'undefined') {
+                    try {
+                      const sessionData = window.sessionStorage.getItem('currentProfileImages')
+                      if (sessionData) {
+                        const parsedData = JSON.parse(sessionData)
+                        if (parsedData.language_skills) {
+                          effectiveLanguageSkills = parsedData.language_skills
+                        }
+                      }
+                    } catch (e) {
+                      console.warn('Language skills session parse error:', e)
+                    }
+                  }
+                  
+                  // レガシーフィールドからの後方互換（language_skillsが空の場合のみ）
+                  if (!effectiveLanguageSkills.length) {
+                    if (shouldDisplayValue(japaneseLevel)) {
+                      effectiveLanguageSkills.push({
+                        language: 'ja',
+                        level: japaneseLevel
+                      })
+                    }
+                    if (shouldDisplayValue(englishLevel)) {
+                      effectiveLanguageSkills.push({
+                        language: 'en',
+                        level: englishLevel
+                      })
+                    }
+                  }
+                  
+                  // 言語とレベルの表示名取得ヘルパー
+                  const getLanguageLabel = (lang: string): string => {
+                    const labels: Record<string, string> = {
+                      'ja': t('languages.japanese'),
+                      'en': t('languages.english'),
+                      'ko': t('languages.korean'),
+                      'zh-TW': t('languages.chinese')
+                    }
+                    return labels[lang] || lang
+                  }
+                  
+                  return effectiveLanguageSkills.length > 0 ? (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-2">{t('profile.languages')}</h3>
+                      <div className="space-y-2">
+                        {effectiveLanguageSkills.map((skill: any, index: number) => (
+                          skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
+                            <div key={index} className="flex items-center">
+                              <span className="font-medium text-gray-700 w-20">{getLanguageLabel(skill.language)}:</span>
+                              <span className="text-gray-600">{getLanguageLevelLabel(skill.level, t)}</span>
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                })()}
                 
                 {/* 7. 訪問予定（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (

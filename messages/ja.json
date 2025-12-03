@@ -72,6 +72,12 @@
     "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
     "emailAlreadyExists": "このメールアドレスは既に使用されています"
   },
+  "languages": {
+    "japanese": "日本語",
+    "english": "英語", 
+    "korean": "韓国語",
+    "chinese": "中国語（繁体字）"
+  },
   "profile": {
     "editProfile": "プロフィール編集",
     "basicInfo": "基本情報",
@@ -99,6 +105,7 @@
     "travelCompanion": "同行者",
     "japaneseLevel": "日本語レベル",
     "englishLevel": "英語レベル",
+    "languages": "使用言語",
     "selectPrefectures": "都道府県を選択",
     "selectStations": "駅を選択",
     "selectedCount": "選択済み",

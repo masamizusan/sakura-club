@@ -44,6 +44,12 @@
     "safety": "Safety",
     "language": "Language"
   },
+  "languages": {
+    "japanese": "Japanese",
+    "english": "English",
+    "korean": "Korean",
+    "chinese": "Chinese (Traditional)"
+  },
   "auth": {
     "welcomeBack": "Welcome back",
     "signInToAccount": "Please sign in to your account",
@@ -99,7 +105,8 @@
     "selfIntroNote": "This will be the first thing people see about you",
     "nicknameDescription": "This is how others will see you",
     "updateProfile": "Update Profile with This Information",
-    "prefectureSelectionRule": "Please select at least 1 (up to 3 prefectures)"
+    "prefectureSelectionRule": "Please select at least 1 (up to 3 prefectures)",
+    "languages": "Languages"
   },
   "matching": {
     "title": "Recommended Matches",

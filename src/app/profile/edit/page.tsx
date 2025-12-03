@@ -2969,11 +2969,11 @@ function ProfileEditContent() {
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
-        // 🆕 専用カラムにも言語レベルを保存
-        english_level: !isForeignMale ? (data.english_level === 'none' ? null : data.english_level) : null,
-        japanese_level: isForeignMale ? (data.japanese_level === 'none' ? null : data.japanese_level) : null,
-        // ✨ 新機能: 使用言語＋言語レベル
+        // ✨ 新機能: 使用言語＋言語レベル（stateから取得）
         language_skills: languageSkills && languageSkills.length > 0 ? languageSkills : null,
+        // レガシーフィールドは完全に無効化（常にnull）
+        japanese_level: null,
+        english_level: null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
         // ✅ Triple-save機能復旧（personality/culture分離）
@@ -3018,6 +3018,14 @@ function ProfileEditContent() {
 
       console.log('[Profile Submit] updatePayload:', updateData)
       console.log('[Profile Submit] updating user id:', user?.id)
+      console.log('🗣️ LANGUAGE SKILLS SAVE DEBUG:', {
+        languageSkillsState: languageSkills,
+        willSaveLanguageSkills: languageSkills && languageSkills.length > 0 ? languageSkills : null,
+        legacyFieldsSetToNull: {
+          japanese_level: null,
+          english_level: null
+        }
+      })
       console.log('📝 Final update data (field mapping fixed):', {
         ...updateData,
         name_source: `nickname="${data.nickname}"`,
