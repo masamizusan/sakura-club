@@ -17,9 +17,25 @@ import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { calculateProfileCompletion } from '@/utils/profileCompletion'
+
+// ⚠️ 重要: 言語スキル構築のための内部関数をインポート
+// calculateProfileCompletion内のextractLanguageSkillsを使用するために、
+// 一時的に同様のロジックを使用（将来的にはcalculateProfileCompletionに完全集約予定）
+function extractLanguageSkillsForForm(data: any): LanguageSkill[] {
+  const skills: LanguageSkill[] = []
+  
+  if (data.japanese_level && data.japanese_level !== 'none') {
+    skills.push({ language: 'ja', level: data.japanese_level })
+  }
+  
+  if (data.english_level && data.english_level !== 'none') {
+    skills.push({ language: 'en', level: data.english_level })
+  }
+  
+  return skills
+}
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
-import { buildLanguageSkillsFromForm } from '@/utils/languageHelpers'
 import { 
   type LanguageSkill, 
   type LanguageCode, 
@@ -586,7 +602,7 @@ function ProfileEditContent() {
       'selectedPersonality.length': selectedPersonality.length
     })
     const currentData = watch()
-    const language_skills = buildLanguageSkillsFromForm(currentData)
+    const language_skills = extractLanguageSkillsForForm(currentData)
     const result = calculateProfileCompletion({
       ...currentData,
       hobbies: selectedHobbies,
@@ -609,7 +625,7 @@ function ProfileEditContent() {
       const currentData = watch()
       // custom_culture は完成度計算から除外（コメント扱い）
       const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-      const language_skills = buildLanguageSkillsFromForm(currentData)
+      const language_skills = extractLanguageSkillsForForm(currentData)
       const result = calculateProfileCompletion({
         ...currentDataWithoutCustomCulture,
         birth_date: birthDate,
@@ -729,7 +745,7 @@ function ProfileEditContent() {
     const isFromSignup = urlParams.get('from') === 'signup'
     const isNewUserForImage = isFromSignup
 
-    const language_skills = buildLanguageSkillsFromForm(currentData)
+    const language_skills = extractLanguageSkillsForForm(currentData)
     const result = calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 状態から直接取得
@@ -928,7 +944,7 @@ function ProfileEditContent() {
           const currentValues = getValues()
           // custom_culture は完成度計算から除外（コメント扱い）
           const { custom_culture, ...valueWithoutCustomCulture } = value || {}
-          const language_skills = buildLanguageSkillsFromForm(currentValues)
+          const language_skills = extractLanguageSkillsForForm(currentValues)
           calculateProfileCompletion({
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
@@ -958,7 +974,7 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = buildLanguageSkillsFromForm(currentData)
+    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
@@ -980,7 +996,7 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = buildLanguageSkillsFromForm(currentData)
+    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
@@ -1002,7 +1018,7 @@ function ProfileEditContent() {
     
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    const language_skills = buildLanguageSkillsFromForm(currentData)
+    const language_skills = extractLanguageSkillsForForm(currentData)
     calculateProfileCompletion({
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
@@ -2439,6 +2455,14 @@ function ProfileEditContent() {
           language_skills: isNewUser ? [{ language: 'none' as LanguageCode, level: 'none' as LanguageLevelCode }] : (profile?.language_skills || generateLanguageSkillsFromLegacy(profile)),
         }
         
+        console.log('🔍 CRITICAL: resetData language_skills check:', {
+          'profile.language_skills': profile?.language_skills,
+          'generated_from_legacy': generateLanguageSkillsFromLegacy(profile),
+          'resetData.language_skills': resetData.language_skills,
+          'resetData includes language_skills': 'language_skills' in resetData,
+          isNewUser
+        })
+        
         console.log('🚨 Final Reset Data for Form:', resetData)
         console.log('🔍 CRITICAL - Japanese Level in resetData:', {
           'resetData.japanese_level': resetData.japanese_level,
@@ -2986,7 +3010,7 @@ function ProfileEditContent() {
         marital_status: data.marital_status === 'none' ? null : data.marital_status,
         // ✨ 新機能: 使用言語＋言語レベル（フォームから構築）
         language_skills: (() => {
-          const builtSkills = buildLanguageSkillsFromForm(data)
+          const builtSkills = extractLanguageSkillsForForm(data)
           console.log('🔥 onSubmit language_skills construction:', {
             formData: data,
             builtSkills,
@@ -3821,7 +3845,7 @@ function ProfileEditContent() {
                                       
                                       // フォームデータから言語スキルを構築
                                       const formDataForLanguageSkills = { ...currentValues, language_skills: newSkills }
-                                      const builtLanguageSkills = buildLanguageSkillsFromForm(formDataForLanguageSkills)
+                                      const builtLanguageSkills = extractLanguageSkillsForForm(formDataForLanguageSkills)
                                       
                                       const formData = { 
                                         ...currentValues, 

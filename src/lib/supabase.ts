@@ -69,6 +69,22 @@ export type Database = {
           avatar_url?: string
           is_verified: boolean
           membership_type: 'free' | 'premium'
+          // 2025年実装: 言語スキルJSONカラム
+          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 外国人男性専用フィールド
+          visit_schedule?: string
+          travel_companion?: string
+          planned_prefectures?: string[]
+          planned_stations?: string[]
+          // 2025年実装: 専用カラム
+          occupation?: string
+          height?: number
+          body_type?: string
+          marital_status?: string
+          // 2025年実装: 性格・言語レベル
+          personality?: string[]
+          japanese_level?: string
+          english_level?: string
           created_at: string
           updated_at: string
         }
@@ -87,6 +103,22 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
+          // 2025年実装: 言語スキルJSONカラム
+          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 外国人男性専用フィールド
+          visit_schedule?: string
+          travel_companion?: string
+          planned_prefectures?: string[]
+          planned_stations?: string[]
+          // 2025年実装: 専用カラム
+          occupation?: string
+          height?: number
+          body_type?: string
+          marital_status?: string
+          // 2025年実装: 性格・言語レベル
+          personality?: string[]
+          japanese_level?: string
+          english_level?: string
           created_at?: string
           updated_at?: string
         }
@@ -105,6 +137,22 @@ export type Database = {
           avatar_url?: string
           is_verified?: boolean
           membership_type?: 'free' | 'premium'
+          // 2025年実装: 言語スキルJSONカラム
+          language_skills?: Array<{language: string; level: string}>
+          // 2025年実装: 外国人男性専用フィールド
+          visit_schedule?: string
+          travel_companion?: string
+          planned_prefectures?: string[]
+          planned_stations?: string[]
+          // 2025年実装: 専用カラム
+          occupation?: string
+          height?: number
+          body_type?: string
+          marital_status?: string
+          // 2025年実装: 性格・言語レベル
+          personality?: string[]
+          japanese_level?: string
+          english_level?: string
           created_at?: string
           updated_at?: string
         }

@@ -9,8 +9,14 @@ type LanguageSkill = {
   level?: string
 }
 
-// 🔧 言語スキル抽出関数（フォールバック付き）
+// 🔧 言語スキル抽出関数（フォールバック付き）- 一元化されたロジック
 function extractLanguageSkills(data: any): LanguageSkill[] {
+  console.log('🔍 extractLanguageSkills: 入力データ', {
+    language_skills: data.language_skills,
+    japanese_level: data.japanese_level,
+    english_level: data.english_level
+  })
+
   // 1) まず新しい language_skills を優先
   if (Array.isArray(data.language_skills) && data.language_skills.length > 0) {
     const validSkills = data.language_skills.filter((skill: any) => 
@@ -18,12 +24,12 @@ function extractLanguageSkills(data: any): LanguageSkill[] {
       skill.language !== 'none' && skill.level !== 'none'
     )
     if (validSkills.length > 0) {
-      console.log('🔍 extractLanguageSkills: using language_skills', validSkills)
+      console.log('🔍 extractLanguageSkills: using existing language_skills', validSkills)
       return validSkills
     }
   }
 
-  // 2) レガシーフィールドからのフォールバック
+  // 2) レガシーフィールドからのフォールバック構築
   const skills: LanguageSkill[] = []
 
   if (data.japanese_level && data.japanese_level !== 'none') {
@@ -36,7 +42,7 @@ function extractLanguageSkills(data: any): LanguageSkill[] {
     console.log('🔍 extractLanguageSkills: added english_level fallback', data.english_level)
   }
 
-  console.log('🔍 extractLanguageSkills: final skills', skills)
+  console.log('🔍 extractLanguageSkills: final constructed skills', skills)
   return skills
 }
 
