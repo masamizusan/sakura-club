@@ -17,6 +17,7 @@ type TranslationKeys = {
     travelCompanion: string
     japaneseLevel: string
     englishLevel: string
+    languages: string
     selectPrefectures: string
     selectStations: string
     selectedCount: string
@@ -685,6 +686,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       travelCompanion: '同行者',
       japaneseLevel: '日本語レベル',
       englishLevel: '英語レベル',
+      languages: '使用言語',
       selectPrefectures: '都道府県を選択',
       selectStations: '駅を選択',
       selectedCount: '選択済み',
@@ -1299,6 +1301,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       travelCompanion: 'Travel Companion',
       japaneseLevel: 'Japanese Level',
       englishLevel: 'English Level',
+      languages: 'Languages',
       selectPrefectures: 'Select Prefectures',
       selectStations: 'Select Stations',
       selectedCount: 'selected',
@@ -1912,6 +1915,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       travelCompanion: '동행자',
       japaneseLevel: '일본어 수준',
       englishLevel: '영어 수준',
+      languages: '사용 언어',
       selectPrefectures: '현 선택',
       selectStations: '역 선택',
       selectedCount: '선택됨',
@@ -2525,6 +2529,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       travelCompanion: '同行者',
       japaneseLevel: '日語程度',
       englishLevel: '英語程度',
+      languages: '使用語言',
       selectPrefectures: '選擇都道府縣',
       selectStations: '選擇車站',
       selectedCount: '已選擇',

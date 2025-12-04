@@ -3760,7 +3760,7 @@ function ProfileEditContent() {
                     <div className="col-span-2">
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          使用言語と言語レベル <span className="text-red-500">*</span>
+                          {t('profile.languages')} <span className="text-red-500">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3">
                           あなたが使用できる言語とそのレベルを選択してください（最低1つ必須）
