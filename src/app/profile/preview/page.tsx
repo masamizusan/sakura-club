@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
-import { LanguageSkill, LANGUAGE_LABELS, LANGUAGE_LEVEL_LABELS } from '@/types/profile'
+import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -953,7 +953,7 @@ function ProfilePreviewContent() {
                           skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
                             <div key={index} className="flex items-center">
                               <span className="font-medium text-gray-700 w-20">{getLanguageDisplayLabel(skill.language)}:</span>
-                              <span className="text-gray-600">{LANGUAGE_LEVEL_LABELS[skill.level] || skill.level}</span>
+                              <span className="text-gray-600">{t(`profile.languageLevel.${skill.level}`) || skill.level}</span>
                             </div>
                           ) : null
                         ))}

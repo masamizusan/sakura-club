@@ -41,7 +41,6 @@ import {
   type LanguageCode, 
   type LanguageLevelCode,
   LANGUAGE_LABELS,
-  LANGUAGE_LEVEL_LABELS,
   hasValidLanguageSkills,
   generateLanguageSkillsFromLegacy 
 } from '@/types/profile'
@@ -3763,7 +3762,7 @@ function ProfileEditContent() {
                           {t('profile.languages')} <span className="text-red-500">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3">
-                          あなたが使用できる言語とそのレベルを選択してください（最低1つ必須）
+                          {t('profile.languageHelp')}
                         </p>
                         
                         {/* 言語スキル一覧表示 */}
@@ -3837,9 +3836,16 @@ function ProfileEditContent() {
                                     <SelectValue placeholder="レベルを選択してください" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {Object.entries(LANGUAGE_LEVEL_LABELS).map(([code, label]) => (
-                                      <SelectItem key={code} value={code} disabled={code === 'none'}>
-                                        {label}
+                                    {[
+                                      { value: 'native', label: t('profile.languageLevel.native') },
+                                      { value: 'beginner', label: t('profile.languageLevel.beginner') },
+                                      { value: 'beginner_plus', label: t('profile.languageLevel.beginner_plus') },
+                                      { value: 'intermediate', label: t('profile.languageLevel.intermediate') },
+                                      { value: 'intermediate_plus', label: t('profile.languageLevel.intermediate_plus') },
+                                      { value: 'advanced', label: t('profile.languageLevel.advanced') }
+                                    ].map((level) => (
+                                      <SelectItem key={level.value} value={level.value}>
+                                        {level.label}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>

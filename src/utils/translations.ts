@@ -18,6 +18,15 @@ type TranslationKeys = {
     japaneseLevel: string
     englishLevel: string
     languages: string
+    languageHelp: string
+    languageLevel: {
+      native: string
+      beginner: string
+      beginner_plus: string
+      intermediate: string
+      intermediate_plus: string
+      advanced: string
+    }
     selectPrefectures: string
     selectStations: string
     selectedCount: string
@@ -687,6 +696,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseLevel: '日本語レベル',
       englishLevel: '英語レベル',
       languages: '使用言語',
+      languageHelp: 'あなたが使用できる言語とそのレベルを選択してください（最低1つ必須）',
+      languageLevel: {
+        native: '母国語',
+        beginner: '初級（日常会話は難しい）',
+        beginner_plus: '初級上（基本的な日常会話ができる）',
+        intermediate: '中級（日常会話は問題ない）',
+        intermediate_plus: '中級上（雑談や複雑な話題も理解できる）',
+        advanced: '上級（流暢に話せる）'
+      },
       selectPrefectures: '都道府県を選択',
       selectStations: '駅を選択',
       selectedCount: '選択済み',
@@ -1302,6 +1320,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseLevel: 'Japanese Level',
       englishLevel: 'English Level',
       languages: 'Languages',
+      languageHelp: 'Please select the languages you can use and their levels (at least one is required).',
+      languageLevel: {
+        native: 'Native language',
+        beginner: 'Beginner (daily conversation is difficult)',
+        beginner_plus: 'Upper beginner (can handle basic daily conversations)',
+        intermediate: 'Intermediate (can handle everyday conversations)',
+        intermediate_plus: 'Upper intermediate (can handle small talk and more complex topics)',
+        advanced: 'Advanced (can speak fluently)'
+      },
       selectPrefectures: 'Select Prefectures',
       selectStations: 'Select Stations',
       selectedCount: 'selected',
@@ -1916,6 +1943,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseLevel: '일본어 수준',
       englishLevel: '영어 수준',
       languages: '사용 언어',
+      languageHelp: '사용할 수 있는 언어와 그 수준을 선택해 주세요 (최소 1개 필수).',
+      languageLevel: {
+        native: '모국어',
+        beginner: '초급 (일상 대화가 어렵다)',
+        beginner_plus: '초급 상 (기본적인 일상 대화가 가능하다)',
+        intermediate: '중급 (일상 대화에는 문제가 없다)',
+        intermediate_plus: '중급 상 (잡담이나 복잡한 주제도 이해할 수 있다)',
+        advanced: '고급 (유창하게 말할 수 있다)'
+      },
       selectPrefectures: '현 선택',
       selectStations: '역 선택',
       selectedCount: '선택됨',
@@ -2530,6 +2566,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseLevel: '日語程度',
       englishLevel: '英語程度',
       languages: '使用語言',
+      languageHelp: '請選擇你可以使用的語言及程度（至少需選一項）。',
+      languageLevel: {
+        native: '母語',
+        beginner: '初級（不太能進行日常會話）',
+        beginner_plus: '初級以上（可以進行基本的日常會話）',
+        intermediate: '中級（一般日常會話沒有問題）',
+        intermediate_plus: '中級以上（可以聊天，也能理解較複雜的話題）',
+        advanced: '高級（可以流利地說）'
+      },
       selectPrefectures: '選擇都道府縣',
       selectStations: '選擇車站',
       selectedCount: '已選擇',
