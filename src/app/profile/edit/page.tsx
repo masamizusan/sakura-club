@@ -40,7 +40,6 @@ import {
   type LanguageSkill, 
   type LanguageCode, 
   type LanguageLevelCode,
-  LANGUAGE_LABELS,
   hasValidLanguageSkills,
   generateLanguageSkillsFromLegacy 
 } from '@/types/profile'
@@ -3795,12 +3794,17 @@ function ProfileEditContent() {
                                   }}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="言語を選択してください" />
+                                    <SelectValue placeholder={t('profile.languagePlaceholder')} />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {Object.entries(LANGUAGE_LABELS).map(([code, label]) => (
-                                      <SelectItem key={code} value={code} disabled={code === 'none'}>
-                                        {label}
+                                    {[
+                                      { value: 'ja', label: t('profile.languageOptions.ja') },
+                                      { value: 'en', label: t('profile.languageOptions.en') },
+                                      { value: 'ko', label: t('profile.languageOptions.ko') },
+                                      { value: 'zh-TW', label: t('profile.languageOptions.zh_tw') }
+                                    ].map((option) => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -3833,7 +3837,7 @@ function ProfileEditContent() {
                                   }}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="レベルを選択してください" />
+                                    <SelectValue placeholder={t('profile.languageLevelPlaceholder')} />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {[

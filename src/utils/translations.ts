@@ -27,6 +27,14 @@ type TranslationKeys = {
       intermediate_plus: string
       advanced: string
     }
+    languagePlaceholder: string
+    languageLevelPlaceholder: string
+    languageOptions: {
+      ja: string
+      en: string
+      ko: string
+      zh_tw: string
+    }
     selectPrefectures: string
     selectStations: string
     selectedCount: string
@@ -705,6 +713,14 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         intermediate_plus: '中級上（雑談や複雑な話題も理解できる）',
         advanced: '上級（流暢に話せる）'
       },
+      languagePlaceholder: '選択してください',
+      languageLevelPlaceholder: '選択してください',
+      languageOptions: {
+        ja: '日本語',
+        en: '英語',
+        ko: '韓国語',
+        zh_tw: '中国語（繁体字）'
+      },
       selectPrefectures: '都道府県を選択',
       selectStations: '駅を選択',
       selectedCount: '選択済み',
@@ -1329,6 +1345,14 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         intermediate_plus: 'Upper intermediate (can handle small talk and more complex topics)',
         advanced: 'Advanced (can speak fluently)'
       },
+      languagePlaceholder: 'Select',
+      languageLevelPlaceholder: 'Select',
+      languageOptions: {
+        ja: 'Japanese',
+        en: 'English',
+        ko: 'Korean',
+        zh_tw: 'Chinese (Traditional)'
+      },
       selectPrefectures: 'Select Prefectures',
       selectStations: 'Select Stations',
       selectedCount: 'selected',
@@ -1952,6 +1976,14 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         intermediate_plus: '중급 상 (잡담이나 복잡한 주제도 이해할 수 있다)',
         advanced: '고급 (유창하게 말할 수 있다)'
       },
+      languagePlaceholder: '선택하세요',
+      languageLevelPlaceholder: '선택하세요',
+      languageOptions: {
+        ja: '일본어',
+        en: '영어',
+        ko: '한국어',
+        zh_tw: '중국어 (번체자)'
+      },
       selectPrefectures: '현 선택',
       selectStations: '역 선택',
       selectedCount: '선택됨',
@@ -2574,6 +2606,14 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         intermediate: '中級（一般日常會話沒有問題）',
         intermediate_plus: '中級以上（可以聊天，也能理解較複雜的話題）',
         advanced: '高級（可以流利地說）'
+      },
+      languagePlaceholder: '請選擇',
+      languageLevelPlaceholder: '請選擇',
+      languageOptions: {
+        ja: '日語',
+        en: '英語',
+        ko: '韓語',
+        zh_tw: '中文（繁體）'
       },
       selectPrefectures: '選擇都道府縣',
       selectStations: '選擇車站',
