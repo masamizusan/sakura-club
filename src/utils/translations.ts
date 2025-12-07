@@ -35,6 +35,8 @@ type TranslationKeys = {
       ko: string
       zh_tw: string
     }
+    languageAddButton: string
+    prefectureWarning: string
     selectPrefectures: string
     selectStations: string
     selectedCount: string
@@ -689,6 +691,23 @@ type TranslationKeys = {
     internationalExchangeTitle: string
     internationalExchangeDescription: string
   }
+  
+  // 独立した言語関連オブジェクト
+  languageOptions: {
+    japanese: string
+    english: string
+    korean: string
+    chineseTraditional: string
+  }
+  
+  languageLevels: {
+    native: string
+    beginner: string
+    beginnerPlus: string
+    intermediate: string
+    intermediatePlus: string
+    advanced: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -721,6 +740,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ko: '韓国語',
         zh_tw: '中国語（繁体字）'
       },
+      languageAddButton: '＋ 使用言語を追加',
+      prefectureWarning: '行く予定の都道府県を1つ以上選択してください',
       selectPrefectures: '都道府県を選択',
       selectStations: '駅を選択',
       selectedCount: '選択済み',
@@ -1321,6 +1342,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       culturalExchangeDescription: '茶道・書道・料理など\n本物の日本文化を体験',
       internationalExchangeTitle: '国際交流',
       internationalExchangeDescription: '言語を学び合い\n国境を越えたつながり'
+    },
+    
+    // 独立した言語関連オブジェクト
+    languageOptions: {
+      japanese: '日本語',
+      english: '英語', 
+      korean: '韓国語',
+      chineseTraditional: '中国語（繁体字）'
+    },
+    
+    languageLevels: {
+      native: '母国語',
+      beginner: '初級',
+      beginnerPlus: '初級上',
+      intermediate: '中級',
+      intermediatePlus: '中級上',
+      advanced: '上級'
     }
   },
 
@@ -1353,6 +1391,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ko: 'Korean',
         zh_tw: 'Chinese (Traditional)'
       },
+      languageAddButton: '+ Add language',
+      prefectureWarning: 'Please select at least one prefecture you plan to visit.',
       selectPrefectures: 'Select Prefectures',
       selectStations: 'Select Stations',
       selectedCount: 'selected',
@@ -1952,6 +1992,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       culturalExchangeDescription: 'Experience authentic\nJapanese culture through\ntea ceremony, calligraphy, cooking',
       internationalExchangeTitle: 'International Exchange',
       internationalExchangeDescription: 'Learn languages together\nand build connections\nacross borders'
+    },
+    
+    // 独立した言語関連オブジェクト
+    languageOptions: {
+      japanese: 'Japanese',
+      english: 'English',
+      korean: 'Korean',
+      chineseTraditional: 'Chinese (Traditional)'
+    },
+    
+    languageLevels: {
+      native: 'Native language',
+      beginner: 'Beginner',
+      beginnerPlus: 'Upper beginner',
+      intermediate: 'Intermediate',
+      intermediatePlus: 'Upper intermediate',
+      advanced: 'Advanced'
     }
   },
 
@@ -1984,6 +2041,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ko: '한국어',
         zh_tw: '중국어 (번체자)'
       },
+      languageAddButton: '+ 사용 언어 추가',
+      prefectureWarning: '방문 예정인 도도부현을 최소 1곳 이상 선택해 주세요.',
       selectPrefectures: '현 선택',
       selectStations: '역 선택',
       selectedCount: '선택됨',
@@ -2583,6 +2642,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       culturalExchangeDescription: '다도·서도·요리 등\n진짜 일본 문화를 체험',
       internationalExchangeTitle: '국제 교류',
       internationalExchangeDescription: '언어를 서로 배우며\n국경을 넘는 인연'
+    },
+    
+    // 독립적인 언어 관련 객체
+    languageOptions: {
+      japanese: '일본어',
+      english: '영어',
+      korean: '한국어',
+      chineseTraditional: '중국어 (번체자)'
+    },
+    
+    languageLevels: {
+      native: '모국어',
+      beginner: '초급',
+      beginnerPlus: '초급 상',
+      intermediate: '중급',
+      intermediatePlus: '중급 상',
+      advanced: '고급'
     }
   },
 
@@ -2615,6 +2691,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ko: '韓語',
         zh_tw: '中文（繁體）'
       },
+      languageAddButton: '+ 新增使用語言',
+      prefectureWarning: '請至少選擇一個預定前往的都道府縣。',
       selectPrefectures: '選擇都道府縣',
       selectStations: '選擇車站',
       selectedCount: '已選擇',
@@ -3213,6 +3291,23 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       culturalExchangeDescription: '透過茶道·書道·料理等\n體驗真正的日本文化',
       internationalExchangeTitle: '國際交流',
       internationalExchangeDescription: '互相學習語言\n跨越國界的連結'
+    },
+    
+    // 獨立的語言相關物件
+    languageOptions: {
+      japanese: '日語',
+      english: '英語',
+      korean: '韓語',
+      chineseTraditional: '中文（繁體）'
+    },
+    
+    languageLevels: {
+      native: '母語',
+      beginner: '初級',
+      beginnerPlus: '初級以上',
+      intermediate: '中級',
+      intermediatePlus: '中級以上',
+      advanced: '高級'
     }
   }
 }

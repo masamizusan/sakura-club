@@ -53,7 +53,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   prefecture: z.string().optional(),
   city: z.string().optional(),
   // 外国人男性向け新フィールド
-  planned_prefectures: z.array(z.string()).min(1, '行く予定の都道府県を1つ以上選択してください').max(3, '行く予定の都道府県は最大3つまで選択できます'),  // 必須項目に変更
+  planned_prefectures: z.array(z.string()).min(1, t('profile.prefectureWarning')).max(3, '行く予定の都道府県は最大3つまで選択できます'),  // 必須項目に変更
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),
@@ -97,7 +97,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
       if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '行く予定の都道府県を1つ以上選択してください',
+          message: t('profile.prefectureWarning'),
           path: ['planned_prefectures']
         }])
       }
@@ -575,8 +575,8 @@ function ProfileEditContent() {
       nationality: typeof window !== 'undefined' && profileType === 'foreign-male'
         ? new URLSearchParams(window.location.search).get('nationality') || 'アメリカ'
         : undefined,
-      // ✨ language_skillsのデフォルト値を設定
-      language_skills: []
+      // ✨ language_skillsのデフォルト値を設定（初期表示で1行表示）
+      language_skills: [{ language: 'none', level: 'none' } as LanguageSkill]
     }
   })
 
@@ -2623,9 +2623,9 @@ function ProfileEditContent() {
         let initialLanguageSkills: LanguageSkill[] = []
         
         if (isNewUser) {
-          // 新規ユーザー: 空配列で開始
-          initialLanguageSkills = []
-          console.log('🆕 New user: starting with empty language skills')
+          // 新規ユーザー: 1行表示で開始
+          initialLanguageSkills = [{ language: 'none', level: 'none' } as LanguageSkill]
+          console.log('🆕 New user: starting with one empty language skill row')
         } else {
           // 既存ユーザー: Supabase language_skills → legacyフィールド の優先順位
           if (profile?.language_skills && Array.isArray(profile.language_skills) && profile.language_skills.length > 0) {
@@ -2633,10 +2633,10 @@ function ProfileEditContent() {
             initialLanguageSkills = profile.language_skills
             console.log('🔥 Using Supabase language_skills:', profile.language_skills)
           } else {
-            // フォールバック: 旧式カラムから生成
+            // フォールバック: 旧式カラムから生成、それも空なら1行表示
             const legacySkills = generateLanguageSkillsFromLegacy(profile) || []
-            initialLanguageSkills = legacySkills
-            console.log('🔄 Fallback to legacy fields:', legacySkills)
+            initialLanguageSkills = legacySkills.length > 0 ? legacySkills : [{ language: 'none', level: 'none' } as LanguageSkill]
+            console.log('🔄 Fallback to legacy fields or one empty row:', legacySkills.length > 0 ? legacySkills : 'one empty row')
           }
         }
         
@@ -3798,10 +3798,10 @@ function ProfileEditContent() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {[
-                                      { value: 'ja', label: t('profile.languageOptions.ja') },
-                                      { value: 'en', label: t('profile.languageOptions.en') },
-                                      { value: 'ko', label: t('profile.languageOptions.ko') },
-                                      { value: 'zh-TW', label: t('profile.languageOptions.zh_tw') }
+                                      { value: 'ja', label: t('languageOptions.japanese') },
+                                      { value: 'en', label: t('languageOptions.english') },
+                                      { value: 'ko', label: t('languageOptions.korean') },
+                                      { value: 'zh-TW', label: t('languageOptions.chineseTraditional') }
                                     ].map((option) => (
                                       <SelectItem key={option.value} value={option.value}>
                                         {option.label}
@@ -3841,12 +3841,12 @@ function ProfileEditContent() {
                                   </SelectTrigger>
                                   <SelectContent>
                                     {[
-                                      { value: 'native', label: t('profile.languageLevel.native') },
-                                      { value: 'beginner', label: t('profile.languageLevel.beginner') },
-                                      { value: 'beginner_plus', label: t('profile.languageLevel.beginner_plus') },
-                                      { value: 'intermediate', label: t('profile.languageLevel.intermediate') },
-                                      { value: 'intermediate_plus', label: t('profile.languageLevel.intermediate_plus') },
-                                      { value: 'advanced', label: t('profile.languageLevel.advanced') }
+                                      { value: 'native', label: t('languageLevels.native') },
+                                      { value: 'beginner', label: t('languageLevels.beginner') },
+                                      { value: 'beginner_plus', label: t('languageLevels.beginnerPlus') },
+                                      { value: 'intermediate', label: t('languageLevels.intermediate') },
+                                      { value: 'intermediate_plus', label: t('languageLevels.intermediatePlus') },
+                                      { value: 'advanced', label: t('languageLevels.advanced') }
                                     ].map((level) => (
                                       <SelectItem key={level.value} value={level.value}>
                                         {level.label}
@@ -3890,7 +3890,7 @@ function ProfileEditContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newSkills = [...languageSkills, { language: 'none' as LanguageCode, level: 'none' as LanguageLevelCode }]
+                              const newSkills: LanguageSkill[] = [...languageSkills, { language: 'none', level: 'none' }]
                               
                               // 🚀 即座反映: setState → setValue の順序で同期実行
                               setLanguageSkills(newSkills)
@@ -3904,7 +3904,7 @@ function ProfileEditContent() {
                             }}
                             className="text-blue-600 hover:text-blue-700"
                           >
-                            + 使用言語を追加
+                            {t('profile.languageAddButton')}
                           </Button>
                         )}
                         
@@ -4186,7 +4186,7 @@ function ProfileEditContent() {
                         if (isForeignMale) {
                           if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
                           if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
-                            validationErrors.push('行く予定の都道府県を1つ以上選択してください')
+                            validationErrors.push(t('profile.prefectureWarning'))
                           }
                         } else {
                           // 日本人女性の場合
