@@ -990,13 +990,32 @@ function ProfileEditContent() {
           const currentValues = getValues()
           // custom_culture は完成度計算から除外（コメント扱い）
           const { custom_culture, ...valueWithoutCustomCulture } = value || {}
-          calculateProfileCompletion({
+          
+          // 🚨 MAIN WATCH SUBSCRIPTION DEBUG - MyPageと同じログ形式
+          const normalizedProfileForWatch = {
             ...valueWithoutCustomCulture,
             birth_date: currentValues.birth_date,
             hobbies: selectedHobbies, // 状態から直接取得
             personality: selectedPersonality, // 状態から直接取得
             language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-          }, profileImages)
+          }
+          
+          console.log('🚨🚨🚨 MAIN WATCH SUBSCRIPTION - COMPLETION DEBUG 🚨🚨🚨')
+          console.log('='.repeat(80))
+          console.log('📊 フォーム変更検出による完成度計算:')
+          console.log(`   isForeignMale: ${isForeignMale}`)
+          console.log(`   personality (selectedPersonality): ${Array.isArray(selectedPersonality) ? `Array(${selectedPersonality.length}) = ${JSON.stringify(selectedPersonality)}` : selectedPersonality}`)
+          console.log(`   hobbies (selectedHobbies): ${Array.isArray(selectedHobbies) ? `Array(${selectedHobbies.length})` : selectedHobbies}`)
+          console.log(`   language_skills: ${Array.isArray(languageSkills) ? `Array(${languageSkills.length})` : languageSkills}`)
+          console.log(`   planned_prefectures: ${Array.isArray(selectedPlannedPrefectures) ? `Array(${selectedPlannedPrefectures.length})` : selectedPlannedPrefectures}`)
+          console.log('📋 フォーム値とState値の比較:')
+          console.log(`   フォーム personality: ${JSON.stringify(valueWithoutCustomCulture.personality)}`)
+          console.log(`   State personality: ${JSON.stringify(selectedPersonality)}`)
+          console.log('📋 最終normalizedProfile.personality詳細:')
+          console.log(`   personality: ${normalizedProfileForWatch.personality ? (Array.isArray(normalizedProfileForWatch.personality) ? `✅ | array has ${normalizedProfileForWatch.personality.length} items` : `✅ | ${normalizedProfileForWatch.personality}`) : '❌ | empty or null'}`)
+          console.log('='.repeat(80))
+          
+          calculateProfileCompletion(normalizedProfileForWatch, profileImages)
         }, 500)
       }
     })
@@ -1038,15 +1057,32 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
+    // 🚨 EDIT SCREEN PERSONALITY DEBUG - MyPageと同じログ形式
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    calculateProfileCompletion({
+    
+    // 完成度計算前の入力データをMyPageと同じ形式でログ出力
+    const normalizedProfile = {
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
       personality: selectedPersonality, // 最新のselectedPersonalityを使用
       planned_prefectures: selectedPlannedPrefectures,
       language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }, profileImages, isForeignMale, false)
+    }
+    
+    console.log('🚨🚨🚨 EDIT SCREEN - PERSONALITY COMPLETION DEBUG 🚨🚨🚨')
+    console.log('='.repeat(80))
+    console.log('📊 完成度計算前のprofileData:')
+    console.log(`   isForeignMale: ${isForeignMale}`)
+    console.log(`   personality (selectedPersonality): ${Array.isArray(selectedPersonality) ? `Array(${selectedPersonality.length})` : selectedPersonality} = ${JSON.stringify(selectedPersonality)}`)
+    console.log(`   hobbies (selectedHobbies): ${Array.isArray(selectedHobbies) ? `Array(${selectedHobbies.length})` : selectedHobbies}`)
+    console.log(`   language_skills: ${Array.isArray(languageSkills) ? `Array(${languageSkills.length})` : languageSkills}`)
+    console.log(`   planned_prefectures: ${Array.isArray(selectedPlannedPrefectures) ? `Array(${selectedPlannedPrefectures.length})` : selectedPlannedPrefectures}`)
+    console.log('📋 normalizedProfile.personality詳細:')
+    console.log(`   personality: ${normalizedProfile.personality ? (Array.isArray(normalizedProfile.personality) ? `✅ | array has ${normalizedProfile.personality.length} items` : `✅ | ${normalizedProfile.personality}`) : '❌ | empty or null'}`)
+    console.log('='.repeat(80))
+    
+    calculateProfileCompletion(normalizedProfile, profileImages, isForeignMale, false)
   }, [selectedPersonality, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
