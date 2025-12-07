@@ -75,20 +75,13 @@ const baseProfileEditSchema = (t: any) => z.object({
     level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
   }))
   .refine((skills) => {
-    // 有効な言語+レベルペアが最低1つ以上必要
+    // 🚀 FIXED: 有効な言語+レベルペアが必ず1つ以上必要（必須化）
     const validPairs = skills.filter(skill => 
       skill.language && (skill.language as string) !== '' && skill.language !== 'none' &&
       skill.level && (skill.level as string) !== '' && skill.level !== 'none'
     );
     
-    // 空の配列または全て空文字の場合は初期状態として許可、1つでも入力があれば完全入力が必要
-    const hasAnyInput = skills.some(skill => 
-      (skill.language && (skill.language as string) !== '' && skill.language !== 'none') ||
-      (skill.level && (skill.level as string) !== '' && skill.level !== 'none')
-    );
-    
-    if (!hasAnyInput) return true; // 初期状態（何も入力なし）は許可
-    return validPairs.length >= 1; // 一部入力があれば完全ペア必須
+    return validPairs.length >= 1; // 必ず1つ以上の有効ペアが必要
   }, { message: 'errors.languagePairRequired' }),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
