@@ -69,11 +69,19 @@ const baseProfileEditSchema = (t: any) => z.object({
   marital_status: z.enum(['none', 'single', 'married']).optional(),
   english_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   japanese_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
-  // ✨ 新機能: 使用言語＋言語レベル（統一型定義使用）
+  // ✨ 新機能: 使用言語＋言語レベル（統一型定義使用）- 必須項目化
   language_skills: z.array(z.object({
     language: z.enum(['', 'none', 'ja', 'en', 'ko', 'zh-TW']),
     level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
-  })).optional(),
+  }))
+  .refine((skills) => {
+    // 有効な言語+レベルペアが最低1つ以上必要
+    const validPairs = skills.filter(skill => 
+      skill.language && skill.language !== '' && skill.language !== 'none' &&
+      skill.level && skill.level !== '' && skill.level !== 'none'
+    );
+    return validPairs.length >= 1;
+  }, { message: 'errors.languagePairRequired' }),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
@@ -586,6 +594,41 @@ function ProfileEditContent() {
     clearErrors()
     console.log('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
   }, [currentLanguage, clearErrors])
+
+  // プレビュー画面への遷移処理（Zodバリデーション経由）
+  const handlePreview = handleSubmit(async (formData) => {
+    try {
+      console.log('✅ Zod validation passed - opening preview', formData)
+      
+      // プレビュー用画像URL（blob URLまたは既存URL）
+      const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
+
+      const previewData = {
+        ...formData,
+        hobbies: selectedHobbies,
+        personality: selectedPersonality,
+        planned_prefectures: selectedPlannedPrefectures,
+        visit_schedule: formData.visit_schedule || '',
+        travel_companion: formData.travel_companion || '',
+        image: previewImageUrl,
+        profile_image: previewImageUrl,
+        // 🚀 CRITICAL FIX: 最新のlanguageSkills stateを必ず含める
+        language_skills: languageSkills
+      }
+
+      // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
+      const previewDataKey = `previewData_${user?.id || 'anonymous'}`
+      sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
+
+      const previewWindow = window.open(`/profile/preview?userId=${user?.id || ''}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
+      if (!previewWindow) {
+        alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
+      }
+    } catch (error) {
+      console.error('❌ Error opening preview:', error)
+      alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
+    }
+  })
 
   // 生年月日から年齢を計算
   const calculateAge = useCallback((birthDate: string): number => {
@@ -3918,7 +3961,7 @@ function ProfileEditContent() {
                         {/* エラーメッセージ表示 */}
                         {errors.language_skills && (
                           <p className="mt-1 text-sm text-red-600">
-                            {errors.language_skills.message}
+                            {t(errors.language_skills.message as string)}
                           </p>
                         )}
                       </div>
@@ -4164,84 +4207,7 @@ function ProfileEditContent() {
                   <Button
                     type="button"
                     className="w-full bg-red-800 hover:bg-red-900 text-white font-medium py-3 mb-4"
-                    onClick={async () => {
-                      try {
-                        // 手動バリデーションを実行
-                        const formData = watch()
-
-                        console.log('🔍 Manual validation start:', {
-                          isForeignMale,
-                          formData: formData,
-                          selectedHobbies,
-                          selectedPlannedPrefectures
-                        })
-
-                        // 必須フィールドのチェック
-                        const validationErrors = []
-
-                        // 共通必須フィールド
-                        if (!formData.nickname?.trim()) validationErrors.push('ニックネームを入力してください')
-                        if (!formData.birth_date) validationErrors.push('生年月日を入力してください')
-                        if (!formData.self_introduction || formData.self_introduction.length < 100) {
-                          validationErrors.push('自己紹介は100文字以上で入力してください')
-                        }
-                        if (!selectedHobbies || selectedHobbies.length === 0) {
-                          validationErrors.push('日本文化を1つ以上選択してください')
-                        }
-
-                        // 外国人男性の場合の追加チェック
-                        if (isForeignMale) {
-                          if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
-                          if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
-                            validationErrors.push(t('errors.plannedPrefecturesRequired'))
-                          }
-                        } else {
-                          // 日本人女性の場合
-                          if (!formData.prefecture?.trim()) validationErrors.push('都道府県を入力してください')
-                        }
-
-                        if (validationErrors.length > 0) {
-                          console.log('❌ Manual validation failed:', validationErrors)
-                          alert(validationErrors[0])
-                          return
-                        }
-
-                        console.log('✅ Manual validation passed')
-
-                        // 手動バリデーションが成功した場合はReact Hook Formのバリデーションをスキップ
-                        console.log('✅ Skipping React Hook Form validation as manual validation passed')
-
-                        // 条件付きバリデーションは手動バリデーションで完了
-
-                        // プレビュー用画像URL（blob URLまたは既存URL）
-                        const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
-
-                        const previewData = {
-                          ...formData,
-                          hobbies: selectedHobbies,
-                          personality: selectedPersonality,
-                          planned_prefectures: selectedPlannedPrefectures,
-                          visit_schedule: formData.visit_schedule || '',
-                          travel_companion: formData.travel_companion || '',
-                          image: previewImageUrl,
-                          profile_image: previewImageUrl,
-                          // 🚀 CRITICAL FIX: 最新のlanguageSkills stateを必ず含める
-                          language_skills: languageSkills
-                        }
-
-                        // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
-                        const previewDataKey = `previewData_${user?.id || 'anonymous'}`
-                        sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
-
-                        const previewWindow = window.open(`/profile/preview?userId=${user?.id || ''}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
-                        if (!previewWindow) {
-                          alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
-                        }
-                      } catch (error) {
-                        console.error('❌ Error opening preview:', error)
-                        alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
-                      }
-                    }}
+                    onClick={handlePreview}
                   >
                     <User className="w-4 h-4 mr-2" />
                     {t('buttons.previewCheck')}

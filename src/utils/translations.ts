@@ -174,6 +174,7 @@ type TranslationKeys = {
     japaneseLevelRequired: string
     englishLevelRequired: string
     plannedPrefecturesRequired: string
+    languagePairRequired: string
   }
 
   // 言語レベル
@@ -878,7 +879,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '日本国籍の確認が必要です',
       japaneseLevelRequired: '日本語レベルを選択してください',
       englishLevelRequired: '英語レベルを選択してください',
-      plannedPrefecturesRequired: '行く予定の都道府県を1つ以上選択してください'
+      plannedPrefecturesRequired: '行く予定の都道府県を1つ以上選択してください',
+      languagePairRequired: '使用言語と言語レベルを1つ以上選択してください'
     },
     levels: {
       none: '記入しない',
@@ -1532,7 +1534,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: 'Japanese nationality confirmation is required',
       japaneseLevelRequired: 'Please select your Japanese level',
       englishLevelRequired: 'Please select your English level',
-      plannedPrefecturesRequired: 'Please select at least one prefecture you plan to visit.'
+      plannedPrefecturesRequired: 'Please select at least one prefecture you plan to visit.',
+      languagePairRequired: 'Please select at least one language and its level.'
     },
     levels: {
       none: 'Not set',
@@ -2185,7 +2188,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '일본 국적 확인이 필요합니다',
       japaneseLevelRequired: '일본어 레벨을 선택해 주세요',
       englishLevelRequired: '영어 레벨을 선택해 주세요',
-      plannedPrefecturesRequired: '방문 예정인 도도부현을 1개 이상 선택해 주세요.'
+      plannedPrefecturesRequired: '방문 예정인 도도부현을 1개 이상 선택해 주세요.',
+      languagePairRequired: '사용 언어와 언어 레벨을 최소 1개 이상 선택해 주세요.'
     },
     levels: {
       none: '미입력',
@@ -2837,7 +2841,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '需要確認日本國籍',
       japaneseLevelRequired: '請選擇日語程度',
       englishLevelRequired: '請選擇英語程度',
-      plannedPrefecturesRequired: '請至少選擇一個預定要前往的都道府縣。'
+      plannedPrefecturesRequired: '請至少選擇一個預定要前往的都道府縣。',
+      languagePairRequired: '請至少選擇一種使用語言及其程度。'
     },
     levels: {
       none: '未填寫',
