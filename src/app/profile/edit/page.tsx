@@ -75,51 +75,20 @@ const baseProfileEditSchema = (t: any) => z.object({
     level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
   }))
   .refine((skills) => {
-    // 🐛 DEBUG: バリデーションロジックの詳細ログ
-    console.log('🔍 Language skills validation debug:', {
-      inputSkills: skills,
-      skillsLength: skills.length
-    });
-    
     // 有効な言語+レベルペアが最低1つ以上必要
-    const validPairs = skills.filter(skill => {
-      const isValidLanguage = skill.language && (skill.language as string) !== '' && skill.language !== 'none';
-      const isValidLevel = skill.level && (skill.level as string) !== '' && skill.level !== 'none';
-      const isValidPair = isValidLanguage && isValidLevel;
-      
-      console.log('🔍 Skill validation detail:', {
-        skill,
-        isValidLanguage,
-        isValidLevel,
-        isValidPair
-      });
-      
-      return isValidPair;
-    });
+    const validPairs = skills.filter(skill => 
+      skill.language && (skill.language as string) !== '' && skill.language !== 'none' &&
+      skill.level && (skill.level as string) !== '' && skill.level !== 'none'
+    );
     
     // 空の配列または全て空文字の場合は初期状態として許可、1つでも入力があれば完全入力が必要
-    const hasAnyInput = skills.some(skill => {
-      const hasLanguageInput = (skill.language && (skill.language as string) !== '' && skill.language !== 'none');
-      const hasLevelInput = (skill.level && (skill.level as string) !== '' && skill.level !== 'none');
-      return hasLanguageInput || hasLevelInput;
-    });
+    const hasAnyInput = skills.some(skill => 
+      (skill.language && (skill.language as string) !== '' && skill.language !== 'none') ||
+      (skill.level && (skill.level as string) !== '' && skill.level !== 'none')
+    );
     
-    console.log('🔍 Language validation result:', {
-      validPairs: validPairs.length,
-      hasAnyInput,
-      allowEmptyState: !hasAnyInput,
-      requireValidPair: hasAnyInput && validPairs.length >= 1,
-      finalResult: !hasAnyInput ? true : validPairs.length >= 1
-    });
-    
-    if (!hasAnyInput) {
-      console.log('✅ Language validation PASSED: empty state allowed');
-      return true; // 初期状態（何も入力なし）は許可
-    }
-    
-    const isValid = validPairs.length >= 1;
-    console.log(isValid ? '✅ Language validation PASSED: valid pairs found' : '❌ Language validation FAILED: no valid pairs');
-    return isValid; // 一部入力があれば完全ペア必須
+    if (!hasAnyInput) return true; // 初期状態（何も入力なし）は許可
+    return validPairs.length >= 1; // 一部入力があれば完全ペア必須
   }, { message: 'errors.languagePairRequired' }),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
@@ -148,14 +117,8 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['planned_prefectures']
         }])
       }
-      // 日本語レベル必須
-      if (!data.japanese_level || data.japanese_level === 'none') {
-        throw new z.ZodError([{
-          code: z.ZodIssueCode.custom,
-          message: t('errors.japaneseLevelRequired'),
-          path: ['japanese_level']
-        }])
-      }
+      // 🚀 FIXED: 古い japanese_level バリデーション削除
+      // 新しい language_skills 配列のバリデーションを使用
       return true
     })
   } else {
@@ -168,14 +131,8 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
           path: ['prefecture']
         }])
       }
-      // 英語レベル必須
-      if (!data.english_level || data.english_level === 'none') {
-        throw new z.ZodError([{
-          code: z.ZodIssueCode.custom,
-          message: t('errors.englishLevelRequired'),
-          path: ['english_level']
-        }])
-      }
+      // 🚀 FIXED: 古い english_level バリデーション削除
+      // 新しい language_skills 配列のバリデーションを使用
       return true
     })
   }
@@ -668,22 +625,7 @@ function ProfileEditContent() {
       alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
     }
   }, (errors) => {
-    // 🐛 DEBUG: バリデーション失敗時の詳細ログ
-    console.error('❌ Form validation failed:', errors)
-    console.error('❌ Form validation details:', {
-      errorKeys: Object.keys(errors),
-      errorMessages: Object.entries(errors).map(([key, error]) => ({
-        field: key,
-        message: error?.message,
-        type: error?.type
-      })),
-      currentFormData: getValues(),
-      currentLanguageSkills: languageSkills,
-      currentFormLanguageSkills: getValues('language_skills'),
-      profileCompletion,
-      completedItems,
-      totalItems
-    })
+    console.error('❌ フォームバリデーションエラー:', errors)
     
     // エラーメッセージを表示
     if (errors.language_skills) {
