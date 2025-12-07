@@ -53,7 +53,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   prefecture: z.string().optional(),
   city: z.string().optional(),
   // 外国人男性向け新フィールド
-  planned_prefectures: z.array(z.string()).min(1, t('profile.prefectureWarning')).max(3, '行く予定の都道府県は最大3つまで選択できます'),  // 必須項目に変更
+  planned_prefectures: z.array(z.string()).min(1, t('profile.prefectureWarning')).max(3, t('errors.prefecturesMaximum')),  // 必須項目に変更
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),

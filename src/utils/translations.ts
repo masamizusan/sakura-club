@@ -162,6 +162,7 @@ type TranslationKeys = {
     selfIntroMaximum: string
     nationalityRequired: string
     prefecturesMinimum: string
+    prefecturesMaximum: string
     cityRequired: string
     saveFailed: string
     loadFailed: string
@@ -864,6 +865,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroMaximum: '自己紹介は1000文字以内で入力してください',
       nationalityRequired: '国籍を選択してください',
       prefecturesMinimum: '行く予定の都道府県を少なくとも1つ選択してください',
+      prefecturesMaximum: '行く予定の都道府県は最大3つまで選択できます',
       cityRequired: '都道府県を入力してください',
       saveFailed: '保存に失敗しました',
       loadFailed: '読み込みに失敗しました',
@@ -1515,6 +1517,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroMaximum: 'Self introduction must be 1000 characters or less',
       nationalityRequired: 'Please select your nationality',
       prefecturesMinimum: 'Please select at least one prefecture to visit',
+      prefecturesMaximum: 'You can select up to 3 prefectures',
       cityRequired: 'Please enter prefecture',
       saveFailed: 'Failed to save',
       loadFailed: 'Failed to load',
@@ -2165,6 +2168,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroMaximum: '자기소개는 1000자 이내로 입력해 주세요',
       nationalityRequired: '국적을 선택해 주세요',
       prefecturesMinimum: '방문 예정 현을 최소 1개 선택해 주세요',
+      prefecturesMaximum: '최대 3개의 현까지 선택할 수 있습니다',
       cityRequired: '현을 입력해 주세요',
       saveFailed: '저장에 실패했습니다',
       loadFailed: '로드에 실패했습니다',
@@ -2815,6 +2819,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selfIntroMaximum: '自我介紹請在1000字以內',
       nationalityRequired: '請選擇國籍',
       prefecturesMinimum: '請至少選擇一個預計前往的都道府縣',
+      prefecturesMaximum: '最多可選擇3個都道府縣',
       cityRequired: '請輸入都道府縣',
       saveFailed: '儲存失敗',
       loadFailed: '載入失敗',
