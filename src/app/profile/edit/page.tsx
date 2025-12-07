@@ -2546,7 +2546,7 @@ function ProfileEditContent() {
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
           marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
           hobbies: isNewUser ? [] : existingHobbies,
-          personality: [], // 🚀 FIXED: 常に空配列で開始（任意項目は自動選択しない）
+          personality: isNewUser ? [] : (existingPersonality ?? []), // 🔧 FIXED: 既存ユーザーはDBから復元
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
           // 🆕 言語レベルフィールド（安全なヘルパー関数使用）
@@ -2881,7 +2881,7 @@ function ProfileEditContent() {
           interests: profile.interests || profile.hobbies || [],
           bio: profile.bio || profile.self_introduction || '',
           hobbies: existingHobbies,
-          personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
+          personality: existingPersonality, // 🔧 FIXED: 既存personalityデータを維持
           // 外国人男性専用フィールドを明示的に追加
           visit_schedule: profile.visit_schedule,
           travel_companion: profile.travel_companion,
@@ -2921,8 +2921,8 @@ function ProfileEditContent() {
             currentValuesWithUserData = {
               // フォームの現在値のみ
               ...currentValues,
-              hobbies: existingHobbies, // ユーザーが選択した趣味のみ
-              personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
+              hobbies: existingHobbies, // ユーザーが選択した趣味のみ  
+              personality: selectedPersonality, // 🔧 FIXED: state優先でpersonality設定
               self_introduction: currentValues.self_introduction || '', // ユーザーが入力した自己紹介のみ
               // その他のフィールドはフォーム値またはundefinedで初期化（DBのprofileは使わない）
               visit_schedule: currentValues.visit_schedule === 'no-entry' ? undefined : currentValues.visit_schedule,
@@ -2944,20 +2944,19 @@ function ProfileEditContent() {
             
             if (isFromMyPageInTimeout) {
               // fromMyPage遷移の場合: localStorageからのフォーム値を優先
-              console.log('🔄 fromMyPage完成度計算 - localStorageフォーム値を優先')
-              console.log('🔍 japanese_level values in fromMyPage completion:', {
-                'currentValues.japanese_level': currentValues.japanese_level,
-                'profile.japanese_level': profile.japanese_level,
-                'will use': currentValues.japanese_level,
-                'watch_japanese_level': watch('japanese_level'),
-                'getValues_japanese_level': getValues().japanese_level,
-                'currentValues.japanese_level === none': currentValues.japanese_level === 'none'
+              console.log('🔄 fromMyPage完成度計算 - state優先に修正済み')
+              console.log('🔍 personality comparison in fromMyPage completion:', {
+                'selectedPersonality': selectedPersonality,
+                'selectedPersonality.length': selectedPersonality.length,
+                'currentValues.personality': currentValues.personality,
+                'profile.personality': profile.personality,
+                'will use': selectedPersonality
               })
               currentValuesWithUserData = {
                 ...profile, // 既存のプロフィールデータを基盤として使用
                 ...currentValues, // フォームの現在値で上書き（localStorageから読み込まれた値）
                 hobbies: existingHobbies, // 状態管理された趣味
-                personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
+                personality: selectedPersonality, // 🔧 FIXED: fromMyPageでもstate優先でpersonality設定
                 // 外国人男性専用フィールド - フォーム値を優先
                 visit_schedule: currentValues.visit_schedule,
                 travel_companion: currentValues.travel_companion,
@@ -2975,7 +2974,7 @@ function ProfileEditContent() {
                 ...profile, // 既存のプロフィールデータを基盤として使用
                 ...currentValues, // フォームの現在値で上書き
                 hobbies: existingHobbies, // 状態管理された趣味
-                personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
+                personality: selectedPersonality, // 🔧 FIXED: 通常処理でもstate優先でpersonality設定
                 // 外国人男性専用フィールドを確実に含める
                 visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
                 travel_companion: currentValues.travel_companion || profile.travel_companion,
