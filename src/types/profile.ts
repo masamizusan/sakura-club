@@ -3,11 +3,12 @@
  * 使用言語＋言語レベル機能の型定義
  */
 
-// 言語コード
-export type LanguageCode = 'none' | 'ja' | 'en' | 'ko' | 'zh-TW';
+// 言語コード（空文字はplaceholder表示のための一時的な値）
+export type LanguageCode = '' | 'none' | 'ja' | 'en' | 'ko' | 'zh-TW';
 
-// 言語レベル（既存システムと統一）
+// 言語レベル（既存システムと統一・空文字はplaceholder表示のための一時的な値）
 export type LanguageLevelCode =
+  | ''                // 一時的な未選択（placeholder表示用）
   | 'none'            // 未選択・記入しない
   | 'beginner'        // 初級
   | 'beginner_plus'   // 初級上

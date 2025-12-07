@@ -575,8 +575,8 @@ function ProfileEditContent() {
       nationality: typeof window !== 'undefined' && profileType === 'foreign-male'
         ? new URLSearchParams(window.location.search).get('nationality') || 'アメリカ'
         : undefined,
-      // ✨ language_skillsのデフォルト値を設定（初期表示で1行表示）
-      language_skills: [{ language: 'none', level: 'none' } as LanguageSkill]
+      // ✨ language_skillsのデフォルト値を設定（初期表示で1行表示・placeholder表示のため空文字）
+      language_skills: [{ language: '', level: '' } as LanguageSkill]
     }
   })
 
@@ -2624,7 +2624,7 @@ function ProfileEditContent() {
         
         if (isNewUser) {
           // 新規ユーザー: 1行表示で開始
-          initialLanguageSkills = [{ language: 'none', level: 'none' } as LanguageSkill]
+          initialLanguageSkills = [{ language: '', level: '' } as LanguageSkill]
           console.log('🆕 New user: starting with one empty language skill row')
         } else {
           // 既存ユーザー: Supabase language_skills → legacyフィールド の優先順位
@@ -2635,7 +2635,7 @@ function ProfileEditContent() {
           } else {
             // フォールバック: 旧式カラムから生成、それも空なら1行表示
             const legacySkills = generateLanguageSkillsFromLegacy(profile) || []
-            initialLanguageSkills = legacySkills.length > 0 ? legacySkills : [{ language: 'none', level: 'none' } as LanguageSkill]
+            initialLanguageSkills = legacySkills.length > 0 ? legacySkills : [{ language: '', level: '' } as LanguageSkill]
             console.log('🔄 Fallback to legacy fields or one empty row:', legacySkills.length > 0 ? legacySkills : 'one empty row')
           }
         }
@@ -3770,7 +3770,7 @@ function ProfileEditContent() {
                             <div key={index} className="flex gap-3 items-center p-3 border rounded-lg bg-gray-50">
                               <div className="flex-1">
                                 <Select
-                                  value={skill.language}
+                                  value={skill.language || ''}
                                   onValueChange={(value: LanguageCode) => {
                                     const newSkills = [...languageSkills]
                                     newSkills[index] = { ...skill, language: value }
@@ -3813,7 +3813,7 @@ function ProfileEditContent() {
                               
                               <div className="flex-1">
                                 <Select
-                                  value={skill.level}
+                                  value={skill.level || ''}
                                   onValueChange={(value: LanguageLevelCode) => {
                                     const newSkills = [...languageSkills]
                                     newSkills[index] = { ...skill, level: value }
@@ -3890,7 +3890,7 @@ function ProfileEditContent() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              const newSkills: LanguageSkill[] = [...languageSkills, { language: 'none', level: 'none' }]
+                              const newSkills: LanguageSkill[] = [...languageSkills, { language: '', level: '' }]
                               
                               // 🚀 即座反映: setState → setValue の順序で同期実行
                               setLanguageSkills(newSkills)
