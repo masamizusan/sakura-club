@@ -2649,8 +2649,9 @@ function ProfileEditContent() {
         console.log('Setting hobbies:', hobbiesValue)
         setValue('hobbies', hobbiesValue)
         
-        const personalityValue: string[] = [] // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
-        console.log('Setting personality:', personalityValue, '(常に空配列)')
+        // 🔧 FIXED fromMyPage遷移時personality初期化問題: フォーム値も既存データを維持
+        const personalityValue: string[] = isNewUser ? [] : (existingPersonality ?? [])
+        console.log('Setting personality:', personalityValue, isNewUser ? '(新規ユーザー: 空配列)' : '(既存ユーザー: DBから復元)')
         setValue('personality', personalityValue)
         
         const customCultureValue = isNewUser ? '' : existingCustomCulture
@@ -2696,12 +2697,14 @@ function ProfileEditContent() {
         console.log('  - isNewUser:', isNewUser)
         
         const finalHobbies = isNewUser ? [] : existingHobbies
-        // 🚀 FIXED: personalityは完全に任意項目なので、DBに値があっても自動で選択状態にしない
-        const finalPersonality: string[] = [] // 常に空配列で開始（ユーザーが選択しない限り空のまま）
+        // 🔧 FIXED fromMyPage遷移時personality初期化問題: 既存ユーザーはDBの値を維持
+        const finalPersonality: string[] = isNewUser ? [] : (existingPersonality ?? [])
         
         console.log('🚨 FINAL STATE SETTING:')
         console.log('  - setSelectedHobbies will be called with:', finalHobbies)
-        console.log('  - setSelectedPersonality will be called with:', finalPersonality, '(常に空配列)')
+        console.log('  - setSelectedPersonality will be called with:', finalPersonality, isNewUser ? '(新規ユーザー: 空配列)' : '(既存ユーザー: DBから復元)')
+        console.log('  - existingPersonality source:', existingPersonality)
+        console.log('  - isNewUser flag:', isNewUser)
         
         setSelectedHobbies(finalHobbies)
         setSelectedPersonality(finalPersonality)
