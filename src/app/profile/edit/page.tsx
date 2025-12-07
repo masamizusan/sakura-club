@@ -77,8 +77,8 @@ const baseProfileEditSchema = (t: any) => z.object({
   .refine((skills) => {
     // 有効な言語+レベルペアが最低1つ以上必要
     const validPairs = skills.filter(skill => 
-      skill.language && skill.language !== '' && skill.language !== 'none' &&
-      skill.level && skill.level !== '' && skill.level !== 'none'
+      skill.language && (skill.language as string) !== '' && skill.language !== 'none' &&
+      skill.level && (skill.level as string) !== '' && skill.level !== 'none'
     );
     return validPairs.length >= 1;
   }, { message: 'errors.languagePairRequired' }),
