@@ -2510,7 +2510,7 @@ function ProfileEditContent() {
           body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
           marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
           hobbies: isNewUser ? [] : existingHobbies,
-          personality: isNewUser ? [] : existingPersonality,
+          personality: [], // 🚀 FIXED: 常に空配列で開始（任意項目は自動選択しない）
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
           // 🆕 言語レベルフィールド（安全なヘルパー関数使用）
@@ -2613,8 +2613,8 @@ function ProfileEditContent() {
         console.log('Setting hobbies:', hobbiesValue)
         setValue('hobbies', hobbiesValue)
         
-        const personalityValue = isNewUser ? [] : existingPersonality
-        console.log('Setting personality:', personalityValue)
+        const personalityValue: string[] = [] // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
+        console.log('Setting personality:', personalityValue, '(常に空配列)')
         setValue('personality', personalityValue)
         
         const customCultureValue = isNewUser ? '' : existingCustomCulture
@@ -2660,11 +2660,12 @@ function ProfileEditContent() {
         console.log('  - isNewUser:', isNewUser)
         
         const finalHobbies = isNewUser ? [] : existingHobbies
-        const finalPersonality = isNewUser ? [] : existingPersonality
+        // 🚀 FIXED: personalityは完全に任意項目なので、DBに値があっても自動で選択状態にしない
+        const finalPersonality: string[] = [] // 常に空配列で開始（ユーザーが選択しない限り空のまま）
         
         console.log('🚨 FINAL STATE SETTING:')
         console.log('  - setSelectedHobbies will be called with:', finalHobbies)
-        console.log('  - setSelectedPersonality will be called with:', finalPersonality)
+        console.log('  - setSelectedPersonality will be called with:', finalPersonality, '(常に空配列)')
         
         setSelectedHobbies(finalHobbies)
         setSelectedPersonality(finalPersonality)
@@ -2841,7 +2842,7 @@ function ProfileEditContent() {
           interests: profile.interests || profile.hobbies || [],
           bio: profile.bio || profile.self_introduction || '',
           hobbies: existingHobbies,
-          personality: existingPersonality,
+          personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
           // 外国人男性専用フィールドを明示的に追加
           visit_schedule: profile.visit_schedule,
           travel_companion: profile.travel_companion,
@@ -2882,7 +2883,7 @@ function ProfileEditContent() {
               // フォームの現在値のみ
               ...currentValues,
               hobbies: existingHobbies, // ユーザーが選択した趣味のみ
-              personality: existingPersonality, // ユーザーが選択した性格のみ
+              personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
               self_introduction: currentValues.self_introduction || '', // ユーザーが入力した自己紹介のみ
               // その他のフィールドはフォーム値またはundefinedで初期化（DBのprofileは使わない）
               visit_schedule: currentValues.visit_schedule === 'no-entry' ? undefined : currentValues.visit_schedule,
@@ -2917,7 +2918,7 @@ function ProfileEditContent() {
                 ...profile, // 既存のプロフィールデータを基盤として使用
                 ...currentValues, // フォームの現在値で上書き（localStorageから読み込まれた値）
                 hobbies: existingHobbies, // 状態管理された趣味
-                personality: existingPersonality, // 状態管理された性格
+                personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
                 // 外国人男性専用フィールド - フォーム値を優先
                 visit_schedule: currentValues.visit_schedule,
                 travel_companion: currentValues.travel_companion,
@@ -2935,7 +2936,7 @@ function ProfileEditContent() {
                 ...profile, // 既存のプロフィールデータを基盤として使用
                 ...currentValues, // フォームの現在値で上書き
                 hobbies: existingHobbies, // 状態管理された趣味
-                personality: existingPersonality, // 状態管理された性格
+                personality: [], // 🚀 FIXED: 常に空配列（任意項目は自動選択しない）
                 // 外国人男性専用フィールドを確実に含める
                 visit_schedule: currentValues.visit_schedule || profile.visit_schedule,
                 travel_companion: currentValues.travel_companion || profile.travel_companion,
