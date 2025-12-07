@@ -105,7 +105,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
       if (!data.japanese_level || data.japanese_level === 'none') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: '日本語レベルを選択してください',
+          message: t('errors.japaneseLevelRequired'),
           path: ['japanese_level']
         }])
       }
@@ -125,7 +125,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
       if (!data.english_level || data.english_level === 'none') {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: 'Please select your English level.',
+          message: t('errors.englishLevelRequired'),
           path: ['english_level']
         }])
       }

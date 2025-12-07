@@ -172,6 +172,8 @@ type TranslationKeys = {
     passwordFormat: string
     locationRequired: string
     japaneseNationalityRequired: string
+    japaneseLevelRequired: string
+    englishLevelRequired: string
   }
 
   // 言語レベル
@@ -874,7 +876,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordMinLength: 'パスワードは8文字以上で入力してください',
       passwordFormat: '半角英字と数字をどちらも含む必要があります',
       locationRequired: '居住地を選択してください',
-      japaneseNationalityRequired: '日本国籍の確認が必要です'
+      japaneseNationalityRequired: '日本国籍の確認が必要です',
+      japaneseLevelRequired: '日本語レベルを選択してください',
+      englishLevelRequired: '英語レベルを選択してください'
     },
     levels: {
       none: '記入しない',
@@ -1526,7 +1530,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordMinLength: 'Password must be at least 8 characters',
       passwordFormat: 'Must contain both letters and numbers',
       locationRequired: 'Please select your location',
-      japaneseNationalityRequired: 'Japanese nationality confirmation is required'
+      japaneseNationalityRequired: 'Japanese nationality confirmation is required',
+      japaneseLevelRequired: 'Please select your Japanese level',
+      englishLevelRequired: 'Please select your English level'
     },
     levels: {
       none: 'Not set',
@@ -2177,7 +2183,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordMinLength: '비밀번호는 8자 이상으로 입력해 주세요',
       passwordFormat: '영문자와 숫자를 모두 포함해야 합니다',
       locationRequired: '거주지를 선택해 주세요',
-      japaneseNationalityRequired: '일본 국적 확인이 필요합니다'
+      japaneseNationalityRequired: '일본 국적 확인이 필요합니다',
+      japaneseLevelRequired: '일본어 레벨을 선택해 주세요',
+      englishLevelRequired: '영어 레벨을 선택해 주세요'
     },
     levels: {
       none: '미입력',
@@ -2827,7 +2835,9 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       passwordMinLength: '密碼至少需要8個字符',
       passwordFormat: '密碼必須包含英文字母和數字',
       locationRequired: '請選擇居住地',
-      japaneseNationalityRequired: '需要確認日本國籍'
+      japaneseNationalityRequired: '需要確認日本國籍',
+      japaneseLevelRequired: '請選擇日語程度',
+      englishLevelRequired: '請選擇英語程度'
     },
     levels: {
       none: '未填寫',
