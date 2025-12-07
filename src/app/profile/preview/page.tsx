@@ -1111,7 +1111,7 @@ function ProfilePreviewContent() {
                         validationErrors.push('国籍を選択してください')
                       }
                       if (!planned_prefectures || planned_prefectures.length === 0) {
-                        validationErrors.push('行く予定の都道府県を少なくとも1つ選択してください')
+                        validationErrors.push(t('errors.plannedPrefecturesRequired'))
                       }
                     } else {
                       // 日本人女性の場合

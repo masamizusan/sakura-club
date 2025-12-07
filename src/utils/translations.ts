@@ -174,6 +174,7 @@ type TranslationKeys = {
     japaneseNationalityRequired: string
     japaneseLevelRequired: string
     englishLevelRequired: string
+    plannedPrefecturesRequired: string
   }
 
   // 言語レベル
@@ -878,7 +879,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       locationRequired: '居住地を選択してください',
       japaneseNationalityRequired: '日本国籍の確認が必要です',
       japaneseLevelRequired: '日本語レベルを選択してください',
-      englishLevelRequired: '英語レベルを選択してください'
+      englishLevelRequired: '英語レベルを選択してください',
+      plannedPrefecturesRequired: '行く予定の都道府県を1つ以上選択してください'
     },
     levels: {
       none: '記入しない',
@@ -1532,7 +1534,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       locationRequired: 'Please select your location',
       japaneseNationalityRequired: 'Japanese nationality confirmation is required',
       japaneseLevelRequired: 'Please select your Japanese level',
-      englishLevelRequired: 'Please select your English level'
+      englishLevelRequired: 'Please select your English level',
+      plannedPrefecturesRequired: 'Please select at least one prefecture you plan to visit'
     },
     levels: {
       none: 'Not set',
@@ -2185,7 +2188,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       locationRequired: '거주지를 선택해 주세요',
       japaneseNationalityRequired: '일본 국적 확인이 필요합니다',
       japaneseLevelRequired: '일본어 레벨을 선택해 주세요',
-      englishLevelRequired: '영어 레벨을 선택해 주세요'
+      englishLevelRequired: '영어 레벨을 선택해 주세요',
+      plannedPrefecturesRequired: '방문 예정 지역을 1개 이상 선택해 주세요'
     },
     levels: {
       none: '미입력',
@@ -2837,7 +2841,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       locationRequired: '請選擇居住地',
       japaneseNationalityRequired: '需要確認日本國籍',
       japaneseLevelRequired: '請選擇日語程度',
-      englishLevelRequired: '請選擇英語程度'
+      englishLevelRequired: '請選擇英語程度',
+      plannedPrefecturesRequired: '請選擇至少一個預計前往的地區'
     },
     levels: {
       none: '未填寫',
