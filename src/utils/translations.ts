@@ -36,7 +36,6 @@ type TranslationKeys = {
       zh_tw: string
     }
     languageAddButton: string
-    prefectureWarning: string
     selectPrefectures: string
     selectStations: string
     selectedCount: string
@@ -745,7 +744,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         zh_tw: '中国語（繁体字）'
       },
       languageAddButton: '＋ 使用言語を追加',
-      prefectureWarning: '行く予定の都道府県を1つ以上選択してください',
       selectPrefectures: '都道府県を選択',
       selectStations: '駅を選択',
       selectedCount: '選択済み',
@@ -1400,7 +1398,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         zh_tw: 'Chinese (Traditional)'
       },
       languageAddButton: '+ Add language',
-      prefectureWarning: 'Please select at least one prefecture you plan to visit.',
       selectPrefectures: 'Select Prefectures',
       selectStations: 'Select Stations',
       selectedCount: 'selected',
@@ -1535,7 +1532,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: 'Japanese nationality confirmation is required',
       japaneseLevelRequired: 'Please select your Japanese level',
       englishLevelRequired: 'Please select your English level',
-      plannedPrefecturesRequired: 'Please select at least one prefecture you plan to visit'
+      plannedPrefecturesRequired: 'Please select at least one prefecture you plan to visit.'
     },
     levels: {
       none: 'Not set',
@@ -2054,7 +2051,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         zh_tw: '중국어 (번체자)'
       },
       languageAddButton: '+ 사용 언어 추가',
-      prefectureWarning: '방문 예정인 도도부현을 최소 1곳 이상 선택해 주세요.',
       selectPrefectures: '현 선택',
       selectStations: '역 선택',
       selectedCount: '선택됨',
@@ -2189,7 +2185,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '일본 국적 확인이 필요합니다',
       japaneseLevelRequired: '일본어 레벨을 선택해 주세요',
       englishLevelRequired: '영어 레벨을 선택해 주세요',
-      plannedPrefecturesRequired: '방문 예정 지역을 1개 이상 선택해 주세요'
+      plannedPrefecturesRequired: '방문 예정인 도도부현을 1개 이상 선택해 주세요.'
     },
     levels: {
       none: '미입력',
@@ -2708,7 +2704,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         zh_tw: '中文（繁體）'
       },
       languageAddButton: '+ 新增使用語言',
-      prefectureWarning: '請至少選擇一個預定前往的都道府縣。',
       selectPrefectures: '選擇都道府縣',
       selectStations: '選擇車站',
       selectedCount: '已選擇',
@@ -2842,7 +2837,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japaneseNationalityRequired: '需要確認日本國籍',
       japaneseLevelRequired: '請選擇日語程度',
       englishLevelRequired: '請選擇英語程度',
-      plannedPrefecturesRequired: '請選擇至少一個預計前往的地區'
+      plannedPrefecturesRequired: '請至少選擇一個預定要前往的都道府縣。'
     },
     levels: {
       none: '未填寫',

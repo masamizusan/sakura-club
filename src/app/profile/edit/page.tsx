@@ -53,7 +53,7 @@ const baseProfileEditSchema = (t: any) => z.object({
   prefecture: z.string().optional(),
   city: z.string().optional(),
   // 外国人男性向け新フィールド
-  planned_prefectures: z.array(z.string()).min(1, t('profile.prefectureWarning')).max(3, t('errors.prefecturesMaximum')),  // 必須項目に変更
+  planned_prefectures: z.array(z.string()).min(1, { message: 'errors.plannedPrefecturesRequired' }).max(3, { message: 'errors.prefecturesMaximum' }),  // 必須項目に変更
   visit_schedule: z.string().optional(),
   travel_companion: z.string().optional(),
   occupation: z.string().optional(),
@@ -97,7 +97,7 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
       if (!data.planned_prefectures || data.planned_prefectures.length === 0) {
         throw new z.ZodError([{
           code: z.ZodIssueCode.custom,
-          message: t('profile.prefectureWarning'),
+          message: 'errors.plannedPrefecturesRequired',
           path: ['planned_prefectures']
         }])
       }
@@ -567,6 +567,7 @@ function ProfileEditContent() {
     reset,
     trigger,
     getValues,
+    clearErrors,
     formState: { errors }
   } = useForm<ProfileEditFormData>({
     resolver: zodResolver(createProfileEditSchema(isForeignMale, t)),
@@ -579,6 +580,12 @@ function ProfileEditContent() {
       language_skills: [{ language: '', level: '' } as LanguageSkill]
     }
   })
+
+  // 言語切り替え時エラー状態クリア（「韓国語のエラーが中国語UIに残る」状態を防ぐ）
+  useEffect(() => {
+    clearErrors()
+    console.log('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
+  }, [currentLanguage, clearErrors])
 
   // 生年月日から年齢を計算
   const calculateAge = useCallback((birthDate: string): number => {
@@ -4050,7 +4057,7 @@ function ProfileEditContent() {
                         </Accordion>
 
                         {errors.planned_prefectures && (
-                          <p className="text-red-500 text-sm mt-1">{errors.planned_prefectures.message}</p>
+                          <p className="text-red-500 text-sm mt-1">{t(errors.planned_prefectures.message as string)}</p>
                         )}
                       </div>
 
@@ -4186,7 +4193,7 @@ function ProfileEditContent() {
                         if (isForeignMale) {
                           if (!formData.nationality?.trim()) validationErrors.push('国籍を選択してください')
                           if (!selectedPlannedPrefectures || selectedPlannedPrefectures.length === 0) {
-                            validationErrors.push(t('profile.prefectureWarning'))
+                            validationErrors.push(t('errors.plannedPrefecturesRequired'))
                           }
                         } else {
                           // 日本人女性の場合
