@@ -71,8 +71,8 @@ const baseProfileEditSchema = (t: any) => z.object({
   japanese_level: z.enum(['none', 'beginner', 'elementary', 'intermediate', 'upperIntermediate', 'advanced', 'native']).default('none'),
   // ✨ 新機能: 使用言語＋言語レベル（統一型定義使用）
   language_skills: z.array(z.object({
-    language: z.enum(['none', 'ja', 'en', 'ko', 'zh-TW']),
-    level: z.enum(['none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
+    language: z.enum(['', 'none', 'ja', 'en', 'ko', 'zh-TW']),
+    level: z.enum(['', 'none', 'beginner', 'beginner_plus', 'intermediate', 'intermediate_plus', 'advanced', 'native'])
   })).optional(),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
