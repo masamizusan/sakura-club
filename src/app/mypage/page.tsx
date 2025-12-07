@@ -233,17 +233,9 @@ function MyPageContent() {
               let extendedCustomCulture: string | null = null
               let regularInterests: string[] = []
               
-              // 1. personality_tagsカラムから性格データを取得（優先）
-              if (completeData.personality_tags && Array.isArray(completeData.personality_tags) && completeData.personality_tags.length > 0) {
-                extendedPersonality = completeData.personality_tags.filter((item: string) => item !== 'その他')
-              } else if (Array.isArray(completeData.interests)) {
-                // 2. interests配列からpersonalityプレフィックス付きを抽出（フォールバック）
-                completeData.interests.forEach((item: any) => {
-                  if (typeof item === 'string' && item.startsWith('personality:')) {
-                    extendedPersonality.push(item.replace('personality:', ''))
-                  }
-                })
-              }
+              // 🚀 FIXED: personality は完全に任意項目 - 自動抽出は行わない
+              // ユーザーが明示的に選択していない限り空配列を維持
+              // extendedPersonality = [] // 常に空配列（自動補完禁止）
               
               // 1. culture_tagsカラムから日本文化データを取得（優先）
               if (completeData.culture_tags && Array.isArray(completeData.culture_tags) && completeData.culture_tags.length > 0) {
@@ -408,17 +400,9 @@ function MyPageContent() {
           let extendedCustomCulture: string | null = null
           let regularInterests: string[] = []
           
-          // 1. personality_tagsカラムから性格データを取得（優先）
-          if ((profileData as any).personality_tags && Array.isArray((profileData as any).personality_tags) && (profileData as any).personality_tags.length > 0) {
-            extendedPersonality = (profileData as any).personality_tags.filter((item: string) => item !== 'その他')
-          } else if (Array.isArray(profileData.interests)) {
-            // 2. interests配列からpersonalityプレフィックス付きを抽出（フォールバック）
-            profileData.interests.forEach((item: any) => {
-              if (typeof item === 'string' && item.startsWith('personality:')) {
-                extendedPersonality.push(item.replace('personality:', ''))
-              }
-            })
-          }
+          // 🚀 FIXED: personality は完全に任意項目 - 自動抽出は行わない
+          // ユーザーが明示的に選択していない限り空配列を維持
+          // extendedPersonality = [] // 常に空配列（自動補完禁止）
           
           // 1. culture_tagsカラムから日本文化データを取得（優先）
           if ((profileData as any).culture_tags && Array.isArray((profileData as any).culture_tags) && (profileData as any).culture_tags.length > 0) {
