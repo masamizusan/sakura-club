@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { calculateProfileCompletion as calculateSharedProfileCompletion } from '@/utils/profileCompletion'
+import { 
+  calculateProfileCompletion as calculateSharedProfileCompletion,
+  normalizeProfileForCompletion,
+  calculateUnifiedCompletion 
+} from '@/utils/profileCompletion'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
@@ -550,51 +554,36 @@ function MyPageContent() {
   }, [user, supabase])
 
   const calculateProfileCompletion = (profileData: any) => {
-    // 共通関数を使用（マイページとプロフィール編集画面で統一）
+    // 🚨 CRITICAL: Supabase を personality の唯一の真実として統一計算
     const isForeignMale = profileData.gender === 'male' && profileData.nationality && profileData.nationality !== '日本'
 
-    // 🔍 外国人男性判定デバッグ
-    console.log('🚨 MyPage: 外国人男性判定チェック:', {
-      gender: profileData.gender,
-      nationality: profileData.nationality,
-      nationalityType: typeof profileData.nationality,
-      isNotJapan: profileData.nationality !== '日本',
-      isForeignMale: isForeignMale,
-      visit_schedule: profileData.visit_schedule,
-      travel_companion: profileData.travel_companion,
-      planned_prefectures: profileData.planned_prefectures
+    console.log('🏠 MyPage: Supabase profile データ受信:', {
+      personality_raw: profileData?.personality,
+      personality_type: typeof profileData?.personality,
+      personality_isArray: Array.isArray(profileData?.personality),
+      personality_length: profileData?.personality?.length || 0,
+      source: 'Supabase profile (唯一の真実)'
     })
 
-    // 🔍 MyPage専用: profileDataの詳細デバッグ（専用カラム重点確認）
-    console.log('🔍 MyPage: profileData debug BEFORE shared function:', {
-      avatar_url: profileData?.avatar_url,
-      avatarUrl: profileData?.avatarUrl,
-      hasAvatarUrl: !!profileData?.avatar_url,
-      hasAvatarUrlCamel: !!profileData?.avatarUrl,
-      profileDataKeys: Object.keys(profileData || {}),
-      nickname: profileData?.nickname || profileData?.name,
-      age: profileData?.age,
-      birth_date: profileData?.birth_date || profileData?.date_of_birth,
-      prefecture: profileData?.prefecture || profileData?.residence,
-      hobbies: profileData?.hobbies || profileData?.interests,
-      self_introduction: profileData?.self_introduction || profileData?.bio,
-      // 🚨 専用カラムの値を重点確認
-      occupation: profileData?.occupation,
-      height: profileData?.height,
-      body_type: profileData?.body_type,
-      marital_status: profileData?.marital_status,
-      english_level: profileData?.english_level,
-      japanese_level: profileData?.japanese_level
-    })
+    // 🆕 統一された正規化と完成度計算を使用
+    const normalized = normalizeProfileForCompletion(profileData)
+    const result = calculateUnifiedCompletion(normalized, undefined, isForeignMale)
 
-    const result = calculateSharedProfileCompletion(profileData, undefined, isForeignMale)
+    console.log('🏠 MyPage: UNIFIED COMPLETION RESULT:', {
+      normalized_personality: normalized.personality,
+      completion_percentage: result.completion,
+      requiredCompleted: result.requiredCompleted,
+      optionalCompleted: result.optionalCompleted,
+      personality_completed: Array.isArray(normalized.personality) && normalized.personality.length > 0,
+      source: 'normalizeProfileForCompletion + calculateUnifiedCompletion'
+    })
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
     setCompletedItems(result.completedFields)
     setTotalItems(result.totalFields)
 
-    console.log('📊 MyPage Profile Completion (共通関数使用):', {
+    console.log('📊 MyPage Profile Completion (統一関数使用):', {
       required: `${result.requiredCompleted}/${result.requiredTotal}`,
       optional: `${result.optionalCompleted}/${result.optionalTotal}`,
       images: `${result.hasImages ? 1 : 0}/1`,

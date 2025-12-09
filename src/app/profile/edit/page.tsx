@@ -16,7 +16,11 @@ import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
-import { calculateProfileCompletion } from '@/utils/profileCompletion'
+import { 
+  calculateProfileCompletion,
+  normalizeProfileForCompletion,
+  calculateUnifiedCompletion 
+} from '@/utils/profileCompletion'
 
 // ⚠️ 重要: 言語スキル構築のための内部関数をインポート
 // calculateProfileCompletion内のextractLanguageSkillsを使用するために、
@@ -1120,13 +1124,25 @@ function ProfileEditContent() {
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
     
-    calculateProfileCompletion({
+    // 🚨 CRITICAL: Watch subscription でも統一関数を使用
+    const profileForWatchCompletion = {
       ...currentDataWithoutCustomCulture,
       hobbies: selectedHobbies,
-      personality: selectedPersonality, 
+      personality: selectedPersonality,  // 🚨 selectedPersonality state優先
       planned_prefectures: selectedPlannedPrefectures,
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }, profileImages, isForeignMale, false)
+      language_skills: languageSkills,
+    }
+    
+    console.log('⏰ WATCH: Real-time completion calculation:', {
+      selectedPersonality: selectedPersonality,
+      source: 'watch subscription (リアルタイム更新)'
+    })
+    
+    const normalizedForWatch = normalizeProfileForCompletion(profileForWatchCompletion)
+    const resultForWatch = calculateUnifiedCompletion(normalizedForWatch, profileImages, isForeignMale, false)
+    setProfileCompletion(resultForWatch.completion)
+    setCompletedItems(resultForWatch.completedFields)
+    setTotalItems(resultForWatch.totalFields)
   }, [languageSkills, isForeignMale, profileImages, calculateProfileCompletion, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, setValue, watch])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
@@ -1519,7 +1535,45 @@ function ProfileEditContent() {
             should_match: true
           })
           const isFromSignupTimeout = urlParamsLocal.get('from') === 'signup'
-          const result = calculateProfileCompletion(actualFormValues, profileImages, isForeignMale, isFromSignupTimeout)
+          
+          // 🚨 CRITICAL DEBUG: Edit screen completion calculation debug 
+          console.log('📝 EDIT SCREEN COMPLETION CALCULATION:', {
+            input_actualFormValues_personality: actualFormValues?.personality,
+            input_selectedPersonality: selectedPersonality,
+            input_formValues_type: typeof actualFormValues?.personality,
+            input_formValues_isArray: Array.isArray(actualFormValues?.personality),
+            input_formValues_length: actualFormValues?.personality?.length || 0,
+            input_profileImages: profileImages,
+            input_isForeignMale: isForeignMale,
+            input_isFromSignupTimeout: isFromSignupTimeout
+          })
+          
+          // 🚨 CRITICAL: 編集画面でも統一関数を使用（personality統一のため）
+          console.log('📝 EDIT: actualFormValues personality check:', {
+            personality: actualFormValues?.personality,
+            selectedPersonality: selectedPersonality,
+            source: 'selectedPersonality state (編集画面で管理中の値)'
+          })
+
+          // selectedPersonality state を最優先（編集中の最新状態）
+          const profileForCompletion = {
+            ...actualFormValues,
+            personality: selectedPersonality  // 🚨 編集中のpersonality stateを使用
+          }
+          
+          const normalized = normalizeProfileForCompletion(profileForCompletion)
+          const result = calculateUnifiedCompletion(normalized, profileImages, isForeignMale, isFromSignupTimeout)
+          
+          console.log('📝 EDIT SCREEN UNIFIED COMPLETION RESULT:', {
+            input_selectedPersonality: selectedPersonality,
+            normalized_personality: normalized.personality,
+            completion_percentage: result.completion,
+            requiredCompleted: result.requiredCompleted,
+            optionalCompleted: result.optionalCompleted,
+            personality_completed: Array.isArray(normalized.personality) && normalized.personality.length > 0,
+            source: 'normalizeProfileForCompletion + calculateUnifiedCompletion (編集画面版)'
+          })
+          
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
           setTotalItems(result.totalFields)
@@ -2905,8 +2959,33 @@ function ProfileEditContent() {
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
-        // 🔧 修正: 正しい画像配列を完成度計算に渡す
-        const result = calculateProfileCompletion(profileDataWithSignup, currentImageArray, isForeignMale, isNewUser)
+        // 🚨 CRITICAL: fromMyPage でも統一関数を使用（personality統一のため）
+        console.log('🔄 fromMyPage: Personality check before completion:', {
+          profile_personality: profile?.personality,
+          selectedPersonality: selectedPersonality,
+          source: 'fromMyPage初期化時'
+        })
+
+        // selectedPersonality がまだ初期化されていない場合は profile.personality を使用
+        const personalityForCompletion = selectedPersonality.length > 0 
+          ? selectedPersonality 
+          : (profile?.personality || [])
+
+        const profileForCompletion = {
+          ...profileDataWithSignup,
+          personality: personalityForCompletion  // 🚨 personality統一
+        }
+        
+        const normalized = normalizeProfileForCompletion(profileForCompletion)
+        const result = calculateUnifiedCompletion(normalized, currentImageArray, isForeignMale, isNewUser)
+        
+        console.log('🔄 fromMyPage: UNIFIED COMPLETION RESULT:', {
+          personality_used: personalityForCompletion,
+          normalized_personality: normalized.personality,
+          completion_percentage: result.completion,
+          source: 'fromMyPage + normalizeProfileForCompletion + calculateUnifiedCompletion'
+        })
+        
         setProfileCompletion(result.completion)
         setCompletedItems(result.completedFields)
         setTotalItems(result.totalFields)
@@ -3022,12 +3101,16 @@ function ProfileEditContent() {
         consolidatedInterests.push(...selectedHobbies)
       }
       
-      // personality を prefix付きで追加（互換性のため）  
-      if (selectedPersonality.length > 0) {
-        selectedPersonality.forEach(personality => {
-          consolidatedInterests.push(`personality:${personality}`)
-        })
-      }
+      // 🎯 FIXED: personality を必ず明示的に処理（空配列でも上書き保存）
+      // 古いpersonality:*エントリを削除
+      const existingNonPersonalityInterests = consolidatedInterests.filter(item => !item.startsWith('personality:'))
+      consolidatedInterests.length = 0
+      consolidatedInterests.push(...existingNonPersonalityInterests)
+      
+      // personalityを条件なしで追加（空でも処理）
+      selectedPersonality.forEach(personality => {
+        consolidatedInterests.push(`personality:${personality}`)
+      })
       
       // custom_culture を prefix付きで追加（互換性のため）
       if (data.custom_culture && data.custom_culture.trim()) {
@@ -3039,9 +3122,25 @@ function ProfileEditContent() {
         consolidatedInterests.push('その他')
       }
       
-      // 🆕 新しいカラム用のクリーンな配列を準備
-      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : null
-      const personalityTags = selectedPersonality.length > 0 ? selectedPersonality : null
+      // 🎯 CRITICAL FIX: personality を無条件でSupabaseに保存（Supabaseを唯一の真実にする）
+      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : []
+      const personalityTags = selectedPersonality  // 🚨 条件削除: 空配列でも常に保存
+      
+      // 🚨 CRITICAL DEBUG: personality保存値の詳細追跡
+      console.log('🧭 PERSONALITY SAVE DEBUG - DETAILED TRACKING:', {
+        selectedPersonality_state: selectedPersonality,
+        selectedPersonality_type: typeof selectedPersonality,
+        selectedPersonality_isArray: Array.isArray(selectedPersonality),
+        selectedPersonality_length: selectedPersonality?.length || 0,
+        selectedPersonality_stringified: JSON.stringify(selectedPersonality),
+        personalityTags_final: personalityTags,
+        personalityTags_type: typeof personalityTags,
+        personalityTags_isArray: Array.isArray(personalityTags),
+        personalityTags_length: personalityTags?.length || 0,
+        personalityTags_stringified: JSON.stringify(personalityTags),
+        UNCONDITIONAL_SAVE: 'YES - selectedPersonality を条件なしで保存（Supabase = 唯一の真実）',
+        logic_check: 'selectedPersonality を直接使用（条件分岐削除）'
+      })
 
       // プロフィール更新データを準備
       const updateData: any = {
@@ -3084,6 +3183,8 @@ function ProfileEditContent() {
         english_level: null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
+        // 🚨 CRITICAL: personality を無条件でSupabaseに保存（唯一の真実化）
+        personality: personalityTags,      // 🆕 personality フィールドも無条件保存
         // ✅ Triple-save機能復旧（personality/culture分離）
         personality_tags: personalityTags,
         culture_tags: cultureTags,
@@ -3091,6 +3192,21 @@ function ProfileEditContent() {
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
+      
+      // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality値
+      console.log('🗄️ SUPABASE PERSONALITY UNCONDITIONAL SAVE:', {
+        updateData_personality: updateData.personality,
+        updateData_personality_tags: updateData.personality_tags,
+        both_fields_identical: JSON.stringify(updateData.personality) === JSON.stringify(updateData.personality_tags),
+        personality_type: typeof updateData.personality,
+        personality_isArray: Array.isArray(updateData.personality),
+        personality_length: updateData.personality?.length || 0,
+        UNCONDITIONAL_SAVE_VERIFICATION: {
+          personality_field: 'ALWAYS included in payload',
+          personality_tags_field: 'ALWAYS included in payload',
+          empty_array_handling: Array.isArray(updateData.personality) && updateData.personality.length === 0 ? 'WILL CLEAR DB' : 'WILL UPDATE DB'
+        }
+      })
 
       // 外国人男性の場合は国籍と専用フィールドも更新
       console.log('🔍 保存時の外国人男性判定デバッグ:', {
@@ -3168,6 +3284,14 @@ function ProfileEditContent() {
         updateData_language_skills: updateData.language_skills,
         updateData_japanese_level: updateData.japanese_level,
         updateData_english_level: updateData.english_level,
+        updateData_personality_tags: updateData.personality_tags,
+        personality_tags_final_check: {
+          value: updateData.personality_tags,
+          type: typeof updateData.personality_tags,
+          isArray: Array.isArray(updateData.personality_tags),
+          length: updateData.personality_tags?.length || 0,
+          isEmpty: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0
+        },
         userId: user.id
       })
       
@@ -3181,7 +3305,14 @@ function ProfileEditContent() {
       console.log('🔥 SUPABASE UPDATE - Post-update debug:', {
         updateResult,
         updateError,
-        sentLanguageSkills: updateData.language_skills
+        sentLanguageSkills: updateData.language_skills,
+        sentPersonalityTags: updateData.personality_tags,
+        personality_save_verification: {
+          sent_value: updateData.personality_tags,
+          was_empty_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0,
+          supabase_success: !updateError,
+          should_have_cleared_db: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0 ? '期待：DB上のpersonalityが空配列になる' : '期待：DB上のpersonalityに値が保存される'
+        }
       })
       
       console.log('[Profile Submit] Supabase error:', updateError)
