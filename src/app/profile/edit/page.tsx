@@ -19,7 +19,8 @@ import { z } from 'zod'
 import { 
   calculateProfileCompletion,
   normalizeProfileForCompletion,
-  calculateUnifiedCompletion 
+  calculateUnifiedCompletion,
+  buildProfileForCompletion
 } from '@/utils/profileCompletion'
 
 // ⚠️ 重要: 言語スキル構築のための内部関数をインポート
@@ -544,6 +545,8 @@ function ProfileEditContent() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>([])
   const [selectedPersonality, setSelectedPersonality] = useState<string[]>([])
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
+  // 🚨 CRITICAL: DBプロフィールの保持（buildProfileForCompletion用）
+  const [dbProfile, setDbProfile] = useState<any>(null)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -1124,26 +1127,53 @@ function ProfileEditContent() {
     const currentData = watch()
     const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
     
-    // 🚨 CRITICAL: Watch subscription でも統一関数を使用
-    const profileForWatchCompletion = {
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies,
-      personality: selectedPersonality,  // 🚨 selectedPersonality state優先
-      planned_prefectures: selectedPlannedPrefectures,
-      language_skills: languageSkills,
+    // 🚨 CRITICAL: buildProfileForCompletion → normalizeProfileForCompletion → calculateUnifiedCompletion の順番
+    if (!dbProfile) {
+      console.log('⏰ WATCH: dbProfile not loaded yet, skipping completion calculation')
+      return
     }
     
-    console.log('⏰ WATCH: Real-time completion calculation:', {
-      selectedPersonality: selectedPersonality,
-      source: 'watch subscription (リアルタイム更新)'
+    console.log('⏰ WATCH: Real-time completion calculation with buildProfileForCompletion:', {
+      selectedHobbies_length: selectedHobbies.length,
+      selectedPersonality_length: selectedPersonality.length,
+      languageSkills_length: languageSkills.length,
+      dbProfile_available: !!dbProfile
     })
     
-    const normalizedForWatch = normalizeProfileForCompletion(profileForWatchCompletion)
+    // ステップ1: DBプロフィールとstate値を適切にマージ
+    const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+    
+    // 他のフィールドはwatch()値で上書き（テキスト系フィールドのみ）
+    const profileForCompletion = {
+      ...builtProfile,
+      ...currentDataWithoutCustomCulture,
+      // 🚨 CRITICAL: hobbies/personality/language_skills はbuildProfileForCompletionの結果を使用
+      hobbies: builtProfile.hobbies,
+      personality: builtProfile.personality,
+      language_skills: builtProfile.language_skills,
+      planned_prefectures: selectedPlannedPrefectures,
+    }
+    
+    // ステップ2: 正規化
+    const normalizedForWatch = normalizeProfileForCompletion(profileForCompletion)
+    
+    // ステップ3: 完成度計算
     const resultForWatch = calculateUnifiedCompletion(normalizedForWatch, profileImages, isForeignMale, false)
+    
+    console.log('⏰ WATCH: STABLE COMPLETION RESULT:', {
+      hobbies_used: builtProfile.hobbies,
+      hobbies_length: builtProfile.hobbies?.length || 0,
+      personality_used: builtProfile.personality,
+      personality_length: builtProfile.personality?.length || 0,
+      completion_percentage: resultForWatch.completion,
+      completedFields: resultForWatch.completedFields,
+      totalFields: resultForWatch.totalFields
+    })
+    
     setProfileCompletion(resultForWatch.completion)
     setCompletedItems(resultForWatch.completedFields)
     setTotalItems(resultForWatch.totalFields)
-  }, [languageSkills, isForeignMale, profileImages, calculateProfileCompletion, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, setValue, watch])
+  }, [dbProfile, languageSkills, isForeignMale, profileImages, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, setValue, watch])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -1548,17 +1578,34 @@ function ProfileEditContent() {
             input_isFromSignupTimeout: isFromSignupTimeout
           })
           
-          // 🚨 CRITICAL: 編集画面でも統一関数を使用（personality統一のため）
+          // 🚨 CRITICAL: 編集画面でもbuildProfileForCompletion使用（データソース統一）
           console.log('📝 EDIT: actualFormValues personality check:', {
             personality: actualFormValues?.personality,
             selectedPersonality: selectedPersonality,
-            source: 'selectedPersonality state (編集画面で管理中の値)'
+            dbProfile_available: !!dbProfile,
+            source: 'buildProfileForCompletion経由の統一データソース'
           })
 
-          // selectedPersonality state を最優先（編集中の最新状態）
-          const profileForCompletion = {
-            ...actualFormValues,
-            personality: selectedPersonality  // 🚨 編集中のpersonality stateを使用
+          // dbProfileが利用可能な場合はbuildProfileForCompletion使用
+          let profileForCompletion
+          if (dbProfile) {
+            const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+            profileForCompletion = {
+              ...builtProfile,
+              ...actualFormValues,
+              // 🚨 CRITICAL: hobbies/personality/language_skills はbuildの結果使用
+              hobbies: builtProfile.hobbies,
+              personality: builtProfile.personality,
+              language_skills: builtProfile.language_skills,
+            }
+          } else {
+            // フォールバック: dbProfileなしの場合
+            profileForCompletion = {
+              ...actualFormValues,
+              personality: selectedPersonality,
+              hobbies: selectedHobbies,
+              language_skills: languageSkills
+            }
           }
           
           const normalized = normalizeProfileForCompletion(profileForCompletion)
@@ -2151,6 +2198,14 @@ function ProfileEditContent() {
           setUserLoading(false)
           return
         }
+
+        // 🚨 CRITICAL: DBプロフィールをstateに保存（buildProfileForCompletion用）
+        setDbProfile(profile)
+        console.log('🔧 DB PROFILE SET:', {
+          profile_hobbies: profile?.hobbies,
+          profile_personality: profile?.personality,
+          profile_language_skills: profile?.language_skills
+        })
 
         console.log('========== PROFILE EDIT DEBUG START ==========')
         console.log('Loaded profile data:', profile)
@@ -2959,31 +3014,32 @@ function ProfileEditContent() {
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
-        // 🚨 CRITICAL: fromMyPage でも統一関数を使用（personality統一のため）
-        console.log('🔄 fromMyPage: Personality check before completion:', {
+        // 🚨 CRITICAL: fromMyPage でもbuildProfileForCompletion使用（完全統一）
+        console.log('🔄 fromMyPage: buildProfileForCompletion setup:', {
           profile_personality: profile?.personality,
           selectedPersonality: selectedPersonality,
+          selectedHobbies: selectedHobbies,
+          languageSkills: languageSkills,
           source: 'fromMyPage初期化時'
         })
 
-        // selectedPersonality がまだ初期化されていない場合は profile.personality を使用
-        const personalityForCompletion = selectedPersonality.length > 0 
-          ? selectedPersonality 
-          : (profile?.personality || [])
+        // buildProfileForCompletion でDBとstateをマージ
+        const builtProfile = buildProfileForCompletion(profile, selectedHobbies, selectedPersonality, languageSkills)
 
         const profileForCompletion = {
           ...profileDataWithSignup,
-          personality: personalityForCompletion  // 🚨 personality統一
+          ...builtProfile,  // buildの結果をマージ
         }
         
         const normalized = normalizeProfileForCompletion(profileForCompletion)
         const result = calculateUnifiedCompletion(normalized, currentImageArray, isForeignMale, isNewUser)
         
         console.log('🔄 fromMyPage: UNIFIED COMPLETION RESULT:', {
-          personality_used: personalityForCompletion,
+          built_personality: builtProfile.personality,
+          built_hobbies: builtProfile.hobbies,
           normalized_personality: normalized.personality,
           completion_percentage: result.completion,
-          source: 'fromMyPage + normalizeProfileForCompletion + calculateUnifiedCompletion'
+          source: 'fromMyPage + buildProfileForCompletion + normalizeProfileForCompletion + calculateUnifiedCompletion'
         })
         
         setProfileCompletion(result.completion)

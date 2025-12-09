@@ -194,6 +194,52 @@ export function normalizeProfileForCompletion(profile: any): NormalizedProfile {
 }
 
 /**
+ * 🚨 CRITICAL: Edit画面用 - DBプロフィールとstate値を適切にマージ
+ * stateが空の場合はDBの値を優先、stateが入力済みの場合はstateを優先
+ */
+export function buildProfileForCompletion(
+  dbProfile: any,
+  selectedHobbies: string[],
+  selectedPersonality: string[], 
+  languageSkills: any[]
+): any {
+  console.log('🔧 BUILD PROFILE FOR COMPLETION - INPUT:', {
+    dbProfile_hobbies: dbProfile?.hobbies,
+    dbProfile_personality: dbProfile?.personality,
+    dbProfile_language_skills: dbProfile?.language_skills,
+    selectedHobbies_state: selectedHobbies,
+    selectedPersonality_state: selectedPersonality,
+    languageSkills_state: languageSkills
+  })
+
+  // 🚨 CRITICAL: state優先のマージルール
+  const mergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : (dbProfile?.hobbies ?? [])
+  const mergedPersonality = selectedPersonality.length > 0 ? selectedPersonality : (dbProfile?.personality ?? [])
+  const mergedLanguageSkills = languageSkills.length > 0 ? languageSkills : (dbProfile?.language_skills ?? [])
+
+  const builtProfile = {
+    ...dbProfile,
+    hobbies: mergedHobbies,
+    personality: mergedPersonality,
+    language_skills: mergedLanguageSkills
+  }
+
+  console.log('🔧 BUILD PROFILE FOR COMPLETION - OUTPUT:', {
+    merged_hobbies: mergedHobbies,
+    merged_hobbies_length: mergedHobbies.length,
+    merged_personality: mergedPersonality,  
+    merged_personality_length: mergedPersonality.length,
+    merged_language_skills: mergedLanguageSkills,
+    merged_language_skills_length: mergedLanguageSkills.length,
+    hobbies_source: selectedHobbies.length > 0 ? 'selectedHobbies state' : 'dbProfile fallback',
+    personality_source: selectedPersonality.length > 0 ? 'selectedPersonality state' : 'dbProfile fallback',
+    language_skills_source: languageSkills.length > 0 ? 'languageSkills state' : 'dbProfile fallback'
+  })
+
+  return builtProfile
+}
+
+/**
  * 🚨 CRITICAL: 統一された completion 計算（正規化済みプロフィール用）
  * personality は [] のとき未入力、要素ありのとき入力完了として判定
  */
