@@ -124,7 +124,7 @@ export interface NormalizedProfile {
   body_type?: string
   marital_status?: string
   personality?: string[]       // 🚨 Supabaseのpersonality を最優先
-  city?: string
+  city?: string | null
   visit_schedule?: string
   travel_companion?: string
   planned_prefectures?: string[]
