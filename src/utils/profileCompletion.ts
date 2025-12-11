@@ -147,11 +147,11 @@ const FIELD_CONFIG = {
   'foreign-male': {
     required: [
       'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction', 'language_info'
+      'hobbies', 'self_introduction', 'language_info', 'planned_prefectures'
     ],
     optional: [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
+      'personality', 'visit_schedule', 'travel_companion'
     ]
   },
   'japanese-female': {
@@ -343,7 +343,7 @@ export function calculateCompletion(
     planned_prefectures: profile.planned_prefectures
   })
 
-  // foreign-male の必須項目（8個）
+  // foreign-male の必須項目（9個）
   const requiredFields = FIELD_CONFIG[userType].required
   const optionalFields = FIELD_CONFIG[userType].optional
 
@@ -366,6 +366,8 @@ export function calculateCompletion(
         return !!(profile.self_introduction && profile.self_introduction !== '')
       case 'language_info':
         return Array.isArray(profile.language_skills) && profile.language_skills.length > 0
+      case 'planned_prefectures':
+        return Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
       default:
         return false
     }
@@ -388,8 +390,6 @@ export function calculateCompletion(
         return !!(profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'noEntry')
       case 'travel_companion':
         return !!(profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry' && profile.travel_companion !== 'noEntry')
-      case 'planned_prefectures':
-        return Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
       default:
         return false
     }
