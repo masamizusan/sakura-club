@@ -43,15 +43,29 @@ function extractLanguageSkills(data: any): LanguageSkill[] {
   return skills
 }
 
-// 修正版: 言語情報完成度判定（フォールバック対応）
+/**
+ * 🚨 CRITICAL: 言語情報完成度判定（厳密版）
+ * プレースホルダー行 {language:"none", level:"none"} では完成扱いしない
+ */
 function hasLanguageInfo(profileData: any): boolean {
   const skills = extractLanguageSkills(profileData)
   
-  // 統一されたヘルパー関数を使用して有効性をチェック
-  const hasValidSkill = hasValidLanguageSkills(skills)
+  // 厳密な有効性チェック：language ≠ 'none' かつ level ≠ 'none' かつ空文字でない
+  const validSkills = Array.isArray(skills) ? skills.filter((s: any) =>
+    s &&
+    typeof s.language === "string" &&
+    typeof s.level === "string" &&
+    s.language !== "none" &&
+    s.level !== "none" &&
+    s.language.trim() !== "" &&
+    s.level.trim() !== ""
+  ) : []
   
-  console.log('🔍 hasLanguageInfo: 最終結果', {
-    extractedSkills: skills,
+  const hasValidSkill = validSkills.length > 0
+  
+  console.log('🔍 hasLanguageInfo: 厳密判定', {
+    originalSkills: skills,
+    validSkills: validSkills,
     hasValidSkill,
     originalLanguageSkills: profileData.language_skills,
     japanese_level: profileData.japanese_level,
@@ -348,29 +362,43 @@ export function calculateCompletion(
   const optionalFields = FIELD_CONFIG[userType].optional
 
   // ① 必須項目チェック
+  const requiredFieldStatus: Record<string, boolean> = {}
   const completedRequired = requiredFields.filter(field => {
+    let isCompleted = false
     switch (field) {
       case 'nickname':
-        return !!(profile.nickname && profile.nickname !== '')
+        isCompleted = !!(profile.nickname && profile.nickname !== '')
+        break
       case 'gender':
-        return !!(profile.gender && profile.gender !== '')
+        isCompleted = !!(profile.gender && profile.gender !== '')
+        break
       case 'age':
-        return !!(profile.age && profile.age > 0)
+        isCompleted = !!(profile.age && profile.age > 0)
+        break
       case 'birth_date':
-        return !!(profile.birth_date && profile.birth_date !== '')
+        isCompleted = !!(profile.birth_date && profile.birth_date !== '')
+        break
       case 'nationality':
-        return !!(profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none')
+        isCompleted = !!(profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none')
+        break
       case 'hobbies':
-        return Array.isArray(profile.hobbies) && profile.hobbies.length > 0
+        isCompleted = Array.isArray(profile.hobbies) && profile.hobbies.length > 0
+        break
       case 'self_introduction':
-        return !!(profile.self_introduction && profile.self_introduction !== '')
+        isCompleted = !!(profile.self_introduction && profile.self_introduction !== '')
+        break
       case 'language_info':
-        return Array.isArray(profile.language_skills) && profile.language_skills.length > 0
+        // 🚨 CRITICAL: 厳密な hasLanguageInfo を使用
+        isCompleted = hasLanguageInfo(profile)
+        break
       case 'planned_prefectures':
-        return Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
+        isCompleted = Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
+        break
       default:
-        return false
+        isCompleted = false
     }
+    requiredFieldStatus[field] = isCompleted
+    return isCompleted
   })
 
   // ② 任意項目チェック
@@ -415,6 +443,10 @@ export function calculateCompletion(
   console.log(`必須: ${completedRequired.length}/${requiredFields.length} = ${requiredScore}%`)
   console.log(`任意: ${completedOptional.length}/${optionalFields.length} = ${optionalScore}%`)
   console.log(`completion: ${completion}%`)
+  
+  // 🧪 必須フィールド個別ステータス（問題特定用）
+  console.log('🧪 REQUIRED FIELD STATUS (foreign-male)', requiredFieldStatus)
+  
   console.log(`personality: ${JSON.stringify(profile.personality)}`)
   console.log(`hobbies: ${JSON.stringify(profile.hobbies)}`)
   console.log(`language_skills: ${JSON.stringify(profile.language_skills)}`)
