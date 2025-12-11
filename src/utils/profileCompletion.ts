@@ -61,17 +61,20 @@ function hasLanguageInfo(profileData: any): boolean {
   return hasValidSkill
 }
 
-// 専用カラム優先、city JSONフォールバックのヘルパー関数
+// 専用カラム優先、city JSONフォールバック + 未入力値除外のヘルパー関数
 function getFieldFromDedicatedColumnOrCity(profileData: any, fieldName: string): any {
-  // 専用カラムの値を優先
-  if (profileData[fieldName] !== null && profileData[fieldName] !== undefined && profileData[fieldName] !== '') {
+  // 専用カラムの値を優先（未入力扱いの値を除外）
+  if (profileData[fieldName] !== null && 
+      profileData[fieldName] !== undefined && 
+      profileData[fieldName] !== '' &&
+      profileData[fieldName] !== 'none') {
     return profileData[fieldName]
   }
 
-  // フォールバック: city JSONから取得
+  // フォールバック: city JSONから取得（未入力扱いの値を除外）
   try {
     const cityData = typeof profileData.city === 'string' ? JSON.parse(profileData.city) : profileData.city
-    if (cityData && cityData[fieldName]) {
+    if (cityData && cityData[fieldName] && cityData[fieldName] !== 'none') {
       return cityData[fieldName]
     }
   } catch (e) {
@@ -212,11 +215,17 @@ export function normalizeProfile(rawProfile: any, userType: UserType): Normalize
     ? rawProfile.planned_prefectures 
     : []
 
-  // 🚨 visit_schedule / travel_companion の統一正規化
-  const normalizedVisitSchedule = rawProfile?.visit_schedule && rawProfile.visit_schedule !== '' 
+  // 🚨 visit_schedule / travel_companion の統一正規化（未入力扱いの明確化）
+  const normalizedVisitSchedule = rawProfile?.visit_schedule && 
+    rawProfile.visit_schedule !== '' && 
+    rawProfile.visit_schedule !== 'no-entry' && 
+    rawProfile.visit_schedule !== 'noEntry'
     ? rawProfile.visit_schedule 
     : null
-  const normalizedTravelCompanion = rawProfile?.travel_companion && rawProfile.travel_companion !== '' 
+  const normalizedTravelCompanion = rawProfile?.travel_companion && 
+    rawProfile.travel_companion !== '' && 
+    rawProfile.travel_companion !== 'noEntry' && 
+    rawProfile.travel_companion !== 'no-entry'
     ? rawProfile.travel_companion 
     : null
 
@@ -378,9 +387,9 @@ export function calculateCompletion(
       case 'personality':
         return Array.isArray(profile.personality) && profile.personality.length > 0
       case 'visit_schedule':
-        return !!(profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry')
+        return !!(profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'noEntry')
       case 'travel_companion':
-        return !!(profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry')
+        return !!(profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry' && profile.travel_companion !== 'noEntry')
       default:
         return false
     }

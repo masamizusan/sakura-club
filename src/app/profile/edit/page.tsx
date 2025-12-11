@@ -1512,12 +1512,12 @@ function ProfileEditContent() {
           city: '', // 完全に空
           // 外国人男性向け新フィールド
           planned_prefectures: [],
-          visit_schedule: 'no-entry',
-          travel_companion: 'noEntry',
-          occupation: 'none', // デフォルト値設定
+          visit_schedule: undefined, // 🔧 新規ユーザーは未選択状態
+          travel_companion: undefined, // 🔧 新規ユーザーは未選択状態
+          occupation: undefined, // 🔧 新規ユーザーは未選択状態
           height: undefined, // 🔧 数値フィールドなのでundefined
-          body_type: 'none', // デフォルト値設定
-          marital_status: 'none', // デフォルト値設定
+          body_type: undefined, // 🔧 新規ユーザーは未選択状態
+          marital_status: undefined, // 🔧 新規ユーザーは未選択状態
           self_introduction: '', // 空
           hobbies: [], // 空配列
           personality: [], // 空配列
@@ -1816,8 +1816,8 @@ function ProfileEditContent() {
           gender: 'female',
           age: 18,
           planned_prefectures: [],
-          visit_schedule: 'no-entry',
-          travel_companion: 'noEntry',
+          visit_schedule: undefined, // 🔧 新規ユーザーは未選択状態
+          travel_companion: undefined, // 🔧 新規ユーザーは未選択状態
           hobbies: [],
           personality: [],
           custom_culture: ''
@@ -1961,8 +1961,8 @@ function ProfileEditContent() {
             personality: [],
             // 外国人男性向けフィールド
             planned_prefectures: [],
-            visit_schedule: 'no-entry',
-            travel_companion: 'noEntry',
+            visit_schedule: undefined, // 🔧 新規ユーザーは未選択状態
+            travel_companion: undefined, // 🔧 新規ユーザーは未選択状態
             // オプションフィールド
             occupation: 'none',
             height: undefined,
@@ -2633,12 +2633,12 @@ function ProfileEditContent() {
           city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
           planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile.planned_prefectures || [])) : undefined,
-          visit_schedule: isForeignMale ? (isNewUser ? 'no-entry' : (profile.visit_schedule || 'no-entry')) : undefined,
-          travel_companion: isForeignMale ? (isNewUser ? 'noEntry' : (profile.travel_companion || 'noEntry')) : undefined,
-          occupation: isNewUser ? 'none' : (parsedOptionalData.occupation || profile.occupation || 'none'),
+          visit_schedule: isForeignMale ? (isNewUser ? undefined : (profile.visit_schedule || undefined)) : undefined,
+          travel_companion: isForeignMale ? (isNewUser ? undefined : (profile.travel_companion || undefined)) : undefined,
+          occupation: isNewUser ? undefined : (parsedOptionalData.occupation || profile.occupation || undefined),
           height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
-          body_type: isNewUser ? 'none' : (parsedOptionalData.body_type || profile.body_type || 'none'),
-          marital_status: isNewUser ? 'none' : (parsedOptionalData.marital_status || profile.marital_status || 'none'),
+          body_type: isNewUser ? undefined : (parsedOptionalData.body_type || profile.body_type || undefined),
+          marital_status: isNewUser ? undefined : (parsedOptionalData.marital_status || profile.marital_status || undefined),
           hobbies: isNewUser ? [] : existingHobbies,
           personality: (!isNewUser && Array.isArray(existingPersonality) && existingPersonality.length > 0) ? existingPersonality : [], // 🎯 FIXED: DBにpersonalityデータが実際に存在する場合のみ復元
           self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
@@ -2764,15 +2764,15 @@ function ProfileEditContent() {
             setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
 
-            const visitScheduleValue = isNewUser ? 'no-entry' :
+            const visitScheduleValue = isNewUser ? undefined :
               (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry'
-                ? profile.visit_schedule : 'no-entry')
+                ? profile.visit_schedule : undefined)
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
-            const travelCompanionValue = isNewUser ? 'noEntry' :
+            const travelCompanionValue = isNewUser ? undefined :
               (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry'
-                ? profile.travel_companion : 'noEntry')
+                ? profile.travel_companion : undefined)
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
@@ -2781,8 +2781,8 @@ function ProfileEditContent() {
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
             // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
-            setValue('visit_schedule', 'no-entry', { shouldValidate: false })
-            setValue('travel_companion', 'noEntry', { shouldValidate: false })
+            setValue('visit_schedule', undefined, { shouldValidate: false })
+            setValue('travel_companion', undefined, { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
         }
@@ -3266,8 +3266,8 @@ function ProfileEditContent() {
           updateData.nationality = data.nationality
         }
         // 外国人男性専用フィールドを追加
-        updateData.visit_schedule = (data.visit_schedule && data.visit_schedule !== 'no-entry') ? data.visit_schedule : null
-        updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry') ? data.travel_companion : null
+        updateData.visit_schedule = (data.visit_schedule && data.visit_schedule !== 'no-entry' && data.visit_schedule !== 'noEntry') ? data.visit_schedule : null
+        updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry' && data.travel_companion !== 'noEntry') ? data.travel_companion : null
         updateData.planned_prefectures = (data.planned_prefectures && Array.isArray(data.planned_prefectures) && data.planned_prefectures.length > 0) ? data.planned_prefectures : null
 
         console.log('🌍 外国人男性保存フィールド追加:', {
