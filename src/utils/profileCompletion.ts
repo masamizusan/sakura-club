@@ -398,8 +398,8 @@ export function calculateCompletion(
   // ③ 画像チェック
   const hasImages = checkImagePresence(profile, imageArray, isNewUser)
 
-  // ④ 最終スコア計算
-  const requiredScore = requiredFields.length === completedRequired.length ? 50 : 0
+  // ④ 最終スコア計算（必須項目部分完了対応）
+  const requiredScore = Math.round((completedRequired.length / requiredFields.length) * 50)
   const optionalScore = Math.round((completedOptional.length / optionalFields.length) * 50)
   const completion = requiredScore + optionalScore
 
