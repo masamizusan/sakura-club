@@ -18,27 +18,13 @@ import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'luci
 import { z } from 'zod'
 import { 
   calculateProfileCompletion,
-  normalizeProfileForCompletion,
-  calculateUnifiedCompletion,
+  normalizeProfile,
+  calculateCompletion,
   buildProfileForCompletion
 } from '@/utils/profileCompletion'
 
-// ⚠️ 重要: 言語スキル構築のための内部関数をインポート
-// calculateProfileCompletion内のextractLanguageSkillsを使用するために、
-// 一時的に同様のロジックを使用（将来的にはcalculateProfileCompletionに完全集約予定）
-function extractLanguageSkillsForForm(data: any): LanguageSkill[] {
-  const skills: LanguageSkill[] = []
-  
-  if (data.japanese_level && data.japanese_level !== 'none') {
-    skills.push({ language: 'ja', level: data.japanese_level })
-  }
-  
-  if (data.english_level && data.english_level !== 'none') {
-    skills.push({ language: 'en', level: data.english_level })
-  }
-  
-  return skills
-}
+// 🧮 統一されたプロフィール完成度計算システム使用
+// normalizeProfile と calculateCompletion を使用して一貫した計算を実現
 import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
 import { 
@@ -1154,11 +1140,9 @@ function ProfileEditContent() {
       planned_prefectures: selectedPlannedPrefectures,
     }
     
-    // ステップ2: 正規化
-    const normalizedForWatch = normalizeProfileForCompletion(profileForCompletion)
-    
-    // ステップ3: 完成度計算
-    const resultForWatch = calculateUnifiedCompletion(normalizedForWatch, profileImages, isForeignMale, false)
+    // ステップ2: 🧮 統一された正規化と計算
+    const normalizedForWatch = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
+    const resultForWatch = calculateCompletion(normalizedForWatch, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, false)
     
     console.log('⏰ WATCH: STABLE COMPLETION RESULT:', {
       hobbies_used: builtProfile.hobbies,
@@ -1608,8 +1592,9 @@ function ProfileEditContent() {
             }
           }
           
-          const normalized = normalizeProfileForCompletion(profileForCompletion)
-          const result = calculateUnifiedCompletion(normalized, profileImages, isForeignMale, isFromSignupTimeout)
+          // 🧮 統一された正規化と計算システム
+          const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
+          const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isFromSignupTimeout)
           
           console.log('📝 EDIT SCREEN UNIFIED COMPLETION RESULT:', {
             input_selectedPersonality: selectedPersonality,
@@ -3031,8 +3016,9 @@ function ProfileEditContent() {
           ...builtProfile,  // buildの結果をマージ
         }
         
-        const normalized = normalizeProfileForCompletion(profileForCompletion)
-        const result = calculateUnifiedCompletion(normalized, currentImageArray, isForeignMale, isNewUser)
+        // 🧮 統一された正規化と計算システム
+        const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
+        const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', currentImageArray, isNewUser)
         
         console.log('🔄 fromMyPage: UNIFIED COMPLETION RESULT:', {
           built_personality: builtProfile.personality,

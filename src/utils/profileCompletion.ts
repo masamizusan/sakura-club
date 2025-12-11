@@ -117,6 +117,7 @@ export interface NormalizedProfile {
   hobbies?: string[]
   self_introduction?: string
   language_info?: any
+  language_skills?: any[]      // 🆕 統一された言語スキル配列
 
   // オプションフィールド（Supabase専用カラム優先）
   occupation?: string
@@ -135,59 +136,130 @@ export interface NormalizedProfile {
   profile_image?: string
 }
 
+// 🧮 User type definitions for extensibility
+export type UserType = 'foreign-male' | 'japanese-female'
+
+// 🧱 Field configuration per user type
+const FIELD_CONFIG = {
+  'foreign-male': {
+    required: [
+      'nickname', 'gender', 'age', 'birth_date', 'nationality',
+      'hobbies', 'self_introduction', 'language_info', 'planned_prefectures'
+    ],
+    optional: [
+      'occupation', 'height', 'body_type', 'marital_status', 
+      'personality', 'visit_schedule', 'travel_companion'
+    ]
+  },
+  'japanese-female': {
+    required: [], // TODO: 後日実装
+    optional: []  // TODO: 後日実装
+  }
+} as const
+
 /**
- * 🚨 CRITICAL: Supabase profile を completion計算用に正規化
- * personality は Supabase の値を唯一の真実として使用
+ * 🚨 CRITICAL: 統一された正規化関数（全画面で必ずこれを使用）
+ * すべての画面で同じ正規化ロジックを使い、ズレを完全に排除
  */
-export function normalizeProfileForCompletion(profile: any): NormalizedProfile {
-  console.log('🔧 NORMALIZE PROFILE - INPUT:', {
-    profile_personality: profile?.personality,
-    profile_personality_tags: profile?.personality_tags,
-    profile_personality_type: typeof profile?.personality,
-    profile_personality_isArray: Array.isArray(profile?.personality)
+export function normalizeProfile(rawProfile: any, userType: UserType): NormalizedProfile {
+  console.log('🧱 NORMALIZE PROFILE - INPUT:', {
+    userType,
+    raw_personality: rawProfile?.personality,
+    raw_hobbies: rawProfile?.hobbies,
+    raw_language_skills: rawProfile?.language_skills,
+    raw_planned_prefectures: rawProfile?.planned_prefectures
   })
 
-  // 🚨 CRITICAL: personality は Supabase の profile.personality を最優先
-  // personality_tags や interests からの抽出は行わない
-  const normalizedPersonality = Array.isArray(profile?.personality) 
-    ? profile.personality 
-    : []
-
-  const normalized: NormalizedProfile = {
-    // 必須フィールドのマッピング（フィールド名の差異を吸収）
-    nickname: profile?.name || profile?.nickname,
-    gender: profile?.gender,
-    age: profile?.age,
-    birth_date: profile?.birth_date || profile?.date_of_birth,
-    nationality: profile?.nationality,
-    prefecture: profile?.residence || profile?.prefecture,
-    hobbies: profile?.hobbies || profile?.interests || [],
-    self_introduction: profile?.bio || profile?.self_introduction,
-
-    // オプションフィールド（専用カラム優先）
-    occupation: getFieldFromDedicatedColumnOrCity(profile, 'occupation'),
-    height: getFieldFromDedicatedColumnOrCity(profile, 'height'),
-    body_type: getFieldFromDedicatedColumnOrCity(profile, 'body_type'),
-    marital_status: getFieldFromDedicatedColumnOrCity(profile, 'marital_status'),
-    
-    // 🚨 CRITICAL: personality は Supabase の値のみ使用（唯一の真実）
-    personality: normalizedPersonality,
-    
-    city: getCityFromNewFormat(profile?.city),
-    visit_schedule: profile?.visit_schedule,
-    travel_companion: profile?.travel_companion,
-    planned_prefectures: profile?.planned_prefectures || [],
-
-    // 画像
-    avatar_url: profile?.avatar_url,
-    avatarUrl: profile?.avatarUrl,
-    profile_image: profile?.profile_image
+  // 🚨 personality の統一正規化
+  let normalizedPersonality: string[] = []
+  if (rawProfile?.personality === null || rawProfile?.personality === undefined) {
+    normalizedPersonality = []
+  } else if (typeof rawProfile?.personality === 'string') {
+    normalizedPersonality = [rawProfile.personality]
+  } else if (Array.isArray(rawProfile?.personality)) {
+    normalizedPersonality = rawProfile.personality
+  } else {
+    normalizedPersonality = []
   }
 
-  console.log('🔧 NORMALIZE PROFILE - OUTPUT:', {
+  // 🚨 language_skills の統一正規化
+  let normalizedLanguageSkills: any[] = []
+  if (Array.isArray(rawProfile?.language_skills)) {
+    // 既存のlanguage_skills配列をフィルタリング
+    normalizedLanguageSkills = rawProfile.language_skills.filter((skill: any) => 
+      skill && 
+      skill.language && skill.level && 
+      skill.language !== '' && skill.level !== '' &&
+      skill.language !== 'none' && skill.level !== 'none'
+    )
+  } else if (rawProfile?.japanese_level || rawProfile?.english_level) {
+    // レガシーフィールドから構築
+    if (rawProfile?.japanese_level && rawProfile.japanese_level !== 'none') {
+      normalizedLanguageSkills.push({ language: 'ja', level: rawProfile.japanese_level })
+    }
+    if (rawProfile?.english_level && rawProfile.english_level !== 'none') {
+      normalizedLanguageSkills.push({ language: 'en', level: rawProfile.english_level })
+    }
+  }
+
+  // 🚨 hobbies の統一正規化
+  const normalizedHobbies = Array.isArray(rawProfile?.hobbies) 
+    ? rawProfile.hobbies 
+    : (Array.isArray(rawProfile?.interests) ? rawProfile.interests : [])
+
+  // 🚨 planned_prefectures の統一正規化
+  const normalizedPlannedPrefectures = Array.isArray(rawProfile?.planned_prefectures) 
+    ? rawProfile.planned_prefectures 
+    : []
+
+  // 🚨 visit_schedule / travel_companion の統一正規化
+  const normalizedVisitSchedule = rawProfile?.visit_schedule && rawProfile.visit_schedule !== '' 
+    ? rawProfile.visit_schedule 
+    : null
+  const normalizedTravelCompanion = rawProfile?.travel_companion && rawProfile.travel_companion !== '' 
+    ? rawProfile.travel_companion 
+    : null
+
+  const normalized: NormalizedProfile = {
+    // 必須フィールド
+    nickname: rawProfile?.name || rawProfile?.nickname,
+    gender: rawProfile?.gender,
+    age: rawProfile?.age,
+    birth_date: rawProfile?.birth_date || rawProfile?.date_of_birth,
+    nationality: rawProfile?.nationality,
+    prefecture: rawProfile?.residence || rawProfile?.prefecture,
+    hobbies: normalizedHobbies,
+    self_introduction: rawProfile?.bio || rawProfile?.self_introduction,
+
+    // オプションフィールド（専用カラム優先）
+    occupation: getFieldFromDedicatedColumnOrCity(rawProfile, 'occupation'),
+    height: getFieldFromDedicatedColumnOrCity(rawProfile, 'height'),
+    body_type: getFieldFromDedicatedColumnOrCity(rawProfile, 'body_type'),
+    marital_status: getFieldFromDedicatedColumnOrCity(rawProfile, 'marital_status'),
+    
+    // 🚨 CRITICAL: 統一正規化の結果を使用
+    personality: normalizedPersonality,
+    language_skills: normalizedLanguageSkills,
+    planned_prefectures: normalizedPlannedPrefectures,
+    visit_schedule: normalizedVisitSchedule,
+    travel_companion: normalizedTravelCompanion,
+    
+    city: getCityFromNewFormat(rawProfile?.city),
+
+    // 画像
+    avatar_url: rawProfile?.avatar_url,
+    avatarUrl: rawProfile?.avatarUrl,
+    profile_image: rawProfile?.profile_image
+  }
+
+  console.log('🧱 NORMALIZE PROFILE - OUTPUT:', {
+    userType,
     normalized_personality: normalized.personality,
     normalized_personality_length: normalized.personality?.length || 0,
-    source: 'Supabase profile.personality (唯一の真実)'
+    normalized_hobbies_length: normalized.hobbies?.length || 0,
+    normalized_language_skills_length: normalized.language_skills?.length || 0,
+    normalized_planned_prefectures_length: normalized.planned_prefectures?.length || 0,
+    source: 'Unified normalization logic'
   })
 
   return normalized
@@ -240,141 +312,104 @@ export function buildProfileForCompletion(
 }
 
 /**
- * 🚨 CRITICAL: 統一された completion 計算（正規化済みプロフィール用）
- * personality は [] のとき未入力、要素ありのとき入力完了として判定
+ * 🧮 CRITICAL: 完全統合された completion 計算関数（1つの関数で完結）
+ * すべての画面でこの1つの関数を呼び出し、別計算は一切行わない
  */
-export function calculateUnifiedCompletion(
-  normalized: NormalizedProfile,
+export function calculateCompletion(
+  profile: NormalizedProfile,
+  userType: UserType,
   imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
-  isForeignMale: boolean = false,
   isNewUser: boolean = false
 ): ProfileCompletionResult {
   
-  console.log('🔧 UNIFIED COMPLETION - INPUT:', {
-    normalized_personality: normalized.personality,
-    personality_length: normalized.personality?.length || 0,
-    isForeignMale,
-    isNewUser
-  })
-
-  // フィールド定義
-  let requiredFields = []
-  let optionalFields = []
-
-  if (isForeignMale) {
-    // 🏆 外国人男性の必須フィールド（8個）
-    requiredFields = [
-      'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction', 'language_info'
-    ]
-    
-    // 🎯 外国人男性のオプションフィールド（8個）
-    optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'visit_schedule', 'travel_companion', 'planned_prefectures'
-    ]
-  } else {
-    // 日本人女性
-    requiredFields = [
-      'nickname', 'age', 'birth_date', 'prefecture',
-      'hobbies', 'self_introduction'
-    ]
-    
-    optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city', 'language_info'
-    ]
+  if (userType !== 'foreign-male') {
+    throw new Error(`UserType ${userType} is not implemented yet. Only foreign-male is supported.`)
   }
 
-  // 必須フィールドチェック
-  const completedRequired = requiredFields.filter(field => {
-    let value
+  console.log('🧮 CALCULATE COMPLETION - INPUT:', {
+    userType,
+    personality: profile.personality,
+    hobbies: profile.hobbies,
+    language_skills: profile.language_skills,
+    planned_prefectures: profile.planned_prefectures
+  })
 
+  // foreign-male の必須項目（9個）※ planned_prefectures を必須化
+  const requiredFields = FIELD_CONFIG[userType].required
+  const optionalFields = FIELD_CONFIG[userType].optional
+
+  // ① 必須項目チェック
+  const completedRequired = requiredFields.filter(field => {
     switch (field) {
       case 'nickname':
-        value = normalized.nickname
-        break
+        return !!(profile.nickname && profile.nickname !== '')
+      case 'gender':
+        return !!(profile.gender && profile.gender !== '')
+      case 'age':
+        return !!(profile.age && profile.age > 0)
       case 'birth_date':
-        value = normalized.birth_date
-        break
-      case 'prefecture':
-        value = normalized.prefecture
-        break
+        return !!(profile.birth_date && profile.birth_date !== '')
+      case 'nationality':
+        return !!(profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none')
       case 'hobbies':
-        value = normalized.hobbies
-        break
+        return Array.isArray(profile.hobbies) && profile.hobbies.length > 0
       case 'self_introduction':
-        value = normalized.self_introduction
-        break
+        return !!(profile.self_introduction && profile.self_introduction !== '')
       case 'language_info':
-        return hasLanguageInfo(normalized)
-      default:
-        value = (normalized as any)[field]
-    }
-
-    if (Array.isArray(value)) {
-      return value.length > 0
-    }
-
-    if (field === 'nationality') {
-      return value && value !== '' && value !== '国籍を選択' && value !== 'none'
-    }
-
-    return value !== null && value !== undefined && value !== '' && value !== 'none'
-  })
-
-  // オプションフィールドチェック
-  const completedOptional = optionalFields.filter(field => {
-    let value = (normalized as any)[field]
-    
-    switch (field) {
-      case 'personality':
-        // 🚨 CRITICAL: personality は [] のとき未入力、要素ありのとき完了
-        const personalityCompleted = Array.isArray(value) && value.length > 0
-        console.log('🔧 PERSONALITY COMPLETION CHECK:', {
-          value: value,
-          isArray: Array.isArray(value),
-          length: value?.length || 0,
-          completed: personalityCompleted
-        })
-        return personalityCompleted
-        
-      case 'visit_schedule':
-      case 'travel_companion':
-        return value && value !== '' && value !== 'none' && value !== 'no-entry' && value !== 'noEntry'
-        
+        return Array.isArray(profile.language_skills) && profile.language_skills.length > 0
       case 'planned_prefectures':
-        return Array.isArray(value) && value.length > 0
-        
-      case 'city':
-        return !!value
-        
-      case 'language_info':
-        return hasLanguageInfo(normalized)
-        
+        return Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
       default:
-        return value && value !== '' && value !== 'none'
+        return false
     }
   })
 
-  // 画像チェック
-  const hasImages = checkImagePresence(normalized, imageArray, isNewUser)
-
-  // 完成度計算
-  const totalFields = requiredFields.length + optionalFields.length + 1
-  const completedFields = completedRequired.length + completedOptional.length + (hasImages ? 1 : 0)
-  const completion = Math.round((completedFields / totalFields) * 100)
-
-  console.log('🔧 UNIFIED COMPLETION - RESULT:', {
-    personality_input: normalized.personality,
-    personality_completed: optionalFields.includes('personality') ? completedOptional.some(f => f === 'personality') : 'N/A',
-    completion_percentage: completion,
-    requiredCompleted: completedRequired.length,
-    optionalCompleted: completedOptional.length,
-    totalCompleted: completedFields
+  // ② 任意項目チェック
+  const completedOptional = optionalFields.filter(field => {
+    switch (field) {
+      case 'occupation':
+        return !!(profile.occupation && profile.occupation !== '' && profile.occupation !== 'none')
+      case 'height':
+        return !!(profile.height && profile.height > 0)
+      case 'body_type':
+        return !!(profile.body_type && profile.body_type !== '' && profile.body_type !== 'none')
+      case 'marital_status':
+        return !!(profile.marital_status && profile.marital_status !== '' && profile.marital_status !== 'none')
+      case 'personality':
+        return Array.isArray(profile.personality) && profile.personality.length > 0
+      case 'visit_schedule':
+        return !!(profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry')
+      case 'travel_companion':
+        return !!(profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry')
+      default:
+        return false
+    }
   })
 
-  return {
+  // ③ 画像チェック
+  const hasImages = checkImagePresence(profile, imageArray, isNewUser)
+
+  // ④ 最終スコア計算
+  const requiredScore = requiredFields.length === completedRequired.length ? 50 : 0
+  const optionalScore = Math.round((completedOptional.length / optionalFields.length) * 50)
+  const completion = requiredScore + optionalScore
+
+  const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for images
+  const completedFields = completedRequired.length + completedOptional.length + (hasImages ? 1 : 0)
+
+  // ⑤ デバッグ用の詳細ログ出力（統一フォーマット）
+  console.log('🚨 CRITICAL ProfileCompletion Debug - foreign-male')
+  console.log('='.repeat(60))
+  console.log(`必須: ${completedRequired.length}/${requiredFields.length}`)
+  console.log(`任意: ${completedOptional.length}/${optionalFields.length}`)
+  console.log(`completion: ${completion}%`)
+  console.log(`personality: ${JSON.stringify(profile.personality)}`)
+  console.log(`hobbies: ${JSON.stringify(profile.hobbies)}`)
+  console.log(`language_skills: ${JSON.stringify(profile.language_skills)}`)
+  console.log(`planned_prefectures: ${JSON.stringify(profile.planned_prefectures)}`)
+  console.log('='.repeat(60))
+
+  const result: ProfileCompletionResult = {
     completion,
     completedFields,
     totalFields,
@@ -384,6 +419,16 @@ export function calculateUnifiedCompletion(
     optionalTotal: optionalFields.length,
     hasImages
   }
+
+  console.log('🧮 CALCULATE COMPLETION - RESULT:', {
+    userType,
+    completion_percentage: result.completion,
+    required_completed: `${result.requiredCompleted}/${result.requiredTotal}`,
+    optional_completed: `${result.optionalCompleted}/${result.optionalTotal}`,
+    has_images: result.hasImages
+  })
+
+  return result
 }
 
 export function calculateProfileCompletion(
@@ -434,17 +479,8 @@ export function calculateProfileCompletion(
       'planned_prefectures' // 訪問予定都道府県（配列、selectedPlannedPrefecturesベース）
     ]
   } else {
-    // 日本人女性の必須フィールド（7個） - 言語情報は不要
-    requiredFields = [
-      'nickname', 'age', 'birth_date', 'prefecture',
-      'hobbies', 'self_introduction'
-    ]
-
-    // 日本人女性のオプションフィールド（7個）- 言語情報をオプションに追加
-    optionalFields = [
-      'occupation', 'height', 'body_type', 'marital_status',
-      'personality', 'city', 'language_info'
-    ]
+    // 🚨 japanese-female は未実装 - foreign-male専用関数
+    throw new Error('calculateProfileCompletion: japanese-female は未実装です。新しい統一システム(calculateCompletion)をご利用ください。')
   }
 
   // 必須フィールドの完成チェック

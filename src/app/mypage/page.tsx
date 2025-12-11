@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { 
   calculateProfileCompletion as calculateSharedProfileCompletion,
-  normalizeProfileForCompletion,
-  calculateUnifiedCompletion 
+  normalizeProfile,
+  calculateCompletion 
 } from '@/utils/profileCompletion'
 import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
@@ -565,9 +565,9 @@ function MyPageContent() {
       source: 'Supabase profile (唯一の真実)'
     })
 
-    // 🆕 統一された正規化と完成度計算を使用
-    const normalized = normalizeProfileForCompletion(profileData)
-    const result = calculateUnifiedCompletion(normalized, undefined, isForeignMale)
+    // 🧮 統一された正規化と完成度計算を使用
+    const normalized = normalizeProfile(profileData, isForeignMale ? 'foreign-male' : 'japanese-female')
+    const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', undefined, false)
 
     console.log('🏠 MyPage: UNIFIED COMPLETION RESULT:', {
       normalized_personality: normalized.personality,
@@ -575,7 +575,7 @@ function MyPageContent() {
       requiredCompleted: result.requiredCompleted,
       optionalCompleted: result.optionalCompleted,
       personality_completed: Array.isArray(normalized.personality) && normalized.personality.length > 0,
-      source: 'normalizeProfileForCompletion + calculateUnifiedCompletion'
+      source: 'normalizeProfile + calculateCompletion (統一システム)'
     })
 
     // 既存のUI更新ロジックを維持
