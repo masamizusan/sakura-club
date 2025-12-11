@@ -151,7 +151,7 @@ const FIELD_CONFIG = {
     ],
     optional: [
       'occupation', 'height', 'body_type', 'marital_status', 
-      'personality', 'visit_schedule', 'travel_companion'
+      'personality', 'visit_schedule', 'travel_companion', 'profile_images'
     ]
   },
   'japanese-female': {
@@ -390,27 +390,30 @@ export function calculateCompletion(
         return !!(profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'noEntry')
       case 'travel_companion':
         return !!(profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'no-entry' && profile.travel_companion !== 'noEntry')
+      case 'profile_images':
+        return checkImagePresence(profile, imageArray, isNewUser)
       default:
         return false
     }
   })
 
-  // ③ 画像チェック
-  const hasImages = checkImagePresence(profile, imageArray, isNewUser)
-
-  // ④ 最終スコア計算（必須項目部分完了対応）
+  // ③ 最終スコア計算（必須項目部分完了対応）
   const requiredScore = Math.round((completedRequired.length / requiredFields.length) * 50)
   const optionalScore = Math.round((completedOptional.length / optionalFields.length) * 50)
-  const completion = requiredScore + optionalScore
+  const completion = Math.round(requiredScore + optionalScore)
 
-  const totalFields = requiredFields.length + optionalFields.length + 1 // +1 for images
-  const completedFields = completedRequired.length + completedOptional.length + (hasImages ? 1 : 0)
+  // 画像は任意項目 profile_images に統合されたため、別途加算不要
+  const totalFields = requiredFields.length + optionalFields.length
+  const completedFields = completedRequired.length + completedOptional.length
+
+  // 画像存在チェック（compat用、任意項目内に統合済み）
+  const hasImages = checkImagePresence(profile, imageArray, isNewUser)
 
   // ⑤ デバッグ用の詳細ログ出力（統一フォーマット）
-  console.log('🚨 CRITICAL ProfileCompletion Debug - foreign-male')
+  console.log('🚨 NEW UNIFIED SYSTEM ProfileCompletion Debug - foreign-male')
   console.log('='.repeat(60))
-  console.log(`必須: ${completedRequired.length}/${requiredFields.length}`)
-  console.log(`任意: ${completedOptional.length}/${optionalFields.length}`)
+  console.log(`必須: ${completedRequired.length}/${requiredFields.length} = ${requiredScore}%`)
+  console.log(`任意: ${completedOptional.length}/${optionalFields.length} = ${optionalScore}%`)
   console.log(`completion: ${completion}%`)
   console.log(`personality: ${JSON.stringify(profile.personality)}`)
   console.log(`hobbies: ${JSON.stringify(profile.hobbies)}`)
@@ -440,6 +443,10 @@ export function calculateCompletion(
   return result
 }
 
+/**
+ * 🚨 DEPRECATED: 旧ロジック - 新統一システムへのリダイレクト
+ * この関数は廃止予定。新ロジック (buildProfileForCompletion → normalizeProfile → calculateCompletion) を使用してください
+ */
 export function calculateProfileCompletion(
   profileData: any,
   imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
@@ -447,6 +454,15 @@ export function calculateProfileCompletion(
   isNewUser: boolean = false
 ): ProfileCompletionResult {
 
+  console.warn('🚨 DEPRECATED: calculateProfileCompletion は廃止予定です。新統一システム (calculateCompletion) を使用してください')
+  
+  // 新統一システムにリダイレクト
+  const builtProfile = buildProfileForCompletion(profileData, [], [], [])
+  const normalized = normalizeProfile(builtProfile, isForeignMale ? 'foreign-male' : 'japanese-female')
+  return calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', imageArray, isNewUser)
+
+  /*
+  // 🚨 以下のコードは廃止 - 新統一システムに移行済み
   // 🚨 CRITICAL FIX: japanese_level/english_level を完全に除外
   // これらのlegacyフィールドが重複カウントを引き起こすため削除
   const { japanese_level, english_level, ...cleanProfileData } = profileData || {}
@@ -724,6 +740,7 @@ export function calculateProfileCompletion(
     optionalTotal: optionalFields.length,
     hasImages
   }
+  */
 }
 
 /**
