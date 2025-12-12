@@ -306,13 +306,27 @@ export function buildProfileForCompletion(
     dbProfile_language_skills: dbProfile?.language_skills,
     selectedHobbies_state: selectedHobbies,
     selectedPersonality_state: selectedPersonality,
-    languageSkills_state: languageSkills
+    languageSkills_state: languageSkills,
+    languageSkills_state_length: languageSkills.length,
+    languageSkills_has_dummy: languageSkills.some(s => s.language === 'none' && s.level === 'none')
   })
 
-  // 🚨 CRITICAL: state優先のマージルール
+  // 🚨 CRITICAL: state優先のマージルール（言語スキルは厳密チェック）
   const mergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : (dbProfile?.hobbies ?? [])
   const mergedPersonality = selectedPersonality.length > 0 ? selectedPersonality : (dbProfile?.personality ?? [])
-  const mergedLanguageSkills = languageSkills.length > 0 ? languageSkills : (dbProfile?.language_skills ?? [])
+  
+  // 🎯 言語スキルの厳密な有効性チェック（none/noneダミー行を除外）
+  const hasValidLanguageSkillsInState = languageSkills.length > 0 && languageSkills.some(s => 
+    s && 
+    typeof s.language === "string" && 
+    typeof s.level === "string" &&
+    s.language !== "none" && 
+    s.level !== "none" && 
+    s.language.trim() !== "" && 
+    s.level.trim() !== ""
+  )
+  
+  const mergedLanguageSkills = hasValidLanguageSkillsInState ? languageSkills : (dbProfile?.language_skills ?? [])
 
   const builtProfile = {
     ...dbProfile,
@@ -328,9 +342,10 @@ export function buildProfileForCompletion(
     merged_personality_length: mergedPersonality.length,
     merged_language_skills: mergedLanguageSkills,
     merged_language_skills_length: mergedLanguageSkills.length,
+    hasValidLanguageSkillsInState: hasValidLanguageSkillsInState,
     hobbies_source: selectedHobbies.length > 0 ? 'selectedHobbies state' : 'dbProfile fallback',
     personality_source: selectedPersonality.length > 0 ? 'selectedPersonality state' : 'dbProfile fallback',
-    language_skills_source: languageSkills.length > 0 ? 'languageSkills state' : 'dbProfile fallback'
+    language_skills_source: hasValidLanguageSkillsInState ? 'languageSkills state (VALID)' : 'dbProfile fallback (state has dummy/none only)'
   })
 
   return builtProfile
