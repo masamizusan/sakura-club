@@ -250,7 +250,7 @@ export function normalizeProfile(rawProfile: any, userType: UserType): Normalize
     age: rawProfile?.age,
     birth_date: rawProfile?.birth_date || rawProfile?.date_of_birth,
     nationality: rawProfile?.nationality,
-    prefecture: rawProfile?.residence || rawProfile?.prefecture,
+    prefecture: userType === 'foreign-male' ? undefined : (rawProfile?.residence || rawProfile?.prefecture),
     hobbies: normalizedHobbies,
     self_introduction: rawProfile?.bio || rawProfile?.self_introduction,
 
@@ -282,6 +282,8 @@ export function normalizeProfile(rawProfile: any, userType: UserType): Normalize
     normalized_hobbies_length: normalized.hobbies?.length || 0,
     normalized_language_skills_length: normalized.language_skills?.length || 0,
     normalized_planned_prefectures_length: normalized.planned_prefectures?.length || 0,
+    prefecture_value: normalized.prefecture,
+    prefecture_forced_undefined: userType === 'foreign-male' ? 'YES' : 'NO',
     source: 'Unified normalization logic'
   })
 
