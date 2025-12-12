@@ -334,6 +334,14 @@ export function buildProfileForCompletion(
     personality: mergedPersonality,
     language_skills: mergedLanguageSkills
   }
+  
+  // 🚨 CRITICAL: foreign-maleでprefectureが混入していないことを確認
+  console.log('🔧 BUILD PROFILE - PREFECTURE CHECK:', {
+    originalProfilePrefecture: dbProfile?.prefecture,
+    builtProfilePrefecture: builtProfile.prefecture,
+    prefectureFromState: builtProfile.residence || builtProfile.prefecture,
+    willCausePrefectureContamination: !!(builtProfile.prefecture || builtProfile.residence)
+  })
 
   console.log('🔧 BUILD PROFILE FOR COMPLETION - OUTPUT:', {
     merged_hobbies: mergedHobbies,
@@ -366,56 +374,100 @@ export function calculateCompletion(
     throw new Error(`UserType ${userType} is not implemented yet. Only foreign-male is supported.`)
   }
 
+  // 🔍 必須項目の完全ログ出力（prefecture混入チェック）
+  const requiredFields = FIELD_CONFIG[userType].required
+  const optionalFields = FIELD_CONFIG[userType].optional
+  
+  console.log('🔍 REQUIRED FIELDS DEFINITION (foreign-male):', {
+    requiredFields: requiredFields,
+    requiredCount: requiredFields.length,
+    hasPlannedPrefecturesInRequired: requiredFields.includes('planned_prefectures'),
+    shouldBe9Fields: requiredFields.length === 9
+  })
+
   console.log('🧮 CALCULATE COMPLETION - INPUT:', {
     userType,
     personality: profile.personality,
     hobbies: profile.hobbies,
     language_skills: profile.language_skills,
-    planned_prefectures: profile.planned_prefectures
+    planned_prefectures: profile.planned_prefectures,
+    prefecture: profile.prefecture,
+    nickname: profile.nickname,
+    gender: profile.gender,
+    age: profile.age,
+    birth_date: profile.birth_date,
+    nationality: profile.nationality,
+    self_introduction: profile.self_introduction
   })
 
-  // foreign-male の必須項目（9個）
-  const requiredFields = FIELD_CONFIG[userType].required
-  const optionalFields = FIELD_CONFIG[userType].optional
-
-  // ① 必須項目チェック
+  // ① 必須項目チェック（全詳細ログ付き）
   const requiredFieldStatus: Record<string, boolean> = {}
   const completedRequired = requiredFields.filter(field => {
     let isCompleted = false
+    let fieldValue = null
     switch (field) {
       case 'nickname':
+        fieldValue = profile.nickname
         isCompleted = !!(profile.nickname && profile.nickname !== '')
         break
       case 'gender':
+        fieldValue = profile.gender
         isCompleted = !!(profile.gender && profile.gender !== '')
         break
       case 'age':
+        fieldValue = profile.age
         isCompleted = !!(profile.age && profile.age > 0)
         break
       case 'birth_date':
+        fieldValue = profile.birth_date
         isCompleted = !!(profile.birth_date && profile.birth_date !== '')
         break
       case 'nationality':
+        fieldValue = profile.nationality
         isCompleted = !!(profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none')
         break
       case 'hobbies':
+        fieldValue = profile.hobbies
         isCompleted = Array.isArray(profile.hobbies) && profile.hobbies.length > 0
         break
       case 'self_introduction':
+        fieldValue = profile.self_introduction
         isCompleted = !!(profile.self_introduction && profile.self_introduction !== '')
         break
       case 'language_info':
+        fieldValue = profile.language_skills
         // 🚨 CRITICAL: 厳密な hasLanguageInfo を使用
         isCompleted = hasLanguageInfo(profile)
         break
       case 'planned_prefectures':
+        fieldValue = profile.planned_prefectures
         isCompleted = Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
         break
       default:
         isCompleted = false
     }
+    
+    // 🔍 全項目の判定詳細ログ
+    console.log(`🔍 REQUIRED FIELD CHECK [${field}]:`, {
+      value: fieldValue,
+      isCompleted: isCompleted,
+      type: typeof fieldValue,
+      isArray: Array.isArray(fieldValue),
+      length: Array.isArray(fieldValue) ? fieldValue.length : 'N/A'
+    })
+    
     requiredFieldStatus[field] = isCompleted
     return isCompleted
+  })
+  
+  // 🔍 6/9になる問題の核心特定ログ
+  console.log('🚨 REQUIRED COMPLETION SUMMARY:', {
+    completedRequired: completedRequired,
+    completedCount: completedRequired.length,
+    totalRequired: requiredFields.length,
+    percentage: Math.round((completedRequired.length / requiredFields.length) * 50),
+    requiredFieldStatus: requiredFieldStatus,
+    isUnexpected6of9: completedRequired.length === 6 && requiredFields.length === 9
   })
 
   // ② 任意項目チェック

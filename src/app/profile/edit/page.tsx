@@ -1508,7 +1508,7 @@ function ProfileEditContent() {
           age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
           birth_date: urlParams.get('birth_date') || '', // 🔧 URLパラメータから生年月日を設定
           nationality: urlParams.get('nationality') || '',
-          prefecture: urlParams.get('prefecture') || '',
+          prefecture: '', // 🚨 foreign-maleではprefectureは使用しない
           city: '', // 完全に空
           // 外国人男性向け新フィールド
           planned_prefectures: [],
@@ -1955,7 +1955,7 @@ function ProfileEditContent() {
             birth_date: urlParams.get('birth_date') || '',
             age: urlParams.get('age') ? parseInt(urlParams.get('age')!) : 18,
             nationality: urlParams.get('nationality') || '',
-            prefecture: urlParams.get('prefecture') || '',
+            prefecture: '', // 🚨 foreign-maleではprefectureは使用しない
             self_introduction: '',
             hobbies: [],
             personality: [],
@@ -2328,6 +2328,8 @@ function ProfileEditContent() {
           console.log('🔍 URL Parameters from signup:', {
             nationality: urlParams.get('nationality'),
             prefecture: urlParams.get('prefecture'),
+            isForeignMale: isForeignMale,
+            prefectureWillBeIgnored: isForeignMale && urlParams.get('prefecture'),
             all_params: Object.fromEntries(urlParams.entries())
           })
         }
@@ -2731,9 +2733,14 @@ function ProfileEditContent() {
         
         // 国籍はresetDataで設定済み
         
-        const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
-        console.log('Setting prefecture:', prefectureValue)
-        setValue('prefecture', prefectureValue)
+        // 🚨 CRITICAL: foreign-maleではprefectureをセットしない（完成度計算混乱を避ける）
+        if (!isForeignMale) {
+          const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
+          console.log('Setting prefecture:', prefectureValue)
+          setValue('prefecture', prefectureValue)
+        } else {
+          console.log('🚨 foreign-male用途: prefecture設定をスキップ')
+        }
         
         const ageValue = defaults.age || (isNewUser ? 18 : (profile.age || 18))
         console.log('Setting age:', ageValue)
