@@ -6,6 +6,13 @@
 // ✨ 統一された言語スキル型を使用
 import { LanguageSkill, hasValidLanguageSkills } from '@/types/profile'
 
+// 🚨 CRITICAL: self_introduction仮文言定義（未入力扱いにする）
+const DEFAULT_SELF_INTRODUCTIONS = [
+  "後でプロフィールを詳しく書きます。",
+  "後ほど入力します",
+  "後で入力します"
+]
+
 // 🔧 言語スキル抽出関数（フォールバック付き）- 一元化されたロジック
 function extractLanguageSkills(data: any): LanguageSkill[] {
   console.log('🔍 extractLanguageSkills: 入力データ', {
@@ -252,7 +259,23 @@ export function normalizeProfile(rawProfile: any, userType: UserType): Normalize
     nationality: rawProfile?.nationality,
     prefecture: userType === 'foreign-male' ? undefined : (rawProfile?.residence || rawProfile?.prefecture),
     hobbies: normalizedHobbies,
-    self_introduction: rawProfile?.bio || rawProfile?.self_introduction,
+    self_introduction: (() => {
+      const rawSelfIntro = rawProfile?.bio || rawProfile?.self_introduction || ''
+      const isDefaultText = DEFAULT_SELF_INTRODUCTIONS.includes(rawSelfIntro)
+      const finalValue = isDefaultText ? '' : rawSelfIntro
+      
+      // 🔍 仮文言除外ログ
+      console.log('🔍 SELF_INTRODUCTION NORMALIZATION:', {
+        rawBio: rawProfile?.bio,
+        rawSelfIntro: rawProfile?.self_introduction,
+        combinedRaw: rawSelfIntro,
+        isDefaultText: isDefaultText,
+        finalNormalizedValue: finalValue,
+        willBeEmpty: finalValue === ''
+      })
+      
+      return finalValue
+    })(),
 
     // オプションフィールド（専用カラム優先）
     occupation: getFieldFromDedicatedColumnOrCity(rawProfile, 'occupation'),
@@ -432,7 +455,22 @@ export function calculateCompletion(
         break
       case 'self_introduction':
         fieldValue = profile.self_introduction
-        isCompleted = !!(profile.self_introduction && profile.self_introduction !== '')
+        const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(fieldValue || '')
+        // 🚨 CRITICAL: 仮文言は未入力扱い
+        isCompleted = !!(
+          profile.self_introduction && 
+          profile.self_introduction.trim() !== '' &&
+          !isDefaultSelfIntro
+        )
+        
+        // 🔍 self_introduction完成度判定ログ
+        console.log('🔍 SELF_INTRODUCTION COMPLETION CHECK:', {
+          value: fieldValue,
+          isEmpty: !fieldValue || fieldValue.trim() === '',
+          isDefaultText: isDefaultSelfIntro,
+          isCompleted: isCompleted,
+          defaultTexts: DEFAULT_SELF_INTRODUCTIONS
+        })
         break
       case 'language_info':
         fieldValue = profile.language_skills
