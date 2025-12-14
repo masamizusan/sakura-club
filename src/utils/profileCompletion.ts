@@ -127,6 +127,7 @@ export interface ProfileCompletionResult {
   optionalCompleted: number
   optionalTotal: number
   hasImages: boolean
+  requiredFieldStatus?: Record<string, boolean>
 }
 
 // 🚨 CRITICAL: Supabase を personality の唯一の真実とする統一化
@@ -379,7 +380,7 @@ export function buildProfileForCompletion(
     hasValidLanguageSkillsInState: hasValidLanguageSkillsInState,
     hobbies_source: selectedHobbies.length > 0 ? 'selectedHobbies state' : 'dbProfile fallback',
     'hobbies_dbProfile_raw': dbProfile?.hobbies,
-    'hobbies_dbProfile_culture_tags': dbProfile?.culture_tags,
+    'hobbies_dbProfile_culture_tags': (dbProfile as any)?.culture_tags,
     'hobbies_selectedHobbies_state': selectedHobbies,
     personality_source: selectedPersonality.length > 0 ? 'selectedPersonality state' : 'dbProfile fallback',
     language_skills_source: hasValidLanguageSkillsInState ? 'languageSkills state (VALID)' : 'dbProfile fallback (state has dummy/none only)'
@@ -411,8 +412,8 @@ export function calculateCompletion(
       requiredTotal: 5,
       optionalCompleted: 0,
       optionalTotal: 5,
-      requiredFieldStatus: {},
-      hasImages: false
+      hasImages: false,
+      requiredFieldStatus: {}
     }
   }
 
@@ -480,10 +481,10 @@ export function calculateCompletion(
         // 🔍 hobbies確定値優先判定ログ（詳細版）
         console.log('🔍 HOBBIES PERSISTED VALUE CHECK (DETAILED):', {
           'DB_profile.hobbies': profile.hobbies,
-          'DB_profile.culture_tags': profile.culture_tags, 
+          'DB_profile.culture_tags': (profile as any).culture_tags, 
           'persistedProfile.hobbies': persistedProfile?.hobbies,
           'persistedProfile.interests': persistedProfile?.interests,
-          'persistedProfile.culture_tags': persistedProfile?.culture_tags,
+          'persistedProfile.culture_tags': (persistedProfile as any)?.culture_tags,
           'merged_persistedHobbies': persistedHobbies,
           draftHasItems: Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
           persistedHasItems: Array.isArray(persistedHobbies) && persistedHobbies.length > 0,
@@ -684,7 +685,8 @@ export function calculateCompletion(
     requiredTotal: requiredFields.length,
     optionalCompleted: completedOptional.length,
     optionalTotal: optionalFields.length,
-    hasImages
+    hasImages,
+    requiredFieldStatus
   }
 
   console.log('🧮 CALCULATE COMPLETION - RESULT:', {
