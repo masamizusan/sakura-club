@@ -1142,7 +1142,7 @@ function ProfileEditContent() {
     
     // ステップ2: 🧮 統一された正規化と計算
     const normalizedForWatch = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-    const resultForWatch = calculateCompletion(normalizedForWatch, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, false)
+    const resultForWatch = calculateCompletion(normalizedForWatch, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, false, profile)
     
     console.log('⏰ WATCH: STABLE COMPLETION RESULT:', {
       hobbies_used: builtProfile.hobbies,
@@ -1594,7 +1594,7 @@ function ProfileEditContent() {
           
           // 🧮 統一された正規化と計算システム
           const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-          const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isFromSignupTimeout)
+          const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isFromSignupTimeout, profile)
           
           console.log('📝 EDIT SCREEN UNIFIED COMPLETION RESULT:', {
             input_selectedPersonality: selectedPersonality,
@@ -3025,7 +3025,7 @@ function ProfileEditContent() {
         
         // 🧮 統一された正規化と計算システム
         const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-        const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', currentImageArray, isNewUser)
+        const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', currentImageArray, isNewUser, profile)
         
         console.log('🔄 fromMyPage: UNIFIED COMPLETION RESULT:', {
           built_personality: builtProfile.personality,

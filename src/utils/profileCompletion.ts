@@ -390,7 +390,8 @@ export function calculateCompletion(
   profile: NormalizedProfile,
   userType: UserType,
   imageArray?: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
-  isNewUser: boolean = false
+  isNewUser: boolean = false,
+  persistedProfile?: any
 ): ProfileCompletionResult {
   
   if (userType !== 'foreign-male') {
@@ -451,7 +452,21 @@ export function calculateCompletion(
         break
       case 'hobbies':
         fieldValue = profile.hobbies
-        isCompleted = Array.isArray(profile.hobbies) && profile.hobbies.length > 0
+        const persistedHobbies = persistedProfile?.hobbies || persistedProfile?.interests
+        // 🚨 CRITICAL: 確定値優先判定（編集中draft空でもDB値があれば完了扱い）
+        isCompleted = (
+          (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) ||
+          (Array.isArray(persistedHobbies) && persistedHobbies.length > 0)
+        )
+        
+        // 🔍 hobbies確定値優先判定ログ
+        console.log('🔍 HOBBIES PERSISTED VALUE CHECK:', {
+          draftValue: profile.hobbies,
+          persistedValue: persistedHobbies,
+          draftHasItems: Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
+          persistedHasItems: Array.isArray(persistedHobbies) && persistedHobbies.length > 0,
+          finalIsCompleted: isCompleted
+        })
         break
       case 'self_introduction':
         fieldValue = profile.self_introduction
@@ -474,12 +489,38 @@ export function calculateCompletion(
         break
       case 'language_info':
         fieldValue = profile.language_skills
-        // 🚨 CRITICAL: 厳密な hasLanguageInfo を使用
-        isCompleted = hasLanguageInfo(profile)
+        const persistedLanguageSkills = persistedProfile?.language_skills
+        // 🚨 CRITICAL: 確定値優先判定 + 厳密な hasLanguageInfo 使用
+        const draftHasValidLanguage = hasLanguageInfo(profile)
+        const persistedHasValidLanguage = persistedLanguageSkills ? hasLanguageInfo({language_skills: persistedLanguageSkills}) : false
+        isCompleted = draftHasValidLanguage || persistedHasValidLanguage
+        
+        // 🔍 language_info確定値優先判定ログ
+        console.log('🔍 LANGUAGE_INFO PERSISTED VALUE CHECK:', {
+          draftValue: profile.language_skills,
+          persistedValue: persistedLanguageSkills,
+          draftHasValidLanguage: draftHasValidLanguage,
+          persistedHasValidLanguage: persistedHasValidLanguage,
+          finalIsCompleted: isCompleted
+        })
         break
       case 'planned_prefectures':
         fieldValue = profile.planned_prefectures
-        isCompleted = Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0
+        const persistedPlannedPrefectures = persistedProfile?.planned_prefectures
+        // 🚨 CRITICAL: 確定値優先判定（編集中draft空でもDB値があれば完了扱い）
+        isCompleted = (
+          (Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0) ||
+          (Array.isArray(persistedPlannedPrefectures) && persistedPlannedPrefectures.length > 0)
+        )
+        
+        // 🔍 planned_prefectures確定値優先判定ログ
+        console.log('🔍 PLANNED_PREFECTURES PERSISTED VALUE CHECK:', {
+          draftValue: profile.planned_prefectures,
+          persistedValue: persistedPlannedPrefectures,
+          draftHasItems: Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0,
+          persistedHasItems: Array.isArray(persistedPlannedPrefectures) && persistedPlannedPrefectures.length > 0,
+          finalIsCompleted: isCompleted
+        })
         break
       default:
         isCompleted = false
