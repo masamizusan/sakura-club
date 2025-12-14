@@ -490,18 +490,33 @@ export function calculateCompletion(
       case 'language_info':
         fieldValue = profile.language_skills
         const persistedLanguageSkills = persistedProfile?.language_skills
-        // 🚨 CRITICAL: 確定値優先判定 + 厳密な hasLanguageInfo 使用
+        
+        // 🚨 CRITICAL: 寛容判定で既存必須項目を保護
         const draftHasValidLanguage = hasLanguageInfo(profile)
         const persistedHasValidLanguage = persistedLanguageSkills ? hasLanguageInfo({language_skills: persistedLanguageSkills}) : false
+        
+        // 🎯 特別ロジック: 言語選択中（level未選択）でも他必須項目を減算しない
+        const hasLanguageSelected = Array.isArray(profile.language_skills) && 
+          profile.language_skills.length > 0 &&
+          profile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+          
+        const hasPersistedLanguageSelected = Array.isArray(persistedLanguageSkills) &&
+          persistedLanguageSkills.length > 0 &&
+          persistedLanguageSkills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+        
+        // 🎯 厳密判定: 完全な言語+レベルのみ真の完了
         isCompleted = draftHasValidLanguage || persistedHasValidLanguage
         
-        // 🔍 language_info確定値優先判定ログ
-        console.log('🔍 LANGUAGE_INFO PERSISTED VALUE CHECK:', {
+        // 🔍 language_info保護的判定ログ
+        console.log('🔍 LANGUAGE_INFO PROTECTIVE CHECK:', {
           draftValue: profile.language_skills,
           persistedValue: persistedLanguageSkills,
           draftHasValidLanguage: draftHasValidLanguage,
           persistedHasValidLanguage: persistedHasValidLanguage,
-          finalIsCompleted: isCompleted
+          hasLanguageSelected: hasLanguageSelected,
+          hasPersistedLanguageSelected: hasPersistedLanguageSelected,
+          finalIsCompleted: isCompleted,
+          protectionActive: !draftHasValidLanguage && !persistedHasValidLanguage && (hasLanguageSelected || hasPersistedLanguageSelected)
         })
         break
       case 'planned_prefectures':
@@ -539,14 +554,44 @@ export function calculateCompletion(
     return isCompleted
   })
   
+  // 🎯 CRITICAL: 言語入力時の完成度低下防止ロジック
+  let stabilizedCompletedCount = completedRequired.length
+  
+  // 言語選択中（level未完了）で他必須項目が影響を受ける場合の保護
+  const languageInfoCompleted = requiredFieldStatus['language_info']
+  const hasLanguageSelected = Array.isArray(profile.language_skills) && 
+    profile.language_skills.length > 0 &&
+    profile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+  const hasPersistedLanguageSelected = Array.isArray(persistedProfile?.language_skills) &&
+    persistedProfile.language_skills.length > 0 &&
+    persistedProfile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+    
+  const languageInProgress = !languageInfoCompleted && (hasLanguageSelected || hasPersistedLanguageSelected)
+  
+  if (languageInProgress) {
+    // 🛡️ 言語選択中は必須項目数を保護（他項目の達成状態は維持）
+    const nonLanguageCompleted = completedRequired.filter(field => field !== 'language_info')
+    stabilizedCompletedCount = nonLanguageCompleted.length
+    
+    console.log('🛡️ LANGUAGE INPUT PROTECTION ACTIVE:', {
+      originalCompletedCount: completedRequired.length,
+      protectedCompletedCount: stabilizedCompletedCount,
+      languageInProgress: languageInProgress,
+      hasLanguageSelected: hasLanguageSelected,
+      hasPersistedLanguageSelected: hasPersistedLanguageSelected
+    })
+  }
+
   // 🔍 6/9になる問題の核心特定ログ
   console.log('🚨 REQUIRED COMPLETION SUMMARY:', {
     completedRequired: completedRequired,
-    completedCount: completedRequired.length,
+    originalCompletedCount: completedRequired.length,
+    stabilizedCompletedCount: stabilizedCompletedCount,
     totalRequired: requiredFields.length,
-    percentage: Math.round((completedRequired.length / requiredFields.length) * 50),
+    percentage: Math.round((stabilizedCompletedCount / requiredFields.length) * 50),
     requiredFieldStatus: requiredFieldStatus,
-    isUnexpected6of9: completedRequired.length === 6 && requiredFields.length === 9
+    languageInProgress: languageInProgress,
+    protectionActive: languageInProgress && stabilizedCompletedCount !== completedRequired.length
   })
 
   // ② 任意項目チェック
@@ -573,14 +618,14 @@ export function calculateCompletion(
     }
   })
 
-  // ③ 最終スコア計算（必須項目部分完了対応）
-  const requiredScore = Math.round((completedRequired.length / requiredFields.length) * 50)
+  // ③ 最終スコア計算（必須項目部分完了対応 + 言語入力時保護）
+  const requiredScore = Math.round((stabilizedCompletedCount / requiredFields.length) * 50)
   const optionalScore = Math.round((completedOptional.length / optionalFields.length) * 50)
   const completion = Math.round(requiredScore + optionalScore)
 
   // 画像は任意項目 profile_images に統合されたため、別途加算不要
   const totalFields = requiredFields.length + optionalFields.length
-  const completedFields = completedRequired.length + completedOptional.length
+  const completedFields = stabilizedCompletedCount + completedOptional.length
 
   // 画像存在チェック（compat用、任意項目内に統合済み）
   const hasImages = checkImagePresence(profile, imageArray, isNewUser)
@@ -588,7 +633,7 @@ export function calculateCompletion(
   // ⑤ デバッグ用の詳細ログ出力（統一フォーマット）
   console.log('🚨 NEW UNIFIED SYSTEM ProfileCompletion Debug - foreign-male')
   console.log('='.repeat(60))
-  console.log(`必須: ${completedRequired.length}/${requiredFields.length} = ${requiredScore}%`)
+  console.log(`必須: ${stabilizedCompletedCount}/${requiredFields.length} = ${requiredScore}% (raw: ${completedRequired.length})`)
   console.log(`任意: ${completedOptional.length}/${optionalFields.length} = ${optionalScore}%`)
   console.log(`completion: ${completion}%`)
   
@@ -605,7 +650,7 @@ export function calculateCompletion(
     completion,
     completedFields,
     totalFields,
-    requiredCompleted: completedRequired.length,
+    requiredCompleted: stabilizedCompletedCount,
     requiredTotal: requiredFields.length,
     optionalCompleted: completedOptional.length,
     optionalTotal: optionalFields.length,
