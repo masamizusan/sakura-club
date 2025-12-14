@@ -228,12 +228,20 @@ export function normalizeProfile(rawProfile: any, userType: UserType): Normalize
   }
 
   // 🚨 hobbies の統一正規化
-  const normalizedHobbies = Array.isArray(rawProfile?.hobbies) 
-    ? rawProfile.hobbies 
-    : (Array.isArray(rawProfile?.interests) ? rawProfile.interests : [])
+  // 🔧 FIX: 空配列=未入力として厳密化（33%問題解決）
+  const normalizedHobbies = (() => {
+    if (Array.isArray(rawProfile?.hobbies) && rawProfile.hobbies.length > 0) {
+      return rawProfile.hobbies
+    } else if (Array.isArray(rawProfile?.interests) && rawProfile.interests.length > 0) {
+      return rawProfile.interests
+    } else {
+      return [] // 明示的に空配列（未入力状態）
+    }
+  })()
 
   // 🚨 planned_prefectures の統一正規化
-  const normalizedPlannedPrefectures = Array.isArray(rawProfile?.planned_prefectures) 
+  // 🔧 FIX: 空配列=未入力として厳密化（consistent with hobbies fix）
+  const normalizedPlannedPrefectures = Array.isArray(rawProfile?.planned_prefectures) && rawProfile.planned_prefectures.length > 0
     ? rawProfile.planned_prefectures 
     : []
 
@@ -477,6 +485,25 @@ export function calculateCompletion(
           (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) ||
           (Array.isArray(persistedHobbies) && persistedHobbies.length > 0)
         )
+        
+        // 🧪 HOBBIES REQUIRED CHECK DEBUG（33%問題解決用）
+        console.log("🧪 HOBBIES REQUIRED CHECK DEBUG", {
+          rawHobbies: profile.hobbies,
+          normalizedHobbies: profile.hobbies,
+          length: profile.hobbies?.length,
+          isArray: Array.isArray(profile.hobbies),
+          isCompleted: isCompleted,
+          persistedHobbies: persistedHobbies,
+          persistedLength: persistedHobbies?.length,
+          'logic_check': {
+            'profile.hobbies_isArray': Array.isArray(profile.hobbies),
+            'profile.hobbies_length': profile.hobbies?.length,
+            'profile.hobbies_length_gt_0': Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
+            'persistedHobbies_isArray': Array.isArray(persistedHobbies),
+            'persistedHobbies_length': persistedHobbies?.length,
+            'persistedHobbies_length_gt_0': Array.isArray(persistedHobbies) && persistedHobbies.length > 0
+          }
+        })
         
         // 🔍 hobbies確定値優先判定ログ（詳細版）
         console.log('🔍 HOBBIES PERSISTED VALUE CHECK (DETAILED):', {
