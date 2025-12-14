@@ -547,6 +547,8 @@ function ProfileEditContent() {
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(0)
   const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
+  // 🔧 FIX: stale state問題解決のため、最新の画像配列をrefで保持
+  const profileImagesRef = useRef<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   const router = useRouter()
   const supabase = createClient()
 
@@ -645,12 +647,23 @@ function ProfileEditContent() {
   }, [])
 
   // 🌟 CRITICAL: 統一された完成度計算・更新ヘルパー（初期化ガード付き）
-  const updateCompletionUnified = useCallback(() => {
+  const updateCompletionUnified = useCallback((source: string = 'unknown', explicitImages?: any[]) => {
     // 初期化完了前は計算しない
     if (!isHydrated) {
-      console.log('🛡️ updateCompletionUnified: 初期化未完了のため計算スキップ')
+      console.log('🛡️ updateCompletionUnified: 初期化未完了のため計算スキップ', { source })
       return
     }
+    
+    // 🔧 FIX: stale state問題解決 - 確実に最新の画像配列を使用
+    const imagesForCalc = explicitImages ?? profileImagesRef.current
+    console.log('🔧 updateCompletionUnified: 画像配列決定', {
+      source,
+      explicitImages_length: explicitImages?.length || 'not provided',
+      profileImages_state_length: profileImages.length,
+      profileImagesRef_length: profileImagesRef.current.length,
+      imagesForCalc_length: imagesForCalc.length,
+      using: explicitImages ? 'explicitImages' : 'profileImagesRef'
+    })
 
     try {
       const currentData = watch()
@@ -669,8 +682,8 @@ function ProfileEditContent() {
         hobbies_length: formValuesForCompletion.hobbies?.length || 0,
         personality_length: formValuesForCompletion.personality?.length || 0,
         language_skills_length: formValuesForCompletion.language_skills?.length || 0,
-        profileImages_length: profileImages.length,
-        profileImages_detail: profileImages.map(img => ({ id: img.id, hasUrl: !!img.url }))
+        imagesForCalc_length: imagesForCalc.length,
+        imagesForCalc_detail: imagesForCalc.map(img => ({ id: img.id, hasUrl: !!img.url }))
       })
 
       const urlParams = new URLSearchParams(window.location.search)
@@ -679,7 +692,7 @@ function ProfileEditContent() {
       const result = calculateCompletionFromForm(
         formValuesForCompletion,
         isForeignMale ? 'foreign-male' : 'japanese-female',
-        profileImages,
+        imagesForCalc,
         isNewUser
       )
 
@@ -706,7 +719,7 @@ function ProfileEditContent() {
       'selectedPersonality.length': selectedPersonality.length,
       'isHydrated': isHydrated
     })
-    updateCompletionUnified()
+    updateCompletionUnified('profileImages-useEffect')
   }, [profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
 
   // 生年月日変更時の年齢自動更新
@@ -718,7 +731,7 @@ function ProfileEditContent() {
       
       // 統一フローで完成度更新
       console.log('📅 生年月日変更: 統一フローで完成度再計算', { birthDate, age })
-      updateCompletionUnified()
+      updateCompletionUnified('birthDateChange')
     }
   }, [calculateAge, setValue, updateCompletionUnified])
 
@@ -747,6 +760,13 @@ function ProfileEditContent() {
     // 写真変更中フラグを設定（デバウンス計算を一時的に無効化）
     setIsImageChanging(true)
     setProfileImages(newImages)
+    
+    // 🔧 FIX: stale state問題解決 - refも同時更新
+    profileImagesRef.current = newImages
+    console.log('🔧 profileImagesRef更新:', { 
+      newImages_length: newImages.length,
+      ref_length: profileImagesRef.current.length 
+    })
     
     // 🔒 セキュリティ強化: ユーザー固有のセッションストレージ保存
     try {
@@ -818,7 +838,7 @@ function ProfileEditContent() {
     }
     // 統一フローで完成度再計算
     console.log('📸 写真変更: 統一フローで完成度再計算実行')
-    updateCompletionUnified()
+    updateCompletionUnified('handleImagesChange', newImages)
     
     // 写真変更完了フラグをリセット
     setTimeout(() => {
@@ -1032,7 +1052,7 @@ function ProfileEditContent() {
           console.log('='.repeat(80))
           
           // 統一フローで完成度更新
-          updateCompletionUnified()
+          updateCompletionUnified('watch-debounce')
         }, 500)
       }
     })
@@ -1061,7 +1081,7 @@ function ProfileEditContent() {
     
     // 統一フローで完成度更新
     console.log('🎯 selectedHobbies変更: 統一フローで完成度再計算')
-    updateCompletionUnified()
+    updateCompletionUnified('selectedHobbies-useEffect')
   }, [selectedHobbies, setValue, updateCompletionUnified])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
@@ -1107,7 +1127,7 @@ function ProfileEditContent() {
     
     // 統一フローで完成度更新
     console.log('🎯 selectedPersonality変更: 統一フローで完成度再計算')
-    updateCompletionUnified()
+    updateCompletionUnified('selectedPersonality-useEffect')
   }, [selectedPersonality, setValue, updateCompletionUnified])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
@@ -2184,6 +2204,8 @@ function ProfileEditContent() {
               
               if (finalImages.length > 0) {
                 setProfileImages(finalImages)
+                profileImagesRef.current = finalImages
+                console.log('🔧 初期化時profileImagesRef更新:', { finalImages_length: finalImages.length })
               }
               
             } catch (error) {
@@ -3509,7 +3531,7 @@ function ProfileEditContent() {
       
       // 統一フローで完成度更新
       console.log('🎯 伝統文化選択: 統一フローで完成度再計算', { newHobbies })
-      updateCompletionUnified()
+      updateCompletionUnified('toggleHobby')
       
       return newHobbies
     })
@@ -3529,7 +3551,7 @@ function ProfileEditContent() {
       
       // 統一フローで完成度更新
       console.log('🎯 性格選択: 統一フローで完成度再計算', { newTraits })
-      updateCompletionUnified()
+      updateCompletionUnified('togglePersonality')
       
       return newTraits
     })
