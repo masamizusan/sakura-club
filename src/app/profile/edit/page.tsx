@@ -1124,16 +1124,9 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
-    const currentData = watch()
-    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    calculateProfileCompletion({
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies,
-      personality: selectedPersonality,
-      planned_prefectures: selectedPlannedPrefectures, // 最新のselectedPlannedPrefecturesを使用
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }, profileImages, isForeignMale, false)
-  }, [selectedPlannedPrefectures, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
+    console.log('🎯 selectedPlannedPrefectures変更: 統一フローで完成度再計算')
+    updateCompletionUnified()
+  }, [selectedPlannedPrefectures, updateCompletionUnified])
 
   // 🗣️ languageSkills変更時の専用完成度再計算とフォーム同期
   useEffect(() => {
@@ -3558,13 +3551,9 @@ function ProfileEditContent() {
         // 新規ユーザー判定
         const urlParams = new URLSearchParams(window.location.search)
         const currentIsNewUser = urlParams.get('from') === 'signup'
-        const result = calculateProfileCompletion({
-          ...currentData,
-          planned_prefectures: newPrefectures
-        }, profileImages, isForeignMale, currentIsNewUser)
-        setProfileCompletion(result.completion)
-        setCompletedItems(result.completedFields)
-        setTotalItems(result.totalFields)
+        // 統一フローで完成度再計算
+        console.log('🎯 togglePrefecture: 統一フローで完成度再計算')
+        updateCompletionUnified()
       }, 100)
       
       return newPrefectures
@@ -3743,13 +3732,8 @@ function ProfileEditContent() {
                         // 自己紹介変更時に完成度を再計算
                         setTimeout(() => {
                           // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const formData = getValues()
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                          setProfileCompletion(result.completion)
-                          setCompletedItems(result.completedFields)
-                          setTotalItems(result.totalFields)
+                          console.log('🎯 自己紹介文変更: 統一フローで完成度再計算')
+                          updateCompletionUnified()
                         }, 100)
                       }
                     })}
@@ -3828,14 +3812,8 @@ function ProfileEditContent() {
                         setValue('nationality', value, { shouldValidate: true })
                         // 国籍変更時に完成度を再計算
                         setTimeout(() => {
-                          const formData = getValues()
-                          // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                          setProfileCompletion(result.completion)
-                          setCompletedItems(result.completedFields)
-                          setTotalItems(result.totalFields)
+                          console.log('🎯 国籍変更: 統一フローで完成度再計算')
+                          updateCompletionUnified()
                         }, 100)
                       }}
                     >
@@ -3913,14 +3891,8 @@ function ProfileEditContent() {
                           setValue('occupation', value)
                           // 職業変更時に完成度を再計算
                           setTimeout(() => {
-                            const formData = getValues()
-                            // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                            setProfileCompletion(result.completion)
-                            setCompletedItems(result.completedFields)
-                            setTotalItems(result.totalFields)
+                            console.log('🎯 職業変更: 統一フローで完成度再計算')
+                            updateCompletionUnified()
                           }, 100)
                         }}
                       >
@@ -3957,14 +3929,8 @@ function ProfileEditContent() {
                           onChange: () => {
                             // 身長変更時に完成度を再計算
                             setTimeout(() => {
-                              const formData = getValues()
-                              // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                              setProfileCompletion(result.completion)
-                              setCompletedItems(result.completedFields)
-                              setTotalItems(result.totalFields)
+                              console.log('🎯 身長変更: 統一フローで完成度再計算')
+                              updateCompletionUnified()
                             }, 100)
                           }
                         })}
@@ -3985,14 +3951,8 @@ function ProfileEditContent() {
                           setValue('body_type', value)
                           // 体型変更時に完成度を再計算
                           setTimeout(() => {
-                            const formData = getValues()
-                            // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                            setProfileCompletion(result.completion)
-                            setCompletedItems(result.completedFields)
-                            setTotalItems(result.totalFields)
+                            console.log('🎯 体型変更: 統一フローで完成度再計算')
+                            updateCompletionUnified()
                           }, 100)
                         }}
                       >
@@ -4019,14 +3979,8 @@ function ProfileEditContent() {
                           setValue('marital_status', value as 'none' | 'single' | 'married')
                           // 婚姻状況変更時に完成度を再計算
                           setTimeout(() => {
-                            const formData = getValues()
-                            // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                            setProfileCompletion(result.completion)
-                            setCompletedItems(result.completedFields)
-                            setTotalItems(result.totalFields)
+                            console.log('🎯 婚姻ステータス変更: 統一フローで完成度再計算')
+                            updateCompletionUnified()
                           }, 100)
                         }}
                       >
@@ -4232,14 +4186,8 @@ function ProfileEditContent() {
                             setValue('visit_schedule', value)
                             // 訪問予定時期変更時に完成度を再計算
                             setTimeout(() => {
-                              const formData = getValues()
-                              // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                              setProfileCompletion(result.completion)
-                              setCompletedItems(result.completedFields)
-                              setTotalItems(result.totalFields)
+                              console.log('🎯 訪問予定時期変更: 統一フローで完成度再計算')
+                              updateCompletionUnified()
                             }, 100)
                           }}
                         >
@@ -4270,14 +4218,8 @@ function ProfileEditContent() {
                             setValue('travel_companion', value)
                             // 同行者変更時に完成度を再計算
                             setTimeout(() => {
-                              const formData = getValues()
-                              // 新規ユーザー判定
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const isNewUserLocal = urlParams.get('from') === 'signup'
-                          const result = calculateProfileCompletion(formData, profileImages, isForeignMale, isNewUserLocal)
-                              setProfileCompletion(result.completion)
-                              setCompletedItems(result.completedFields)
-                              setTotalItems(result.totalFields)
+                              console.log('🎯 同行者変更: 統一フローで完成度再計算')
+                              updateCompletionUnified()
                             }, 100)
                           }}
                         >
