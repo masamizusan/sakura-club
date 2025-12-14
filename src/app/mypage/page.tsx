@@ -404,9 +404,23 @@ function MyPageContent() {
           let extendedCustomCulture: string | null = null
           let regularInterests: string[] = []
           
-          // 🚀 FIXED: personality は完全に任意項目 - 自動抽出は行わない
-          // ユーザーが明示的に選択していない限り空配列を維持
-          // extendedPersonality = [] // 常に空配列（自動補完禁止）
+          // 🔧 FIX: personality_tags優先でpersonalityを復元（94%→100%修正）
+          // (A) personality_tags が配列で1件以上 → それを personality として採用
+          if ((profileData as any).personality_tags && Array.isArray((profileData as any).personality_tags) && (profileData as any).personality_tags.length > 0) {
+            extendedPersonality = (profileData as any).personality_tags
+            console.log('🔧 personality復元: personality_tagsから取得', { 
+              personality_tags: (profileData as any).personality_tags, 
+              extendedPersonality 
+            })
+          } else if (Array.isArray(profileData.interests)) {
+            // (B) personality_tags が空の場合のみ、interests から personality: プレフィックスを抽出
+            profileData.interests.forEach((item: any) => {
+              if (typeof item === 'string' && item.startsWith('personality:')) {
+                extendedPersonality.push(item.replace('personality:', ''))
+              }
+            })
+            console.log('🔧 personality復元: interestsから抽出（フォールバック）', { extendedPersonality })
+          }
           
           // 1. culture_tagsカラムから日本文化データを取得（優先）
           if ((profileData as any).culture_tags && Array.isArray((profileData as any).culture_tags) && (profileData as any).culture_tags.length > 0) {
@@ -465,6 +479,10 @@ function MyPageContent() {
           console.log('  - city:', normalizedProfileData.city)
           console.log('  - interests:', normalizedProfileData.interests)
           console.log('  - personality:', normalizedProfileData.personality)
+          console.log('🔧 PERSONALITY DEBUG:')
+          console.log('    raw personality_tags:', (profileData as any).personality_tags)
+          console.log('    extendedPersonality length:', extendedPersonality.length)
+          console.log('    final personality array:', normalizedProfileData.personality)
           console.log('  - height:', normalizedProfileData.height)
           console.log('  - occupation:', normalizedProfileData.occupation)
           console.log('  - body_type:', normalizedProfileData.body_type)
@@ -571,12 +589,19 @@ function MyPageContent() {
 
     console.log('🏠 MyPage: UNIFIED COMPLETION RESULT:', {
       normalized_personality: normalized.personality,
+      normalized_personality_length: normalized.personality?.length || 0,
       completion_percentage: result.completion,
       requiredCompleted: result.requiredCompleted,
       optionalCompleted: result.optionalCompleted,
       personality_completed: Array.isArray(normalized.personality) && normalized.personality.length > 0,
+      expected_100_percent: result.completion === 100,
       source: 'normalizeProfile + calculateCompletion (統一システム)'
     })
+    
+    console.log('🔧 COMPLETION FIX VERIFICATION:')
+    console.log(`  ❓ Expected: 100% (personality_tags: ["優しい","穏やか","寂しがりや"])`)
+    console.log(`  ✅ Actual: ${result.completion}% (personality: ${JSON.stringify(normalized.personality)})`)
+    console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.optionalCompleted}/${result.optionalTotal} optional fields`))
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
