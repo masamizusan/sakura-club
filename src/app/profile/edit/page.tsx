@@ -17,7 +17,7 @@ import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { 
-  calculateProfileCompletion,
+  // 🚨 DEPRECATED: calculateProfileCompletion - 統一フローに移行済み
   normalizeProfile,
   calculateCompletion,
   buildProfileForCompletion,
@@ -539,6 +539,8 @@ function ProfileEditContent() {
   const [dbProfile, setDbProfile] = useState<any>(null)
   // 🔧 FIX: 初期化中のcompletion計算揺れ防止フラグ
   const initializingRef = useRef(true)
+  // 🌟 CRITICAL: 初期化完了フラグ（reset/setValue/state復元完了後にtrueに）
+  const [isHydrated, setIsHydrated] = useState(false)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -642,24 +644,68 @@ function ProfileEditContent() {
     return age
   }, [])
 
+  // 🌟 CRITICAL: 統一された完成度計算・更新ヘルパー（初期化ガード付き）
+  const updateCompletionUnified = useCallback(() => {
+    // 初期化完了前は計算しない
+    if (!isHydrated) {
+      console.log('🛡️ updateCompletionUnified: 初期化未完了のため計算スキップ')
+      return
+    }
+
+    try {
+      const currentData = watch()
+      const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+      
+      const formValuesForCompletion = {
+        ...currentDataWithoutCustomCulture,
+        hobbies: selectedHobbies,
+        personality: selectedPersonality,
+        language_skills: languageSkills,
+        planned_prefectures: selectedPlannedPrefectures,
+      }
+
+      console.log('🌟 updateCompletionUnified: 統一フロー実行', {
+        isHydrated,
+        hobbies_length: formValuesForCompletion.hobbies?.length || 0,
+        personality_length: formValuesForCompletion.personality?.length || 0,
+        language_skills_length: formValuesForCompletion.language_skills?.length || 0
+      })
+
+      const urlParams = new URLSearchParams(window.location.search)
+      const isNewUser = urlParams.get('from') === 'signup'
+
+      const result = calculateCompletionFromForm(
+        formValuesForCompletion,
+        isForeignMale ? 'foreign-male' : 'japanese-female',
+        profileImages,
+        isNewUser
+      )
+
+      console.log('🌟 updateCompletionUnified: 完了', {
+        completion: result.completion,
+        completedFields: result.completedFields,
+        totalFields: result.totalFields,
+        source: '統一ヘルパー関数'
+      })
+
+      setProfileCompletion(result.completion)
+      setCompletedItems(result.completedFields)
+      setTotalItems(result.totalFields)
+    } catch (error) {
+      console.error('❌ updateCompletionUnified: エラー', error)
+    }
+  }, [isHydrated, watch, selectedHobbies, selectedPersonality, languageSkills, selectedPlannedPrefectures, profileImages, isForeignMale])
+
   // プロフィール画像の変更を監視して完成度を再計算
   useEffect(() => {
-    console.log('🖼️ 画像状態変更検出 - 完成度再計算実行', {
+    console.log('🖼️ 画像状態変更検出 - 統一フローで完成度再計算', {
       'profileImages.length': profileImages.length,
       'selectedHobbies.length': selectedHobbies.length,
-      'selectedPersonality.length': selectedPersonality.length
+      'selectedPersonality.length': selectedPersonality.length,
+      'isHydrated': isHydrated
     })
-    const currentData = watch()
-    const result = calculateProfileCompletion({
-      ...currentData,
-      hobbies: selectedHobbies,
-      personality: selectedPersonality,
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }, profileImages, isForeignMale, false)
-    setProfileCompletion(result.completion)
-    setCompletedItems(result.completedFields)
-    setTotalItems(result.totalFields)
-  }, [profileImages.length, selectedHobbies, selectedPersonality, languageSkills])
+    updateCompletionUnified()
+  }, [profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
@@ -668,24 +714,11 @@ function ProfileEditContent() {
       setValue('age', age)
       setValue('birth_date', birthDate)
       
-      // リアルタイム完成度更新
-      const currentData = watch()
-      // custom_culture は完成度計算から除外（コメント扱い）
-      const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-      const result = calculateProfileCompletion({
-        ...currentDataWithoutCustomCulture,
-        birth_date: birthDate,
-        age: age,
-        hobbies: selectedHobbies, // 状態から直接取得
-        personality: selectedPersonality, // 状態から直接取得
-        language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-        avatar_url: profileImages.length > 0 ? 'has_images' : null
-      }, profileImages, isForeignMale, false)
-      setProfileCompletion(result.completion)
-      setCompletedItems(result.completedFields)
-      setTotalItems(result.totalFields)
+      // 統一フローで完成度更新
+      console.log('📅 生年月日変更: 統一フローで完成度再計算', { birthDate, age })
+      updateCompletionUnified()
     }
-  }, [calculateAge, setValue, watch, profileImages, selectedHobbies, selectedPersonality])
+  }, [calculateAge, setValue, updateCompletionUnified])
 
 
   // 簡素化された国籍設定（他のフィールドと同様にresetで処理）
@@ -781,34 +814,16 @@ function ProfileEditContent() {
         console.error('❌ 写真保存中にエラー:', error)
       }
     }
-    // 写真変更時に完成度を再計算（最新の画像配列を直接渡す）
-    const currentData = watch()
-    // custom_culture は完成度計算から除外（コメント扱い）
-    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-
-    // 新規ユーザー判定（画像変更時）
-    const urlParams = new URLSearchParams(window.location.search)
-    const isFromSignup = urlParams.get('from') === 'signup'
-    const isNewUserForImage = isFromSignup
-
-    const result = calculateProfileCompletion({
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies, // 状態から直接取得
-      personality: selectedPersonality, // 状態から直接取得
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-      // 画像削除時はavatar_urlをnullに設定
-      avatar_url: newImages.length > 0 ? 'has_images' : null
-    }, newImages, isForeignMale, isNewUserForImage)
-    setProfileCompletion(result.completion)
-    setCompletedItems(result.completedFields)
-    setTotalItems(result.totalFields)
+    // 統一フローで完成度再計算
+    console.log('📸 写真変更: 統一フローで完成度再計算実行')
+    updateCompletionUnified()
     
     // 写真変更完了フラグをリセット
     setTimeout(() => {
       setIsImageChanging(false)
       console.log('📸 写真変更完了：デバウンス計算を再有効化')
     }, 100)
-  }, [isForeignMale, profileImages, calculateProfileCompletion])
+  }, [updateCompletionUnified])
 
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
@@ -1014,7 +1029,8 @@ function ProfileEditContent() {
           console.log(`   personality: ${normalizedProfileForWatch.personality ? (Array.isArray(normalizedProfileForWatch.personality) ? `✅ | array has ${normalizedProfileForWatch.personality.length} items` : `✅ | ${normalizedProfileForWatch.personality}`) : '❌ | empty or null'}`)
           console.log('='.repeat(80))
           
-          calculateProfileCompletion(normalizedProfileForWatch, profileImages)
+          // 統一フローで完成度更新
+          updateCompletionUnified()
         }, 500)
       }
     })
@@ -1023,7 +1039,7 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [isForeignMale, profileImages, calculateProfileCompletion])
+  }, [isForeignMale, profileImages, updateCompletionUnified])
 
   // selectedHobbies変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1041,16 +1057,10 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
-    const currentData = watch()
-    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    calculateProfileCompletion({
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies, // 最新のselectedHobbiesを使用
-      personality: selectedPersonality,
-      planned_prefectures: selectedPlannedPrefectures,
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }, profileImages, isForeignMale, false)
-  }, [selectedHobbies, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
+    // 統一フローで完成度更新
+    console.log('🎯 selectedHobbies変更: 統一フローで完成度再計算')
+    updateCompletionUnified()
+  }, [selectedHobbies, setValue, updateCompletionUnified])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1093,8 +1103,10 @@ function ProfileEditContent() {
     console.log(`   personality: ${normalizedProfile.personality ? (Array.isArray(normalizedProfile.personality) ? `✅ | array has ${normalizedProfile.personality.length} items` : `✅ | ${normalizedProfile.personality}`) : '❌ | empty or null'}`)
     console.log('='.repeat(80))
     
-    calculateProfileCompletion(normalizedProfile, profileImages, isForeignMale, false)
-  }, [selectedPersonality, isForeignMale, profileImages, calculateProfileCompletion, languageSkills])
+    // 統一フローで完成度更新
+    console.log('🎯 selectedPersonality変更: 統一フローで完成度再計算')
+    updateCompletionUnified()
+  }, [selectedPersonality, setValue, updateCompletionUnified])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -3136,6 +3148,10 @@ function ProfileEditContent() {
           setProfileCompletion(completionResult.completion)
           setCompletedItems(completionResult.completedFields)
           setTotalItems(completionResult.totalFields)
+          
+          // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
+          console.log('🌟 CRITICAL: 初期化完了 - isHydrated=true設定')
+          setIsHydrated(true)
         })
 
       } catch (error) {
@@ -3493,18 +3509,12 @@ function ProfileEditContent() {
           ? [hobby]
           : [...prev, hobby]
       
-      // リアルタイム完成度更新
-      setTimeout(() => {
-        const currentData = watch()
-        // custom_culture は完成度計算から除外（コメント扱い）
-        const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-        calculateProfileCompletion({
-          ...currentDataWithoutCustomCulture,
-          hobbies: newHobbies,
-          personality: selectedPersonality,
-          avatar_url: profileImages.length > 0 ? 'has_images' : null
-        }, profileImages, isForeignMale)
-      }, 0)
+      // 🌟 CRITICAL: フォームにも確実に反映（setValue統一）
+      setValue('hobbies', newHobbies, { shouldDirty: true, shouldValidate: true })
+      
+      // 統一フローで完成度更新
+      console.log('🎯 伝統文化選択: 統一フローで完成度再計算', { newHobbies })
+      updateCompletionUnified()
       
       return newHobbies
     })
@@ -3519,17 +3529,12 @@ function ProfileEditContent() {
           ? [trait]
           : [...prev, trait]
       
-      // リアルタイム完成度更新
-      setTimeout(() => {
-        const currentData = watch()
-        calculateProfileCompletion({
-          ...currentData,
-          hobbies: selectedHobbies,
-          personality: newTraits,
-          custom_culture: currentData.custom_culture,
-          avatar_url: profileImages.length > 0 ? 'has_images' : null
-        })
-      }, 0)
+      // 🌟 CRITICAL: フォームにも確実に反映（setValue統一）
+      setValue('personality', newTraits, { shouldDirty: true, shouldValidate: true })
+      
+      // 統一フローで完成度更新
+      console.log('🎯 性格選択: 統一フローで完成度再計算', { newTraits })
+      updateCompletionUnified()
       
       return newTraits
     })
