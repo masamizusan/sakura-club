@@ -33,26 +33,10 @@ export const authService = {
       // 0. 既存ユーザーのクリーンアップ（「新しい紙」方式）
       console.log('🧹 新規登録開始 - 既存データクリーンアップ中...')
       
-      // 既存の認証ユーザーがいる場合は削除
-      try {
-        const { data: existingUsers } = await supabase.auth.admin.listUsers()
-        const existingUser = existingUsers.users.find(user => user.email === data.email)
-        
-        if (existingUser) {
-          console.log('🗑️ 既存ユーザー発見 - 削除中:', existingUser.id)
-          
-          // プロフィールデータを先に削除
-          await supabase.from('profiles').delete().eq('id', existingUser.id)
-          
-          // 認証ユーザーを削除
-          await supabase.auth.admin.deleteUser(existingUser.id)
-          
-          console.log('✅ 既存ユーザー完全削除完了')
-        }
-      } catch (cleanupError) {
-        console.log('⚠️ クリーンアップエラー（続行）:', cleanupError)
-        // クリーンアップに失敗しても新規登録は続行
-      }
+      // 🚫 REMOVED: Client-side admin API calls (causes 403 errors)
+      // Admin operations should be done server-side only
+      // クライアントサイドでのadmin API呼び出しを削除（403エラーの原因）
+      console.log('⚠️ Admin cleanup skipped (client-side limitation)')
       
       // 1. Create auth user (完全に新しいユーザー)
       console.log('👤 新しいユーザー作成中...')

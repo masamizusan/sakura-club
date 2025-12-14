@@ -325,6 +325,7 @@ export function buildProfileForCompletion(
 ): any {
   console.log('🔧 BUILD PROFILE FOR COMPLETION - INPUT:', {
     dbProfile_hobbies: dbProfile?.hobbies,
+    dbProfile_culture_tags: dbProfile?.culture_tags,
     dbProfile_personality: dbProfile?.personality,
     dbProfile_language_skills: dbProfile?.language_skills,
     selectedHobbies_state: selectedHobbies,
@@ -335,7 +336,9 @@ export function buildProfileForCompletion(
   })
 
   // 🚨 CRITICAL: state優先のマージルール（言語スキルは厳密チェック）
-  const mergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : (dbProfile?.hobbies ?? [])
+  // 🔧 FIX: culture_tags → hobbies マッピング（DBではculture_tagsに保存されている）
+  const dbHobbies = dbProfile?.hobbies || dbProfile?.culture_tags || []
+  const mergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : dbHobbies
   const mergedPersonality = selectedPersonality.length > 0 ? selectedPersonality : (dbProfile?.personality ?? [])
   
   // 🎯 言語スキルの厳密な有効性チェック（none/noneダミー行を除外）
@@ -395,7 +398,19 @@ export function calculateCompletion(
 ): ProfileCompletionResult {
   
   if (userType !== 'foreign-male') {
-    throw new Error(`UserType ${userType} is not implemented yet. Only foreign-male is supported.`)
+    console.warn(`⚠️ UserType ${userType} is not implemented yet. Returning dummy result.`)
+    // 🛡️ エラーを投げずに、ダミー結果を返してクラッシュを防ぐ
+    return {
+      completion: 0,
+      completedFields: 0,
+      totalFields: 10,
+      requiredCompleted: 0,
+      requiredTotal: 5,
+      optionalCompleted: 0,
+      optionalTotal: 5,
+      requiredFieldStatus: {},
+      hasImages: false
+    }
   }
 
   // 🔍 必須項目の完全ログ出力（prefecture混入チェック）
@@ -583,16 +598,24 @@ export function calculateCompletion(
   }
 
   // 🔍 6/9になる問題の核心特定ログ
+  const trueKeys = Object.entries(requiredFieldStatus)
+    .filter(([_, isCompleted]) => isCompleted === true)
+    .map(([field]) => field)
+  
   console.log('🚨 REQUIRED COMPLETION SUMMARY:', {
     completedRequired: completedRequired,
     originalCompletedCount: completedRequired.length,
     stabilizedCompletedCount: stabilizedCompletedCount,
     totalRequired: requiredFields.length,
     percentage: Math.round((stabilizedCompletedCount / requiredFields.length) * 50),
-    requiredFieldStatus: requiredFieldStatus,
     languageInProgress: languageInProgress,
     protectionActive: languageInProgress && stabilizedCompletedCount !== completedRequired.length
   })
+  
+  // 🔍 6項目目特定：必須項目の詳細状況
+  console.log('✅ REQUIRED TRUE KEYS (完了済み必須項目):', trueKeys)
+  console.table(requiredFieldStatus)
+  console.log('[REQUIRED FIELD STATUS JSON]:', JSON.stringify(requiredFieldStatus, null, 2))
 
   // ② 任意項目チェック
   const completedOptional = optionalFields.filter(field => {

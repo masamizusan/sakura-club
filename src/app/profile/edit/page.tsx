@@ -1606,6 +1606,16 @@ function ProfileEditContent() {
             source: 'normalizeProfileForCompletion + calculateUnifiedCompletion (編集画面版)'
           })
           
+          // 🚨 33%問題調査：完成済み必須項目の詳細
+          if (result.requiredFieldStatus) {
+            console.log('🚨 33% ISSUE DEBUG - COMPLETED REQUIRED FIELDS:', 
+              Object.entries(result.requiredFieldStatus)
+                .filter(([_, completed]) => completed)
+                .map(([field]) => field)
+            )
+            console.log('🚨 33% ISSUE DEBUG - ALL REQUIRED FIELD STATUS:', result.requiredFieldStatus)
+          }
+          
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
           setTotalItems(result.totalFields)
@@ -2414,6 +2424,18 @@ function ProfileEditContent() {
         console.log('  - profile.interests exists:', !!profile.interests)
         console.log('  - profile.name exists:', !!profile.name)
         console.log('  - FINAL isNewUser result:', isNewUser)
+        
+        // 🚨 33%問題調査：初期データ詳細ログ
+        console.log('🔍 INITIAL DATA FOR 33% ISSUE DEBUG:')
+        console.log('  - nickname:', profile.name || profile.first_name || '')
+        console.log('  - gender:', profile.gender || 'male')
+        console.log('  - nationality:', profile.nationality)
+        console.log('  - age:', profile.age)
+        console.log('  - birth_date:', profile.birth_date || profile.date_of_birth)
+        console.log('  - planned_prefectures:', profile.planned_prefectures)
+        console.log('  - hobbies/culture_tags:', profile.hobbies || profile.culture_tags)
+        console.log('  - personality:', profile.personality || profile.personality_tags)
+        console.log('  - language_skills:', profile.language_skills)
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
         // このブロックは現在無効化されています
