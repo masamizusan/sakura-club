@@ -1152,8 +1152,34 @@ function ProfileEditContent() {
       dbProfile_available: !!dbProfile
     })
     
+    // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（watch計算でも33%防止）
+    const rawInterests = Array.isArray(dbProfile?.interests) 
+      ? dbProfile.interests 
+      : Array.isArray(dbProfile?.hobbies)
+        ? dbProfile.hobbies
+        : [];
+
+    // "その他" 単体は未入力扱い（watch計算時も33%の根本原因を除去）
+    const cleanedInterests = 
+      rawInterests.length === 1 && rawInterests[0] === "その他"
+        ? []
+        : rawInterests;
+
+    console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
+      rawInterests,
+      cleanedInterests,
+      source: 'watch計算時'
+    });
+
+    // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
+    const cleanedDbProfile = {
+      ...dbProfile,
+      interests: cleanedInterests,
+      hobbies: cleanedInterests, // 両方のフィールドを掃除
+    };
+
     // ステップ1: DBプロフィールとstate値を適切にマージ
-    const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+    const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
     
     // 他のフィールドはwatch()値で上書き（テキスト系フィールドのみ）
     const profileForCompletion = {
@@ -1599,7 +1625,33 @@ function ProfileEditContent() {
           // dbProfileが利用可能な場合はbuildProfileForCompletion使用
           let profileForCompletion
           if (dbProfile) {
-            const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+            // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（edit画面でも33%防止）
+            const rawInterests = Array.isArray(dbProfile?.interests) 
+              ? dbProfile.interests 
+              : Array.isArray(dbProfile?.hobbies)
+                ? dbProfile.hobbies
+                : [];
+
+            // "その他" 単体は未入力扱い（edit画面計算時も33%の根本原因を除去）
+            const cleanedInterests = 
+              rawInterests.length === 1 && rawInterests[0] === "その他"
+                ? []
+                : rawInterests;
+
+            console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
+              rawInterests,
+              cleanedInterests,
+              source: 'edit画面計算時'
+            });
+
+            // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
+            const cleanedDbProfile = {
+              ...dbProfile,
+              interests: cleanedInterests,
+              hobbies: cleanedInterests, // 両方のフィールドを掃除
+            };
+
+            const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
             profileForCompletion = {
               ...builtProfile,
               ...actualFormValues,
@@ -3063,8 +3115,34 @@ function ProfileEditContent() {
           source: 'fromMyPage初期化時'
         })
 
+        // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（33%問題の根本解決）
+        const rawInterests = Array.isArray(profile?.interests) 
+          ? profile.interests 
+          : Array.isArray(profile?.hobbies)
+            ? profile.hobbies
+            : [];
+
+        // "その他" 単体は未入力扱い（33%の根本原因を除去）
+        const cleanedInterests = 
+          rawInterests.length === 1 && rawInterests[0] === "その他"
+            ? []
+            : rawInterests;
+
+        console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
+          rawInterests,
+          cleanedInterests,
+          source: 'fromMyPage初期化時'
+        });
+
+        // buildProfileForCompletion に渡すprofileから「その他」単体を除去
+        const cleanedProfile = {
+          ...profile,
+          interests: cleanedInterests,
+          hobbies: cleanedInterests, // 両方のフィールドを掃除
+        };
+
         // buildProfileForCompletion でDBとstateをマージ
-        const builtProfile = buildProfileForCompletion(profile, selectedHobbies, selectedPersonality, languageSkills)
+        const builtProfile = buildProfileForCompletion(cleanedProfile, selectedHobbies, selectedPersonality, languageSkills)
 
         const profileForCompletion = {
           ...profileDataWithSignup,
@@ -3101,7 +3179,33 @@ function ProfileEditContent() {
           const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
           
           if (dbProfile) {
-            const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+            // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（初期化完了後でも33%防止）
+            const rawInterests = Array.isArray(dbProfile?.interests) 
+              ? dbProfile.interests 
+              : Array.isArray(dbProfile?.hobbies)
+                ? dbProfile.hobbies
+                : [];
+
+            // "その他" 単体は未入力扱い（初期化完了後計算時も33%の根本原因を除去）
+            const cleanedInterests = 
+              rawInterests.length === 1 && rawInterests[0] === "その他"
+                ? []
+                : rawInterests;
+
+            console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
+              rawInterests,
+              cleanedInterests,
+              source: '初期化完了後一回限り計算時'
+            });
+
+            // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
+            const cleanedDbProfile = {
+              ...dbProfile,
+              interests: cleanedInterests,
+              hobbies: cleanedInterests, // 両方のフィールドを掃除
+            };
+
+            const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
             const profileForCompletion = {
               ...builtProfile,
               ...currentDataWithoutCustomCulture,
