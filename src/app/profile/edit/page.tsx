@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -533,6 +533,8 @@ function ProfileEditContent() {
   const [selectedPlannedPrefectures, setSelectedPlannedPrefectures] = useState<string[]>([])
   // 🚨 CRITICAL: DBプロフィールの保持（buildProfileForCompletion用）
   const [dbProfile, setDbProfile] = useState<any>(null)
+  // 🔧 FIX: 初期化中のcompletion計算揺れ防止フラグ
+  const initializingRef = useRef(true)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -1023,6 +1025,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
     
+    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
+    if (initializingRef.current) {
+      console.log('🔍 HOBBIES: Skipping completion calculation during initialization')
+      return
+    }
+    
     // 🔧 フォームフィールドへの同期を追加
     setValue('hobbies', selectedHobbies, { 
       shouldDirty: true, 
@@ -1043,6 +1051,12 @@ function ProfileEditContent() {
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
     console.log('🔍 selectedPersonality changed:', selectedPersonality)
+    
+    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
+    if (initializingRef.current) {
+      console.log('🔍 PERSONALITY: Skipping completion calculation during initialization')
+      return
+    }
     
     // 🔧 フォームフィールドへの同期を追加
     setValue('personality', selectedPersonality, { 
@@ -1082,6 +1096,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🔍 selectedPlannedPrefectures changed:', selectedPlannedPrefectures)
     
+    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
+    if (initializingRef.current) {
+      console.log('🔍 PLANNED_PREFECTURES: Skipping completion calculation during initialization')
+      return
+    }
+    
     // 🔧 フォームフィールドへの同期を追加
     setValue('planned_prefectures', selectedPlannedPrefectures, { 
       shouldDirty: true, 
@@ -1102,6 +1122,12 @@ function ProfileEditContent() {
   // 🗣️ languageSkills変更時の専用完成度再計算とフォーム同期
   useEffect(() => {
     console.log('🗣️ languageSkills changed:', languageSkills)
+    
+    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
+    if (initializingRef.current) {
+      console.log('⏰ WATCH: Skipping completion calculation during initialization')
+      return
+    }
     
     // フォームのlanguage_skillsフィールドに同期
     setValue('language_skills', languageSkills, { 
@@ -3064,6 +3090,42 @@ function ProfileEditContent() {
         // 🗑️ REMOVED: fromMyPage専用completion再計算を削除
         // メインのwatch subscriptionとuseEffectロジックに統一
         console.log('✅ Profile initialization completed - completion calculation handled by main logic')
+        
+        // 🔧 FIX: 初期化完了後に一度だけcompletion計算を実行（33%問題解決）
+        queueMicrotask(() => {
+          console.log('🔧 INITIALIZATION: Enabling watch-based completion calculation')
+          initializingRef.current = false
+          
+          // 初期化完了直後に一度だけ正確なcompletion計算
+          const currentData = watch()
+          const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+          
+          if (dbProfile) {
+            const builtProfile = buildProfileForCompletion(dbProfile, selectedHobbies, selectedPersonality, languageSkills)
+            const profileForCompletion = {
+              ...builtProfile,
+              ...currentDataWithoutCustomCulture,
+              hobbies: builtProfile.hobbies,
+              personality: builtProfile.personality,
+              language_skills: builtProfile.language_skills,
+              planned_prefectures: selectedPlannedPrefectures,
+            }
+            
+            const normalizedForInitial = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
+            const resultForInitial = calculateCompletion(normalizedForInitial, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isNewUser, dbProfile)
+            
+            console.log('🔧 INITIAL: One-time completion calculation after initialization:', {
+              completion_percentage: resultForInitial.completion,
+              required_completed: resultForInitial.requiredCompleted,
+              required_total: resultForInitial.requiredTotal,
+              source: 'Post-initialization single calculation'
+            })
+            
+            setProfileCompletion(resultForInitial.completion)
+            setCompletedItems(resultForInitial.completedFields)
+            setTotalItems(resultForInitial.totalFields)
+          }
+        })
 
       } catch (error) {
         console.error('Error loading user data:', error)

@@ -347,7 +347,16 @@ export function buildProfileForCompletion(
   // 🚨 CRITICAL: state優先のマージルール（言語スキルは厳密チェック）
   // 🔧 FIX: culture_tags → hobbies マッピング（DBではculture_tagsに保存されている）
   const dbHobbies = dbProfile?.hobbies || dbProfile?.culture_tags || []
-  const mergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : dbHobbies
+  const rawMergedHobbies = selectedHobbies.length > 0 ? selectedHobbies : dbHobbies
+  
+  // 🔧 FIX: 「その他」単体を未入力扱い（33%問題の根本対策）
+  const cleanedHobbies = Array.isArray(rawMergedHobbies) && 
+    rawMergedHobbies.length === 1 && 
+    rawMergedHobbies[0] === "その他"
+    ? [] // 「その他」単体は未入力扱い
+    : rawMergedHobbies
+  
+  const mergedHobbies = cleanedHobbies
   const mergedPersonality = selectedPersonality.length > 0 ? selectedPersonality : (dbProfile?.personality ?? [])
   
   // 🎯 言語スキルの厳密な有効性チェック（none/noneダミー行を除外）
@@ -381,6 +390,9 @@ export function buildProfileForCompletion(
   console.log('🔧 BUILD PROFILE FOR COMPLETION - OUTPUT:', {
     merged_hobbies: mergedHobbies,
     merged_hobbies_length: mergedHobbies.length,
+    '33%_fix_applied': rawMergedHobbies.length === 1 && rawMergedHobbies[0] === "その他" ? 'YES (その他→[])' : 'NO',
+    'hobbies_raw_before_clean': rawMergedHobbies,
+    'hobbies_cleaned_after': mergedHobbies,
     merged_personality: mergedPersonality,  
     merged_personality_length: mergedPersonality.length,
     merged_language_skills: mergedLanguageSkills,
