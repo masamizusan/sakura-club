@@ -567,7 +567,7 @@ function MyPageContent() {
 
     // 🧮 統一された正規化と完成度計算を使用
     const normalized = normalizeProfile(profileData, isForeignMale ? 'foreign-male' : 'japanese-female')
-    const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', undefined, false, profile)
+    const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', undefined, false, profileData)
 
     console.log('🏠 MyPage: UNIFIED COMPLETION RESULT:', {
       normalized_personality: normalized.personality,

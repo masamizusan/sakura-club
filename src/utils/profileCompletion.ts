@@ -498,11 +498,11 @@ export function calculateCompletion(
         // 🎯 特別ロジック: 言語選択中（level未選択）でも他必須項目を減算しない
         const hasLanguageSelected = Array.isArray(profile.language_skills) && 
           profile.language_skills.length > 0 &&
-          profile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+          profile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
           
         const hasPersistedLanguageSelected = Array.isArray(persistedLanguageSkills) &&
           persistedLanguageSkills.length > 0 &&
-          persistedLanguageSkills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+          persistedLanguageSkills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
         
         // 🎯 厳密判定: 完全な言語+レベルのみ真の完了
         isCompleted = draftHasValidLanguage || persistedHasValidLanguage
@@ -561,10 +561,10 @@ export function calculateCompletion(
   const languageInfoCompleted = requiredFieldStatus['language_info']
   const hasLanguageSelected = Array.isArray(profile.language_skills) && 
     profile.language_skills.length > 0 &&
-    profile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+    profile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
   const hasPersistedLanguageSelected = Array.isArray(persistedProfile?.language_skills) &&
     persistedProfile.language_skills.length > 0 &&
-    persistedProfile.language_skills.some(s => s && s.language && s.language !== 'none' && s.language.trim() !== '')
+    persistedProfile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
     
   const languageInProgress = !languageInfoCompleted && (hasLanguageSelected || hasPersistedLanguageSelected)
   
