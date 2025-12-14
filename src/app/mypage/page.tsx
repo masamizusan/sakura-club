@@ -601,7 +601,7 @@ function MyPageContent() {
     console.log('🔧 COMPLETION FIX VERIFICATION:')
     console.log(`  ❓ Expected: 100% (personality_tags: ["優しい","穏やか","寂しがりや"])`)
     console.log(`  ✅ Actual: ${result.completion}% (personality: ${JSON.stringify(normalized.personality)})`)
-    console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.optionalCompleted}/${result.optionalTotal} optional fields`))
+    console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.optionalCompleted}/${result.optionalTotal} optional fields`)
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)
