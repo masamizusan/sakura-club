@@ -1120,3 +1120,137 @@ function checkImagePresence(
   // CLAUDE.mdの完璧な実装：4つのフォールバック方法
   return result
 }
+
+// ========================================
+// 🌟 SINGLE SOURCE OF TRUTH ARCHITECTURE
+// ========================================
+
+/**
+ * 🎯 CRITICAL: フォーム値のみを入力とする完成度計算用オブジェクト作成
+ * DB値は一切混ぜず、フォーム現在値だけを完成度計算の入力とする
+ */
+export function buildCompletionInputFromForm(formValues: any) {
+  console.log('🌟 buildCompletionInputFromForm: フォーム値のみで入力オブジェクト作成', {
+    nickname: formValues.nickname,
+    hobbies_length: Array.isArray(formValues.hobbies) ? formValues.hobbies.length : 0,
+    personality_length: Array.isArray(formValues.personality) ? formValues.personality.length : 0,
+    language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0
+  })
+
+  return {
+    // 必須項目（基本情報）
+    nickname: formValues.nickname,
+    gender: formValues.gender,
+    age: formValues.age,
+    birth_date: formValues.birth_date,
+    nationality: formValues.nationality,
+    bio: formValues.bio,
+    self_introduction: formValues.self_introduction,
+
+    // 配列項目（空配列を明示的に設定）
+    hobbies: Array.isArray(formValues.hobbies) ? formValues.hobbies : [],
+    personality: Array.isArray(formValues.personality) ? formValues.personality : [],
+    language_skills: Array.isArray(formValues.language_skills) ? formValues.language_skills : [],
+    planned_prefectures: Array.isArray(formValues.planned_prefectures) 
+      ? formValues.planned_prefectures 
+      : [],
+
+    // オプション項目
+    occupation: formValues.occupation,
+    height: formValues.height,
+    body_type: formValues.body_type,
+    marital_status: formValues.marital_status,
+    city: formValues.city,
+    residence: formValues.residence,
+    
+    // 外国人男性専用項目
+    visit_schedule: formValues.visit_schedule,
+    travel_companion: formValues.travel_companion,
+    planned_stations: Array.isArray(formValues.planned_stations) 
+      ? formValues.planned_stations 
+      : [],
+
+    // レガシー言語項目（フォールバック）
+    japanese_level: formValues.japanese_level,
+    english_level: formValues.english_level,
+
+    // カスタム文化入力
+    custom_culture: formValues.custom_culture ?? "",
+
+    // 画像は別ルートで渡すため、ここには含めない
+  }
+}
+
+/**
+ * 🛡️ CRITICAL: 完成度計算用入力の安全装置（単一防波堤）
+ * 「その他」単体などの誤判定を一箇所で防ぐ
+ */
+export function sanitizeForCompletion(input: any) {
+  console.log('🛡️ sanitizeForCompletion: 入力安全装置適用前', {
+    hobbies: input.hobbies,
+    personality: input.personality
+  })
+
+  const sanitized = structuredClone(input)
+
+  // 「その他」単体は未入力扱い（33%問題の根本対策）
+  if (
+    Array.isArray(sanitized.hobbies) &&
+    sanitized.hobbies.length === 1 &&
+    sanitized.hobbies[0] === "その他"
+  ) {
+    console.log('🛡️ sanitizeForCompletion: 「その他」単体を空配列に変換')
+    sanitized.hobbies = []
+  }
+
+  // 将来的に他の項目でも同様の処理が必要なら、ここに追加
+
+  console.log('🛡️ sanitizeForCompletion: 安全装置適用後', {
+    hobbies: sanitized.hobbies,
+    personality: sanitized.personality
+  })
+
+  return sanitized
+}
+
+/**
+ * 🌟 CRITICAL: 統一された完成度計算フロー
+ * すべての計算（初期表示・watch・再計算）でこれを使用
+ */
+export function calculateCompletionFromForm(
+  formValues: any, 
+  userType: 'foreign-male' | 'japanese-female',
+  imageArray: any[] = [],
+  isNewUser: boolean = false
+) {
+  console.log('🌟 calculateCompletionFromForm: 統一フロー開始', {
+    userType,
+    isNewUser,
+    imageArray_length: imageArray.length
+  })
+
+  // ステップ1: フォーム値のみから入力オブジェクトを作成
+  const rawInput = buildCompletionInputFromForm(formValues)
+
+  // ステップ2: 安全装置適用
+  const cleanInput = sanitizeForCompletion(rawInput)
+
+  // ステップ3: 既存の正規化・計算システムを使用
+  const normalizedProfile = normalizeProfile(cleanInput, userType)
+  const result = calculateCompletion(
+    normalizedProfile, 
+    userType, 
+    imageArray, 
+    isNewUser,
+    null // persistedProfile は使用しない（Single Source of Truth）
+  )
+
+  console.log('🌟 calculateCompletionFromForm: 統一フロー完了', {
+    completion: result.completion,
+    completedFields: result.completedFields,
+    totalFields: result.totalFields,
+    source: 'フォーム値のみ（Single Source of Truth）'
+  })
+
+  return result
+}

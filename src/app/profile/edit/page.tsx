@@ -20,7 +20,11 @@ import {
   calculateProfileCompletion,
   normalizeProfile,
   calculateCompletion,
-  buildProfileForCompletion
+  buildProfileForCompletion,
+  // 🌟 SINGLE SOURCE OF TRUTH ARCHITECTURE
+  buildCompletionInputFromForm,
+  sanitizeForCompletion,
+  calculateCompletionFromForm
 } from '@/utils/profileCompletion'
 
 // 🧮 統一されたプロフィール完成度計算システム使用
@@ -1145,65 +1149,39 @@ function ProfileEditContent() {
       return
     }
     
-    console.log('⏰ WATCH: Real-time completion calculation with buildProfileForCompletion:', {
+    console.log('⏰ WATCH: 🌟 統一フロー - フォーム値のみで完成度計算:', {
       selectedHobbies_length: selectedHobbies.length,
       selectedPersonality_length: selectedPersonality.length,
       languageSkills_length: languageSkills.length,
-      dbProfile_available: !!dbProfile
+      current_data_available: !!currentDataWithoutCustomCulture
     })
     
-    // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（watch計算でも33%防止）
-    const rawInterests = Array.isArray(dbProfile?.interests) 
-      ? dbProfile.interests 
-      : Array.isArray(dbProfile?.hobbies)
-        ? dbProfile.hobbies
-        : [];
-
-    // "その他" 単体は未入力扱い（watch計算時も33%の根本原因を除去）
-    const cleanedInterests = 
-      rawInterests.length === 1 && rawInterests[0] === "その他"
-        ? []
-        : rawInterests;
-
-    console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
-      rawInterests,
-      cleanedInterests,
-      source: 'watch計算時'
-    });
-
-    // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
-    const cleanedDbProfile = {
-      ...dbProfile,
-      interests: cleanedInterests,
-      hobbies: cleanedInterests, // 両方のフィールドを掃除
-    };
-
-    // ステップ1: DBプロフィールとstate値を適切にマージ
-    const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
-    
-    // 他のフィールドはwatch()値で上書き（テキスト系フィールドのみ）
-    const profileForCompletion = {
-      ...builtProfile,
+    // 🌟 SINGLE SOURCE OF TRUTH: フォーム値のみを使用した完成度計算
+    const formValuesForCompletion = {
       ...currentDataWithoutCustomCulture,
-      // 🚨 CRITICAL: hobbies/personality/language_skills はbuildProfileForCompletionの結果を使用
-      hobbies: builtProfile.hobbies,
-      personality: builtProfile.personality,
-      language_skills: builtProfile.language_skills,
+      hobbies: selectedHobbies,
+      personality: selectedPersonality,
+      language_skills: languageSkills,
       planned_prefectures: selectedPlannedPrefectures,
     }
     
-    // ステップ2: 🧮 統一された正規化と計算
-    const normalizedForWatch = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-    const resultForWatch = calculateCompletion(normalizedForWatch, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, false, dbProfile)
+    // 🌟 SINGLE SOURCE OF TRUTH: 統一された完成度計算フロー
+    const resultForWatch = calculateCompletionFromForm(
+      formValuesForCompletion,
+      isForeignMale ? 'foreign-male' : 'japanese-female',
+      profileImages,
+      false // watch計算では新規ユーザーフラグはfalse
+    )
     
-    console.log('⏰ WATCH: STABLE COMPLETION RESULT:', {
-      hobbies_used: builtProfile.hobbies,
-      hobbies_length: builtProfile.hobbies?.length || 0,
-      personality_used: builtProfile.personality,
-      personality_length: builtProfile.personality?.length || 0,
+    console.log('⏰ WATCH: 🌟 統一フロー完了:', {
+      hobbies_from_form: formValuesForCompletion.hobbies,
+      hobbies_length: formValuesForCompletion.hobbies?.length || 0,
+      personality_from_form: formValuesForCompletion.personality,
+      personality_length: formValuesForCompletion.personality?.length || 0,
       completion_percentage: resultForWatch.completion,
       completedFields: resultForWatch.completedFields,
-      totalFields: resultForWatch.totalFields
+      totalFields: resultForWatch.totalFields,
+      source: 'フォーム値のみ（SSOT）'
     })
     
     setProfileCompletion(resultForWatch.completion)
@@ -1622,66 +1600,31 @@ function ProfileEditContent() {
             source: 'buildProfileForCompletion経由の統一データソース'
           })
 
-          // dbProfileが利用可能な場合はbuildProfileForCompletion使用
-          let profileForCompletion
-          if (dbProfile) {
-            // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（edit画面でも33%防止）
-            const rawInterests = Array.isArray(dbProfile?.interests) 
-              ? dbProfile.interests 
-              : Array.isArray(dbProfile?.hobbies)
-                ? dbProfile.hobbies
-                : [];
-
-            // "その他" 単体は未入力扱い（edit画面計算時も33%の根本原因を除去）
-            const cleanedInterests = 
-              rawInterests.length === 1 && rawInterests[0] === "その他"
-                ? []
-                : rawInterests;
-
-            console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
-              rawInterests,
-              cleanedInterests,
-              source: 'edit画面計算時'
-            });
-
-            // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
-            const cleanedDbProfile = {
-              ...dbProfile,
-              interests: cleanedInterests,
-              hobbies: cleanedInterests, // 両方のフィールドを掃除
-            };
-
-            const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
-            profileForCompletion = {
-              ...builtProfile,
-              ...actualFormValues,
-              // 🚨 CRITICAL: hobbies/personality/language_skills はbuildの結果使用
-              hobbies: builtProfile.hobbies,
-              personality: builtProfile.personality,
-              language_skills: builtProfile.language_skills,
-            }
-          } else {
-            // フォールバック: dbProfileなしの場合
-            profileForCompletion = {
-              ...actualFormValues,
-              personality: selectedPersonality,
-              hobbies: selectedHobbies,
-              language_skills: languageSkills
-            }
+          // 🌟 SINGLE SOURCE OF TRUTH: フォーム値のみを使用した完成度計算
+          const formValuesForEditCompletion = {
+            ...actualFormValues,
+            hobbies: selectedHobbies,
+            personality: selectedPersonality,
+            language_skills: languageSkills,
+            planned_prefectures: selectedPlannedPrefectures,
           }
+
+          // 🌟 統一フロー: calculateCompletionFromForm使用
+          const result = calculateCompletionFromForm(
+            formValuesForEditCompletion,
+            isForeignMale ? 'foreign-male' : 'japanese-female',
+            profileImages,
+            isFromSignupTimeout // 新規ユーザーフラグとして使用
+          )
           
-          // 🧮 統一された正規化と計算システム
-          const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-          const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isFromSignupTimeout, dbProfile)
-          
-          console.log('📝 EDIT SCREEN UNIFIED COMPLETION RESULT:', {
-            input_selectedPersonality: selectedPersonality,
-            normalized_personality: normalized.personality,
+          console.log('📝 EDIT SCREEN: 🌟 統一フロー完了:', {
+            input_hobbies: formValuesForEditCompletion.hobbies,
+            input_personality: formValuesForEditCompletion.personality,
             completion_percentage: result.completion,
             requiredCompleted: result.requiredCompleted,
             optionalCompleted: result.optionalCompleted,
-            personality_completed: Array.isArray(normalized.personality) && normalized.personality.length > 0,
-            source: 'normalizeProfileForCompletion + calculateUnifiedCompletion (編集画面版)'
+            totalFields: result.totalFields,
+            source: 'フォーム値のみ（SSOT編集画面版）'
           })
           
           // 🚨 33%問題調査：完成済み必須項目の詳細
@@ -3107,58 +3050,40 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🚨 CRITICAL: fromMyPage でもbuildProfileForCompletion使用（完全統一）
-        console.log('🔄 fromMyPage: buildProfileForCompletion setup:', {
+        console.log('🔄 fromMyPage: 🌟 統一フロー初期化:', {
           profile_personality: profile?.personality,
           selectedPersonality: selectedPersonality,
           selectedHobbies: selectedHobbies,
           languageSkills: languageSkills,
-          source: 'fromMyPage初期化時'
+          source: 'fromMyPage初期化時（SSOT適用）'
         })
 
-        // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（33%問題の根本解決）
-        const rawInterests = Array.isArray(profile?.interests) 
-          ? profile.interests 
-          : Array.isArray(profile?.hobbies)
-            ? profile.hobbies
-            : [];
-
-        // "その他" 単体は未入力扱い（33%の根本原因を除去）
-        const cleanedInterests = 
-          rawInterests.length === 1 && rawInterests[0] === "その他"
-            ? []
-            : rawInterests;
-
-        console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
-          rawInterests,
-          cleanedInterests,
-          source: 'fromMyPage初期化時'
-        });
-
-        // buildProfileForCompletion に渡すprofileから「その他」単体を除去
-        const cleanedProfile = {
-          ...profile,
-          interests: cleanedInterests,
-          hobbies: cleanedInterests, // 両方のフィールドを掃除
-        };
-
-        // buildProfileForCompletion でDBとstateをマージ
-        const builtProfile = buildProfileForCompletion(cleanedProfile, selectedHobbies, selectedPersonality, languageSkills)
-
-        const profileForCompletion = {
+        // 🌟 SINGLE SOURCE OF TRUTH: フォーム初期値のみを完成度計算に使用
+        // DBプロファイルは初期値設定のみに使用し、完成度計算からは除外
+        const formValuesForInitialCompletion = {
           ...profileDataWithSignup,
-          ...builtProfile,  // buildの結果をマージ
+          // state値を優先（フォームの現在状態）
+          hobbies: selectedHobbies,
+          personality: selectedPersonality,
+          language_skills: languageSkills,
+          planned_prefectures: selectedPlannedPrefectures,
         }
+
+        // 🌟 統一フロー: calculateCompletionFromForm使用（33%問題根本解決）
+        const result = calculateCompletionFromForm(
+          formValuesForInitialCompletion,
+          isForeignMale ? 'foreign-male' : 'japanese-female',
+          currentImageArray,
+          isNewUser
+        )
         
-        // 🧮 統一された正規化と計算システム
-        const normalized = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-        const result = calculateCompletion(normalized, isForeignMale ? 'foreign-male' : 'japanese-female', currentImageArray, isNewUser, dbProfile)
-        
-        console.log('🔄 fromMyPage: UNIFIED COMPLETION RESULT:', {
-          built_personality: builtProfile.personality,
-          built_hobbies: builtProfile.hobbies,
-          normalized_personality: normalized.personality,
+        console.log('🔄 fromMyPage: 🌟 統一フロー完了:', {
+          form_hobbies: formValuesForInitialCompletion.hobbies,
+          form_personality: formValuesForInitialCompletion.personality,
           completion_percentage: result.completion,
-          source: 'fromMyPage + buildProfileForCompletion + normalizeProfileForCompletion + calculateUnifiedCompletion'
+          completedFields: result.completedFields,
+          totalFields: result.totalFields,
+          source: 'fromMyPage初期化（SSOT）- 33%問題根本解決'
         })
         
         setProfileCompletion(result.completion)
@@ -3178,57 +3103,39 @@ function ProfileEditContent() {
           const currentData = watch()
           const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
           
-          if (dbProfile) {
-            // 🧼 CRITICAL: buildProfileForCompletion 呼び出し直前で「その他」単体を除去（初期化完了後でも33%防止）
-            const rawInterests = Array.isArray(dbProfile?.interests) 
-              ? dbProfile.interests 
-              : Array.isArray(dbProfile?.hobbies)
-                ? dbProfile.hobbies
-                : [];
-
-            // "その他" 単体は未入力扱い（初期化完了後計算時も33%の根本原因を除去）
-            const cleanedInterests = 
-              rawInterests.length === 1 && rawInterests[0] === "その他"
-                ? []
-                : rawInterests;
-
-            console.log("🧼 CLEAN INTERESTS BEFORE COMPLETION", {
-              rawInterests,
-              cleanedInterests,
-              source: '初期化完了後一回限り計算時'
-            });
-
-            // buildProfileForCompletion に渡すdbProfileから「その他」単体を除去
-            const cleanedDbProfile = {
-              ...dbProfile,
-              interests: cleanedInterests,
-              hobbies: cleanedInterests, // 両方のフィールドを掃除
-            };
-
-            const builtProfile = buildProfileForCompletion(cleanedDbProfile, selectedHobbies, selectedPersonality, languageSkills)
-            const profileForCompletion = {
-              ...builtProfile,
-              ...currentDataWithoutCustomCulture,
-              hobbies: builtProfile.hobbies,
-              personality: builtProfile.personality,
-              language_skills: builtProfile.language_skills,
-              planned_prefectures: selectedPlannedPrefectures,
-            }
-            
-            const normalizedForInitial = normalizeProfile(profileForCompletion, isForeignMale ? 'foreign-male' : 'japanese-female')
-            const resultForInitial = calculateCompletion(normalizedForInitial, isForeignMale ? 'foreign-male' : 'japanese-female', profileImages, isNewUser, dbProfile)
-            
-            console.log('🔧 INITIAL: One-time completion calculation after initialization:', {
-              completion_percentage: resultForInitial.completion,
-              required_completed: resultForInitial.requiredCompleted,
-              required_total: resultForInitial.requiredTotal,
-              source: 'Post-initialization single calculation'
-            })
-            
-            setProfileCompletion(resultForInitial.completion)
-            setCompletedItems(resultForInitial.completedFields)
-            setTotalItems(resultForInitial.totalFields)
+          // 🌟 SINGLE SOURCE OF TRUTH: 初期化完了後もフォーム値のみを使用
+          const formValuesForPostInit = {
+            ...currentDataWithoutCustomCulture,
+            hobbies: selectedHobbies,
+            personality: selectedPersonality,
+            language_skills: languageSkills,
+            planned_prefectures: selectedPlannedPrefectures,
           }
+
+          console.log("🌟 初期化完了後: フォーム値のみで完成度計算", {
+            hobbies: formValuesForPostInit.hobbies,
+            personality: formValuesForPostInit.personality,
+            source: '初期化完了後一回限り計算時（SSOT）'
+          })
+
+          // 🌟 統一フロー: calculateCompletionFromForm使用
+          const completionResult = calculateCompletionFromForm(
+            formValuesForPostInit,
+            isForeignMale ? 'foreign-male' : 'japanese-female',
+            profileImages,
+            false // 初期化完了後なので新規ユーザーフラグはfalse
+          )
+            
+          console.log('🔧 INITIAL: 🌟 統一フロー一回限り計算完了:', {
+            completion_percentage: completionResult.completion,
+            required_completed: completionResult.requiredCompleted,
+            required_total: completionResult.requiredTotal,
+            source: 'Post-initialization single calculation (SSOT)'
+          })
+          
+          setProfileCompletion(completionResult.completion)
+          setCompletedItems(completionResult.completedFields)
+          setTotalItems(completionResult.totalFields)
         })
 
       } catch (error) {
