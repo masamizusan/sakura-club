@@ -378,6 +378,9 @@ export function buildProfileForCompletion(
     merged_language_skills_length: mergedLanguageSkills.length,
     hasValidLanguageSkillsInState: hasValidLanguageSkillsInState,
     hobbies_source: selectedHobbies.length > 0 ? 'selectedHobbies state' : 'dbProfile fallback',
+    'hobbies_dbProfile_raw': dbProfile?.hobbies,
+    'hobbies_dbProfile_culture_tags': dbProfile?.culture_tags,
+    'hobbies_selectedHobbies_state': selectedHobbies,
     personality_source: selectedPersonality.length > 0 ? 'selectedPersonality state' : 'dbProfile fallback',
     language_skills_source: hasValidLanguageSkillsInState ? 'languageSkills state (VALID)' : 'dbProfile fallback (state has dummy/none only)'
   })
@@ -474,10 +477,14 @@ export function calculateCompletion(
           (Array.isArray(persistedHobbies) && persistedHobbies.length > 0)
         )
         
-        // 🔍 hobbies確定値優先判定ログ
-        console.log('🔍 HOBBIES PERSISTED VALUE CHECK:', {
-          draftValue: profile.hobbies,
-          persistedValue: persistedHobbies,
+        // 🔍 hobbies確定値優先判定ログ（詳細版）
+        console.log('🔍 HOBBIES PERSISTED VALUE CHECK (DETAILED):', {
+          'DB_profile.hobbies': profile.hobbies,
+          'DB_profile.culture_tags': profile.culture_tags, 
+          'persistedProfile.hobbies': persistedProfile?.hobbies,
+          'persistedProfile.interests': persistedProfile?.interests,
+          'persistedProfile.culture_tags': persistedProfile?.culture_tags,
+          'merged_persistedHobbies': persistedHobbies,
           draftHasItems: Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
           persistedHasItems: Array.isArray(persistedHobbies) && persistedHobbies.length > 0,
           finalIsCompleted: isCompleted
