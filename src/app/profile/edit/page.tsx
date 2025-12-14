@@ -668,7 +668,9 @@ function ProfileEditContent() {
         isHydrated,
         hobbies_length: formValuesForCompletion.hobbies?.length || 0,
         personality_length: formValuesForCompletion.personality?.length || 0,
-        language_skills_length: formValuesForCompletion.language_skills?.length || 0
+        language_skills_length: formValuesForCompletion.language_skills?.length || 0,
+        profileImages_length: profileImages.length,
+        profileImages_detail: profileImages.map(img => ({ id: img.id, hasUrl: !!img.url }))
       })
 
       const urlParams = new URLSearchParams(window.location.search)

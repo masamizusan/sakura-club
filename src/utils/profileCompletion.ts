@@ -1101,6 +1101,7 @@ function checkImagePresence(
   // デバッグログ
   console.log('🖼️ 画像検出デバッグ:', {
     imageArray: imageArray ? `${imageArray.length} images` : 'undefined',
+    imageArray_items: imageArray ? imageArray.map(img => ({ id: img.id, hasUrl: !!img.url })) : 'N/A',
     hasImagesInArray,
     hasImagesInProfile: isNewUser ? `SKIPPED (new user)` : hasImagesInProfile,
     hasImagesInUser: isNewUser ? `SKIPPED (new user)` : hasImagesInUser,
@@ -1226,7 +1227,8 @@ export function calculateCompletionFromForm(
   console.log('🌟 calculateCompletionFromForm: 統一フロー開始', {
     userType,
     isNewUser,
-    imageArray_length: imageArray.length
+    imageArray_length: imageArray.length,
+    imageArray_detail: imageArray.map(img => ({ id: img.id, hasUrl: !!img.url, isMain: img.isMain }))
   })
 
   // ステップ1: フォーム値のみから入力オブジェクトを作成
