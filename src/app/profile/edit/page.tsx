@@ -541,6 +541,8 @@ function ProfileEditContent() {
   const initializingRef = useRef(true)
   // 🌟 CRITICAL: 初期化完了フラグ（reset/setValue/state復元完了後にtrueに）
   const [isHydrated, setIsHydrated] = useState(false)
+  // 🛡️ CRITICAL: チラつき防止 - 初期化専用フラグ（完成度計算ガード）
+  const [isInitializing, setIsInitializing] = useState(true)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -648,6 +650,12 @@ function ProfileEditContent() {
 
   // 🌟 CRITICAL: 統一された完成度計算・更新ヘルパー（初期化ガード付き）
   const updateCompletionUnified = useCallback((source: string = 'unknown', explicitImages?: any[]) => {
+    // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算を完全にスキップ
+    if (isInitializing) {
+      console.log('🛡️ completion skipped: still initializing', { source, isInitializing })
+      return
+    }
+    
     // 初期化完了前は計算しない
     if (!isHydrated) {
       console.log('🛡️ updateCompletionUnified: 初期化未完了のため計算スキップ', { source })
@@ -709,18 +717,34 @@ function ProfileEditContent() {
     } catch (error) {
       console.error('❌ updateCompletionUnified: エラー', error)
     }
-  }, [isHydrated, watch, selectedHobbies, selectedPersonality, languageSkills, selectedPlannedPrefectures, profileImages, isForeignMale])
+  }, [isInitializing, isHydrated, watch, selectedHobbies, selectedPersonality, languageSkills, selectedPlannedPrefectures, profileImages, isForeignMale])
 
   // プロフィール画像の変更を監視して完成度を再計算
   useEffect(() => {
+    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
+    if (isInitializing) {
+      console.log('🛡️ 画像監視: 初期化中のため計算スキップ', { isInitializing })
+      return
+    }
+    
     console.log('🖼️ 画像状態変更検出 - 統一フローで完成度再計算', {
       'profileImages.length': profileImages.length,
       'selectedHobbies.length': selectedHobbies.length,
       'selectedPersonality.length': selectedPersonality.length,
-      'isHydrated': isHydrated
+      'isHydrated': isHydrated,
+      'isInitializing': isInitializing
     })
     updateCompletionUnified('profileImages-useEffect')
-  }, [profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
+  }, [isInitializing, profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
+
+  // 🛡️ CRITICAL: チラつき防止 - 初期化完了後に1回だけ正規データで完成度計算
+  useEffect(() => {
+    if (!isInitializing) {
+      console.log('🌟 initialization completed')
+      console.log('🌟 completion calculated after initialization')
+      updateCompletionUnified('post-initialization')
+    }
+  }, [isInitializing, updateCompletionUnified])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
@@ -1017,6 +1041,12 @@ function ProfileEditContent() {
         
         // 500ms後に計算実行（デバウンス）
         timeoutId = setTimeout(() => {
+          // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
+          if (isInitializing) {
+            console.log('🛡️ watch debounce: 初期化中のため計算スキップ', { isInitializing })
+            return
+          }
+          
           // 写真変更中は計算をスキップ
           if (isImageChanging) {
             console.log('🚫 写真変更中のためデバウンス計算をスキップ')
@@ -1067,6 +1097,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
     
+    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
+    if (isInitializing) {
+      console.log('🛡️ hobbies監視: 初期化中のため計算スキップ', { isInitializing })
+      return
+    }
+    
     // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
     if (initializingRef.current) {
       console.log('🔍 HOBBIES: Skipping completion calculation during initialization')
@@ -1082,11 +1118,17 @@ function ProfileEditContent() {
     // 統一フローで完成度更新
     console.log('🎯 selectedHobbies変更: 統一フローで完成度再計算')
     updateCompletionUnified('selectedHobbies-useEffect')
-  }, [selectedHobbies, setValue, updateCompletionUnified])
+  }, [isInitializing, selectedHobbies, setValue, updateCompletionUnified])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
     console.log('🔍 selectedPersonality changed:', selectedPersonality)
+    
+    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
+    if (isInitializing) {
+      console.log('🛡️ personality監視: 初期化中のため計算スキップ', { isInitializing })
+      return
+    }
     
     // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
     if (initializingRef.current) {
@@ -1128,7 +1170,7 @@ function ProfileEditContent() {
     // 統一フローで完成度更新
     console.log('🎯 selectedPersonality変更: 統一フローで完成度再計算')
     updateCompletionUnified('selectedPersonality-useEffect')
-  }, [selectedPersonality, setValue, updateCompletionUnified])
+  }, [isInitializing, selectedPersonality, setValue, updateCompletionUnified])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -3165,6 +3207,10 @@ function ProfileEditContent() {
           setProfileCompletion(completionResult.completion)
           setCompletedItems(completionResult.completedFields)
           setTotalItems(completionResult.totalFields)
+          
+          // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
+          console.log('🌟 CRITICAL: 初期化完了 - チラつき防止フラグ解除')
+          setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
           console.log('🌟 CRITICAL: 初期化完了 - isHydrated=true設定')
