@@ -2847,6 +2847,11 @@ function ProfileEditContent() {
         reset(resetData)
         console.log('✅ Form reset completed')
         
+        // 🔥 CRITICAL: form.reset完了直後に強制計算実行（確実なタイミング）
+        console.log('🔥 FORCE CALC AFTER FORM RESET')
+        forceInitialCompletionCalculation()
+        setDidInitialCalc(true)
+        
         // 国籍はresetDataに含まれているため、個別設定は不要
         
         // Select要素の値を個別に設定（signup データを優先）
@@ -3265,11 +3270,6 @@ function ProfileEditContent() {
           
           // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
           console.log('✅ Profile initialization completed')
-          
-          // 🔥 CRITICAL: 初期化直後に強制計算実行（状態監視に依存しない）
-          forceInitialCompletionCalculation()
-          setDidInitialCalc(true)
-          
           setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
