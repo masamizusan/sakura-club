@@ -739,19 +739,66 @@ function ProfileEditContent() {
     updateCompletionUnified('profileImages-useEffect')
   }, [isInitializing, profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
 
-  // 🛡️ CRITICAL: 初期化完了後に確実に1回だけ完成度計算（0%バグ防止）
+  // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
+  const forceInitialCompletionCalculation = useCallback(() => {
+    console.log('⚡ FORCE CALC START: 強制初期計算開始')
+    
+    try {
+      // 🔧 最新フォーム値を直接取得
+      const currentFormData = getValues()
+      const currentProfileImages = profileImagesRef.current
+      
+      console.log('⚡ FORCE CALC: フォームデータ収集', {
+        formData_keys: Object.keys(currentFormData),
+        images_length: currentProfileImages.length,
+        personality_length: selectedPersonality.length,
+        hobbies_length: selectedHobbies.length
+      })
+      
+      // 🔧 完成度計算用データを構築
+      const completionInput = {
+        ...currentFormData,
+        hobbies: selectedHobbies,
+        personality: selectedPersonality,
+        culture: [], // culture は watch() で直接取得
+        languageSkills: languageSkills,
+        plannedPrefectures: selectedPlannedPrefectures
+      }
+      
+      // 🔧 完成度を直接計算（isInitializingガード無視）
+      const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
+      const calculatedCompletion = calculateCompletionFromForm(completionInput, userType, currentProfileImages)
+      
+      console.log('⚡ FORCE CALC RESULT:', {
+        calculated_completion: calculatedCompletion.completion,
+        completion_details: calculatedCompletion,
+        source: 'forceInitialCalculation'
+      })
+      
+      // 🔧 完成度を直接設定
+      setProfileCompletion(calculatedCompletion.completion)
+      
+      console.log('⚡ FORCE CALC COMPLETE: 強制初期計算完了', { completion: calculatedCompletion.completion })
+      
+    } catch (error) {
+      console.error('❌ FORCE CALC ERROR:', error)
+      // エラー時は最低限の計算
+      setProfileCompletion(0)
+    }
+  }, [getValues, selectedPersonality, selectedHobbies, languageSkills, selectedPlannedPrefectures])
+
+  // 🛡️ CRITICAL: 初期化完了後に確実に1回だけ強制計算実行（0%バグ防止）
   useEffect(() => {
     if (!isInitializing && !didInitialCalc) {
-      console.log('🌟 initialization completed')
-      console.log('🌟 completion calculated after initialization (forced)')
+      console.log('🌟 initialization completed - executing force calculation')
       setDidInitialCalc(true)
       
-      // isInitializingがfalseになった直後に確実に実行
+      // isInitializingガードを完全に無視する専用関数実行
       setTimeout(() => {
-        updateCompletionUnified('post-initialization-forced')
+        forceInitialCompletionCalculation()
       }, 50) // 短時間遅延でstate更新完了を待つ
     }
-  }, [isInitializing, didInitialCalc, updateCompletionUnified])
+  }, [isInitializing, didInitialCalc, forceInitialCompletionCalculation])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
