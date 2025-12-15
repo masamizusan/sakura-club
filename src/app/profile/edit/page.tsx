@@ -1196,6 +1196,12 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🗣️ languageSkills changed:', languageSkills)
     
+    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
+    if (isInitializing) {
+      console.log('🛡️ languageSkills監視: 初期化中のため計算スキップ', { isInitializing })
+      return
+    }
+    
     // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
     if (initializingRef.current) {
       console.log('⏰ WATCH: Skipping completion calculation during initialization')
@@ -3140,26 +3146,31 @@ function ProfileEditContent() {
           planned_prefectures: selectedPlannedPrefectures,
         }
 
-        // 🌟 統一フロー: calculateCompletionFromForm使用（33%問題根本解決）
-        const result = calculateCompletionFromForm(
-          formValuesForInitialCompletion,
-          isForeignMale ? 'foreign-male' : 'japanese-female',
-          currentImageArray,
-          isNewUser
-        )
+        // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算をスキップ
+        if (isInitializing) {
+          console.log('🛡️ fromMyPage統一フロー: 初期化中のため計算スキップ', { isInitializing })
+        } else {
+          // 🌟 統一フロー: calculateCompletionFromForm使用（33%問題根本解決）
+          const result = calculateCompletionFromForm(
+            formValuesForInitialCompletion,
+            isForeignMale ? 'foreign-male' : 'japanese-female',
+            currentImageArray,
+            isNewUser
+          )
         
-        console.log('🔄 fromMyPage: 🌟 統一フロー完了:', {
-          form_hobbies: formValuesForInitialCompletion.hobbies,
-          form_personality: formValuesForInitialCompletion.personality,
-          completion_percentage: result.completion,
-          completedFields: result.completedFields,
-          totalFields: result.totalFields,
-          source: 'fromMyPage初期化（SSOT）- 33%問題根本解決'
-        })
-        
-        setProfileCompletion(result.completion)
-        setCompletedItems(result.completedFields)
-        setTotalItems(result.totalFields)
+          console.log('🔄 fromMyPage: 🌟 統一フロー完了:', {
+            form_hobbies: formValuesForInitialCompletion.hobbies,
+            form_personality: formValuesForInitialCompletion.personality,
+            completion_percentage: result.completion,
+            completedFields: result.completedFields,
+            totalFields: result.totalFields,
+            source: 'fromMyPage初期化（SSOT）- 33%問題根本解決'
+          })
+          
+          setProfileCompletion(result.completion)
+          setCompletedItems(result.completedFields)
+          setTotalItems(result.totalFields)
+        }
         
         // 🗑️ REMOVED: fromMyPage専用completion再計算を削除
         // メインのwatch subscriptionとuseEffectロジックに統一
@@ -3189,6 +3200,12 @@ function ProfileEditContent() {
             source: '初期化完了後一回限り計算時（SSOT）'
           })
 
+          // 🛡️ CRITICAL: チラつき防止 - 念のため初期化確認
+          if (isInitializing) {
+            console.log('🛡️ 初期化完了後計算: まだ初期化中のためスキップ', { isInitializing })
+            return
+          }
+          
           // 🌟 統一フロー: calculateCompletionFromForm使用
           const completionResult = calculateCompletionFromForm(
             formValuesForPostInit,
