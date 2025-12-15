@@ -543,6 +543,8 @@ function ProfileEditContent() {
   const [isHydrated, setIsHydrated] = useState(false)
   // 🛡️ CRITICAL: チラつき防止 - 初期化専用フラグ（完成度計算ガード）
   const [isInitializing, setIsInitializing] = useState(true)
+  // 🔧 FIX: 初期化完了時の強制計算フラグ（0%バグ防止）
+  const [didInitialCalc, setDidInitialCalc] = useState(false)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
   const [languageSkills, setLanguageSkills] = useState<LanguageSkill[]>([])
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -737,14 +739,19 @@ function ProfileEditContent() {
     updateCompletionUnified('profileImages-useEffect')
   }, [isInitializing, profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
 
-  // 🛡️ CRITICAL: チラつき防止 - 初期化完了後に1回だけ正規データで完成度計算
+  // 🛡️ CRITICAL: 初期化完了後に確実に1回だけ完成度計算（0%バグ防止）
   useEffect(() => {
-    if (!isInitializing) {
+    if (!isInitializing && !didInitialCalc) {
       console.log('🌟 initialization completed')
-      console.log('🌟 completion calculated after initialization')
-      updateCompletionUnified('post-initialization')
+      console.log('🌟 completion calculated after initialization (forced)')
+      setDidInitialCalc(true)
+      
+      // isInitializingがfalseになった直後に確実に実行
+      setTimeout(() => {
+        updateCompletionUnified('post-initialization-forced')
+      }, 50) // 短時間遅延でstate更新完了を待つ
     }
-  }, [isInitializing, updateCompletionUnified])
+  }, [isInitializing, didInitialCalc, updateCompletionUnified])
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
@@ -3227,6 +3234,7 @@ function ProfileEditContent() {
           
           // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
           console.log('🌟 CRITICAL: 初期化完了 - チラつき防止フラグ解除')
+          setDidInitialCalc(false) // 強制計算フラグリセット
           setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
