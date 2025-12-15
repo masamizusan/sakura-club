@@ -741,7 +741,7 @@ function ProfileEditContent() {
 
   // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
   const forceInitialCompletionCalculation = useCallback(() => {
-    console.log('⚡ FORCE CALC START: 強制初期計算開始')
+    console.log('🔥 forceInitialCompletionCalculation start')
     
     try {
       // 🔧 最新フォーム値を直接取得
@@ -769,16 +769,10 @@ function ProfileEditContent() {
       const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
       const calculatedCompletion = calculateCompletionFromForm(completionInput, userType, currentProfileImages)
       
-      console.log('⚡ FORCE CALC RESULT:', {
-        calculated_completion: calculatedCompletion.completion,
-        completion_details: calculatedCompletion,
-        source: 'forceInitialCalculation'
-      })
+      console.log('📊 force calculation result:', calculatedCompletion.completion)
       
       // 🔧 完成度を直接設定
       setProfileCompletion(calculatedCompletion.completion)
-      
-      console.log('⚡ FORCE CALC COMPLETE: 強制初期計算完了', { completion: calculatedCompletion.completion })
       
     } catch (error) {
       console.error('❌ FORCE CALC ERROR:', error)
@@ -787,18 +781,8 @@ function ProfileEditContent() {
     }
   }, [getValues, selectedPersonality, selectedHobbies, languageSkills, selectedPlannedPrefectures])
 
-  // 🛡️ CRITICAL: 初期化完了後に確実に1回だけ強制計算実行（0%バグ防止）
-  useEffect(() => {
-    if (!isInitializing && !didInitialCalc) {
-      console.log('🌟 initialization completed - executing force calculation')
-      setDidInitialCalc(true)
-      
-      // isInitializingガードを完全に無視する専用関数実行
-      setTimeout(() => {
-        forceInitialCompletionCalculation()
-      }, 50) // 短時間遅延でstate更新完了を待つ
-    }
-  }, [isInitializing, didInitialCalc, forceInitialCompletionCalculation])
+  // 🔧 REMOVED: useEffect による状態監視は削除
+  // 初期化処理の最終行で直接呼び出す方式に変更
 
   // 生年月日変更時の年齢自動更新
   const handleBirthDateChange = useCallback((birthDate: string) => {
@@ -3280,8 +3264,12 @@ function ProfileEditContent() {
           setTotalItems(completionResult.totalFields)
           
           // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
-          console.log('🌟 CRITICAL: 初期化完了 - チラつき防止フラグ解除')
-          setDidInitialCalc(false) // 強制計算フラグリセット
+          console.log('✅ Profile initialization completed')
+          
+          // 🔥 CRITICAL: 初期化直後に強制計算実行（状態監視に依存しない）
+          forceInitialCompletionCalculation()
+          setDidInitialCalc(true)
+          
           setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
