@@ -654,7 +654,7 @@ function ProfileEditContent() {
   const updateCompletionUnified = useCallback((source: string = 'unknown', explicitImages?: any[]) => {
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算を完全にスキップ
     if (isInitializing) {
-      console.log('🛡️ completion skipped: still initializing', { source, isInitializing })
+      console.log('🛑 completion skipped because isInitializing=true', { source, isInitializing })
       return
     }
     
@@ -725,7 +725,7 @@ function ProfileEditContent() {
   useEffect(() => {
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
     if (isInitializing) {
-      console.log('🛡️ 画像監視: 初期化中のため計算スキップ', { isInitializing })
+      console.log('🛑 画像監視: skipped because isInitializing=true', { isInitializing })
       return
     }
     
@@ -1081,7 +1081,7 @@ function ProfileEditContent() {
         timeoutId = setTimeout(() => {
           // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
           if (isInitializing) {
-            console.log('🛡️ watch debounce: 初期化中のため計算スキップ', { isInitializing })
+            console.log('🛑 watch debounce: skipped because isInitializing=true', { isInitializing })
             return
           }
           
@@ -1137,7 +1137,7 @@ function ProfileEditContent() {
     
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
     if (isInitializing) {
-      console.log('🛡️ hobbies監視: 初期化中のため計算スキップ', { isInitializing })
+      console.log('🛑 hobbies監視: skipped because isInitializing=true', { isInitializing })
       return
     }
     
@@ -1164,7 +1164,7 @@ function ProfileEditContent() {
     
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
     if (isInitializing) {
-      console.log('🛡️ personality監視: 初期化中のため計算スキップ', { isInitializing })
+      console.log('🛑 personality監視: skipped because isInitializing=true', { isInitializing })
       return
     }
     
@@ -1236,7 +1236,7 @@ function ProfileEditContent() {
     
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
     if (isInitializing) {
-      console.log('🛡️ languageSkills監視: 初期化中のため計算スキップ', { isInitializing })
+      console.log('🛑 languageSkills監視: skipped because isInitializing=true', { isInitializing })
       return
     }
     
@@ -1993,10 +1993,12 @@ function ProfileEditContent() {
     
     // 🚨 CRITICAL DEBUG: 包括的エラーハンドリング追加
     const initializeProfileEdit = async () => {
+      console.log('🟡 isInitializing -> true (init start)')
+      console.log('🔍 PROFILE EDIT INITIALIZATION START')
+      console.log('  - User:', user?.id)
+      console.log('  - Search params:', window.location.search)
+      
       try {
-        console.log('🔍 PROFILE EDIT INITIALIZATION START')
-        console.log('  - User:', user?.id)
-        console.log('  - Search params:', window.location.search)
         
         // fromMyPageパラメータの確認（useEffect内の最初で定義）
         const urlParams = new URLSearchParams(window.location.search)
@@ -2154,6 +2156,12 @@ function ProfileEditContent() {
         console.log('🔥 FORCE CALC AFTER FORM RESET (test mode)')
         forceInitialCompletionCalculation()
         setDidInitialCalc(true)
+        
+        // 🚨 CRITICAL FIX: テストモード分岐でもisInitializing解除（リアルタイム更新復活）
+        console.log('🟢 isInitializing -> false (test mode end)')
+        setIsInitializing(false)
+        console.log('🌟 テストモード初期化完了 - リアルタイム計算解禁')
+        setIsHydrated(true)
         
         // 画像設定は後の統合処理で行う
         
@@ -3197,7 +3205,7 @@ function ProfileEditContent() {
 
         // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算をスキップ
         if (isInitializing) {
-          console.log('🛡️ fromMyPage統一フロー: 初期化中のため計算スキップ', { isInitializing })
+          console.log('🛑 fromMyPage統一フロー: skipped because isInitializing=true', { isInitializing })
         } else {
           // 🌟 統一フロー: calculateCompletionFromForm使用（33%問題根本解決）
           const result = calculateCompletionFromForm(
@@ -3251,7 +3259,7 @@ function ProfileEditContent() {
 
           // 🛡️ CRITICAL: チラつき防止 - 念のため初期化確認
           if (isInitializing) {
-            console.log('🛡️ 初期化完了後計算: まだ初期化中のためスキップ', { isInitializing })
+            console.log('🛑 初期化完了後計算: skipped because isInitializing=true', { isInitializing })
             return
           }
           
@@ -3276,6 +3284,7 @@ function ProfileEditContent() {
           
           // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
           console.log('✅ Profile initialization completed')
+          console.log('🟢 isInitializing -> false (normal init end)')
           setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
@@ -3287,6 +3296,9 @@ function ProfileEditContent() {
         console.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
       } finally {
+        // 🚨 CRITICAL FIX: 例外が発生してもisInitializing確実解除（リアルタイム更新復活保証）
+        console.log('🟢 isInitializing -> false (finally block - guaranteed)')
+        setIsInitializing(false)
         setUserLoading(false)
       }
     }
