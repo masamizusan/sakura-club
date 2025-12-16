@@ -10,6 +10,7 @@ interface AuthState {
   isLoading: boolean
   isInitialized: boolean
   isInitializing: boolean
+  authReady: boolean
   listenerSetup: boolean
   setUser: (user: AuthUser | null) => void
   setLoading: (loading: boolean) => void
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isInitialized: false,
   isInitializing: false,
+  authReady: false,
   listenerSetup: false,
 
   setUser: (user) => set({ user }),
@@ -53,7 +55,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.log('✅ Auth/v1/user 403 prevention successful')
       
       globalInitialized = true
-      set({ user, isInitialized: true })
+      set({ user, isInitialized: true, authReady: true })
+
+      console.log('✅ Auth ready:', { hasUser: !!user, authReady: true })
 
       // Set up auth state listener only once
       if (!state.listenerSetup) {
@@ -81,7 +85,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Auth initialization error:', error)
       globalInitialized = true // エラーでも初期化済みとマーク
-      set({ user: null, isInitialized: true })
+      set({ user: null, isInitialized: true, authReady: true })
+      console.log('✅ Auth ready (after error):', { hasUser: false, authReady: true })
     } finally {
       globalInitializing = false
       set({ isLoading: false, isInitializing: false })
@@ -103,11 +108,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
 // Hook for easy access to auth state
 export const useAuth = () => {
-  const { user, isLoading, isInitialized, signOut } = useAuthStore()
+  const { user, isLoading, isInitialized, authReady, signOut } = useAuthStore()
   return {
     user,
     isLoading,
     isInitialized,
+    authReady,
     isAuthenticated: !!user,
     logout: signOut,
   }

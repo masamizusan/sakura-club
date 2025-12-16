@@ -192,47 +192,62 @@ export const authService = {
     const supabase = createClient()
     
     try {
-      // 🔧 FIX: テストモード検出 - 403エラー回避
-      if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search)
-        const isTestMode = urlParams.get('devTest') === 'true' || 
-                          localStorage.getItem('devTestMode') === 'true' ||
-                          (window.location.pathname.includes('/profile/edit') && 
-                           (urlParams.get('type') || urlParams.get('gender')))
-        
-        if (isTestMode) {
-          console.log('🧪 Test mode detected - skipping auth/v1/user call to prevent 403')
-          return null
-        }
-      }
-
-      // 🔧 FIX: まずgetSession()でセッション確認（軽量、403エラーなし）
+      // 🔧 STEP 1: getSession()優先 - 軽量で403エラーなし
+      console.log('🔄 Getting session first (no 403 risk)')
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
         console.log('Session error:', sessionError)
-        return null
       }
       
-      if (!session?.user) {
-        console.log('No active session found')
+      let user = session?.user || null
+      
+      // 🔧 STEP 2: セッションでユーザー取得できた場合
+      if (user) {
+        console.log('✅ User from session:', { id: user.id, email: user.email, hasSession: true })
+      } else {
+        console.log('❌ No user in session, trying getUser() fallback')
+        
+        // 🔧 STEP 3: fallbackとしてgetUser()（403は握りつぶす）
+        try {
+          const { data: userData, error: userError } = await supabase.auth.getUser()
+          
+          if (userError) {
+            if (userError.status === 403 || String(userError.status) === '403') {
+              console.log('🛡️ getUser() returned 403 - handled gracefully, returning null')
+              return null
+            }
+            console.log('getUser() other error:', userError.message)
+            return null
+          }
+          
+          user = userData.user
+          console.log('✅ User from getUser() fallback:', { id: user?.id, email: user?.email })
+        } catch (error: any) {
+          if (error.status === 403 || String(error.status) === '403') {
+            console.log('🛡️ getUser() threw 403 - handled gracefully, returning null')
+            return null
+          }
+          console.log('getUser() threw error:', error.message)
+          return null
+        }
+      }
+      
+      if (!user) {
+        console.log('❌ No user found via session or getUser()')
         return null
       }
 
-      // 🔧 セッションからユーザー情報取得（getUser() 回避）
-      const user = session.user
-      console.log('User from session:', { id: user.id, email: user.email })
-
-      // Try to get profile, but don't fail if it doesn't exist
+      // 🔧 STEP 4: プロフィール取得
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single()
 
-      // If profile doesn't exist, return basic user info from session
+      // If profile doesn't exist, return basic user info
       if (profileError || !profile) {
-        console.log('No profile found for user, returning basic session info:', user.id)
+        console.log('⚠️ No profile found for user, returning basic auth info:', user.id)
         return {
           id: user.id,
           email: user.email || '',
@@ -251,7 +266,8 @@ export const authService = {
         }
       }
 
-      // Return profile data if it exists
+      // Return complete profile data
+      console.log('✅ Complete user profile loaded:', { id: profile.id, name: profile.name })
       return {
         id: profile.id,
         email: profile.email,
@@ -269,7 +285,7 @@ export const authService = {
         membershipType: profile.membership_type || 'free',
       }
     } catch (error) {
-      console.error('Error getting current user:', error)
+      console.error('❌ Error in getCurrentUser:', error)
       return null
     }
   },
