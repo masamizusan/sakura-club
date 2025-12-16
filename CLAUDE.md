@@ -339,5 +339,53 @@ grep -n "localStorage.*image" src/app/mypage/page.tsx
 - **ビルド**: `npm run build`
 - **デプロイ**: `git add . && git commit && git push`
 
+### ✅ 完成度（Profile Completion）初期表示0%バグ：最終解決（決定版）
+
+#### 背景
+新規登録直後（/profile/edit 初期表示）で、完成度が一瞬 0% になったり、初期計算が走らず 0% のままになる問題が発生していた。
+原因は **初期化中ガード（isInitializing）** と **watch/effect のタイミング競合** により、初回計算がブロックされるケースがあったため。
+
+#### 最終解決方針（設計）
+- **初期表示の完成度は、状態監視（useEffect / watch）に依存せず、フォーム reset 完了直後に1回だけ強制計算して確定させる。**
+- **初期化中のチラつき防止ガード（isInitializing）は維持する**
+- ただし初回だけは**「ガードを無視する専用ルート」**で確実に計算する
+- 強制計算は `reset(resetData)` の直後に直接呼び出し、必ず1回だけ実行する
+
+#### 実装要点
+1. **forceInitialCompletionCalculation()** を追加（または同等の専用関数）
+2. **updateCompletionUnified の isInitializing ガードを通さない**
+3. `getValues()` 等で最新フォーム値を取得し、`calculateCompletionFromForm` を直接呼ぶ
+4. 画像は `profileImagesRef` 等の「最新参照」を使い stale state を回避
+5. **didInitialCalc フラグで重複防止**
+   - reset直後に `forceInitialCompletionCalculation()` 実行 → `setDidInitialCalc(true)`
+
+#### 確実な実行タイミング（決定版）
+以下の順序で実行されること：
+```typescript
+reset(resetData)
+console.log('✅ Form reset completed')
+console.log('🔥 FORCE CALC AFTER FORM RESET')
+forceInitialCompletionCalculation()
+setDidInitialCalc(true)
+```
+
+#### 正常動作の確認ログ（必須）
+以下が揃って出れば「強制計算が確実に実行され、初期0%は解消」：
+- `🔥 FORCE CALC AFTER FORM RESET`
+- `🔥 forceInitialCompletionCalculation start`
+- `📊 force calculation result: XX`（新規登録直後は例：28）
+
+**実際の確認例：**
+```
+📊 force calculation result: 28
+```
+**必須**: 5/9 = 28%（foreign-male 新規登録の初期状態として正しい）
+
+#### 保証される結果
+- **新規登録直後**：初期完成度が必ず正しい値で表示（例：28%）
+- **MyPage → Edit**：100%維持（既存ロジックを壊さない）
+- **Preview → Edit**：100%維持（既存ロジックを壊さない）
+- **監視（watch/debounce）**：初期化中はガードでチラつき防止、初期確定後は自然更新
+
 ---
 **重要**: この実装状態は完璧に動作しているため、どのような理由があっても変更しないでください。
