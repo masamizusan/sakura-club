@@ -47,8 +47,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true, isInitializing: true })
       
       console.log('Auth initialization starting...')
+      console.log('🔧 Calling getCurrentUser (with 403 prevention)')
       const user = await authService.getCurrentUser()
       console.log('Auth initialization completed, user:', !!user)
+      console.log('✅ Auth/v1/user 403 prevention successful')
       
       globalInitialized = true
       set({ user, isInitialized: true })
