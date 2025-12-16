@@ -2149,6 +2149,12 @@ function ProfileEditContent() {
         setSelectedPersonality(initialData.personality)
         setSelectedPlannedPrefectures(initialData.planned_prefectures)
         
+        // 🔧 CRITICAL: テストモード分岐でも強制完成度計算を実行（0%再発防止）
+        console.log('✅ Form reset completed (test mode)')
+        console.log('🔥 FORCE CALC AFTER FORM RESET (test mode)')
+        forceInitialCompletionCalculation()
+        setDidInitialCalc(true)
+        
         // 画像設定は後の統合処理で行う
         
         setIsLoading(false)
