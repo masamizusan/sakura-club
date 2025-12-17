@@ -729,15 +729,9 @@ function ProfileEditContent() {
       return
     }
     
-    console.log('🖼️ 画像状態変更検出 - 統一フローで完成度再計算', {
-      'profileImages.length': profileImages.length,
-      'selectedHobbies.length': selectedHobbies.length,
-      'selectedPersonality.length': selectedPersonality.length,
-      'isHydrated': isHydrated,
-      'isInitializing': isInitializing
-    })
-    updateCompletionUnified('profileImages-useEffect')
-  }, [isInitializing, profileImages.length, selectedHobbies, selectedPersonality, languageSkills, updateCompletionUnified])
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📝 profileImages state updated:', profileImages.length, 'images')
+  }, [profileImages])
 
   // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
   const forceInitialCompletionCalculation = useCallback(() => {
@@ -791,11 +785,10 @@ function ProfileEditContent() {
       setValue('age', age)
       setValue('birth_date', birthDate)
       
-      // 統一フローで完成度更新
-      console.log('📅 生年月日変更: 統一フローで完成度再計算', { birthDate, age })
-      updateCompletionUnified('birthDateChange')
+      // 🔧 MAIN WATCH統一: フォーム値変更のみ（完成度再計算はメインwatchが担当）
+      console.log('📅 生年月日変更: フォーム値更新', { birthDate, age })
     }
-  }, [calculateAge, setValue, updateCompletionUnified])
+  }, [calculateAge, setValue])
 
 
   // 簡素化された国籍設定（他のフィールドと同様にresetで処理）
@@ -898,16 +891,15 @@ function ProfileEditContent() {
         console.error('❌ 写真保存中にエラー:', error)
       }
     }
-    // 統一フローで完成度再計算
-    console.log('📸 写真変更: 統一フローで完成度再計算実行')
-    updateCompletionUnified('handleImagesChange', newImages)
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📸 写真変更: state更新完了', { images: newImages.length })
     
     // 写真変更完了フラグをリセット
     setTimeout(() => {
       setIsImageChanging(false)
       console.log('📸 写真変更完了：デバウンス計算を再有効化')
     }, 100)
-  }, [updateCompletionUnified])
+  }, [])
 
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
@@ -1104,20 +1096,13 @@ function ProfileEditContent() {
             language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
           }
           
-          console.log('🚨🚨🚨 MAIN WATCH SUBSCRIPTION - COMPLETION DEBUG 🚨🚨🚨')
-          console.log('='.repeat(80))
-          console.log('📊 フォーム変更検出による完成度計算:')
-          console.log(`   isForeignMale: ${isForeignMale}`)
-          console.log(`   personality (selectedPersonality): ${Array.isArray(selectedPersonality) ? `Array(${selectedPersonality.length}) = ${JSON.stringify(selectedPersonality)}` : selectedPersonality}`)
-          console.log(`   hobbies (selectedHobbies): ${Array.isArray(selectedHobbies) ? `Array(${selectedHobbies.length})` : selectedHobbies}`)
-          console.log(`   language_skills: ${Array.isArray(languageSkills) ? `Array(${languageSkills.length})` : languageSkills}`)
-          console.log(`   planned_prefectures: ${Array.isArray(selectedPlannedPrefectures) ? `Array(${selectedPlannedPrefectures.length})` : selectedPlannedPrefectures}`)
-          console.log('📋 フォーム値とState値の比較:')
-          console.log(`   フォーム personality: ${JSON.stringify(valueWithoutCustomCulture.personality)}`)
-          console.log(`   State personality: ${JSON.stringify(selectedPersonality)}`)
-          console.log('📋 最終normalizedProfile.personality詳細:')
-          console.log(`   personality: ${normalizedProfileForWatch.personality ? (Array.isArray(normalizedProfileForWatch.personality) ? `✅ | array has ${normalizedProfileForWatch.personality.length} items` : `✅ | ${normalizedProfileForWatch.personality}`) : '❌ | empty or null'}`)
-          console.log('='.repeat(80))
+          console.log('🎯 MAIN WATCH: 完成度再計算実行（唯一の入口）', {
+            hobbies: selectedHobbies.length,
+            personality: selectedPersonality.length, 
+            prefectures: selectedPlannedPrefectures.length,
+            languageSkills: languageSkills.length,
+            images: profileImages.length
+          })
           
           // 統一フローで完成度更新
           updateCompletionUnified('watch-debounce')
@@ -1129,7 +1114,7 @@ function ProfileEditContent() {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
     }
-  }, [isForeignMale, profileImages, updateCompletionUnified])
+  }, [isForeignMale, profileImages, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, languageSkills, updateCompletionUnified])
 
   // selectedHobbies変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1153,10 +1138,9 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
-    // 統一フローで完成度更新
-    console.log('🎯 selectedHobbies変更: 統一フローで完成度再計算')
-    updateCompletionUnified('selectedHobbies-useEffect')
-  }, [isInitializing, selectedHobbies, setValue, updateCompletionUnified])
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📝 selectedHobbies state updated:', selectedHobbies.length, 'items')
+  }, [selectedHobbies, setValue])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1205,10 +1189,9 @@ function ProfileEditContent() {
     console.log(`   personality: ${normalizedProfile.personality ? (Array.isArray(normalizedProfile.personality) ? `✅ | array has ${normalizedProfile.personality.length} items` : `✅ | ${normalizedProfile.personality}`) : '❌ | empty or null'}`)
     console.log('='.repeat(80))
     
-    // 統一フローで完成度更新
-    console.log('🎯 selectedPersonality変更: 統一フローで完成度再計算')
-    updateCompletionUnified('selectedPersonality-useEffect')
-  }, [isInitializing, selectedPersonality, setValue, updateCompletionUnified])
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📝 selectedPersonality state updated:', selectedPersonality.length, 'items')
+  }, [selectedPersonality, setValue])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
   useEffect(() => {
@@ -1226,9 +1209,9 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
-    console.log('🎯 selectedPlannedPrefectures変更: 統一フローで完成度再計算')
-    updateCompletionUnified()
-  }, [selectedPlannedPrefectures, updateCompletionUnified])
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📝 selectedPlannedPrefectures state updated:', selectedPlannedPrefectures.length, 'prefectures')
+  }, [selectedPlannedPrefectures, setValue])
 
   // 🗣️ languageSkills変更時の専用完成度再計算とフォーム同期
   useEffect(() => {
@@ -1252,55 +1235,9 @@ function ProfileEditContent() {
       shouldValidate: true 
     })
     
-    // 完成度再計算（languageSkills Stateを直接使用）
-    const currentData = watch()
-    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    
-    // 🚨 CRITICAL: buildProfileForCompletion → normalizeProfileForCompletion → calculateUnifiedCompletion の順番
-    if (!dbProfile) {
-      console.log('⏰ WATCH: dbProfile not loaded yet, skipping completion calculation')
-      return
-    }
-    
-    console.log('⏰ WATCH: 🌟 統一フロー - フォーム値のみで完成度計算:', {
-      selectedHobbies_length: selectedHobbies.length,
-      selectedPersonality_length: selectedPersonality.length,
-      languageSkills_length: languageSkills.length,
-      current_data_available: !!currentDataWithoutCustomCulture
-    })
-    
-    // 🌟 SINGLE SOURCE OF TRUTH: フォーム値のみを使用した完成度計算
-    const formValuesForCompletion = {
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies,
-      personality: selectedPersonality,
-      language_skills: languageSkills,
-      planned_prefectures: selectedPlannedPrefectures,
-    }
-    
-    // 🌟 SINGLE SOURCE OF TRUTH: 統一された完成度計算フロー
-    const resultForWatch = calculateCompletionFromForm(
-      formValuesForCompletion,
-      isForeignMale ? 'foreign-male' : 'japanese-female',
-      profileImages,
-      false // watch計算では新規ユーザーフラグはfalse
-    )
-    
-    console.log('⏰ WATCH: 🌟 統一フロー完了:', {
-      hobbies_from_form: formValuesForCompletion.hobbies,
-      hobbies_length: formValuesForCompletion.hobbies?.length || 0,
-      personality_from_form: formValuesForCompletion.personality,
-      personality_length: formValuesForCompletion.personality?.length || 0,
-      completion_percentage: resultForWatch.completion,
-      completedFields: resultForWatch.completedFields,
-      totalFields: resultForWatch.totalFields,
-      source: 'フォーム値のみ（SSOT）'
-    })
-    
-    setProfileCompletion(resultForWatch.completion)
-    setCompletedItems(resultForWatch.completedFields)
-    setTotalItems(resultForWatch.totalFields)
-  }, [dbProfile, languageSkills, isForeignMale, profileImages, selectedHobbies, selectedPersonality, selectedPlannedPrefectures, setValue, watch])
+    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+    console.log('📝 languageSkills state updated:', languageSkills.length, 'skills')
+  }, [languageSkills, setValue])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -3664,9 +3601,8 @@ function ProfileEditContent() {
       // 🌟 CRITICAL: フォームにも確実に反映（setValue統一）
       setValue('hobbies', newHobbies, { shouldDirty: true, shouldValidate: true })
       
-      // 統一フローで完成度更新
-      console.log('🎯 伝統文化選択: 統一フローで完成度再計算', { newHobbies })
-      updateCompletionUnified('toggleHobby')
+      // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+      console.log('📝 Hobby toggled:', hobby, '→', newHobbies.length, 'total hobbies')
       
       return newHobbies
     })
@@ -3684,9 +3620,8 @@ function ProfileEditContent() {
       // 🌟 CRITICAL: フォームにも確実に反映（setValue統一）
       setValue('personality', newTraits, { shouldDirty: true, shouldValidate: true })
       
-      // 統一フローで完成度更新
-      console.log('🎯 性格選択: 統一フローで完成度再計算', { newTraits })
-      updateCompletionUnified('togglePersonality')
+      // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+      console.log('📝 Personality toggled:', trait, '→', newTraits.length, 'total traits')
       
       return newTraits
     })
@@ -3704,16 +3639,8 @@ function ProfileEditContent() {
       // フォームデータに反映
       setValue('planned_prefectures', newPrefectures)
       
-      // リアルタイム完成度更新
-      setTimeout(() => {
-        const currentData = watch()
-        // 新規ユーザー判定
-        const urlParams = new URLSearchParams(window.location.search)
-        const currentIsNewUser = urlParams.get('from') === 'signup'
-        // 統一フローで完成度再計算
-        console.log('🎯 togglePrefecture: 統一フローで完成度再計算')
-        updateCompletionUnified()
-      }, 100)
+      // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
+      console.log('📝 Prefecture toggled:', prefecture, '→', newPrefectures.length, 'total prefectures')
       
       return newPrefectures
     })
@@ -3886,16 +3813,7 @@ function ProfileEditContent() {
                   <Textarea
                     placeholder={t('profile.selfIntroPlaceholder')}
                     rows={4}
-                    {...register('self_introduction', {
-                      onChange: () => {
-                        // 自己紹介変更時に完成度を再計算
-                        setTimeout(() => {
-                          // 新規ユーザー判定
-                          console.log('🎯 自己紹介文変更: 統一フローで完成度再計算')
-                          updateCompletionUnified()
-                        }, 100)
-                      }
-                    })}
+                    {...register('self_introduction')}
                     className={errors.self_introduction ? 'border-red-500' : ''}
                   />
                   {errors.self_introduction && (
@@ -3969,11 +3887,8 @@ function ProfileEditContent() {
                       onValueChange={(value) => {
                         console.log('🔧 国籍選択変更:', value)
                         setValue('nationality', value, { shouldValidate: true })
-                        // 国籍変更時に完成度を再計算
-                        setTimeout(() => {
-                          console.log('🎯 国籍変更: 統一フローで完成度再計算')
-                          updateCompletionUnified()
-                        }, 100)
+                        // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                        console.log('📝 Nationality changed:', value)
                       }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
@@ -4048,11 +3963,8 @@ function ProfileEditContent() {
                         value={watch('occupation') || 'none'}
                         onValueChange={(value) => {
                           setValue('occupation', value)
-                          // 職業変更時に完成度を再計算
-                          setTimeout(() => {
-                            console.log('🎯 職業変更: 統一フローで完成度再計算')
-                            updateCompletionUnified()
-                          }, 100)
+                          // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                          console.log('📝 Occupation changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -4084,14 +3996,7 @@ function ProfileEditContent() {
                           }
                         }}
                         {...register('height', { 
-                          valueAsNumber: true,
-                          onChange: () => {
-                            // 身長変更時に完成度を再計算
-                            setTimeout(() => {
-                              console.log('🎯 身長変更: 統一フローで完成度再計算')
-                              updateCompletionUnified()
-                            }, 100)
-                          }
+                          valueAsNumber: true
                         })}
                         className={errors.height ? 'border-red-500' : ''}
                       />
@@ -4108,11 +4013,8 @@ function ProfileEditContent() {
                         value={watch('body_type') || 'none'}
                         onValueChange={(value) => {
                           setValue('body_type', value)
-                          // 体型変更時に完成度を再計算
-                          setTimeout(() => {
-                            console.log('🎯 体型変更: 統一フローで完成度再計算')
-                            updateCompletionUnified()
-                          }, 100)
+                          // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                          console.log('📝 Body type changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -4136,11 +4038,8 @@ function ProfileEditContent() {
                         value={watch('marital_status') || 'none'}
                         onValueChange={(value) => {
                           setValue('marital_status', value as 'none' | 'single' | 'married')
-                          // 婚姻状況変更時に完成度を再計算
-                          setTimeout(() => {
-                            console.log('🎯 婚姻ステータス変更: 統一フローで完成度再計算')
-                            updateCompletionUnified()
-                          }, 100)
+                          // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                          console.log('📝 Marital status changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -4343,11 +4242,8 @@ function ProfileEditContent() {
                           value={watch('visit_schedule') || 'no-entry'}
                           onValueChange={(value) => {
                             setValue('visit_schedule', value)
-                            // 訪問予定時期変更時に完成度を再計算
-                            setTimeout(() => {
-                              console.log('🎯 訪問予定時期変更: 統一フローで完成度再計算')
-                              updateCompletionUnified()
-                            }, 100)
+                            // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                            console.log('📝 Visit schedule changed:', value)
                           }}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
@@ -4375,11 +4271,8 @@ function ProfileEditContent() {
                           value={watch('travel_companion') || 'noEntry'}
                           onValueChange={(value) => {
                             setValue('travel_companion', value)
-                            // 同行者変更時に完成度を再計算
-                            setTimeout(() => {
-                              console.log('🎯 同行者変更: 統一フローで完成度再計算')
-                              updateCompletionUnified()
-                            }, 100)
+                            // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
+                            console.log('📝 Travel companion changed:', value)
                           }}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
