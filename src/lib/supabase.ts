@@ -1,14 +1,36 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 import { LanguageSkill } from '@/types/profile'
 
-// シングルトンクライアント
+// シングルトンクライアント（モード別）
 let supabaseInstance: SupabaseClient | null = null
+let testModeInstance: SupabaseClient | null = null
+
+// テストモード検出（統一）
+const isTestModeActive = (): boolean => {
+  if (typeof window === 'undefined') return false
+  
+  const urlParams = new URLSearchParams(window.location.search)
+  const pathname = window.location.pathname
+  
+  return !!(
+    urlParams.get('dev') === 'skip-verification' ||
+    urlParams.get('devTest') === 'true' ||
+    localStorage.getItem('devTestMode') === 'true' ||
+    pathname.includes('/test') ||
+    (pathname.includes('/profile/edit') && 
+     (urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')) &&
+     urlParams.get('fromMyPage') !== 'true')
+  )
+}
 
 export const createClient = () => {
+  const isTestMode = isTestModeActive()
+  const currentInstance = isTestMode ? testModeInstance : supabaseInstance
+  
   // 既にインスタンスが存在する場合は再利用
-  if (supabaseInstance) {
-    console.log('既存のSupabaseクライアントを再利用')
-    return supabaseInstance
+  if (currentInstance) {
+    console.log(`既存のSupabaseクライアントを再利用 (${isTestMode ? 'TEST' : 'PROD'} mode)`)
+    return currentInstance
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
@@ -38,15 +60,32 @@ export const createClient = () => {
   }
 
   try {
-    console.log('新しいSupabaseクライアント作成中...')
+    console.log(`新しいSupabaseクライアント作成中... (${isTestMode ? 'TEST' : 'PROD'} mode)`)
     console.log('使用するURL:', url)
     console.log('使用するキー:', key?.substring(0, 20) + '...')
     
-    supabaseInstance = createSupabaseClient(url, key)
-    console.log('Supabaseクライアント作成成功')
-    return supabaseInstance
+    // テストモード時は専用設定でクライアント作成
+    const clientOptions = isTestMode ? {
+      auth: {
+        persistSession: false, // テストモード時はセッション永続化無効
+        autoRefreshToken: false, // テストモード時はトークン自動更新無効
+      }
+    } : undefined
+    
+    const newInstance = createSupabaseClient(url, key, clientOptions)
+    
+    // モード別インスタンスに保存
+    if (isTestMode) {
+      testModeInstance = newInstance
+      console.log('🧪 テストモード専用Supabaseクライアント作成成功（セッション隔離）')
+    } else {
+      supabaseInstance = newInstance
+      console.log('🔧 本番Supabaseクライアント作成成功')
+    }
+    
+    return newInstance
   } catch (error) {
-    console.error('Supabaseクライアント作成エラー:', error)
+    console.error(`Supabaseクライアント作成エラー (${isTestMode ? 'TEST' : 'PROD'} mode):`, error)
     throw error
   }
 }

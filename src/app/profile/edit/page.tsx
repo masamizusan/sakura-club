@@ -2160,6 +2160,11 @@ function ProfileEditContent() {
         // 🚨 CRITICAL FIX: テストモード分岐でもisInitializing解除（リアルタイム更新復活）
         console.log('🟢 isInitializing -> false (test mode end)')
         setIsInitializing(false)
+        
+        // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活）
+        console.log('🟢 initializingRef.current -> false (test mode end)')
+        initializingRef.current = false
+        
         console.log('🌟 テストモード初期化完了 - リアルタイム計算解禁')
         setIsHydrated(true)
         
@@ -3236,6 +3241,7 @@ function ProfileEditContent() {
         // 🔧 FIX: 初期化完了後に一度だけcompletion計算を実行（33%問題解決）
         queueMicrotask(() => {
           console.log('🔧 INITIALIZATION: Enabling watch-based completion calculation')
+          console.log('🟢 initializingRef.current -> false (normal init end)')
           initializingRef.current = false
           
           // 初期化完了直後に一度だけ正確なcompletion計算
@@ -3299,6 +3305,11 @@ function ProfileEditContent() {
         // 🚨 CRITICAL FIX: 例外が発生してもisInitializing確実解除（リアルタイム更新復活保証）
         console.log('🟢 isInitializing -> false (finally block - guaranteed)')
         setIsInitializing(false)
+        
+        // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活保証）
+        console.log('🟢 initializingRef.current -> false (finally block - guaranteed)')
+        initializingRef.current = false
+        
         setUserLoading(false)
       }
     }

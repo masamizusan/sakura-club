@@ -197,7 +197,17 @@ export const authService = {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
-        console.log('Session error:', sessionError)
+        console.error('🚨 Session error details:', {
+          message: sessionError.message,
+          status: sessionError.status || 'unknown',
+          name: sessionError.name || 'unknown',
+          stack: sessionError.stack || 'no stack'
+        })
+        
+        // 🚨 CRITICAL: refresh_token 400エラーの特別処理
+        if (sessionError.message?.includes('refresh_token') || sessionError.status === 400) {
+          console.error('🛑 REFRESH_TOKEN 400 ERROR DETECTED:', sessionError)
+        }
       }
       
       let user = session?.user || null
@@ -355,11 +365,34 @@ export const authService = {
     const supabase = createClient()
     let lastUserId: string | null = null
     
+    // 🚨 CRITICAL: テストモード検出の統一化
+    const isTestModeActive = () => {
+      if (typeof window === 'undefined') return false
+      const urlParams = new URLSearchParams(window.location.search)
+      const pathname = window.location.pathname
+      
+      return !!(
+        urlParams.get('dev') === 'skip-verification' ||
+        urlParams.get('devTest') === 'true' ||
+        localStorage.getItem('devTestMode') === 'true' ||
+        pathname.includes('/test') ||
+        (pathname.includes('/profile/edit') && 
+         (urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')) &&
+         urlParams.get('fromMyPage') !== 'true')
+      )
+    }
+    
+    // 🔧 CRITICAL: テストモード時はauth状態監視を無効化（refresh_token 400回避）
+    if (isTestModeActive()) {
+      console.log('🧪 Test mode detected - skipping auth state monitoring completely')
+      return { data: { subscription: { unsubscribe: () => {} } } }
+    }
+    
     // 認証状態の変更を監視（重複コールバックを防ぐ）
     return supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUserId = session?.user?.id || null
       
-      console.log('Auth state change:', { 
+      console.log('🔍 Auth state change:', { 
         event, 
         hasSession: !!session, 
         hasUser: !!session?.user,
@@ -368,24 +401,20 @@ export const authService = {
         shouldUpdate: currentUserId !== lastUserId
       })
       
+      // 🚨 CRITICAL: refresh_token エラーの詳細ログ
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('🔄 Token refreshed successfully')
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 Signed out event')
+      }
+      
       // ユーザーIDが変わった場合のみコールバックを実行
       if (currentUserId !== lastUserId) {
         lastUserId = currentUserId
         
         if (session?.user) {
-          // 🔧 FIX: 403エラー回避 - getCurrentUser()呼び出しを制限
-          const isTestMode = typeof window !== 'undefined' && (
-            new URLSearchParams(window.location.search).get('devTest') === 'true' || 
-            localStorage.getItem('devTestMode') === 'true'
-          )
-          
-          if (isTestMode) {
-            console.log('🧪 Test mode - skipping getCurrentUser in auth state change')
-            callback(null)
-          } else {
-            const user = await this.getCurrentUser()
-            callback(user)
-          }
+          const user = await this.getCurrentUser()
+          callback(user)
         } else {
           callback(null)
         }
