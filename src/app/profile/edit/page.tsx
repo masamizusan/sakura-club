@@ -894,10 +894,14 @@ function ProfileEditContent() {
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📸 写真変更: state更新完了', { images: newImages.length })
     
-    // 写真変更完了フラグをリセット
+    // 🚨 FIX: 写真変更完了フラグをリセット + 強制再計算
     setTimeout(() => {
-      setIsImageChanging(false)
       console.log('📸 写真変更完了：デバウンス計算を再有効化')
+      setIsImageChanging(false)
+      
+      // 🎯 CRITICAL: 画像変更完了時に必ず1回だけ強制再計算
+      console.log('🔥 画像変更完了時の強制完成度再計算実行')
+      updateCompletionUnified('image-change-finalize')
     }, 100)
   }, [])
 
@@ -1077,9 +1081,18 @@ function ProfileEditContent() {
             return
           }
           
-          // 写真変更中は計算をスキップ
+          // 🔧 FIX: 写真変更中スキップの粒度調整
           if (isImageChanging) {
-            console.log('🚫 写真変更中のためデバウンス計算をスキップ')
+            const currentValues = getValues()
+            console.log('🚫 写真変更中のためデバウンス計算をスキップ', {
+              isImageChanging,
+              profileImagesLength: profileImages.length,
+              triggerSource: 'main-watch-debounce',
+              formLangSkills: currentValues.language_skills?.length || 0,
+              stateLangSkills: languageSkills.length,
+              formHobbies: currentValues.hobbies?.length || 0,
+              stateHobbies: selectedHobbies.length
+            })
             return
           }
           
@@ -1096,12 +1109,18 @@ function ProfileEditContent() {
             language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
           }
           
+          // 🚨 原因特定ログ（修正後も残す）
           console.log('🎯 MAIN WATCH: 完成度再計算実行（唯一の入口）', {
             hobbies: selectedHobbies.length,
             personality: selectedPersonality.length, 
             prefectures: selectedPlannedPrefectures.length,
             languageSkills: languageSkills.length,
-            images: profileImages.length
+            images: profileImages.length,
+            // フォーム値との差分確認
+            formHobbies: currentValues.hobbies?.length || 0,
+            formPersonality: currentValues.personality?.length || 0,
+            formLanguageSkills: currentValues.language_skills?.length || 0,
+            formPlannedPrefectures: currentValues.planned_prefectures?.length || 0
           })
           
           // 統一フローで完成度更新
@@ -1120,19 +1139,7 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🔍 selectedHobbies changed:', selectedHobbies)
     
-    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
-    if (isInitializing) {
-      console.log('🛑 hobbies監視: skipped because isInitializing=true', { isInitializing })
-      return
-    }
-    
-    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
-    if (initializingRef.current) {
-      console.log('🔍 HOBBIES: Skipping completion calculation during initialization')
-      return
-    }
-    
-    // 🔧 フォームフィールドへの同期を追加
+    // 🔧 フォームフィールドへの同期（初期化中でも必須）
     setValue('hobbies', selectedHobbies, { 
       shouldDirty: true, 
       shouldValidate: true 
@@ -1140,25 +1147,14 @@ function ProfileEditContent() {
     
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📝 selectedHobbies state updated:', selectedHobbies.length, 'items')
+    console.log('🔄 フォーム値同期完了: hobbies =', selectedHobbies.length, 'items')
   }, [selectedHobbies, setValue])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
     console.log('🔍 selectedPersonality changed:', selectedPersonality)
     
-    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
-    if (isInitializing) {
-      console.log('🛑 personality監視: skipped because isInitializing=true', { isInitializing })
-      return
-    }
-    
-    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
-    if (initializingRef.current) {
-      console.log('🔍 PERSONALITY: Skipping completion calculation during initialization')
-      return
-    }
-    
-    // 🔧 フォームフィールドへの同期を追加
+    // 🔧 フォームフィールドへの同期（初期化中でも必須）
     setValue('personality', selectedPersonality, { 
       shouldDirty: true, 
       shouldValidate: true 
@@ -1197,13 +1193,7 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🔍 selectedPlannedPrefectures changed:', selectedPlannedPrefectures)
     
-    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
-    if (initializingRef.current) {
-      console.log('🔍 PLANNED_PREFECTURES: Skipping completion calculation during initialization')
-      return
-    }
-    
-    // 🔧 フォームフィールドへの同期を追加
+    // 🔧 フォームフィールドへの同期（初期化中でも必須）
     setValue('planned_prefectures', selectedPlannedPrefectures, { 
       shouldDirty: true, 
       shouldValidate: true 
@@ -1217,19 +1207,7 @@ function ProfileEditContent() {
   useEffect(() => {
     console.log('🗣️ languageSkills changed:', languageSkills)
     
-    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
-    if (isInitializing) {
-      console.log('🛑 languageSkills監視: skipped because isInitializing=true', { isInitializing })
-      return
-    }
-    
-    // 🔧 FIX: 初期化中は completion 計算をスキップ（揺れ防止）
-    if (initializingRef.current) {
-      console.log('⏰ WATCH: Skipping completion calculation during initialization')
-      return
-    }
-    
-    // フォームのlanguage_skillsフィールドに同期
+    // 🔧 フォームのlanguage_skillsフィールドに同期（初期化中でも必須）
     setValue('language_skills', languageSkills, { 
       shouldDirty: true, 
       shouldValidate: true 
