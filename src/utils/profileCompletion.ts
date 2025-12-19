@@ -167,11 +167,13 @@ export type UserType = 'foreign-male' | 'japanese-female'
 // 🧱 Field configuration per user type
 const FIELD_CONFIG = {
   'foreign-male': {
+    // 🚨 UX改善: 必須項目を基本情報のみに限定（6個）
     required: [
-      'nickname', 'gender', 'age', 'birth_date', 'nationality',
-      'hobbies', 'self_introduction', 'language_info', 'planned_prefectures'
+      'nickname', 'gender', 'age', 'birth_date', 'nationality', 'self_introduction'
     ],
+    // 🎯 オプション項目に日本文化・言語・都道府県を移動（10個）
     optional: [
+      'hobbies', 'language_info', 'planned_prefectures',
       'occupation', 'height', 'body_type', 'marital_status', 
       'personality', 'visit_schedule', 'travel_companion', 'profile_images'
     ]
@@ -444,8 +446,7 @@ export function calculateCompletion(
   console.log('🔍 REQUIRED FIELDS DEFINITION (foreign-male):', {
     requiredFields: requiredFields,
     requiredCount: requiredFields.length,
-    hasPlannedPrefecturesInRequired: requiredFields.includes('planned_prefectures'),
-    shouldBe9Fields: requiredFields.length === 9
+    shouldBe6Fields: requiredFields.length === 6
   })
 
   console.log('🧮 CALCULATE COMPLETION - INPUT:', {
@@ -492,10 +493,10 @@ export function calculateCompletion(
       case 'hobbies':
         fieldValue = profile.hobbies
         const persistedHobbies = persistedProfile?.hobbies || persistedProfile?.interests
-        // 🚨 CRITICAL: 確定値優先判定（編集中draft空でもDB値があれば完了扱い）
+        // 🚨 UX改善: オプション項目として「配列存在=入力済み」扱い（0件でも完了）
         isCompleted = (
-          (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) ||
-          (Array.isArray(persistedHobbies) && persistedHobbies.length > 0)
+          Array.isArray(profile.hobbies) ||
+          Array.isArray(persistedHobbies)
         )
         
         // 🧪 HOBBIES REQUIRED CHECK DEBUG（33%問題解決用）
@@ -566,8 +567,8 @@ export function calculateCompletion(
           persistedLanguageSkills.length > 0 &&
           persistedLanguageSkills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
         
-        // 🎯 厳密判定: 完全な言語+レベルのみ真の完了
-        isCompleted = draftHasValidLanguage || persistedHasValidLanguage
+        // 🚨 UX改善: オプション項目として言語選択のみで完了扱い（レベル未選択でも可）
+        isCompleted = hasLanguageSelected || hasPersistedLanguageSelected || draftHasValidLanguage || persistedHasValidLanguage
         
         // 🔍 language_info保護的判定ログ
         console.log('🔍 LANGUAGE_INFO PROTECTIVE CHECK:', {
@@ -584,10 +585,10 @@ export function calculateCompletion(
       case 'planned_prefectures':
         fieldValue = profile.planned_prefectures
         const persistedPlannedPrefectures = persistedProfile?.planned_prefectures
-        // 🚨 CRITICAL: 確定値優先判定（編集中draft空でもDB値があれば完了扱い）
+        // 🚨 UX改善: オプション項目として「配列存在=入力済み」扱い（0件でも完了）
         isCompleted = (
-          (Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0) ||
-          (Array.isArray(persistedPlannedPrefectures) && persistedPlannedPrefectures.length > 0)
+          Array.isArray(profile.planned_prefectures) ||
+          Array.isArray(persistedPlannedPrefectures)
         )
         
         // 🔍 planned_prefectures確定値優先判定ログ
@@ -774,29 +775,31 @@ export function calculateProfileCompletion(
   let optionalFields = []
 
   if (isForeignMale) {
-    // 🏆 外国人男性の必須フィールド（8個）- 合計17フィールドのうち8個が必須
-    // UI上必ず表示され、100%達成には全て入力が必要
+    // 🚨 UX改善: 外国人男性の必須フィールド（6個）- 新規登録直後に自然に入力される基本項目のみ
+    // UI上必ず表示され、ユーザーが「基本完成」と感じる項目
     requiredFields = [
       'nickname',         // ニックネーム
       'gender',           // 性別
       'age',              // 年齢  
       'birth_date',       // 生年月日
       'nationality',      // 国籍
-      'hobbies',          // 日本文化（配列、最低1個選択）
-      'self_introduction', // 自己紹介
-      'language_info'     // 言語情報（統一スロット、language_skillsベース）
+      'self_introduction' // 自己紹介
+      // hobbies: 任意項目に変更（新規ユーザーに即座選択を強いるのはUX的に不自然）
+      // language_info: 任意項目に変更（外国人でも言語スキルは段階的入力が自然）
     ]
 
-    // 🎯 外国人男性のオプションフィールド（8個）- 合計17フィールドのうち8個がオプション  
-    // UI上表示され、入力すると完成度向上、空でも100%達成可能
+    // 🎯 外国人男性のオプションフィールド（10個）- プロフィール充実化項目
+    // UI上表示され、入力すると完成度向上、空でも基本完成度達成可能
     optionalFields = [
-      'occupation',         // 職業
-      'height',            // 身長
-      'body_type',         // 体型
-      'marital_status',    // 婚姻状況
-      'personality',       // 性格（配列、selectedPersonalityベース）
-      'visit_schedule',    // 訪問予定時期
-      'travel_companion',  // 同行者
+      'hobbies',           // 日本文化（旧必須→任意に変更）
+      'language_info',     // 言語情報（旧必須→任意に変更）
+      'occupation',        // 職業
+      'height',           // 身長
+      'body_type',        // 体型
+      'marital_status',   // 婚姻状況
+      'personality',      // 性格（配列、selectedPersonalityベース）
+      'visit_schedule',   // 訪問予定時期
+      'travel_companion', // 同行者
       'planned_prefectures' // 訪問予定都道府県（配列、selectedPlannedPrefecturesベース）
     ]
   } else {

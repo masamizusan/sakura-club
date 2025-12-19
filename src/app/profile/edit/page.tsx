@@ -4059,7 +4059,7 @@ function ProfileEditContent() {
                     <div className="col-span-2">
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('profile.languages')} <span className="text-red-500">*</span>
+                          {t('profile.languages')}
                         </label>
                         <p className="text-xs text-gray-500 mb-3">
                           {t('profile.languageHelp')}
@@ -4295,7 +4295,6 @@ function ProfileEditContent() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t('profile.plannedPrefectures')}
-                          <span className="text-red-500 ml-1">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3">{t('profile.prefectureSelectionRule')}</p>
 
@@ -4375,7 +4374,7 @@ function ProfileEditContent() {
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span>（{selectedHobbies.length}/8 {t('profile.selectedCount')}）
+                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {t('profile.selectCultureNote')}
