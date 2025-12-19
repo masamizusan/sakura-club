@@ -652,15 +652,20 @@ function ProfileEditContent() {
 
   // 🌟 CRITICAL: 統一された完成度計算・更新ヘルパー（初期化ガード付き）
   const updateCompletionUnified = useCallback((source: string = 'unknown', explicitImages?: any[]) => {
-    // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算を完全にスキップ
-    if (isInitializing) {
-      console.log('🛑 completion skipped because isInitializing=true', { source, isInitializing })
+    // 🚨 CRITICAL: ガード条件統一化 - isInitializingのみをチェック
+    if (initializingRef.current === true) {
+      console.log('🛑 completion skipped because initializingRef=true', { 
+        source, 
+        initializingRef: initializingRef.current,
+        isInitializing,
+        reason: '初期化中のみスキップ' 
+      })
       return
     }
     
-    // 初期化完了前は計算しない
+    // 初期化完了前は計算しない（ハイドレーション完了チェック）
     if (!isHydrated) {
-      console.log('🛡️ updateCompletionUnified: 初期化未完了のため計算スキップ', { source })
+      console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { source })
       return
     }
     
@@ -894,13 +899,25 @@ function ProfileEditContent() {
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📸 写真変更: state更新完了', { images: newImages.length })
     
-    // 🚨 FIX: 写真変更完了フラグをリセット + 強制再計算
+    // 🚨 CRITICAL: 画像変更完了時の確実な状態リセット
     setTimeout(() => {
-      console.log('📸 写真変更完了：デバウンス計算を再有効化')
-      setIsImageChanging(false)
+      console.log('📸 写真変更完了：フラグリセット開始')
       
-      // 🎯 CRITICAL: 画像変更完了時に必ず1回だけ強制再計算
-      console.log('🔥 画像変更完了時の強制完成度再計算実行')
+      // 🔧 STEP 1: isImageChanging を確実に false に戻す
+      setIsImageChanging(false)
+      console.log('✅ isImageChanging = false 設定完了')
+      
+      // 🔧 STEP 2: isInitializing も念のため確実に false に戻す
+      if (initializingRef.current === true) {
+        initializingRef.current = false
+        console.log('✅ initializingRef.current = false 強制設定完了')
+      }
+      
+      // 🔧 STEP 3: 両方のフラグがfalseの状態で強制再計算
+      console.log('🔥 画像変更完了時の強制完成度再計算実行', {
+        isImageChanging: false,
+        isInitializing: initializingRef.current
+      })
       updateCompletionUnified('image-change-finalize')
     }, 100)
   }, [])
@@ -1076,23 +1093,28 @@ function ProfileEditContent() {
         // 500ms後に計算実行（デバウンス）
         timeoutId = setTimeout(() => {
           // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
-          if (isInitializing) {
-            console.log('🛑 watch debounce: skipped because isInitializing=true', { isInitializing })
+          // 🚨 CRITICAL: ガード条件統一 - initializingRefのみをチェック
+          if (initializingRef.current === true) {
+            console.log('🛑 watch debounce: skipped because initializingRef=true', { 
+              initializingRef: initializingRef.current,
+              isInitializing,
+              reason: 'メインwatch統一ガード' 
+            })
             return
           }
           
-          // 🔧 FIX: 写真変更中スキップの粒度調整
+          // 🚨 CRITICAL FIX: isImageChangingはデバウンス制御のみ、完全スキップは禁止
           if (isImageChanging) {
-            const currentValues = getValues()
-            console.log('🚫 写真変更中のためデバウンス計算をスキップ', {
+            console.log('⏳ 写真変更中 - デバウンス時間を延長して計算実行', {
               isImageChanging,
               profileImagesLength: profileImages.length,
-              triggerSource: 'main-watch-debounce',
-              formLangSkills: currentValues.language_skills?.length || 0,
-              stateLangSkills: languageSkills.length,
-              formHobbies: currentValues.hobbies?.length || 0,
-              stateHobbies: selectedHobbies.length
+              action: 'debounce-延長（スキップ無し）'
             })
+            // スキップせず、デバウンス時間のみ延長
+            timeoutId = setTimeout(() => {
+              console.log('📸 写真変更中だがデバウンス延長後に完成度計算実行')
+              updateCompletionUnified('watch-debounce-during-image-change')
+            }, 1000) // 通常500msから1000msに延長
             return
           }
           
