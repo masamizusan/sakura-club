@@ -490,47 +490,6 @@ export function calculateCompletion(
         fieldValue = profile.nationality
         isCompleted = !!(profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none')
         break
-      case 'hobbies':
-        fieldValue = profile.hobbies
-        const persistedHobbies = persistedProfile?.hobbies || persistedProfile?.interests
-        // 🚨 UX改善: オプション項目として「配列存在=入力済み」扱い（0件でも完了）
-        isCompleted = (
-          Array.isArray(profile.hobbies) ||
-          Array.isArray(persistedHobbies)
-        )
-        
-        // 🧪 HOBBIES REQUIRED CHECK DEBUG（33%問題解決用）
-        console.log("🧪 HOBBIES REQUIRED CHECK DEBUG", {
-          rawHobbies: profile.hobbies,
-          normalizedHobbies: profile.hobbies,
-          length: profile.hobbies?.length,
-          isArray: Array.isArray(profile.hobbies),
-          isCompleted: isCompleted,
-          persistedHobbies: persistedHobbies,
-          persistedLength: persistedHobbies?.length,
-          'logic_check': {
-            'profile.hobbies_isArray': Array.isArray(profile.hobbies),
-            'profile.hobbies_length': profile.hobbies?.length,
-            'profile.hobbies_length_gt_0': Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
-            'persistedHobbies_isArray': Array.isArray(persistedHobbies),
-            'persistedHobbies_length': persistedHobbies?.length,
-            'persistedHobbies_length_gt_0': Array.isArray(persistedHobbies) && persistedHobbies.length > 0
-          }
-        })
-        
-        // 🔍 hobbies確定値優先判定ログ（詳細版）
-        console.log('🔍 HOBBIES PERSISTED VALUE CHECK (DETAILED):', {
-          'DB_profile.hobbies': profile.hobbies,
-          'DB_profile.culture_tags': (profile as any).culture_tags, 
-          'persistedProfile.hobbies': persistedProfile?.hobbies,
-          'persistedProfile.interests': persistedProfile?.interests,
-          'persistedProfile.culture_tags': (persistedProfile as any)?.culture_tags,
-          'merged_persistedHobbies': persistedHobbies,
-          draftHasItems: Array.isArray(profile.hobbies) && profile.hobbies.length > 0,
-          persistedHasItems: Array.isArray(persistedHobbies) && persistedHobbies.length > 0,
-          finalIsCompleted: isCompleted
-        })
-        break
       case 'self_introduction':
         fieldValue = profile.self_introduction
         const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(fieldValue || '')
@@ -548,56 +507,6 @@ export function calculateCompletion(
           isDefaultText: isDefaultSelfIntro,
           isCompleted: isCompleted,
           defaultTexts: DEFAULT_SELF_INTRODUCTIONS
-        })
-        break
-      case 'language_info':
-        fieldValue = profile.language_skills
-        const persistedLanguageSkills = persistedProfile?.language_skills
-        
-        // 🚨 CRITICAL: 寛容判定で既存必須項目を保護
-        const draftHasValidLanguage = hasLanguageInfo(profile)
-        const persistedHasValidLanguage = persistedLanguageSkills ? hasLanguageInfo({language_skills: persistedLanguageSkills}) : false
-        
-        // 🎯 特別ロジック: 言語選択中（level未選択）でも他必須項目を減算しない
-        const hasLanguageSelected = Array.isArray(profile.language_skills) && 
-          profile.language_skills.length > 0 &&
-          profile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
-          
-        const hasPersistedLanguageSelected = Array.isArray(persistedLanguageSkills) &&
-          persistedLanguageSkills.length > 0 &&
-          persistedLanguageSkills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
-        
-        // 🚨 UX改善: オプション項目として言語選択のみで完了扱い（レベル未選択でも可）
-        isCompleted = hasLanguageSelected || hasPersistedLanguageSelected || draftHasValidLanguage || persistedHasValidLanguage
-        
-        // 🔍 language_info保護的判定ログ
-        console.log('🔍 LANGUAGE_INFO PROTECTIVE CHECK:', {
-          draftValue: profile.language_skills,
-          persistedValue: persistedLanguageSkills,
-          draftHasValidLanguage: draftHasValidLanguage,
-          persistedHasValidLanguage: persistedHasValidLanguage,
-          hasLanguageSelected: hasLanguageSelected,
-          hasPersistedLanguageSelected: hasPersistedLanguageSelected,
-          finalIsCompleted: isCompleted,
-          protectionActive: !draftHasValidLanguage && !persistedHasValidLanguage && (hasLanguageSelected || hasPersistedLanguageSelected)
-        })
-        break
-      case 'planned_prefectures':
-        fieldValue = profile.planned_prefectures
-        const persistedPlannedPrefectures = persistedProfile?.planned_prefectures
-        // 🚨 UX改善: オプション項目として「配列存在=入力済み」扱い（0件でも完了）
-        isCompleted = (
-          Array.isArray(profile.planned_prefectures) ||
-          Array.isArray(persistedPlannedPrefectures)
-        )
-        
-        // 🔍 planned_prefectures確定値優先判定ログ
-        console.log('🔍 PLANNED_PREFECTURES PERSISTED VALUE CHECK:', {
-          draftValue: profile.planned_prefectures,
-          persistedValue: persistedPlannedPrefectures,
-          draftHasItems: Array.isArray(profile.planned_prefectures) && profile.planned_prefectures.length > 0,
-          persistedHasItems: Array.isArray(persistedPlannedPrefectures) && persistedPlannedPrefectures.length > 0,
-          finalIsCompleted: isCompleted
         })
         break
       default:
@@ -620,30 +529,6 @@ export function calculateCompletion(
   // 🎯 CRITICAL: 言語入力時の完成度低下防止ロジック
   let stabilizedCompletedCount = completedRequired.length
   
-  // 言語選択中（level未完了）で他必須項目が影響を受ける場合の保護
-  const languageInfoCompleted = requiredFieldStatus['language_info']
-  const hasLanguageSelected = Array.isArray(profile.language_skills) && 
-    profile.language_skills.length > 0 &&
-    profile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
-  const hasPersistedLanguageSelected = Array.isArray(persistedProfile?.language_skills) &&
-    persistedProfile.language_skills.length > 0 &&
-    persistedProfile.language_skills.some((s: any) => s && s.language && s.language !== 'none' && s.language.trim() !== '')
-    
-  const languageInProgress = !languageInfoCompleted && (hasLanguageSelected || hasPersistedLanguageSelected)
-  
-  if (languageInProgress) {
-    // 🛡️ 言語選択中は必須項目数を保護（他項目の達成状態は維持）
-    const nonLanguageCompleted = completedRequired.filter(field => field !== 'language_info')
-    stabilizedCompletedCount = nonLanguageCompleted.length
-    
-    console.log('🛡️ LANGUAGE INPUT PROTECTION ACTIVE:', {
-      originalCompletedCount: completedRequired.length,
-      protectedCompletedCount: stabilizedCompletedCount,
-      languageInProgress: languageInProgress,
-      hasLanguageSelected: hasLanguageSelected,
-      hasPersistedLanguageSelected: hasPersistedLanguageSelected
-    })
-  }
 
   // 🔍 6/9になる問題の核心特定ログ
   const trueKeys = Object.entries(requiredFieldStatus)
@@ -655,9 +540,7 @@ export function calculateCompletion(
     originalCompletedCount: completedRequired.length,
     stabilizedCompletedCount: stabilizedCompletedCount,
     totalRequired: requiredFields.length,
-    percentage: Math.round((stabilizedCompletedCount / requiredFields.length) * 50),
-    languageInProgress: languageInProgress,
-    protectionActive: languageInProgress && stabilizedCompletedCount !== completedRequired.length
+    percentage: Math.round((stabilizedCompletedCount / requiredFields.length) * 50)
   })
   
   // 🔍 6項目目特定：必須項目の詳細状況
@@ -823,18 +706,9 @@ export function calculateProfileCompletion(
       case 'prefecture':
         value = cleanProfileData.residence || cleanProfileData.prefecture
         break
-      case 'hobbies':
-        value = cleanProfileData.hobbies || cleanProfileData.interests
-        break
       case 'self_introduction':
         value = cleanProfileData.bio || cleanProfileData.self_introduction
         break
-      case 'planned_prefectures':
-        value = cleanProfileData.planned_prefectures
-        break
-      case 'language_info':
-        // ✨ 統一された言語情報スロット（cleanProfileDataを使用）
-        return hasLanguageInfo(cleanProfileData)
       default:
         value = cleanProfileData[field]
     }
