@@ -633,8 +633,8 @@ function MyPageContent() {
     console.log('🔧 88% COMPLETION FIX VERIFICATION:')
     console.log(`  ❓ Expected: 100% (17項目完成)`)
     console.log(`  ✅ Actual: ${result.completion}% (completed: ${result.completedFields}/${result.totalFields})`)
-    console.log(`  🔍 hobbies check:`, normalized.hobbies?.length > 0 ? 'OK' : 'MISSING', normalized.hobbies)
-    console.log(`  🔍 personality check:`, normalized.personality?.length > 0 ? 'OK' : 'MISSING', normalized.personality)
+    console.log(`  🔍 hobbies check:`, (normalized.hobbies && normalized.hobbies.length > 0) ? 'OK' : 'MISSING', normalized.hobbies)
+    console.log(`  🔍 personality check:`, (normalized.personality && normalized.personality.length > 0) ? 'OK' : 'MISSING', normalized.personality)
     console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.completedFields}/${result.totalFields} fields`)
 
     // 既存のUI更新ロジックを維持

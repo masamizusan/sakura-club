@@ -2555,7 +2555,7 @@ function ProfileEditContent() {
                   operation: 'FROMMYPAGE_FORCE_CALC',
                   initialData: {
                     ...initialData,
-                    imagesCount: finalImages?.length || 0
+                    imagesCount: profileImages?.length || 0
                   },
                   initializingRef: initializingRef.current,
                   isInitializing: isInitializing,
