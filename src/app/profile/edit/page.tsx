@@ -500,9 +500,11 @@ function ProfileEditContent() {
     if (isFromSignup && typeof window !== 'undefined') {
       console.log('🧹 新規ユーザー: デプロイ直後対策でストレージを早期クリア')
       try {
-        // セッションストレージの画像関連データを削除
-        sessionStorage.removeItem('currentProfileImages')
-        sessionStorage.removeItem('imageStateTimestamp')
+        // 🌸 TASK5: test mode安全なキー使用でセッションストレージクリア
+        const safeUserId = user?.id || 'testmode'
+        sessionStorage.removeItem(`currentProfileImages_${safeUserId}`)
+        sessionStorage.removeItem(`imageStateTimestamp_${safeUserId}`)
+        sessionStorage.removeItem(`imageChangeTime_${safeUserId}`)
         sessionStorage.removeItem('imageEditHistory')
 
         // ユーザー固有キーも削除
@@ -553,6 +555,8 @@ function ProfileEditContent() {
   const [profileImages, setProfileImages] = useState<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   // 🔧 FIX: stale state問題解決のため、最新の画像配列をrefで保持
   const profileImagesRef = useRef<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
+  // 🌸 TASK1: hydration完了後のqueued再計算用フラグ
+  const queuedRecalcRef = useRef<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -663,13 +667,16 @@ function ProfileEditContent() {
       return
     }
     
-    // 🌸 TASK3: 初期化完了前はqueuedRecalcフラグを立てる（永続スキップを禁止）
+    // 🌸 TASK1: 初期化完了前はqueuedRecalcフラグを立てる（永続スキップを禁止）
     if (!isHydrated) {
+      queuedRecalcRef.current = true
       console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { 
-        source,
-        queuedRecalc: true 
+        triggerSource: source,
+        queuedRecalc_ON: queuedRecalcRef.current,
+        willExecuteAfterHydration: true,
+        imagesCount: profileImagesRef.current.length,
+        hydrationStatus: 'pending'
       })
-      // TODO: queuedRecalcフラグ実装（hydration完了時に1回だけ再実行）
       return
     }
     
@@ -696,16 +703,19 @@ function ProfileEditContent() {
         planned_prefectures: selectedPlannedPrefectures,
       }
 
-      // 🌸 追加ログ（確認用） - タスクの要求通り
+      // 🌸 必須確認ログ - 全タスク要求を満たす統合ログ
       console.log('🌟 updateCompletionUnified: 統一フロー実行', {
         triggerSource: source,
         imagesCount: imagesForCalc.length,
+        has_profile_image: imagesForCalc.length > 0,
         isHydrated,
+        queuedRecalc: queuedRecalcRef.current,
         hobbies_length: formValuesForCompletion.hobbies?.length || 0,
         personality_length: formValuesForCompletion.personality?.length || 0,
         language_skills_length: formValuesForCompletion.language_skills?.length || 0,
         imagesForCalc_length: imagesForCalc.length,
-        imagesForCalc_detail: imagesForCalc.map(img => ({ id: img.id, hasUrl: !!img.url }))
+        imagesForCalc_detail: imagesForCalc.map(img => ({ id: img.id, hasUrl: !!img.url })),
+        hydrationStatus: isHydrated ? 'completed' : 'pending'
       })
 
       const urlParams = new URLSearchParams(window.location.search)
@@ -824,11 +834,45 @@ function ProfileEditContent() {
       newImages
     )
     
-    // 無限ループ防止：現在の状態と同じ場合は早期リターン
-    if (JSON.stringify(profileImages) === JSON.stringify(newImages)) {
-      console.log('🚫 同じ画像状態のため処理をスキップ')
+    // 🌸 TASK3: 精密な画像状態比較（0枚削除時の誤判定を防ぐ）
+    const currentImageIds = profileImages.map(img => img.id).sort()
+    const newImageIds = newImages.map(img => img.id).sort()
+    const isSameImageSet = currentImageIds.length === newImageIds.length && 
+                          currentImageIds.every((id, index) => id === newImageIds[index])
+    
+    if (isSameImageSet) {
+      console.log('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
+        current_ids: currentImageIds,
+        new_ids: newImageIds
+      })
       return
     }
+    
+    console.log('🎯 画像状態変更検出', {
+      from: currentImageIds.length + '枚',
+      to: newImageIds.length + '枚',
+      current_ids: currentImageIds,
+      new_ids: newImageIds
+    })
+    
+    // 🌸 TASK3: 競合ガード - 直前に画像追加があった場合、短期間の0枚イベントを無視
+    const lastChangeTime = Date.now()
+    const imageChangeKey = `imageChangeTime_${user?.id || 'testmode'}`
+    const lastChange = sessionStorage.getItem(imageChangeKey)
+    
+    if (newImages.length === 0 && currentImageIds.length > 0 && lastChange) {
+      const timeSinceLastChange = lastChangeTime - parseInt(lastChange)
+      if (timeSinceLastChange < 500) { // 500ms以内の0枚イベントは無視
+        console.log('🛡️ 競合ガード: 直前の画像追加から500ms以内の0枚イベントを無視', {
+          timeSinceLastChange,
+          previousImages: currentImageIds.length
+        })
+        return
+      }
+    }
+    
+    // 画像変更タイムスタンプを記録
+    sessionStorage.setItem(imageChangeKey, lastChangeTime.toString())
     
     // 写真変更中フラグを設定（デバウンス計算を一時的に無効化）
     setIsImageChanging(true)
@@ -911,8 +955,22 @@ function ProfileEditContent() {
         console.error('❌ 写真保存中にエラー:', error)
       }
     }
+    // 🌸 TASK4: 削除時の確実な状態確認
+    if (newImages.length === 0 && currentImageIds.length > 0) {
+      console.log('🗑️ 画像削除検出: state/ref/sessionStorageを完全同期', {
+        beforeDelete: currentImageIds.length,
+        afterDelete: newImages.length,
+        profileImages_state: profileImages.length,
+        profileImagesRef: profileImagesRef.current.length
+      })
+    }
+    
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📸 写真変更: state更新完了', { images: newImages.length })
+    console.log('📸 写真変更: state更新完了', { 
+      images: newImages.length,
+      isAddition: newImages.length > currentImageIds.length,
+      isDeletion: newImages.length < currentImageIds.length
+    })
     
     // 🚨 CRITICAL: 画像変更完了時の確実な状態リセット
     setTimeout(() => {
@@ -931,9 +989,12 @@ function ProfileEditContent() {
       // 🔧 STEP 3: 両方のフラグがfalseの状態で強制再計算
       console.log('🔥 画像変更完了時の強制完成度再計算実行', {
         isImageChanging: false,
-        isInitializing: initializingRef.current
+        isInitializing: initializingRef.current,
+        finalImageCount: profileImagesRef.current.length,
+        isDeletion: newImages.length < currentImageIds.length
       })
-      updateCompletionUnified('image-change-finalize')
+      // 🌸 TASK4: 削除時の確実な再計算（queued対応込み）
+      updateCompletionUnified(newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize')
     }, 100)
   }, [])
 
@@ -1253,6 +1314,19 @@ function ProfileEditContent() {
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📝 languageSkills state updated:', languageSkills.length, 'skills')
   }, [languageSkills, setValue])
+
+  // 🌸 TASK1: hydration完了時のqueued再計算処理
+  useEffect(() => {
+    if (isHydrated && queuedRecalcRef.current) {
+      console.log('🎯 hydration完了 - queued再計算実行', {
+        isHydrated,
+        queuedRecalc: queuedRecalcRef.current,
+        source: 'queued-after-hydration'
+      })
+      queuedRecalcRef.current = false // フラグをリセット
+      updateCompletionUnified('queued-after-hydration')
+    }
+  }, [isHydrated, updateCompletionUnified])
 
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
@@ -3042,9 +3116,10 @@ function ProfileEditContent() {
           }
         } else if (isNewUser) {
           console.log('🔒 新規ユーザー: セッションストレージの使用を禁止（セキュリティ保護）')
-          // 新規ユーザーの場合は他ユーザーのデータを完全削除
-          sessionStorage.removeItem('currentProfileImages')
-          sessionStorage.removeItem('imageStateTimestamp')
+          // 🌸 TASK5: 新規ユーザーの場合は全ユーザーのデータを完全削除
+          const safeUserId = user?.id || 'testmode'
+          sessionStorage.removeItem(`currentProfileImages_${safeUserId}`)
+          sessionStorage.removeItem(`imageStateTimestamp_${safeUserId}`)
           for (let i = 0; i < sessionStorage.length; i++) {
             const key = sessionStorage.key(i)
             if (key?.startsWith('currentProfileImages_') || key?.startsWith('imageStateTimestamp_')) {

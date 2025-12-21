@@ -397,8 +397,9 @@ export function buildProfileForCompletion(
  * 🌸 画像状態を必ず含める（フォーム値だけに依存しない）
  */
 export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]) {
-  // 🌸 TASK1: 画像の有無を必ずセット（state/ref を一次ソース）
+  // 🌸 TASK2: 画像の有無を必ずセット（state/ref を一次ソース）
   const imagesCount = Array.isArray(imageArray) ? imageArray.length : 0
+  const hasImages = imagesCount > 0
   
   console.log('🌟 buildCompletionInputFromForm: フォーム値のみで入力オブジェクト作成', {
     nickname: formValues.nickname,
@@ -406,7 +407,8 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
     personality_length: Array.isArray(formValues.personality) ? formValues.personality.length : 0,
     language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0,
     imagesCount: imagesCount,
-    has_profile_image: imagesCount > 0
+    has_profile_image: hasImages,
+    imageArray_provided: Array.isArray(imageArray)
   })
 
   return {
@@ -439,8 +441,8 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
     prefecture: formValues.prefecture,
     city: formValues.city,
     
-    // 🌸 TASK1: 画像状態を確実に含める
-    has_profile_image: imagesCount > 0,
+    // 🌸 TASK2: 画像状態を確実に含める（state/refから優先取得）
+    has_profile_image: hasImages,
     profile_images: imageArray || [],
     // 画像関連フォールバック
     avatar_url: formValues.avatar_url,
