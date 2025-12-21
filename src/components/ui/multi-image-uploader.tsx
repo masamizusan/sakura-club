@@ -112,37 +112,42 @@ export default function MultiImageUploader({
   }
 
   const handleImageDelete = (imageId: string) => {
+    // 🧨 削除開始ログ（最初に出力）
+    console.log('🧨 remove image start', { 
+      imageId, 
+      before: images.length,
+      targetImage: images.find(img => img.id === imageId)?.url || 'not found',
+      timestamp: new Date().toISOString()
+    })
+    
     try {
-      console.log('🚨 IMAGE_DELETE_START', {
-        imageId,
-        beforeDelete: images.length,
-        targetImage: images.find(img => img.id === imageId)?.url || 'not found',
-        timestamp: new Date().toISOString()
-      })
-      
-      // ① まずUI/state を更新（ここで画面上は必ず消える）
-      const updatedImages = images.filter(img => img.id !== imageId)
+      // ① UI更新（最優先・確実に実行）
+      const nextImages = images.filter(img => img.id !== imageId)
       
       // メイン画像を削除した場合、次の画像をメインに設定
-      if (images.find(img => img.id === imageId)?.isMain && updatedImages.length > 0) {
-        updatedImages[0].isMain = true
+      if (images.find(img => img.id === imageId)?.isMain && nextImages.length > 0) {
+        nextImages[0].isMain = true
       }
       
-      console.log('🗑️ MultiImageUploader: UI更新完了', {
-        afterDelete: updatedImages.length,
-        calling_onImagesChange: true
+      console.log('🧨 UI update completed', {
+        after: nextImages.length,
+        removed: images.length - nextImages.length
       })
       
-      // ② 必ず成功する処理のみ（例外発生の余地なし）
-      onImagesChange(updatedImages)
+      // ② 即座に親に伝える（完成度更新も同時実行される）
+      onImagesChange(nextImages)
+      
+      console.log('🧨 onImagesChange called - deletion flow completed')
       
     } catch (error) {
-      console.error('🚨 IMAGE_DELETE_CRASH in MultiImageUploader:', {
+      // 🧨 削除失敗ログ（詳細スタックトレース）
+      console.error('🧨 remove image failed', {
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : 'no stack',
         imageId,
         imagesLength: images.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        callStack: (new Error()).stack?.split('\n').slice(1, 5) || 'no stack'
       })
       // ❗ 絶対にthrowしない
     }
@@ -205,10 +210,15 @@ export default function MultiImageUploader({
                 <Edit className="w-3 h-3" />
               </Button>
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
-                onClick={() => handleImageDelete(image.id)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleImageDelete(image.id)
+                }}
               >
                 <X className="w-3 h-3" />
               </Button>

@@ -32,6 +32,13 @@ export default function Error({ error, reset }: ErrorPageProps) {
     
     // 🚨 NEXT_ERROR_BOUNDARY でも出力（デバッグ用）
     console.error('NEXT_ERROR_BOUNDARY', error)
+    
+    // 🔥 ERROR BOUNDARY: 完全スタックトレース出力
+    console.error('🔥 ERROR BOUNDARY:', {
+      message: error.message,
+      stack: error.stack,
+      fullError: error
+    })
   }, [error])
 
   return (

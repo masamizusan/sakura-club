@@ -912,12 +912,12 @@ function ProfileEditContent() {
       }
     }
     
-      // 🌸 TASK2: 安全なキー生成関数でundefinedキー禁止
+      // 🌸 TASK2: 安全なキー生成関数でundefinedキー禁止（TESTモード用固定キー）
       const getProfileImagesKey = () => {
-        if (user?.id) return `currentProfileImages_${user.id}`
-        const profileType = searchParams?.get('type') || 'unknown'
-        const nickname = searchParams?.get('nickname') || 'anon'
-        return `currentProfileImages_test_${profileType}_${nickname}`
+        // TESTモードは完全固定キーで安全化
+        if (isTestMode) return 'currentProfileImages_test'
+        // 本番モードのみuser.idを使用
+        return user?.id ? `currentProfileImages_${user.id}` : 'currentProfileImages_test'
       }
       
       const imageChangeKey = getProfileImagesKey().replace('currentProfileImages', 'imageChangeTime')
@@ -950,18 +950,21 @@ function ProfileEditContent() {
           localStateOnly: true
         })
         // ローカルstate更新のみで処理完了
-        setTimeout(() => {
-          try {
-            setIsImageChanging(false)
-            updateCompletionUnified('image-delete-test-mode')
-          } catch (error) {
-            console.error('🚨 ERROR in TEST mode completion update:', {
-              error: error instanceof Error ? error.message : error,
-              stack: error instanceof Error ? error.stack : 'no stack'
-            })
-            // 絶対にthrowしない
-          }
-        }, 100)
+        // 🌸 CRITICAL: TESTモード削除時も即座に完成度更新（explicitImages渡し）
+        try {
+          setIsImageChanging(false)
+          updateCompletionUnified('image-delete-test-mode', newImages)
+          console.log('🧨 TEST mode completion updated', { 
+            newImagesLength: newImages.length,
+            explicitImages: true 
+          })
+        } catch (error) {
+          console.error('🚨 ERROR in TEST mode completion update:', {
+            error: error instanceof Error ? error.message : error,
+            stack: error instanceof Error ? error.stack : 'no stack'
+          })
+          // 絶対にthrowしない
+        }
         return
       }
     
@@ -1084,9 +1087,17 @@ function ProfileEditContent() {
         finalImageCount: profileImagesRef.current.length,
         isDeletion: newImages.length < currentImageIds.length
       })
-      // 🌸 TASK4: 削除時の確実な再計算（queued対応込み）
+      // 🌸 TASK4: 削除時の確実な再計算（queued対応込み + explicitImages）
       try {
-        updateCompletionUnified(newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize')
+        updateCompletionUnified(
+          newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize',
+          newImages
+        )
+        console.log('🧨 production mode completion updated', { 
+          newImagesLength: newImages.length,
+          explicitImages: true,
+          isDeletion: newImages.length < currentImageIds.length
+        })
       } catch (error) {
         console.error('🚨 ERROR in completion calculation after image change:', {
           error: error instanceof Error ? error.message : error,
