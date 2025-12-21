@@ -20,8 +20,18 @@ export default function Error({ error, reset }: ErrorPageProps) {
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
       url: typeof window !== 'undefined' ? window.location.href : 'server',
       localStorage_devTestMode: typeof window !== 'undefined' ? localStorage.getItem('devTestMode') : null,
-      sessionStorage_keys: typeof window !== 'undefined' ? Object.keys(sessionStorage) : []
+      sessionStorage_keys: typeof window !== 'undefined' ? Object.keys(sessionStorage) : [],
+      // 🔍 追加デバッグ情報
+      urlParams: typeof window !== 'undefined' ? Object.fromEntries(new URLSearchParams(window.location.search)) : {},
+      isTestMode: typeof window !== 'undefined' ? (
+        new URLSearchParams(window.location.search).get('devTest') === 'true' ||
+        window.location.pathname.includes('/test') ||
+        localStorage.getItem('devTestMode') === 'true'
+      ) : false
     })
+    
+    // 🚨 NEXT_ERROR_BOUNDARY でも出力（デバッグ用）
+    console.error('NEXT_ERROR_BOUNDARY', error)
   }, [error])
 
   return (

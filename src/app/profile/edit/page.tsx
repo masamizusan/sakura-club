@@ -847,7 +847,12 @@ function ProfileEditContent() {
         newImagesLength: newImages.length,
         isDeletion: newImages.length < profileImages.length,
         sessionAvailable: typeof sessionStorage !== 'undefined',
-        windowAvailable: typeof window !== 'undefined'
+        windowAvailable: typeof window !== 'undefined',
+        // 🔍 スタックトレース用情報
+        currentUrl: typeof window !== 'undefined' ? window.location.href : 'unknown',
+        callStack: (new Error()).stack?.split('\n').slice(1, 5) || 'no stack',
+        hydrated: isHydrated,
+        initializing: isInitializing
       })
     
     // 🌸 TASK2: 精密な画像状態比較（削除は絶対にスキップしない）
@@ -946,8 +951,16 @@ function ProfileEditContent() {
         })
         // ローカルstate更新のみで処理完了
         setTimeout(() => {
-          setIsImageChanging(false)
-          updateCompletionUnified('image-delete-test-mode')
+          try {
+            setIsImageChanging(false)
+            updateCompletionUnified('image-delete-test-mode')
+          } catch (error) {
+            console.error('🚨 ERROR in TEST mode completion update:', {
+              error: error instanceof Error ? error.message : error,
+              stack: error instanceof Error ? error.stack : 'no stack'
+            })
+            // 絶対にthrowしない
+          }
         }, 100)
         return
       }
@@ -1072,7 +1085,16 @@ function ProfileEditContent() {
         isDeletion: newImages.length < currentImageIds.length
       })
       // 🌸 TASK4: 削除時の確実な再計算（queued対応込み）
-      updateCompletionUnified(newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize')
+      try {
+        updateCompletionUnified(newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize')
+      } catch (error) {
+        console.error('🚨 ERROR in completion calculation after image change:', {
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : 'no stack',
+          isDeletion: newImages.length < currentImageIds.length
+        })
+        // 絶対にthrowしない
+      }
     }, 100)
     
     } catch (error) {
@@ -1280,8 +1302,16 @@ function ProfileEditContent() {
             })
             // スキップせず、デバウンス時間のみ延長
             timeoutId = setTimeout(() => {
-              console.log('📸 写真変更中だがデバウンス延長後に完成度計算実行')
-              updateCompletionUnified('watch-debounce-during-image-change')
+              try {
+                console.log('📸 写真変更中だがデバウンス延長後に完成度計算実行')
+                updateCompletionUnified('watch-debounce-during-image-change')
+              } catch (error) {
+                console.error('🚨 ERROR in watch debounce during image change:', {
+                  error: error instanceof Error ? error.message : error,
+                  stack: error instanceof Error ? error.stack : 'no stack'
+                })
+                // 絶対にthrowしない
+              }
             }, 1000) // 通常500msから1000msに延長
             return
           }
@@ -1314,7 +1344,15 @@ function ProfileEditContent() {
           })
           
           // 統一フローで完成度更新
-          updateCompletionUnified('watch-debounce')
+          try {
+            updateCompletionUnified('watch-debounce')
+          } catch (error) {
+            console.error('🚨 ERROR in watch debounce main:', {
+              error: error instanceof Error ? error.message : error,
+              stack: error instanceof Error ? error.stack : 'no stack'
+            })
+            // 絶対にthrowしない
+          }
         }, 500)
       }
     })
