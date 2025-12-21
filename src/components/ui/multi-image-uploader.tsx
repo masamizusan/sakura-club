@@ -17,7 +17,7 @@ interface ProfileImage {
 
 interface MultiImageUploaderProps {
   images: ProfileImage[]
-  onImagesChange: (images: ProfileImage[]) => void
+  onImagesChange: (images: ProfileImage[], deleteInfo?: { isDeletion: boolean; prevLength: number; deletedImageId: string }) => void
   maxImages?: number
   currentLanguage: SupportedLanguage
 }
@@ -121,7 +121,12 @@ export default function MultiImageUploader({
     })
     
     try {
-      // ① UI更新（最優先・確実に実行）
+      // 🔧 CRITICAL: 削除前のprevImagesを先に退避（比較用）
+      const prevImages = [...images]
+      const prevLength = prevImages.length
+      const prevIds = prevImages.map(img => img.id)
+      
+      // ① UI更新（nextImages生成）
       const nextImages = images.filter(img => img.id !== imageId)
       
       // メイン画像を削除した場合、次の画像をメインに設定
@@ -130,14 +135,22 @@ export default function MultiImageUploader({
       }
       
       console.log('🧨 UI update completed', {
+        prev: prevLength,
         after: nextImages.length,
-        removed: images.length - nextImages.length
+        removed: prevLength - nextImages.length,
+        prevIds: prevIds,
+        nextIds: nextImages.map(img => img.id),
+        isDeletion: nextImages.length < prevLength
       })
       
-      // ② 即座に親に伝える（完成度更新も同時実行される）
-      onImagesChange(nextImages)
+      // ② 削除フラグ付きで親に伝える（同一判定スキップを無効化）
+      onImagesChange(nextImages, { 
+        isDeletion: true,
+        prevLength: prevLength,
+        deletedImageId: imageId
+      })
       
-      console.log('🧨 onImagesChange called - deletion flow completed')
+      console.log('🧨 onImagesChange called with deletion flag - flow completed')
       
     } catch (error) {
       // 🧨 削除失敗ログ（詳細スタックトレース）

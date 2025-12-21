@@ -829,7 +829,10 @@ function ProfileEditContent() {
   const [isImageChanging, setIsImageChanging] = useState(false)
   
   // 写真変更時のコールバック関数
-  const handleImagesChange = useCallback(async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
+  const handleImagesChange = useCallback(async (
+    newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
+    deleteInfo?: { isDeletion: boolean; prevLength: number; deletedImageId: string }
+  ) => {
     try {
       // 🌸 TASK1: TEST mode / user状態検出
       const isTestMode = !user?.id || typeof window !== 'undefined' && (
@@ -855,18 +858,27 @@ function ProfileEditContent() {
         initializing: isInitializing
       })
     
-    // 🌸 TASK2: 精密な画像状態比較（削除は絶対にスキップしない）
+    // 🔧 CRITICAL FIX: 削除フラグがある場合は同一判定を完全スキップ
+    const isExplicitDeletion = deleteInfo?.isDeletion === true
     const currentImageIds = profileImages.map(img => img.id).sort()
     const newImageIds = newImages.map(img => img.id).sort()
-    const isDeletion = newImageIds.length < currentImageIds.length
+    const isDeletion = newImageIds.length < currentImageIds.length || isExplicitDeletion
     const isSameImageSet = currentImageIds.length === newImageIds.length && 
                           currentImageIds.every((id, index) => id === newImageIds[index])
     
-    if (isSameImageSet && !isDeletion) {
+    if (isExplicitDeletion) {
+      console.log('🧨 削除フラグ検出: 同一判定を完全無効化', {
+        deleteInfo,
+        current_ids: currentImageIds,
+        new_ids: newImageIds,
+        forcedProcessing: true
+      })
+    } else if (isSameImageSet && !isDeletion) {
       console.log('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
         current_ids: currentImageIds,
         new_ids: newImageIds,
-        isDeletion: false
+        isDeletion: false,
+        explicitDeletion: false
       })
       return
     } else if (isDeletion) {
@@ -936,35 +948,41 @@ function ProfileEditContent() {
       setProfileImages(newImages)
       profileImagesRef.current = newImages
       
-      console.log('🗑️ UI/state更新完了:', { 
+      console.log('🧨 UI/state更新完了:', { 
         newImages_length: newImages.length,
         ref_length: profileImagesRef.current.length,
-        画面上の表示: '更新済み'
+        isDeletion: isDeletion,
+        explicitDeletion: isExplicitDeletion
       })
+      
+      // 🔧 CRITICAL: UI更新直後に必ず完成度更新（TESTモード・本番共通）
+      try {
+        updateCompletionUnified(
+          isDeletion ? 'image-delete-immediate' : 'image-change-immediate', 
+          newImages
+        )
+        console.log('🧨 completion updated immediately after UI change', { 
+          newImagesLength: newImages.length,
+          explicitImages: true,
+          triggerSource: isDeletion ? 'delete' : 'change'
+        })
+      } catch (error) {
+        console.error('🚨 ERROR in immediate completion update:', {
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : 'no stack'
+        })
+        // 絶対にthrowしない
+      }
       
       // ② TESTモード or userなし → ここでreturn（外部I/Oスキップ）
       if (isTestMode || !user?.id) {
         console.log('🧪 IMAGE_DELETE: skipped external I/O (test mode)', {
           isTestMode,
           hasUserId: !!user?.id,
-          localStateOnly: true
+          localStateOnly: true,
+          completionAlreadyUpdated: true
         })
-        // ローカルstate更新のみで処理完了
-        // 🌸 CRITICAL: TESTモード削除時も即座に完成度更新（explicitImages渡し）
-        try {
-          setIsImageChanging(false)
-          updateCompletionUnified('image-delete-test-mode', newImages)
-          console.log('🧨 TEST mode completion updated', { 
-            newImagesLength: newImages.length,
-            explicitImages: true 
-          })
-        } catch (error) {
-          console.error('🚨 ERROR in TEST mode completion update:', {
-            error: error instanceof Error ? error.message : error,
-            stack: error instanceof Error ? error.stack : 'no stack'
-          })
-          // 絶対にthrowしない
-        }
+        setIsImageChanging(false)
         return
       }
     
