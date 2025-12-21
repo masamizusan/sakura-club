@@ -188,6 +188,46 @@ export const authService = {
     }
   },
 
+  // 🆕 テストモード検出機能
+  isTestModeActive(): boolean {
+    if (typeof window === 'undefined') return false
+    const urlParams = new URLSearchParams(window.location.search)
+    const pathname = window.location.pathname
+    
+    return !!(
+      urlParams.get('dev') === 'skip-verification' ||
+      urlParams.get('devTest') === 'true' ||
+      localStorage.getItem('devTestMode') === 'true' ||
+      pathname.includes('/test') ||
+      (pathname.includes('/profile/edit') && 
+       (urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')) &&
+       urlParams.get('fromMyPage') !== 'true')
+    )
+  },
+
+  // 🆕 匿名ログイン機能（テストモード用）
+  async signInAnonymously() {
+    const supabase = createClient()
+    
+    try {
+      console.log('🧪 Attempting anonymous sign-in for test mode...')
+      const { data, error } = await supabase.auth.signInAnonymously()
+      
+      if (error) {
+        console.error('❌ Anonymous sign-in failed:', error)
+        throw new AuthError(`匿名ログインに失敗しました: ${error.message}`)
+      }
+      
+      console.log('✅ Anonymous sign-in successful:', { userId: data.user?.id })
+      return { user: data.user, session: data.session }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error
+      }
+      throw new AuthError('匿名ログイン処理中にエラーが発生しました')
+    }
+  },
+
   async getCurrentUser(): Promise<AuthUser | null> {
     const supabase = createClient()
     
@@ -211,6 +251,17 @@ export const authService = {
       }
       
       let user = session?.user || null
+      
+      // 🆕 STEP 1.5: テストモード時はセッション無しで匿名ログイン実行
+      if (!user && this.isTestModeActive()) {
+        console.log('🧪 Test mode detected with no session - attempting anonymous sign-in')
+        try {
+          const { user: anonUser } = await this.signInAnonymously()
+          user = anonUser
+        } catch (error) {
+          console.error('❌ Anonymous sign-in failed, proceeding with null user:', error)
+        }
+      }
       
       // 🔧 STEP 2: セッションでユーザー取得できた場合
       if (user) {
@@ -365,27 +416,10 @@ export const authService = {
     const supabase = createClient()
     let lastUserId: string | null = null
     
-    // 🚨 CRITICAL: テストモード検出の統一化
-    const isTestModeActive = () => {
-      if (typeof window === 'undefined') return false
-      const urlParams = new URLSearchParams(window.location.search)
-      const pathname = window.location.pathname
-      
-      return !!(
-        urlParams.get('dev') === 'skip-verification' ||
-        urlParams.get('devTest') === 'true' ||
-        localStorage.getItem('devTestMode') === 'true' ||
-        pathname.includes('/test') ||
-        (pathname.includes('/profile/edit') && 
-         (urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')) &&
-         urlParams.get('fromMyPage') !== 'true')
-      )
-    }
-    
-    // 🔧 CRITICAL: テストモード時はauth状態監視を無効化（refresh_token 400回避）
-    if (isTestModeActive()) {
-      console.log('🧪 Test mode detected - skipping auth state monitoring completely')
-      return { data: { subscription: { unsubscribe: () => {} } } }
+    // 🆕 テストモード時も認証状態監視は継続（匿名ユーザーの状態変更を監視）
+    const isTestMode = this.isTestModeActive()
+    if (isTestMode) {
+      console.log('🧪 Test mode detected - monitoring anonymous auth state')
     }
     
     // 認証状態の変更を監視（重複コールバックを防ぐ）

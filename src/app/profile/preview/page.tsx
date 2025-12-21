@@ -1362,14 +1362,62 @@ function ProfilePreviewContent() {
                           console.error('❌ Complete data NOT saved!')
                         }
                         
-                        // localStorage保存が完了するまで少し待機
-                        await new Promise(resolve => setTimeout(resolve, 100))
+                        // 🆕 CRITICAL: 実際にSupabaseにプロフィールデータを保存してから遷移
+                        console.log('🔄 Starting Supabase profile save before MyPage transition...')
+                        
+                        try {
+                          const { createClient } = await import('@/lib/supabase')
+                          const supabase = createClient()
+                          
+                          // 現在の認証ユーザーを取得
+                          const { data: { user }, error: userError } = await supabase.auth.getUser()
+                          
+                          if (!user) {
+                            // テストモード時は匿名ログインを試行
+                            console.log('🧪 No user found - attempting anonymous login for test mode')
+                            const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
+                            if (anonError) {
+                              console.error('❌ Anonymous login failed:', anonError)
+                              throw new Error('匿名ログインに失敗しました')
+                            }
+                            console.log('✅ Anonymous login successful:', anonData.user?.id)
+                          }
+                          
+                          const finalUser = user || (await supabase.auth.getUser()).data.user
+                          
+                          if (!finalUser) {
+                            throw new Error('ユーザー情報の取得に失敗しました')
+                          }
+                          
+                          // Supabaseに完全なプロフィールデータを保存
+                          console.log('💾 Saving complete profile to Supabase...', { userId: finalUser.id })
+                          const { error: saveError } = await supabase
+                            .from('profiles')
+                            .upsert({
+                              user_id: finalUser.id,
+                              ...completeProfileData
+                            }, { onConflict: 'user_id' })
+                          
+                          if (saveError) {
+                            console.error('❌ Supabase save failed:', saveError)
+                            throw saveError
+                          }
+                          
+                          console.log('✅ Profile saved to Supabase successfully')
+                          
+                          // localStorage保存が完了するまで少し待機
+                          await new Promise(resolve => setTimeout(resolve, 200))
+                          
+                        } catch (saveError) {
+                          console.error('❌ Failed to save profile to Supabase:', saveError)
+                          // エラーでもlocalStorageベースで継続
+                        }
                         
                         // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
                         console.log('🔍 Checking window.opener:', !!window.opener)
                         
-                        // 直接マイページに遷移し、バックグラウンドでプロフィール更新
-                        console.log('🎯 Redirecting directly to mypage after localStorage confirmation')
+                        // 直接マイページに遷移（Supabase保存完了後）
+                        console.log('🎯 Redirecting to mypage after Supabase save completion')
                         
                         if (window.opener) {
                           // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
