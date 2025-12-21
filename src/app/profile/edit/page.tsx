@@ -831,32 +831,24 @@ function ProfileEditContent() {
   // 写真変更時のコールバック関数
   const handleImagesChange = useCallback(async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
     try {
-    // 🌸 TASK1: TEST mode / user状態検出
-    const isTestMode = !user?.id || typeof window !== 'undefined' && (
-      new URLSearchParams(window.location.search).get('devTest') === 'true' ||
-      window.location.pathname.includes('/test') ||
-      localStorage.getItem('devTestMode') === 'true'
-    )
-    
-    // 🌸 TASK4: ×押下時の必須ログ（エラー確定のため）
-    console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
-    console.log('📸 CRITICAL DELETE LOG:', {
-      timestamp: new Date().toISOString(),
-      isTestMode: isTestMode,
-      user_id: user?.id || 'undefined',
-      imagesBefore: {
-        length: profileImages.length,
-        ids: profileImages.map(img => img.id)
-      },
-      imagesAfter: {
-        length: newImages.length, 
-        ids: newImages.map(img => img.id)
-      },
-      isDeletion: newImages.length < profileImages.length,
-      isAddition: newImages.length > profileImages.length,
-      sessionAvailable: typeof sessionStorage !== 'undefined',
-      windowAvailable: typeof window !== 'undefined'
-    })
+      // 🌸 TASK1: TEST mode / user状態検出
+      const isTestMode = !user?.id || typeof window !== 'undefined' && (
+        new URLSearchParams(window.location.search).get('devTest') === 'true' ||
+        window.location.pathname.includes('/test') ||
+        localStorage.getItem('devTestMode') === 'true'
+      )
+      
+      // 🚨 IMAGE_DELETE_START: error boundary発火時の原因特定ログ
+      console.log('🚨 IMAGE_DELETE_START', {
+        timestamp: new Date().toISOString(),
+        isTestMode: isTestMode,
+        userId: user?.id || 'undefined',
+        imagesLength: profileImages.length,
+        newImagesLength: newImages.length,
+        isDeletion: newImages.length < profileImages.length,
+        sessionAvailable: typeof sessionStorage !== 'undefined',
+        windowAvailable: typeof window !== 'undefined'
+      })
     
     // 🌸 TASK2: 精密な画像状態比較（削除は絶対にスキップしない）
     const currentImageIds = profileImages.map(img => img.id).sort()
@@ -890,8 +882,19 @@ function ProfileEditContent() {
     
     // 🌸 TASK3: 競合ガード - 直前に画像追加があった場合、短期間の0枚イベントを無視
     const lastChangeTime = Date.now()
-    const imageChangeKey = `imageChangeTime_${user?.id || 'testmode'}`
-    const lastChange = sessionStorage.getItem(imageChangeKey)
+    let lastChange = null
+    
+    // 安全なキーで最後の変更時刻を取得
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const tempImageChangeKey = user?.id ? 
+          `imageChangeTime_${user.id}` : 
+          `imageChangeTime_test_${searchParams?.get('type') || 'unknown'}_${searchParams?.get('nickname') || 'anon'}`
+        lastChange = sessionStorage.getItem(tempImageChangeKey)
+      }
+    } catch (storageError) {
+      console.error('🚨 READ_TIMESTAMP_FAILED:', storageError)
+    }
     
     if (newImages.length === 0 && currentImageIds.length > 0 && lastChange) {
       const timeSinceLastChange = lastChangeTime - parseInt(lastChange)
@@ -904,40 +907,72 @@ function ProfileEditContent() {
       }
     }
     
-    // 画像変更タイムスタンプを記録
-    sessionStorage.setItem(imageChangeKey, lastChangeTime.toString())
+      // 🌸 TASK2: 安全なキー生成関数でundefinedキー禁止
+      const getProfileImagesKey = () => {
+        if (user?.id) return `currentProfileImages_${user.id}`
+        const profileType = searchParams?.get('type') || 'unknown'
+        const nickname = searchParams?.get('nickname') || 'anon'
+        return `currentProfileImages_test_${profileType}_${nickname}`
+      }
+      
+      const imageChangeKey = getProfileImagesKey().replace('currentProfileImages', 'imageChangeTime')
+      
+      // 画像変更タイムスタンプを記録（安全なキーで）
+      if (typeof sessionStorage !== 'undefined') {
+        try {
+          sessionStorage.setItem(imageChangeKey, lastChangeTime.toString())
+        } catch (storageError) {
+          console.error('🚨 TIMESTAMP_STORAGE_FAILED:', storageError)
+        }
+      }
     
-    // 写真変更中フラグを設定（デバウンス計算を一時的に無効化）
-    setIsImageChanging(true)
-    setProfileImages(newImages)
+      // ① まずUI/state を更新（ここで画面上は必ず消える）
+      setIsImageChanging(true)
+      setProfileImages(newImages)
+      profileImagesRef.current = newImages
+      
+      console.log('🗑️ UI/state更新完了:', { 
+        newImages_length: newImages.length,
+        ref_length: profileImagesRef.current.length,
+        画面上の表示: '更新済み'
+      })
+      
+      // ② TESTモード or userなし → ここでreturn（外部I/Oスキップ）
+      if (isTestMode || !user?.id) {
+        console.log('🧪 IMAGE_DELETE: skipped external I/O (test mode)', {
+          isTestMode,
+          hasUserId: !!user?.id,
+          localStateOnly: true
+        })
+        // ローカルstate更新のみで処理完了
+        setTimeout(() => {
+          setIsImageChanging(false)
+          updateCompletionUnified('image-delete-test-mode')
+        }, 100)
+        return
+      }
     
-    // 🔧 FIX: stale state問題解決 - refも同時更新
-    profileImagesRef.current = newImages
-    console.log('🔧 profileImagesRef更新:', { 
-      newImages_length: newImages.length,
-      ref_length: profileImagesRef.current.length 
-    })
+      // ③ 本番のみ：安全なStorage更新
+      try {
+        const safeImageKey = getProfileImagesKey()
+        const safeTimestampKey = safeImageKey.replace('currentProfileImages', 'imageStateTimestamp')
+        
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem(safeImageKey, JSON.stringify(newImages))
+          sessionStorage.setItem(safeTimestampKey, Date.now().toString())
+          sessionStorage.setItem('imageEditHistory', 'true')
+          
+          console.log('💾 セッションストレージ更新完了:', safeImageKey)
+        }
+      } catch (sessionError) {
+        console.error('🚨 IMAGE_DELETE_STORAGE_FAILED:', {
+          error: sessionError instanceof Error ? sessionError.message : sessionError,
+          stack: sessionError instanceof Error ? sessionError.stack : 'no stack'
+        })
+        // sessionStorageエラーでもUIは継続
+      }
     
-    // 🔒 セキュリティ強化: ユーザー固有のセッションストレージ保存
-    // 🌸 TASK2: test modeでuser=undefinedの時に安全なキーを使用
-    try {
-      const safeUserId = user?.id || 'testmode'
-      const userImageKey = `currentProfileImages_${safeUserId}`
-      const userTimestampKey = `imageStateTimestamp_${safeUserId}`
-      sessionStorage.setItem(userImageKey, JSON.stringify(newImages))
-      sessionStorage.setItem(userTimestampKey, Date.now().toString())
-
-      // 画像編集履歴を記録（完成度計算で使用）
-      sessionStorage.setItem('imageEditHistory', 'true')
-
-      console.log('💾 最新の画像状態をユーザー固有キーでセッションストレージに保存:', userImageKey)
-      console.log('✏️ 画像編集履歴を記録')
-    } catch (sessionError) {
-      console.error('❌ セッションストレージ保存エラー:', sessionError)
-    }
-    
-    // 🌸 TASK1: 外部I/O（storage/DB）をTEST mode時はスキップ
-    if (user?.id && !isTestMode) {
+      // ④ 本番のみ：安全なDB更新
       try {
         // メイン画像を探す（blob URLでない場合のみ）
         let avatarUrl = null
@@ -950,12 +985,11 @@ function ProfileEditContent() {
           avatarUrl = firstImage.url
         }
         
-        console.log('💾 写真変更をデータベースに即座保存:', {
+        console.log('💾 データベース更新開始:', {
           hasImages: newImages.length > 0,
           hasBlobImages: newImages.some(img => img.url.startsWith('blob:')),
           avatarUrl,
-          willSave: !!avatarUrl,
-          isTestMode: false
+          willSave: !!avatarUrl
         })
         
         // blob URLでない場合のみデータベースに保存
@@ -966,10 +1000,9 @@ function ProfileEditContent() {
             .eq('id', user.id)
 
           if (error) {
-            console.error('❌ 写真保存エラー:', error)
-          } else {
-            console.log('✅ 写真がデータベースに保存されました')
+            throw new Error(`DB保存失敗: ${error.message}`)
           }
+          console.log('✅ 写真がデータベースに保存されました')
         } else if (newImages.length === 0) {
           // 画像が完全に削除された場合は、データベースのavatar_urlをnullに更新
           const { error } = await supabase
@@ -978,29 +1011,20 @@ function ProfileEditContent() {
             .eq('id', user.id)
 
           if (error) {
-            console.error('❌ 写真削除エラー:', error)
-          } else {
-            console.log('✅ 写真がデータベースから削除されました')
+            throw new Error(`DB削除失敗: ${error.message}`)
           }
+          console.log('✅ 写真がデータベースから削除されました')
         } else {
-          console.log('⚠️ blob URL画像のため、データベース保存をスキップ（フォーム送信時に処理）')
+          console.log('⚠️ blob URL画像のため、データベース保存をスキップ')
         }
-      } catch (error) {
+      } catch (dbError) {
         console.error('🚨 IMAGE_DB_FAILED:', {
-          error: error instanceof Error ? error.message : error,
-          stack: error instanceof Error ? error.stack : 'no stack',
-          user_id: user.id,
-          isTestMode
+          error: dbError instanceof Error ? dbError.message : dbError,
+          stack: dbError instanceof Error ? dbError.stack : 'no stack',
+          user_id: user.id
         })
-        // エラーでもUIは継続（throwしない）
+        // DBエラーでもUIは継続（throwしない）
       }
-    } else {
-      console.log('🧪 TEST mode またはuser未定義: データベース操作をスキップ', {
-        user_id: user?.id || 'undefined',
-        isTestMode,
-        localStateOnly: true
-      })
-    }
     // 🌸 TASK4: 削除時の確実な状態確認
     if (newImages.length === 0 && currentImageIds.length > 0) {
       console.log('🗑️ 画像削除検出: state/ref/sessionStorageを完全同期', {
