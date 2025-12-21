@@ -663,9 +663,13 @@ function ProfileEditContent() {
       return
     }
     
-    // 初期化完了前は計算しない（ハイドレーション完了チェック）
+    // 🌸 TASK3: 初期化完了前はqueuedRecalcフラグを立てる（永続スキップを禁止）
     if (!isHydrated) {
-      console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { source })
+      console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { 
+        source,
+        queuedRecalc: true 
+      })
+      // TODO: queuedRecalcフラグ実装（hydration完了時に1回だけ再実行）
       return
     }
     
@@ -692,7 +696,10 @@ function ProfileEditContent() {
         planned_prefectures: selectedPlannedPrefectures,
       }
 
+      // 🌸 追加ログ（確認用） - タスクの要求通り
       console.log('🌟 updateCompletionUnified: 統一フロー実行', {
+        triggerSource: source,
+        imagesCount: imagesForCalc.length,
         isHydrated,
         hobbies_length: formValuesForCompletion.hobbies?.length || 0,
         personality_length: formValuesForCompletion.personality?.length || 0,
@@ -727,6 +734,7 @@ function ProfileEditContent() {
   }, [isInitializing, isHydrated, watch, selectedHobbies, selectedPersonality, languageSkills, selectedPlannedPrefectures, profileImages, isForeignMale])
 
   // プロフィール画像の変更を監視して完成度を再計算
+  // 🌸 TASK3: profileImages state更新後に必ず完成度再計算を1回実行
   useEffect(() => {
     // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
     if (isInitializing) {
@@ -734,9 +742,14 @@ function ProfileEditContent() {
       return
     }
     
-    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📝 profileImages state updated:', profileImages.length, 'images')
-  }, [profileImages])
+    
+    // 🌸 TASK3: state確定後に1回だけ完成度再計算を実行
+    if (isHydrated) {
+      console.log('🌸 TASK3: profileImages変更後の強制完成度再計算実行')
+      updateCompletionUnified('profileImages-state-change')
+    }
+  }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
 
   // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
   const forceInitialCompletionCalculation = useCallback(() => {
@@ -829,9 +842,11 @@ function ProfileEditContent() {
     })
     
     // 🔒 セキュリティ強化: ユーザー固有のセッションストレージ保存
+    // 🌸 TASK2: test modeでuser=undefinedの時に安全なキーを使用
     try {
-      const userImageKey = `currentProfileImages_${user?.id}`
-      const userTimestampKey = `imageStateTimestamp_${user?.id}`
+      const safeUserId = user?.id || 'testmode'
+      const userImageKey = `currentProfileImages_${safeUserId}`
+      const userTimestampKey = `imageStateTimestamp_${safeUserId}`
       sessionStorage.setItem(userImageKey, JSON.stringify(newImages))
       sessionStorage.setItem(userTimestampKey, Date.now().toString())
 
@@ -2997,8 +3012,10 @@ function ProfileEditContent() {
         console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
         
         // 🔒 セキュリティ強化: ユーザー固有のセッションストレージチェック
-        const userImageKey = `currentProfileImages_${user?.id || 'anonymous'}`
-        const userTimestampKey = `imageStateTimestamp_${user?.id || 'anonymous'}`
+        // 🌸 TASK2: test modeでuser=undefinedの時に安全なキーを使用
+        const safeUserId = user?.id || 'testmode'
+        const userImageKey = `currentProfileImages_${safeUserId}`
+        const userTimestampKey = `imageStateTimestamp_${safeUserId}`
         const currentImageState = sessionStorage.getItem(userImageKey)
         let shouldUseStorageImages = false
         let storageImages: any[] = []

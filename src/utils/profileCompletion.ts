@@ -107,8 +107,14 @@ function hasLanguageInfo(profileData: any): boolean {
 
 /**
  * プロフィール画像の有無を判定する関数
+ * 🌸 has_profile_imageフラグを優先的に確認
  */
 function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: boolean = false): boolean {
+  // 🌸 TASK1: has_profile_imageフラグが設定されていればそれを優先
+  if (typeof (profile as any).has_profile_image === 'boolean') {
+    return (profile as any).has_profile_image
+  }
+  
   // 1. imageArray パラメータ優先
   if (Array.isArray(imageArray) && imageArray.length > 0) {
     return true
@@ -230,12 +236,15 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
     completedCount++
   }
   
-  const percentage = Math.floor((completedCount / 17) * 100)
+  const percentage = Math.round((completedCount / 17) * 100)
   
   console.log('🌸 SAKURA CLUB COMPLETION:', {
     'TOTAL FIELDS': 17,
     'COMPLETED': completedCount,
-    'COMPLETION': `${percentage}%`
+    'COMPLETION': `${percentage}%`,
+    'completionInput.has_profile_image': (profile as any).has_profile_image,
+    'hasProfileImages_result': hasProfileImages(profile, imageArray),
+    'completedFields内訳_画像': hasProfileImages(profile, imageArray) ? 'TRUE' : 'FALSE'
   })
   
   return {
@@ -311,8 +320,8 @@ export function calculateCompletionFromForm(
     imageArray_length: imageArray.length
   })
 
-  // 🌸 SAKURA CLUB 仕様: フォーム値を直接17項目計算に渡す
-  const profileData: ProfileData = { ...formValues }
+  // 🌸 SAKURA CLUB 仕様: buildCompletionInputFromFormで画像状態を確実にセット
+  const profileData: ProfileData = buildCompletionInputFromForm(formValues, imageArray)
   const result17 = calculateCompletion17Fields(profileData, imageArray)
 
   const result: ProfileCompletionResult = {
@@ -385,13 +394,19 @@ export function buildProfileForCompletion(
 
 /**
  * フォーム値から完成度計算用オブジェクト作成 - 旧システムとの互換性のため
+ * 🌸 画像状態を必ず含める（フォーム値だけに依存しない）
  */
-export function buildCompletionInputFromForm(formValues: any) {
+export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]) {
+  // 🌸 TASK1: 画像の有無を必ずセット（state/ref を一次ソース）
+  const imagesCount = Array.isArray(imageArray) ? imageArray.length : 0
+  
   console.log('🌟 buildCompletionInputFromForm: フォーム値のみで入力オブジェクト作成', {
     nickname: formValues.nickname,
     hobbies_length: Array.isArray(formValues.hobbies) ? formValues.hobbies.length : 0,
     personality_length: Array.isArray(formValues.personality) ? formValues.personality.length : 0,
-    language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0
+    language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0,
+    imagesCount: imagesCount,
+    has_profile_image: imagesCount > 0
   })
 
   return {
@@ -422,7 +437,14 @@ export function buildCompletionInputFromForm(formValues: any) {
 
     // ジオ情報
     prefecture: formValues.prefecture,
-    city: formValues.city
+    city: formValues.city,
+    
+    // 🌸 TASK1: 画像状態を確実に含める
+    has_profile_image: imagesCount > 0,
+    profile_images: imageArray || [],
+    // 画像関連フォールバック
+    avatar_url: formValues.avatar_url,
+    avatarUrl: formValues.avatarUrl
   }
 }
 
