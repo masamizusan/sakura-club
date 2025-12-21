@@ -112,14 +112,37 @@ export default function MultiImageUploader({
   }
 
   const handleImageDelete = (imageId: string) => {
-    const updatedImages = images.filter(img => img.id !== imageId)
-    
-    // メイン画像を削除した場合、次の画像をメインに設定
-    if (images.find(img => img.id === imageId)?.isMain && updatedImages.length > 0) {
-      updatedImages[0].isMain = true
+    try {
+      console.log('🗑️ MultiImageUploader: 削除処理開始', {
+        imageId,
+        beforeDelete: images.length,
+        targetImage: images.find(img => img.id === imageId)?.url || 'not found'
+      })
+      
+      const updatedImages = images.filter(img => img.id !== imageId)
+      
+      // メイン画像を削除した場合、次の画像をメインに設定
+      if (images.find(img => img.id === imageId)?.isMain && updatedImages.length > 0) {
+        updatedImages[0].isMain = true
+      }
+      
+      console.log('🗑️ MultiImageUploader: 削除処理完了', {
+        afterDelete: updatedImages.length,
+        calling_onImagesChange: true
+      })
+      
+      // 必ず成功する処理のみ（例外発生の余地なし）
+      onImagesChange(updatedImages)
+      
+    } catch (error) {
+      console.error('🚨 IMAGE_DELETE_FAILED in MultiImageUploader:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : 'no stack',
+        imageId,
+        imagesLength: images.length
+      })
+      // エラーでもUIは継続（throwしない）
     }
-    
-    onImagesChange(updatedImages)
   }
 
   const handleSetMainImage = (imageId: string) => {

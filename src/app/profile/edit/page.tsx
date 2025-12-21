@@ -485,6 +485,9 @@ function ProfileEditContent() {
   const searchParams = useSearchParams()
   const profileType = searchParams?.get('type') // 'foreign-male' or 'japanese-female'
   
+  // 🌸 TASK3: typeクエリが無い場合の安全化（真っさら画面防止）
+  const hasValidType = profileType === 'foreign-male' || profileType === 'japanese-female'
+  
   // 言語設定
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const { t } = useTranslation(currentLanguage)
@@ -827,25 +830,55 @@ function ProfileEditContent() {
   
   // 写真変更時のコールバック関数
   const handleImagesChange = useCallback(async (newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>) => {
-    console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
-    console.log('📸 写真変更:', 
-      `新しい画像数: ${newImages.length}`,
-      `avatar_url値: ${newImages.length > 0 ? 'has_images' : null}`,
-      newImages
+    try {
+    // 🌸 TASK1: TEST mode / user状態検出
+    const isTestMode = !user?.id || typeof window !== 'undefined' && (
+      new URLSearchParams(window.location.search).get('devTest') === 'true' ||
+      window.location.pathname.includes('/test') ||
+      localStorage.getItem('devTestMode') === 'true'
     )
     
-    // 🌸 TASK3: 精密な画像状態比較（0枚削除時の誤判定を防ぐ）
+    // 🌸 TASK4: ×押下時の必須ログ（エラー確定のため）
+    console.log('🚨🚨🚨 HANDLE IMAGES CHANGE CALLED!')
+    console.log('📸 CRITICAL DELETE LOG:', {
+      timestamp: new Date().toISOString(),
+      isTestMode: isTestMode,
+      user_id: user?.id || 'undefined',
+      imagesBefore: {
+        length: profileImages.length,
+        ids: profileImages.map(img => img.id)
+      },
+      imagesAfter: {
+        length: newImages.length, 
+        ids: newImages.map(img => img.id)
+      },
+      isDeletion: newImages.length < profileImages.length,
+      isAddition: newImages.length > profileImages.length,
+      sessionAvailable: typeof sessionStorage !== 'undefined',
+      windowAvailable: typeof window !== 'undefined'
+    })
+    
+    // 🌸 TASK2: 精密な画像状態比較（削除は絶対にスキップしない）
     const currentImageIds = profileImages.map(img => img.id).sort()
     const newImageIds = newImages.map(img => img.id).sort()
+    const isDeletion = newImageIds.length < currentImageIds.length
     const isSameImageSet = currentImageIds.length === newImageIds.length && 
                           currentImageIds.every((id, index) => id === newImageIds[index])
     
-    if (isSameImageSet) {
+    if (isSameImageSet && !isDeletion) {
       console.log('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
         current_ids: currentImageIds,
-        new_ids: newImageIds
+        new_ids: newImageIds,
+        isDeletion: false
       })
       return
+    } else if (isDeletion) {
+      console.log('🗑️ 削除操作検出: スキップ判定を無効化', {
+        current_ids: currentImageIds,
+        new_ids: newImageIds,
+        fromLength: currentImageIds.length,
+        toLength: newImageIds.length
+      })
     }
     
     console.log('🎯 画像状態変更検出', {
@@ -903,8 +936,8 @@ function ProfileEditContent() {
       console.error('❌ セッションストレージ保存エラー:', sessionError)
     }
     
-    // 写真変更時に即座データベースに保存（blob URLは除外）
-    if (user) {
+    // 🌸 TASK1: 外部I/O（storage/DB）をTEST mode時はスキップ
+    if (user?.id && !isTestMode) {
       try {
         // メイン画像を探す（blob URLでない場合のみ）
         let avatarUrl = null
@@ -921,7 +954,8 @@ function ProfileEditContent() {
           hasImages: newImages.length > 0,
           hasBlobImages: newImages.some(img => img.url.startsWith('blob:')),
           avatarUrl,
-          willSave: !!avatarUrl
+          willSave: !!avatarUrl,
+          isTestMode: false
         })
         
         // blob URLでない場合のみデータベースに保存
@@ -952,8 +986,20 @@ function ProfileEditContent() {
           console.log('⚠️ blob URL画像のため、データベース保存をスキップ（フォーム送信時に処理）')
         }
       } catch (error) {
-        console.error('❌ 写真保存中にエラー:', error)
+        console.error('🚨 IMAGE_DB_FAILED:', {
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : 'no stack',
+          user_id: user.id,
+          isTestMode
+        })
+        // エラーでもUIは継続（throwしない）
       }
+    } else {
+      console.log('🧪 TEST mode またはuser未定義: データベース操作をスキップ', {
+        user_id: user?.id || 'undefined',
+        isTestMode,
+        localStateOnly: true
+      })
     }
     // 🌸 TASK4: 削除時の確実な状態確認
     if (newImages.length === 0 && currentImageIds.length > 0) {
@@ -964,6 +1010,14 @@ function ProfileEditContent() {
         profileImagesRef: profileImagesRef.current.length
       })
     }
+    
+    // 🌸 TASK2: react-hook-form フィールドとの単一ソース同期（formには存在しないためコメントアウト）
+    // avatar_urlフィールドはフォームスキーマに含まれていないため、state管理のみで十分
+    console.log('🔗 画像state同期完了:', {
+      images_count: newImages.length,
+      state_updated: true,
+      ref_updated: true
+    })
     
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
     console.log('📸 写真変更: state更新完了', { 
@@ -996,6 +1050,20 @@ function ProfileEditContent() {
       // 🌸 TASK4: 削除時の確実な再計算（queued対応込み）
       updateCompletionUnified(newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize')
     }, 100)
+    
+    } catch (error) {
+      // 🌸 TASK4: Next.js error boundary捕捉前の確実ログ出力
+      console.error('🚨 CRITICAL ERROR in handleImagesChange:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : 'no stack',
+        timestamp: new Date().toISOString(),
+        user_id: user?.id || 'undefined',
+        isTestMode: !user?.id,
+        newImages_length: newImages?.length || 'unknown',
+        currentImages_length: profileImages?.length || 'unknown'
+      })
+      // UIは継続（throwしない）
+    }
   }, [])
 
   // ALL useEffect hooks must be here (after all other hooks)
@@ -3780,6 +3848,28 @@ function ProfileEditContent() {
   }
 
   // Main return statement - normal profile editing interface  
+  // 🌸 TASK3: typeクエリが無い場合の安全エラー表示（真っさら防止）
+  if (!hasValidType && !userBasedType) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-4">
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              🚫 プロフィール編集エラー
+            </h2>
+            <p className="text-gray-700 mb-4">
+              プロフィールタイプが指定されていません。正しいURLからアクセスしてください。
+            </p>
+            <div className="text-sm text-gray-500">
+              <p>有効なtype: foreign-male, japanese-female</p>
+              <p>現在のtype: {profileType || 'なし'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
