@@ -966,6 +966,47 @@ function ProfileEditContent() {
           explicitImages: true,
           triggerSource: isDeletion ? 'delete' : 'change'
         })
+        
+        // 🔧 TESTモード用Single Source of Truth: 固定キーで完成度保存
+        if (isTestMode) {
+          setTimeout(() => {
+            try {
+              const currentFormData = getValues()
+              const completionResult = calculateCompletionFromForm(
+                {
+                  ...currentFormData,
+                  hobbies: selectedHobbies,
+                  personality: selectedPersonality,
+                  language_skills: languageSkills,
+                  planned_prefectures: selectedPlannedPrefectures
+                },
+                isForeignMale ? 'foreign-male' : 'japanese-female',
+                newImages
+              )
+              
+              const testModeKey = 'SC_PROFILE_DRAFT_TEST_MODE'
+              const testData = {
+                completion: completionResult.completion,
+                completedItems: completionResult.completedFields,
+                totalItems: completionResult.totalFields,
+                images: newImages,
+                formData: currentFormData,
+                timestamp: new Date().toISOString(),
+                source: 'PROFILE_EDIT_IMAGE_CHANGE'
+              }
+              
+              localStorage.setItem(testModeKey, JSON.stringify(testData))
+              console.log('🧪 TEST MODE: Saved completion to fixed localStorage key', {
+                key: testModeKey,
+                completion: completionResult.completion,
+                images: newImages.length
+              })
+            } catch (saveError) {
+              console.error('🚨 TEST MODE localStorage save failed:', saveError)
+            }
+          }, 50)
+        }
+        
       } catch (error) {
         console.error('🚨 ERROR in immediate completion update:', {
           error: error instanceof Error ? error.message : error,

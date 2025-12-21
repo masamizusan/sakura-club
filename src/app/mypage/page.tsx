@@ -55,8 +55,37 @@ function MyPageContent() {
         hasPreviewData: !!hasPreviewData
       })
       
+      // 🔧 CRITICAL FIX: TESTモード用Single Source of Truth実装
+      const isTestMode = !user || !user.id
+      
       if (!user && !hasPreviewData) {
-        console.log('⏸️ MyPage: No user and no preview data, stopping')
+        console.error('🕵️ MYPAGE_INVESTIGATION: No user and no preview data', {
+          user: !!user,
+          hasPreviewData: !!hasPreviewData,
+          operation: 'POTENTIAL_ZERO_INITIALIZATION',
+          warningNote: 'THIS_MIGHT_SAVE_ZERO_COMPLETION'
+        })
+        
+        // 🚨 CRITICAL: 0%初期化保存を絶対禁止
+        // localStorage があるならそれを表示、無いなら未作成表示（0%保存しない）
+        const testModeKey = 'SC_PROFILE_DRAFT_TEST_MODE'
+        const existingTestData = localStorage.getItem(testModeKey)
+        
+        if (existingTestData) {
+          console.log('🧪 TEST MODE: Using existing localStorage data instead of zero initialization')
+          try {
+            const parsed = JSON.parse(existingTestData)
+            setProfileCompletion(parsed.completion || 0)
+            setCompletedItems(parsed.completedItems || 0)
+            setTotalItems(parsed.totalItems || 17)
+          } catch (e) {
+            console.error('Parse error:', e)
+          }
+        } else {
+          console.log('🚫 TEST MODE: No data available, showing "未作成" instead of zero')
+          // 何も保存せず、未作成状態を表示
+        }
+        
         setIsLoading(false)
         return
       }

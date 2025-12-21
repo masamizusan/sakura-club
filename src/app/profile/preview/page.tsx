@@ -1300,10 +1300,40 @@ function ProfilePreviewContent() {
                           travel_companion
                         })
                         
-                        // localStorageに完全なプロフィールデータを保存
+                        // 🔥 CRITICAL INVESTIGATION: localStorageに完全なプロフィールデータを保存
+                        console.error('🕵️ PREVIEW_SAVE_INVESTIGATION: About to save localStorage', {
+                          timestamp: new Date().toISOString(),
+                          operation: 'PREVIEW_TO_MYPAGE_SAVE',
+                          completeProfileData: {
+                            ...completeProfileData,
+                            images: completeProfileData.profile_image ? 'HAS_IMAGE' : 'NO_IMAGE',
+                            imagesCount: completeProfileData.profile_image ? 1 : 0
+                          },
+                          completion: 'NOT_CALCULATED_HERE',
+                          userId: searchParams?.get('userId') || 'undefined',
+                          isTestMode: !searchParams?.get('userId') || searchParams.get('userId') === '',
+                          warningNote: 'THIS_MIGHT_OVERWRITE_GOOD_DATA'
+                        })
+                        
                         localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
                         localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
                         localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
+                        
+                        // 🔍 INVESTIGATION: TESTモード用固定キー監視
+                        const testModeKey = 'SC_PROFILE_DRAFT_TEST_MODE'
+                        try {
+                          const existingTestData = localStorage.getItem(testModeKey)
+                          if (existingTestData) {
+                            const parsed = JSON.parse(existingTestData)
+                            console.error('🚨 EXISTING_TEST_DATA_BEFORE_OVERWRITE:', {
+                              completion: parsed.completion,
+                              imagesCount: parsed.images?.length || 0,
+                              nickname: parsed.nickname || 'none'
+                            })
+                          }
+                        } catch (e) {
+                          console.log('No existing test data or parse error')
+                        }
                         
                         // sessionStorageをクリア
                         sessionStorage.removeItem('previewData')
