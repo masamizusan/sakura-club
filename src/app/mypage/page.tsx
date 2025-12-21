@@ -485,7 +485,7 @@ function MyPageContent() {
             interests: regularInterests,
             personality: extendedPersonality.length > 0 ? extendedPersonality : [],
             custom_culture: extendedCustomCulture,
-            hobbies: regularInterests, // compatibilityのため
+            hobbies: regularInterests.length > 0 ? regularInterests : [], // 🔧 88%問題修正: 空配列を明示的に設定
             // 🆕 言語レベル（専用カラム優先、JSONフォールバック）
             english_level: profileData.english_level || parsedOptionalData.english_level,
             japanese_level: profileData.japanese_level || parsedOptionalData.japanese_level,
@@ -508,10 +508,13 @@ function MyPageContent() {
           console.log('  - city:', normalizedProfileData.city)
           console.log('  - interests:', normalizedProfileData.interests)
           console.log('  - personality:', normalizedProfileData.personality)
-          console.log('🔧 PERSONALITY DEBUG:')
+          console.log('🔧 88% PROBLEM DEBUG:')
+          console.log('    raw culture_tags:', (profileData as any).culture_tags)
           console.log('    raw personality_tags:', (profileData as any).personality_tags)
-          console.log('    extendedPersonality length:', extendedPersonality.length)
-          console.log('    final personality array:', normalizedProfileData.personality)
+          console.log('    regularInterests length:', regularInterests.length, 'values:', regularInterests)
+          console.log('    extendedPersonality length:', extendedPersonality.length, 'values:', extendedPersonality)
+          console.log('    final hobbies:', normalizedProfileData.hobbies)
+          console.log('    final personality:', normalizedProfileData.personality)
           console.log('  - height:', normalizedProfileData.height)
           console.log('  - occupation:', normalizedProfileData.occupation)
           console.log('  - body_type:', normalizedProfileData.body_type)
@@ -627,10 +630,12 @@ function MyPageContent() {
       source: 'normalizeProfile + calculateCompletion (統一システム)'
     })
     
-    console.log('🔧 COMPLETION FIX VERIFICATION:')
-    console.log(`  ❓ Expected: 100% (personality_tags: ["優しい","穏やか","寂しがりや"])`)
-    console.log(`  ✅ Actual: ${result.completion}% (personality: ${JSON.stringify(normalized.personality)})`)
-    console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.optionalCompleted}/${result.optionalTotal} optional fields`)
+    console.log('🔧 88% COMPLETION FIX VERIFICATION:')
+    console.log(`  ❓ Expected: 100% (17項目完成)`)
+    console.log(`  ✅ Actual: ${result.completion}% (completed: ${result.completedFields}/${result.totalFields})`)
+    console.log(`  🔍 hobbies check:`, normalized.hobbies?.length > 0 ? 'OK' : 'MISSING', normalized.hobbies)
+    console.log(`  🔍 personality check:`, normalized.personality?.length > 0 ? 'OK' : 'MISSING', normalized.personality)
+    console.log(`  🎯 Fix ${result.completion === 100 ? 'SUCCESS' : 'FAILED'}: ${result.completedFields}/${result.totalFields} fields`)
 
     // 既存のUI更新ロジックを維持
     setProfileCompletion(result.completion)

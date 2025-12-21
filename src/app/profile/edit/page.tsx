@@ -2543,6 +2543,43 @@ function ProfileEditContent() {
               console.error('❌ 画像データ復元エラー (no user):', error)
             }
             
+            // 🔧 CRITICAL: fromMyPage (user && isFromMyPage) でも強制完成度計算を実行（0%再発防止）
+            console.log('✅ Form reset completed (fromMyPage with user)')
+            console.log('🔥 FORCE CALC AFTER FORM RESET (fromMyPage)')
+            
+            // 少し遅延させてフォームresetの完了を確実にする
+            setTimeout(() => {
+              try {
+                console.error('🕵️ FROMMYPAGE_INVESTIGATION: About to force calc', {
+                  timestamp: new Date().toISOString(),
+                  operation: 'FROMMYPAGE_FORCE_CALC',
+                  initialData: {
+                    ...initialData,
+                    imagesCount: finalImages?.length || 0
+                  },
+                  initializingRef: initializingRef.current,
+                  isInitializing: isInitializing,
+                  source: 'FROMMYPAGE_WITH_USER'
+                })
+                
+                forceInitialCompletionCalculation()
+                setDidInitialCalc(true)
+                
+                // 🚨 CRITICAL FIX: fromMyPageでもisInitializing解除（リアルタイム更新復活）
+                console.log('🟢 isInitializing -> false (fromMyPage end)')
+                setIsInitializing(false)
+                
+                // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活）
+                console.log('🟢 initializingRef.current -> false (fromMyPage end)')
+                initializingRef.current = false
+                
+                console.log('🌟 fromMyPage初期化完了 - リアルタイム計算解禁')
+                setIsHydrated(true)
+              } catch (calcError) {
+                console.error('🚨 ERROR in fromMyPage force calc:', calcError)
+              }
+            }, 150)
+            
           } catch (error) {
             console.error('❌ localStorage解析エラー (no user):', error)
           }
