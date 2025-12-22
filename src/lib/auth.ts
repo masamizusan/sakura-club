@@ -205,12 +205,33 @@ export const authService = {
     )
   },
 
-  // 🆕 匿名ログイン機能（テストモード用）
-  async signInAnonymously() {
+  // 🆕 匿名ログイン機能（テストモード用）- user_id固定対応
+  async ensureTestAnonSession() {
     const supabase = createClient()
     
     try {
-      console.log('🧪 Attempting anonymous sign-in for test mode...')
+      // 🛡️ CRITICAL FIX: 既存セッションチェック - 重複実行防止
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        console.log('🔒 ensureTestAnonSession: 既存セッション発見 - anonymous sign-in スキップ', {
+          userId: session.user.id,
+          skipReason: 'SESSION_EXISTS'
+        })
+        return { user: session.user, session }
+      }
+      
+      // 🛡️ localStorage保険チェック - 多重初期化防止
+      if (typeof window !== 'undefined') {
+        const anonDone = localStorage.getItem('sc_test_anon_done')
+        if (anonDone === '1') {
+          console.log('🔒 ensureTestAnonSession: localStorage保険フラグ発見 - anonymous sign-in スキップ')
+          // セッションなしでも保険フラグがある場合は一度クリアして再試行
+          localStorage.removeItem('sc_test_anon_done')
+        }
+      }
+      
+      console.log('🧪 ensureTestAnonSession: 新規anonymous sign-in実行...')
       const { data, error } = await supabase.auth.signInAnonymously()
       
       if (error) {
@@ -218,7 +239,15 @@ export const authService = {
         throw new AuthError(`匿名ログインに失敗しました: ${error.message}`)
       }
       
-      console.log('✅ Anonymous sign-in successful:', { userId: data.user?.id })
+      // 🔒 成功時の保険フラグ設定
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sc_test_anon_done', '1')
+      }
+      
+      console.log('✅ ensureTestAnonSession: 新規anonymous sign-in成功', {
+        userId: data.user?.id,
+        sessionExists: !!data.session
+      })
       return { user: data.user, session: data.session }
     } catch (error) {
       if (error instanceof AuthError) {
@@ -226,6 +255,11 @@ export const authService = {
       }
       throw new AuthError('匿名ログイン処理中にエラーが発生しました')
     }
+  },
+
+  // 🆕 匿名ログイン機能（テストモード用）- 後方互換性
+  async signInAnonymously() {
+    return this.ensureTestAnonSession()
   },
 
   async getCurrentUser(): Promise<AuthUser | null> {
@@ -252,14 +286,14 @@ export const authService = {
       
       let user = session?.user || null
       
-      // 🆕 STEP 1.5: テストモード時はセッション無しで匿名ログイン実行
+      // 🆕 STEP 1.5: テストモード時はセッション無しで匿名ログイン実行（user_id固定版）
       if (!user && this.isTestModeActive()) {
-        console.log('🧪 Test mode detected with no session - attempting anonymous sign-in')
+        console.log('🧪 Test mode detected with no session - ensuring anonymous session')
         try {
-          const { user: anonUser } = await this.signInAnonymously()
+          const { user: anonUser } = await this.ensureTestAnonSession()
           user = anonUser
         } catch (error) {
-          console.error('❌ Anonymous sign-in failed, proceeding with null user:', error)
+          console.error('❌ Anonymous session ensure failed, proceeding with null user:', error)
         }
       }
       

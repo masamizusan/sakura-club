@@ -46,62 +46,63 @@ function MyPageContent() {
     const loadProfile = async () => {
       console.log('🆕 UNIFIED MyPage loadProfile called, user:', !!user, user?.id)
       
-      // 🆕 CRITICAL: ユーザーが存在しない場合は匿名ログインを試行
+      // 🆕 CRITICAL: ユーザーが存在しない場合はAuthProviderに委譲（重複実行防止）
       if (!user || !user.id) {
-        console.log('🧪 No user found - attempting anonymous authentication...')
-        try {
-          const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
-          if (anonError) {
-            console.error('❌ Anonymous authentication failed:', anonError)
-            setIsLoading(false)
-            return
-          }
-          console.log('✅ Anonymous authentication successful, refreshing page...')
-          // 認証完了後にページをリロードして適切なuser状態にする
-          window.location.reload()
-          return
-        } catch (error) {
-          console.error('❌ Anonymous authentication error:', error)
-          setIsLoading(false)
-          return
-        }
+        console.log('🧪 MyPage: No user found - waiting for AuthProvider initialization')
+        setIsLoading(false)
+        return
       }
 
       try {
         setIsLoading(true)
         
-        // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからuser_idベースでプロフィール取得のみ
+        // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからuser_idベースでプロフィール取得のみ（406回避版）
         console.log('🔄 Loading profile from Supabase with user_id:', user.id)
         let { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', user.id) // 🆕 user_idベースで統一
-          .single()
+          .maybeSingle() // 🛡️ CRITICAL FIX: single() -> maybeSingle() で406回避
 
-        if (profileError && profileError.code === 'PGRST116') {
-          // プロフィールが存在しない場合は空のプロフィールを作成
+        if (profileError) {
+          console.error('❌ MyPage profiles取得エラー:', {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint
+          })
+          setIsLoading(false)
+          return
+        }
+        
+        if (!profileData) {
+          // maybeSingle()でnullが返された場合（プロフィール存在しない）
           console.log('📝 No profile found, creating empty profile for user_id:', user.id)
+          const createPayload = { 
+            user_id: user.id,
+            name: user.email?.split('@')[0] || 'ユーザー',
+            email: user.email
+          }
+          console.log('🔧 Profile作成payload:', createPayload)
+          
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .upsert({ 
-              user_id: user.id,
-              name: null,
-              email: user.email
-            }, { onConflict: 'user_id' })
+            .insert(createPayload)
             .select('*')
             .single()
             
           if (createError) {
-            console.error('❌ Failed to create profile:', createError)
+            console.error('❌ Failed to create profile:', {
+              code: createError.code,
+              message: createError.message,
+              details: createError.details,
+              hint: createError.hint
+            })
             setIsLoading(false)
             return
           }
           
           profileData = newProfile
-        } else if (profileError) {
-          console.error('❌ Failed to load profile:', profileError)
-          setIsLoading(false)
-          return
         }
         
         console.log('✅ Profile data loaded from Supabase:', {

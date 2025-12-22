@@ -1373,14 +1373,8 @@ function ProfilePreviewContent() {
                           const { data: { user }, error: userError } = await supabase.auth.getUser()
                           
                           if (!user) {
-                            // テストモード時は匿名ログインを試行
-                            console.log('🧪 No user found - attempting anonymous login for test mode')
-                            const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
-                            if (anonError) {
-                              console.error('❌ Anonymous login failed:', anonError)
-                              throw new Error('匿名ログインに失敗しました')
-                            }
-                            console.log('✅ Anonymous login successful:', anonData.user?.id)
+                            console.log('🧪 Preview: No user found - user should be initialized by AuthProvider')
+                            throw new Error('ユーザー情報の取得に失敗しました - AuthProvider初期化待ち')
                           }
                           
                           const finalUser = user || (await supabase.auth.getUser()).data.user
