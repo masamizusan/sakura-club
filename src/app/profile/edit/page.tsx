@@ -548,6 +548,16 @@ function ProfileEditContent() {
   const [isHydrated, setIsHydrated] = useState(false)
   // 🛡️ CRITICAL: チラつき防止 - 初期化専用フラグ（完成度計算ガード）
   const [isInitializing, setIsInitializing] = useState(true)
+  
+  // 🔍 DEBUG: isHydrated状態変化監視
+  useEffect(() => {
+    console.log('🔍 HYDRATION_DEBUG: isHydrated状態変化', {
+      isHydrated,
+      isInitializing,
+      initializingRef: initializingRef.current,
+      timestamp: new Date().toISOString()
+    })
+  }, [isHydrated, isInitializing])
   // 🔧 FIX: 初期化完了時の強制計算フラグ（0%バグ防止）
   const [didInitialCalc, setDidInitialCalc] = useState(false)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
@@ -675,13 +685,30 @@ function ProfileEditContent() {
       queuedRecalcRef.current = true
       console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { 
         triggerSource: source,
+        isHydrated,
+        isInitializing,
+        initializingRef: initializingRef.current,
+        userReady: !!user,
         queuedRecalc_ON: queuedRecalcRef.current,
         willExecuteAfterHydration: true,
         imagesCount: profileImagesRef.current.length,
-        hydrationStatus: 'pending'
+        hydrationStatus: 'pending',
+        skipReason: 'HYDRATION_NOT_READY',
+        timestamp: new Date().toISOString()
       })
       return
     }
+    
+    // 🔍 DEBUG: 計算実行時のログ
+    console.log('✅ updateCompletionUnified: 計算実行開始', {
+      source,
+      isHydrated,
+      isInitializing,
+      initializingRef: initializingRef.current,
+      userReady: !!user,
+      skipReason: 'NO_SKIP',
+      timestamp: new Date().toISOString()
+    })
     
     // 🔧 FIX: stale state問題解決 - 確実に最新の画像配列を使用
     const imagesForCalc = explicitImages ?? profileImagesRef.current
@@ -3575,6 +3602,10 @@ function ProfileEditContent() {
         // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活保証）
         console.log('🟢 initializingRef.current -> false (finally block - guaranteed)')
         initializingRef.current = false
+        
+        // 🆕 CRITICAL FIX: エラー時でも確実にハイドレーション完了（29%固定問題解決）
+        console.log('🟢 isHydrated -> true (finally block - FORCE COMPLETE)')
+        setIsHydrated(true)
         
         setUserLoading(false)
       }
