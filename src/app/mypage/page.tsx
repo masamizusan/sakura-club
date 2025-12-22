@@ -56,12 +56,12 @@ function MyPageContent() {
       try {
         setIsLoading(true)
         
-        // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからuser_idベースでプロフィール取得のみ（406回避版）
-        console.log('🔄 Loading profile from Supabase with user_id:', user.id)
+        // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからid=auth.uidで統一（user_id null問題解消）
+        console.log('🔄 Loading profile from Supabase with id=auth.uid:', user.id)
         let { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('user_id', user.id) // 🆕 user_idベースで統一
+          .eq('id', user.id) // 🛡️ CRITICAL FIX: user_id -> id で統一（nullレコード回避）
           .maybeSingle() // 🛡️ CRITICAL FIX: single() -> maybeSingle() で406回避
 
         if (profileError) {
@@ -77,9 +77,10 @@ function MyPageContent() {
         
         if (!profileData) {
           // maybeSingle()でnullが返された場合（プロフィール存在しない）
-          console.log('📝 No profile found, creating empty profile for user_id:', user.id)
+          console.log('📝 No profile found, creating empty profile for id=auth.uid:', user.id)
           const createPayload = { 
-            user_id: user.id,
+            id: user.id, // 🛡️ CRITICAL FIX: id=auth.uid で統一
+            user_id: user.id, // 🔄 後方互換性のため両方設定
             name: user.email?.split('@')[0] || 'ユーザー',
             email: user.email
           }
@@ -87,7 +88,7 @@ function MyPageContent() {
           
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .insert(createPayload)
+            .upsert(createPayload, { onConflict: 'id' }) // 🛡️ id で upsert
             .select('*')
             .single()
             

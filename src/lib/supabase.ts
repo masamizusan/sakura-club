@@ -64,11 +64,13 @@ export const createClient = () => {
     console.log('使用するURL:', url)
     console.log('使用するキー:', key?.substring(0, 20) + '...')
     
-    // テストモード時は専用設定でクライアント作成
+    // 🛡️ CRITICAL FIX: テストモード時もセッション永続化有効（user_id固定化）
     const clientOptions = isTestMode ? {
       auth: {
-        persistSession: false, // テストモード時はセッション永続化無効
-        autoRefreshToken: false, // テストモード時はトークン自動更新無効
+        persistSession: true, // 🛡️ セッション永続化で user_id 固定
+        autoRefreshToken: true, // 🛡️ トークン自動更新で継続性確保
+        storage: window.localStorage, // 🛡️ localStorage でセッション保持
+        storageKey: 'sakura-club-test-session', // 🛡️ テスト専用キー
       }
     } : undefined
     

@@ -221,13 +221,13 @@ export const authService = {
         return { user: session.user, session }
       }
       
-      // 🛡️ localStorage保険チェック - 多重初期化防止
+      // 🛡️ CRITICAL FIX: localStorage保険フラグで絶対スキップ（増殖防止）
       if (typeof window !== 'undefined') {
         const anonDone = localStorage.getItem('sc_test_anon_done')
         if (anonDone === '1') {
-          console.log('🔒 ensureTestAnonSession: localStorage保険フラグ発見 - anonymous sign-in スキップ')
-          // セッションなしでも保険フラグがある場合は一度クリアして再試行
-          localStorage.removeItem('sc_test_anon_done')
+          console.log('🔒 ensureTestAnonSession: localStorage保険フラグ発見 - 絶対スキップ（増殖防止）')
+          // 🚨 CRITICAL: フラグがある場合は絶対に再実行しない
+          return { user: null, session: null }
         }
       }
       
