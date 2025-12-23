@@ -1383,21 +1383,33 @@ function ProfilePreviewContent() {
                             throw new Error('ユーザー情報の取得に失敗しました')
                           }
                           
-                          // Supabaseに完全なプロフィールデータを保存
+                          // 🛡️ CRITICAL FIX: Supabaseに完全なプロフィールデータを保存（id=auth.uid統一）
                           console.log('💾 Saving complete profile to Supabase...', { userId: finalUser.id })
                           const { error: saveError } = await supabase
                             .from('profiles')
                             .upsert({
-                              user_id: finalUser.id,
+                              id: finalUser.id, // 🛡️ CRITICAL: id=auth.uid で統一（MyPageと一致）
+                              user_id: finalUser.id, // 🔄 後方互換性のため併設
                               ...completeProfileData
-                            }, { onConflict: 'user_id' })
+                            }, { onConflict: 'id' }) // 🛡️ onConflict も id に統一
                           
                           if (saveError) {
-                            console.error('❌ Supabase save failed:', saveError)
+                            console.error('❌ Supabase save failed:', {
+                              code: saveError.code,
+                              message: saveError.message,
+                              details: saveError.details,
+                              hint: saveError.hint,
+                              userId: finalUser.id
+                            })
                             throw saveError
                           }
                           
-                          console.log('✅ Profile saved to Supabase successfully')
+                          console.log('✅ Profile saved to Supabase successfully', {
+                            userId: finalUser.id,
+                            timestamp: new Date().toISOString(),
+                            payloadKeys: Object.keys(completeProfileData),
+                            operation: 'UPSERT_PROFILES_BY_ID'
+                          })
                           
                           // localStorage保存が完了するまで少し待機
                           await new Promise(resolve => setTimeout(resolve, 200))
