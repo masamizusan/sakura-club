@@ -1324,7 +1324,7 @@ function ProfilePreviewContent() {
                             try {
                               const languageSkillsParam = searchParams?.get('language_skills')
                               if (languageSkillsParam) {
-                                const parsedSkills = JSON.parse(decodeURIComponent(languageSkillsParam))
+                                const parsedSkills = JSON.parse(decodeURIComponent(languageSkillsParam as string))
                                 console.log('🔥 Preview: language_skills from URL:', parsedSkills)
                                 return parsedSkills
                               }
@@ -1341,7 +1341,7 @@ function ProfilePreviewContent() {
                                 
                                 const sessionData = window.sessionStorage.getItem(previewDataKey)
                                 if (sessionData) {
-                                  const parsed = JSON.parse(sessionData)
+                                  const parsed = JSON.parse(sessionData as string)
                                   if (parsed.language_skills) {
                                     console.log('🔥 Preview保存: language_skills from sessionStorage:', parsed.language_skills)
                                     return parsed.language_skills
@@ -1414,7 +1414,7 @@ function ProfilePreviewContent() {
                           },
                           completion: 'NOT_CALCULATED_HERE',
                           userId: searchParams?.get('userId') || 'undefined',
-                          isTestMode: !searchParams?.get('userId') || searchParams.get('userId') === '',
+                          isTestMode: !searchParams?.get('userId') || searchParams?.get('userId') === '',
                           warningNote: 'THIS_MIGHT_OVERWRITE_GOOD_DATA'
                         })
                         
@@ -1427,7 +1427,7 @@ function ProfilePreviewContent() {
                         try {
                           const existingTestData = localStorage.getItem(testModeKey)
                           if (existingTestData) {
-                            const parsed = JSON.parse(existingTestData)
+                            const parsed = JSON.parse(existingTestData as string)
                             console.error('🚨 EXISTING_TEST_DATA_BEFORE_OVERWRITE:', {
                               completion: parsed.completion,
                               imagesCount: parsed.images?.length || 0,
@@ -1460,7 +1460,7 @@ function ProfilePreviewContent() {
                         })
                         
                         if (savedCompleteData) {
-                          console.log('✅ Complete data saved successfully:', JSON.parse(savedCompleteData))
+                          console.log('✅ Complete data saved successfully:', JSON.parse(savedCompleteData as string))
                         } else {
                           console.error('❌ Complete data NOT saved!')
                         }
@@ -1487,28 +1487,22 @@ function ProfilePreviewContent() {
                           }
                           
                           // 🛡️ CRITICAL FIX: Supabaseに完全なプロフィールデータを保存（id=auth.uid統一）
-                          console.log('💾 Saving complete profile to Supabase...', { userId: finalUser.id })
+                          console.log('💾 Saving complete profile to Supabase...', { userId: finalUser?.id })
                           const { error: saveError } = await supabase
                             .from('profiles')
                             .upsert({
-                              id: finalUser.id, // 🛡️ CRITICAL: id=auth.uid で統一（MyPageと一致）
-                              user_id: finalUser.id, // 🔄 後方互換性のため併設
+                              id: finalUser?.id, // 🛡️ CRITICAL: id=auth.uid で統一（MyPageと一致）
+                              user_id: finalUser?.id, // 🔄 後方互換性のため併設
                               ...completeProfileData
                             }, { onConflict: 'id' }) // 🛡️ onConflict も id に統一
                           
                           if (saveError) {
-                            console.error('❌ Supabase save failed:', {
-                              code: saveError.code,
-                              message: saveError.message,
-                              details: saveError.details,
-                              hint: saveError.hint,
-                              userId: finalUser.id
-                            })
+                            console.error('❌ Supabase save failed:', saveError)
                             throw saveError
                           }
                           
                           console.log('✅ Profile saved to Supabase successfully', {
-                            userId: finalUser.id,
+                            userId: finalUser?.id,
                             timestamp: new Date().toISOString(),
                             payloadKeys: Object.keys(completeProfileData),
                             operation: 'UPSERT_PROFILES_BY_ID'
