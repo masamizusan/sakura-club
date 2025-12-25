@@ -1146,34 +1146,85 @@ function ProfilePreviewContent() {
                         throw new Error('ユーザー情報の取得に失敗しました')
                       }
 
-                      // 🛡️ CRITICAL FIX: 簡易payloadでまず確実に保存を実行（実在列のみ）
-                      const quickPayload = {
-                        id: user.id,
-                        user_id: user.id,
-                        name: nickname || 'ニックネーム未設定', // 🛡️ nickname → name（実在列）
-                        bio: selfIntroduction || '', // 🔄 自己紹介はbio列に保存
-                        // updated_at は除去（自動更新されるため）
+                      // 🚨 CRITICAL: DB列ホワイトリスト（PGRST204防止）
+                      const ALLOWED_PROFILE_COLUMNS = [
+                        'name','last_name','gender','age','birth_date','nationality','residence','city','email',
+                        'bio','avatar_url','interests','visit_schedule','travel_companion','planned_prefectures',
+                        'japanese_level','english_level','language_skills','personality_tags','culture_tags',
+                        'occupation','height','body_type','marital_status','membership_type','is_verified',
+                        'planned_stations' // 🆕 外国人男性専用フィールド
+                      ] as const
+                      
+                      // 🛡️ フルペイロード構築関数（実在列のみ）
+                      const buildFullPayload = (userId: string, source: any) => {
+                        const payload: any = {
+                          id: userId,
+                          user_id: userId,
+                        }
+                        
+                        // ホワイトリストされた列のみ追加
+                        for (const key of ALLOWED_PROFILE_COLUMNS) {
+                          if (source[key] !== undefined) payload[key] = source[key]
+                        }
+                        
+                        // 🔄 後方互換性マッピング
+                        if (payload.name === undefined && source.nickname) payload.name = source.nickname
+                        if (payload.bio === undefined && source.self_introduction) payload.bio = source.self_introduction
+                        if (payload.bio === undefined && source.selfIntroduction) payload.bio = source.selfIntroduction
+                        if (payload.residence === undefined && source.prefecture) payload.residence = source.prefecture
+                        if (payload.avatar_url === undefined && source.profile_image) payload.avatar_url = source.profile_image
+                        if (payload.interests === undefined && source.hobbies) payload.interests = source.hobbies
+                        
+                        // 🛡️ 型安全化（配列/JSON）
+                        if (payload.interests && !Array.isArray(payload.interests)) payload.interests = [payload.interests]
+                        if (payload.planned_prefectures && !Array.isArray(payload.planned_prefectures)) payload.planned_prefectures = [payload.planned_prefectures]
+                        if (payload.planned_stations && !Array.isArray(payload.planned_stations)) payload.planned_stations = [payload.planned_stations]
+                        if (payload.language_skills && !Array.isArray(payload.language_skills)) payload.language_skills = []
+                        if (payload.personality_tags && !Array.isArray(payload.personality_tags)) payload.personality_tags = []
+                        if (payload.culture_tags && !Array.isArray(payload.culture_tags)) payload.culture_tags = []
+                        
+                        return payload
                       }
                       
-                      console.log('🔍 Quick upsert payload:', quickPayload)
+                      // 🔧 プレビュー表示データをソースとして使用
+                      const sourceProfile = previewData || {}
+                      const fullPayload = buildFullPayload(user.id, sourceProfile)
+                      
+                      console.log('FULL_PAYLOAD_KEYS', Object.keys(fullPayload))
+                      console.log('🔍 Full upsert payload sample:', {
+                        ...fullPayload,
+                        bio: fullPayload.bio ? `${fullPayload.bio.slice(0, 50)}...` : 'empty'
+                      })
                       
                       const { data: upsertData, error: upsertError } = await supabase
                         .from('profiles')
-                        .upsert(quickPayload, { onConflict: 'id' })
+                        .upsert(fullPayload, { onConflict: 'id' })
                         .select()
+                        .single()
                       
                       console.log('UPSERT_RESULT', { 
-                        data: upsertData, 
+                        ok: !upsertError,
                         error: upsertError, 
+                        data: upsertData,
                         status: upsertError ? 'ERROR' : 'SUCCESS' 
                       })
                       
                       if (upsertError) {
-                        console.error('❌ Quick upsert failed:', upsertError)
-                        throw new Error('プロフィールの保存に失敗しました')
+                        console.error('❌ Full upsert failed:', upsertError)
+                        alert('プロフィールの保存に失敗しました')
+                        return // 🛡️ 失敗時は遷移しない
                       }
                       
-                      console.log('✅ Quick upsert succeeded, proceeding with full data preparation')
+                      console.log('✅ Full upsert succeeded - all profile data saved to Supabase')
+                      
+                      // 🛡️ 成功時のみマイページに遷移
+                      if (window.opener) {
+                        window.opener.location.href = '/mypage'
+                        window.close()
+                      } else {
+                        window.location.href = '/mypage'
+                      }
+                      return // 🛡️ ここで処理終了（以下の古い処理をスキップ）
                       
                     } catch (upsertError) {
                       console.error('❌ Critical upsert error:', upsertError)
