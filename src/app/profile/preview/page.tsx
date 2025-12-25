@@ -1146,13 +1146,13 @@ function ProfilePreviewContent() {
                         throw new Error('ユーザー情報の取得に失敗しました')
                       }
 
-                      // 簡易payloadでまず確実に保存を実行
+                      // 🛡️ CRITICAL FIX: 簡易payloadでまず確実に保存を実行（実在列のみ）
                       const quickPayload = {
                         id: user.id,
                         user_id: user.id,
-                        nickname: nickname || 'ニックネーム未設定',
-                        bio: selfIntroduction || '',
-                        updated_at: new Date().toISOString()
+                        name: nickname || 'ニックネーム未設定', // 🛡️ nickname → name（実在列）
+                        bio: selfIntroduction || '', // 🔄 自己紹介はbio列に保存
+                        // updated_at は除去（自動更新されるため）
                       }
                       
                       console.log('🔍 Quick upsert payload:', quickPayload)
