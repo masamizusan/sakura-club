@@ -439,14 +439,34 @@ export function calculateCompletionFromForm(
 
   // 🌸 SAKURA CLUB 仕様: buildCompletionInputFromFormで画像状態を確実にセット
   const profileData: ProfileData = buildCompletionInputFromForm(formValues, imageArray)
-  const result17 = calculateCompletion17Fields(profileData, imageArray)
+  
+  // 🛡️ CRITICAL FIX: userTypeに基づいた項目数分岐
+  let calculationResult: { completed: number; total: number; percentage: number }
+  
+  if (userType === 'japanese-female') {
+    calculationResult = calculateCompletion15Fields(profileData, imageArray)
+    console.log('📊 母数算出元 - 日本人女性15項目計算:', {
+      totalCount: calculationResult.total,
+      profileType: userType,
+      completedCount: calculationResult.completed,
+      source: 'calculateCompletion15Fields'
+    })
+  } else {
+    calculationResult = calculateCompletion17Fields(profileData, imageArray)
+    console.log('📊 母数算出元 - 外国人男性17項目計算:', {
+      totalCount: calculationResult.total,
+      profileType: userType,
+      completedCount: calculationResult.completed,
+      source: 'calculateCompletion17Fields'
+    })
+  }
 
   const result: ProfileCompletionResult = {
-    completion: result17.percentage,
-    completedFields: result17.completed,
-    totalFields: result17.total,
-    requiredCompleted: result17.completed,
-    requiredTotal: result17.total,
+    completion: calculationResult.percentage,
+    completedFields: calculationResult.completed,
+    totalFields: calculationResult.total,
+    requiredCompleted: calculationResult.completed,
+    requiredTotal: calculationResult.total,
     optionalCompleted: 0,
     optionalTotal: 0,
     hasImages: hasProfileImages(profileData, imageArray),
@@ -457,7 +477,8 @@ export function calculateCompletionFromForm(
     completion: result.completion,
     completedFields: result.completedFields,
     totalFields: result.totalFields,
-    source: '17項目固定計算'
+    userType,
+    source: userType === 'japanese-female' ? '15項目計算' : '17項目計算'
   })
 
   return result
