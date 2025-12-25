@@ -1077,6 +1077,8 @@ function ProfilePreviewContent() {
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={async () => {
+                    // 🚨 CRITICAL DEBUG: ボタンクリック確認（最上流）
+                    console.log('CLICK_MY_PAGE_BUTTON')
                     console.log('🎯 Preview update button clicked!')
 
                     // 🔍 バリデーション: 必須項目のチェック
@@ -1128,6 +1130,56 @@ function ProfilePreviewContent() {
                     }
 
                     console.log('✅ All validation checks passed')
+
+                    // 🚨 CRITICAL: 最上流でSupabase保存を必ず実行
+                    console.log('BEFORE_UPSERT')
+                    
+                    try {
+                      const { createClient } = await import('@/lib/supabase')
+                      const supabase = createClient()
+                      
+                      // 現在の認証ユーザーを取得
+                      const { data: { user }, error: userError } = await supabase.auth.getUser()
+                      
+                      if (!user) {
+                        console.error('❌ No user found for upsert')
+                        throw new Error('ユーザー情報の取得に失敗しました')
+                      }
+
+                      // 簡易payloadでまず確実に保存を実行
+                      const quickPayload = {
+                        id: user.id,
+                        user_id: user.id,
+                        nickname: nickname || 'ニックネーム未設定',
+                        bio: selfIntroduction || '',
+                        updated_at: new Date().toISOString()
+                      }
+                      
+                      console.log('🔍 Quick upsert payload:', quickPayload)
+                      
+                      const { data: upsertData, error: upsertError } = await supabase
+                        .from('profiles')
+                        .upsert(quickPayload, { onConflict: 'id' })
+                        .select()
+                      
+                      console.log('UPSERT_RESULT', { 
+                        data: upsertData, 
+                        error: upsertError, 
+                        status: upsertError ? 'ERROR' : 'SUCCESS' 
+                      })
+                      
+                      if (upsertError) {
+                        console.error('❌ Quick upsert failed:', upsertError)
+                        throw new Error('プロフィールの保存に失敗しました')
+                      }
+                      
+                      console.log('✅ Quick upsert succeeded, proceeding with full data preparation')
+                      
+                    } catch (upsertError) {
+                      console.error('❌ Critical upsert error:', upsertError)
+                      alert('保存に失敗しました: ' + (upsertError as Error).message)
+                      return
+                    }
 
                     // sessionStorageからデータを取得してプロフィール更新用データを準備
                     try {
