@@ -39,7 +39,7 @@ import {
   generateLanguageSkillsFromLegacy 
 } from '@/types/profile'
 
-const baseProfileEditSchema = (t: any) => z.object({
+const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
   gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
   birth_date: z.string().min(1, t('errors.birthDateRequired')),
@@ -47,10 +47,14 @@ const baseProfileEditSchema = (t: any) => z.object({
   nationality: z.string().optional(),
   prefecture: z.string().optional(),
   city: z.string().optional(),
-  // 外国人男性向け新フィールド
-  planned_prefectures: z.array(z.string()).min(1, { message: 'errors.plannedPrefecturesRequired' }).max(3, { message: 'errors.prefecturesMaximum' }),  // 必須項目
+  // 🛡️ CRITICAL FIX: 外国人男性専用フィールドを条件分岐で制御
+  planned_prefectures: isForeignMale 
+    ? z.array(z.string()).min(1, { message: 'errors.plannedPrefecturesRequired' }).max(3, { message: 'errors.prefecturesMaximum' })  // 外国人男性：必須
+    : z.array(z.string()).optional().default([]),  // 日本人女性：任意
   visit_schedule: z.string().optional(),
-  travel_companion: z.string().optional(),
+  travel_companion: isForeignMale 
+    ? z.string().optional()  // 外国人男性：任意（必須制約一旦削除）
+    : z.string().optional().default("undecided"),  // 日本人女性：任意
   occupation: z.string().optional(),
   height: z.preprocess(
     (val) => {
@@ -86,7 +90,7 @@ const baseProfileEditSchema = (t: any) => z.object({
 
 // 条件付きバリデーション関数
 const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
-  const baseSchema = baseProfileEditSchema(t)
+  const baseSchema = baseProfileEditSchema(isForeignMale, t)
   if (isForeignMale) {
     return baseSchema.refine((data) => {
       // Nationality is required for foreign male users
@@ -3249,9 +3253,9 @@ function ProfileEditContent() {
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
-            const travelCompanionValue = isNewUser ? undefined :
+            const travelCompanionValue = isNewUser ? 'undecided' :
               (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry'
-                ? profile.travel_companion : undefined)
+                ? profile.travel_companion : 'undecided')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
@@ -3261,7 +3265,7 @@ function ProfileEditContent() {
             // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
             setValue('visit_schedule', undefined, { shouldValidate: false })
-            setValue('travel_companion', undefined, { shouldValidate: false })
+            setValue('travel_companion', 'undecided', { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
         }

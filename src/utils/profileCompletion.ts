@@ -147,6 +147,106 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
  * - 常に17項目固定で計算
  * - 完成度 = floor(入力済み項目数 / 17 * 100)
  */
+// 🛡️ CRITICAL FIX: 日本人女性用15項目計算関数（planned_prefectures/travel_companion除外）
+function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
+  let completedCount = 0
+  
+  // 1. ニックネーム
+  if (profile.nickname && profile.nickname.trim() !== '') {
+    completedCount++
+  }
+  
+  // 2. 性別
+  if (profile.gender && profile.gender !== '') {
+    completedCount++
+  }
+  
+  // 3. 年齢
+  if (profile.age && profile.age > 0) {
+    completedCount++
+  }
+  
+  // 4. 生年月日
+  if (profile.birth_date && profile.birth_date !== '') {
+    completedCount++
+  }
+  
+  // 5. 国籍
+  if (profile.nationality && profile.nationality !== '' && profile.nationality !== '国籍を選択' && profile.nationality !== 'none') {
+    completedCount++
+  }
+  
+  // 6. 自己紹介
+  const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(profile.self_introduction || '')
+  if (profile.self_introduction && profile.self_introduction.trim() !== '' && !isDefaultSelfIntro) {
+    completedCount++
+  }
+  
+  // 7. 趣味・興味
+  if (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) {
+    completedCount++
+  }
+  
+  // 8. 言語スキル
+  if (hasLanguageInfo(profile)) {
+    completedCount++
+  }
+  
+  // 🚫 EXCLUDED: 9. 予定都道府県（日本人女性は除外）
+  
+  // 9. 職業
+  if (profile.occupation && profile.occupation !== '' && profile.occupation !== 'none') {
+    completedCount++
+  }
+  
+  // 10. 身長
+  if (profile.height && profile.height > 0) {
+    completedCount++
+  }
+  
+  // 11. 体型
+  if (profile.body_type && profile.body_type !== '' && profile.body_type !== 'none') {
+    completedCount++
+  }
+  
+  // 12. 結婚歴
+  if (profile.marital_status && profile.marital_status !== '' && profile.marital_status !== 'none') {
+    completedCount++
+  }
+  
+  // 13. 性格
+  if (Array.isArray(profile.personality) && profile.personality.length > 0) {
+    completedCount++
+  }
+  
+  // 14. 訪問予定
+  if (profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'none') {
+    completedCount++
+  }
+  
+  // 🚫 EXCLUDED: 旅行同伴者（日本人女性は除外）
+  
+  // 15. プロフィール画像
+  if (hasProfileImages(profile, imageArray)) {
+    completedCount++
+  }
+  
+  const percentage = Math.round((completedCount / 15) * 100)
+  
+  console.log('🌸 JAPANESE FEMALE COMPLETION (15 FIELDS):', {
+    'TOTAL FIELDS': 15,
+    'COMPLETED': completedCount,
+    'COMPLETION': `${percentage}%`,
+    'hasProfileImages_result': hasProfileImages(profile, imageArray)
+  })
+  
+  return {
+    completed: completedCount,
+    total: 15,
+    percentage: percentage
+  }
+}
+
 function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
   let completedCount = 0
   
@@ -266,25 +366,42 @@ export function calculateCompletion(
   persistedProfile?: any
 ): ProfileCompletionResult {
   
-  // 🌸 SAKURA CLUB 仕様: 17項目固定計算（userType/必須任意は無視）
+  // 🛡️ CRITICAL FIX: 日本人女性は15項目、外国人男性は17項目で計算
   const enhancedProfile: ProfileData = {
     ...profile,
     profile_images: imageArray
   }
   
-  const result17 = calculateCompletion17Fields(enhancedProfile, imageArray)
-  
-  // 🌸 SAKURA CLUB 仕様に従い、ProfileCompletionResult形式で返却
-  return {
-    completion: result17.percentage,
-    completedFields: result17.completed,
-    totalFields: result17.total,
-    requiredCompleted: result17.completed, // 17項目固定では全て同じ扱い
-    requiredTotal: result17.total,
-    optionalCompleted: 0, // 必須/任意概念は廃止
-    optionalTotal: 0,
-    hasImages: hasProfileImages(enhancedProfile, imageArray),
-    requiredFieldStatus: {} // 17項目固定では不要
+  // userTypeに応じた計算分岐
+  if (userType === 'japanese-female') {
+    const result15 = calculateCompletion15Fields(enhancedProfile, imageArray)
+    
+    return {
+      completion: result15.percentage,
+      completedFields: result15.completed,
+      totalFields: result15.total,
+      requiredCompleted: result15.completed,
+      requiredTotal: result15.total,
+      optionalCompleted: 0,
+      optionalTotal: 0,
+      hasImages: hasProfileImages(enhancedProfile, imageArray),
+      requiredFieldStatus: {}
+    }
+  } else {
+    // 外国人男性は従来通り17項目
+    const result17 = calculateCompletion17Fields(enhancedProfile, imageArray)
+    
+    return {
+      completion: result17.percentage,
+      completedFields: result17.completed,
+      totalFields: result17.total,
+      requiredCompleted: result17.completed,
+      requiredTotal: result17.total,
+      optionalCompleted: 0,
+      optionalTotal: 0,
+      hasImages: hasProfileImages(enhancedProfile, imageArray),
+      requiredFieldStatus: {}
+    }
   }
 }
 
