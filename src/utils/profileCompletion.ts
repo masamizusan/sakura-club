@@ -32,6 +32,7 @@ export interface ProfileData {
   personality?: string[]
   visit_schedule?: string
   travel_companion?: string
+  city?: string
   profile_images?: any[] | any
   // 画像関連フォールバック
   avatar_url?: string
@@ -192,39 +193,39 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
     completedCount++
   }
   
-  // 🚫 EXCLUDED: 9. 予定都道府県（日本人女性は除外）
+  // 9. 市区町村（任意・完成度100%到達に必要）
+  if (profile.city && profile.city.trim() !== '') {
+    completedCount++
+  }
   
-  // 9. 職業
+  // 🚫 EXCLUDED: 予定都道府県（日本人女性は除外）
+  
+  // 10. 職業
   if (profile.occupation && profile.occupation !== '' && profile.occupation !== 'none') {
     completedCount++
   }
   
-  // 10. 身長
+  // 11. 身長
   if (profile.height && profile.height > 0) {
     completedCount++
   }
   
-  // 11. 体型
+  // 12. 体型
   if (profile.body_type && profile.body_type !== '' && profile.body_type !== 'none') {
     completedCount++
   }
   
-  // 12. 結婚歴
+  // 13. 結婚歴
   if (profile.marital_status && profile.marital_status !== '' && profile.marital_status !== 'none') {
     completedCount++
   }
   
-  // 13. 性格
+  // 14. 性格
   if (Array.isArray(profile.personality) && profile.personality.length > 0) {
     completedCount++
   }
   
-  // 14. 訪問予定
-  if (profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'none') {
-    completedCount++
-  }
-  
-  // 🚫 EXCLUDED: 旅行同伴者（日本人女性は除外）
+  // 🚫 EXCLUDED: 訪問予定・旅行同伴者（日本人女性は除外）
   
   // 15. プロフィール画像
   if (hasProfileImages(profile, imageArray)) {

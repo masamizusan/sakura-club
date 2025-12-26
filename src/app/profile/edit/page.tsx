@@ -4323,7 +4323,7 @@ function ProfileEditContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        市区町村
+                        市区町村（任意・プロフィールを100%にするには入力）
                       </label>
                       <Input
                         placeholder="市区町村を入力"
