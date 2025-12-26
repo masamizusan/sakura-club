@@ -32,7 +32,7 @@ export interface ProfileData {
   personality?: string[]
   visit_schedule?: string
   travel_companion?: string
-  city?: string
+  city?: string | null
   profile_images?: any[] | any
   // 画像関連フォールバック
   avatar_url?: string
