@@ -139,41 +139,49 @@ function MyPageContent() {
       isForeignMale
     })
     
-    // 正規化されたプロフィールデータを作成
+    // 正規化されたプロフィールデータを作成（Supabase実態に合わせたキーマッピング）
     const normalized: any = {
       ...profileData,
-      // hobbies/personalityフィールドマッピング
+      // 🔧 DB実態キーマッピング修正
+      nickname: profileData?.name || profileData?.nickname,           // DB: name
+      self_introduction: profileData?.bio || profileData?.self_introduction, // DB: bio
+      // hobbies/personalityフィールドマッピング  
       hobbies: profileData?.culture_tags || profileData?.interests || [],
-      personality: profileData?.personality_tags || profileData?.personality || []
+      personality: Array.isArray(profileData?.personality_tags) 
+        ? profileData.personality_tags 
+        : (profileData?.personality || [])  // DB: personality_tags配列
     }
     
     // 🆕 Step A: missingFields確定用詳細ログ - 日本人女性専用15項目チェック
     if (!isForeignMale) {
       console.log('🔍 STEP A: 日本人女性15項目デバッグ開始')
       
-      // 入力データスナップショット
+      // 入力データスナップショット（DB実態 vs 正規化後の対比）
       const inputSnapshot = {
-        nickname: normalized.nickname,
+        // ✅ 正規化後（計算に使用される値）
+        normalized_nickname: normalized.nickname,
+        normalized_self_introduction: normalized.self_introduction,
+        normalized_personality: normalized.personality,
+        normalized_hobbies: normalized.hobbies,
+        // 🔍 DB実データ確認
+        db_name: profileData?.name,
+        db_bio: profileData?.bio,
+        db_personality_tags: profileData?.personality_tags,
+        db_culture_tags: profileData?.culture_tags,
+        // その他項目
         gender: normalized.gender,
         age: normalized.age,
         birth_date: normalized.birth_date,
         nationality: normalized.nationality,
-        self_introduction: normalized.self_introduction,
-        hobbies: normalized.hobbies,
         language_skills: normalized.language_skills,
         city: normalized.city,
         occupation: normalized.occupation,
         height: normalized.height,
         body_type: normalized.body_type,
         marital_status: normalized.marital_status,
-        personality: normalized.personality,
         // 🔍 prefecture vs residence 確認用
         prefecture: normalized.prefecture,
         residence: normalized.residence,
-        // 🔍 配列系フィールド詳細確認
-        personality_tags: profileData?.personality_tags,
-        culture_tags: profileData?.culture_tags,
-        interests: profileData?.interests,
         // 🚨 日本人女性UIに無いはずのフィールド確認
         planned_prefectures: normalized.planned_prefectures,
         visit_schedule: normalized.visit_schedule,
