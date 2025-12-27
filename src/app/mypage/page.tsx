@@ -147,6 +147,177 @@ function MyPageContent() {
       personality: profileData?.personality_tags || profileData?.personality || []
     }
     
+    // 🆕 Step A: missingFields確定用詳細ログ - 日本人女性専用15項目チェック
+    if (!isForeignMale) {
+      console.log('🔍 STEP A: 日本人女性15項目デバッグ開始')
+      
+      // 入力データスナップショット
+      const inputSnapshot = {
+        nickname: normalized.nickname,
+        gender: normalized.gender,
+        age: normalized.age,
+        birth_date: normalized.birth_date,
+        nationality: normalized.nationality,
+        self_introduction: normalized.self_introduction,
+        hobbies: normalized.hobbies,
+        language_skills: normalized.language_skills,
+        city: normalized.city,
+        occupation: normalized.occupation,
+        height: normalized.height,
+        body_type: normalized.body_type,
+        marital_status: normalized.marital_status,
+        personality: normalized.personality,
+        // 🔍 prefecture vs residence 確認用
+        prefecture: normalized.prefecture,
+        residence: normalized.residence,
+        // 🔍 配列系フィールド詳細確認
+        personality_tags: profileData?.personality_tags,
+        culture_tags: profileData?.culture_tags,
+        interests: profileData?.interests,
+        // 🚨 日本人女性UIに無いはずのフィールド確認
+        planned_prefectures: normalized.planned_prefectures,
+        visit_schedule: normalized.visit_schedule,
+        travel_companion: normalized.travel_companion
+      }
+      
+      // 15項目個別チェック（calculateCompletion15Fieldsロジックを再現）
+      const missingFields: string[] = []
+      let filledCount = 0
+      
+      // 1. ニックネーム
+      if (normalized.nickname && normalized.nickname.trim() !== '') {
+        filledCount++
+      } else {
+        missingFields.push('nickname')
+      }
+      
+      // 2. 性別
+      if (normalized.gender && normalized.gender !== '') {
+        filledCount++
+      } else {
+        missingFields.push('gender')
+      }
+      
+      // 3. 年齢
+      if (normalized.age && normalized.age > 0) {
+        filledCount++
+      } else {
+        missingFields.push('age')
+      }
+      
+      // 4. 生年月日
+      if (normalized.birth_date && normalized.birth_date !== '') {
+        filledCount++
+      } else {
+        missingFields.push('birth_date')
+      }
+      
+      // 5. 国籍
+      if (normalized.nationality && normalized.nationality !== '' && normalized.nationality !== '国籍を選択' && normalized.nationality !== 'none') {
+        filledCount++
+      } else {
+        missingFields.push('nationality')
+      }
+      
+      // 6. 自己紹介
+      const DEFAULT_SELF_INTRODUCTIONS = ["後でプロフィールを詳しく書きます。", "後ほど入力します", "後で入力します"]
+      const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(normalized.self_introduction || '')
+      if (normalized.self_introduction && normalized.self_introduction.trim() !== '' && !isDefaultSelfIntro) {
+        filledCount++
+      } else {
+        missingFields.push('self_introduction')
+      }
+      
+      // 7. 趣味・興味（hobbies）
+      if (Array.isArray(normalized.hobbies) && normalized.hobbies.length > 0) {
+        filledCount++
+      } else {
+        missingFields.push('hobbies')
+      }
+      
+      // 8. 言語スキル
+      if (Array.isArray(normalized.language_skills) && normalized.language_skills.length > 0) {
+        // 有効性チェック
+        const validSkills = normalized.language_skills.filter((s: any) =>
+          s &&
+          typeof s.language === "string" &&
+          typeof s.level === "string" &&
+          s.language !== "none" &&
+          s.level !== "none" &&
+          s.language.trim() !== "" &&
+          s.level.trim() !== ""
+        )
+        if (validSkills.length > 0) {
+          filledCount++
+        } else {
+          missingFields.push('language_skills')
+        }
+      } else {
+        missingFields.push('language_skills')
+      }
+      
+      // 9. 市区町村（任意・完成度100%到達に必要）
+      if (normalized.city && normalized.city.trim() !== '') {
+        filledCount++
+      } else {
+        missingFields.push('city')
+      }
+      
+      // 10. 職業
+      if (normalized.occupation && normalized.occupation !== '' && normalized.occupation !== 'none') {
+        filledCount++
+      } else {
+        missingFields.push('occupation')
+      }
+      
+      // 11. 身長
+      if (normalized.height && normalized.height > 0) {
+        filledCount++
+      } else {
+        missingFields.push('height')
+      }
+      
+      // 12. 体型
+      if (normalized.body_type && normalized.body_type !== '' && normalized.body_type !== 'none') {
+        filledCount++
+      } else {
+        missingFields.push('body_type')
+      }
+      
+      // 13. 結婚歴
+      if (normalized.marital_status && normalized.marital_status !== '' && normalized.marital_status !== 'none') {
+        filledCount++
+      } else {
+        missingFields.push('marital_status')
+      }
+      
+      // 14. 性格
+      if (Array.isArray(normalized.personality) && normalized.personality.length > 0) {
+        filledCount++
+      } else {
+        missingFields.push('personality')
+      }
+      
+      // 15. プロフィール画像（簡易チェック）
+      const hasImages = !!(normalized.avatar_url || normalized.profile_image)
+      if (hasImages) {
+        filledCount++
+      } else {
+        missingFields.push('profile_images')
+      }
+      
+      const completionPercent = Math.round((filledCount / 15) * 100)
+      
+      console.log('🏠 MyPage completion debug:', {
+        type: 'japanese-female',
+        total: 15,
+        filled: filledCount,
+        percent: completionPercent,
+        missingFields: missingFields,
+        snapshot: inputSnapshot
+      })
+    }
+    
     // 統一完成度計算システムを使用
     const { calculateCompletion } = require('@/utils/profileCompletion')
     const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
