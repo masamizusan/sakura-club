@@ -306,6 +306,20 @@ function MyPageContent() {
         missingFields.push('personality')
       }
       
+      // 🔽 14. 共有したい日本文化（culture_tags）- 新規追加
+      console.log("🧩 culture_tags check", {
+        db_culture_tags: profileData?.culture_tags,
+        isArray: Array.isArray(profileData?.culture_tags),
+        length: profileData?.culture_tags?.length,
+        normalized_hobbies: normalized.hobbies
+      })
+      
+      if (Array.isArray(normalized.hobbies) && normalized.hobbies.length > 0) {
+        filledCount++
+      } else {
+        missingFields.push('culture')
+      }
+      
       // 15. プロフィール画像（簡易チェック）
       const hasImages = !!(normalized.avatar_url || normalized.profile_image)
       if (hasImages) {
