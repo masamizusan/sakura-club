@@ -573,8 +573,9 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
     visit_schedule: formValues.visit_schedule,
     travel_companion: formValues.travel_companion,
 
-    // ジオ情報
+    // ジオ情報（🔧 prefecture→residence統一変換）
     prefecture: formValues.prefecture,
+    residence: formValues.prefecture || formValues.residence || "", // 🎯 A案修正: prefecture→residence変換
     city: formValues.city,
     
     // 🌸 TASK2: 画像状態を確実に含める（state/refから優先取得）

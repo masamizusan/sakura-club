@@ -2410,9 +2410,12 @@ function ProfileEditContent() {
         
         // 🔧 CRITICAL: テストモード分岐でも強制完成度計算を実行（0%再発防止）
         console.log('✅ Form reset completed (test mode)')
-        console.log('🔥 FORCE CALC AFTER FORM RESET (test mode)')
-        forceInitialCompletionCalculation()
-        setDidInitialCalc(true)
+        console.log('🔥 FORCE CALC AFTER FORM RESET (test mode) - DELAYED')
+        setTimeout(() => {
+          console.log('🎯 Executing delayed initial completion calculation (test mode)')
+          forceInitialCompletionCalculation()
+          setDidInitialCalc(true)
+        }, 100)
         
         // 🚨 CRITICAL FIX: テストモード分岐でもisInitializing解除（リアルタイム更新復活）
         console.log('🟢 isInitializing -> false (test mode end)')
@@ -2593,8 +2596,11 @@ function ProfileEditContent() {
                   source: 'FROMMYPAGE_WITH_USER'
                 })
                 
-                forceInitialCompletionCalculation()
-                setDidInitialCalc(true)
+                setTimeout(() => {
+                  console.log('🎯 Executing delayed initial completion calculation (fromMyPage)')
+                  forceInitialCompletionCalculation()
+                  setDidInitialCalc(true)
+                }, 100)
                 
                 // 🚨 CRITICAL FIX: fromMyPageでもisInitializing解除（リアルタイム更新復活）
                 console.log('🟢 isInitializing -> false (fromMyPage end)')
@@ -3078,12 +3084,22 @@ function ProfileEditContent() {
         console.log('🔍 Form Reset Data Debug:')
         console.log('  - nicknameValue:', nicknameValue)
         console.log('  - resetBirthDate:', resetBirthDate)
+        // 🎯 A案修正: nationality正規化（都道府県名→適切な国名）
+        const prefectureNames = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+        const rawNationality = defaults.nationality || profile.nationality || ''
+        const normalizedNationality = isForeignMale 
+          ? (prefectureNames.includes(rawNationality) ? 'アメリカ' : (rawNationality || (isNewUser ? 'アメリカ' : '')))
+          : 'japan'
+        
         console.log('  - 🌍 nationality calculation:', {
           defaults_nationality: defaults.nationality,
           profile_nationality: profile.nationality,
+          rawNationality,
+          normalizedNationality,
           isNewUser,
           isForeignMale,
-          final_nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : 'japan'
+          isPrefectureName: prefectureNames.includes(rawNationality),
+          final_nationality: normalizedNationality
         })
         console.log('  - parsedOptionalData.city:', parsedOptionalData.city)
         console.log('  - parsedOptionalData.occupation:', parsedOptionalData.occupation)
@@ -3101,7 +3117,7 @@ function ProfileEditContent() {
           gender: defaults.gender,
           birth_date: resetBirthDate,
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
-          nationality: isForeignMale ? (defaults.nationality || profile.nationality || (isNewUser ? 'アメリカ' : '')) : 'japan',
+          nationality: normalizedNationality,
           prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
           city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
@@ -3160,10 +3176,13 @@ function ProfileEditContent() {
         reset(resetData)
         console.log('✅ Form reset completed')
         
-        // 🔥 CRITICAL: form.reset完了直後に強制計算実行（確実なタイミング）
-        console.log('🔥 FORCE CALC AFTER FORM RESET')
-        forceInitialCompletionCalculation()
-        setDidInitialCalc(true)
+        // 🎯 A案修正: setValue完了後に初回完成度計算実行（prefecture→residence反映保証）
+        console.log('🔥 FORCE CALC AFTER FORM RESET - DELAYED FOR setValue COMPLETION')
+        setTimeout(() => {
+          console.log('🎯 Executing delayed initial completion calculation')
+          forceInitialCompletionCalculation()
+          setDidInitialCalc(true)
+        }, 100) // setValue完了を待つ
         
         // 国籍はresetDataに含まれているため、個別設定は不要
         
