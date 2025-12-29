@@ -3862,6 +3862,60 @@ function ProfileEditContent() {
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
+
+      // 🚨 CRITICAL: updateData作成直後のpersonality_tags完全検証
+      console.log('🔥 UPDATE DATA PERSONALITY_TAGS VALIDATION:', {
+        updateData_personality_tags: updateData.personality_tags,
+        updateData_personality_tags_type: typeof updateData.personality_tags,
+        updateData_personality_tags_isNull: updateData.personality_tags === null,
+        updateData_personality_tags_isUndefined: updateData.personality_tags === undefined,
+        updateData_personality_tags_isArray: Array.isArray(updateData.personality_tags),
+        updateData_personality_tags_length: updateData.personality_tags?.length || 0,
+        updateData_personality_tags_stringified: JSON.stringify(updateData.personality_tags),
+        updateData_culture_tags: updateData.culture_tags,
+        updateData_culture_tags_type: typeof updateData.culture_tags,
+        updateData_culture_tags_isArray: Array.isArray(updateData.culture_tags),
+        CRITICAL_CHECK: {
+          will_save_null: updateData.personality_tags === null || updateData.personality_tags === undefined,
+          is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
+          payload_safe_for_text_array: Array.isArray(updateData.personality_tags) ? 'YES' : 'NO - WILL FAIL'
+        }
+      })
+
+      // 🚨 CRITICAL: NULL/UNDEFINED禁止 + string[]強制変換
+      if (updateData.personality_tags === null || updateData.personality_tags === undefined || !Array.isArray(updateData.personality_tags)) {
+        console.error('❌ CRITICAL: personality_tags is null/undefined/not-array, forcing to []')
+        updateData.personality_tags = []
+      } else {
+        // string[]強制変換（オブジェクト配列→文字列配列）
+        updateData.personality_tags = updateData.personality_tags.map((item: any) => {
+          if (typeof item === 'string') return item
+          if (typeof item === 'object' && item.value) return item.value
+          if (typeof item === 'object' && item.label) return item.label
+          return String(item)
+        }).filter((item: string) => item && item.trim() !== '')
+      }
+
+      if (updateData.culture_tags === null || updateData.culture_tags === undefined || !Array.isArray(updateData.culture_tags)) {
+        console.error('❌ CRITICAL: culture_tags is null/undefined/not-array, forcing to []')
+        updateData.culture_tags = []
+      } else {
+        // string[]強制変換
+        updateData.culture_tags = updateData.culture_tags.map((item: any) => {
+          if (typeof item === 'string') return item
+          if (typeof item === 'object' && item.value) return item.value
+          if (typeof item === 'object' && item.label) return item.label
+          return String(item)
+        }).filter((item: string) => item && item.trim() !== '')
+      }
+
+      console.log('🛡️ FINAL PAYLOAD SAFETY CHECK:', {
+        personality_tags_final: updateData.personality_tags,
+        culture_tags_final: updateData.culture_tags,
+        personality_tags_is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
+        culture_tags_is_string_array: Array.isArray(updateData.culture_tags) && updateData.culture_tags.every((item: any) => typeof item === 'string'),
+        ready_for_text_array_column: 'YES - GUARANTEED'
+      })
       
       // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality値
       console.log('🗄️ SUPABASE PERSONALITY UNCONDITIONAL SAVE:', {
@@ -3966,10 +4020,20 @@ function ProfileEditContent() {
       })
       
       // データベースを更新
+      // 🚨 CRITICAL: UPDATE条件統一確認
+      console.log('🔑 UPDATE CONDITION CHECK:', {
+        user_id: user.id,
+        user_id_type: typeof user.id,
+        update_condition: '.eq(id, user.id)',
+        mypage_condition: '.eq(id, user.id)',
+        conditions_match: true,
+        critical_note: 'MyPageとプロフィール編集で同一のキー(id)を使用'
+      })
+
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id)
+        .eq('id', user.id)  // MyPageと同一条件
       
       // 🚨 CRITICAL: Supabase update結果の完全ログ（RLS/権限問題検出）
       console.log('🔥 SUPABASE UPDATE RESULT - DETAILED:', {
@@ -4016,20 +4080,52 @@ function ProfileEditContent() {
           .eq('id', user.id)
           .single()
           
-        console.log('🔍 SAVE VERIFICATION - DB確認:', {
-          送信したpersonality_tags: updateData.personality_tags,
-          送信したculture_tags: updateData.culture_tags,
-          DB保存済みpersonality_tags: savedProfile?.personality_tags,
-          DB保存済みculture_tags: savedProfile?.culture_tags,
-          personality_tags一致確認: JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags),
-          culture_tags一致確認: JSON.stringify(updateData.culture_tags) === JSON.stringify(savedProfile?.culture_tags),
-          DB確認エラー: fetchError?.message || 'なし'
+        console.log('🔍 ENHANCED SAVE VERIFICATION - 完全DB確認:', {
+          // 送信値
+          sent_personality_tags: updateData.personality_tags,
+          sent_culture_tags: updateData.culture_tags,
+          sent_personality_tags_type: typeof updateData.personality_tags,
+          sent_culture_tags_type: typeof updateData.culture_tags,
+          sent_personality_tags_length: updateData.personality_tags?.length || 0,
+          sent_culture_tags_length: updateData.culture_tags?.length || 0,
+          // DB保存済み値
+          db_personality_tags: savedProfile?.personality_tags,
+          db_culture_tags: savedProfile?.culture_tags,
+          db_personality_tags_type: typeof savedProfile?.personality_tags,
+          db_culture_tags_type: typeof savedProfile?.culture_tags,
+          db_personality_tags_isNull: savedProfile?.personality_tags === null,
+          db_culture_tags_isNull: savedProfile?.culture_tags === null,
+          db_personality_tags_length: savedProfile?.personality_tags?.length || 0,
+          db_culture_tags_length: savedProfile?.culture_tags?.length || 0,
+          // 一致確認
+          personality_tags_match: JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags),
+          culture_tags_match: JSON.stringify(updateData.culture_tags) === JSON.stringify(savedProfile?.culture_tags),
+          // RLS/権限問題検出
+          rls_silent_drop_possibility: {
+            personality_tags: updateData.personality_tags && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null ? 'HIGH - RLS問題可能性' : 'LOW',
+            culture_tags: updateData.culture_tags && Array.isArray(updateData.culture_tags) && savedProfile?.culture_tags === null ? 'HIGH - RLS問題可能性' : 'LOW'
+          },
+          db_fetch_error: fetchError?.message || 'なし'
         })
         
+        // 🚨 CRITICAL: NULL保存検出
         if (savedProfile?.personality_tags === null || savedProfile?.culture_tags === null) {
-          console.error('🚨 CRITICAL: DBにnullが保存されています！', {
-            personality_tags: savedProfile?.personality_tags,
-            culture_tags: savedProfile?.culture_tags
+          console.error('🚨 CRITICAL NULL DETECTED IN DB:', {
+            personality_tags_is_null: savedProfile?.personality_tags === null,
+            culture_tags_is_null: savedProfile?.culture_tags === null,
+            sent_personality_tags_was_array: Array.isArray(updateData.personality_tags),
+            sent_culture_tags_was_array: Array.isArray(updateData.culture_tags),
+            probable_cause: 'RLS policy blocking these columns OR type mismatch OR update condition failed'
+          })
+        }
+
+        // 🚨 CRITICAL: 型不一致検出
+        if (Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags && !Array.isArray(savedProfile.personality_tags)) {
+          console.error('🚨 TYPE MISMATCH: personality_tags type changed during save:', {
+            sent_type: typeof updateData.personality_tags,
+            db_type: typeof savedProfile.personality_tags,
+            sent_value: updateData.personality_tags,
+            db_value: savedProfile.personality_tags
           })
         }
       } catch (fetchErr) {
