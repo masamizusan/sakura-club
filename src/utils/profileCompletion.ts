@@ -222,6 +222,14 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
   // 14. 共有したい日本文化（culture_tags）
   if (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) {
     completedCount++
+    console.log('✅ Culture tags COMPLETED - profile.hobbies detected:', profile.hobbies)
+  } else {
+    console.log('❌ Culture tags MISSING:', {
+      profile_hobbies: profile.hobbies,
+      profile_hobbies_type: typeof profile.hobbies,
+      profile_hobbies_isArray: Array.isArray(profile.hobbies),
+      profile_hobbies_length: profile.hobbies?.length
+    })
   }
   
   // 15. プロフィール画像

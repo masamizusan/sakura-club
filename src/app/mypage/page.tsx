@@ -129,11 +129,11 @@ function MyPageContent() {
     loadProfile()
   }, [user, supabase])
 
-  // 🆕 完成度計算関数（Supabaseデータのみ）
+  // 🚨 CRITICAL FIX: 完成度計算単一化（Supabaseデータのみ）
   const calculateProfileCompletion = (profileData: any) => {
     const isForeignMale = profileData?.gender === 'male' && profileData?.nationality && profileData?.nationality !== '日本'
     
-    console.log('🏠 MyPage: Supabase完成度計算開始:', {
+    console.log('🏠 MyPage: 統一完成度計算開始:', {
       userId: user?.id,
       hasProfileData: !!profileData,
       isForeignMale
@@ -152,203 +152,51 @@ function MyPageContent() {
         : (profileData?.personality || [])  // DB: personality_tags配列
     }
     
-    // 🆕 Step A: missingFields確定用詳細ログ - 日本人女性専用15項目チェック
-    if (!isForeignMale) {
-      console.log('🔍 STEP A: 日本人女性15項目デバッグ開始')
-      
-      // 入力データスナップショット（DB実態 vs 正規化後の対比）
-      const inputSnapshot = {
-        // ✅ 正規化後（計算に使用される値）
-        normalized_nickname: normalized.nickname,
-        normalized_self_introduction: normalized.self_introduction,
-        normalized_personality: normalized.personality,
-        normalized_hobbies: normalized.hobbies,
-        // 🔍 DB実データ確認
-        db_name: profileData?.name,
-        db_bio: profileData?.bio,
-        db_personality_tags: profileData?.personality_tags,
-        db_culture_tags: profileData?.culture_tags,
-        // その他項目
-        gender: normalized.gender,
-        age: normalized.age,
-        birth_date: normalized.birth_date,
-        nationality: normalized.nationality,
-        language_skills: normalized.language_skills,
-        city: normalized.city,
-        occupation: normalized.occupation,
-        height: normalized.height,
-        body_type: normalized.body_type,
-        marital_status: normalized.marital_status,
-        // 🔍 prefecture vs residence 確認用
-        prefecture: normalized.prefecture,
-        residence: normalized.residence,
-        // 🚨 日本人女性UIに無いはずのフィールド確認
-        planned_prefectures: normalized.planned_prefectures,
-        visit_schedule: normalized.visit_schedule,
-        travel_companion: normalized.travel_companion
-      }
-      
-      // 15項目個別チェック（calculateCompletion15Fieldsロジックを再現）
-      const missingFields: string[] = []
-      let filledCount = 0
-      
-      // 1. ニックネーム
-      if (normalized.nickname && normalized.nickname.trim() !== '') {
-        filledCount++
-      } else {
-        missingFields.push('nickname')
-      }
-      
-      // 2. 性別
-      if (normalized.gender && normalized.gender !== '') {
-        filledCount++
-      } else {
-        missingFields.push('gender')
-      }
-      
-      // 3. 年齢
-      if (normalized.age && normalized.age > 0) {
-        filledCount++
-      } else {
-        missingFields.push('age')
-      }
-      
-      // 4. 生年月日
-      if (normalized.birth_date && normalized.birth_date !== '') {
-        filledCount++
-      } else {
-        missingFields.push('birth_date')
-      }
-      
-      // 5. 国籍
-      if (normalized.nationality && normalized.nationality !== '' && normalized.nationality !== '国籍を選択' && normalized.nationality !== 'none') {
-        filledCount++
-      } else {
-        missingFields.push('nationality')
-      }
-      
-      // 6. 自己紹介
-      const DEFAULT_SELF_INTRODUCTIONS = ["後でプロフィールを詳しく書きます。", "後ほど入力します", "後で入力します"]
-      const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(normalized.self_introduction || '')
-      if (normalized.self_introduction && normalized.self_introduction.trim() !== '' && !isDefaultSelfIntro) {
-        filledCount++
-      } else {
-        missingFields.push('self_introduction')
-      }
-      
-      // 7. 趣味・興味（hobbies）
-      if (Array.isArray(normalized.hobbies) && normalized.hobbies.length > 0) {
-        filledCount++
-      } else {
-        missingFields.push('hobbies')
-      }
-      
-      // 8. 言語スキル
-      if (Array.isArray(normalized.language_skills) && normalized.language_skills.length > 0) {
-        // 有効性チェック
-        const validSkills = normalized.language_skills.filter((s: any) =>
-          s &&
-          typeof s.language === "string" &&
-          typeof s.level === "string" &&
-          s.language !== "none" &&
-          s.level !== "none" &&
-          s.language.trim() !== "" &&
-          s.level.trim() !== ""
-        )
-        if (validSkills.length > 0) {
-          filledCount++
-        } else {
-          missingFields.push('language_skills')
-        }
-      } else {
-        missingFields.push('language_skills')
-      }
-      
-      // 9. 市区町村（任意・完成度100%到達に必要）
-      if (normalized.city && normalized.city.trim() !== '') {
-        filledCount++
-      } else {
-        missingFields.push('city')
-      }
-      
-      // 10. 職業
-      if (normalized.occupation && normalized.occupation !== '' && normalized.occupation !== 'none') {
-        filledCount++
-      } else {
-        missingFields.push('occupation')
-      }
-      
-      // 11. 身長
-      if (normalized.height && normalized.height > 0) {
-        filledCount++
-      } else {
-        missingFields.push('height')
-      }
-      
-      // 12. 体型
-      if (normalized.body_type && normalized.body_type !== '' && normalized.body_type !== 'none') {
-        filledCount++
-      } else {
-        missingFields.push('body_type')
-      }
-      
-      // 13. 結婚歴
-      if (normalized.marital_status && normalized.marital_status !== '' && normalized.marital_status !== 'none') {
-        filledCount++
-      } else {
-        missingFields.push('marital_status')
-      }
-      
-      // 14. 性格
-      if (Array.isArray(normalized.personality) && normalized.personality.length > 0) {
-        filledCount++
-      } else {
-        missingFields.push('personality')
-      }
-      
-      // 🔽 14. 共有したい日本文化（culture_tags）- 新規追加
-      console.log("🧩 culture_tags check", {
-        db_culture_tags: profileData?.culture_tags,
-        isArray: Array.isArray(profileData?.culture_tags),
-        length: profileData?.culture_tags?.length,
-        normalized_hobbies: normalized.hobbies
-      })
-      
-      if (Array.isArray(normalized.hobbies) && normalized.hobbies.length > 0) {
-        filledCount++
-      } else {
-        missingFields.push('culture')
-      }
-      
-      // 15. プロフィール画像（簡易チェック）
-      const hasImages = !!(normalized.avatar_url || normalized.profile_image)
-      if (hasImages) {
-        filledCount++
-      } else {
-        missingFields.push('profile_images')
-      }
-      
-      const completionPercent = Math.round((filledCount / 15) * 100)
-      
-      console.log('🏠 MyPage completion debug:', {
-        type: 'japanese-female',
-        total: 15,
-        filled: filledCount,
-        percent: completionPercent,
-        missingFields: missingFields,
-        snapshot: inputSnapshot
-      })
-    }
+    // 🔍 DB実データ確認ログ（culture_tags問題特定用）
+    console.log('🧩 DB DATA CHECK:', {
+      db_personality_tags: profileData?.personality_tags,
+      db_culture_tags: profileData?.culture_tags,
+      normalized_personality: normalized.personality,
+      normalized_hobbies: normalized.hobbies
+    })
     
-    // 統一完成度計算システムを使用
+    // 🚨 SINGLE SOURCE: 統一完成度計算システムのみを使用
     const { calculateCompletion } = require('@/utils/profileCompletion')
     const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
     const result = calculateCompletion(normalized, userType, [], false)
     
-    console.log('✅ MyPage完成度計算完了:', {
+    // 🛡️ CRITICAL: 計算矛盾検出ガード
+    const totalExpected = userType === 'japanese-female' ? 15 : 17
+    const isConsistent = result.totalFields === totalExpected
+    const isValidCalculation = result.completedFields <= result.totalFields
+    
+    console.log('🔧 CALCULATION GUARD CHECK:', {
+      userType,
+      totalExpected,
+      result_totalFields: result.totalFields,
+      result_completedFields: result.completedFields,
+      result_completion: result.completion,
+      isConsistent,
+      isValidCalculation,
+      calculationSource: 'calculateCompletion統一システム'
+    })
+    
+    // 🚨 計算矛盾時は強制エラー表示
+    if (!isConsistent || !isValidCalculation) {
+      console.error('❌ CALCULATION INCONSISTENCY DETECTED:', {
+        expected_total: totalExpected,
+        actual_total: result.totalFields,
+        completed: result.completedFields,
+        userType
+      })
+    }
+    
+    console.log('✅ MyPage完成度計算完了（統一）:', {
       completion: result.completion,
       completedFields: result.completedFields,
-      totalFields: result.totalFields
+      totalFields: result.totalFields,
+      userType,
+      singleSourceOnly: true
     })
     
     // UI更新

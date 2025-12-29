@@ -3947,18 +3947,31 @@ function ProfileEditContent() {
         .update(updateData)
         .eq('id', user.id)
       
-      // データベース更新直後のデバッグ
-      console.log('🔥 SUPABASE UPDATE - Post-update debug:', {
+      // 🚨 CRITICAL: Supabase update結果の完全ログ（RLS/権限問題検出）
+      console.log('🔥 SUPABASE UPDATE RESULT - DETAILED:', {
+        // 基本結果
         updateResult,
         updateError,
-        sentLanguageSkills: updateData.language_skills,
-        sentPersonalityTags: updateData.personality_tags,
-        personality_save_verification: {
-          sent_value: updateData.personality_tags,
-          was_empty_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0,
-          supabase_success: !updateError,
-          should_have_cleared_db: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0 ? '期待：DB上のpersonalityが空配列になる' : '期待：DB上のpersonalityに値が保存される'
-        }
+        updateError_message: updateError?.message,
+        updateError_code: updateError?.code,
+        updateError_details: updateError?.details,
+        updateError_hint: updateError?.hint,
+        // personality_tags/culture_tags保存状況
+        sent_personality_tags: updateData.personality_tags,
+        sent_culture_tags: updateData.culture_tags,
+        sent_personality_tags_type: typeof updateData.personality_tags,
+        sent_culture_tags_type: typeof updateData.culture_tags,
+        sent_personality_tags_length: updateData.personality_tags?.length,
+        sent_culture_tags_length: updateData.culture_tags?.length,
+        // RLS/権限問題検出用
+        update_success: !updateError,
+        affected_rows_count: updateResult ? 'データあり（成功想定）' : 'データなし（問題可能性）',
+        rls_silent_drop_possibility: !updateError && !updateResult ? 'HIGH（エラー無しだがデータ無し）' : 'LOW',
+        // 検証用詳細
+        full_updateData_keys: Object.keys(updateData),
+        updateData_personality_final: updateData.personality,
+        updateData_personality_tags_final: updateData.personality_tags,
+        updateData_culture_tags_final: updateData.culture_tags
       })
       
       console.log('[Profile Submit] Supabase error:', updateError)
