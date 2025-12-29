@@ -4158,7 +4158,7 @@ function ProfileEditContent() {
 
         // 🚨 CRITICAL: デバッグパネルに結果設定（画面固定表示用）
         const personalityMatch = JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags)
-        const hasRlsIssue = !updateError && updateResult && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null
+        const hasRlsIssue = Boolean(!updateError && updateResult && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null)
 
         setDebugPanel({
           show: true,
@@ -4167,7 +4167,7 @@ function ProfileEditContent() {
           payloadPersonalityTags: updateData.personality_tags,
           dbPersonalityTags: savedProfile?.personality_tags,
           match: personalityMatch,
-          updateError: updateError?.message || null,
+          updateError: updateError ? String(updateError) : null,
           updatedRows: updateResult ? 1 : 0,
           rlsIssue: hasRlsIssue
         })
