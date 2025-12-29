@@ -3754,12 +3754,13 @@ function ProfileEditContent() {
         consolidatedInterests.push('その他')
       }
       
-      // 🎯 CRITICAL FIX: personality を無条件でSupabaseに保存（Supabaseを唯一の真実にする）
-      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : []
-      const personalityTags = selectedPersonality  // 🚨 条件削除: 空配列でも常に保存
+      // 🎯 CRITICAL FIX: personality/culture_tagsを正しいフィールドから生成
+      const personalityTags = selectedPersonality  // 性格（personality_tags）
+      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : []  // 共有したい日本文化（culture_tags）
       
-      // 🚨 CRITICAL DEBUG: personality保存値の詳細追跡
-      console.log('🧭 PERSONALITY SAVE DEBUG - DETAILED TRACKING:', {
+      // 🚨 CRITICAL DEBUG: personality/culture保存値の詳細追跡
+      console.log('🧭 PERSONALITY & CULTURE SAVE DEBUG - DETAILED TRACKING:', {
+        // 性格（personality_tags）
         selectedPersonality_state: selectedPersonality,
         selectedPersonality_type: typeof selectedPersonality,
         selectedPersonality_isArray: Array.isArray(selectedPersonality),
@@ -3770,8 +3771,21 @@ function ProfileEditContent() {
         personalityTags_isArray: Array.isArray(personalityTags),
         personalityTags_length: personalityTags?.length || 0,
         personalityTags_stringified: JSON.stringify(personalityTags),
-        UNCONDITIONAL_SAVE: 'YES - selectedPersonality を条件なしで保存（Supabase = 唯一の真実）',
-        logic_check: 'selectedPersonality を直接使用（条件分岐削除）'
+        // 共有したい日本文化（culture_tags）  
+        selectedHobbies_state: selectedHobbies,
+        selectedHobbies_type: typeof selectedHobbies,
+        selectedHobbies_isArray: Array.isArray(selectedHobbies),
+        selectedHobbies_length: selectedHobbies?.length || 0,
+        selectedHobbies_stringified: JSON.stringify(selectedHobbies),
+        cultureTags_final: cultureTags,
+        cultureTags_type: typeof cultureTags,
+        cultureTags_isArray: Array.isArray(cultureTags),
+        cultureTags_length: cultureTags?.length || 0,
+        cultureTags_stringified: JSON.stringify(cultureTags),
+        SAVE_LOGIC: {
+          personalityTags: 'selectedPersonality を直接保存',
+          cultureTags: 'selectedHobbies を直接保存（共有したい日本文化）'
+        }
       })
 
       // プロフィール更新データを準備
@@ -3956,6 +3970,34 @@ function ProfileEditContent() {
       }
 
       console.log('✅ プロフィール更新成功:', updateResult)
+      
+      // 🔍 CRITICAL: 保存直後にDBから再取得して確認
+      try {
+        const { data: savedProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('personality_tags, culture_tags')
+          .eq('id', user.id)
+          .single()
+          
+        console.log('🔍 SAVE VERIFICATION - DB確認:', {
+          送信したpersonality_tags: updateData.personality_tags,
+          送信したculture_tags: updateData.culture_tags,
+          DB保存済みpersonality_tags: savedProfile?.personality_tags,
+          DB保存済みculture_tags: savedProfile?.culture_tags,
+          personality_tags一致確認: JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags),
+          culture_tags一致確認: JSON.stringify(updateData.culture_tags) === JSON.stringify(savedProfile?.culture_tags),
+          DB確認エラー: fetchError?.message || 'なし'
+        })
+        
+        if (savedProfile?.personality_tags === null || savedProfile?.culture_tags === null) {
+          console.error('🚨 CRITICAL: DBにnullが保存されています！', {
+            personality_tags: savedProfile?.personality_tags,
+            culture_tags: savedProfile?.culture_tags
+          })
+        }
+      } catch (fetchErr) {
+        console.error('❌ DB確認エラー:', fetchErr)
+      }
       
       setSuccess('プロフィールが正常に更新されました')
       
