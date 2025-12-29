@@ -139,25 +139,37 @@ function MyPageContent() {
       isForeignMale
     })
     
-    // 正規化されたプロフィールデータを作成（Supabase実態に合わせたキーマッピング）
+    // 正規化されたプロフィールデータを作成（Supabase実態に合わせたキーマッピング + NULL→[]正規化）
     const normalized: any = {
       ...profileData,
       // 🔧 DB実態キーマッピング修正
       nickname: profileData?.name || profileData?.nickname,           // DB: name
       self_introduction: profileData?.bio || profileData?.self_introduction, // DB: bio
-      // hobbies/personalityフィールドマッピング  
-      hobbies: profileData?.culture_tags || profileData?.interests || [],
+      // 🚨 NULL→[]正規化: hobbies/personalityフィールドマッピング  
+      hobbies: Array.isArray(profileData?.culture_tags) 
+        ? profileData.culture_tags 
+        : (Array.isArray(profileData?.interests) ? profileData.interests : []),
       personality: Array.isArray(profileData?.personality_tags) 
         ? profileData.personality_tags 
-        : (profileData?.personality || [])  // DB: personality_tags配列
+        : (Array.isArray(profileData?.personality) ? profileData.personality : [])  // DB: personality_tags配列（null→[]正規化）
     }
     
-    // 🔍 DB実データ確認ログ（culture_tags問題特定用）
-    console.log('🧩 DB DATA CHECK:', {
+    // 🔍 DB実データ確認ログ（culture_tags問題特定用 + NULL→[]正規化確認）
+    console.log('🧩 DB DATA CHECK + NULL NORMALIZATION:', {
       db_personality_tags: profileData?.personality_tags,
       db_culture_tags: profileData?.culture_tags,
+      db_personality_tags_isNull: profileData?.personality_tags === null,
+      db_culture_tags_isNull: profileData?.culture_tags === null,
+      db_personality_tags_type: typeof profileData?.personality_tags,
+      db_culture_tags_type: typeof profileData?.culture_tags,
       normalized_personality: normalized.personality,
-      normalized_hobbies: normalized.hobbies
+      normalized_hobbies: normalized.hobbies,
+      normalized_personality_length: normalized.personality?.length || 0,
+      normalized_hobbies_length: normalized.hobbies?.length || 0,
+      null_normalization_applied: {
+        personality_tags: profileData?.personality_tags === null ? 'null→[]変換済み' : '配列または他の値',
+        culture_tags: profileData?.culture_tags === null ? 'null→[]変換済み' : '配列または他の値'
+      }
     })
     
     // 🚨 SINGLE SOURCE: 統一完成度計算システムのみを使用

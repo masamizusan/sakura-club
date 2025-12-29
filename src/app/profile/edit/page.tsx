@@ -2983,10 +2983,20 @@ function ProfileEditContent() {
         if (!isNewUser) {
           // 🆕 Triple-save対応: 新しいカラムを優先、フォールバックでinterests配列から抽出
           
-          // 1. personality_tagsカラムから性格データを取得（優先）
-          if ((profile as any).personality_tags && Array.isArray((profile as any).personality_tags) && (profile as any).personality_tags.length > 0) {
-            existingPersonality = (profile as any).personality_tags.filter((item: string) => item !== 'その他')
-          } else if (profile.personality && Array.isArray(profile.personality) && profile.personality.length > 0) {
+          // 1. personality_tagsカラムから性格データを取得（優先）+ NULL→[]正規化
+          const rawPersonalityTags = (profile as any).personality_tags
+          console.log('🔍 PERSONALITY NULL→[]正規化チェック:', {
+            rawPersonalityTags,
+            rawPersonalityTags_type: typeof rawPersonalityTags,
+            rawPersonalityTags_isNull: rawPersonalityTags === null,
+            rawPersonalityTags_isArray: Array.isArray(rawPersonalityTags),
+            rawPersonalityTags_length: rawPersonalityTags?.length,
+            will_normalize_to_empty_array: rawPersonalityTags === null || !Array.isArray(rawPersonalityTags)
+          })
+          
+          if (Array.isArray(rawPersonalityTags) && rawPersonalityTags.length > 0) {
+            existingPersonality = rawPersonalityTags.filter((item: string) => item !== 'その他')
+          } else if (Array.isArray(profile.personality) && profile.personality.length > 0) {
             // 2. 従来のpersonalityカラムからフォールバック
             existingPersonality = profile.personality.filter((item: string) => item !== 'その他')
           } else if (profile.interests && Array.isArray(profile.interests)) {
@@ -3755,8 +3765,22 @@ function ProfileEditContent() {
       }
       
       // 🎯 CRITICAL FIX: personality/culture_tagsを正しいフィールドから生成
-      const personalityTags = selectedPersonality  // 性格（personality_tags）
-      const cultureTags = selectedHobbies.length > 0 ? selectedHobbies : []  // 共有したい日本文化（culture_tags）
+      // 🚨 NULL禁止: 保存時は必ず配列化（null/undefined→[]正規化）
+      const personalityTags = Array.isArray(selectedPersonality) ? selectedPersonality : []  // 性格（personality_tags）
+      const cultureTags = Array.isArray(selectedHobbies) ? selectedHobbies : []  // 共有したい日本文化（culture_tags）
+      
+      // 🚨 NULL禁止正規化ログ
+      console.log('🔧 NULL禁止正規化完了:', {
+        selectedPersonality_original: selectedPersonality,
+        selectedHobbies_original: selectedHobbies,
+        personalityTags_normalized: personalityTags,
+        cultureTags_normalized: cultureTags,
+        personalityTags_isArray: Array.isArray(personalityTags),
+        cultureTags_isArray: Array.isArray(cultureTags),
+        personalityTags_length: personalityTags.length,
+        cultureTags_length: cultureTags.length,
+        null_prevention_success: 'personalityTags/cultureTagsは必ず配列として保存される'
+      })
       
       // 🚨 CRITICAL DEBUG: personality/culture保存値の詳細追跡
       console.log('🧭 PERSONALITY & CULTURE SAVE DEBUG - DETAILED TRACKING:', {
@@ -3831,9 +3855,9 @@ function ProfileEditContent() {
         interests: consolidatedInterests,
         // 🚨 CRITICAL: personality を無条件でSupabaseに保存（唯一の真実化）
         personality: personalityTags,      // 🆕 personality フィールドも無条件保存
-        // ✅ Triple-save機能復旧（personality/culture分離）
-        personality_tags: personalityTags,
-        culture_tags: cultureTags,
+        // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
+        personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
+        culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
         avatar_url: avatarUrl,
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
