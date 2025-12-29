@@ -152,71 +152,98 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
 // 🛡️ CRITICAL FIX: 日本人女性用15項目計算関数（planned_prefectures/travel_companion除外）
 function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
   let completedCount = 0
+  const missingFields: string[] = [] // 🧩 MISSING FIELDS追跡用
   
   // 1. ニックネーム
   if (profile.nickname && profile.nickname.trim() !== '') {
     completedCount++
+  } else {
+    missingFields.push('nickname')
   }
   
   // 2. 性別
   if (profile.gender && profile.gender !== '') {
     completedCount++
+  } else {
+    missingFields.push('gender')
   }
   
   // 3. 年齢
   if (profile.age && profile.age > 0) {
     completedCount++
+  } else {
+    missingFields.push('age')
   }
   
   // 4. 生年月日
   if (profile.birth_date && profile.birth_date !== '') {
     completedCount++
+  } else {
+    missingFields.push('birth_date')
   }
   
   // 5. 都道府県（residence）
   if (profile.residence && profile.residence.trim() !== '') {
     completedCount++
+  } else {
+    missingFields.push('residence')
   }
   
   // 6. 自己紹介
   const isDefaultSelfIntro = DEFAULT_SELF_INTRODUCTIONS.includes(profile.self_introduction || '')
   if (profile.self_introduction && profile.self_introduction.trim() !== '' && !isDefaultSelfIntro) {
     completedCount++
+  } else {
+    missingFields.push('self_introduction')
   }
   
   // 7. 市区町村（任意・完成度100%到達に必要）
   if (profile.city && profile.city.trim() !== '') {
     completedCount++
+  } else {
+    missingFields.push('city')
   }
   
   // 8. 職業
   if (profile.occupation && profile.occupation !== '' && profile.occupation !== 'none') {
     completedCount++
+  } else {
+    missingFields.push('occupation')
   }
   
   // 9. 身長
   if (profile.height && profile.height > 0) {
     completedCount++
+  } else {
+    missingFields.push('height')
   }
   
   // 10. 体型
   if (profile.body_type && profile.body_type !== '' && profile.body_type !== 'none') {
     completedCount++
+  } else {
+    missingFields.push('body_type')
   }
   
   // 11. 結婚歴
   if (profile.marital_status && profile.marital_status !== '' && profile.marital_status !== 'none') {
     completedCount++
+  } else {
+    missingFields.push('marital_status')
   }
   
   // 12. 使用言語（language_skills）
   if (hasLanguageInfo(profile)) {
     completedCount++
+  } else {
+    missingFields.push('language_skills')
   }
   
   // 13. 性格（personality_tags）
   if (Array.isArray(profile.personality) && profile.personality.length > 0) {
     completedCount++
+  } else {
+    missingFields.push('personality_tags')
   }
   
   // 14. 共有したい日本文化（culture_tags）
@@ -224,6 +251,7 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
     completedCount++
     console.log('✅ Culture tags COMPLETED - profile.hobbies detected:', profile.hobbies)
   } else {
+    missingFields.push('culture_tags')
     console.log('❌ Culture tags MISSING:', {
       profile_hobbies: profile.hobbies,
       profile_hobbies_type: typeof profile.hobbies,
@@ -235,14 +263,27 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
   // 15. プロフィール画像
   if (hasProfileImages(profile, imageArray)) {
     completedCount++
+  } else {
+    missingFields.push('profile_images')
   }
   
   const percentage = Math.round((completedCount / 15) * 100)
+  
+  // 🧩 COMPLETION INTERNAL - 93%問題の最終原因特定
+  console.log("🧩 COMPLETION INTERNAL", {
+    completed: completedCount,
+    missing: missingFields,
+    totalExpected: 15,
+    missingCount: missingFields.length,
+    calculationCheck: completedCount + missingFields.length,
+    shouldEqual15: (completedCount + missingFields.length) === 15
+  })
   
   console.log('🌸 JAPANESE FEMALE COMPLETION (15 FIELDS):', {
     'TOTAL FIELDS': 15,
     'COMPLETED': completedCount,
     'COMPLETION': `${percentage}%`,
+    'MISSING_FIELDS': missingFields,
     'hasProfileImages_result': hasProfileImages(profile, imageArray)
   })
   
@@ -255,6 +296,7 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
 
 function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
   let completedCount = 0
+  const missingFields: string[] = [] // 🧩 MISSING FIELDS追跡用（外国人男性）
   
   // 1. ニックネーム
   if (profile.nickname && profile.nickname.trim() !== '') {
@@ -344,10 +386,21 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
   
   const percentage = Math.round((completedCount / 17) * 100)
   
+  // 🧩 COMPLETION INTERNAL - 外国人男性版（参考用）
+  console.log("🧩 COMPLETION INTERNAL (FOREIGN MALE)", {
+    completed: completedCount,
+    missing: missingFields,
+    totalExpected: 17,
+    missingCount: missingFields.length,
+    calculationCheck: completedCount + missingFields.length,
+    shouldEqual17: (completedCount + missingFields.length) === 17
+  })
+  
   console.log('🌸 SAKURA CLUB COMPLETION:', {
     'TOTAL FIELDS': 17,
     'COMPLETED': completedCount,
     'COMPLETION': `${percentage}%`,
+    'MISSING_FIELDS': missingFields,
     'completionInput.has_profile_image': (profile as any).has_profile_image,
     'hasProfileImages_result': hasProfileImages(profile, imageArray),
     'completedFields内訳_画像': hasProfileImages(profile, imageArray) ? 'TRUE' : 'FALSE'
