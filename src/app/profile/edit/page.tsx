@@ -537,6 +537,19 @@ function ProfileEditContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [initializationError, setInitializationError] = useState('')
+  
+  // 🚨 CRITICAL: 保存検証デバッグパネル用State
+  const [debugPanel, setDebugPanel] = useState<{
+    show: boolean
+    uid: string
+    whereCondition: string
+    payloadPersonalityTags: any
+    dbPersonalityTags: any
+    match: boolean
+    updateError: any
+    updatedRows: number
+    rlsIssue: boolean
+  } | null>(null)
   const [success, setSuccess] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [updateSuccess, setUpdateSuccess] = useState(false)
@@ -4019,21 +4032,35 @@ function ProfileEditContent() {
         userId: user.id
       })
       
-      // データベースを更新
-      // 🚨 CRITICAL: UPDATE条件統一確認
-      console.log('🔑 UPDATE CONDITION CHECK:', {
-        user_id: user.id,
-        user_id_type: typeof user.id,
-        update_condition: '.eq(id, user.id)',
-        mypage_condition: '.eq(id, user.id)',
-        conditions_match: true,
-        critical_note: 'MyPageとプロフィール編集で同一のキー(id)を使用'
+      // 🚨 CRITICAL: 保存前の認証情報再確認
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+      if (authError || !currentUser) {
+        throw new Error(`認証エラー: ${authError?.message || 'ユーザー情報取得失敗'}`)
+      }
+
+      const finalUid = currentUser.id
+      const whereCondition = `id = ${finalUid}`
+      
+      console.log('🔑 FINAL UPDATE CONDITION CHECK:', {
+        original_user_id: user.id,
+        current_user_id: finalUid,
+        ids_match: user.id === finalUid,
+        where_condition: whereCondition,
+        mypage_condition: 'same: .eq(id, user.id)',
+        critical_note: 'MyPageと完全同一条件で更新'
       })
 
+      // personality_tagsの最終安全変換
+      if (!Array.isArray(updateData.personality_tags)) {
+        console.error('🚨 FORCING personality_tags to array before save')
+        updateData.personality_tags = []
+      }
+
+      // データベースを更新
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user.id)  // MyPageと同一条件
+        .eq('id', finalUid)  // 再認証されたUIDで更新
       
       // 🚨 CRITICAL: Supabase update結果の完全ログ（RLS/権限問題検出）
       console.log('🔥 SUPABASE UPDATE RESULT - DETAILED:', {
@@ -4072,12 +4099,12 @@ function ProfileEditContent() {
 
       console.log('✅ プロフィール更新成功:', updateResult)
       
-      // 🔍 CRITICAL: 保存直後にDBから再取得して確認
+      // 🔍 CRITICAL: 保存直後にDBから再取得して確認（同一UID条件）
       try {
         const { data: savedProfile, error: fetchError } = await supabase
           .from('profiles')
-          .select('personality_tags, culture_tags')
-          .eq('id', user.id)
+          .select('personality_tags, culture_tags, id')
+          .eq('id', finalUid)  // 同一UID条件で検証
           .single()
           
         console.log('🔍 ENHANCED SAVE VERIFICATION - 完全DB確認:', {
@@ -4128,8 +4155,48 @@ function ProfileEditContent() {
             db_value: savedProfile.personality_tags
           })
         }
+
+        // 🚨 CRITICAL: デバッグパネルに結果設定（画面固定表示用）
+        const personalityMatch = JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags)
+        const hasRlsIssue = !updateError && updateResult && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null
+
+        setDebugPanel({
+          show: true,
+          uid: finalUid,
+          whereCondition: whereCondition,
+          payloadPersonalityTags: updateData.personality_tags,
+          dbPersonalityTags: savedProfile?.personality_tags,
+          match: personalityMatch,
+          updateError: updateError?.message || null,
+          updatedRows: updateResult ? 1 : 0,
+          rlsIssue: hasRlsIssue
+        })
+
+        // 🚨 CRITICAL: 保存失敗時のアラート
+        if (!personalityMatch || hasRlsIssue) {
+          alert(`🚨 PERSONALITY_TAGS保存失敗検出！
+          
+送信値: ${JSON.stringify(updateData.personality_tags)}
+DB値: ${JSON.stringify(savedProfile?.personality_tags)}
+一致: ${personalityMatch}
+RLS問題: ${hasRlsIssue}
+
+デバッグパネルで詳細確認してください。`)
+        }
+
       } catch (fetchErr) {
         console.error('❌ DB確認エラー:', fetchErr)
+        setDebugPanel({
+          show: true,
+          uid: finalUid,
+          whereCondition: whereCondition,
+          payloadPersonalityTags: updateData.personality_tags,
+          dbPersonalityTags: 'DB確認エラー',
+          match: false,
+          updateError: fetchErr,
+          updatedRows: 0,
+          rlsIssue: true
+        })
       }
       
       setSuccess('プロフィールが正常に更新されました')
@@ -5036,6 +5103,65 @@ function ProfileEditContent() {
             </form>
           </div>
         </div>
+        
+        {/* 🚨 CRITICAL: 保存検証デバッグパネル（固定表示） */}
+        {debugPanel?.show && (
+          <div className="fixed bottom-4 right-4 w-96 bg-white border-2 border-red-500 shadow-2xl rounded-lg p-4 z-50 max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-bold text-red-600">🚨 SAVE VERIFICATION</h3>
+              <button
+                onClick={() => setDebugPanel(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-2 text-xs">
+              <div className={`p-2 rounded ${debugPanel.match ? 'bg-green-100' : 'bg-red-100'}`}>
+                <strong>一致結果: {debugPanel.match ? '✅ SUCCESS' : '❌ FAILED'}</strong>
+              </div>
+              
+              <div>
+                <strong>UID:</strong> {debugPanel.uid}
+              </div>
+              
+              <div>
+                <strong>Where条件:</strong> {debugPanel.whereCondition}
+              </div>
+              
+              <div>
+                <strong>送信 personality_tags:</strong>
+                <div className="bg-blue-50 p-2 rounded mt-1 font-mono">
+                  {JSON.stringify(debugPanel.payloadPersonalityTags)}
+                </div>
+              </div>
+              
+              <div>
+                <strong>DB personality_tags:</strong>
+                <div className="bg-yellow-50 p-2 rounded mt-1 font-mono">
+                  {JSON.stringify(debugPanel.dbPersonalityTags)}
+                </div>
+              </div>
+              
+              <div>
+                <strong>更新件数:</strong> {debugPanel.updatedRows}
+              </div>
+              
+              {debugPanel.updateError && (
+                <div className="bg-red-50 p-2 rounded">
+                  <strong>エラー:</strong> {debugPanel.updateError}
+                </div>
+              )}
+              
+              {debugPanel.rlsIssue && (
+                <div className="bg-orange-100 p-2 rounded">
+                  <strong>🚨 RLS問題可能性:</strong> 送信成功だがDB値null
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
