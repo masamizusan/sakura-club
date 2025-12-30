@@ -1111,10 +1111,10 @@ function ProfilePreviewContent() {
                         // 🚀 CRITICAL: avatar_url必須（指示書対応）
                         avatar_url: previewData.profile_image || profileImage || null,
                         // その他項目
-                        occupation: dedicatedColumnData?.occupation || null,
-                        height: dedicatedColumnData?.height || null,
-                        body_type: dedicatedColumnData?.body_type || null,
-                        marital_status: dedicatedColumnData?.marital_status || null,
+                        occupation: occupation || null,
+                        height: height || null,
+                        body_type: bodyType || null,
+                        marital_status: maritalStatus || null,
                         // 外国人男性専用
                         visit_schedule: visit_schedule || null,
                         travel_companion: travel_companion || null,
