@@ -40,6 +40,7 @@ function MyPageContent() {
   const [totalItems, setTotalItems] = useState(8)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [saveDebugData, setSaveDebugData] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -55,6 +56,18 @@ function MyPageContent() {
 
       try {
         setIsLoading(true)
+        
+        // 🔍 CRITICAL: sessionStorageからプロフィール保存デバッグログを読み込み
+        const savedDebugData = sessionStorage.getItem('profileEditSaveDebug')
+        if (savedDebugData) {
+          try {
+            const debugData = JSON.parse(savedDebugData)
+            setSaveDebugData(debugData)
+            console.log('📊 MyPage: プロフィール保存デバッグデータ読み込み:', debugData)
+          } catch (e) {
+            console.error('sessionStorage parse error:', e)
+          }
+        }
         
         // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからid=auth.uidで統一（user_id null問題解消）
         console.log('🔄 Loading profile from Supabase with id=auth.uid:', user.id)
@@ -340,6 +353,62 @@ function MyPageContent() {
           </div>
         </div>
       </div>
+      
+      {/* 🔍 CRITICAL: プロフィール保存デバッグパネル（sessionStorage表示） */}
+      {saveDebugData && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          background: '#fff',
+          border: '2px solid #dc2626',
+          borderRadius: '8px',
+          padding: '12px',
+          maxWidth: '400px',
+          fontSize: '12px',
+          zIndex: 9999,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+            🚨 プロフィール保存結果
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>保存時刻:</strong> {new Date(saveDebugData.timestamp).toLocaleString()}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>送信 personality_tags:</strong> {JSON.stringify(saveDebugData.payload_personality_tags)}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>DB personality_tags:</strong> {JSON.stringify(saveDebugData.updatedRow_personality_tags)}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>一致結果:</strong> 
+            <span style={{ color: saveDebugData.personality_tags_saved_correctly ? '#16a34a' : '#dc2626', fontWeight: 'bold' }}>
+              {saveDebugData.personality_tags_saved_correctly ? ' ✅ SUCCESS' : ' ❌ FAILED'}
+            </span>
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>分析:</strong> {saveDebugData.success_analysis}
+          </div>
+          <button 
+            onClick={() => {
+              setSaveDebugData(null)
+              sessionStorage.removeItem('profileEditSaveDebug')
+            }}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              cursor: 'pointer'
+            }}
+          >
+            閉じる
+          </button>
+        </div>
+      )}
     </div>
   )
 }

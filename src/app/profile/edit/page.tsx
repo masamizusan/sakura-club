@@ -4152,7 +4152,9 @@ function ProfileEditContent() {
       const updateReturnedPersonality = updateResult?.[0]?.personality_tags
       const updateReturnedCulture = updateResult?.[0]?.culture_tags
       
-      console.log('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', {
+      // 🔍 CRITICAL: デバッグログをsessionStorageに保存（コンソール依存解消）
+      const saveDebugData = {
+        timestamp: new Date().toISOString(),
         finalUid: finalUid,
         // 送信値
         payload_personality_tags: updateData.personality_tags,
@@ -4176,7 +4178,12 @@ function ProfileEditContent() {
         success_analysis: updateReturnedPersonality === null ? 
           '❌ FAILED: personality_tagsがnullで保存された' : 
           '✅ SUCCESS: personality_tagsが配列で保存された'
-      })
+      }
+      
+      // sessionStorageに保存（MyPageで表示用）
+      sessionStorage.setItem('profileEditSaveDebug', JSON.stringify(saveDebugData))
+      
+      console.log('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', saveDebugData)
 
       // 🚨 CRITICAL: エラーチェック
       if (hasError) {
