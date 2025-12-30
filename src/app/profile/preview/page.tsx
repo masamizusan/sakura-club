@@ -1128,42 +1128,43 @@ function ProfilePreviewContent() {
                         'id',
                         'user_id',
                         'name',
-                        'last_name',
-                        'gender',
+                        'bio',
                         'age',
                         'birth_date',
-                        'email',
+                        'gender',
                         'nationality',
                         'residence',          // 居住地（都道府県など）
                         'city',               // city JSON等
-                        'bio',
-                        'avatar_url',
-                        'interests',
                         'personality_tags',
-                        'culture_tags',
+                        'interests',
+                        'avatar_url',
                         'occupation',
                         'height',
                         'body_type',
                         'marital_status',
-                        'membership_type',
-                        'is_verified',
                         'visit_schedule',
                         'travel_companion',
                         'planned_prefectures', // 訪問予定（これが本命）
                         'japanese_level',
                         'english_level',
-                        'updated_at'
+                        'membership_type',
+                        'is_verified'
+                        // 'updated_at' ← 絶対に入れない（DB側で自動更新に任せる）
                       ])
 
+                      // ② 念のためブラックリストで最終除去（今後の地雷対策）
+                      const BLOCKED_KEYS = new Set(['updated_at', 'prefecture', 'planned_stations'])
+
                       const sanitizedPayload = Object.fromEntries(
-                        Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k))
+                        Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k) && !BLOCKED_KEYS.has(k))
                       )
 
                       // デバッグ：落としたキーを可視化（次の地雷発見が一瞬になる）
                       const droppedKeys = Object.keys(savePayload).filter(k => !ALLOWED_PROFILE_KEYS.has(k))
                       console.log('🧹 UPSERT SANITIZE', {
                         allowed_count: Object.keys(sanitizedPayload).length,
-                        droppedKeys,
+                        blocked_present: Object.keys(savePayload).filter(k => BLOCKED_KEYS.has(k)),
+                        payload_keys: Object.keys(sanitizedPayload),
                         residence_present: 'residence' in sanitizedPayload,
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                       })
