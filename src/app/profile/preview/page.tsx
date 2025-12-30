@@ -1123,8 +1123,8 @@ function ProfilePreviewContent() {
                         updated_at: new Date().toISOString()
                       }
 
-                      // 🔧 CRITICAL: planned_stations除外（PGRST204対策）
-                      const { planned_stations: removedPlannedStations, ...sanitizedPayload } = savePayload
+                      // 🔧 CRITICAL: 廃止キー除外（PGRST204対策）
+                      const { planned_stations: removedPlannedStations, prefecture: removedPrefecture, ...sanitizedPayload } = savePayload
 
                       // 🚀 Step 3: upsert直前ログ（指示書対応）
                       console.log('🚀 PROFILE UPSERT PAYLOAD', {
@@ -1132,7 +1132,10 @@ function ProfilePreviewContent() {
                         interests: sanitizedPayload.interests,
                         avatar_url: sanitizedPayload.avatar_url,
                         payload_keys: Object.keys(sanitizedPayload),
-                        planned_stations_excluded: !Object.keys(sanitizedPayload).includes('planned_stations'),
+                        planned_stations_excluded: !('planned_stations' in sanitizedPayload),
+                        prefecture_excluded: !('prefecture' in sanitizedPayload),
+                        residence_present: 'residence' in sanitizedPayload,
+                        planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                         full_payload: sanitizedPayload
                       })
 
@@ -1152,7 +1155,9 @@ function ProfilePreviewContent() {
                         timestamp: new Date().toISOString(),
                         saved_personality_tags: sanitizedPayload.personality_tags,
                         saved_interests: sanitizedPayload.interests,
-                        planned_stations_excluded: true
+                        planned_stations_excluded: true,
+                        prefecture_excluded: true,
+                        residence_preserved: 'residence' in sanitizedPayload
                       })
 
                       // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
