@@ -4050,153 +4050,177 @@ function ProfileEditContent() {
         critical_note: 'MyPageと完全同一条件で更新'
       })
 
-      // personality_tagsの最終安全変換
-      if (!Array.isArray(updateData.personality_tags)) {
-        console.error('🚨 FORCING personality_tags to array before save')
-        updateData.personality_tags = []
+      // 🛡️ CRITICAL: text[]強制正規化システム
+      const normalizeTextArray = (value: any): string[] => {
+        if (!value) return []
+        if (!Array.isArray(value)) return []
+        return value.map(item => {
+          if (typeof item === 'string') return item
+          if (typeof item === 'object' && item !== null) {
+            return String(item.value ?? item.label ?? item)
+          }
+          return String(item)
+        }).filter(Boolean)
       }
 
-      // データベースを更新
+      // 🚨 CRITICAL: personality_tags/culture_tags強制正規化
+      updateData.personality_tags = normalizeTextArray(updateData.personality_tags)
+      updateData.culture_tags = normalizeTextArray(updateData.culture_tags)
+
+      console.log('🛡️ FINAL PAYLOAD SAFETY CHECK:', {
+        personality_tags_final: updateData.personality_tags,
+        culture_tags_final: updateData.culture_tags,
+        personality_tags_is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
+        culture_tags_is_string_array: Array.isArray(updateData.culture_tags) && updateData.culture_tags.every((item: any) => typeof item === 'string'),
+        ready_for_text_array_column: "YES - GUARANTEED"
+      })
+
+      // 🚨 CRITICAL: finalUidが空なら即エラー（保存中断）
+      if (!finalUid) {
+        const errorMsg = '🚨 CRITICAL: finalUid is empty - 保存処理を中断します'
+        console.error(errorMsg)
+        alert(errorMsg)
+        return
+      }
+
+      // 📊 CRITICAL: updateを.select()付きで実行（戻りデータ取得）
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', finalUid)  // 再認証されたUIDで更新
+        .eq('id', finalUid)  // 絶対に1行に当てる
+        .select('id, personality_tags, culture_tags')
       
-      // 🚨 CRITICAL: Supabase update結果の完全ログ（RLS/権限問題検出）
-      console.log('🔥 SUPABASE UPDATE RESULT - DETAILED:', {
-        // 基本結果
-        updateResult,
-        updateError,
-        updateError_message: updateError?.message,
-        updateError_code: updateError?.code,
-        updateError_details: updateError?.details,
-        updateError_hint: updateError?.hint,
-        // personality_tags/culture_tags保存状況
-        sent_personality_tags: updateData.personality_tags,
-        sent_culture_tags: updateData.culture_tags,
-        sent_personality_tags_type: typeof updateData.personality_tags,
-        sent_culture_tags_type: typeof updateData.culture_tags,
-        sent_personality_tags_length: updateData.personality_tags?.length,
-        sent_culture_tags_length: updateData.culture_tags?.length,
-        // RLS/権限問題検出用
-        update_success: !updateError,
-        affected_rows_count: updateResult ? 'データあり（成功想定）' : 'データなし（問題可能性）',
-        rls_silent_drop_possibility: !updateError && !updateResult ? 'HIGH（エラー無しだがデータ無し）' : 'LOW',
-        // 検証用詳細
-        full_updateData_keys: Object.keys(updateData),
-        updateData_personality_final: updateData.personality,
-        updateData_personality_tags_final: updateData.personality_tags,
-        updateData_culture_tags_final: updateData.culture_tags
+      // 🔍 CRITICAL: updateの戻りで"更新件数"を確定する
+      const updateRowCount = updateResult?.length || 0
+      const hasError = Boolean(updateError)
+      
+      console.log('📊 UPDATE RESULT VERIFICATION:', {
+        finalUid: finalUid,
+        payload_personality_tags: updateData.personality_tags,
+        payload_culture_tags: updateData.culture_tags,
+        updateResult_data_length: updateRowCount,
+        updateResult_error: updateError ? String(updateError) : null,
+        updatedRow_id: updateResult?.[0]?.id || null,
+        updatedRow_personality_tags: updateResult?.[0]?.personality_tags || null,
+        updatedRow_culture_tags: updateResult?.[0]?.culture_tags || null,
       })
-      
-      console.log('[Profile Submit] Supabase error:', updateError)
-      console.log('[Profile Submit] Supabase result:', updateResult)
 
-      if (updateError) {
-        console.error('❌ プロフィール更新エラー:', updateError)
+      // 🚨 CRITICAL: エラーチェック
+      if (hasError) {
+        console.error('❌ UPDATE ERROR DETECTED:', updateError)
+        setDebugPanel({
+          show: true,
+          uid: finalUid,
+          whereCondition: `id = ${finalUid}`,
+          payloadPersonalityTags: updateData.personality_tags,
+          dbPersonalityTags: null,
+          match: false,
+          updateError: String(updateError),
+          updatedRows: 0,
+          rlsIssue: false
+        })
         throw updateError
       }
 
-      console.log('✅ プロフィール更新成功:', updateResult)
-      
-      // 🔍 CRITICAL: 保存直後にDBから再取得して確認（同一UID条件）
-      try {
-        const { data: savedProfile, error: fetchError } = await supabase
-          .from('profiles')
-          .select('personality_tags, culture_tags, id')
-          .eq('id', finalUid)  // 同一UID条件で検証
-          .single()
-          
-        console.log('🔍 ENHANCED SAVE VERIFICATION - 完全DB確認:', {
-          // 送信値
-          sent_personality_tags: updateData.personality_tags,
-          sent_culture_tags: updateData.culture_tags,
-          sent_personality_tags_type: typeof updateData.personality_tags,
-          sent_culture_tags_type: typeof updateData.culture_tags,
-          sent_personality_tags_length: updateData.personality_tags?.length || 0,
-          sent_culture_tags_length: updateData.culture_tags?.length || 0,
-          // DB保存済み値
-          db_personality_tags: savedProfile?.personality_tags,
-          db_culture_tags: savedProfile?.culture_tags,
-          db_personality_tags_type: typeof savedProfile?.personality_tags,
-          db_culture_tags_type: typeof savedProfile?.culture_tags,
-          db_personality_tags_isNull: savedProfile?.personality_tags === null,
-          db_culture_tags_isNull: savedProfile?.culture_tags === null,
-          db_personality_tags_length: savedProfile?.personality_tags?.length || 0,
-          db_culture_tags_length: savedProfile?.culture_tags?.length || 0,
-          // 一致確認
-          personality_tags_match: JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags),
-          culture_tags_match: JSON.stringify(updateData.culture_tags) === JSON.stringify(savedProfile?.culture_tags),
-          // RLS/権限問題検出
-          rls_silent_drop_possibility: {
-            personality_tags: updateData.personality_tags && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null ? 'HIGH - RLS問題可能性' : 'LOW',
-            culture_tags: updateData.culture_tags && Array.isArray(updateData.culture_tags) && savedProfile?.culture_tags === null ? 'HIGH - RLS問題可能性' : 'LOW'
-          },
-          db_fetch_error: fetchError?.message || 'なし'
-        })
+      // 🚨 CRITICAL: 0件更新チェック
+      if (updateRowCount === 0) {
+        console.error('🚨 ZERO ROWS UPDATED - whereズレ / 行が存在しない / RLS')
         
-        // 🚨 CRITICAL: NULL保存検出
-        if (savedProfile?.personality_tags === null || savedProfile?.culture_tags === null) {
-          console.error('🚨 CRITICAL NULL DETECTED IN DB:', {
-            personality_tags_is_null: savedProfile?.personality_tags === null,
-            culture_tags_is_null: savedProfile?.culture_tags === null,
-            sent_personality_tags_was_array: Array.isArray(updateData.personality_tags),
-            sent_culture_tags_was_array: Array.isArray(updateData.culture_tags),
-            probable_cause: 'RLS policy blocking these columns OR type mismatch OR update condition failed'
-          })
+        // 追加確認: 該当行が存在するかチェック
+        const { data: existCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', finalUid)
+        
+        const errorInfo = {
+          finalUid: finalUid,
+          updateRowCount: 0,
+          existCheck_found: existCheck?.length || 0,
+          probable_cause: existCheck?.length === 0 
+            ? 'INSERT時のidがfinalUidと違う（設計破綻）'
+            : 'RLSがupdateを拒否している可能性'
         }
-
-        // 🚨 CRITICAL: 型不一致検出
-        if (Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags && !Array.isArray(savedProfile.personality_tags)) {
-          console.error('🚨 TYPE MISMATCH: personality_tags type changed during save:', {
-            sent_type: typeof updateData.personality_tags,
-            db_type: typeof savedProfile.personality_tags,
-            sent_value: updateData.personality_tags,
-            db_value: savedProfile.personality_tags
-          })
-        }
-
-        // 🚨 CRITICAL: デバッグパネルに結果設定（画面固定表示用）
-        const personalityMatch = JSON.stringify(updateData.personality_tags) === JSON.stringify(savedProfile?.personality_tags)
-        const hasRlsIssue = Boolean(!updateError && updateResult && Array.isArray(updateData.personality_tags) && savedProfile?.personality_tags === null)
-
+        
+        console.error('🔍 ZERO UPDATE ANALYSIS:', errorInfo)
         setDebugPanel({
           show: true,
           uid: finalUid,
-          whereCondition: whereCondition,
+          whereCondition: `id = ${finalUid}`,
           payloadPersonalityTags: updateData.personality_tags,
-          dbPersonalityTags: savedProfile?.personality_tags,
-          match: personalityMatch,
-          updateError: updateError ? String(updateError) : null,
-          updatedRows: updateResult ? 1 : 0,
-          rlsIssue: hasRlsIssue
+          dbPersonalityTags: null,
+          match: false,
+          updateError: `0件更新: ${errorInfo.probable_cause}`,
+          updatedRows: 0,
+          rlsIssue: (existCheck?.length ?? 0) > 0
         })
+        return
+      }
+      
+      // 🔍 CRITICAL: update直後に「同じwhere」でselectして二重確認
+      const { data: dbSelect, error: selectError } = await supabase
+        .from('profiles')
+        .select('id, personality_tags, culture_tags')
+        .eq('id', finalUid)
+        .single()
+        
+      console.log('🔍 SELECT DOUBLE-CHECK:', {
+        finalUid: finalUid,
+        dbSelect_personality_tags: dbSelect?.personality_tags,
+        selectError: selectError ? String(selectError) : null
+      })
 
-        // 🚨 CRITICAL: 保存失敗時のアラート
-        if (!personalityMatch || hasRlsIssue) {
-          alert(`🚨 PERSONALITY_TAGS保存失敗検出！
-          
+      // 🔍 CRITICAL: updateの戻りとselectが食い違うかチェック
+      const updateReturnedPersonality = updateResult?.[0]?.personality_tags
+      const selectReturnedPersonality = dbSelect?.personality_tags
+      const returnValuesMatch = JSON.stringify(updateReturnedPersonality) === JSON.stringify(selectReturnedPersonality)
+      
+      if (!returnValuesMatch) {
+        console.error('🚨 UPDATE-SELECT MISMATCH - RLS/権限/レプリカ等の疑い:', {
+          updateReturned: updateReturnedPersonality,
+          selectReturned: selectReturnedPersonality
+        })
+      }
+
+      // 🚨 CRITICAL: DB側で潰されてる / 型不一致 / trigger チェック
+      const personalityWasSaved = dbSelect?.personality_tags !== null
+      const personalityMatches = JSON.stringify(updateData.personality_tags) === JSON.stringify(dbSelect?.personality_tags)
+      
+      if (!personalityWasSaved) {
+        console.error('🚨 PERSONALITY_TAGS NULL IN DB - DB側で潰されてる / 型不一致 / trigger疑い:', {
+          sent: updateData.personality_tags,
+          db_result: dbSelect?.personality_tags,
+          schema_check_sql: `select column_name, data_type, udt_name from information_schema.columns where table_name='profiles' and column_name in ('personality_tags','culture_tags');`
+        })
+      }
+
+      // 🚨 CRITICAL: デバッグパネル設定（画面固定・ユーザー貼り付け用）
+      setDebugPanel({
+        show: true,
+        uid: finalUid,
+        whereCondition: `id = ${finalUid}`,
+        payloadPersonalityTags: updateData.personality_tags,
+        dbPersonalityTags: dbSelect?.personality_tags,
+        match: personalityMatches,
+        updateError: null,
+        updatedRows: updateRowCount,
+        rlsIssue: updateRowCount > 0 && !personalityWasSaved
+      })
+
+      // 🚨 CRITICAL: 保存失敗時のアラート
+      if (!personalityMatches || (updateRowCount > 0 && !personalityWasSaved)) {
+        alert(`🚨 PERSONALITY_TAGS保存失敗検出！
+        
 送信値: ${JSON.stringify(updateData.personality_tags)}
-DB値: ${JSON.stringify(savedProfile?.personality_tags)}
-一致: ${personalityMatch}
-RLS問題: ${hasRlsIssue}
+DB値: ${JSON.stringify(dbSelect?.personality_tags)}
+一致: ${personalityMatches}
+更新件数: ${updateRowCount}
+DB保存成功: ${personalityWasSaved}
+
+原因分析:
+${!personalityWasSaved ? '- DB側で潰されてる / 型不一致 / trigger疑い' : ''}
+${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
 デバッグパネルで詳細確認してください。`)
-        }
-
-      } catch (fetchErr) {
-        console.error('❌ DB確認エラー:', fetchErr)
-        setDebugPanel({
-          show: true,
-          uid: finalUid,
-          whereCondition: whereCondition,
-          payloadPersonalityTags: updateData.personality_tags,
-          dbPersonalityTags: 'DB確認エラー',
-          match: false,
-          updateError: fetchErr,
-          updatedRows: 0,
-          rlsIssue: true
-        })
       }
       
       setSuccess('プロフィールが正常に更新されました')
@@ -5117,46 +5141,90 @@ RLS問題: ${hasRlsIssue}
               </button>
             </div>
             
-            <div className="space-y-2 text-xs">
+            <div className="space-y-3 text-xs">
               <div className={`p-2 rounded ${debugPanel.match ? 'bg-green-100' : 'bg-red-100'}`}>
                 <strong>一致結果: {debugPanel.match ? '✅ SUCCESS' : '❌ FAILED'}</strong>
               </div>
               
-              <div>
-                <strong>UID:</strong> {debugPanel.uid}
-              </div>
-              
-              <div>
-                <strong>Where条件:</strong> {debugPanel.whereCondition}
-              </div>
-              
-              <div>
-                <strong>送信 personality_tags:</strong>
-                <div className="bg-blue-50 p-2 rounded mt-1 font-mono">
-                  {JSON.stringify(debugPanel.payloadPersonalityTags)}
+              {/* ユーザー貼り付け用の必須情報 */}
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="font-bold mb-2">📋 ユーザー貼り付け用データ:</div>
+                
+                <div className="mb-2">
+                  <strong>finalUid:</strong>
+                  <div className="font-mono text-green-600">{debugPanel.uid}</div>
+                </div>
+                
+                <div className="mb-2">
+                  <strong>payload.personality_tags:</strong>
+                  <div className="bg-blue-50 p-2 rounded mt-1 font-mono">
+                    {JSON.stringify(debugPanel.payloadPersonalityTags)}
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <strong>updateResult.data.length:</strong>
+                  <div className="font-mono text-purple-600">{debugPanel.updatedRows}</div>
+                </div>
+                
+                <div className="mb-2">
+                  <strong>updateResult.error:</strong>
+                  <div className="font-mono text-red-600">
+                    {debugPanel.updateError || 'null'}
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <strong>dbSelect.personality_tags:</strong>
+                  <div className="bg-yellow-50 p-2 rounded mt-1 font-mono">
+                    {JSON.stringify(debugPanel.dbPersonalityTags)}
+                  </div>
                 </div>
               </div>
               
-              <div>
-                <strong>DB personality_tags:</strong>
-                <div className="bg-yellow-50 p-2 rounded mt-1 font-mono">
-                  {JSON.stringify(debugPanel.dbPersonalityTags)}
-                </div>
-              </div>
-              
-              <div>
-                <strong>更新件数:</strong> {debugPanel.updatedRows}
-              </div>
-              
-              {debugPanel.updateError && (
-                <div className="bg-red-50 p-2 rounded">
-                  <strong>エラー:</strong> {debugPanel.updateError}
+              {/* 失敗原因別の分岐表示 */}
+              {debugPanel.updatedRows === 0 && (
+                <div className="bg-red-100 p-3 rounded">
+                  <div className="font-bold text-red-700">🚨 CASE A: 0件更新</div>
+                  <div className="mt-2 text-red-600">
+                    → whereズレ or 行が存在しない or RLS
+                  </div>
+                  <div className="mt-2 text-sm">
+                    追加確認が必要です。
+                  </div>
                 </div>
               )}
               
-              {debugPanel.rlsIssue && (
-                <div className="bg-orange-100 p-2 rounded">
-                  <strong>🚨 RLS問題可能性:</strong> 送信成功だがDB値null
+              {debugPanel.updateError && (
+                <div className="bg-red-100 p-3 rounded">
+                  <div className="font-bold text-red-700">🚨 CASE B: エラー発生</div>
+                  <div className="mt-2 bg-red-50 p-2 rounded font-mono text-sm">
+                    {debugPanel.updateError}
+                  </div>
+                </div>
+              )}
+              
+              {debugPanel.updatedRows > 0 && debugPanel.dbPersonalityTags === null && (
+                <div className="bg-orange-100 p-3 rounded">
+                  <div className="font-bold text-orange-700">🚨 CASE C: updateは1件返るのにDB値がnull</div>
+                  <div className="mt-2 text-orange-600">
+                    → DBスキーマ / trigger / 型不一致
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <strong>確認用SQL:</strong>
+                    <div className="bg-orange-50 p-2 rounded mt-1 font-mono text-xs">
+                      select column_name, data_type, udt_name from information_schema.columns where table_name=&apos;profiles&apos; and column_name in (&apos;personality_tags&apos;,&apos;culture_tags&apos;);
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {debugPanel.match && (
+                <div className="bg-green-100 p-3 rounded">
+                  <div className="font-bold text-green-700">✅ 保存成功</div>
+                  <div className="mt-2 text-green-600">
+                    personality_tagsが正常にSupabaseに保存されました。
+                  </div>
                 </div>
               )}
             </div>
