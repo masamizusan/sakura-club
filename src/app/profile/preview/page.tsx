@@ -1098,6 +1098,31 @@ function ProfilePreviewContent() {
                         console.warn('⚠️ city is missing: cityName is empty', { cityName, city })
                       }
 
+                      // 🚨 SSOT: language_skills を必ずDBに保存（指示書対応）
+                      let sessionLanguageSkills = []
+                      try {
+                        const urlParams = new URLSearchParams(window.location.search)
+                        const userId = urlParams.get('userId') || user.id
+                        const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
+                        let savedData = sessionStorage.getItem(previewDataKey)
+                        if (!savedData) savedData = sessionStorage.getItem('previewData')
+                        if (savedData) {
+                          const sessionData = JSON.parse(savedData)
+                          sessionLanguageSkills = Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
+                        }
+                      } catch (error) {
+                        console.warn('⚠️ sessionStorage language_skills取得失敗:', error)
+                      }
+                      
+                      const skills = previewData?.language_skills ?? sessionLanguageSkills ?? []
+                      const normalizedLanguageSkills = Array.isArray(skills) ? skills : []
+                      console.log('🚨 SSOT language_skills保存準備:', {
+                        sessionSkills: sessionLanguageSkills,
+                        previewSkills: previewData?.language_skills,
+                        normalizedLength: normalizedLanguageSkills.length,
+                        willSaveToDB: true
+                      })
+
                       const savePayload: any = {
                         id: user.id,
                         user_id: user.id,
@@ -1117,6 +1142,8 @@ function ProfilePreviewContent() {
                           : null,
                         // 🚀 CRITICAL: interests必須（指示書対応）  
                         interests: hobbies && hobbies.length > 0 ? hobbies : null,
+                        // 🚨 SSOT: language_skills必須DB保存（指示書対応）
+                        language_skills: normalizedLanguageSkills,
                         // 🚀 CRITICAL: avatar_url必須（指示書対応）
                         avatar_url: previewData.profile_image || profileImage || null,
                         // その他項目
@@ -1157,7 +1184,9 @@ function ProfilePreviewContent() {
                         'japanese_level',
                         'english_level',
                         'membership_type',
-                        'is_verified'
+                        'is_verified',
+                        // 🚨 SSOT追加: language_skillsをDB永続化（指示書対応）
+                        'language_skills'
                         // 'updated_at' ← 絶対に入れない（DB側で自動更新に任せる）
                       ])
 
@@ -1187,6 +1216,14 @@ function ProfilePreviewContent() {
                         residence_present: 'residence' in sanitizedPayload,
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                         full_payload: sanitizedPayload
+                      })
+
+                      // 🚨 SSOT保存保証ログ（指示書対応）
+                      console.log('🚀 PROFILE UPSERT FINAL PAYLOAD CHECK', {
+                        has_language_skills: 'language_skills' in sanitizedPayload,
+                        language_skills: sanitizedPayload.language_skills,
+                        isArray: Array.isArray(sanitizedPayload.language_skills),
+                        length: Array.isArray(sanitizedPayload.language_skills) ? sanitizedPayload.language_skills.length : null,
                       })
 
                       // 🚀 Step 4: 必ずupsertを実行（指示書対応）

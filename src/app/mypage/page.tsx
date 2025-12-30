@@ -168,11 +168,17 @@ function MyPageContent() {
       isForeignMale
     })
     
-    // 🎯 language_skills補完（83%→100%対策）
+    // 🚨 SSOT: DB基準を最優先、sessionData補完は保存直後のUX補助のみ（指示書対応）
     const sessionSkills = (() => {
+      // DB基準優先：profileData.language_skillsがあれば補完不要
+      if (Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0) {
+        console.log('🚨 SSOT: DB優先 - profileData.language_skillsを使用')
+        return [] // 補完不要
+      }
+      
       if (typeof window === 'undefined') return []
       try {
-        // PreviewData同様にsessionStorageから取得
+        // 保存直後のUX補助としてのみsessionData使用
         const urlParams = new URLSearchParams(window.location.search)
         const userId = urlParams.get('userId') || user?.id
         const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
@@ -182,6 +188,7 @@ function MyPageContent() {
         
         if (savedData) {
           const sessionData = JSON.parse(savedData)
+          console.log('🚨 SSOT: DB補完 - sessionDataから一時補助')
           return Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
         }
       } catch (error) {
@@ -203,8 +210,10 @@ function MyPageContent() {
       personality: Array.isArray(profileData?.personality_tags) 
         ? profileData.personality_tags 
         : (Array.isArray(profileData?.personality) ? profileData.personality : []),  // DB: personality_tags配列（null→[]正規化）
-      // 🎯 CRITICAL: language_skills runtime統合（83%→100%対策）
-      language_skills: sessionSkills.length > 0 ? sessionSkills : (profileData?.language_skills || [])
+      // 🚨 SSOT: language_skills DB基準統合（指示書対応）
+      language_skills: Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0
+        ? profileData.language_skills  // DB優先
+        : sessionSkills               // 保存直後UX補助のみ
     }
     
     // 🔍 DB実データ確認ログ（culture_tags問題特定用 + NULL→[]正規化確認）
@@ -256,19 +265,20 @@ function MyPageContent() {
       })
     }
     
-    // 🎯 最終確認ログ（83%→100%対策）
+    // 🚨 SSOT最終確認ログ（指示書対応）
     const missingFields = []
     if (!normalized.city || (typeof normalized.city === 'object' && !normalized.city.city)) missingFields.push('city')
     if (!Array.isArray(normalized.language_skills) || normalized.language_skills.length === 0) missingFields.push('language_skills')
     
-    console.log('🎯 83%→100% FINAL CHECK:', {
+    console.log('🚨 SSOT FINAL CHECK - DB基準100%検証:', {
+      'DB_language_skills': profileData?.language_skills,
+      'DB_language_skills_isArray': Array.isArray(profileData?.language_skills),
+      'DB_language_skills_length': profileData?.language_skills?.length || 0,
+      'sessionSkills_used_as_fallback': sessionSkills.length,
+      'normalized_language_skills_source': Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0 ? 'DB' : 'session補完',
       'city_present': !!normalized.city,
-      'city_value': normalized.city,
-      'language_skills_present': Array.isArray(normalized.language_skills) && normalized.language_skills.length > 0,
-      'language_skills_length': normalized.language_skills?.length || 0,
-      'sessionSkills_found': sessionSkills.length,
       'missing_for_100%': missingFields,
-      'completion_should_be_100%': missingFields.length === 0
+      'DB基準100%達成': missingFields.length === 0 && Array.isArray(profileData?.language_skills)
     })
 
     console.log('✅ MyPage完成度計算完了（統一）:', {
