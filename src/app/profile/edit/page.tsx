@@ -3464,6 +3464,12 @@ function ProfileEditContent() {
             console.log('✅ セッションストレージから画像状態を復元:', storageImages)
             currentImageArray = storageImages
             setProfileImages(storageImages)
+            // 🔍 CRITICAL: MyPage→編集時のprofile_images missing修正（Task B）
+            profileImagesRef.current = storageImages
+            console.log('🔧 TASK B FIX: sessionStorage画像復元でprofileImagesRef更新', {
+              storageImages_length: storageImages.length,
+              profileImagesRef_length: profileImagesRef.current.length
+            })
           } else {
             // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用
             if (profile.avatar_url) {
@@ -3477,6 +3483,14 @@ function ProfileEditContent() {
                 isEdited: false
               }]
               setProfileImages(currentImageArray)
+              // 🔍 CRITICAL: MyPage→編集時のprofile_images missing修正（Task B）
+              profileImagesRef.current = currentImageArray
+              console.log('🔧 TASK B FIX: profileImagesRef更新完了', {
+                currentImageArray_length: currentImageArray.length,
+                profileImagesRef_length: profileImagesRef.current.length,
+                avatar_url_exists: !!profile.avatar_url,
+                task_B_fix: 'MyPage→編集でprofile_images state復元'
+              })
             } else {
               console.log('❌ 画像なしで初期化')
               console.log('  - Reason: avatar_url=', !!profile.avatar_url)

@@ -76,6 +76,22 @@ function MyPageContent() {
           .select('*')
           .eq('id', user.id) // 🛡️ CRITICAL FIX: user_id -> id で統一（nullレコード回避）
           .maybeSingle() // 🛡️ CRITICAL FIX: single() -> maybeSingle() で406回避
+        
+        // 🔍 CRITICAL: MyPage profiles select直後のpersonality_tags確認（Task A-1）
+        console.log('🚨 MyPage PROFILES SELECT結果 PERSONALITY_TAGS確認:', {
+          profiles_select_successful: !profileError && !!profileData,
+          profileData_personality_tags: profileData?.personality_tags,
+          profileData_personality_tags_type: typeof profileData?.personality_tags,
+          profileData_personality_tags_isNull: profileData?.personality_tags === null,
+          profileData_personality_tags_isArray: Array.isArray(profileData?.personality_tags),
+          profileData_personality_tags_length: profileData?.personality_tags?.length || 0,
+          other_fields_check: {
+            name: profileData?.name,
+            height: profileData?.height,
+            occupation: profileData?.occupation
+          },
+          task_A1_check: 'MyPageでのprofiles取得直後の状態確認'
+        })
 
         if (profileError) {
           console.error('❌ MyPage profiles取得エラー:', {

@@ -1274,6 +1274,18 @@ function ProfilePreviewContent() {
                           ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
                           : null
                         
+                        // 🔍 CRITICAL: personality_tags送信確認ログ（Task A-1）
+                        console.log('🚨 PREVIEW確定時 PERSONALITY_TAGS検証:', {
+                          original_personality_from_previewData: personality,
+                          personality_isArray: Array.isArray(personality),
+                          personality_length: personality?.length || 0,
+                          personality_raw_values: personality,
+                          personalityTags_processed: personalityTags,
+                          personalityTags_isNull: personalityTags === null,
+                          personalityTags_willBeSent: personalityTags,
+                          task_A1_check: 'プレビュー確定時のpersonality_tags生成確認'
+                        })
+                        
                         console.log('🚨 DIRECT SAVE: Prepared data', {
                           optionalData,
                           extendedInterests
@@ -1488,13 +1500,26 @@ function ProfilePreviewContent() {
                           
                           // 🛡️ CRITICAL FIX: Supabaseに完全なプロフィールデータを保存（id=auth.uid統一）
                           console.log('💾 Saving complete profile to Supabase...', { userId: finalUser?.id })
+                          
+                          // 🔍 CRITICAL: upsert直前のpersonality_tags確認（Task A-1）
+                          const upsertPayload = {
+                            id: finalUser?.id,
+                            user_id: finalUser?.id,
+                            ...completeProfileData
+                          }
+                          console.log('🚨 UPSERT直前 PERSONALITY_TAGS確認:', {
+                            payload_personality_tags: upsertPayload.personality_tags,
+                            payload_personality_tags_type: typeof upsertPayload.personality_tags,
+                            payload_personality_tags_isNull: upsertPayload.personality_tags === null,
+                            payload_personality_tags_isArray: Array.isArray(upsertPayload.personality_tags),
+                            payload_keys_include_personality_tags: Object.keys(upsertPayload).includes('personality_tags'),
+                            full_payload_keys: Object.keys(upsertPayload),
+                            task_A1_check: 'Supabase upsert直前のpayload確認'
+                          })
+                          
                           const { error: saveError } = await supabase
                             .from('profiles')
-                            .upsert({
-                              id: finalUser?.id, // 🛡️ CRITICAL: id=auth.uid で統一（MyPageと一致）
-                              user_id: finalUser?.id, // 🔄 後方互換性のため併設
-                              ...completeProfileData
-                            }, { onConflict: 'id' }) // 🛡️ onConflict も id に統一
+                            .upsert(upsertPayload, { onConflict: 'id' }) // 🛡️ onConflict も id に統一
                           
                           if (saveError) {
                             console.error('❌ Supabase save failed:', saveError)
