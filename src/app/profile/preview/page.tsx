@@ -1123,8 +1123,50 @@ function ProfilePreviewContent() {
                         updated_at: new Date().toISOString()
                       }
 
-                      // 🔧 CRITICAL: 廃止キー除外（PGRST204対策）
-                      const { planned_stations: removedPlannedStations, prefecture: removedPrefecture, ...sanitizedPayload } = savePayload
+                      // 🔧 CRITICAL: allowlistによるDBスキーマ厳格制限（指示書対応）
+                      const ALLOWED_PROFILE_KEYS = new Set([
+                        'id',
+                        'user_id',
+                        'name',
+                        'last_name',
+                        'gender',
+                        'age',
+                        'birth_date',
+                        'email',
+                        'nationality',
+                        'residence',          // 居住地（都道府県など）
+                        'city',               // city JSON等
+                        'bio',
+                        'avatar_url',
+                        'interests',
+                        'personality_tags',
+                        'culture_tags',
+                        'occupation',
+                        'height',
+                        'body_type',
+                        'marital_status',
+                        'membership_type',
+                        'is_verified',
+                        'visit_schedule',
+                        'travel_companion',
+                        'planned_prefectures', // 訪問予定（これが本命）
+                        'japanese_level',
+                        'english_level',
+                        'updated_at'
+                      ])
+
+                      const sanitizedPayload = Object.fromEntries(
+                        Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k))
+                      )
+
+                      // デバッグ：落としたキーを可視化（次の地雷発見が一瞬になる）
+                      const droppedKeys = Object.keys(savePayload).filter(k => !ALLOWED_PROFILE_KEYS.has(k))
+                      console.log('🧹 UPSERT SANITIZE', {
+                        allowed_count: Object.keys(sanitizedPayload).length,
+                        droppedKeys,
+                        residence_present: 'residence' in sanitizedPayload,
+                        planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
+                      })
 
                       // 🚀 Step 3: upsert直前ログ（指示書対応）
                       console.log('🚀 PROFILE UPSERT PAYLOAD', {
@@ -1132,8 +1174,6 @@ function ProfilePreviewContent() {
                         interests: sanitizedPayload.interests,
                         avatar_url: sanitizedPayload.avatar_url,
                         payload_keys: Object.keys(sanitizedPayload),
-                        planned_stations_excluded: !('planned_stations' in sanitizedPayload),
-                        prefecture_excluded: !('prefecture' in sanitizedPayload),
                         residence_present: 'residence' in sanitizedPayload,
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                         full_payload: sanitizedPayload
@@ -1145,7 +1185,9 @@ function ProfilePreviewContent() {
                         .upsert(sanitizedPayload, { onConflict: 'id' })
 
                       if (saveError) {
-                        console.error('❌ PROFILE UPSERT FAILED:', saveError)
+                        console.error('❌ PROFILE UPSERT FAILED RAW', saveError)
+                        console.error('❌ PROFILE UPSERT FAILED JSON', JSON.stringify(saveError, null, 2))
+                        console.error('❌ PAYLOAD KEYS', Object.keys(sanitizedPayload))
                         throw saveError
                       }
 
