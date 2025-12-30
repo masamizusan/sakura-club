@@ -168,6 +168,28 @@ function MyPageContent() {
       isForeignMale
     })
     
+    // 🎯 language_skills補完（83%→100%対策）
+    const sessionSkills = (() => {
+      if (typeof window === 'undefined') return []
+      try {
+        // PreviewData同様にsessionStorageから取得
+        const urlParams = new URLSearchParams(window.location.search)
+        const userId = urlParams.get('userId') || user?.id
+        const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
+        
+        let savedData = sessionStorage.getItem(previewDataKey)
+        if (!savedData) savedData = sessionStorage.getItem('previewData')
+        
+        if (savedData) {
+          const sessionData = JSON.parse(savedData)
+          return Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
+        }
+      } catch (error) {
+        console.warn('⚠️ language_skills session取得失敗:', error)
+      }
+      return []
+    })()
+
     // 正規化されたプロフィールデータを作成（Supabase実態に合わせたキーマッピング + NULL→[]正規化）
     const normalized: any = {
       ...profileData,
@@ -180,7 +202,9 @@ function MyPageContent() {
         : (Array.isArray(profileData?.interests) ? profileData.interests : []),
       personality: Array.isArray(profileData?.personality_tags) 
         ? profileData.personality_tags 
-        : (Array.isArray(profileData?.personality) ? profileData.personality : [])  // DB: personality_tags配列（null→[]正規化）
+        : (Array.isArray(profileData?.personality) ? profileData.personality : []),  // DB: personality_tags配列（null→[]正規化）
+      // 🎯 CRITICAL: language_skills runtime統合（83%→100%対策）
+      language_skills: sessionSkills.length > 0 ? sessionSkills : (profileData?.language_skills || [])
     }
     
     // 🔍 DB実データ確認ログ（culture_tags問題特定用 + NULL→[]正規化確認）
@@ -232,11 +256,28 @@ function MyPageContent() {
       })
     }
     
+    // 🎯 最終確認ログ（83%→100%対策）
+    const missingFields = []
+    if (!normalized.city || (typeof normalized.city === 'object' && !normalized.city.city)) missingFields.push('city')
+    if (!Array.isArray(normalized.language_skills) || normalized.language_skills.length === 0) missingFields.push('language_skills')
+    
+    console.log('🎯 83%→100% FINAL CHECK:', {
+      'city_present': !!normalized.city,
+      'city_value': normalized.city,
+      'language_skills_present': Array.isArray(normalized.language_skills) && normalized.language_skills.length > 0,
+      'language_skills_length': normalized.language_skills?.length || 0,
+      'sessionSkills_found': sessionSkills.length,
+      'missing_for_100%': missingFields,
+      'completion_should_be_100%': missingFields.length === 0
+    })
+
     console.log('✅ MyPage完成度計算完了（統一）:', {
       completion: result.completion,
       completedFields: result.completedFields,
       totalFields: result.totalFields,
       userType,
+      missing: missingFields,
+      is_100_percent: missingFields.length === 0 && result.completion === 100,
       singleSourceOnly: true
     })
     

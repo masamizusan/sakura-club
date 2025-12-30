@@ -1091,6 +1091,13 @@ function ProfilePreviewContent() {
                       }
 
                       // 🚀 Step 2: 保存ペイロード準備（指示書対応）
+                      // 🎯 city JSON形式準備（83%→100%対策）
+                      const cityName = previewData.city || city
+                      const cityJson = cityName?.trim() ? { city: cityName.trim() } : null
+                      if (!cityJson) {
+                        console.warn('⚠️ city is missing: cityName is empty', { cityName, city })
+                      }
+
                       const savePayload: any = {
                         id: user.id,
                         user_id: user.id,
@@ -1102,6 +1109,8 @@ function ProfilePreviewContent() {
                         gender: gender || null,
                         nationality: nationality || null,
                         prefecture: prefecture || null,
+                        // 🎯 CRITICAL: city JSON形式で必須（83%→100%対策）
+                        city: cityJson,
                         // 🚀 CRITICAL: personality_tags必須（指示書対応）
                         personality_tags: personality && personality.length > 0 
                           ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
