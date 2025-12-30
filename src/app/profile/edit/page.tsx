@@ -3924,23 +3924,27 @@ function ProfileEditContent() {
         updated_at: new Date().toISOString()
       }
 
-      // 🚨 CRITICAL: updateData作成直後のpersonality_tags完全検証
-      console.log('🔥 UPDATE DATA PERSONALITY_TAGS VALIDATION:', {
-        updateData_personality_tags: updateData.personality_tags,
-        updateData_personality_tags_type: typeof updateData.personality_tags,
-        updateData_personality_tags_isNull: updateData.personality_tags === null,
-        updateData_personality_tags_isUndefined: updateData.personality_tags === undefined,
-        updateData_personality_tags_isArray: Array.isArray(updateData.personality_tags),
-        updateData_personality_tags_length: updateData.personality_tags?.length || 0,
-        updateData_personality_tags_stringified: JSON.stringify(updateData.personality_tags),
-        updateData_culture_tags: updateData.culture_tags,
-        updateData_culture_tags_type: typeof updateData.culture_tags,
-        updateData_culture_tags_isArray: Array.isArray(updateData.culture_tags),
-        CRITICAL_CHECK: {
-          will_save_null: updateData.personality_tags === null || updateData.personality_tags === undefined,
-          is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
-          payload_safe_for_text_array: Array.isArray(updateData.personality_tags) ? 'YES' : 'NO - WILL FAIL'
-        }
+      // 🚨 CRITICAL: updateData全体構造確認（personality_tags他項目比較）
+      console.log('🔥 UPDATE DATA FULL STRUCTURE COMPARISON:', {
+        // personality_tags検証
+        personality_tags_value: updateData.personality_tags,
+        personality_tags_type: typeof updateData.personality_tags,
+        personality_tags_isNull: updateData.personality_tags === null,
+        personality_tags_isUndefined: updateData.personality_tags === undefined,
+        personality_tags_isArray: Array.isArray(updateData.personality_tags),
+        personality_tags_length: updateData.personality_tags?.length || 0,
+        // 他の任意項目との比較
+        height_value: updateData.height,
+        height_type: typeof updateData.height,
+        occupation_value: updateData.occupation,
+        occupation_type: typeof updateData.occupation,
+        body_type_value: updateData.body_type,
+        body_type_type: typeof updateData.body_type,
+        // updateData全体のキー確認
+        updateData_keys: Object.keys(updateData),
+        personality_tags_in_keys: Object.keys(updateData).includes('personality_tags'),
+        // updateData全体のJSON文字列化（Supabaseに送信される実際のペイロード）
+        full_updateData_payload: JSON.stringify(updateData, null, 2)
       })
 
       // 🔍 NOTE: personality_tags/culture_tagsは既にnormalizeTextArray()で正規化済み
@@ -4156,13 +4160,22 @@ function ProfileEditContent() {
       const saveDebugData = {
         timestamp: new Date().toISOString(),
         finalUid: finalUid,
-        // 送信値
+        // 送信前のpersonality_tags生成確認
+        selectedPersonality_original: selectedPersonality,
+        personalityTags_normalized: personalityTags,
+        personalityTags_in_updateData: updateData.personality_tags,
+        // 送信値（他の任意項目との比較）
         payload_personality_tags: updateData.personality_tags,
         payload_personality_tags_type: typeof updateData.personality_tags,
         payload_personality_tags_isArray: Array.isArray(updateData.personality_tags),
         payload_personality_tags_isStringArray: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
         payload_personality_tags_isNull: updateData.personality_tags === null,
         payload_personality_tags_length: updateData.personality_tags?.length || 0,
+        payload_height: updateData.height,
+        payload_occupation: updateData.occupation,
+        payload_body_type: updateData.body_type,
+        updateData_keys: Object.keys(updateData),
+        personality_tags_in_keys: Object.keys(updateData).includes('personality_tags'),
         // update戻り値
         updateResult_data_length: updateRowCount,
         updateResult_error: updateError ? String(updateError) : null,

@@ -376,10 +376,22 @@ function MyPageContent() {
             <strong>保存時刻:</strong> {new Date(saveDebugData.timestamp).toLocaleString()}
           </div>
           <div style={{ marginBottom: '4px' }}>
+            <strong>元の選択値:</strong> {JSON.stringify(saveDebugData.selectedPersonality_original)}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>正規化後:</strong> {JSON.stringify(saveDebugData.personalityTags_normalized)}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
             <strong>送信 personality_tags:</strong> {JSON.stringify(saveDebugData.payload_personality_tags)}
           </div>
           <div style={{ marginBottom: '4px' }}>
             <strong>DB personality_tags:</strong> {JSON.stringify(saveDebugData.updatedRow_personality_tags)}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>他の項目比較:</strong> height:{saveDebugData.payload_height}, occupation:{saveDebugData.payload_occupation}
+          </div>
+          <div style={{ marginBottom: '4px' }}>
+            <strong>updateData内キー:</strong> personality_tags含む:{saveDebugData.personality_tags_in_keys ? 'Yes' : 'No'}
           </div>
           <div style={{ marginBottom: '4px' }}>
             <strong>一致結果:</strong> 
