@@ -1077,492 +1077,93 @@ function ProfilePreviewContent() {
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={async () => {
-                    // 🚨 CRITICAL DEBUG: ボタンクリック確認（最上流）
-                    console.log('CLICK_MY_PAGE_BUTTON')
-                    console.log('🎯 Preview update button clicked!')
+                    // 🚀 CRITICAL: 指示書対応 - シンプルで確実な保存処理
+                    console.log('🚀 プレビュー確定ボタンクリック - 保存処理開始')
 
-                    // 🔍 バリデーション: 必須項目のチェック
-                    const validationErrors = []
-
-                    if (!nickname || nickname === 'ニックネーム未設定') {
-                      validationErrors.push('ニックネームを入力してください')
-                    }
-
-                    if (!age || age < 18) {
-                      validationErrors.push('年齢は18歳以上で入力してください')
-                    }
-
-                    // birth_dateのチェック（previewDataから取得）
-                    const birth_date = previewData.birth_date || previewData.birthday || previewData.dob
-                    if (!birth_date) {
-                      validationErrors.push('生年月日を入力してください')
-                    }
-
-                    if (!selfIntroduction || selfIntroduction.length < 100) {
-                      validationErrors.push('自己紹介は100文字以上で入力してください')
-                    }
-
-                    if (!hobbies || hobbies.length === 0 || (hobbies.length === 1 && hobbies[0] === 'その他')) {
-                      validationErrors.push('共有したい日本文化を1つ以上選択してください')
-                    }
-
-                    // 性別による必須項目チェック
-                    if (gender === 'male') {
-                      // 外国人男性の場合
-                      if (!nationality) {
-                        validationErrors.push('国籍を選択してください')
-                      }
-                      if (!planned_prefectures || planned_prefectures.length === 0) {
-                        validationErrors.push(t('errors.plannedPrefecturesRequired'))
-                      }
-                    } else {
-                      // 日本人女性の場合
-                      if (!prefecture) {
-                        validationErrors.push('都道府県を入力してください')
-                      }
-                    }
-
-                    // バリデーションエラーがある場合は保存を中止
-                    if (validationErrors.length > 0) {
-                      alert('以下の項目を確認してください:\n\n' + validationErrors.join('\n'))
-                      console.log('❌ Validation errors:', validationErrors)
-                      return
-                    }
-
-                    console.log('✅ All validation checks passed')
-
-                    // 🚨 CRITICAL: 最上流でSupabase保存を必ず実行
-                    console.log('BEFORE_UPSERT')
-                    
                     try {
+                      // 🚀 Step 1: ユーザー認証確認
                       const { createClient } = await import('@/lib/supabase')
                       const supabase = createClient()
-                      
-                      // 現在の認証ユーザーを取得
                       const { data: { user }, error: userError } = await supabase.auth.getUser()
                       
                       if (!user) {
-                        console.error('❌ No user found for upsert')
                         throw new Error('ユーザー情報の取得に失敗しました')
                       }
 
-                      // 🚨 CRITICAL: DB列ホワイトリスト（PGRST204防止）
-                      const ALLOWED_PROFILE_COLUMNS = [
-                        'name','last_name','gender','age','birth_date','nationality','residence','city','email',
-                        'bio','avatar_url','interests','visit_schedule','travel_companion','planned_prefectures',
-                        'japanese_level','english_level','language_skills','personality_tags','culture_tags',
-                        'occupation','height','body_type','marital_status','membership_type','is_verified',
-                        'planned_stations' // 🆕 外国人男性専用フィールド
-                      ] as const
-                      
-                      // 🛡️ フルペイロード構築関数（実在列のみ）
-                      const buildFullPayload = (userId: string, source: any) => {
-                        const payload: any = {
-                          id: userId,
-                          user_id: userId,
-                        }
-                        
-                        // ホワイトリストされた列のみ追加
-                        for (const key of ALLOWED_PROFILE_COLUMNS) {
-                          if (source[key] !== undefined) payload[key] = source[key]
-                        }
-                        
-                        // 🔄 後方互換性マッピング
-                        if (payload.name === undefined && source.nickname) payload.name = source.nickname
-                        if (payload.bio === undefined && source.self_introduction) payload.bio = source.self_introduction
-                        if (payload.bio === undefined && source.selfIntroduction) payload.bio = source.selfIntroduction
-                        if (payload.residence === undefined && source.prefecture) payload.residence = source.prefecture
-                        if (payload.avatar_url === undefined && source.profile_image) payload.avatar_url = source.profile_image
-                        if (payload.interests === undefined && source.hobbies) payload.interests = source.hobbies
-                        
-                        // 🛡️ 型安全化（配列/JSON）
-                        if (payload.interests && !Array.isArray(payload.interests)) payload.interests = [payload.interests]
-                        if (payload.planned_prefectures && !Array.isArray(payload.planned_prefectures)) payload.planned_prefectures = [payload.planned_prefectures]
-                        if (payload.planned_stations && !Array.isArray(payload.planned_stations)) payload.planned_stations = [payload.planned_stations]
-                        if (payload.language_skills && !Array.isArray(payload.language_skills)) payload.language_skills = []
-                        if (payload.personality_tags && !Array.isArray(payload.personality_tags)) payload.personality_tags = []
-                        if (payload.culture_tags && !Array.isArray(payload.culture_tags)) payload.culture_tags = []
-                        
-                        return payload
+                      // 🚀 Step 2: 保存ペイロード準備（指示書対応）
+                      const savePayload = {
+                        id: user.id,
+                        user_id: user.id,
+                        // 基本情報
+                        name: nickname || null,
+                        bio: selfIntroduction || null, 
+                        age: age ? Number(age) : null,
+                        birth_date: previewData.birth_date || previewData.birthday || previewData.dob || null,
+                        gender: gender || null,
+                        nationality: nationality || null,
+                        prefecture: prefecture || null,
+                        // 🚀 CRITICAL: personality_tags必須（指示書対応）
+                        personality_tags: personality && personality.length > 0 
+                          ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
+                          : null,
+                        // 🚀 CRITICAL: interests必須（指示書対応）  
+                        interests: hobbies && hobbies.length > 0 ? hobbies : null,
+                        // 🚀 CRITICAL: avatar_url必須（指示書対応）
+                        avatar_url: previewData.profile_image || profileImage || null,
+                        // その他項目
+                        occupation: dedicatedColumnData?.occupation || null,
+                        height: dedicatedColumnData?.height || null,
+                        body_type: dedicatedColumnData?.body_type || null,
+                        marital_status: dedicatedColumnData?.marital_status || null,
+                        // 外国人男性専用
+                        visit_schedule: visit_schedule || null,
+                        travel_companion: travel_companion || null,
+                        planned_prefectures: planned_prefectures || null,
+                        planned_stations: planned_stations || null,
+                        updated_at: new Date().toISOString()
                       }
-                      
-                      // 🔧 プレビュー表示データをソースとして使用
-                      const sourceProfile = previewData || {}
-                      const fullPayload = buildFullPayload(user.id, sourceProfile)
-                      
-                      console.log('FULL_PAYLOAD_KEYS', Object.keys(fullPayload))
-                      console.log('🔍 Full upsert payload sample:', {
-                        ...fullPayload,
-                        bio: fullPayload.bio ? `${fullPayload.bio.slice(0, 50)}...` : 'empty'
+
+                      // 🚀 Step 3: upsert直前ログ（指示書対応）
+                      console.log('🚀 PROFILE UPSERT PAYLOAD', {
+                        personality_tags: savePayload.personality_tags,
+                        interests: savePayload.interests,
+                        avatar_url: savePayload.avatar_url,
+                        payload_keys: Object.keys(savePayload),
+                        full_payload: savePayload
                       })
-                      
-                      const { data: upsertData, error: upsertError } = await supabase
+
+                      // 🚀 Step 4: 必ずupsertを実行（指示書対応）
+                      const { error: saveError } = await supabase
                         .from('profiles')
-                        .upsert(fullPayload, { onConflict: 'id' })
-                        .select()
-                        .single()
-                      
-                      console.log('UPSERT_RESULT', { 
-                        ok: !upsertError,
-                        error: upsertError, 
-                        data: upsertData,
-                        status: upsertError ? 'ERROR' : 'SUCCESS' 
-                      })
-                      
-                      if (upsertError) {
-                        console.error('❌ Full upsert failed:', upsertError)
-                        alert('プロフィールの保存に失敗しました')
-                        return // 🛡️ 失敗時は遷移しない
+                        .upsert(savePayload, { onConflict: 'id' })
+
+                      if (saveError) {
+                        console.error('❌ PROFILE UPSERT FAILED:', saveError)
+                        throw saveError
                       }
+
+                      // ✅ Step 5: upsert完了ログ（指示書対応）
+                      console.log('✅ PROFILE UPSERT SUCCESS', {
+                        userId: user.id,
+                        timestamp: new Date().toISOString(),
+                        saved_personality_tags: savePayload.personality_tags,
+                        saved_interests: savePayload.interests
+                      })
+
+                      // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
+                      console.log('🎯 Profile保存完了 - MyPageに遷移')
                       
-                      console.log('✅ Full upsert succeeded - all profile data saved to Supabase')
-                      
-                      // 🛡️ 成功時のみマイページに遷移
                       if (window.opener) {
                         window.opener.location.href = '/mypage'
                         window.close()
                       } else {
                         window.location.href = '/mypage'
                       }
-                      return // 🛡️ ここで処理終了（以下の古い処理をスキップ）
-                      
-                    } catch (upsertError) {
-                      console.error('❌ Critical upsert error:', upsertError)
-                      alert('保存に失敗しました: ' + (upsertError as Error).message)
-                      return
-                    }
 
-                    // sessionStorageからデータを取得してプロフィール更新用データを準備
-                    try {
-                        console.log('🚨 DIRECT SAVE: Using sessionStorage data')
-                        
-                        // 専用カラム用データ準備
-                        const dedicatedColumnData = {
-                          occupation: occupation || null,
-                          height: height ? Number(height) : null,
-                          body_type: bodyType || null,
-                          marital_status: maritalStatus || null,
-                          english_level: englishLevel || null,
-                          japanese_level: japaneseLevel || null,
-                        }
-
-                        // オプションデータをJSONで準備（新形式：cityのみ）
-                        const optionalData = {
-                          city: city || null
-                        }
-                        
-                        // 🆕 Triple-save対応: interests配列構築（互換性維持）
-                        const extendedInterests = [...hobbies]
-                        
-                        // personalityを追加（互換性のため）
-                        if (personality && personality.length > 0) {
-                          personality.forEach((p: string) => {
-                            if (p && p.trim()) {
-                              extendedInterests.push(`personality:${p.trim()}`)
-                            }
-                          })
-                        }
-                        
-                        // custom_cultureを追加（互換性のため）
-                        if (customCulture && customCulture.trim()) {
-                          extendedInterests.push(`custom_culture:${customCulture.trim()}`)
-                        }
-                        
-                        // 🆕 新しいカラム用のクリーンな配列を準備
-                        const cultureTags = hobbies && hobbies.length > 0 ? hobbies : null
-                        const personalityTags = personality && personality.length > 0 
-                          ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
-                          : null
-                        
-                        // 🔍 CRITICAL: personality_tags送信確認ログ（Task A-1）
-                        console.log('🚨 PREVIEW確定時 PERSONALITY_TAGS検証:', {
-                          original_personality_from_previewData: personality,
-                          personality_isArray: Array.isArray(personality),
-                          personality_length: personality?.length || 0,
-                          personality_raw_values: personality,
-                          personalityTags_processed: personalityTags,
-                          personalityTags_isNull: personalityTags === null,
-                          personalityTags_willBeSent: personalityTags,
-                          task_A1_check: 'プレビュー確定時のpersonality_tags生成確認'
-                        })
-                        
-                        console.log('🚨 DIRECT SAVE: Prepared data', {
-                          optionalData,
-                          extendedInterests
-                        })
-                        
-                        // 🛠️ 修正: 全フィールドのデータを準備（オプションデータ以外も含む）
-                        console.log('🔍 DEBUG: previewData contents:', previewData)
-                        console.log('🔍 DEBUG: Individual field values:', {
-                          nickname, selfIntroduction, age, gender, nationality, prefecture, city,
-                          occupation, height, bodyType, maritalStatus, hobbies, personality, customCulture
-                        })
-                        
-                        // birth_dateの確実な取得
-                        const birth_date = previewData.birth_date || 
-                                          previewData.birthday || 
-                                          previewData.dob || 
-                                          searchParams?.get('birth_date') || 
-                                          searchParams?.get('birthday') || 
-                                          searchParams?.get('dob') || 
-                                          null
-                        
-                        const completeProfileData = {
-                          // 基本情報
-                          name: nickname || null,
-                          bio: selfIntroduction || null,
-                          age: age ? Number(age) : null,
-                          birth_date: birth_date,
-                          gender: gender || null,
-                          nationality: nationality || null,
-                          prefecture: prefecture || null,
-                          residence: prefecture || null, // compatibilityのため
-
-                          // 写真データ（既存の写真を含める）
-                          profile_image: previewData.profile_image || profileImage || searchParams?.get('profile_image') || null,
-
-                          // 🆕 専用カラム（occupation, height, body_type, marital_status）
-                          occupation: dedicatedColumnData.occupation || null,
-                          height: dedicatedColumnData.height || null,
-                          body_type: dedicatedColumnData.body_type || null,
-                          marital_status: dedicatedColumnData.marital_status || null,
-
-                          // 🆕 言語レベル（MyPageでの専用カラム保存用）
-                          english_level: dedicatedColumnData.english_level || null,
-                          japanese_level: dedicatedColumnData.japanese_level || null,
-                          // ✨ 新機能: 使用言語＋言語レベル（URLパラメータ + sessionStorage フォールバック）
-                          language_skills: (() => {
-                            // 1. URLパラメータから取得を試行
-                            try {
-                              const languageSkillsParam = searchParams?.get('language_skills')
-                              if (languageSkillsParam) {
-                                const parsedSkills = JSON.parse(decodeURIComponent(languageSkillsParam as string))
-                                console.log('🔥 Preview: language_skills from URL:', parsedSkills)
-                                return parsedSkills
-                              }
-                            } catch (e) {
-                              console.warn('Language skills URL parse error:', e)
-                            }
-                            
-                            // 2. 正しいpreviewDataキーからsessionStorageフォールバック取得
-                            if (typeof window !== 'undefined') {
-                              try {
-                                const urlParams = new URLSearchParams(window.location.search)
-                                const userId = urlParams.get('userId')
-                                const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
-                                
-                                const sessionData = window.sessionStorage.getItem(previewDataKey)
-                                if (sessionData) {
-                                  const parsed = JSON.parse(sessionData as string)
-                                  if (parsed.language_skills) {
-                                    console.log('🔥 Preview保存: language_skills from sessionStorage:', parsed.language_skills)
-                                    return parsed.language_skills
-                                  }
-                                }
-                              } catch (e) {
-                                console.warn('Language skills session parse error:', e)
-                              }
-                            }
-                            
-                            console.log('🔥 Preview: No language_skills found, using null')
-                            return null
-                          })(),
-
-                          // ✅ Triple-save機能復旧（personality/culture分離）
-                          personality_tags: personalityTags,
-                          culture_tags: cultureTags,
-
-                          // オプション情報（city JSONに格納）
-                          optionalData: optionalData,
-
-                          // interests配列（互換性維持）
-                          interests: extendedInterests,
-
-                          // 外国人男性専用フィールドを追加（外国人男性のみ）
-                          ...(gender === 'male' && nationality && nationality !== '日本' ? {
-                            visit_schedule: previewData.visit_schedule || visit_schedule || null,
-                            travel_companion: previewData.travel_companion || travel_companion || null,
-                            planned_prefectures: previewData.planned_prefectures || planned_prefectures || null,
-                            planned_stations: previewData.planned_stations || planned_stations || null
-                          } : {})
-                        }
-                        
-                        console.log('🔍 DEBUG: birth_date sources:', {
-                          'previewData.birth_date': previewData.birth_date,
-                          'previewData.birthday': previewData.birthday,  
-                          'previewData.dob': previewData.dob,
-                          'searchParams birth_date': searchParams?.get('birth_date'),
-                          'searchParams birthday': searchParams?.get('birthday'),
-                          'searchParams dob': searchParams?.get('dob'),
-                          'final birth_date': birth_date
-                        })
-                        
-                        console.log('🚨 COMPLETE SAVE: All profile data prepared', completeProfileData)
-                        console.log('🔍 DEBUG: Individual data fields:', {
-                          nickname,
-                          selfIntroduction,
-                          age,
-                          birth_date,
-                          gender,
-                          nationality,
-                          prefecture,
-                          profileImage,
-                          hobbies,
-                          personality,
-                          customCulture,
-                          planned_prefectures,
-                          visit_schedule,
-                          travel_companion
-                        })
-                        
-                        // 🔥 CRITICAL INVESTIGATION: localStorageに完全なプロフィールデータを保存
-                        console.error('🕵️ PREVIEW_SAVE_INVESTIGATION: About to save localStorage', {
-                          timestamp: new Date().toISOString(),
-                          operation: 'PREVIEW_TO_MYPAGE_SAVE',
-                          completeProfileData: {
-                            ...completeProfileData,
-                            images: completeProfileData.profile_image ? 'HAS_IMAGE' : 'NO_IMAGE',
-                            imagesCount: completeProfileData.profile_image ? 1 : 0
-                          },
-                          completion: 'NOT_CALCULATED_HERE',
-                          userId: searchParams?.get('userId') || 'undefined',
-                          isTestMode: !searchParams?.get('userId') || searchParams?.get('userId') === '',
-                          warningNote: 'THIS_MIGHT_OVERWRITE_GOOD_DATA'
-                        })
-                        
-                        localStorage.setItem('previewCompleteData', JSON.stringify(completeProfileData))
-                        localStorage.setItem('previewOptionalData', JSON.stringify(optionalData))
-                        localStorage.setItem('previewExtendedInterests', JSON.stringify(extendedInterests))
-                        
-                        // 🔍 INVESTIGATION: TESTモード用固定キー監視
-                        const testModeKey = 'SC_PROFILE_DRAFT_TEST_MODE'
-                        try {
-                          const existingTestData = localStorage.getItem(testModeKey)
-                          if (existingTestData) {
-                            const parsed = JSON.parse(existingTestData as string)
-                            console.error('🚨 EXISTING_TEST_DATA_BEFORE_OVERWRITE:', {
-                              completion: parsed.completion,
-                              imagesCount: parsed.images?.length || 0,
-                              nickname: parsed.nickname || 'none'
-                            })
-                          }
-                        } catch (e) {
-                          console.log('No existing test data or parse error')
-                        }
-                        
-                        // sessionStorageをクリア
-                        sessionStorage.removeItem('previewData')
-                        
-                        // 🛠️ 修正: localStorageへの保存を確実に完了してから遷移
-                        // localStorageにプロフィール更新フラグを設定
-                        localStorage.setItem('updateProfile', 'true')
-                        localStorage.setItem('updateProfileTimestamp', Date.now().toString())
-                        
-                        // 🔒 localStorage保存の確認
-                        const savedUpdateFlag = localStorage.getItem('updateProfile')
-                        const savedCompleteData = localStorage.getItem('previewCompleteData')
-                        const savedOptionalData = localStorage.getItem('previewOptionalData')
-                        const savedInterestsData = localStorage.getItem('previewExtendedInterests')
-                        
-                        console.log('💾 localStorage保存完了確認:', {
-                          updateProfile: savedUpdateFlag,
-                          hasCompleteData: !!savedCompleteData,
-                          hasOptionalData: !!savedOptionalData,
-                          hasInterestsData: !!savedInterestsData
-                        })
-                        
-                        if (savedCompleteData) {
-                          console.log('✅ Complete data saved successfully:', JSON.parse(savedCompleteData as string))
-                        } else {
-                          console.error('❌ Complete data NOT saved!')
-                        }
-                        
-                        // 🆕 CRITICAL: 実際にSupabaseにプロフィールデータを保存してから遷移
-                        console.log('🔄 Starting Supabase profile save before MyPage transition...')
-                        
-                        try {
-                          const { createClient } = await import('@/lib/supabase')
-                          const supabase = createClient()
-                          
-                          // 現在の認証ユーザーを取得
-                          const { data: { user }, error: userError } = await supabase.auth.getUser()
-                          
-                          if (!user) {
-                            console.log('🧪 Preview: No user found - user should be initialized by AuthProvider')
-                            throw new Error('ユーザー情報の取得に失敗しました - AuthProvider初期化待ち')
-                          }
-                          
-                          const finalUser = user || (await supabase.auth.getUser()).data.user
-                          
-                          if (!finalUser) {
-                            throw new Error('ユーザー情報の取得に失敗しました')
-                          }
-                          
-                          // 🛡️ CRITICAL FIX: Supabaseに完全なプロフィールデータを保存（id=auth.uid統一）
-                          console.log('💾 Saving complete profile to Supabase...', { userId: finalUser?.id })
-                          
-                          // 🔍 CRITICAL: upsert直前のpersonality_tags確認（Task A-1）
-                          const upsertPayload = {
-                            id: finalUser?.id,
-                            user_id: finalUser?.id,
-                            ...completeProfileData
-                          }
-                          console.log('🚨 UPSERT直前 PERSONALITY_TAGS確認:', {
-                            payload_personality_tags: upsertPayload.personality_tags,
-                            payload_personality_tags_type: typeof upsertPayload.personality_tags,
-                            payload_personality_tags_isNull: upsertPayload.personality_tags === null,
-                            payload_personality_tags_isArray: Array.isArray(upsertPayload.personality_tags),
-                            payload_keys_include_personality_tags: Object.keys(upsertPayload).includes('personality_tags'),
-                            full_payload_keys: Object.keys(upsertPayload),
-                            task_A1_check: 'Supabase upsert直前のpayload確認'
-                          })
-                          
-                          const { error: saveError } = await supabase
-                            .from('profiles')
-                            .upsert(upsertPayload, { onConflict: 'id' }) // 🛡️ onConflict も id に統一
-                          
-                          if (saveError) {
-                            console.error('❌ Supabase save failed:', saveError)
-                            throw saveError
-                          }
-                          
-                          console.log('✅ Profile saved to Supabase successfully', {
-                            userId: finalUser?.id,
-                            timestamp: new Date().toISOString(),
-                            payloadKeys: Object.keys(completeProfileData),
-                            operation: 'UPSERT_PROFILES_BY_ID'
-                          })
-                          
-                          // localStorage保存が完了するまで少し待機
-                          await new Promise(resolve => setTimeout(resolve, 200))
-                          
-                        } catch (saveError) {
-                          console.error('❌ Failed to save profile to Supabase:', saveError)
-                          // エラーでもlocalStorageベースで継続
-                        }
-                        
-                        // 親ウィンドウ（プロフィール編集画面）にメッセージを送信
-                        console.log('🔍 Checking window.opener:', !!window.opener)
-                        
-                        // 直接マイページに遷移（Supabase保存完了後）
-                        console.log('🎯 Redirecting to mypage after Supabase save completion')
-                        
-                        if (window.opener) {
-                          // プレビューウィンドウを閉じて、親ウィンドウをマイページにリダイレクト
-                          console.log('📡 Redirecting opener to mypage and closing preview')
-                          window.opener.postMessage({ action: 'updateProfile' }, '*')
-                          
-                          // localStorage保存完了後にマイページにリダイレクト（認証済みユーザーとして）
-                          window.opener.location.href = '/mypage'
-                          window.close()
-                        } else {
-                          // 直接マイページに遷移（認証済みユーザーとして）
-                          console.log('🔄 Direct redirect to mypage after localStorage confirmation')
-                          window.location.href = '/mypage'
-                        }
-                        
                     } catch (error) {
-                      console.error('❌ Error preparing preview data:', error)
+                      console.error('❌ CRITICAL: Profile保存処理でエラー:', error)
+                      alert('プロフィールの保存に失敗しました: ' + (error as Error).message)
+                      return // エラー時は遷移しない
                     }
                   }}
                 >
