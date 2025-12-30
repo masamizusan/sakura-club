@@ -1091,7 +1091,7 @@ function ProfilePreviewContent() {
                       }
 
                       // 🚀 Step 2: 保存ペイロード準備（指示書対応）
-                      const savePayload = {
+                      const savePayload: any = {
                         id: user.id,
                         user_id: user.id,
                         // 基本情報
@@ -1124,7 +1124,7 @@ function ProfilePreviewContent() {
                       }
 
                       // 🔧 CRITICAL: planned_stations除外（PGRST204対策）
-                      const { planned_stations, ...sanitizedPayload } = savePayload
+                      const { planned_stations: removedPlannedStations, ...sanitizedPayload } = savePayload
 
                       // 🚀 Step 3: upsert直前ログ（指示書対応）
                       console.log('🚀 PROFILE UPSERT PAYLOAD', {
