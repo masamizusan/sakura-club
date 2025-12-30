@@ -549,6 +549,7 @@ function ProfileEditContent() {
     updateError: any
     updatedRows: number
     rlsIssue: boolean
+    saveClickedAt: string
   } | null>(null)
   const [success, setSuccess] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -3662,6 +3663,25 @@ function ProfileEditContent() {
 
   // Form submission handler
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
+    // 🟥 CRITICAL: 保存処理開始の絶対証明ログ（最上段）
+    console.log('🟥 SAVE CLICKED (ProfileEdit)')
+    const saveClickedAt = new Date().toISOString()
+    console.log('🟥 SAVE TIMESTAMP:', saveClickedAt)
+    
+    // 🔴 CRITICAL: デバッグパネル強制表示（保存ボタンクリック証明）
+    setDebugPanel({
+      show: true,
+      uid: 'processing...',
+      whereCondition: 'processing...',
+      payloadPersonalityTags: 'processing...',
+      dbPersonalityTags: 'processing...',
+      match: false,
+      updateError: null,
+      updatedRows: 0,
+      rlsIssue: false,
+      saveClickedAt: saveClickedAt
+    })
+    
     console.log('🚀 Form submission started')
     console.log('📋 提出されたデータ:', data)
     console.log('[Profile Submit] values.japanese_level:', data.japanese_level)
@@ -4041,6 +4061,15 @@ function ProfileEditContent() {
       const finalUid = currentUser.id
       const whereCondition = `id = ${finalUid}`
       
+      // 🚨 CRITICAL: user_id統一設定（空文字禁止）
+      updateData.user_id = finalUid  // 🆕 CRITICAL: user_id=auth.uid()で統一（空文字禁止）
+      
+      console.log('🔑 USER_ID UNIFICATION:', {
+        finalUid: finalUid,
+        updateData_user_id: updateData.user_id,
+        note: 'id=finalUid AND user_id=finalUid で完全統一（RLS対応）'
+      })
+      
       console.log('🔑 FINAL UPDATE CONDITION CHECK:', {
         original_user_id: user.id,
         current_user_id: finalUid,
@@ -4083,6 +4112,33 @@ function ProfileEditContent() {
         return
       }
 
+      // 🔍 CRITICAL: update直前の接続確認（軽いselect）
+      console.log('🔍 PRE-UPDATE CONNECTION TEST: 接続確認のためのselect実行')
+      const { data: preSelectData, error: preSelectError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', finalUid)
+        
+      console.log('🔍 PRE-UPDATE SELECT RESULT:', {
+        finalUid: finalUid,
+        found_records: preSelectData?.length || 0,
+        preSelectError: preSelectError ? String(preSelectError) : null,
+        analysis: preSelectData?.length === 0 
+          ? '❌ 更新対象行が無い（INSERTが別id/別環境）' 
+          : '✅ 更新対象行存在確認'
+      })
+
+      if (preSelectData?.length === 0) {
+        console.error('🚨 CRITICAL: 更新対象行が存在しません - INSERTが別id/別環境の可能性')
+        setDebugPanel(prev => ({
+          ...prev!,
+          updateError: '更新対象行が存在しません',
+          rlsIssue: false,
+          saveClickedAt: saveClickedAt
+        }))
+        return
+      }
+
       // 📊 CRITICAL: updateを.select()付きで実行（戻りデータ取得）
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
@@ -4117,7 +4173,8 @@ function ProfileEditContent() {
           match: false,
           updateError: String(updateError),
           updatedRows: 0,
-          rlsIssue: false
+          rlsIssue: false,
+          saveClickedAt: saveClickedAt
         })
         throw updateError
       }
@@ -4151,7 +4208,8 @@ function ProfileEditContent() {
           match: false,
           updateError: `0件更新: ${errorInfo.probable_cause}`,
           updatedRows: 0,
-          rlsIssue: (existCheck?.length ?? 0) > 0
+          rlsIssue: (existCheck?.length ?? 0) > 0,
+          saveClickedAt: saveClickedAt
         })
         return
       }
@@ -4203,7 +4261,8 @@ function ProfileEditContent() {
         match: personalityMatches,
         updateError: null,
         updatedRows: updateRowCount,
-        rlsIssue: updateRowCount > 0 && !personalityWasSaved
+        rlsIssue: updateRowCount > 0 && !personalityWasSaved,
+        saveClickedAt: saveClickedAt
       })
 
       // 🚨 CRITICAL: 保存失敗時のアラート
@@ -5178,6 +5237,37 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   <strong>dbSelect.personality_tags:</strong>
                   <div className="bg-yellow-50 p-2 rounded mt-1 font-mono">
                     {JSON.stringify(debugPanel.dbPersonalityTags)}
+                  </div>
+                </div>
+                
+                <div className="mb-2">
+                  <strong>saveClickedAt:</strong>
+                  <div className="font-mono text-blue-600">{debugPanel.saveClickedAt}</div>
+                </div>
+              </div>
+              
+              {/* RLS確定用SQL表示 */}
+              <div className="bg-purple-50 p-3 rounded mt-3">
+                <div className="font-bold mb-2 text-purple-700">📋 RLS確定用SQL（Supabase SQL Editorにコピペ）:</div>
+                
+                <div className="mb-3">
+                  <strong>1. profilesのRLS/ポリシー一覧:</strong>
+                  <div className="bg-white p-2 rounded mt-1 font-mono text-xs border">
+                    select * from pg_policies where schemaname = &apos;public&apos; and tablename = &apos;profiles&apos;;
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <strong>2. RLSが有効か確認:</strong>
+                  <div className="bg-white p-2 rounded mt-1 font-mono text-xs border">
+                    select relrowsecurity from pg_class where relname = &apos;profiles&apos;;
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <strong>3. user_id確認（INSERT問題検出用）:</strong>
+                  <div className="bg-white p-2 rounded mt-1 font-mono text-xs border">
+                    select id, user_id, personality_tags from profiles where id = &apos;{debugPanel.uid}&apos;;
                   </div>
                 </div>
               </div>
