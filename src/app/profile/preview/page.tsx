@@ -1123,19 +1123,23 @@ function ProfilePreviewContent() {
                         updated_at: new Date().toISOString()
                       }
 
+                      // 🔧 CRITICAL: planned_stations除外（PGRST204対策）
+                      const { planned_stations, ...sanitizedPayload } = savePayload
+
                       // 🚀 Step 3: upsert直前ログ（指示書対応）
                       console.log('🚀 PROFILE UPSERT PAYLOAD', {
-                        personality_tags: savePayload.personality_tags,
-                        interests: savePayload.interests,
-                        avatar_url: savePayload.avatar_url,
-                        payload_keys: Object.keys(savePayload),
-                        full_payload: savePayload
+                        personality_tags: sanitizedPayload.personality_tags,
+                        interests: sanitizedPayload.interests,
+                        avatar_url: sanitizedPayload.avatar_url,
+                        payload_keys: Object.keys(sanitizedPayload),
+                        planned_stations_excluded: !Object.keys(sanitizedPayload).includes('planned_stations'),
+                        full_payload: sanitizedPayload
                       })
 
                       // 🚀 Step 4: 必ずupsertを実行（指示書対応）
                       const { error: saveError } = await supabase
                         .from('profiles')
-                        .upsert(savePayload, { onConflict: 'id' })
+                        .upsert(sanitizedPayload, { onConflict: 'id' })
 
                       if (saveError) {
                         console.error('❌ PROFILE UPSERT FAILED:', saveError)
@@ -1146,8 +1150,9 @@ function ProfilePreviewContent() {
                       console.log('✅ PROFILE UPSERT SUCCESS', {
                         userId: user.id,
                         timestamp: new Date().toISOString(),
-                        saved_personality_tags: savePayload.personality_tags,
-                        saved_interests: savePayload.interests
+                        saved_personality_tags: sanitizedPayload.personality_tags,
+                        saved_interests: sanitizedPayload.interests,
+                        planned_stations_excluded: true
                       })
 
                       // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
