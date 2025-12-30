@@ -3797,10 +3797,38 @@ function ProfileEditContent() {
         consolidatedInterests.push('その他')
       }
       
+      // 🛡️ CRITICAL: text[]強制正規化システム（関数定義）
+      const normalizeTextArray = (value: any): string[] => {
+        if (!value) return []
+        if (!Array.isArray(value)) return []
+        return value.map(item => {
+          if (typeof item === 'string') return item
+          if (typeof item === 'object' && item !== null) {
+            return String(item.value ?? item.label ?? item)
+          }
+          return String(item)
+        }).filter(Boolean)
+      }
+
       // 🎯 CRITICAL FIX: personality/culture_tagsを正しいフィールドから生成
       // 🚨 NULL禁止: 保存時は必ず配列化（null/undefined→[]正規化）
-      const personalityTags = Array.isArray(selectedPersonality) ? selectedPersonality : []  // 性格（personality_tags）
-      const cultureTags = Array.isArray(selectedHobbies) ? selectedHobbies : []  // 共有したい日本文化（culture_tags）
+      const rawPersonalityTags = Array.isArray(selectedPersonality) ? selectedPersonality : []
+      const rawCultureTags = Array.isArray(selectedHobbies) ? selectedHobbies : []
+      
+      // 🚨 CRITICAL: normalizeTextArray()で必ずstring[]に変換（null禁止）
+      const personalityTags = normalizeTextArray(rawPersonalityTags) ?? []  // 性格（personality_tags）
+      const cultureTags = normalizeTextArray(rawCultureTags) ?? []  // 共有したい日本文化（culture_tags）
+      
+      // 🔍 CRITICAL: 最終string[]確認ログ
+      console.log('🛡️ NORMALIZED PERSONALITY_TAGS VERIFICATION:', {
+        raw_selectedPersonality: selectedPersonality,
+        raw_selectedHobbies: selectedHobbies,
+        personalityTags_final: personalityTags,
+        cultureTags_final: cultureTags,
+        personalityTags_isStringArray: Array.isArray(personalityTags) && personalityTags.every(item => typeof item === 'string'),
+        cultureTags_isStringArray: Array.isArray(cultureTags) && cultureTags.every(item => typeof item === 'string'),
+        guarantee: 'normalizeTextArray()で必ずstring[]変換済み'
+      })
       
       // 🚨 NULL禁止正規化ログ
       console.log('🔧 NULL禁止正規化完了:', {
@@ -3915,40 +3943,8 @@ function ProfileEditContent() {
         }
       })
 
-      // 🚨 CRITICAL: NULL/UNDEFINED禁止 + string[]強制変換
-      if (updateData.personality_tags === null || updateData.personality_tags === undefined || !Array.isArray(updateData.personality_tags)) {
-        console.error('❌ CRITICAL: personality_tags is null/undefined/not-array, forcing to []')
-        updateData.personality_tags = []
-      } else {
-        // string[]強制変換（オブジェクト配列→文字列配列）
-        updateData.personality_tags = updateData.personality_tags.map((item: any) => {
-          if (typeof item === 'string') return item
-          if (typeof item === 'object' && item.value) return item.value
-          if (typeof item === 'object' && item.label) return item.label
-          return String(item)
-        }).filter((item: string) => item && item.trim() !== '')
-      }
-
-      if (updateData.culture_tags === null || updateData.culture_tags === undefined || !Array.isArray(updateData.culture_tags)) {
-        console.error('❌ CRITICAL: culture_tags is null/undefined/not-array, forcing to []')
-        updateData.culture_tags = []
-      } else {
-        // string[]強制変換
-        updateData.culture_tags = updateData.culture_tags.map((item: any) => {
-          if (typeof item === 'string') return item
-          if (typeof item === 'object' && item.value) return item.value
-          if (typeof item === 'object' && item.label) return item.label
-          return String(item)
-        }).filter((item: string) => item && item.trim() !== '')
-      }
-
-      console.log('🛡️ FINAL PAYLOAD SAFETY CHECK:', {
-        personality_tags_final: updateData.personality_tags,
-        culture_tags_final: updateData.culture_tags,
-        personality_tags_is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
-        culture_tags_is_string_array: Array.isArray(updateData.culture_tags) && updateData.culture_tags.every((item: any) => typeof item === 'string'),
-        ready_for_text_array_column: 'YES - GUARANTEED'
-      })
+      // 🔍 NOTE: personality_tags/culture_tagsは既にnormalizeTextArray()で正規化済み
+      // updateDataに設定された値は必ずstring[]または[]（null/undefined絶対なし）
       
       // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality値
       console.log('🗄️ SUPABASE PERSONALITY UNCONDITIONAL SAVE:', {
@@ -4079,30 +4075,32 @@ function ProfileEditContent() {
         critical_note: 'MyPageと完全同一条件で更新'
       })
 
-      // 🛡️ CRITICAL: text[]強制正規化システム
-      const normalizeTextArray = (value: any): string[] => {
-        if (!value) return []
-        if (!Array.isArray(value)) return []
-        return value.map(item => {
-          if (typeof item === 'string') return item
-          if (typeof item === 'object' && item !== null) {
-            return String(item.value ?? item.label ?? item)
-          }
-          return String(item)
-        }).filter(Boolean)
-      }
+      // 🔍 NOTE: normalizeTextArray関数は既に上で定義済み
 
-      // 🚨 CRITICAL: personality_tags/culture_tags強制正規化
-      updateData.personality_tags = normalizeTextArray(updateData.personality_tags)
-      updateData.culture_tags = normalizeTextArray(updateData.culture_tags)
-
-      console.log('🛡️ FINAL PAYLOAD SAFETY CHECK:', {
-        personality_tags_final: updateData.personality_tags,
-        culture_tags_final: updateData.culture_tags,
-        personality_tags_is_string_array: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
-        culture_tags_is_string_array: Array.isArray(updateData.culture_tags) && updateData.culture_tags.every((item: any) => typeof item === 'string'),
-        ready_for_text_array_column: "YES - GUARANTEED"
+      // 🔍 CRITICAL: updateData.personality_tags最終確認（二重正規化不要：既に正規化済み）
+      console.log('🛡️ FINAL PAYLOAD PERSONALITY_TAGS CHECK:', {
+        personality_tags_in_updateData: updateData.personality_tags,
+        personality_tags_type: typeof updateData.personality_tags,
+        personality_tags_isArray: Array.isArray(updateData.personality_tags),
+        personality_tags_isStringArray: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
+        personality_tags_length: updateData.personality_tags?.length || 0,
+        personality_tags_isNull: updateData.personality_tags === null,
+        personality_tags_isUndefined: updateData.personality_tags === undefined,
+        culture_tags_in_updateData: updateData.culture_tags,
+        culture_tags_isStringArray: Array.isArray(updateData.culture_tags) && updateData.culture_tags.every((item: any) => typeof item === 'string'),
+        ready_for_text_array_column: "YES - ALREADY NORMALIZED BY normalizeTextArray()",
+        guarantee: "personality_tags は必ず string[] または [] で null/undefined は絶対にない"
       })
+      
+      // 🚨 CRITICAL: null/undefined最終防衛（念のため）
+      if (updateData.personality_tags === null || updateData.personality_tags === undefined) {
+        console.error('❌ EMERGENCY: personality_tags is null/undefined after normalization - forcing to []')
+        updateData.personality_tags = []
+      }
+      if (updateData.culture_tags === null || updateData.culture_tags === undefined) {
+        console.error('❌ EMERGENCY: culture_tags is null/undefined after normalization - forcing to []')
+        updateData.culture_tags = []
+      }
 
       // 🚨 CRITICAL: finalUidが空なら即エラー（保存中断）
       if (!finalUid) {
@@ -4150,15 +4148,34 @@ function ProfileEditContent() {
       const updateRowCount = updateResult?.length || 0
       const hasError = Boolean(updateError)
       
-      console.log('📊 UPDATE RESULT VERIFICATION:', {
+      // 🔍 CRITICAL: .select()戻り値でpersonality_tags保存確認
+      const updateReturnedPersonality = updateResult?.[0]?.personality_tags
+      const updateReturnedCulture = updateResult?.[0]?.culture_tags
+      
+      console.log('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', {
         finalUid: finalUid,
+        // 送信値
         payload_personality_tags: updateData.personality_tags,
-        payload_culture_tags: updateData.culture_tags,
+        payload_personality_tags_type: typeof updateData.personality_tags,
+        payload_personality_tags_isArray: Array.isArray(updateData.personality_tags),
+        payload_personality_tags_isStringArray: Array.isArray(updateData.personality_tags) && updateData.personality_tags.every((item: any) => typeof item === 'string'),
+        payload_personality_tags_isNull: updateData.personality_tags === null,
+        payload_personality_tags_length: updateData.personality_tags?.length || 0,
+        // update戻り値
         updateResult_data_length: updateRowCount,
         updateResult_error: updateError ? String(updateError) : null,
         updatedRow_id: updateResult?.[0]?.id || null,
-        updatedRow_personality_tags: updateResult?.[0]?.personality_tags || null,
-        updatedRow_culture_tags: updateResult?.[0]?.culture_tags || null,
+        updatedRow_personality_tags: updateReturnedPersonality,
+        updatedRow_personality_tags_type: typeof updateReturnedPersonality,
+        updatedRow_personality_tags_isNull: updateReturnedPersonality === null,
+        updatedRow_personality_tags_isArray: Array.isArray(updateReturnedPersonality),
+        updatedRow_personality_tags_length: updateReturnedPersonality?.length || 0,
+        // 一致確認
+        personality_tags_saved_correctly: JSON.stringify(updateData.personality_tags) === JSON.stringify(updateReturnedPersonality),
+        personality_tags_null_prevented: updateReturnedPersonality !== null,
+        success_analysis: updateReturnedPersonality === null ? 
+          '❌ FAILED: personality_tagsがnullで保存された' : 
+          '✅ SUCCESS: personality_tagsが配列で保存された'
       })
 
       // 🚨 CRITICAL: エラーチェック
@@ -4228,7 +4245,6 @@ function ProfileEditContent() {
       })
 
       // 🔍 CRITICAL: updateの戻りとselectが食い違うかチェック
-      const updateReturnedPersonality = updateResult?.[0]?.personality_tags
       const selectReturnedPersonality = dbSelect?.personality_tags
       const returnValuesMatch = JSON.stringify(updateReturnedPersonality) === JSON.stringify(selectReturnedPersonality)
       
