@@ -817,10 +817,10 @@ function ProfileEditContent() {
       // 🔍 CRITICAL DEBUG: 完成度計算直前のデバッグログ（SSOT統一）
       console.log('🚨 COMPLETION DEBUG - 計算直前チェック:', {
         '1_profile_avatar_url': {
-          exists: !!profile?.avatar_url,
-          type: typeof profile?.avatar_url,
-          isBase64: profile?.avatar_url?.startsWith('data:image/'),
-          preview: profile?.avatar_url?.substring(0, 50) + '...'
+          exists: !!dbProfile?.avatar_url,
+          type: typeof dbProfile?.avatar_url,
+          isBase64: dbProfile?.avatar_url?.startsWith('data:image/'),
+          preview: dbProfile?.avatar_url?.substring(0, 50) + '...'
         },
         '2_profileImages_state': {
           length: profileImages.length,
@@ -833,8 +833,8 @@ function ProfileEditContent() {
           allTypesCorrect: imagesForCalc.every(img => typeof img.url === 'string' && typeof img.isMain === 'boolean')
         },
         '4_formValues_profile_images': {
-          raw: formValuesForCompletion.profile_images,
-          length: Array.isArray(formValuesForCompletion.profile_images) ? formValuesForCompletion.profile_images.length : 'not array'
+          raw: 'profile_images not in form values',
+          length: 'using profileImages state instead'
         }
       })
       
