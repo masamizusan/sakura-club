@@ -108,7 +108,33 @@ function hasLanguageInfo(profileData: any): boolean {
 }
 
 /**
- * 🎯 画像配列の正規化関数 - 型統一とbase64除外
+ * 🎯 完成度判定専用: 寛容な画像正規化関数（B案修正）
+ * ユーザーが画像を追加した事実をカウントする（URL厳密性よりも存在を重視）
+ */
+function normalizeImagesForCompletion(images?: any[]): Array<{ url: string; isMain: boolean; _hasFile?: boolean; _hasPreview?: boolean }> {
+  if (!Array.isArray(images)) return []
+  
+  return images
+    .filter(Boolean)
+    .map((img) => {
+      const url = img.url ?? img.publicUrl ?? img.previewUrl ?? img.preview ?? img.originalUrl ?? img.path ?? ''
+      const hasFile = !!img.file // 新規追加直後
+      const hasPreview = typeof url === 'string' && url.length > 0 // blob:含む
+      const hasPath = !!img.path // 保存予定
+      
+      return { 
+        url: url || 'pending-upload',
+        isMain: Boolean(img.isMain),
+        _hasFile: hasFile,
+        _hasPreview: hasPreview,
+        _hasPath: hasPath
+      }
+    })
+    .filter((img) => img._hasFile || img._hasPreview || img._hasPath) // いずれかがあればOK
+}
+
+/**
+ * 🎯 画像配列の正規化関数 - 型統一とbase64除外（保存/表示用）
  */
 function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain: boolean }> {
   if (!Array.isArray(imageArray)) return []
@@ -149,23 +175,24 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     return (profile as any).has_profile_image
   }
   
-  // 🎯 CRITICAL FIX: 画像配列を正規化してから判定
-  const normalizedImages = normalizeImageArray(imageArray)
-  console.log('🎯 hasProfileImages正規化判定:', {
+  // 🚨 B案修正: 完成度判定専用の寛容な正規化を使用
+  const normalizedImages = normalizeImagesForCompletion(imageArray)
+  console.log('🎯 hasProfileImages寛容正規化判定:', {
     original_imageArray_length: imageArray?.length || 0,
     normalized_length: normalizedImages.length,
     original_sample: imageArray?.slice(0, 2),
     normalized_sample: normalizedImages.slice(0, 2),
-    has_valid_images: normalizedImages.length > 0
+    has_valid_images: normalizedImages.length > 0,
+    completion_detection: 'file/preview/path_any_ok'
   })
   
-  // 1. 正規化されたimageArray優先判定
+  // 1. 寛容正規化されたimageArray優先判定
   if (normalizedImages.length > 0) {
     return true
   }
   
-  // 2. profile_images配列も正規化
-  const normalizedProfileImages = normalizeImageArray(profile.profile_images)
+  // 2. profile_images配列も寛容正規化
+  const normalizedProfileImages = normalizeImagesForCompletion(profile.profile_images)
   if (normalizedProfileImages.length > 0) {
     return true
   }

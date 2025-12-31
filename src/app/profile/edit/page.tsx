@@ -736,8 +736,29 @@ function ProfileEditContent() {
       timestamp: new Date().toISOString()
     })
     
-    // 🔧 FIX: stale state問題解決 - 確実に最新の画像配列を使用
-    const rawImagesForCalc = explicitImages ?? profileImagesRef.current
+    // 🚨 C案修正: 画像入力優先順位見直し（空配列を優先しない）
+    const rawImagesForCalc = (() => {
+      // 1. explicitImages（ありかつ非空なら最優先）
+      if (Array.isArray(explicitImages) && explicitImages.length > 0) {
+        return explicitImages
+      }
+      
+      // 2. profileImagesRef（UIが持っている真実）
+      if (Array.isArray(profileImagesRef.current) && profileImagesRef.current.length > 0) {
+        return profileImagesRef.current
+      }
+      
+      // 3. フォーム値のprofile_images（最後の手段）
+      // getValues型エラー回避のため、watchで取得
+      const allFormValues = getValues() as any
+      const formImages = allFormValues?.profile_images
+      if (Array.isArray(formImages) && formImages.length > 0) {
+        return formImages
+      }
+      
+      // いずれも空/未定義なら空配列
+      return []
+    })()
     
     // 🎯 CRITICAL FIX: 画像配列正規化（原因B対策）
     const normalizeImageArray = (imageArray: any[]): Array<{ url: string; isMain: boolean }> => {
@@ -769,7 +790,9 @@ function ProfileEditContent() {
         }) as Array<{ url: string; isMain: boolean }>
     }
     
-    const imagesForCalc = normalizeImageArray(rawImagesForCalc)
+    // 🚨 B+C案修正: 完成度判定には寛容な正規化を使用
+    const { normalizeImagesForCompletion } = require('@/utils/profileCompletion')
+    const imagesForCalc = normalizeImagesForCompletion(rawImagesForCalc)
     
     console.log('🔧 updateCompletionUnified: 画像配列決定と正規化', {
       source,
@@ -807,7 +830,7 @@ function ProfileEditContent() {
         personality_length: formValuesForCompletion.personality?.length || 0,
         language_skills_length: formValuesForCompletion.language_skills?.length || 0,
         imagesForCalc_length: imagesForCalc.length,
-        imagesForCalc_detail: imagesForCalc.map(img => ({ url: img.url.substring(0, 50), hasUrl: !!img.url, isMain: img.isMain })),
+        imagesForCalc_detail: imagesForCalc.map((img: any) => ({ url: img.url?.substring(0, 50) || 'no-url', hasUrl: !!img.url, isMain: img.isMain })),
         hydrationStatus: isHydrated ? 'completed' : 'pending'
       })
 
@@ -830,7 +853,7 @@ function ProfileEditContent() {
         '3_imagesForCalc_normalized': {
           length: imagesForCalc.length,
           sample: imagesForCalc.slice(0, 2),
-          allTypesCorrect: imagesForCalc.every(img => typeof img.url === 'string' && typeof img.isMain === 'boolean')
+          allTypesCorrect: imagesForCalc.every((img: any) => typeof img.url === 'string' && typeof img.isMain === 'boolean')
         },
         '4_formValues_profile_images': {
           raw: 'profile_images not in form values',
@@ -1083,6 +1106,18 @@ function ProfileEditContent() {
       setIsImageChanging(true)
       setProfileImages(newImages)
       profileImagesRef.current = newImages
+      
+      // 🚨 CRITICAL FIX: RHFフォーム値にも確実に同期（A案修正）
+      (setValue as any)('profile_images', newImages, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      })
+      
+      console.log('🚨 RHF同期完了:', { 
+        setValue_profile_images_length: newImages.length,
+        form_will_detect_change: true
+      })
       
       console.log('🧨 UI/state更新完了:', { 
         newImages_length: newImages.length,
@@ -2734,7 +2769,7 @@ function ProfileEditContent() {
           .from('profiles')
           .select('*')
           .eq('id', user?.id)
-          .single()
+          .maybeSingle() // 🚨 D案修正: 406エラー防止
 
         if (profileError || !profile) {
           console.error('Profile load error:', profileError)
