@@ -110,7 +110,7 @@ function hasLanguageInfo(profileData: any): boolean {
 /**
  * 🎯 画像配列の正規化関数 - 型統一とbase64除外
  */
-function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain?: boolean }> {
+function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain: boolean }> {
   if (!Array.isArray(imageArray)) return []
   
   return imageArray
@@ -124,7 +124,7 @@ function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain?: 
       if (img && typeof img === 'object') {
         const url = img.url || img.originalUrl || img.avatar_url || img.profile_image
         if (url && typeof url === 'string') {
-          return { url, isMain: img.isMain || false }
+          return { url, isMain: Boolean(img.isMain) }
         }
       }
       
@@ -132,11 +132,11 @@ function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain?: 
     })
     .filter((img): img is { url: string; isMain: boolean } => {
       // null除外 + base64画像除外（data:image/...）
-      return img !== null && 
-             img.url && 
+      if (!img || !img.url) return false
+      return typeof img.url === 'string' &&
              img.url.trim() !== '' &&
              !img.url.startsWith('data:image/')  // 🚨 base64画像は無効として除外
-    })
+    }) as Array<{ url: string; isMain: boolean }>
 }
 
 /**

@@ -740,7 +740,7 @@ function ProfileEditContent() {
     const rawImagesForCalc = explicitImages ?? profileImagesRef.current
     
     // 🎯 CRITICAL FIX: 画像配列正規化（原因B対策）
-    const normalizeImageArray = (imageArray: any[]): Array<{ url: string; isMain?: boolean }> => {
+    const normalizeImageArray = (imageArray: any[]): Array<{ url: string; isMain: boolean }> => {
       if (!Array.isArray(imageArray)) return []
       
       return imageArray
@@ -754,7 +754,7 @@ function ProfileEditContent() {
           if (img && typeof img === 'object') {
             const url = img.url || img.originalUrl || img.avatar_url || img.profile_image
             if (url && typeof url === 'string') {
-              return { url, isMain: img.isMain || false }
+              return { url, isMain: Boolean(img.isMain) }
             }
           }
           
@@ -762,11 +762,11 @@ function ProfileEditContent() {
         })
         .filter((img): img is { url: string; isMain: boolean } => {
           // null除外 + base64画像除外（data:image/...）
-          return img !== null && 
-                 img.url && 
+          if (!img || !img.url) return false
+          return typeof img.url === 'string' &&
                  img.url.trim() !== '' &&
                  !img.url.startsWith('data:image/')  // 🚨 base64画像は無効として除外
-        })
+        }) as Array<{ url: string; isMain: boolean }>
     }
     
     const imagesForCalc = normalizeImageArray(rawImagesForCalc)
@@ -807,7 +807,7 @@ function ProfileEditContent() {
         personality_length: formValuesForCompletion.personality?.length || 0,
         language_skills_length: formValuesForCompletion.language_skills?.length || 0,
         imagesForCalc_length: imagesForCalc.length,
-        imagesForCalc_detail: imagesForCalc.map(img => ({ id: img.id, hasUrl: !!img.url })),
+        imagesForCalc_detail: imagesForCalc.map(img => ({ url: img.url.substring(0, 50), hasUrl: !!img.url, isMain: img.isMain })),
         hydrationStatus: isHydrated ? 'completed' : 'pending'
       })
 
