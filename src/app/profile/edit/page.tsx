@@ -24,7 +24,8 @@ import {
   // 🌟 SINGLE SOURCE OF TRUTH ARCHITECTURE
   buildCompletionInputFromForm,
   sanitizeForCompletion,
-  calculateCompletionFromForm
+  calculateCompletionFromForm,
+  normalizeImagesForCompletion
 } from '@/utils/profileCompletion'
 
 // 🧮 統一されたプロフィール完成度計算システム使用
@@ -791,8 +792,20 @@ function ProfileEditContent() {
     }
     
     // 🚨 B+C案修正: 完成度判定には寛容な正規化を使用
-    const { normalizeImagesForCompletion } = require('@/utils/profileCompletion')
-    const imagesForCalc = normalizeImagesForCompletion(rawImagesForCalc)
+    // 🚨 CRASH GUARD: normalizeImagesForCompletion関数チェック
+    let imagesForCalc: any[]
+    if (typeof normalizeImagesForCompletion !== 'function') {
+      console.error('[DEBUG] normalizeImagesForCompletion is not function', {
+        type: typeof normalizeImagesForCompletion,
+        value: normalizeImagesForCompletion,
+        source: 'updateCompletionUnified'
+      })
+      // フォールバック：空配列を返す
+      imagesForCalc = []
+      console.warn('[FALLBACK] Using empty array for imagesForCalc due to function error')
+    } else {
+      imagesForCalc = normalizeImagesForCompletion(rawImagesForCalc)
+    }
     
     console.log('🔧 updateCompletionUnified: 画像配列決定と正規化', {
       source,
@@ -861,12 +874,30 @@ function ProfileEditContent() {
         }
       })
       
-      const result = calculateCompletionFromForm(
-        formValuesForCompletion,
-        isForeignMale ? 'foreign-male' : 'japanese-female',
-        imagesForCalc,
-        isNewUser
-      )
+      // 🚨 CRASH GUARD: calculateCompletionFromForm関数チェック
+      let result: any
+      if (typeof calculateCompletionFromForm !== 'function') {
+        console.error('[DEBUG] calculateCompletionFromForm is not function', {
+          type: typeof calculateCompletionFromForm,
+          value: calculateCompletionFromForm,
+          source: 'updateCompletionUnified'
+        })
+        // フォールバック結果
+        result = {
+          completion: 0,
+          completedFields: 0,
+          totalFields: isForeignMale ? 17 : 14,
+          hasImages: false
+        }
+        console.warn('[FALLBACK] Using default completion result due to function error')
+      } else {
+        result = calculateCompletionFromForm(
+          formValuesForCompletion,
+          isForeignMale ? 'foreign-male' : 'japanese-female',
+          imagesForCalc,
+          isNewUser
+        )
+      }
       
       // 🔍 CRITICAL DEBUG: hasProfileImages判定結果の詳細ログ
       console.log('🚨 COMPLETION RESULT - hasProfileImages判定結果:', {
@@ -1134,6 +1165,16 @@ function ProfileEditContent() {
       
       // 🔧 CRITICAL: UI更新直後に必ず完成度更新（TESTモード・本番共通）
       try {
+        // 🚨 CRASH GUARD: updateCompletionUnified呼び出し前の安全チェック
+        if (typeof updateCompletionUnified !== 'function') {
+          console.error('[DEBUG] updateCompletionUnified is not function', {
+            type: typeof updateCompletionUnified,
+            value: updateCompletionUnified,
+            source: 'handleImagesChange'
+          })
+          throw new Error('updateCompletionUnified is not a function')
+        }
+        
         updateCompletionUnified(
           isDeletion ? 'image-delete-immediate' : 'image-change-immediate', 
           newImages

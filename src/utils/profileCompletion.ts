@@ -111,7 +111,7 @@ function hasLanguageInfo(profileData: any): boolean {
  * 🎯 完成度判定専用: 寛容な画像正規化関数（B案修正）
  * ユーザーが画像を追加した事実をカウントする（URL厳密性よりも存在を重視）
  */
-function normalizeImagesForCompletion(images?: any[]): Array<{ url: string; isMain: boolean; _hasFile?: boolean; _hasPreview?: boolean }> {
+export function normalizeImagesForCompletion(images?: any[]): Array<{ url: string; isMain: boolean; _hasFile?: boolean; _hasPreview?: boolean }> {
   if (!Array.isArray(images)) return []
   
   return images
