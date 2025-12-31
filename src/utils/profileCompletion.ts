@@ -108,8 +108,40 @@ function hasLanguageInfo(profileData: any): boolean {
 }
 
 /**
+ * 🎯 画像配列の正規化関数 - 型統一とbase64除外
+ */
+function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain?: boolean }> {
+  if (!Array.isArray(imageArray)) return []
+  
+  return imageArray
+    .map(img => {
+      // string形式の場合
+      if (typeof img === 'string') {
+        return { url: img, isMain: false }
+      }
+      
+      // object形式の場合
+      if (img && typeof img === 'object') {
+        const url = img.url || img.originalUrl || img.avatar_url || img.profile_image
+        if (url && typeof url === 'string') {
+          return { url, isMain: img.isMain || false }
+        }
+      }
+      
+      return null
+    })
+    .filter((img): img is { url: string; isMain: boolean } => {
+      // null除外 + base64画像除外（data:image/...）
+      return img !== null && 
+             img.url && 
+             img.url.trim() !== '' &&
+             !img.url.startsWith('data:image/')  // 🚨 base64画像は無効として除外
+    })
+}
+
+/**
  * プロフィール画像の有無を判定する関数
- * 🌸 has_profile_imageフラグを優先的に確認
+ * 🚨 CRITICAL FIX: 型統一とbase64除外による正確な判定
  */
 function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: boolean = false): boolean {
   // 🌸 TASK1: has_profile_imageフラグが設定されていればそれを優先
@@ -117,26 +149,43 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     return (profile as any).has_profile_image
   }
   
-  // 1. imageArray パラメータ優先
-  if (Array.isArray(imageArray) && imageArray.length > 0) {
+  // 🎯 CRITICAL FIX: 画像配列を正規化してから判定
+  const normalizedImages = normalizeImageArray(imageArray)
+  console.log('🎯 hasProfileImages正規化判定:', {
+    original_imageArray_length: imageArray?.length || 0,
+    normalized_length: normalizedImages.length,
+    original_sample: imageArray?.slice(0, 2),
+    normalized_sample: normalizedImages.slice(0, 2),
+    has_valid_images: normalizedImages.length > 0
+  })
+  
+  // 1. 正規化されたimageArray優先判定
+  if (normalizedImages.length > 0) {
     return true
   }
   
-  // 2. profile_images配列
-  if (Array.isArray(profile.profile_images) && profile.profile_images.length > 0) {
+  // 2. profile_images配列も正規化
+  const normalizedProfileImages = normalizeImageArray(profile.profile_images)
+  if (normalizedProfileImages.length > 0) {
     return true
   }
   
-  // 3. その他の画像URLフィールド
-  if (profile.avatar_url && profile.avatar_url !== '') {
+  // 3. その他の画像URLフィールド（base64除外）
+  if (profile.avatar_url && 
+      profile.avatar_url !== '' && 
+      !profile.avatar_url.startsWith('data:image/')) {
     return true
   }
   
-  if (profile.avatarUrl && profile.avatarUrl !== '') {
+  if (profile.avatarUrl && 
+      profile.avatarUrl !== '' && 
+      !profile.avatarUrl.startsWith('data:image/')) {
     return true
   }
   
-  if (profile.profile_image && profile.profile_image !== '') {
+  if (profile.profile_image && 
+      profile.profile_image !== '' && 
+      !profile.profile_image.startsWith('data:image/')) {
     return true
   }
   

@@ -339,9 +339,12 @@ function MyPageContent() {
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <div className="flex items-center mb-6">
               <div className="relative">
-                {profile?.avatar_url || profile?.profile_image ? (
+                {((profile?.avatar_url && !profile.avatar_url.startsWith('data:image/')) || 
+                  (profile?.profile_image && !profile.profile_image.startsWith('data:image/'))) ? (
                   <img
-                    src={profile.avatar_url || profile.profile_image}
+                    src={(profile.avatar_url && !profile.avatar_url.startsWith('data:image/')) 
+                         ? profile.avatar_url 
+                         : profile.profile_image}
                     alt="プロフィール写真"
                     className="w-20 h-20 rounded-full object-cover border-2 border-sakura-200"
                   />
