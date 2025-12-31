@@ -814,12 +814,45 @@ function ProfileEditContent() {
       const urlParams = new URLSearchParams(window.location.search)
       const isNewUser = urlParams.get('from') === 'signup'
 
+      // 🔍 CRITICAL DEBUG: 完成度計算直前のデバッグログ（SSOT統一）
+      console.log('🚨 COMPLETION DEBUG - 計算直前チェック:', {
+        '1_profile_avatar_url': {
+          exists: !!profile?.avatar_url,
+          type: typeof profile?.avatar_url,
+          isBase64: profile?.avatar_url?.startsWith('data:image/'),
+          preview: profile?.avatar_url?.substring(0, 50) + '...'
+        },
+        '2_profileImages_state': {
+          length: profileImages.length,
+          sample: profileImages.slice(0, 2),
+          types: profileImages.map(img => typeof img)
+        },
+        '3_imagesForCalc_normalized': {
+          length: imagesForCalc.length,
+          sample: imagesForCalc.slice(0, 2),
+          allTypesCorrect: imagesForCalc.every(img => typeof img.url === 'string' && typeof img.isMain === 'boolean')
+        },
+        '4_formValues_profile_images': {
+          raw: formValuesForCompletion.profile_images,
+          length: Array.isArray(formValuesForCompletion.profile_images) ? formValuesForCompletion.profile_images.length : 'not array'
+        }
+      })
+      
       const result = calculateCompletionFromForm(
         formValuesForCompletion,
         isForeignMale ? 'foreign-male' : 'japanese-female',
         imagesForCalc,
         isNewUser
       )
+      
+      // 🔍 CRITICAL DEBUG: hasProfileImages判定結果の詳細ログ
+      console.log('🚨 COMPLETION RESULT - hasProfileImages判定結果:', {
+        final_completion: result.completion,
+        hasImages_result: result.hasImages,
+        missing_fields: result.hasImages ? 'none' : 'profile_images',
+        calculation_source: 'calculateCompletionFromForm',
+        images_passed_to_calc: imagesForCalc.length
+      })
 
       console.log('🌟 updateCompletionUnified: 完了', {
         completion: result.completion,
@@ -3491,11 +3524,12 @@ function ProfileEditContent() {
               profileImagesRef_length: profileImagesRef.current.length
             })
           } else {
-            // 🔧 修正: 新規ユーザーでも有効な画像データがある場合は使用（base64除外）
-            if (profile.avatar_url && 
-                !profile.avatar_url.startsWith('data:image/')) {  // 🚨 base64画像は除外
-              console.log('✅ プロフィール画像を設定:', profile.avatar_url.substring(0, 50) + '...')
-              console.log('  - isNewUser:', isNewUser, ', 有効な画像データを検出（base64ではない）')
+            // 🎯 SSOT統一: avatar_urlがある場合は必ずprofileImages配列に反映
+            if (profile.avatar_url && profile.avatar_url.trim() !== '') {
+              console.log('✅ プロフィール画像を設定（SSOT統一）:', profile.avatar_url.substring(0, 50) + '...')
+              console.log('  - isBase64:', profile.avatar_url.startsWith('data:image/'))
+              console.log('  - isNewUser:', isNewUser, ', avatar_urlを確実にprofileImagesに反映')
+              
               currentImageArray = [{
                 id: '1',
                 url: profile.avatar_url,
@@ -3504,17 +3538,20 @@ function ProfileEditContent() {
                 isEdited: false
               }]
               setProfileImages(currentImageArray)
-              // 🔍 CRITICAL: MyPage→編集時のprofile_images missing修正（Task B）
+              // 🔍 CRITICAL: profileImagesRefも同期（SSOT統一）
               profileImagesRef.current = currentImageArray
-              console.log('🔧 TASK B FIX: profileImagesRef更新完了（base64除外）', {
+              
+              console.log('🎯 SSOT統一: avatar_url→profileImages反映完了', {
                 currentImageArray_length: currentImageArray.length,
                 profileImagesRef_length: profileImagesRef.current.length,
                 avatar_url_exists: !!profile.avatar_url,
-                task_B_fix: 'MyPage→編集でprofile_images state復元'
+                isBase64: profile.avatar_url.startsWith('data:image/'),
+                ssot_fix: 'avatar_url確実反映でUI表示と完成度計算を統一'
               })
             } else {
-              console.log('❌ 画像なしで初期化')
-              console.log('  - Reason: avatar_url=', !!profile.avatar_url)
+              console.log('❌ 画像なしで初期化（avatar_url無効）')
+              console.log('  - avatar_url存在:', !!profile.avatar_url)
+              console.log('  - avatar_url値:', profile.avatar_url)
               currentImageArray = []
             }
           }

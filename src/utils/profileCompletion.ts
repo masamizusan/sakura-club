@@ -304,7 +304,19 @@ function calculateCompletion14Fields(profile: ProfileData, imageArray?: any[]): 
   }
   
   // 14. プロフィール画像
-  if (hasProfileImages(profile, imageArray)) {
+  const hasImagesResult = hasProfileImages(profile, imageArray)
+  
+  console.log('🚨 CRITICAL: プロフィール画像判定詳細 (日本人女性14項目)', {
+    hasProfileImages_result: hasImagesResult,
+    profile_avatar_url: profile.avatar_url ? `${profile.avatar_url.substring(0, 30)}...` : 'none',
+    profile_avatarUrl: profile.avatarUrl ? `${profile.avatarUrl.substring(0, 30)}...` : 'none',
+    profile_profile_image: profile.profile_image ? `${profile.profile_image.substring(0, 30)}...` : 'none',
+    imageArray_length: Array.isArray(imageArray) ? imageArray.length : 'not array',
+    imageArray_sample: Array.isArray(imageArray) ? imageArray.slice(0, 2) : 'not array',
+    profile_has_profile_image_flag: (profile as any).has_profile_image
+  })
+  
+  if (hasImagesResult) {
     completedCount++
   } else {
     missingFields.push('profile_images')
@@ -641,14 +653,31 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
   const imagesCount = Array.isArray(imageArray) ? imageArray.length : 0
   const hasImages = imagesCount > 0
   
+  // 🔍 CRITICAL DEBUG: buildCompletionInputFromForm詳細ログ
   console.log('🌟 buildCompletionInputFromForm: フォーム値のみで入力オブジェクト作成', {
     nickname: formValues.nickname,
     hobbies_length: Array.isArray(formValues.hobbies) ? formValues.hobbies.length : 0,
     personality_length: Array.isArray(formValues.personality) ? formValues.personality.length : 0,
     language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0,
-    imagesCount: imagesCount,
-    has_profile_image: hasImages,
-    imageArray_provided: Array.isArray(imageArray)
+    
+    // 🚨 CRITICAL: 画像関連の詳細情報
+    imageArray_input: {
+      provided: Array.isArray(imageArray),
+      length: imagesCount,
+      sample: imageArray?.slice(0, 2),
+      types: imageArray?.map(img => typeof img)
+    },
+    
+    // formValuesからの画像関連情報
+    formValues_images: {
+      avatar_url: formValues.avatar_url ? `${formValues.avatar_url.substring(0, 30)}...` : 'none',
+      profile_images: formValues.profile_images,
+      avatarUrl: formValues.avatarUrl ? `${formValues.avatarUrl.substring(0, 30)}...` : 'none'
+    },
+    
+    // 最終判定
+    final_hasImages: hasImages,
+    final_imagesCount: imagesCount
   })
 
   return {

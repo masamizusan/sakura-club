@@ -389,6 +389,32 @@ function MyPageContent() {
                   try {
                     const isForeignMale = profile?.gender === 'male' && profile?.nationality && profile?.nationality !== '日本'
                     const profileType = isForeignMale ? 'foreign-male' : 'japanese-female'
+                    
+                    // 🎯 SSOT統一: MyPage→編集遷移時の画像データ保存
+                    if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
+                      const imageData = [{
+                        id: '1',
+                        url: profile.avatar_url,
+                        originalUrl: profile.avatar_url,
+                        isMain: true,
+                        isEdited: false
+                      }]
+                      
+                      localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
+                      
+                      console.log('🎯 MyPage→Edit遷移: 画像データ保存完了', {
+                        avatar_url_exists: !!profile.avatar_url,
+                        isBase64: profile.avatar_url.startsWith('data:image/'),
+                        saved_to_localStorage: true,
+                        imageData_length: imageData.length,
+                        purpose: 'UI表示と完成度計算の統一'
+                      })
+                    } else {
+                      // 画像がない場合はlocalStorageをクリア
+                      localStorage.removeItem('currentProfileImages')
+                      console.log('🎯 MyPage→Edit遷移: 画像なし - localStorage クリア完了')
+                    }
+                    
                     setTimeout(() => {
                       router.push(`/profile/edit?fromMyPage=true&type=${profileType}`)
                     }, 100)
