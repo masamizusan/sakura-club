@@ -1105,7 +1105,13 @@ function ProfileEditContent() {
       // ① まずUI/state を更新（ここで画面上は必ず消える）
       setIsImageChanging(true)
       setProfileImages(newImages)
-      profileImagesRef.current = newImages
+      // 🚨 Type safety fix
+      if (profileImagesRef.current) {
+        profileImagesRef.current.length = 0
+        profileImagesRef.current.push(...newImages)
+      } else {
+        profileImagesRef.current = newImages
+      }
       
       // 🚨 CRITICAL FIX: RHFフォーム値にも確実に同期（A案修正）
       (setValue as any)('profile_images', newImages, {
