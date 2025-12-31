@@ -149,8 +149,8 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
  * - 常に17項目固定で計算
  * - 完成度 = floor(入力済み項目数 / 17 * 100)
  */
-// 🛡️ CRITICAL FIX: 日本人女性用15項目計算関数（planned_prefectures/travel_companion除外）
-function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
+// 🛡️ CRITICAL FIX: 日本人女性用14項目計算関数（city除外で15→14項目に変更）
+function calculateCompletion14Fields(profile: ProfileData, imageArray?: any[]): { completed: number; total: number; percentage: number } {
   let completedCount = 0
   const missingFields: string[] = [] // 🧩 MISSING FIELDS追跡用
   
@@ -197,12 +197,6 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
     missingFields.push('self_introduction')
   }
   
-  // 7. 市区町村（任意・完成度100%到達に必要）
-  if (profile.city && profile.city.trim() !== '') {
-    completedCount++
-  } else {
-    missingFields.push('city')
-  }
   
   // 8. 職業
   if (profile.occupation && profile.occupation !== '' && profile.occupation !== 'none') {
@@ -260,27 +254,27 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
     })
   }
   
-  // 15. プロフィール画像
+  // 14. プロフィール画像
   if (hasProfileImages(profile, imageArray)) {
     completedCount++
   } else {
     missingFields.push('profile_images')
   }
   
-  const percentage = Math.round((completedCount / 15) * 100)
+  const percentage = Math.round((completedCount / 14) * 100)
   
-  // 🧩 COMPLETION INTERNAL - 93%問題の最終原因特定
+  // 🧩 COMPLETION INTERNAL - city除外後14項目計算の確認
   console.log("🧩 COMPLETION INTERNAL", {
     completed: completedCount,
     missing: missingFields,
-    totalExpected: 15,
+    totalExpected: 14,
     missingCount: missingFields.length,
     calculationCheck: completedCount + missingFields.length,
-    shouldEqual15: (completedCount + missingFields.length) === 15
+    shouldEqual14: (completedCount + missingFields.length) === 14
   })
   
-  console.log('🌸 JAPANESE FEMALE COMPLETION (15 FIELDS):', {
-    'TOTAL FIELDS': 15,
+  console.log('🌸 JAPANESE FEMALE COMPLETION (14 FIELDS):', {
+    'TOTAL FIELDS': 14,
     'COMPLETED': completedCount,
     'COMPLETION': `${percentage}%`,
     'MISSING_FIELDS': missingFields,
@@ -289,7 +283,7 @@ function calculateCompletion15Fields(profile: ProfileData, imageArray?: any[]): 
   
   return {
     completed: completedCount,
-    total: 15,
+    total: 14,
     percentage: percentage
   }
 }
@@ -433,14 +427,14 @@ export function calculateCompletion(
   
   // userTypeに応じた計算分岐
   if (userType === 'japanese-female') {
-    const result15 = calculateCompletion15Fields(enhancedProfile, imageArray)
+    const result14 = calculateCompletion14Fields(enhancedProfile, imageArray)
     
     return {
-      completion: result15.percentage,
-      completedFields: result15.completed,
-      totalFields: result15.total,
-      requiredCompleted: result15.completed,
-      requiredTotal: result15.total,
+      completion: result14.percentage,
+      completedFields: result14.completed,
+      totalFields: result14.total,
+      requiredCompleted: result14.completed,
+      requiredTotal: result14.total,
       optionalCompleted: 0,
       optionalTotal: 0,
       hasImages: hasProfileImages(enhancedProfile, imageArray),
@@ -503,12 +497,12 @@ export function calculateCompletionFromForm(
   let calculationResult: { completed: number; total: number; percentage: number }
   
   if (userType === 'japanese-female') {
-    calculationResult = calculateCompletion15Fields(profileData, imageArray)
-    console.log('📊 母数算出元 - 日本人女性15項目計算:', {
+    calculationResult = calculateCompletion14Fields(profileData, imageArray)
+    console.log('📊 母数算出元 - 日本人女性14項目計算:', {
       totalCount: calculationResult.total,
       profileType: userType,
       completedCount: calculationResult.completed,
-      source: 'calculateCompletion15Fields'
+      source: 'calculateCompletion14Fields'
     })
   } else {
     calculationResult = calculateCompletion17Fields(profileData, imageArray)
@@ -658,7 +652,6 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
     // ジオ情報（🔧 prefecture→residence統一変換）
     prefecture: formValues.prefecture,
     residence: formValues.prefecture || formValues.residence || "", // 🎯 A案修正: prefecture→residence変換
-    city: formValues.city,
     
     // 🌸 TASK2: 画像状態を確実に含める（state/refから優先取得）
     has_profile_image: hasImages,

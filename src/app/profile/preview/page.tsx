@@ -678,7 +678,6 @@ function ProfilePreviewContent() {
           gender: searchParams?.get('gender') || '',
           nationality: searchParams?.get('nationality') || '',
           prefecture: searchParams?.get('prefecture') || '',
-          city: searchParams?.get('city') || '',
           occupation: searchParams?.get('occupation') || '',
           height: searchParams?.get('height') || '',
           body_type: searchParams?.get('body_type') || '',
@@ -724,7 +723,6 @@ function ProfilePreviewContent() {
     gender = '',
     nationality = '',
     prefecture = '',
-    city = '',
     occupation = '',
     height = '',
     body_type: bodyType = '',
@@ -839,7 +837,7 @@ function ProfilePreviewContent() {
                 {gender === 'female' && prefecture && (
                   <div className="flex items-center">
                     <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
-                    <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}{city ? `・${city}` : ''}</span>
+                    <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}</span>
                   </div>
                 )}
                 
@@ -1091,12 +1089,6 @@ function ProfilePreviewContent() {
                       }
 
                       // 🚀 Step 2: 保存ペイロード準備（指示書対応）
-                      // 🎯 city JSON形式準備（83%→100%対策）
-                      const cityName = previewData.city || city
-                      const cityJson = cityName?.trim() ? { city: cityName.trim() } : null
-                      if (!cityJson) {
-                        console.warn('⚠️ city is missing: cityName is empty', { cityName, city })
-                      }
 
                       // 🚨 SSOT: language_skills を必ずDBに保存（指示書対応）
                       let sessionLanguageSkills = []
@@ -1134,8 +1126,6 @@ function ProfilePreviewContent() {
                         gender: gender || null,
                         nationality: nationality || null,
                         prefecture: prefecture || null,
-                        // 🎯 CRITICAL: city JSON形式で必須（83%→100%対策）
-                        city: cityJson,
                         // 🚀 CRITICAL: personality_tags必須（指示書対応）
                         personality_tags: personality && personality.length > 0 
                           ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
@@ -1170,7 +1160,6 @@ function ProfilePreviewContent() {
                         'gender',
                         'nationality',
                         'residence',          // 居住地（都道府県など）
-                        'city',               // city JSON等
                         'personality_tags',
                         'interests',
                         'avatar_url',

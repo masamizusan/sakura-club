@@ -240,7 +240,7 @@ function MyPageContent() {
     const result = calculateCompletion(normalized, userType, [], false)
     
     // 🛡️ CRITICAL: 計算矛盾検出ガード
-    const totalExpected = userType === 'japanese-female' ? 15 : 17
+    const totalExpected = userType === 'japanese-female' ? 14 : 17
     const isConsistent = result.totalFields === totalExpected
     const isValidCalculation = result.completedFields <= result.totalFields
     

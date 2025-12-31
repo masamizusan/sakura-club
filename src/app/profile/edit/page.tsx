@@ -46,7 +46,6 @@ const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   age: z.number().min(18, t('errors.ageMinimum')).max(99, t('errors.ageMaximum')),
   nationality: z.string().optional(),
   prefecture: z.string().optional(),
-  city: z.string().optional(),
   // 🛡️ CRITICAL FIX: 外国人男性専用フィールドを条件分岐で制御
   planned_prefectures: isForeignMale 
     ? z.array(z.string()).min(1, { message: 'errors.plannedPrefecturesRequired' }).max(3, { message: 'errors.prefecturesMaximum' })  // 外国人男性：必須
@@ -1346,14 +1345,12 @@ function ProfileEditContent() {
           console.log('🚨 height:', parsedData.height)
           console.log('🚨 body_type:', parsedData.body_type)
           console.log('🚨 marital_status:', parsedData.marital_status)
-          console.log('🚨 city:', parsedData.city)
           
           // フォームの値を更新
           setValue('occupation', parsedData.occupation || 'none')
           setValue('height', parsedData.height || undefined)
           setValue('body_type', parsedData.body_type || 'average')
           setValue('marital_status', parsedData.marital_status || 'single')
-          setValue('city', parsedData.city || '')
         } catch (error) {
           console.error('❌ Error parsing localStorage data:', error)
         }
@@ -1893,7 +1890,6 @@ function ProfileEditContent() {
             bio: null,
             interests: null,
             avatar_url: null,
-            city: null,
             
             // 注意: age, birth_date, gender, nationality, prefecture, residence等は
             // 存在しない可能性があるため除外
@@ -1915,7 +1911,7 @@ function ProfileEditContent() {
         console.log('✅ PROFILE COMPLETELY RESET: All user data cleared to NULL')
         console.log('🧹 Profile reset completed:', {
           method: 'SAFE_NULL_UPDATE',
-          clearedFields: ['name', 'bio', 'interests', 'avatar_url', 'city'],
+          clearedFields: ['name', 'bio', 'interests', 'avatar_url'],
           note: 'Only existing columns updated to prevent schema errors',
           preservedFields: ['id', 'email', 'created_at'],
           userId: user?.id,
@@ -1936,7 +1932,6 @@ function ProfileEditContent() {
           birth_date: urlParams.get('birth_date') || '', // 🔧 URLパラメータから生年月日を設定
           nationality: urlParams.get('nationality') || '',
           prefecture: '', // 🚨 foreign-maleではprefectureは使用しない
-          city: '', // 完全に空
           // 外国人男性向け新フィールド
           planned_prefectures: [],
           visit_schedule: undefined, // 🔧 新規ユーザーは未選択状態
@@ -2150,14 +2145,12 @@ function ProfileEditContent() {
           console.log('🚨 height:', parsedData.height)
           console.log('🚨 body_type:', parsedData.body_type)
           console.log('🚨 marital_status:', parsedData.marital_status)
-          console.log('🚨 city:', parsedData.city)
           
           // フォームの値を更新
           setValue('occupation', parsedData.occupation || 'none')
           setValue('height', parsedData.height || undefined)
           setValue('body_type', parsedData.body_type || 'average')
           setValue('marital_status', parsedData.marital_status || 'single')
-          setValue('city', parsedData.city || '')
         } catch (error) {
           console.error('❌ Error parsing localStorage data:', error)
         }
@@ -2367,7 +2360,6 @@ function ProfileEditContent() {
                 body_type: profileData.body_type || 'none',
                 marital_status: profileData.marital_status || 'none',
                 english_level: profileData.english_level || 'none',
-                city: profileData.city || ''
               }
             } catch (error) {
               console.error('❌ localStorage解析エラー:', error)
@@ -2400,7 +2392,6 @@ function ProfileEditContent() {
             marital_status: 'none' as 'none' | 'single' | 'married',
             japanese_level: 'none',
             english_level: 'none',
-            city: ''
           }
         }
         
@@ -2414,7 +2405,6 @@ function ProfileEditContent() {
           age: initialData.age,
           nationality: initialData.nationality,
           prefecture: initialData.prefecture,
-          city: initialData.city,
           planned_prefectures: initialData.planned_prefectures,
           visit_schedule: initialData.visit_schedule,
           travel_companion: initialData.travel_companion,
@@ -2508,7 +2498,6 @@ function ProfileEditContent() {
               body_type: profileData.body_type || 'none',
               marital_status: profileData.marital_status || 'none',
               english_level: profileData.english_level || 'none',
-              city: profileData.city || ''
             }
             
             console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
@@ -2531,8 +2520,7 @@ function ProfileEditContent() {
               age: initialData.age,
               nationality: initialData.nationality,
               prefecture: initialData.prefecture,
-              city: initialData.city,
-              planned_prefectures: initialData.planned_prefectures,
+                  planned_prefectures: initialData.planned_prefectures,
               visit_schedule: initialData.visit_schedule,
               travel_companion: initialData.travel_companion,
               occupation: initialData.occupation,
@@ -2691,7 +2679,6 @@ function ProfileEditContent() {
         console.log('  - bio:', profile?.bio)
         console.log('  - age:', profile?.age)
         console.log('  - birth_date:', profile?.birth_date)
-        console.log('  - city (raw):', profile?.city, typeof profile?.city)
         console.log('  - interests (raw):', profile?.interests)
         console.log('  - height:', profile?.height)
         console.log('  - occupation:', profile?.occupation)
@@ -2738,35 +2725,13 @@ function ProfileEditContent() {
             return profile[fieldName]
           }
           
-          // フォールバック: city JSONから取得
-          try {
-            const cityData = typeof profile?.city === 'string' ? JSON.parse(profile.city) : profile?.city
-            if (cityData && cityData[fieldName]) {
-              return cityData[fieldName]
-            }
-          } catch (e) {
-            // JSON parse error - ignore
-          }
           
           return null
         }
 
-        // 🔍 新形式のcity JSONから市区町村名を取得
-        const getCityValue = () => {
-          if (!profile?.city) return ''
-          
-          try {
-            const cityData = typeof profile?.city === 'string' ? JSON.parse(profile.city) : profile?.city
-            return cityData?.city || ''
-          } catch (e) {
-            // JSON parse error - return as is if it's a simple string
-            return typeof profile?.city === 'string' ? profile?.city : ''
-          }
-        }
 
         // 🔍 専用カラム優先でoptionalDataを構築
         let parsedOptionalData: {
-          city?: string;
           occupation?: string;
           height?: number;
           body_type?: string;
@@ -2774,7 +2739,6 @@ function ProfileEditContent() {
           english_level?: string;
           japanese_level?: string;
         } = {
-          city: getCityValue(),
           occupation: getFieldValue('occupation'),
           height: getFieldValue('height'),
           body_type: getFieldValue('body_type'),
@@ -2868,7 +2832,6 @@ function ProfileEditContent() {
         console.log('  - bio:', profile.bio) 
         console.log('  - age:', profile.age)
         console.log('  - birth_date:', profile.birth_date)
-        console.log('  - city (raw):', profile?.city)
         console.log('  - interests (raw):', profile.interests)
         console.log('  - height:', profile.height)
         console.log('  - occupation:', profile.occupation)
@@ -3138,7 +3101,6 @@ function ProfileEditContent() {
           isPrefectureName: prefectureNames.includes(rawNationality),
           final_nationality: normalizedNationality
         })
-        console.log('  - parsedOptionalData.city:', parsedOptionalData.city)
         console.log('  - parsedOptionalData.occupation:', parsedOptionalData.occupation)
         console.log('  - parsedOptionalData.height:', parsedOptionalData.height)
         console.log('  - parsedOptionalData.body_type:', parsedOptionalData.body_type)
@@ -3156,7 +3118,6 @@ function ProfileEditContent() {
           age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
           nationality: normalizedNationality,
           prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
-          city: !isForeignMale ? (isNewUser ? '' : (parsedOptionalData.city || '')) : undefined,
           // 外国人男性向け新フィールド
           planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile.planned_prefectures || [])) : undefined,
           visit_schedule: isForeignMale ? (isNewUser ? undefined : (profile.visit_schedule || undefined)) : undefined,
@@ -3549,7 +3510,6 @@ function ProfileEditContent() {
           height: profile.height,
           body_type: profile.body_type,
           marital_status: profile.marital_status,
-          city: profile?.city,
           english_level: profile.english_level,
           // ユーザー画像情報を追加
           avatarUrl: user?.avatarUrl || profile.avatarUrl,
@@ -3907,10 +3867,6 @@ function ProfileEditContent() {
         age: data.age,
         birth_date: data.birth_date,
         prefecture: data.prefecture,
-        // 🆕 cityは新形式（市区町村のみ）で保存
-        city: JSON.stringify({
-          city: data.city === 'none' ? null : data.city
-        }),
         occupation: data.occupation === 'none' ? null : data.occupation,
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
@@ -4728,19 +4684,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       )}
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        市区町村（任意・プロフィールを100%にするには入力）
-                      </label>
-                      <Input
-                        placeholder="市区町村を入力"
-                        {...register('city')}
-                        className={errors.city ? 'border-red-500' : ''}
-                      />
-                      {errors.city && (
-                        <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
                   </div>
                 )}
 
