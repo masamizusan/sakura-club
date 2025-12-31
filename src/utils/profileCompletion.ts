@@ -621,7 +621,28 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
     // 配列項目（空配列を明示的に設定）
     hobbies: Array.isArray(formValues.hobbies) ? formValues.hobbies : [],
     personality: Array.isArray(formValues.personality) ? formValues.personality : [],
-    language_skills: Array.isArray(formValues.language_skills) ? formValues.language_skills : [],
+    // 🔧 CRITICAL: 有効スキルのみ抽出（none/none除外）- 35%初期問題解決
+    language_skills: (() => {
+      const rawSkills = Array.isArray(formValues.language_skills) ? formValues.language_skills : []
+      const validSkills = rawSkills.filter((s: any) =>
+        s &&
+        typeof s.language === "string" &&
+        typeof s.level === "string" &&
+        s.language !== "none" &&
+        s.level !== "none" &&
+        s.language.trim() !== "" &&
+        s.level.trim() !== ""
+      )
+      
+      // 🔧 デバッグログ（35%問題特定用）
+      console.log("🔧 LANG_SKILLS DEBUG", { 
+        rawSkills: rawSkills.length, 
+        validSkills: validSkills.length,
+        completionInput_length: validSkills.length 
+      })
+      
+      return validSkills
+    })(),
     planned_prefectures: Array.isArray(formValues.planned_prefectures) 
       ? formValues.planned_prefectures 
       : [],
