@@ -813,6 +813,19 @@ function ProfileEditContent() {
   const forceInitialCompletionCalculation = useCallback(() => {
     console.log('🔥 forceInitialCompletionCalculation start')
     
+    // 🔧 修正2: 実行条件を厳密化（35%問題解決）
+    if (isInitializing) {
+      console.log('⏸️ forceInitialCompletionCalculation: skipped - isInitializing=true')
+      return
+    }
+    
+    if (!isHydrated) {
+      console.log('⏸️ forceInitialCompletionCalculation: skipped - isHydrated=false')
+      return
+    }
+    
+    console.log('✅ forceInitialCompletionCalculation: 実行条件満たした')
+    
     try {
       // 🔧 最新フォーム値を直接取得
       const currentFormData = getValues()
