@@ -3324,13 +3324,13 @@ function ProfileEditContent() {
             if (profile?.language_skills && Array.isArray(profile.language_skills) && profile.language_skills.length > 0) {
               return profile.language_skills
             }
-            return generateLanguageSkillsFromLegacy(profile) || []
+            return generateLanguageSkillsFromLegacy(profile as any) || []
           })()
         }
         
         console.log('🔍 CRITICAL: resetData language_skills check:', {
           'profile.language_skills': profile?.language_skills,
-          'generated_from_legacy': generateLanguageSkillsFromLegacy(profile),
+          'generated_from_legacy': generateLanguageSkillsFromLegacy(profile as any),
           'resetData.language_skills': resetData.language_skills,
           'resetData includes language_skills': 'language_skills' in resetData,
           isNewUser
@@ -3505,7 +3505,7 @@ function ProfileEditContent() {
             console.log('🔥 Using Supabase language_skills:', profile.language_skills)
           } else {
             // フォールバック: 旧式カラムから生成、それも空なら1行表示
-            const legacySkills = generateLanguageSkillsFromLegacy(profile) || []
+            const legacySkills = generateLanguageSkillsFromLegacy(profile as any) || []
             initialLanguageSkills = legacySkills.length > 0 ? legacySkills : [{ language: '', level: '' } as LanguageSkill]
             console.log('🔄 Fallback to legacy fields or one empty row:', legacySkills.length > 0 ? legacySkills : 'one empty row')
           }
@@ -3517,7 +3517,7 @@ function ProfileEditContent() {
           'language_skills exists': profile?.language_skills ? 'YES' : 'NO',
           'language_skills type': typeof profile?.language_skills,
           'language_skills length': Array.isArray(profile?.language_skills) ? profile.language_skills.length : 'N/A',
-          'generated from legacy': isNewUser ? 'SKIPPED (new user)' : generateLanguageSkillsFromLegacy(profile),
+          'generated from legacy': isNewUser ? 'SKIPPED (new user)' : generateLanguageSkillsFromLegacy(profile as any),
           'final initialLanguageSkills': initialLanguageSkills
         })
         
