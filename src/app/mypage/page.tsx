@@ -237,9 +237,22 @@ function MyPageContent() {
     // 🚨 SINGLE SOURCE: 統一完成度計算システムのみを使用
     const { calculateCompletion } = require('@/utils/profileCompletion')
     const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
+    
+    // 🔍 STEP2 DEBUG: 完成度計算に渡すデータの詳細確認
+    console.log('🔍 STEP2 DEBUG - MyPage完成度計算入力データ:', {
+      userType,
+      imageArray_passed: [],  // 現在は空配列を渡している
+      normalized_avatar_url: normalized.avatar_url ? `${normalized.avatar_url.substring(0, 30)}...` : 'none',
+      normalized_avatarUrl: normalized.avatarUrl ? `${normalized.avatarUrl.substring(0, 30)}...` : 'none', 
+      normalized_profile_image: normalized.profile_image ? `${normalized.profile_image.substring(0, 30)}...` : 'none',
+      normalized_profile_images: normalized.profile_images,
+      mypage_display_uses: 'avatar_url + profile_image',
+      completion_will_check: 'profile_images (empty) + fallback to avatar_url'
+    })
+    
     const result = calculateCompletion(normalized, userType, [], false)
     
-    // 🛡️ CRITICAL: 計算矛盾検出ガード
+    // 🛡️ CRITICAL: 計算矛盾検出ガード（14項目固定 - cityは除外だが項目数変更禁止）
     const totalExpected = userType === 'japanese-female' ? 14 : 17
     const isConsistent = result.totalFields === totalExpected
     const isValidCalculation = result.completedFields <= result.totalFields
@@ -265,18 +278,18 @@ function MyPageContent() {
       })
     }
     
-    // 🚨 SSOT最終確認ログ（指示書対応）
+    // 🚨 SSOT最終確認ログ（指示書対応）- cityは除外
     const missingFields = []
-    if (!normalized.city || (typeof normalized.city === 'object' && !normalized.city.city)) missingFields.push('city')
+    // ⚠️ city は完成度計算から除外（UI削除済み）
     if (!Array.isArray(normalized.language_skills) || normalized.language_skills.length === 0) missingFields.push('language_skills')
     
-    console.log('🚨 SSOT FINAL CHECK - DB基準100%検証:', {
+    console.log('🚨 SSOT FINAL CHECK - DB基準100%検証 (city除外版):', {
       'DB_language_skills': profileData?.language_skills,
       'DB_language_skills_isArray': Array.isArray(profileData?.language_skills),
       'DB_language_skills_length': profileData?.language_skills?.length || 0,
       'sessionSkills_used_as_fallback': sessionSkills.length,
       'normalized_language_skills_source': Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0 ? 'DB' : 'session補完',
-      'city_present': !!normalized.city,
+      'city_status': 'EXCLUDED_FROM_COMPLETION',
       'missing_for_100%': missingFields,
       'DB基準100%達成': missingFields.length === 0 && Array.isArray(profileData?.language_skills)
     })

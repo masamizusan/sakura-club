@@ -166,56 +166,51 @@ function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain: b
 }
 
 /**
- * プロフィール画像の有無を判定する関数
- * 🚨 CRITICAL FIX: 型統一とbase64除外による正確な判定
+ * プロフィール画像の有無を判定する関数（MyPage表示ロジック完全一致版）
+ * 🚨 STEP3 FIX: MyPageの表示条件と完成度計算を完全統一
  */
 function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: boolean = false): boolean {
-  // 🌸 TASK1: has_profile_imageフラグが設定されていればそれを優先
+  // 🔍 STEP3 DEBUG: MyPage表示ロジック完全再現
+  const myPageDisplayCondition = (
+    (profile?.avatar_url && !profile.avatar_url.startsWith('data:image/')) || 
+    (profile?.profile_image && !profile.profile_image.startsWith('data:image/'))
+  )
+  
+  console.log('🎯 STEP3 - MyPage表示ロジック完全一致判定:', {
+    avatar_url_exists: !!profile.avatar_url,
+    avatar_url_not_base64: profile.avatar_url && !profile.avatar_url.startsWith('data:image/'),
+    profile_image_exists: !!profile.profile_image, 
+    profile_image_not_base64: profile.profile_image && !profile.profile_image.startsWith('data:image/'),
+    myPageDisplayCondition,
+    logic_source: 'MyPageコンポーネントと完全一致'
+  })
+  
+  // 🌸 優先度1: has_profile_imageフラグが設定されていればそれを最優先
   if (typeof (profile as any).has_profile_image === 'boolean') {
+    console.log('🎯 has_profile_imageフラグ優先:', (profile as any).has_profile_image)
     return (profile as any).has_profile_image
   }
   
-  // 🚨 B案修正: 完成度判定専用の寛容な正規化を使用
-  const normalizedImages = normalizeImagesForCompletion(imageArray)
-  console.log('🎯 hasProfileImages寛容正規化判定:', {
-    original_imageArray_length: imageArray?.length || 0,
-    normalized_length: normalizedImages.length,
-    original_sample: imageArray?.slice(0, 2),
-    normalized_sample: normalizedImages.slice(0, 2),
-    has_valid_images: normalizedImages.length > 0,
-    completion_detection: 'file/preview/path_any_ok'
-  })
+  // 🌸 優先度2: imageArray（フォーム状態）- プロフィール編集中のみ
+  if (Array.isArray(imageArray) && imageArray.length > 0) {
+    const validImages = imageArray.filter(img => {
+      if (!img) return false
+      const url = img.url || img.originalUrl || img.avatar_url
+      return url && typeof url === 'string' && !url.startsWith('data:image/')
+    })
+    if (validImages.length > 0) {
+      console.log('🎯 imageArray判定: TRUE (編集中画像数:', validImages.length, ')')
+      return true
+    }
+  }
   
-  // 1. 寛容正規化されたimageArray優先判定
-  if (normalizedImages.length > 0) {
+  // 🌸 優先度3: MyPage表示ロジックと完全一致（最重要）
+  if (myPageDisplayCondition) {
+    console.log('🎯 MyPage表示ロジック一致: TRUE - 完成度とUI表示が統一')
     return true
   }
   
-  // 2. profile_images配列も寛容正規化
-  const normalizedProfileImages = normalizeImagesForCompletion(profile.profile_images)
-  if (normalizedProfileImages.length > 0) {
-    return true
-  }
-  
-  // 3. その他の画像URLフィールド（base64除外）
-  if (profile.avatar_url && 
-      profile.avatar_url !== '' && 
-      !profile.avatar_url.startsWith('data:image/')) {
-    return true
-  }
-  
-  if (profile.avatarUrl && 
-      profile.avatarUrl !== '' && 
-      !profile.avatarUrl.startsWith('data:image/')) {
-    return true
-  }
-  
-  if (profile.profile_image && 
-      profile.profile_image !== '' && 
-      !profile.profile_image.startsWith('data:image/')) {
-    return true
-  }
-  
+  console.log('🎯 画像判定: FALSE (MyPage表示条件も不一致)')
   return false
 }
 
@@ -513,7 +508,7 @@ export function calculateCompletion(
     profile_images: imageArray
   }
   
-  // userTypeに応じた計算分岐
+  // userTypeに応じた計算分岐（14項目固定維持）
   if (userType === 'japanese-female') {
     const result14 = calculateCompletion14Fields(enhancedProfile, imageArray)
     
