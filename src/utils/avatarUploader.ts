@@ -158,7 +158,7 @@ export async function uploadAvatarToStorage(
 }
 
 /**
- * 🔧 プロフィール更新時のアバター処理
+ * 🔧 プロフィール更新時のアバター処理（段階的移行対応）
  * 
  * アップロード + DB更新をセットで実行
  * 
@@ -182,27 +182,63 @@ export async function updateProfileAvatar(
     return uploadResult
   }
   
-  // 2. profiles.avatar_url をstorage pathに更新
-  console.log('💾 Updating profiles.avatar_url to storage path:', uploadResult.storagePath)
+  // 🔄 段階的移行: avatar_pathカラム優先、fallbackはavatar_url
+  console.log('💾 Updating profiles.avatar_path (safe migration):', uploadResult.storagePath)
   
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ 
-      avatar_url: uploadResult.storagePath, // Storage path保存（URL不保存）
-      updated_at: new Date().toISOString()
-    })
-    .eq('user_id', userId)
+  const updateData: any = {
+    updated_at: new Date().toISOString()
+  }
   
-  if (updateError) {
-    console.error('❌ Profile avatar_url update failed:', updateError)
+  // 🔄 avatar_pathカラムが存在するかチェック（段階的移行対応）
+  try {
+    // まずavatar_pathに保存を試行
+    updateData.avatar_path = uploadResult.storagePath
+    console.log('🆕 Trying to save to avatar_path column')
+    
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('user_id', userId)
+    
+    if (updateError && updateError.code === '42703') {
+      // カラムが存在しない場合はavatar_urlにfallback（安全版）
+      console.log('🔄 avatar_path column not found, fallback to avatar_url')
+      delete updateData.avatar_path
+      updateData.avatar_url = uploadResult.storagePath
+      
+      const { error: fallbackError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('user_id', userId)
+      
+      if (fallbackError) {
+        console.error('❌ Profile fallback update failed:', fallbackError)
+        return {
+          ...uploadResult,
+          dbUpdateSuccess: false,
+          error: `Fallback DB update failed: ${fallbackError.message}`
+        }
+      }
+      
+      console.log('✅ Profile avatar_url updated (fallback)')
+    } else if (updateError) {
+      console.error('❌ Profile avatar_path update failed:', updateError)
+      return {
+        ...uploadResult,
+        dbUpdateSuccess: false,
+        error: `DB update failed: ${updateError.message}`
+      }
+    } else {
+      console.log('✅ Profile avatar_path updated successfully')
+    }
+  } catch (error) {
+    console.error('❌ Profile update error:', error)
     return {
       ...uploadResult,
       dbUpdateSuccess: false,
-      error: `DB update failed: ${updateError.message}`
+      error: `DB update error: ${error}`
     }
   }
-  
-  console.log('✅ Profile avatar_url updated successfully')
   
   return {
     ...uploadResult,

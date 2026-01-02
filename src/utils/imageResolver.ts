@@ -16,7 +16,7 @@ const BUCKET_NAME = 'avatars'
 /**
  * 🔧 Avatar URL 解決関数（全画面統一）
  * 
- * @param avatar_url - DB内のavatar_urlフィールド値
+ * @param avatar_url - DB内のavatar_urlフィールド値（またはavatar_path）
  * @param supabaseClient - オプションのSupabaseクライアント（未提供時は新規作成）
  * @returns 表示用URL文字列 | null
  */
@@ -63,9 +63,9 @@ export function resolveAvatarSrc(
 }
 
 /**
- * 🖼️ プロフィール画像解決（複数フィールド対応）
+ * 🖼️ プロフィール画像解決（複数フィールド対応・avatar_path優先）
  * 
- * MyPage/Preview等でavatar_url、profile_image、avatarUrl等を
+ * MyPage/Preview等でavatar_path、avatar_url、profile_image、avatarUrl等を
  * 統一的に処理するためのヘルパー関数
  * 
  * @param profileData - プロフィールデータオブジェクト
@@ -81,12 +81,21 @@ export function resolveProfileImageSrc(
     return null
   }
   
-  // 優先順位: avatar_url → profile_image → avatarUrl
+  // 🔄 段階的移行: avatar_path優先、なければavatar_url（安全版）
   const candidateUrls = [
-    profileData.avatar_url,
+    profileData.avatar_path,    // 🆕 Storage pathを最優先
+    profileData.avatar_url,     // 既存（Base64/HTTP/Storage path互換）
     profileData.profile_image,
     profileData.avatarUrl
   ].filter(Boolean) // null/undefined を除外
+  
+  console.log('🔄 resolveProfileImageSrc: 段階的移行対応', {
+    avatar_path_exists: !!profileData.avatar_path,
+    avatar_url_exists: !!profileData.avatar_url,
+    avatar_path_preview: profileData.avatar_path?.substring(0, 30) || 'none',
+    avatar_url_preview: profileData.avatar_url?.substring(0, 30) || 'none',
+    migration_strategy: 'avatar_path優先'
+  })
   
   // 最初に有効な値を解決
   for (const url of candidateUrls) {

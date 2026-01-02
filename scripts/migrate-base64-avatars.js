@@ -95,13 +95,39 @@ async function migrateRecord(record) {
     
     console.log(`   📁 Storage path: ${storagePath}`)
     
+    // 🔍 冪等性チェック: 既にStorageにファイルが存在するかチェック
+    const { data: existingFiles, error: listError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .list(`${user_id}`)
+    
+    if (!listError && existingFiles) {
+      const existingFile = existingFiles.find(f => f.name === fileName)
+      if (existingFile) {
+        console.log(`   ⏭️ Storage file already exists: ${fileName}, reusing existing`)
+        // 既存のファイルを使用（重複アップロードを避ける）
+        const { data: publicUrlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(storagePath)
+        
+        return {
+          success: true,
+          record: { ...record, avatar_url: storagePath },
+          storagePath,
+          publicUrl: publicUrlData.publicUrl,
+          originalSize: avatar_url.length,
+          newSize: storagePath.length,
+          note: 'Reused existing storage file'
+        }
+      }
+    }
+    
     // 3. Storage アップロード
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(storagePath, buffer, {
         contentType: mimeType,
         cacheControl: '3600',
-        upsert: false
+        upsert: true // 冪等性のためupsert=trueに変更
       })
     
     if (uploadError) {
@@ -120,16 +146,41 @@ async function migrateRecord(record) {
     console.log(`   🔗 Public URL (for reference): ${publicUrl.substring(0, 60)}...`)
     console.log(`   📁 Storage path (will be saved to DB): ${storagePath}`)
     
-    // 5. DB更新（Storage pathを保存、URLではない）
+    // 5. DB更新（段階的移行対応：avatar_path優先、fallbackはavatar_url）
     const updateData = {
-      avatar_url: storagePath, // Storage pathを保存（URL化は表示時に実行）
       updated_at: new Date().toISOString()
     }
     
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', id)
+    let updateError = null
+    
+    try {
+      // まずavatar_pathカラムに保存を試行
+      updateData.avatar_path = storagePath
+      console.log(`   🆕 Trying to save to avatar_path column`)
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', id)
+      
+      if (error && error.code === '42703') {
+        // カラムが存在しない場合はavatar_urlにfallback
+        console.log(`   🔄 avatar_path column not found, fallback to avatar_url`)
+        delete updateData.avatar_path
+        updateData.avatar_url = storagePath
+        
+        const { error: fallbackError } = await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', id)
+        
+        updateError = fallbackError
+      } else {
+        updateError = error
+      }
+    } catch (err) {
+      updateError = err
+    }
     
     if (updateError) {
       console.error(`   ❌ DB update failed:`, updateError)
@@ -190,10 +241,10 @@ async function main() {
     
     console.log('\n🔍 Step 2: Find base64 records')
     
-    // Base64レコード検索
+    // Base64レコード検索（冪等性チェック含む）
     const { data: base64Records, error: selectError } = await supabase
       .from('profiles')
-      .select('id, user_id, avatar_url')
+      .select('id, user_id, avatar_url, avatar_path')
       .like('avatar_url', 'data:image/%')
       .limit(100) // 安全のため最初は100件まで
     
@@ -209,9 +260,27 @@ async function main() {
       return
     }
     
+    // 🔄 冪等性チェック: 既にmigration済みのレコードをスキップ
+    const recordsNeedingMigration = base64Records.filter(record => {
+      // avatar_pathが既に存在する場合は移行済み
+      const alreadyMigrated = record.avatar_path && !record.avatar_path.startsWith('data:image/')
+      if (alreadyMigrated) {
+        console.log(`   ⏭️ Skipping ${record.user_id}: already migrated (avatar_path exists)`)
+        return false
+      }
+      return true
+    })
+    
+    console.log(`📊 Migration status: ${recordsNeedingMigration.length} need migration, ${base64Records.length - recordsNeedingMigration.length} already migrated`)
+    
+    if (recordsNeedingMigration.length === 0) {
+      console.log('🎉 All records already migrated! No work needed.')
+      return
+    }
+    
     // 確認プロンプト
     console.log('\n⚠️  This will migrate the following records:')
-    base64Records.forEach((record, index) => {
+    recordsNeedingMigration.forEach((record, index) => {
       const sizeKB = Math.round(record.avatar_url.length / 1024)
       console.log(`   ${index + 1}. ${record.user_id} (${sizeKB}KB)`)
     })
@@ -226,9 +295,9 @@ async function main() {
     }
     
     // 順次処理（並行処理は Storage制限でエラーになる可能性があるため）
-    for (let i = 0; i < base64Records.length; i++) {
-      const record = base64Records[i]
-      console.log(`\n📋 Progress: ${i + 1}/${base64Records.length}`)
+    for (let i = 0; i < recordsNeedingMigration.length; i++) {
+      const record = recordsNeedingMigration[i]
+      console.log(`\n📋 Progress: ${i + 1}/${recordsNeedingMigration.length}`)
       
       const result = await migrateRecord(record)
       
@@ -241,7 +310,7 @@ async function main() {
       }
       
       // レート制限対策
-      if (i < base64Records.length - 1) {
+      if (i < recordsNeedingMigration.length - 1) {
         console.log('   ⏳ Waiting 1 second...')
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
