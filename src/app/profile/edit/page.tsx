@@ -2842,10 +2842,10 @@ function ProfileEditContent() {
         }
 
         console.log('✅ Profile ensured:', {
-          profileId: profile.id,
-          userId: profile.user_id,
+          profileId: profile!.id,
+          userId: profile!.user_id,
           authUid: user?.id,
-          userIdMatch: profile.user_id === user?.id
+          userIdMatch: profile!.user_id === user?.id
         })
 
         // 🚨 CRITICAL: DBプロフィールをstateに保存（buildProfileForCompletion用）
@@ -2933,12 +2933,12 @@ function ProfileEditContent() {
         
         console.log('🔍 DEDICATED COLUMN FIELD ANALYSIS:')
         console.log('Profile dedicated columns:', {
-          occupation: profile.occupation,
-          height: profile.height,
-          body_type: profile.body_type,
-          marital_status: profile.marital_status,
-          english_level: profile.english_level,
-          japanese_level: profile.japanese_level
+          occupation: profile?.occupation,
+          height: profile?.height,
+          body_type: profile?.body_type,
+          marital_status: profile?.marital_status,
+          english_level: profile?.english_level,
+          japanese_level: profile?.japanese_level
         })
         console.log('📋 Merged optional data:', parsedOptionalData)
         
@@ -3012,33 +3012,33 @@ function ProfileEditContent() {
         
         console.log('🚨 DATA COMPARISON DEBUG - Profile Edit vs MyPage')
         console.log('🔍 Raw profile data from DB (Profile Edit):')
-        console.log('  - name:', profile.name)
-        console.log('  - bio:', profile.bio) 
-        console.log('  - age:', profile.age)
-        console.log('  - birth_date:', profile.birth_date)
-        console.log('  - interests (raw):', profile.interests)
-        console.log('  - height:', profile.height)
-        console.log('  - occupation:', profile.occupation)
-        console.log('  - marital_status:', profile.marital_status)
-        console.log('  - body_type:', profile.body_type)
+        console.log('  - name:', profile?.name)
+        console.log('  - bio:', profile?.bio) 
+        console.log('  - age:', profile?.age)
+        console.log('  - birth_date:', profile?.birth_date)
+        console.log('  - interests (raw):', profile?.interests)
+        console.log('  - height:', profile?.height)
+        console.log('  - occupation:', profile?.occupation)
+        console.log('  - marital_status:', profile?.marital_status)
+        console.log('  - body_type:', profile?.body_type)
         
         console.log('🔍 Parsed optional data (Profile Edit):', parsedOptionalData)
         
         // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
         // 🚨 危険なロジック修正: 茶道選択ユーザーを誤って新規ユーザー扱いしないよう修正
-        const isTestData = profile.bio?.includes('テスト用の自己紹介です') || 
-                          profile.name === 'テスト'
+        const isTestData = profile?.bio?.includes('テスト用の自己紹介です') || 
+                          profile?.name === 'テスト'
         // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーを誤判定する危険
         
         console.log('🚨 CRITICAL: New user determination logic:')
         console.log('  - Original isTestData (with 茶道):', 
-                    profile.bio?.includes('テスト用の自己紹介です') || 
-                    profile.name === 'テスト' ||
-                    (profile.interests?.length === 1 && profile.interests[0] === '茶道'))
+                    profile?.bio?.includes('テスト用の自己紹介です') || 
+                    profile?.name === 'テスト' ||
+                    (profile?.interests?.length === 1 && profile?.interests[0] === '茶道'))
         console.log('  - Safer isTestData (without 茶道):', isTestData)
-        console.log('  - Profile has bio:', !!profile.bio)
-        console.log('  - Profile has interests:', !!profile.interests)  
-        console.log('  - Profile has name:', !!profile.name)
+        console.log('  - Profile has bio:', !!profile?.bio)
+        console.log('  - Profile has interests:', !!profile?.interests)  
+        console.log('  - Profile has name:', !!profile?.name)
         
         // 🔗 DB存在ベースでisNewUser判定（ensureProfileForUserで確実に存在するため、常にfalse）
         const isNewUser = false  // ensureProfileForUser()により必ず存在
@@ -3047,18 +3047,18 @@ function ProfileEditContent() {
         console.log('  - isFromMyPage:', isFromMyPage)
         console.log('  - isTestData:', isTestData)
         console.log('  - isFromSignup:', isFromSignup)
-        console.log('  - profile.bio exists:', !!profile.bio)
-        console.log('  - profile.interests exists:', !!profile.interests)
-        console.log('  - profile.name exists:', !!profile.name)
+        console.log('  - profile.bio exists:', !!profile?.bio)
+        console.log('  - profile.interests exists:', !!profile?.interests)
+        console.log('  - profile.name exists:', !!profile?.name)
         console.log('  - FINAL isNewUser result:', isNewUser)
         
         // 🚨 33%問題調査：初期データ詳細ログ
         console.log('🔍 INITIAL DATA FOR 33% ISSUE DEBUG:')
-        console.log('  - nickname:', profile.name || profile.first_name || '')
-        console.log('  - gender:', profile.gender || 'male')
-        console.log('  - nationality:', profile.nationality)
-        console.log('  - age:', profile.age)
-        console.log('  - birth_date:', profile.birth_date || profile.date_of_birth)
+        console.log('  - nickname:', profile?.name || profile?.first_name || '')
+        console.log('  - gender:', profile?.gender || 'male')
+        console.log('  - nationality:', profile?.nationality)
+        console.log('  - age:', profile?.age)
+        console.log('  - birth_date:', profile?.birth_date || profile?.date_of_birth)
         console.log('  - planned_prefectures:', profile.planned_prefectures)
         console.log('  - hobbies/culture_tags:', profile.hobbies || profile.culture_tags)
         console.log('  - personality:', profile.personality || profile.personality_tags)
@@ -3145,7 +3145,7 @@ function ProfileEditContent() {
         }
 
         // ニックネーム（仮登録から）
-        const nicknameValue = (signupData as any).nickname || (isNewUser ? '' : (profile.name || profile.first_name || ''))
+        const nicknameValue = (signupData as any).nickname || (isNewUser ? '' : (profile?.name || profile?.first_name || ''))
 
         // 既存ユーザーの場合：新しいカラム優先でデータを抽出（Triple-save対応）
         let existingPersonality: string[] = []
