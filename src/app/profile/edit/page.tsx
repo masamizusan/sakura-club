@@ -848,7 +848,17 @@ function ProfileEditContent() {
       })
 
       const urlParams = new URLSearchParams(window.location.search)
-      const isNewUser = urlParams.get('from') === 'signup'
+      // 🔗 DB存在ベースでisNewUser判定（profiles.user_id が紐付いているかで判断）
+      const { checkProfileExists } = await import('@/lib/profile/ensureProfileForUser')
+      const profileExists = await checkProfileExists(supabase, user)
+      const isNewUser = !profileExists  // DBに存在しない = 新規ユーザー
+      
+      console.log('🔍 isNewUser DB-based determination:', {
+        profileExists,
+        isNewUser,
+        userId: user?.id,
+        fromSignup: urlParams.get('from') === 'signup'
+      })
 
       // 🔍 CRITICAL DEBUG: 完成度計算直前のデバッグログ（SSOT統一）
       console.log('🚨 COMPLETION DEBUG - 計算直前チェック:', {
@@ -1299,7 +1309,7 @@ function ProfileEditContent() {
           const { error } = await supabase
             .from('profiles')
             .update({ avatar_url: avatarUrl })
-            .eq('id', user.id)
+            .eq('user_id', user.id)
 
           if (error) {
             throw new Error(`DB保存失敗: ${error.message}`)
@@ -1310,7 +1320,7 @@ function ProfileEditContent() {
           const { error } = await supabase
             .from('profiles')
             .update({ avatar_url: null })
-            .eq('id', user.id)
+            .eq('user_id', user.id)
 
           if (error) {
             throw new Error(`DB削除失敗: ${error.message}`)
@@ -2821,18 +2831,23 @@ function ProfileEditContent() {
       console.log('✅ ユーザー確認完了 - プロフィール読み込み開始')
 
       try {
-        let { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user?.id)
-          .maybeSingle() // 🚨 D案修正: 406エラー防止
+        // 🔗 user_id ベースでプロフィール取得・作成を保証
+        const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
+        const profile = await ensureProfileForUser(supabase, user)
 
-        if (profileError || !profile) {
-          console.error('Profile load error:', profileError)
-          setError('プロフィール情報の読み込みに失敗しました')
+        if (!profile) {
+          console.error('Profile ensure failed for user:', user?.id)
+          setError('プロフィール情報の取得に失敗しました')
           setUserLoading(false)
           return
         }
+
+        console.log('✅ Profile ensured:', {
+          profileId: profile.id,
+          userId: profile.user_id,
+          authUid: user?.id,
+          userIdMatch: profile.user_id === user?.id
+        })
 
         // 🚨 CRITICAL: DBプロフィールをstateに保存（buildProfileForCompletion用）
         setDbProfile(profile)
@@ -3026,10 +3041,8 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile.interests)  
         console.log('  - Profile has name:', !!profile.name)
         
-        // 🔒 セキュリティ強化: 新規ユーザー判定の厳格化
-        const isNewUser = isFromMyPage ? false : 
-          (isFromSignup || // 新規登録フローの場合は必ず新規扱い
-           ((!profile.bio && !profile.interests && !profile.name && !profile.avatar_url && !profile.profile_images) || isTestData))
+        // 🔗 DB存在ベースでisNewUser判定（ensureProfileForUserで確実に存在するため、常にfalse）
+        const isNewUser = false  // ensureProfileForUser()により必ず存在
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)

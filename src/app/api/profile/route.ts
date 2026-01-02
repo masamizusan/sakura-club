@@ -32,27 +32,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // プロフィール情報の取得
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+    // プロフィール情報の確実な取得・作成
+    const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
+    const profile = await ensureProfileForUser(supabase, user)
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError)
+    if (!profile) {
+      console.error('Profile ensure failed for user:', user.id)
       return NextResponse.json(
         { error: 'プロフィールの取得に失敗しました' },
         { status: 500 }
       )
     }
 
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'プロフィールが見つかりません' },
-        { status: 404 }
-      )
-    }
+    // ensureProfileForUser() により profile は確実に存在
 
     // フロントエンド用のデータ形式に変換（nameとbioフィールドに対応）
     const nameParts = profile.name ? profile.name.split(' ') : ['', '']
@@ -138,11 +130,11 @@ export async function PUT(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    // プロフィールの更新
+    // プロフィールの更新（user_id ベースで統一）
     const { data: updatedProfile, error: updateError } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .select()
       .single()
 

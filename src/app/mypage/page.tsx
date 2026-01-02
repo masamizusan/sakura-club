@@ -69,17 +69,21 @@ function MyPageContent() {
           }
         }
         
-        // 🆕 SINGLE SOURCE OF TRUTH: Supabaseからid=auth.uidで統一（user_id null問題解消）
-        console.log('🔄 Loading profile from Supabase with id=auth.uid:', user.id)
-        let { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id) // 🛡️ CRITICAL FIX: user_id -> id で統一（nullレコード回避）
-          .maybeSingle() // 🛡️ CRITICAL FIX: single() -> maybeSingle() で406回避
+        // 🔗 user_id ベースでプロフィール取得・作成を保証
+        console.log('🔄 Loading profile with ensureProfileForUser:', user.id)
+        const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
+        const profileData = await ensureProfileForUser(supabase, user)
+        
+        if (!profileData) {
+          console.error('🚨 MyPage: Profile ensure failed for user:', user.id)
+          setError('プロフィール情報を取得できませんでした')
+          setIsLoading(false)
+          return
+        }
         
         // 🔍 CRITICAL: MyPage profiles select直後のpersonality_tags確認（Task A-1）
         console.log('🚨 MyPage PROFILES SELECT結果 PERSONALITY_TAGS確認:', {
-          profiles_select_successful: !profileError && !!profileData,
+          profiles_select_successful: !!profileData,
           profileData_personality_tags: profileData?.personality_tags,
           profileData_personality_tags_type: typeof profileData?.personality_tags,
           profileData_personality_tags_isNull: profileData?.personality_tags === null,
@@ -93,47 +97,8 @@ function MyPageContent() {
           task_A1_check: 'MyPageでのprofiles取得直後の状態確認'
         })
 
-        if (profileError) {
-          console.error('❌ MyPage profiles取得エラー:', {
-            code: profileError.code,
-            message: profileError.message,
-            details: profileError.details,
-            hint: profileError.hint
-          })
-          setIsLoading(false)
-          return
-        }
-        
-        if (!profileData) {
-          // maybeSingle()でnullが返された場合（プロフィール存在しない）
-          console.log('📝 No profile found, creating empty profile for id=auth.uid:', user.id)
-          const createPayload = { 
-            id: user.id, // 🛡️ CRITICAL FIX: id=auth.uid で統一
-            user_id: user.id, // 🔄 後方互換性のため両方設定
-            name: user.email?.split('@')[0] || 'ユーザー',
-            email: user.email
-          }
-          console.log('🔧 Profile作成payload:', createPayload)
-          
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .upsert(createPayload, { onConflict: 'id' }) // 🛡️ id で upsert
-            .select('*')
-            .single()
-            
-          if (createError) {
-            console.error('❌ Failed to create profile:', {
-              code: createError.code,
-              message: createError.message,
-              details: createError.details,
-              hint: createError.hint
-            })
-            setIsLoading(false)
-            return
-          }
-          
-          profileData = newProfile
-        }
+        // ensureProfileForUser() で確実にプロフィールが取得されるため、
+        // 追加のエラーハンドリングやプロフィール作成は不要
         
         console.log('✅ Profile data loaded from Supabase:', {
           userId: user.id,
