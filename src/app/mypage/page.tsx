@@ -69,16 +69,31 @@ function MyPageContent() {
           }
         }
         
-        // 🔗 user_id ベースでプロフィール取得・作成を保証
-        console.log('🔄 Loading profile with ensureProfileForUser:', user.id)
-        const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
-        const profileData = await ensureProfileForUser(supabase, user)
+        // 🔗 user_id ベースでプロフィール取得・作成を保証（遷移継続保証版）
+        console.log('🔄 Loading profile with ensureProfileForUserSafe:', user.id)
+        const { ensureProfileForUserSafe } = await import('@/lib/profile/ensureProfileForUser')
+        const ensureResult = await ensureProfileForUserSafe(supabase, user)
+        const profileData = ensureResult.profile
         
-        if (!profileData) {
-          console.error('🚨 MyPage: Profile ensure failed for user:', user.id)
-          // ensureProfileForUser()により基本的にnullにはならないが、念のため
-          setIsLoading(false)
-          return
+        if (!ensureResult.success) {
+          console.warn('🚨 MyPage: Profile ensure failed but continuing with minimal display:', {
+            reason: ensureResult.reason,
+            canContinue: ensureResult.canContinue,
+            userId: user.id
+          })
+          
+          // MyPageでは最低限の表示を継続（編集ボタンは表示）
+          if (ensureResult.canContinue) {
+            // プロフィールなしでも基本的なMyPage表示
+            setProfile(null)
+            calculateProfileCompletion(null) // nullでも計算可能
+            setIsLoading(false)
+            return
+          } else {
+            // 致命的エラーの場合のみ停止
+            setIsLoading(false)
+            return
+          }
         }
         
         // 🔍 CRITICAL: MyPage profiles select直後のpersonality_tags確認（Task A-1）

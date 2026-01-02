@@ -2830,22 +2830,38 @@ function ProfileEditContent() {
       console.log('✅ ユーザー確認完了 - プロフィール読み込み開始')
 
       try {
-        // 🔗 user_id ベースでプロフィール取得・作成を保証
-        const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
-        let profile = await ensureProfileForUser(supabase, user)
+        // 🔗 user_id ベースでプロフィール取得・作成を保証（遷移継続保証版）
+        const { ensureProfileForUserSafe } = await import('@/lib/profile/ensureProfileForUser')
+        const ensureResult = await ensureProfileForUserSafe(supabase, user)
+        let profile = ensureResult.profile
 
-        if (!profile) {
-          console.error('Profile ensure failed for user:', user?.id)
-          setError('プロフィール情報の取得に失敗しました')
-          setUserLoading(false)
-          return
+        // 🔧 方針1: 403/406でも遷移を継続（DB失敗でも画面表示は可能）
+        if (!ensureResult.success) {
+          console.warn('🚨 Profile ensure failed but continuing with UI initialization:', {
+            reason: ensureResult.reason,
+            canContinue: ensureResult.canContinue,
+            userId: user?.id
+          })
+          
+          // 遷移不可な致命的エラーの場合のみ停止
+          if (!ensureResult.canContinue) {
+            setError('認証エラーのため、プロフィール編集画面を表示できません')
+            setUserLoading(false)
+            return
+          }
+          
+          // DB失敗でも画面は表示 - 初期値でフォーム表示継続
+          profile = null
+          console.log('🔥 DB失敗だが画面表示継続 - URLパラメータや初期値でフォーム初期化')
         }
 
-        console.log('✅ Profile ensured:', {
-          profileId: profile!.id,
-          userId: profile!.user_id,
+        console.log('✅ Profile initialization result:', {
+          profileExists: !!profile,
+          profileId: profile?.id || 'none',
+          userId: profile?.user_id || 'none',
           authUid: user?.id,
-          userIdMatch: profile!.user_id === user?.id
+          userIdMatch: profile ? profile.user_id === user?.id : 'n/a (no profile)',
+          reason: ensureResult.reason
         })
 
         // 🚨 CRITICAL: DBプロフィールをstateに保存（buildProfileForCompletion用）
@@ -3040,8 +3056,10 @@ function ProfileEditContent() {
         console.log('  - Profile has interests:', !!profile?.interests)  
         console.log('  - Profile has name:', !!profile?.name)
         
-        // 🔗 DB存在ベースでisNewUser判定（ensureProfileForUserで確実に存在するため、常にfalse）
-        const isNewUser = false  // ensureProfileForUser()により必ず存在
+        // 🔗 DB存在ベースでisNewUser判定（DB失敗や空プロフィールも考慮）
+        const isNewUser = !profile || // DB失敗でprofileがnull
+                         isFromSignup || // サインアップからの遷移
+                         (!profile.name && !profile.bio && (!profile.interests || profile.interests.length === 0))
         
         console.log('🔍 New User Determination Debug:')
         console.log('  - isFromMyPage:', isFromMyPage)
@@ -3097,13 +3115,13 @@ function ProfileEditContent() {
         
         // テストデータまたは既存データクリア（新規登録以外でも実行）
         // 🚨 危険なロジック修正: 茶道選択ユーザーのデータを誤ってクリアしないよう修正
-        const isTestData2 = profile.bio?.includes('テスト用の自己紹介です') || 
-                          profile.name === 'テスト'
+        const isTestData2 = profile?.bio?.includes('テスト用の自己紹介です') || 
+                          profile?.name === 'テスト'
         // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーデータを誤削除する危険
         
         console.log('🚨 CRITICAL: Test data clear condition check:')
         console.log('  - isTestData2:', isTestData2)
-        console.log('  - profile.name:', profile.name)
+        console.log('  - profile.name:', profile?.name)
         console.log('  - isFromMyPage:', isFromMyPage)
         console.log('  - Should clear data:', isTestData2 && user?.id)
         console.log('  - 🛡️ SECURITY: Removed dangerous name-based condition')

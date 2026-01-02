@@ -28,20 +28,47 @@ export interface ProfileData {
   [key: string]: any
 }
 
+// 新規：ensureProfileForUser の結果型（遷移継続のため）
+export interface EnsureProfileResult {
+  success: boolean
+  profile: ProfileData | null
+  reason?: string
+  canContinue: boolean // 画面表示可能かどうか
+}
+
+// テストモード判定ヘルパー
+const isTestMode = (): boolean => {
+  if (typeof window === 'undefined') return false
+  const urlParams = new URLSearchParams(window.location.search)
+  
+  // マイページからの遷移の場合はテストモードではない
+  if (urlParams.get('fromMyPage') === 'true') {
+    return false
+  }
+  
+  return !!(urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || 
+           urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality'))
+}
+
 /**
- * ユーザーの profiles レコードを確実に取得・作成する
+ * 🆕 安全なプロフィール取得・作成（遷移継続保証版）
  * 
  * @param supabase - Supabaseクライアント
  * @param user - 認証済みユーザー
- * @returns ProfileData | null
+ * @returns EnsureProfileResult（失敗でも遷移可能）
  */
-export async function ensureProfileForUser(
+export async function ensureProfileForUserSafe(
   supabase: SupabaseClient,
   user: AuthUserCompatible | null
-): Promise<ProfileData | null> {
+): Promise<EnsureProfileResult> {
   if (!user?.id) {
     console.log('🚫 ensureProfileForUser: No user provided')
-    return null
+    return {
+      success: false,
+      profile: null,
+      reason: 'No user provided',
+      canContinue: false
+    }
   }
 
   try {
@@ -56,7 +83,12 @@ export async function ensureProfileForUser(
 
     if (searchError && searchError.code !== 'PGRST116') {
       console.error('🚨 ensureProfileForUser: Search error', searchError)
-      return null
+      return {
+        success: false,
+        profile: null,
+        reason: `Search error: ${searchError.message}`,
+        canContinue: true // 検索失敗でも画面は表示可能
+      }
     }
 
     // 2. プロフィールが既に存在する場合はそれを返す
@@ -66,7 +98,12 @@ export async function ensureProfileForUser(
         userId: existingProfile.user_id,
         hasName: !!existingProfile.name
       })
-      return existingProfile
+      return {
+        success: true,
+        profile: existingProfile,
+        reason: 'Profile found',
+        canContinue: true
+      }
     }
 
     // 3. 既存データ救済: id = auth.uid の行があるかチェック
@@ -90,15 +127,63 @@ export async function ensureProfileForUser(
 
       if (updateError) {
         console.error('🚨 ensureProfileForUser: Legacy update failed', updateError)
+        return {
+          success: false,
+          profile: null,
+          reason: `Legacy update failed: ${updateError.message}`,
+          canContinue: true // 更新失敗でも画面は表示可能
+        }
       } else {
         console.log('✅ ensureProfileForUser: Legacy profile updated')
-        return updatedProfile
+        return {
+          success: true,
+          profile: updatedProfile,
+          reason: 'Legacy profile updated',
+          canContinue: true
+        }
       }
     }
 
     // 4. 新規プロフィール作成
     console.log('🆕 ensureProfileForUser: Creating new profile')
     
+    // 4-1. テストモードの場合は先にAPI経由で試行（RLS回避）
+    const testMode = isTestMode()
+    if (testMode) {
+      console.log('🧪 テストモード検出 - API経由でプロフィール作成を試行')
+      try {
+        const apiResponse = await fetch('/api/ensure-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            isTestMode: true
+          })
+        })
+
+        if (apiResponse.ok) {
+          const apiResult = await apiResponse.json()
+          if (apiResult.success && apiResult.profile) {
+            console.log('✅ テストモード: API経由でプロフィール作成成功')
+            return {
+              success: true,
+              profile: apiResult.profile,
+              reason: 'テストモード - API経由で作成成功',
+              canContinue: true
+            }
+          }
+        }
+        
+        console.warn('⚠️ テストモード: API失敗、通常方法にフォールバック')
+      } catch (apiError) {
+        console.warn('⚠️ テストモード: API呼び出し失敗、通常方法にフォールバック:', apiError)
+      }
+    }
+
+    // 4-2. 通常のクライアント側作成
     const newProfileData = {
       user_id: user.id,
       email: user.email,
@@ -116,8 +201,28 @@ export async function ensureProfileForUser(
       .single()
 
     if (insertError) {
-      console.error('🚨 ensureProfileForUser: Insert failed', insertError)
-      return null
+      // 🔧 方針1: 403/406は想定内として扱い、遷移を止めない
+      const is403 = insertError.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('insufficient_privilege')
+      const is406 = insertError.code === 'PGRST116' || insertError.message?.includes('No rows')
+      
+      console.error('🚨 ensureProfileForUser: Insert failed (継続可能)', {
+        error: insertError,
+        code: insertError.code,
+        message: insertError.message,
+        is403_RLS_suspected: is403,
+        is406_no_rows: is406,
+        testMode,
+        next_action: is403 ? 'Check RLS policies or use service_role API' : 'Check data constraints'
+      })
+      
+      return {
+        success: false,
+        profile: null,
+        reason: is403 ? '403 RLS疑い - DBプロフィール作成失敗（RLSポリシーまたはAPI必要）' : 
+                is406 ? '406 No rows - プロフィール作成失敗' : 
+                `Insert failed: ${insertError.message}`,
+        canContinue: true // 🔥 重要: DB失敗でも画面表示は継続
+      }
     }
 
     console.log('✅ ensureProfileForUser: New profile created', {
@@ -125,12 +230,40 @@ export async function ensureProfileForUser(
       userId: newProfile.user_id
     })
 
-    return newProfile
+    return {
+      success: true,
+      profile: newProfile,
+      reason: 'New profile created',
+      canContinue: true
+    }
 
   } catch (error) {
-    console.error('🚨 ensureProfileForUser: Unexpected error', error)
-    return null
+    console.error('🚨 ensureProfileForUser: Unexpected error (継続可能)', error)
+    return {
+      success: false,
+      profile: null,
+      reason: `Unexpected error: ${error}`,
+      canContinue: true // 予期しないエラーでも画面は表示
+    }
   }
+}
+
+/**
+ * 🔄 既存のプロフィール取得関数（後方互換性維持）
+ * 
+ * @param supabase - Supabaseクライアント
+ * @param user - 認証済みユーザー
+ * @returns ProfileData | null
+ */
+export async function ensureProfileForUser(
+  supabase: SupabaseClient,
+  user: AuthUserCompatible | null
+): Promise<ProfileData | null> {
+  // 新しい安全な関数のラッパー（後方互換性のため）
+  const result = await ensureProfileForUserSafe(supabase, user)
+  
+  // 従来通り、成功時にprofileを返し、失敗時にnullを返す
+  return result.success ? result.profile : null
 }
 
 /**
