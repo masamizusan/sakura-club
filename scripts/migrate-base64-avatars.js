@@ -117,12 +117,12 @@ async function migrateRecord(record) {
       .getPublicUrl(storagePath)
     
     const publicUrl = publicUrlData.publicUrl
-    console.log(`   🔗 Public URL: ${publicUrl.substring(0, 60)}...`)
+    console.log(`   🔗 Public URL (for reference): ${publicUrl.substring(0, 60)}...`)
+    console.log(`   📁 Storage path (will be saved to DB): ${storagePath}`)
     
-    // 5. DB更新
+    // 5. DB更新（Storage pathを保存、URLではない）
     const updateData = {
-      avatar_url: publicUrl,
-      // avatar_path: storagePath, // TODO: カラム追加時
+      avatar_url: storagePath, // Storage pathを保存（URL化は表示時に実行）
       updated_at: new Date().toISOString()
     }
     
@@ -142,10 +142,11 @@ async function migrateRecord(record) {
     
     return {
       success: true,
-      record: { ...record, avatar_url: publicUrl },
+      record: { ...record, avatar_url: storagePath },
       storagePath,
+      publicUrl,
       originalSize: avatar_url.length,
-      newSize: publicUrl.length
+      newSize: storagePath.length
     }
     
   } catch (error) {
