@@ -3059,10 +3059,10 @@ function ProfileEditContent() {
         console.log('  - nationality:', profile?.nationality)
         console.log('  - age:', profile?.age)
         console.log('  - birth_date:', profile?.birth_date || profile?.date_of_birth)
-        console.log('  - planned_prefectures:', profile.planned_prefectures)
-        console.log('  - hobbies/culture_tags:', profile.hobbies || profile.culture_tags)
-        console.log('  - personality:', profile.personality || profile.personality_tags)
-        console.log('  - language_skills:', profile.language_skills)
+        console.log('  - planned_prefectures:', profile?.planned_prefectures)
+        console.log('  - hobbies/culture_tags:', profile?.hobbies || (profile as any)?.culture_tags)
+        console.log('  - personality:', profile?.personality || (profile as any)?.personality_tags)
+        console.log('  - language_skills:', profile?.language_skills)
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
         // このブロックは現在無効化されています
@@ -3168,12 +3168,12 @@ function ProfileEditContent() {
           
           if (Array.isArray(rawPersonalityTags) && rawPersonalityTags.length > 0) {
             existingPersonality = rawPersonalityTags.filter((item: string) => item !== 'その他')
-          } else if (Array.isArray(profile.personality) && profile.personality.length > 0) {
+          } else if (Array.isArray(profile?.personality) && profile.personality.length > 0) {
             // 2. 従来のpersonalityカラムからフォールバック
             existingPersonality = profile.personality.filter((item: string) => item !== 'その他')
-          } else if (profile.interests && Array.isArray(profile.interests)) {
+          } else if (profile?.interests && Array.isArray(profile.interests)) {
             // 3. interests配列からpersonalityプレフィックス付きを抽出（最終フォールバック）
-            profile.interests.forEach((item: string) => {
+            profile!.interests.forEach((item: string) => {
               if (item.startsWith('personality:')) {
                 existingPersonality.push(item.replace('personality:', ''))
               }
@@ -3183,9 +3183,9 @@ function ProfileEditContent() {
           // 1. culture_tagsカラムから日本文化データを取得（優先）
           if ((profile as any).culture_tags && Array.isArray((profile as any).culture_tags) && (profile as any).culture_tags.length > 0) {
             existingHobbies = (profile as any).culture_tags.filter((item: string) => item !== 'その他')
-          } else if (profile.interests && Array.isArray(profile.interests)) {
+          } else if (profile?.interests && Array.isArray(profile.interests)) {
             // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
-            profile.interests.forEach((item: string) => {
+            profile!.interests.forEach((item: string) => {
               if (!item.startsWith('personality:') && !item.startsWith('custom_culture:') && item !== 'その他') {
                 existingHobbies.push(item)
               }
@@ -3193,10 +3193,10 @@ function ProfileEditContent() {
           }
           
           // custom_cultureは従来通り（direct fieldとinterests配列から）
-          if (profile.custom_culture) {
+          if (profile?.custom_culture) {
             existingCustomCulture = profile.custom_culture
-          } else if (profile.interests && Array.isArray(profile.interests)) {
-            profile.interests.forEach((item: string) => {
+          } else if (profile?.interests && Array.isArray(profile.interests)) {
+            profile!.interests.forEach((item: string) => {
               if (item.startsWith('custom_culture:')) {
                 existingCustomCulture = item.replace('custom_culture:', '')
               }
@@ -3205,9 +3205,9 @@ function ProfileEditContent() {
         }
         
         console.log('🔍 DATA EXTRACTION DEBUG:', {
-          'profile.personality (direct field)': profile.personality,
-          'profile.interests (array field)': profile.interests, 
-          'profile.custom_culture (direct field)': profile.custom_culture,
+          'profile.personality (direct field)': profile?.personality,
+          'profile.interests (array field)': profile?.interests, 
+          'profile.custom_culture (direct field)': profile?.custom_culture,
           'extracted existingPersonality': existingPersonality,
           'extracted existingHobbies': existingHobbies,
           'extracted existingCustomCulture': existingCustomCulture,
@@ -3215,12 +3215,12 @@ function ProfileEditContent() {
         })
         
         console.log('🔍 RAW DATABASE FIELDS CHECK:', {
-          'profile.interests type': typeof profile.interests,
-          'profile.interests isArray': Array.isArray(profile.interests),
-          'profile.interests content': profile.interests,
-          'profile.personality type': typeof profile.personality,
-          'profile.personality isArray': Array.isArray(profile.personality),
-          'profile.personality content': profile.personality
+          'profile.interests type': typeof profile?.interests,
+          'profile.interests isArray': Array.isArray(profile?.interests),
+          'profile.interests content': profile?.interests,
+          'profile.personality type': typeof profile?.personality,
+          'profile.personality isArray': Array.isArray(profile?.personality),
+          'profile.personality content': profile?.personality
         })
         
         // 状態更新は後でまとめて実行するため、ここでは実行しない
@@ -3235,7 +3235,7 @@ function ProfileEditContent() {
         let resetBirthDate
         if (isFromMyPage) {
           // MyPageからの遷移：既存の生年月日を必ず保持
-          resetBirthDate = profile.birth_date || profile.date_of_birth || ''
+          resetBirthDate = profile?.birth_date || profile?.date_of_birth || ''
           console.log('🔄 MyPage遷移 - 既存birth_dateを保持:', resetBirthDate)
         } else if (isNewUser) {
           // 新規ユーザー：signupデータまたは空
@@ -3243,23 +3243,23 @@ function ProfileEditContent() {
           console.log('🆕 新規ユーザー - signup birth_date使用:', resetBirthDate)
         } else {
           // 既存ユーザー：既存データを使用
-          resetBirthDate = profile.birth_date || profile.date_of_birth || defaults.birth_date || ''
+          resetBirthDate = profile?.birth_date || profile?.date_of_birth || defaults.birth_date || ''
           console.log('👤 既存ユーザー - profile birth_date使用:', resetBirthDate)
         }
         
         // birth_dateが空でageが存在する場合のみ、年齢から生年を推定（推定値であることを明示）
-        if (!resetBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
+        if (!resetBirthDate && profile?.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
           // MyPageからの遷移時は推定を行わず、ユーザーに実際の入力を促す
           resetBirthDate = ''
-          console.log(`⚠️ Birth date not found, age is ${profile.age}. User should set actual birth_date.`)
+          console.log(`⚠️ Birth date not found, age is ${profile?.age}. User should set actual birth_date.`)
         }
         
         console.log('🔍 Reset birth_date value:', {
           isNewUser,
           'defaults.birth_date': defaults.birth_date,
-          'profile.birth_date': profile.birth_date,
-          'profile.date_of_birth': profile.date_of_birth,
-          'profile.age': profile.age,
+          'profile.birth_date': profile?.birth_date,
+          'profile.date_of_birth': profile?.date_of_birth,
+          'profile.age': profile?.age,
           resetBirthDate
         })
         
@@ -3268,14 +3268,14 @@ function ProfileEditContent() {
         console.log('  - resetBirthDate:', resetBirthDate)
         // 🎯 A案修正: nationality正規化（都道府県名→適切な国名）
         const prefectureNames = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
-        const rawNationality = defaults.nationality || profile.nationality || ''
+        const rawNationality = defaults.nationality || profile?.nationality || ''
         const normalizedNationality = isForeignMale 
           ? (prefectureNames.includes(rawNationality) ? 'アメリカ' : (rawNationality || (isNewUser ? 'アメリカ' : '')))
           : 'japan'
         
         console.log('  - 🌍 nationality calculation:', {
           defaults_nationality: defaults.nationality,
-          profile_nationality: profile.nationality,
+          profile_nationality: profile?.nationality,
           rawNationality,
           normalizedNationality,
           isNewUser,
@@ -3297,20 +3297,20 @@ function ProfileEditContent() {
           nickname: nicknameValue,
           gender: defaults.gender,
           birth_date: resetBirthDate,
-          age: defaults.age || (isNewUser ? 18 : (profile.age || 18)),
+          age: defaults.age || (isNewUser ? 18 : (profile?.age || 18)),
           nationality: normalizedNationality,
-          prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''))) : undefined,
+          prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile?.residence || profile?.prefecture || ''))) : undefined,
           // 外国人男性向け新フィールド
-          planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile.planned_prefectures || [])) : undefined,
-          visit_schedule: isForeignMale ? (isNewUser ? undefined : (profile.visit_schedule || undefined)) : undefined,
-          travel_companion: isForeignMale ? (isNewUser ? undefined : (profile.travel_companion || undefined)) : undefined,
-          occupation: isNewUser ? undefined : (parsedOptionalData.occupation || profile.occupation || undefined),
-          height: isNewUser ? undefined : (parsedOptionalData.height || profile.height || undefined),
-          body_type: isNewUser ? undefined : (parsedOptionalData.body_type || profile.body_type || undefined),
-          marital_status: isNewUser ? undefined : (parsedOptionalData.marital_status || profile.marital_status || undefined),
+          planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile?.planned_prefectures || [])) : undefined,
+          visit_schedule: isForeignMale ? (isNewUser ? undefined : (profile?.visit_schedule || undefined)) : undefined,
+          travel_companion: isForeignMale ? (isNewUser ? undefined : (profile?.travel_companion || undefined)) : undefined,
+          occupation: isNewUser ? undefined : (parsedOptionalData.occupation || profile?.occupation || undefined),
+          height: isNewUser ? undefined : (parsedOptionalData.height || profile?.height || undefined),
+          body_type: isNewUser ? undefined : (parsedOptionalData.body_type || profile?.body_type || undefined),
+          marital_status: isNewUser ? undefined : (parsedOptionalData.marital_status || profile?.marital_status || undefined),
           hobbies: isNewUser ? [] : existingHobbies,
           personality: (!isNewUser && Array.isArray(existingPersonality) && existingPersonality.length > 0) ? existingPersonality : [], // 🎯 FIXED: DBにpersonalityデータが実際に存在する場合のみ復元
-          self_introduction: isNewUser ? '' : (profile.bio || profile.self_introduction || ''),
+          self_introduction: isNewUser ? '' : (profile?.bio || profile?.self_introduction || ''),
           custom_culture: isNewUser ? '' : existingCustomCulture,
           // 🆕 言語レベルフィールド（安全なヘルパー関数使用）
           japanese_level: isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'japanese_level')) : 'none',
@@ -3340,7 +3340,7 @@ function ProfileEditContent() {
         console.log('🔍 CRITICAL - Japanese Level in resetData:', {
           'resetData.japanese_level': resetData.japanese_level,
           'parsedOptionalData.japanese_level': parsedOptionalData.japanese_level,
-          'profile.japanese_level': profile.japanese_level,
+          'profile.japanese_level': profile?.japanese_level,
           'isForeignMale': isForeignMale,
           'isNewUser': isNewUser
         })
@@ -3374,7 +3374,7 @@ function ProfileEditContent() {
         let finalBirthDate
         if (isFromMyPage) {
           // MyPageからの遷移：既存の生年月日を必ず保持
-          finalBirthDate = profile.birth_date || profile.date_of_birth || ''
+          finalBirthDate = profile?.birth_date || profile?.date_of_birth || ''
           console.log('🔄 setValue - MyPage遷移のbirth_date保持:', finalBirthDate)
         } else if (isNewUser) {
           // 新規ユーザー：signupデータまたは空
@@ -3382,24 +3382,24 @@ function ProfileEditContent() {
           console.log('🆕 setValue - 新規ユーザーbirth_date:', finalBirthDate)
         } else {
           // 既存ユーザー：既存データを使用
-          finalBirthDate = profile.birth_date || profile.date_of_birth || defaults.birth_date || ''
+          finalBirthDate = profile?.birth_date || profile?.date_of_birth || defaults.birth_date || ''
           console.log('👤 setValue - 既存ユーザーbirth_date:', finalBirthDate)
         }
         
         // finalBirthDateが空でageが存在する場合のみ警告（推定値は設定しない）
-        if (!finalBirthDate && profile.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
+        if (!finalBirthDate && profile?.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
           // 実際の生年月日がない場合は空文字のまま、ユーザーに入力を促す（MyPage遷移時は除く）
           finalBirthDate = ''
-          console.log(`⚠️ Birth date not found (setValue), age is ${profile.age}. User should set actual birth_date.`)
+          console.log(`⚠️ Birth date not found (setValue), age is ${profile?.age}. User should set actual birth_date.`)
         }
         
         console.log('🔍 Setting birth_date value:', {
           isNewUser,
           isFromMyPage,
           'defaults.birth_date': defaults.birth_date,
-          'profile.birth_date': profile.birth_date,
-          'profile.date_of_birth': profile.date_of_birth,
-          'profile.age': profile.age,
+          'profile.birth_date': profile?.birth_date,
+          'profile.date_of_birth': profile?.date_of_birth,
+          'profile.age': profile?.age,
           finalBirthDate
         })
         console.log('🔍 FORM FIELD SET VALUES DETAILED LOG:')
@@ -3410,14 +3410,14 @@ function ProfileEditContent() {
         
         // 🚨 CRITICAL: foreign-maleではprefectureをセットしない（完成度計算混乱を避ける）
         if (!isForeignMale) {
-          const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile.residence || profile.prefecture || ''));
+          const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile?.residence || profile?.prefecture || ''));
           console.log('Setting prefecture:', prefectureValue)
           setValue('prefecture', prefectureValue)
         } else {
           console.log('🚨 foreign-male用途: prefecture設定をスキップ')
         }
         
-        const ageValue = defaults.age || (isNewUser ? 18 : (profile.age || 18))
+        const ageValue = defaults.age || (isNewUser ? 18 : (profile?.age || 18))
         console.log('Setting age:', ageValue)
         setValue('age', ageValue)
         
@@ -3441,20 +3441,20 @@ function ProfileEditContent() {
           try {
             // 新規ユーザーの場合は既存データを無視して空の状態で初期化
             const plannedPrefecturesValue = isNewUser ? [] :
-              (Array.isArray(profile?.planned_prefectures) ? profile.planned_prefectures : [])
+              (Array.isArray(profile?.planned_prefectures) ? profile!.planned_prefectures : [])
             console.log('Setting planned_prefectures:', plannedPrefecturesValue, 'isNewUser:', isNewUser)
             setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
 
             const visitScheduleValue = isNewUser ? undefined :
               (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry'
-                ? profile.visit_schedule : undefined)
+                ? profile!.visit_schedule : undefined)
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
             const travelCompanionValue = isNewUser ? 'undecided' :
               (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry'
-                ? profile.travel_companion : 'undecided')
+                ? profile!.travel_companion : 'undecided')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
@@ -3532,7 +3532,7 @@ function ProfileEditContent() {
         console.log('✅ STATE SETTING COMPLETED')
 
         // 🌐 言語設定の初期化
-        const nationality = profile.nationality || ((signupData as any)?.nationality)
+        const nationality = profile?.nationality || ((signupData as any)?.nationality)
         let detectedLanguage: SupportedLanguage
         
         // 国籍から言語を判定（日本人女性も選択可能に）
@@ -3548,9 +3548,9 @@ function ProfileEditContent() {
         
         console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
         console.log('  - isNewUser:', isNewUser)
-        console.log('  - profile.avatar_url:', profile.avatar_url)
-        console.log('  - profile.avatar_url exists:', !!profile.avatar_url)
-        console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile.avatar_url)
+        console.log('  - profile.avatar_url:', profile?.avatar_url)
+        console.log('  - profile.avatar_url exists:', !!profile?.avatar_url)
+        console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile?.avatar_url)
         
         // 🔒 セキュリティ強化: ユーザー固有のセッションストレージチェック
         // 🌸 TASK2: test modeでuser=undefinedの時に安全なキーを使用
@@ -3628,15 +3628,15 @@ function ProfileEditContent() {
             })
           } else {
             // 🎯 SSOT統一: avatar_urlがある場合は必ずprofileImages配列に反映
-            if (profile.avatar_url && profile.avatar_url.trim() !== '') {
-              console.log('✅ プロフィール画像を設定（SSOT統一）:', profile.avatar_url.substring(0, 50) + '...')
-              console.log('  - isBase64:', profile.avatar_url.startsWith('data:image/'))
+            if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
+              console.log('✅ プロフィール画像を設定（SSOT統一）:', profile!.avatar_url.substring(0, 50) + '...')
+              console.log('  - isBase64:', profile!.avatar_url.startsWith('data:image/'))
               console.log('  - isNewUser:', isNewUser, ', avatar_urlを確実にprofileImagesに反映')
               
               currentImageArray = [{
                 id: '1',
-                url: profile.avatar_url,
-                originalUrl: profile.avatar_url,
+                url: profile!.avatar_url,
+                originalUrl: profile!.avatar_url,
                 isMain: true,
                 isEdited: false
               }]
@@ -3647,14 +3647,14 @@ function ProfileEditContent() {
               console.log('🎯 SSOT統一: avatar_url→profileImages反映完了', {
                 currentImageArray_length: currentImageArray.length,
                 profileImagesRef_length: profileImagesRef.current.length,
-                avatar_url_exists: !!profile.avatar_url,
-                isBase64: profile.avatar_url.startsWith('data:image/'),
+                avatar_url_exists: !!profile?.avatar_url,
+                isBase64: profile!.avatar_url.startsWith('data:image/'),
                 ssot_fix: 'avatar_url確実反映でUI表示と完成度計算を統一'
               })
             } else {
               console.log('❌ 画像なしで初期化（avatar_url無効）')
-              console.log('  - avatar_url存在:', !!profile.avatar_url)
-              console.log('  - avatar_url値:', profile.avatar_url)
+              console.log('  - avatar_url存在:', !!profile?.avatar_url)
+              console.log('  - avatar_url値:', profile?.avatar_url)
               currentImageArray = []
             }
           }
@@ -3679,28 +3679,28 @@ function ProfileEditContent() {
           ...profile,
           name: nicknameValue,
           gender: defaults.gender,
-          age: defaults.age || profile.age || 18,
-          nationality: isForeignMale ? (defaults.nationality || profile.nationality) : profile.nationality,
-          residence: defaults.prefecture || profile.residence || profile.prefecture,
-          interests: profile.interests || profile.hobbies || [],
-          bio: profile.bio || profile.self_introduction || '',
+          age: defaults.age || profile?.age || 18,
+          nationality: isForeignMale ? (defaults.nationality || profile?.nationality) : profile?.nationality,
+          residence: defaults.prefecture || profile?.residence || profile?.prefecture,
+          interests: profile?.interests || profile?.hobbies || [],
+          bio: profile?.bio || profile?.self_introduction || '',
           hobbies: existingHobbies,
           personality: existingPersonality, // 🔧 FIXED: 既存personalityデータを維持
           // 外国人男性専用フィールドを明示的に追加
-          visit_schedule: profile.visit_schedule,
-          travel_companion: profile.travel_companion,
-          planned_prefectures: profile.planned_prefectures || [],
-          japanese_level: profile.japanese_level,
+          visit_schedule: profile?.visit_schedule,
+          travel_companion: profile?.travel_companion,
+          planned_prefectures: profile?.planned_prefectures || [],
+          japanese_level: profile?.japanese_level,
           planned_stations: (profile as any).planned_stations || [],
           // その他のオプションフィールド
-          occupation: profile.occupation,
-          height: profile.height,
-          body_type: profile.body_type,
-          marital_status: profile.marital_status,
-          english_level: profile.english_level,
+          occupation: profile?.occupation,
+          height: profile?.height,
+          body_type: profile?.body_type,
+          marital_status: profile?.marital_status,
+          english_level: profile?.english_level,
           // ユーザー画像情報を追加
-          avatarUrl: user?.avatarUrl || profile.avatarUrl,
-          avatar_url: user?.avatarUrl || profile.avatar_url, // userオブジェクトはavatarUrlのみ
+          avatarUrl: user?.avatarUrl || profile?.avatarUrl,
+          avatar_url: user?.avatarUrl || profile?.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🚨 CRITICAL: fromMyPage でもbuildProfileForCompletion使用（完全統一）
         console.log('🔄 fromMyPage: 🌟 統一フロー初期化:', {
