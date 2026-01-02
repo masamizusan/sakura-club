@@ -170,19 +170,19 @@ function normalizeImageArray(imageArray?: any[]): Array<{ url: string; isMain: b
  * 🚨 STEP3 FIX: MyPageの表示条件と完成度計算を完全統一
  */
 function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: boolean = false): boolean {
-  // 🔍 STEP3 DEBUG: MyPage表示ロジック完全再現
-  const myPageDisplayCondition = (
-    (profile?.avatar_url && !profile.avatar_url.startsWith('data:image/')) || 
-    (profile?.profile_image && !profile.profile_image.startsWith('data:image/'))
-  )
+  // 🔥 恒久修正: data URI、HTTP、Storage path全てOKとする（MyPageアバター安定化）
+  const hasAvatar = typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0
+  const hasProfileImage = typeof profile?.profile_image === "string" && profile.profile_image.trim().length > 0
   
-  console.log('🎯 STEP3 - MyPage表示ロジック完全一致判定:', {
+  const imageCondition = hasAvatar || hasProfileImage
+  
+  console.log('🎯 FIXED - 画像判定恒久修正:', {
     avatar_url_exists: !!profile.avatar_url,
-    avatar_url_not_base64: profile.avatar_url && !profile.avatar_url.startsWith('data:image/'),
-    profile_image_exists: !!profile.profile_image, 
-    profile_image_not_base64: profile.profile_image && !profile.profile_image.startsWith('data:image/'),
-    myPageDisplayCondition,
-    logic_source: 'MyPageコンポーネントと完全一致'
+    avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
+    hasAvatar,
+    hasProfileImage,
+    imageCondition,
+    judgment_basis: 'data URI/HTTP/Storage path全てOK（base64除外を撤廃）'
   })
   
   // 🌸 優先度1: has_profile_imageフラグが設定されていればそれを最優先
@@ -196,7 +196,8 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     const validImages = imageArray.filter(img => {
       if (!img) return false
       const url = img.url || img.originalUrl || img.avatar_url
-      return url && typeof url === 'string' && !url.startsWith('data:image/')
+      // 🔥 修正: base64除外を撤廃、すべての画像URL形式をOKとする
+      return url && typeof url === 'string' && url.trim().length > 0
     })
     if (validImages.length > 0) {
       console.log('🎯 imageArray判定: TRUE (編集中画像数:', validImages.length, ')')
@@ -204,13 +205,13 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     }
   }
   
-  // 🌸 優先度3: MyPage表示ロジックと完全一致（最重要）
-  if (myPageDisplayCondition) {
-    console.log('🎯 MyPage表示ロジック一致: TRUE - 完成度とUI表示が統一')
+  // 🌸 優先度3: 統一画像判定ロジック（data URI/HTTP/Storage path全てOK）
+  if (imageCondition) {
+    console.log('🎯 統一画像判定: TRUE - data URI/HTTP/Storage path全対応')
     return true
   }
   
-  console.log('🎯 画像判定: FALSE (MyPage表示条件も不一致)')
+  console.log('🎯 画像判定: FALSE (avatar_url/profile_imageが空文字または未定義)')
   return false
 }
 

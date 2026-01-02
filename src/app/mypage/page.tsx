@@ -12,6 +12,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
+import { resolveProfileImageSrc, resolveAvatarSrc } from '@/utils/imageResolver'
 import Link from 'next/link'
 import { 
   User, 
@@ -121,6 +122,10 @@ function MyPageContent() {
           profileFields: Object.keys(profileData || {}).length
         })
         
+        // 🔍 Base64検出警告（TASK C: 再発防止）
+        const { detectBase64InImageFields } = await import('@/utils/imageResolver')
+        detectBase64InImageFields(profileData)
+
         // 🆕 CRITICAL: localStorage処理を完全削除し、Supabaseデータのみで完成度計算
         setProfile(profileData)
         calculateProfileCompletion(profileData)
@@ -183,6 +188,8 @@ function MyPageContent() {
       // 🔧 DB実態キーマッピング修正
       nickname: profileData?.name || profileData?.nickname,           // DB: name
       self_introduction: profileData?.bio || profileData?.self_introduction, // DB: bio
+      // 🛡️ avatar_url保護: NULL正規化の対象外（どんな値でも保持）
+      avatar_url: profileData?.avatar_url, // data URI/HTTP/Storage path全て保護
       // 🚨 NULL→[]正規化: hobbies/personalityフィールドマッピング  
       hobbies: Array.isArray(profileData?.culture_tags) 
         ? profileData.culture_tags 
@@ -332,20 +339,33 @@ function MyPageContent() {
           <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
             <div className="flex items-center mb-6">
               <div className="relative">
-                {((profile?.avatar_url && !profile.avatar_url.startsWith('data:image/')) || 
-                  (profile?.profile_image && !profile.profile_image.startsWith('data:image/'))) ? (
-                  <img
-                    src={(profile.avatar_url && !profile.avatar_url.startsWith('data:image/')) 
-                         ? profile.avatar_url 
-                         : profile.profile_image}
-                    alt="プロフィール写真"
-                    className="w-20 h-20 rounded-full object-cover border-2 border-sakura-200"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gray-200 border-2 border-sakura-200 flex items-center justify-center">
-                    <User className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
+                {(() => {
+                  // 🔥 MyPage画像表示恒久修正: 判定ロジックから切り離し
+                  console.log('🔍 MyPage Avatar Debug:', {
+                    profile_avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
+                    profile_avatar_url_type: typeof profile?.avatar_url,
+                    profile_avatar_url_length: profile?.avatar_url?.length || 0
+                  })
+                  
+                  const avatarSrc = resolveAvatarSrc(profile?.avatar_url, supabase)
+                  console.log('🔍 MyPage Avatar Resolve Result:', {
+                    resolved_src_preview: avatarSrc?.substring(0, 60) || 'null',
+                    will_show_image: !!avatarSrc
+                  })
+                  
+                  // 🛡️ 画像表示は完成度判定から完全切り離し - avatar_urlがあれば必ず表示を試みる
+                  return avatarSrc ? (
+                    <img
+                      src={avatarSrc}
+                      alt="プロフィール写真"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-sakura-200"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-200 border-2 border-sakura-200 flex items-center justify-center">
+                      <User className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )
+                })()}
               </div>
               <div className="ml-4 flex-1">
                 <h2 className="text-xl font-bold text-gray-900">
@@ -384,7 +404,16 @@ function MyPageContent() {
                     const profileType = isForeignMale ? 'foreign-male' : 'japanese-female'
                     
                     // 🎯 SSOT統一: MyPage→編集遷移時の画像データ保存
-                    if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
+                    // 🔥 修正: 画像あり判定をdata URI、HTTP、Storage path全てOKにする
+                    const hasAvatar = typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0
+                    console.log('🔍 MyPage hasAvatar判定:', {
+                      hasAvatar,
+                      avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
+                      avatar_url_length: profile?.avatar_url?.length || 0,
+                      judgment_basis: 'string + length > 0 (data URI/HTTP/Storage path全てOK)'
+                    })
+                    
+                    if (hasAvatar) {
                       const imageData = [{
                         id: '1',
                         url: profile.avatar_url,

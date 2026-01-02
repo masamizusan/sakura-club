@@ -8,6 +8,8 @@ import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
+import { resolveAvatarSrc } from '@/utils/imageResolver'
+import { createClient } from '@/lib/supabase'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -638,6 +640,9 @@ function ProfilePreviewContent() {
   // 言語切り替え状態
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const { t } = useTranslation(currentLanguage)
+  
+  // Supabase client for image resolution
+  const supabase = createClient()
 
   // 🔒 セキュリティ強化: ユーザー固有のsessionStorageからデータを取得
   useEffect(() => {
@@ -802,17 +807,20 @@ function ProfilePreviewContent() {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* プロフィール画像 */}
             <div className="relative aspect-square bg-gray-100">
-              {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="プロフィール"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                  <User className="w-24 h-24 text-gray-400" />
-                </div>
-              )}
+              {(() => {
+                const avatarSrc = resolveAvatarSrc(profileImage, supabase)
+                return avatarSrc ? (
+                  <img
+                    src={avatarSrc}
+                    alt="プロフィール"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <User className="w-24 h-24 text-gray-400" />
+                  </div>
+                )
+              })()}
             </div>
 
             {/* プロフィール情報 */}

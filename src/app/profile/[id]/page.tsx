@@ -20,6 +20,8 @@ import {
   Sparkles
 } from 'lucide-react'
 import Link from 'next/link'
+import { resolveAvatarSrc } from '@/utils/imageResolver'
+import { createClient } from '@/lib/supabase'
 
 function ProfileDetailContent() {
   const params = useParams()
@@ -27,6 +29,7 @@ function ProfileDetailContent() {
   const profileId = params?.id as string
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
 
   // APIからプロフィールデータを取得
   useEffect(() => {
@@ -216,15 +219,22 @@ function ProfileDetailContent() {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-6">
               {/* Main Image */}
               <div className="relative h-96 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
-                {profile.images && profile.images[currentImageIndex] ? (
-                  <img 
-                    src={profile.images[currentImageIndex]} 
-                    alt={`${profile.name}のプロフィール写真`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Users className="w-24 h-24 text-sakura-400" />
-                )}
+                {(() => {
+                  const imageToShow = profile.images && profile.images[currentImageIndex] 
+                    ? profile.images[currentImageIndex] 
+                    : profile.avatar_url
+                  const resolvedSrc = resolveAvatarSrc(imageToShow, supabase)
+                  
+                  return resolvedSrc ? (
+                    <img 
+                      src={resolvedSrc} 
+                      alt={`${profile.name}のプロフィール写真`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Users className="w-24 h-24 text-sakura-400" />
+                  )
+                })()}
               </div>
 
               {/* Image Thumbnails */}
@@ -239,15 +249,18 @@ function ProfileDetailContent() {
                           currentImageIndex === index ? 'ring-2 ring-sakura-500' : ''
                         }`}
                       >
-                        {image ? (
-                          <img 
-                            src={image} 
-                            alt={`${profile.name}の写真 ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Camera className="w-6 h-6 text-sakura-400" />
-                        )}
+                        {(() => {
+                          const resolvedSrc = resolveAvatarSrc(image, supabase)
+                          return resolvedSrc ? (
+                            <img 
+                              src={resolvedSrc} 
+                              alt={`${profile.name}の写真 ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Camera className="w-6 h-6 text-sakura-400" />
+                          )
+                        })()}
                       </button>
                     ))}
                   </div>

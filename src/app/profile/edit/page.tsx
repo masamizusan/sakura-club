@@ -1305,14 +1305,32 @@ function ProfileEditContent() {
         
         // blob URLでない場合のみデータベースに保存
         if (avatarUrl) {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ avatar_url: avatarUrl })
-            .eq('user_id', user.id)
-
-          if (error) {
-            throw new Error(`DB保存失敗: ${error.message}`)
+          // 🛡️ 恒久ガード: base64はStorageにアップロードしてURLに変換
+          console.log('🛡️ Avatar URL normalization before DB save')
+          const { normalizeAvatarUrl } = await import('@/utils/avatarStorage')
+          const normalizeResult = await normalizeAvatarUrl(avatarUrl, user.id)
+          
+          if (!normalizeResult.success) {
+            throw new Error(`Avatar処理失敗: ${normalizeResult.error}`)
           }
+          
+          const finalAvatarUrl = normalizeResult.avatarUrl
+          if (normalizeResult.wasBase64) {
+            console.log('✅ Base64をStorage URLに変換:', finalAvatarUrl?.substring(0, 50) + '...')
+          }
+          
+          // 🔄 Storage path方式で保存
+          const { updateProfileAvatar } = await import('@/utils/avatarUploader')
+          const uploadResult = await updateProfileAvatar(avatarUrl, user.id, supabase)
+          
+          if (!uploadResult.success || !uploadResult.dbUpdateSuccess) {
+            throw new Error(`Avatar保存失敗: ${uploadResult.error}`)
+          }
+          
+          console.log(`🔄 Avatar saved to DB as storage path: ${uploadResult.storagePath}`)
+          
+          // DB更新は既にupdateProfileAvatarで実行済み
+          console.log('✅ Storage path画像保存完了')
           console.log('✅ 写真がデータベースに保存されました')
         } else if (newImages.length === 0) {
           // 画像が完全に削除された場合は、データベースのavatar_urlをnullに更新
@@ -4107,7 +4125,7 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        avatar_url: avatarUrl,
+        avatar_url: null, // avatar_url は別途Storage path処理
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
@@ -4338,6 +4356,23 @@ function ProfileEditContent() {
       
       // 🔍 CRITICAL: updateの戻りで"更新件数"を確定する
       const updateRowCount = updateResult?.length || 0
+      
+      // 🔄 Avatar Storage path 処理（DB更新後）
+      if (profileImages.length > 0 && profileImages[0]?.url) {
+        try {
+          console.log('🔄 Processing avatar upload to Storage (path-based)')
+          const { updateProfileAvatar } = await import('@/utils/avatarUploader')
+          const avatarUploadResult = await updateProfileAvatar(profileImages[0].url, user.id, supabase)
+          
+          if (avatarUploadResult.success && avatarUploadResult.dbUpdateSuccess) {
+            console.log(`✅ Avatar saved to Storage: ${avatarUploadResult.storagePath}`)
+          } else {
+            console.warn('⚠️ Avatar Storage保存失敗（メイン保存は継続）:', avatarUploadResult.error)
+          }
+        } catch (avatarError) {
+          console.warn('⚠️ Avatar処理エラー（メイン保存は継続）:', avatarError)
+        }
+      }
       const hasError = Boolean(updateError)
       
       // 🔍 CRITICAL: .select()戻り値でpersonality_tags保存確認
