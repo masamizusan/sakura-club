@@ -737,7 +737,7 @@ function ProfileEditContent() {
       timestamp: new Date().toISOString()
     })
     
-    // 🚨 C案修正: 画像入力優先順位見直し（空配列を優先しない）
+    // 🔥 Task A: 画像入力優先順位見直し（profile.avatar_url補完追加）
     const rawImagesForCalc = (() => {
       // 1. explicitImages（ありかつ非空なら最優先）
       if (Array.isArray(explicitImages) && explicitImages.length > 0) {
@@ -757,7 +757,25 @@ function ProfileEditContent() {
         return formImages
       }
       
-      // いずれも空/未定義なら空配列
+      // 🔥 Task A修正: DBのavatar_urlから画像補完（MyPage→Edit 100%維持）
+      if (typeof dbProfile?.avatar_url === "string" && dbProfile.avatar_url.trim().length > 0) {
+        console.log('🛡️ 画像補完: DBのavatar_urlから画像データ生成', {
+          avatar_url_preview: dbProfile.avatar_url.substring(0, 30) + '...',
+          avatar_url_type: typeof dbProfile.avatar_url,
+          补完_reason: 'MyPage→Edit完成度100%維持のため',
+          data_uri_ok: true,
+          storage_path_ok: true
+        })
+        return [{
+          id: 'db-avatar',
+          url: dbProfile.avatar_url,
+          originalUrl: dbProfile.avatar_url,
+          isMain: true,
+          isEdited: false
+        }]
+      }
+      
+      // すべて空/未定義なら空配列
       return []
     })()
     
@@ -813,6 +831,8 @@ function ProfileEditContent() {
       profileImages_state_length: profileImages.length,
       profileImagesRef_length: profileImagesRef.current.length,
       raw_imagesForCalc_length: rawImagesForCalc.length,
+      profile_avatar_url_exists: !!dbProfile?.avatar_url,
+      profile_avatar_url_preview: dbProfile?.avatar_url?.substring(0, 30) || 'null',
       normalized_imagesForCalc_length: imagesForCalc.length,
       base64_filtered: rawImagesForCalc.length - imagesForCalc.length,
       using: explicitImages ? 'explicitImages' : 'profileImagesRef',
@@ -914,7 +934,12 @@ function ProfileEditContent() {
         hasImages_result: result.hasImages,
         missing_fields: result.hasImages ? 'none' : 'profile_images',
         calculation_source: 'calculateCompletionFromForm',
-        images_passed_to_calc: imagesForCalc.length
+        images_passed_to_calc: imagesForCalc.length,
+        // 🔥 Task A確認用デバッグログ
+        profile_avatar_url_exists: !!dbProfile?.avatar_url,
+        profile_avatar_url_preview: dbProfile?.avatar_url?.substring(0, 30) || 'null',
+        avatar_url_補完_success: rawImagesForCalc.some((img: any) => img.id === 'db-avatar'),
+        task_A_effectiveness: imagesForCalc.length > 0 ? 'SUCCESS' : 'NEED_CHECK'
       })
 
       console.log('🌟 updateCompletionUnified: 完了', {

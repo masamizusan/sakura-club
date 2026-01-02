@@ -185,11 +185,12 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     judgment_basis: 'data URI/HTTP/Storage path全てOK（base64除外を撤廃）'
   })
   
-  // 🌸 優先度1: has_profile_imageフラグが設定されていればそれを最優先
-  if (typeof (profile as any).has_profile_image === 'boolean') {
-    console.log('🎯 has_profile_imageフラグ優先:', (profile as any).has_profile_image)
-    return (profile as any).has_profile_image
+  // 🔥 Task B修正: has_profile_imageフラグはtrueの場合のみ優先（falseは実データにフォールバック）
+  if ((profile as any).has_profile_image === true) {
+    console.log('🎯 has_profile_imageフラグ=true: 強制的に画像あり判定')
+    return true
   }
+  // has_profile_image=false/null/undefinedの場合は実データ（avatar_url/imageArray）で判定
   
   // 🌸 優先度2: imageArray（フォーム状態）- プロフィール編集中のみ
   if (Array.isArray(imageArray) && imageArray.length > 0) {
