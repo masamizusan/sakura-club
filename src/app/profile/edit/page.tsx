@@ -1202,7 +1202,7 @@ function ProfileEditContent() {
                 newImages
               )
               
-              const testModeKey = 'SC_PROFILE_DRAFT_TEST_MODE'
+              const testModeKey = `SC_PROFILE_DRAFT_TEST_MODE_${user?.id || 'anonymous'}`
               const testData = {
                 completion: completionResult.completion,
                 completedItems: completionResult.completedFields,
@@ -1214,7 +1214,7 @@ function ProfileEditContent() {
               }
               
               localStorage.setItem(testModeKey, JSON.stringify(testData))
-              console.log('🧪 TEST MODE: Saved completion to fixed localStorage key', {
+              console.log('🧪 TEST MODE: Saved completion to user-specific localStorage key', {
                 key: testModeKey,
                 completion: completionResult.completion,
                 images: newImages.length
@@ -1233,11 +1233,20 @@ function ProfileEditContent() {
         // 絶対にthrowしない
       }
       
-      // ② TESTモード or userなし → ここでreturn（外部I/Oスキップ）
-      if (isTestMode || !user?.id) {
-        console.log('🧪 IMAGE_DELETE: skipped external I/O (test mode)', {
-          isTestMode,
+      // ② TESTモード時の処理分岐（DB保存は継続）
+      if (isTestMode) {
+        console.log('🧪 TEST MODE: Local storage handled, but DB save continues', {
+          isTestMode: true,
           hasUserId: !!user?.id,
+          willContinueToDbSave: true
+        })
+        // localStorage処理のみ調整済み、DB処理は継続
+      }
+      
+      // userIdが無い場合のみ外部I/Oを停止（安全策として維持）
+      if (!user?.id) {
+        console.log('🧪 No user ID, skipping all external I/O', {
+          hasUserId: false,
           localStateOnly: true,
           completionAlreadyUpdated: true
         })

@@ -29,6 +29,13 @@ const getStoragePrefix = (): string => {
   return isTestModeActive() ? TEST_MODE_PREFIX : PROD_MODE_PREFIX
 }
 
+// ユーザー別キー生成（TEST MODE対応）
+const getUserSpecificKey = (baseKey: string, userId?: string): string => {
+  const prefix = getStoragePrefix()
+  const userSuffix = userId ? `_${userId}` : '_anonymous'
+  return `${prefix}${baseKey}${userSuffix}`
+}
+
 // 安全なlocalStorage操作
 export const safeLocalStorage = {
   setItem: (key: string, value: string): void => {
@@ -135,6 +142,41 @@ export const safeSessionStorage = {
       console.log(`🧹 Cleared ${isTestModeActive() ? 'TEST' : 'PROD'} mode session:`, keysToRemove.length, 'items')
     } catch (error) {
       console.error('Clear session storage error:', error)
+    }
+  }
+}
+
+// ユーザー別localStorage操作（推奨）
+export const safeUserStorage = {
+  setItem: (key: string, value: string, userId?: string): void => {
+    try {
+      const userSpecificKey = getUserSpecificKey(key, userId)
+      console.log(`📦 User Storage set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
+      localStorage.setItem(userSpecificKey, value)
+    } catch (error) {
+      console.error('User localStorage setItem error:', error)
+    }
+  },
+
+  getItem: (key: string, userId?: string): string | null => {
+    try {
+      const userSpecificKey = getUserSpecificKey(key, userId)
+      const value = localStorage.getItem(userSpecificKey)
+      console.log(`📦 User Storage get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey, !!value)
+      return value
+    } catch (error) {
+      console.error('User localStorage getItem error:', error)
+      return null
+    }
+  },
+
+  removeItem: (key: string, userId?: string): void => {
+    try {
+      const userSpecificKey = getUserSpecificKey(key, userId)
+      console.log(`🗑️ User Storage remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
+      localStorage.removeItem(userSpecificKey)
+    } catch (error) {
+      console.error('User localStorage removeItem error:', error)
     }
   }
 }
