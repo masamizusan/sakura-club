@@ -76,7 +76,7 @@ function MyPageContent() {
         
         if (!profileData) {
           console.error('🚨 MyPage: Profile ensure failed for user:', user.id)
-          setError('プロフィール情報を取得できませんでした')
+          // ensureProfileForUser()により基本的にnullにはならないが、念のため
           setIsLoading(false)
           return
         }

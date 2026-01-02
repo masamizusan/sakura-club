@@ -9,6 +9,13 @@
 
 import { SupabaseClient, User } from '@supabase/supabase-js'
 
+// AuthUserとUserの互換性のために型を拡張
+type AuthUserCompatible = User | {
+  id: string
+  email?: string
+  [key: string]: any
+}
+
 export interface ProfileData {
   id: string
   user_id: string
@@ -30,7 +37,7 @@ export interface ProfileData {
  */
 export async function ensureProfileForUser(
   supabase: SupabaseClient,
-  user: User | null
+  user: AuthUserCompatible | null
 ): Promise<ProfileData | null> {
   if (!user?.id) {
     console.log('🚫 ensureProfileForUser: No user provided')
@@ -132,7 +139,7 @@ export async function ensureProfileForUser(
  */
 export async function checkProfileExists(
   supabase: SupabaseClient,
-  user: User | null
+  user: AuthUserCompatible | null
 ): Promise<boolean> {
   if (!user?.id) return false
 

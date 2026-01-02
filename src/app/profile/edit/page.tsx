@@ -848,13 +848,12 @@ function ProfileEditContent() {
       })
 
       const urlParams = new URLSearchParams(window.location.search)
-      // 🔗 DB存在ベースでisNewUser判定（profiles.user_id が紐付いているかで判断）
-      const { checkProfileExists } = await import('@/lib/profile/ensureProfileForUser')
-      const profileExists = await checkProfileExists(supabase, user)
-      const isNewUser = !profileExists  // DBに存在しない = 新規ユーザー
+      // 🔗 DB存在ベースでisNewUser判定（dbProfileの存在で判断）
+      // ensureProfileForUser()により確実にプロフィールが存在するため、基本的にfalse
+      const isNewUser = !dbProfile || (!dbProfile.name && !dbProfile.bio && !dbProfile.interests)
       
       console.log('🔍 isNewUser DB-based determination:', {
-        profileExists,
+        hasDbProfile: !!dbProfile,
         isNewUser,
         userId: user?.id,
         fromSignup: urlParams.get('from') === 'signup'
@@ -2833,7 +2832,7 @@ function ProfileEditContent() {
       try {
         // 🔗 user_id ベースでプロフィール取得・作成を保証
         const { ensureProfileForUser } = await import('@/lib/profile/ensureProfileForUser')
-        const profile = await ensureProfileForUser(supabase, user)
+        let profile = await ensureProfileForUser(supabase, user)
 
         if (!profile) {
           console.error('Profile ensure failed for user:', user?.id)
@@ -2905,8 +2904,8 @@ function ProfileEditContent() {
 
         // 🔍 専用カラム優先でフィールド値を取得するヘルパー関数
         const getFieldValue = (fieldName: string) => {
-          // 専用カラムの値を優先
-          if (profile[fieldName] !== null && profile[fieldName] !== undefined && profile[fieldName] !== '') {
+          // 専用カラムの値を優先（profile null check追加）
+          if (profile && profile[fieldName] !== null && profile[fieldName] !== undefined && profile[fieldName] !== '') {
             return profile[fieldName]
           }
           
@@ -2978,16 +2977,16 @@ function ProfileEditContent() {
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
         const getDefaults = () => {
           const baseDefaults = {
-            gender: (signupData as any).gender || profile.gender || (isForeignMale ? 'male' : 'female'),
-            nationality: (signupData as any).nationality || profile.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
-            prefecture: (signupData as any).prefecture || profile.prefecture || '',
-            birth_date: (signupData as any).birth_date || profile.birth_date || '',
-            age: (signupData as any).age ? parseInt((signupData as any).age) : profile.age || 18,
+            gender: (signupData as any).gender || profile?.gender || (isForeignMale ? 'male' : 'female'),
+            nationality: (signupData as any).nationality || profile?.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
+            prefecture: (signupData as any).prefecture || profile?.prefecture || '',
+            birth_date: (signupData as any).birth_date || profile?.birth_date || '',
+            age: (signupData as any).age ? parseInt((signupData as any).age) : profile?.age || 18,
           }
           
           console.log('🏗️ getDefaults calculation:', {
             signupData_nationality: (signupData as any).nationality,
-            profile_nationality: profile.nationality,
+            profile_nationality: profile?.nationality,
             isForeignMale,
             final_nationality: baseDefaults.nationality
           })
