@@ -3989,18 +3989,73 @@ function ProfileEditContent() {
 
       // メイン画像を決定
       const mainImageIndex = profileImages.findIndex(img => img.isMain)
-      const avatarUrl = mainImageIndex !== -1 && uploadedImageUrls[mainImageIndex] 
+      const rawAvatarUrl = mainImageIndex !== -1 && uploadedImageUrls[mainImageIndex] 
         ? uploadedImageUrls[mainImageIndex] 
         : uploadedImageUrls[0] || null
 
-      console.log('🎯 Selected avatar URL:', avatarUrl)
+      console.log('🎯 Raw avatar URL (before Base64→Storage conversion):', rawAvatarUrl)
       console.log('📸 All uploaded URLs:', uploadedImageUrls)
       console.log('🔍 Profile images state:', profileImages)
-      console.log('📊 Image processing summary:', {
+
+      // 🔥 NEW: Base64→Storage変換処理（保存時のみ）
+      let avatarUrl = rawAvatarUrl
+      let conversionResult = null
+
+      if (rawAvatarUrl) {
+        console.log('🚨 Checking for Base64→Storage conversion need...')
+        
+        // Base64判定とStorage変換
+        if (rawAvatarUrl.startsWith('data:image/')) {
+          console.log('🔄 Base64 detected → Starting Storage conversion...')
+          
+          try {
+            const response = await fetch('/api/upload-avatar', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                dataUrl: rawAvatarUrl
+              })
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              if (result.success) {
+                avatarUrl = result.path // Storage path（例：user123/avatar.jpg）
+                conversionResult = {
+                  converted: true,
+                  originalSize: rawAvatarUrl.length,
+                  storagePath: result.path,
+                  savedBytes: rawAvatarUrl.length - result.path.length
+                }
+                console.log('✅ Base64→Storage conversion success:', conversionResult)
+              } else {
+                console.warn('⚠️ Storage conversion failed, using original Base64:', result.error)
+                conversionResult = { converted: false, error: result.error }
+              }
+            } else {
+              console.warn('⚠️ Storage API error, using original Base64:', response.statusText)
+              conversionResult = { converted: false, error: response.statusText }
+            }
+          } catch (error) {
+            console.warn('⚠️ Storage conversion error, using original Base64:', error)
+            conversionResult = { converted: false, error: error instanceof Error ? error.message : 'Unknown error' }
+          }
+        } else {
+          console.log('✅ Non-Base64 image (HTTP/Storage path), no conversion needed')
+          conversionResult = { converted: false, reason: 'Non-Base64 format' }
+        }
+      }
+
+      console.log('📊 Final image processing summary:', {
         totalImages: profileImages.length,
         uploadedUrls: uploadedImageUrls.length,
         mainImageIndex,
-        finalAvatarUrl: avatarUrl
+        rawAvatarUrl: rawAvatarUrl?.substring(0, 60) + '...' || 'null',
+        finalAvatarUrl: avatarUrl?.substring(0, 60) + '...' || 'null',
+        conversionResult
       })
 
       // 🆕 Triple-save対応: interests配列の構築（互換性維持）
