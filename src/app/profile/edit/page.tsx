@@ -4205,7 +4205,8 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        avatar_url: null, // avatar_url は別途Storage path処理
+        // 🔧 AVATAR: ensureAvatarStored()で変換済みのURLを設定
+        avatar_url: null, // ⚠️ この行は下で置換される
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
@@ -4427,6 +4428,39 @@ function ProfileEditContent() {
         return
       }
 
+      // 🚨 CRITICAL: DB保存直前のAvatar Storage確実実行
+      console.log('🔧 AVATAR STORAGE PROCESSING: Starting ensureAvatarStored...')
+      
+      const { ensureAvatarStored } = await import('@/utils/ensureAvatarStored')
+      const avatarResult = await ensureAvatarStored(avatarUrl, user.id, supabase)
+      
+      // updateData.avatar_url を確実にStorage URLまたはnullに設定
+      updateData.avatar_url = avatarResult.avatarUrlForDb
+      
+      console.log('🚨 AVATAR DEBUG - DB保存直前状態（修正版）:', {
+        avatar_input_type: avatarResult.originalFormat,
+        upload_attempted: avatarResult.uploadAttempted,
+        upload_result: avatarResult.uploadResult,
+        upload_error: avatarResult.uploadError || 'none',
+        final_avatar_url_to_DB: updateData.avatar_url?.substring(0, 60) + '...' || 'null',
+        success: avatarResult.success,
+        savedBytes: avatarResult.savedBytes || 0,
+        problem_fixed: avatarResult.originalFormat === 'data_url' && avatarResult.uploadResult === 'success' ? '✅ Base64→Storage変換成功' : 'N/A'
+      })
+      
+      // 🚨 Storage失敗時の処理（新規保存ではDB保存停止）
+      if (!avatarResult.success && avatarResult.originalFormat === 'data_url') {
+        console.error('❌ Avatar Storage処理失敗 - Base64のDB保存を阻止')
+        console.error('   Error:', avatarResult.uploadError)
+        
+        // 新規保存時はStorage失敗でDB保存を停止
+        setError(`画像のアップロードに失敗しました: ${avatarResult.uploadError}`)
+        setIsSubmitting(false)
+        return // DB更新を実行しない
+        
+        // 注意：既存ユーザーの編集時は別途考慮が必要だが、今回は新規前提
+      }
+
       // 📊 CRITICAL: updateを.select()付きで実行（戻りデータ取得）
       const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
@@ -4437,22 +4471,8 @@ function ProfileEditContent() {
       // 🔍 CRITICAL: updateの戻りで"更新件数"を確定する
       const updateRowCount = updateResult?.length || 0
       
-      // 🔄 Avatar Storage path 処理（DB更新後）
-      if (profileImages.length > 0 && profileImages[0]?.url) {
-        try {
-          console.log('🔄 Processing avatar upload to Storage (path-based)')
-          const { updateProfileAvatar } = await import('@/utils/avatarUploader')
-          const avatarUploadResult = await updateProfileAvatar(profileImages[0].url, user.id, supabase)
-          
-          if (avatarUploadResult.success && avatarUploadResult.dbUpdateSuccess) {
-            console.log(`✅ Avatar saved to Storage: ${avatarUploadResult.storagePath}`)
-          } else {
-            console.warn('⚠️ Avatar Storage保存失敗（メイン保存は継続）:', avatarUploadResult.error)
-          }
-        } catch (avatarError) {
-          console.warn('⚠️ Avatar処理エラー（メイン保存は継続）:', avatarError)
-        }
-      }
+      // ✅ Avatar処理完了（DB更新前にensureAvatarStored()で処理済み）
+      console.log('✅ Avatar processing completed before DB update')
       const hasError = Boolean(updateError)
       
       // 🔍 CRITICAL: .select()戻り値でpersonality_tags保存確認
