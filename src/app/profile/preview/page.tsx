@@ -1224,7 +1224,18 @@ function ProfilePreviewContent() {
                       })
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
-                      console.log('📍 profiles write entry: preview confirm')
+                      console.log('📍 profiles write entry: profile/preview confirm')
+                      
+                      // 🔍 保存前詳細ログ（avatar変換追跡用）
+                      const preConversionAvatarUrl = sanitizedPayload.avatar_url
+                      console.log('🔍 PRE-CONVERSION AVATAR DEBUG:', {
+                        avatar_url_exists: !!preConversionAvatarUrl,
+                        avatar_url_type: typeof preConversionAvatarUrl,
+                        avatar_url_length: (typeof preConversionAvatarUrl === 'string' ? preConversionAvatarUrl.length : 0),
+                        avatar_url_preview: (typeof preConversionAvatarUrl === 'string' ? preConversionAvatarUrl.substring(0, 30) + '...' : 'null'),
+                        is_data_url: (typeof preConversionAvatarUrl === 'string' && preConversionAvatarUrl.startsWith('data:image/')),
+                        is_http_url: /^https?:\/\//.test(preConversionAvatarUrl as string || '')
+                      })
                       
                       const { upsertProfile } = await import('@/utils/saveProfileToDb')
                       const saveResult = await upsertProfile(
@@ -1234,6 +1245,13 @@ function ProfilePreviewContent() {
                         'profile/preview/page.tsx/confirm',
                         ['id']
                       )
+                      
+                      // 🔍 保存後詳細ログ（結果確認用）
+                      console.log('🔍 POST-CONVERSION RESULT:', {
+                        save_success: saveResult.success,
+                        save_error: saveResult.error || 'none',
+                        final_data_count: saveResult.data?.length || 0
+                      })
 
                       if (!saveResult.success) {
                         console.error('❌ PROFILE UPSERT FAILED via unified pipeline')
