@@ -4428,37 +4428,42 @@ function ProfileEditContent() {
         return
       }
 
-      // 🚨 CRITICAL: DB保存直前のAvatar Storage確実実行
+      // 🚨 CRITICAL: DB保存直前のAvatar Storage確実実行（指示書準拠版）
       console.log('🔧 AVATAR STORAGE PROCESSING: Starting ensureAvatarStored...')
       
-      const { ensureAvatarStored } = await import('@/utils/ensureAvatarStored')
-      const avatarResult = await ensureAvatarStored(avatarUrl, user.id, supabase)
+      const { ensureAvatarStored, blockBase64FromDB } = await import('@/utils/ensureAvatarStored')
       
-      // updateData.avatar_url を確実にStorage URLまたはnullに設定
-      updateData.avatar_url = avatarResult.avatarUrlForDb
-      
-      console.log('🚨 AVATAR DEBUG - DB保存直前状態（修正版）:', {
-        avatar_input_type: avatarResult.originalFormat,
-        upload_attempted: avatarResult.uploadAttempted,
-        upload_result: avatarResult.uploadResult,
-        upload_error: avatarResult.uploadError || 'none',
-        final_avatar_url_to_DB: updateData.avatar_url?.substring(0, 60) + '...' || 'null',
-        success: avatarResult.success,
-        savedBytes: avatarResult.savedBytes || 0,
-        problem_fixed: avatarResult.originalFormat === 'data_url' && avatarResult.uploadResult === 'success' ? '✅ Base64→Storage変換成功' : 'N/A'
-      })
-      
-      // 🚨 Storage失敗時の処理（新規保存ではDB保存停止）
-      if (!avatarResult.success && avatarResult.originalFormat === 'data_url') {
-        console.error('❌ Avatar Storage処理失敗 - Base64のDB保存を阻止')
-        console.error('   Error:', avatarResult.uploadError)
+      try {
+        // 指示書準拠：ensureAvatarStored(supabase, userId, avatarUrl)
+        const finalAvatarUrl = await ensureAvatarStored(supabase, user.id, avatarUrl)
         
-        // 新規保存時はStorage失敗でDB保存を停止
-        setError(`画像のアップロードに失敗しました: ${avatarResult.uploadError}`)
+        // updateData.avatar_url を確実にStorage URLまたはnullに設定
+        updateData.avatar_url = finalAvatarUrl
+        
+        console.log('🚨 AVATAR PROCESSING COMPLETE - DB保存直前状態（指示書準拠版）:', {
+          final_avatar_url_to_DB: updateData.avatar_url?.substring(0, 30) + '...' || 'null'
+        })
+        
+      } catch (error) {
+        console.error('❌ Avatar Storage処理失敗 - DB保存を阻止')
+        console.error('   Error:', error instanceof Error ? error.message : 'Unknown error')
+        
+        // 指示書準拠：Storage失敗時は新規保存を失敗にする
+        setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
         setIsSubmitting(false)
         return // DB更新を実行しない
+      }
+      
+      // 🛡️ 遮断用安全装置（指示書準拠）- 再発防止
+      try {
+        blockBase64FromDB(updateData)
+      } catch (blockError) {
+        console.error('❌ Base64遮断装置が発動 - DB保存を阻止')
+        console.error('   Error:', blockError instanceof Error ? blockError.message : 'Unknown error')
         
-        // 注意：既存ユーザーの編集時は別途考慮が必要だが、今回は新規前提
+        setError('画像データの保存処理でエラーが発生しました')
+        setIsSubmitting(false)
+        return // DB更新を実行しない
       }
 
       // 📊 CRITICAL: updateを.select()付きで実行（戻りデータ取得）
