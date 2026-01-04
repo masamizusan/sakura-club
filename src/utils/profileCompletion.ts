@@ -453,7 +453,8 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
     profile.visit_schedule !== '' && 
     profile.visit_schedule !== 'none' &&
     profile.visit_schedule !== 'no-entry' &&
-    profile.visit_schedule !== 'noEntry'
+    profile.visit_schedule !== 'noEntry' &&
+    profile.visit_schedule !== 'forms.noEntry'
   if (visitScheduleFilled) {
     completedCount++
   }
@@ -464,7 +465,8 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
     profile.travel_companion !== 'none' &&
     profile.travel_companion !== 'no-entry' &&
     profile.travel_companion !== 'noEntry' &&
-    profile.travel_companion !== 'undecided'
+    profile.travel_companion !== 'undecided' &&
+    profile.travel_companion !== 'forms.noEntry'
   if (travelCompanionFilled) {
     completedCount++
   }

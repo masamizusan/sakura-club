@@ -3508,13 +3508,13 @@ function ProfileEditContent() {
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
 
             const visitScheduleValue = isNewUser ? undefined :
-              (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry'
+              (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'forms.noEntry'
                 ? profile!.visit_schedule : undefined)
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
             const travelCompanionValue = isNewUser ? 'undecided' :
-              (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry'
+              (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry' && profile.travel_companion !== 'forms.noEntry'
                 ? profile!.travel_companion : 'undecided')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
@@ -5319,7 +5319,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="no-entry">{t('forms.noEntry')}</SelectItem>
                             {getVisitScheduleOptionsTranslated().map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -5360,7 +5359,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             <SelectValue placeholder={t('placeholders.selectTravelCompanion')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="noEntry">{t('forms.noEntry')}</SelectItem>
                             {getTravelCompanionOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
