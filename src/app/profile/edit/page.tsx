@@ -4428,50 +4428,27 @@ function ProfileEditContent() {
         return
       }
 
-      // 🚨 CRITICAL: DB保存直前のAvatar Storage確実実行（指示書準拠版）
-      console.log('🔧 AVATAR STORAGE PROCESSING: Starting ensureAvatarStored...')
+      // 🚨 CRITICAL: 統一パイプライン経由でDB保存（Base64完全遮断）
+      console.log('🔧 PROFILE SAVE: Starting unified pipeline...')
       
-      const { ensureAvatarStored, blockBase64FromDB } = await import('@/utils/ensureAvatarStored')
+      const { updateProfile } = await import('@/utils/saveProfileToDb')
       
-      try {
-        // 指示書準拠：ensureAvatarStored(supabase, userId, avatarUrl)
-        const finalAvatarUrl = await ensureAvatarStored(supabase, user.id, avatarUrl)
-        
-        // updateData.avatar_url を確実にStorage URLまたはnullに設定
-        updateData.avatar_url = finalAvatarUrl
-        
-        console.log('🚨 AVATAR PROCESSING COMPLETE - DB保存直前状態（指示書準拠版）:', {
-          final_avatar_url_to_DB: updateData.avatar_url?.substring(0, 30) + '...' || 'null'
-        })
-        
-      } catch (error) {
-        console.error('❌ Avatar Storage処理失敗 - DB保存を阻止')
-        console.error('   Error:', error instanceof Error ? error.message : 'Unknown error')
-        
-        // 指示書準拠：Storage失敗時は新規保存を失敗にする
-        setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      const saveResult = await updateProfile(
+        supabase,
+        user.id,
+        updateData,
+        'profile/edit/page.tsx/onSubmit'
+      )
+      
+      if (!saveResult.success) {
+        console.error('❌ Profile save failed through unified pipeline')
+        setError(`プロフィールの保存に失敗しました: ${saveResult.error}`)
         setIsSubmitting(false)
-        return // DB更新を実行しない
+        return
       }
       
-      // 🛡️ 遮断用安全装置（指示書準拠）- 再発防止
-      try {
-        blockBase64FromDB(updateData)
-      } catch (blockError) {
-        console.error('❌ Base64遮断装置が発動 - DB保存を阻止')
-        console.error('   Error:', blockError instanceof Error ? blockError.message : 'Unknown error')
-        
-        setError('画像データの保存処理でエラーが発生しました')
-        setIsSubmitting(false)
-        return // DB更新を実行しない
-      }
-
-      // 📊 CRITICAL: updateを.select()付きで実行（戻りデータ取得）
-      const { data: updateResult, error: updateError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', finalUid)  // 絶対に1行に当てる
-        .select('id, personality_tags, culture_tags')
+      const updateResult = saveResult.data
+      const updateError = null
       
       // 🔍 CRITICAL: updateの戻りで"更新件数"を確定する
       const updateRowCount = updateResult?.length || 0

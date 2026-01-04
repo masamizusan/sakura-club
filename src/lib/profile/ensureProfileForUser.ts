@@ -183,7 +183,7 @@ export async function ensureProfileForUserSafe(
       }
     }
 
-    // 4-2. 通常のクライアント側作成
+    // 4-2. 🛡️ 統一パイプライン経由でのプロフィール作成（Base64遮断保証）
     const newProfileData = {
       user_id: user.id,
       email: user.email,
@@ -191,23 +191,39 @@ export async function ensureProfileForUserSafe(
       // 最小限の初期値（UIバリデーションと整合）
       name: null,
       gender: null,
-      birth_date: null
+      birth_date: null,
+      avatar_url: null // ✅ OK: 画像は未設定が正解（Base64は絶対にセットしない）
     }
 
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles')
-      .insert(newProfileData)
-      .select('*')
-      .single()
+    // 🚨 CRITICAL: saveProfileToDb統一パイプライン使用でBase64遮断保証
+    const { insertProfile } = await import('@/utils/saveProfileToDb')
+    const saveResult = await insertProfile(
+      supabase,
+      user.id,
+      newProfileData,
+      'ensureProfileForUser/clientSide'
+    )
+
+    let insertError: Error | null = null
+    let newProfile: any = null
+
+    if (!saveResult.success) {
+      insertError = new Error(saveResult.error || 'Profile creation failed')
+      newProfile = null
+    } else {
+      newProfile = saveResult.data?.[0]
+      insertError = null
+    }
 
     if (insertError) {
       // 🔧 方針1: 403/406は想定内として扱い、遷移を止めない
-      const is403 = insertError.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('insufficient_privilege')
-      const is406 = insertError.code === 'PGRST116' || insertError.message?.includes('No rows')
+      const errorAny = insertError as any
+      const is403 = errorAny.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('insufficient_privilege')
+      const is406 = errorAny.code === 'PGRST116' || insertError.message?.includes('No rows')
       
       console.error('🚨 ensureProfileForUser: Insert failed (継続可能)', {
         error: insertError,
-        code: insertError.code,
+        code: errorAny.code,
         message: insertError.message,
         is403_RLS_suspected: is403,
         is406_no_rows: is406,
