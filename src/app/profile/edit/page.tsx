@@ -5297,17 +5297,29 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           {t('profile.visitSchedule')}
                         </label>
                         <Select
-                          value={watch('visit_schedule') || 'no-entry'}
+                          value={(() => {
+                            const currentValue = watch('visit_schedule')
+                            // sentinel値は未選択として表示
+                            if (!currentValue || currentValue === 'no-entry' || currentValue === 'noEntry' || currentValue === 'none') {
+                              return undefined
+                            }
+                            return currentValue
+                          })()}
                           onValueChange={(value) => {
                             setValue('visit_schedule', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
                             console.log('📝 Visit schedule changed:', value)
+                            
+                            // 🔍 完成度計算デバッグログ（指示書対応）
+                            console.log('[FORM] visit_schedule:', value)
+                            console.log('[FORM] travel_companion:', watch('travel_companion'))
                           }}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
                             <SelectValue placeholder={t('placeholders.selectVisitSchedule')} />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="no-entry">{t('forms.noEntry')}</SelectItem>
                             {getVisitScheduleOptionsTranslated().map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -5326,17 +5338,29 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           {t('profile.travelCompanion')}
                         </label>
                         <Select
-                          value={watch('travel_companion') || 'noEntry'}
+                          value={(() => {
+                            const currentValue = watch('travel_companion')
+                            // sentinel値は未選択として表示
+                            if (!currentValue || currentValue === 'noEntry' || currentValue === 'no-entry' || currentValue === 'none' || currentValue === 'undecided') {
+                              return undefined
+                            }
+                            return currentValue
+                          })()}
                           onValueChange={(value) => {
                             setValue('travel_companion', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
                             console.log('📝 Travel companion changed:', value)
+                            
+                            // 🔍 完成度計算デバッグログ（指示書対応）
+                            console.log('[FORM] visit_schedule:', watch('visit_schedule'))
+                            console.log('[FORM] travel_companion:', value)
                           }}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
                             <SelectValue placeholder={t('placeholders.selectTravelCompanion')} />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="noEntry">{t('forms.noEntry')}</SelectItem>
                             {getTravelCompanionOptions(t).map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}

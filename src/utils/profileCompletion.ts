@@ -448,15 +448,35 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
     completedCount++
   }
   
-  // 15. 訪問予定
-  if (profile.visit_schedule && profile.visit_schedule !== '' && profile.visit_schedule !== 'none') {
+  // 15. 訪問予定（sentinel値除外修正）
+  const visitScheduleFilled = profile.visit_schedule && 
+    profile.visit_schedule !== '' && 
+    profile.visit_schedule !== 'none' &&
+    profile.visit_schedule !== 'no-entry' &&
+    profile.visit_schedule !== 'noEntry'
+  if (visitScheduleFilled) {
     completedCount++
   }
   
-  // 16. 旅行同伴者
-  if (profile.travel_companion && profile.travel_companion !== '' && profile.travel_companion !== 'none') {
+  // 16. 旅行同伴者（sentinel値除外修正）
+  const travelCompanionFilled = profile.travel_companion && 
+    profile.travel_companion !== '' && 
+    profile.travel_companion !== 'none' &&
+    profile.travel_companion !== 'no-entry' &&
+    profile.travel_companion !== 'noEntry' &&
+    profile.travel_companion !== 'undecided'
+  if (travelCompanionFilled) {
     completedCount++
   }
+  
+  // 🔍 デバッグログ（指示書対応）
+  console.log('[PROFILE_FOR_SCORE]', {
+    visit_schedule: profile.visit_schedule,
+    travel_companion: profile.travel_companion,
+    visitScheduleFilled,
+    travelCompanionFilled
+  })
+  console.log('[SCORE]', { completedCount, totalCount: 17, percent: Math.round((completedCount / 17) * 100) })
   
   // 17. プロフィール画像
   if (hasProfileImages(profile, imageArray)) {
