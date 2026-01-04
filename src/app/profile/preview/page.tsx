@@ -1223,16 +1223,23 @@ function ProfilePreviewContent() {
                         length: Array.isArray(sanitizedPayload.language_skills) ? sanitizedPayload.language_skills.length : null,
                       })
 
-                      // 🚀 Step 4: 必ずupsertを実行（指示書対応）
-                      const { error: saveError } = await supabase
-                        .from('profiles')
-                        .upsert(sanitizedPayload, { onConflict: 'id' })
+                      // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
+                      console.log('📍 profiles write entry: preview confirm')
+                      
+                      const { upsertProfile } = await import('@/utils/saveProfileToDb')
+                      const saveResult = await upsertProfile(
+                        supabase,
+                        user.id,
+                        sanitizedPayload,
+                        'profile/preview/page.tsx/confirm',
+                        ['id']
+                      )
 
-                      if (saveError) {
-                        console.error('❌ PROFILE UPSERT FAILED RAW', saveError)
-                        console.error('❌ PROFILE UPSERT FAILED JSON', JSON.stringify(saveError, null, 2))
+                      if (!saveResult.success) {
+                        console.error('❌ PROFILE UPSERT FAILED via unified pipeline')
+                        console.error('❌ Error:', saveResult.error)
                         console.error('❌ PAYLOAD KEYS', Object.keys(sanitizedPayload))
-                        throw saveError
+                        throw new Error(saveResult.error || 'Profile upsert failed')
                       }
 
                       // ✅ Step 5: upsert完了ログ（指示書対応）
