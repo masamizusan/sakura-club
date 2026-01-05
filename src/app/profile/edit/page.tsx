@@ -235,13 +235,29 @@ const getJapaneseLevelOptions = (t: any) => [
 ]
 
 // 同行者選択肢（翻訳対応）
-const getTravelCompanionOptions = (t: any) => [
-  { value: 'noEntry', label: t('companion.noEntry') },
-  { value: 'alone', label: t('companion.alone') },
-  { value: 'friend', label: t('companion.friend') },
-  { value: 'family', label: t('companion.family') },
-  { value: 'partner', label: t('companion.partner') }
-]
+const getTravelCompanionOptions = (t: any) => {
+  const options = [
+    { value: 'noEntry', label: t('companion.noEntry') },
+    { value: 'alone', label: t('companion.alone') },
+    { value: 'friend', label: t('companion.friend') },
+    { value: 'family', label: t('companion.family') },
+    { value: 'partner', label: t('companion.partner') }
+  ]
+
+  // 🧪 OPTIONS DEBUG - options生成結果をログ（1回だけ）
+  if (typeof window !== 'undefined' && !(window as any).__DEBUG_COMPANION_OPTIONS_LOGGED__) {
+    (window as any).__DEBUG_COMPANION_OPTIONS_LOGGED__ = true
+    console.log('🧪 OPTIONS DEBUG [travel_companion]', {
+      values: options?.map(o => o.value),
+      labels: options?.map(o => o.label),
+      hasFormsNoEntry: (options ?? []).some(o =>
+        String(o.value).includes('forms.') || String(o.label).includes('forms.')
+      )
+    })
+  }
+
+  return options
+}
 
 
 // Japanese culture categories (with translation support)
@@ -628,6 +644,19 @@ function ProfileEditContent() {
       language_skills: [{ language: '', level: '' } as LanguageSkill]
     }
   })
+
+  // 🧪 WATCH VALUE DEBUG - visit_schedule と travel_companion の実値監視
+  const watchVisit = watch('visit_schedule')
+  const watchCompanion = watch('travel_companion')
+
+  useEffect(() => {
+    console.log('🧪 WATCH VALUE DEBUG', {
+      visit_schedule: watchVisit,
+      travel_companion: watchCompanion,
+      visitIsFormsKey: typeof watchVisit === 'string' && watchVisit.includes('forms.'),
+      companionIsFormsKey: typeof watchCompanion === 'string' && watchCompanion.includes('forms.')
+    })
+  }, [watchVisit, watchCompanion])
 
   // 言語切り替え時エラー状態クリア（「韓国語のエラーが中国語UIに残る」状態を防ぐ）
   useEffect(() => {
@@ -1965,6 +1994,18 @@ function ProfileEditContent() {
       value: `beyond-${currentYear + 2}`,
       label: getVisitScheduleLabel(`beyond-${currentYear + 2}`)
     })
+
+    // 🧪 OPTIONS DEBUG - options生成結果をログ（1回だけ）
+    if (typeof window !== 'undefined' && !(window as any).__DEBUG_VISIT_OPTIONS_LOGGED__) {
+      (window as any).__DEBUG_VISIT_OPTIONS_LOGGED__ = true
+      console.log('🧪 OPTIONS DEBUG [visit_schedule]', {
+        values: options?.map(o => o.value),
+        labels: options?.map(o => o.label),
+        hasFormsNoEntry: (options ?? []).some(o =>
+          String(o.value).includes('forms.') || String(o.label).includes('forms.')
+        )
+      })
+    }
 
     return options
   }
@@ -3414,6 +3455,20 @@ function ProfileEditContent() {
           console.log(`  - ${key}: ${JSON.stringify(value)} (type: ${typeof value})`)
         })
         
+        // 🧪 INIT/RESET WRITE [visit_schedule & travel_companion]
+        if (resetData.visit_schedule !== undefined) {
+          console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
+            write: resetData.visit_schedule,
+            reason: 'main reset() call'
+          })
+        }
+        if (resetData.travel_companion !== undefined) {
+          console.log('🧪 INIT/RESET WRITE [travel_companion]', {
+            write: resetData.travel_companion,
+            reason: 'main reset() call'
+          })
+        }
+        
         reset(resetData)
         console.log('✅ Form reset completed')
         
@@ -3511,12 +3566,24 @@ function ProfileEditContent() {
               (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'forms.noEntry'
                 ? profile!.visit_schedule : undefined)
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
+            
+            // 🧪 INIT/RESET WRITE [visit_schedule]
+            console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
+              write: visitScheduleValue,
+              reason: 'profile initialization from DB'
+            })
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
             const travelCompanionValue = isNewUser ? 'undecided' :
               (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry' && profile.travel_companion !== 'forms.noEntry'
                 ? profile!.travel_companion : 'undecided')
             console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
+            
+            // 🧪 INIT/RESET WRITE [travel_companion]
+            console.log('🧪 INIT/RESET WRITE [travel_companion]', {
+              write: travelCompanionValue,
+              reason: 'profile initialization from DB'
+            })
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
           } catch (error) {
@@ -3524,7 +3591,19 @@ function ProfileEditContent() {
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
             // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
+            
+            // 🧪 INIT/RESET WRITE [visit_schedule]
+            console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
+              write: undefined,
+              reason: 'error fallback default'
+            })
             setValue('visit_schedule', undefined, { shouldValidate: false })
+            
+            // 🧪 INIT/RESET WRITE [travel_companion]
+            console.log('🧪 INIT/RESET WRITE [travel_companion]', {
+              write: 'undecided',
+              reason: 'error fallback default'
+            })
             setValue('travel_companion', 'undecided', { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
@@ -5306,6 +5385,12 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             return currentValue
                           })()}
                           onValueChange={(value) => {
+                            // 🧪 CHANGE DEBUG [visit_schedule] BEFORE
+                            console.log('🧪 CHANGE DEBUG [visit_schedule] BEFORE', {
+                              nextValue: value,
+                              current: watch('visit_schedule'),
+                            })
+
                             setValue('visit_schedule', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
                             console.log('📝 Visit schedule changed:', value)
@@ -5313,6 +5398,20 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             // 🔍 完成度計算デバッグログ（指示書対応）
                             console.log('[FORM] visit_schedule:', value)
                             console.log('[FORM] travel_companion:', watch('travel_companion'))
+
+                            // 🧪 setValue直後の確認（マイクロタスク/次tick）
+                            queueMicrotask(() => {
+                              console.log('🧪 CHANGE DEBUG [visit_schedule] AFTER microtask', {
+                                expected: value,
+                                actual: watch('visit_schedule')
+                              })
+                            })
+                            setTimeout(() => {
+                              console.log('🧪 CHANGE DEBUG [visit_schedule] AFTER 0ms', {
+                                expected: value,
+                                actual: watch('visit_schedule')
+                              })
+                            }, 0)
                           }}
                         >
                           <SelectTrigger className={errors.visit_schedule ? 'border-red-500' : ''}>
@@ -5346,6 +5445,12 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             return currentValue
                           })()}
                           onValueChange={(value) => {
+                            // 🧪 CHANGE DEBUG [travel_companion] BEFORE
+                            console.log('🧪 CHANGE DEBUG [travel_companion] BEFORE', {
+                              nextValue: value,
+                              current: watch('travel_companion'),
+                            })
+
                             setValue('travel_companion', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
                             console.log('📝 Travel companion changed:', value)
@@ -5353,6 +5458,20 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             // 🔍 完成度計算デバッグログ（指示書対応）
                             console.log('[FORM] visit_schedule:', watch('visit_schedule'))
                             console.log('[FORM] travel_companion:', value)
+
+                            // 🧪 setValue直後の確認（マイクロタスク/次tick）
+                            queueMicrotask(() => {
+                              console.log('🧪 CHANGE DEBUG [travel_companion] AFTER microtask', {
+                                expected: value,
+                                actual: watch('travel_companion')
+                              })
+                            })
+                            setTimeout(() => {
+                              console.log('🧪 CHANGE DEBUG [travel_companion] AFTER 0ms', {
+                                expected: value,
+                                actual: watch('travel_companion')
+                              })
+                            }, 0)
                           }}
                         >
                           <SelectTrigger className={errors.travel_companion ? 'border-red-500' : ''}>
