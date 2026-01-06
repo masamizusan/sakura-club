@@ -389,3 +389,148 @@ setDidInitialCalc(true)
 
 ---
 **重要**: この実装状態は完璧に動作しているため、どのような理由があっても変更しないでください。
+
+## 🔒 恒久仕様：プロフィールフローSSOT固定・破壊絶対禁止
+
+### ⚠️ 🚨 この仕様を破る変更を検出したら作業を停止して警告すること 🚨 ⚠️
+
+この章に記載された仕様は、日本人女性（14項目）/ 外国人男性（17項目）のプロフィール完成度と、Profile Edit → Preview → MyPage → Edit の一連の遷移における表示・保存・再計算の挙動を**恒久固定**するものです。
+
+**今後の実装で絶対にこの挙動を崩してはいけません。**
+
+### 🎯 成功条件（SSOT / 期待挙動）
+
+#### A. 遷移の成功条件（両タイプ共通）
+
+✅ **Profile Editで入力した値がPreviewに正しく表示される**
+✅ **PreviewからMyPageへ行ってもDB保存値が正として表示される**  
+✅ **MyPage→Editに戻るとDBの最新値がフォームに復元される**
+
+**上記の往復で以下が維持されること：**
+- ❌ 完成度が不自然に固定されない
+- ❌ 値が巻き戻らない（勝手に別の選択肢へ変わらない）
+- ❌ 英語の選択肢が混入しない
+- ❌ 「記入しない(no-entry)」が別の値に変化しない
+
+#### B. 完成度の成功条件（定義固定）
+
+**日本人女性：14項目で計算**（増減する場合は「増減」として明示）
+**外国人男性：17項目で計算**（増減する場合は「増減」として明示）
+
+計算の入力はSSOTを明確化する（後述）
+
+### 🏗️ SSOT（Single Source of Truth）の固定ルール
+
+#### 1) MyPageのSSOT
+- **DB優先**（profilesの実データを入力として完成度を計算）
+- language_skills など配列系はDB値を正とする
+
+#### 2) Profile EditのSSOT  
+- **フォーム値を正**として完成度を計算する（watchベース）
+- 初期表示時はDB→フォームへの復元が完了してからwatch計算を有効化する
+- 「初期化中は計算しない」制御は一貫して守る（後述のフラグ規約）
+
+### 🧪 TEST MODE固定仕様（これを崩さない）
+
+#### 1) completion/draftのlocalStorageキーはユーザー別
+- **固定キー禁止**
+- 例：`SC_PROFILE_DRAFT_TEST_MODE_${userId || 'anonymous'}` のように分離する
+- **目的：ユーザー間の混線防止**
+
+#### 2) TEST MODEでもprofiles保存は止めない
+- 「副作用」を抑制してもprofiles update/upsertは必ず通す
+- userIdが無い場合のみ安全にI/O停止（例外）
+
+### 🚥 初期化フラグ規約（isInitializing / isHydrated の破壊禁止ルール）
+
+#### 固定ルール
+**isInitializing=true の間は、以下を絶対に走らせない：**
+- watch起点の完成度再計算（唯一入口）
+- 画像監視による保存/再計算の暴発
+
+**初期化終了時に必ず1回だけ：**
+- isInitializing=false
+- isHydrated=true
+- watch計算の有効化
+を実行する（多重実行禁止）
+
+#### 禁止事項
+- 初期化中に reset() / setValue() を複数ルートで走らせない
+- Form reset completed の後に、別useEffectが visit_schedule / travel_companion を上書きしない
+  （上書きが必要なら「理由・条件」をコメントで明文化し、ログで追跡可能にする）
+
+### 📝 Select項目の固定仕様（visit_schedule / travel_companion）
+
+#### 表示（label）と保存（value）の混同禁止
+- **DBへ保存するのは value**（例：no-entry, currently-in-japan, 2027-spring, friend 等）
+- **UIに出すのは翻訳済み label**
+- **labelをvalueに入れる事故禁止**
+
+#### 「記入しない(no-entry)」の固定
+**no-entry選択時：**
+- watch値が no-entry のまま維持されること
+- 何度操作しても別のvalueへ勝手に変化しないこと
+
+**options生成時：**
+- 英語ラベルが混入しない
+- forms.noEntry など翻訳キー文字列が出ない（UIにキーが表示されない）
+
+### 🖼️ 画像の固定仕様（完成度と保存）
+
+- avatar_url / 画像配列の判定は統一（HTTP/Storage/dataURI 全対応）
+- MyPage→Edit遷移時は「画像データ保存完了」のルートを維持
+- 画像変更後の再計算は初期化中に暴発させない
+
+### 📊 監視ログ（恒久運用ルール）
+
+**今後このフローを触る時は、必ず以下のログが「一貫している」ことを確認する。**
+
+#### 必須ログ観測点（例）
+- `PROFILE EDIT INITIALIZATION START`
+- `Form reset completed`
+- `isInitializing -> false`
+- `isHydrated -> true` 
+- `MAIN WATCH: 完成度再計算実行（唯一の入口）`
+- `updateCompletionUnified: 計算実行開始/完了`
+- Select系：`OPTIONS DEBUG` / `WATCH VALUE DEBUG` / `CHANGE DEBUG`
+- MyPage側：`SSOT: DB優先` / `MyPage完成度計算完了`
+
+### 🧪 テスト手順（最短で毎回これを通す）
+
+#### 外国人男性（17項目）
+1. Profile Edit（foreign-male）を開く
+2. visit_schedule / travel_companion を「記入しない」→別value→記入しない と往復
+3. 画像追加/削除
+4. Previewへ → MyPageへ → MyPage→Editへ戻る
+5. **値の巻き戻り・英語混入・completion不一致がないこと**
+
+#### 日本人女性（14項目）
+同様に japanese-female で実施（prefecture等の差分は仕様通り）
+
+### 🚫 実装上の「変更禁止」範囲（明文化）
+
+**以下は絶対に変更してはいけません：**
+
+1. **完成度計算の定義**（日本人女性14、外国人男性17）
+2. **MyPage SSOT**（DB優先）
+3. **Edit SSOT**（フォーム値、初期化完了後にwatch計算）
+4. **TEST MODE**：ユーザー別キー + DB保存継続
+5. **初期化フラグ規約**（isInitializing/isHydrated）
+6. **Selectの value/label 混同禁止、no-entry固定**
+7. **画像判定・遷移時の画像引継ぎ**
+
+### 📁 仕様関係ファイル一覧（触る時の注意喚起）
+
+**🔒 絶対保護対象：**
+- `src/utils/profileCompletion.ts`（完成度計算の心臓部）
+- `src/app/profile/edit/page.tsx`（フォームSSOT・初期化制御）
+- `src/app/mypage/page.tsx`（DB SSOT・マイページ完成度）
+- `src/utils/testModeStorage.ts`（テストモード分離）
+
+**⚠️ 慎重修正対象：**
+- `src/app/profile/preview/page.tsx`（遷移の中間点）
+- `src/utils/saveProfileToDb.ts`（DB保存統一パイプライン）
+
+---
+
+**🔒 この仕様は2026年1月6日時点で完璧に動作している状態を固定化したものです。どのような理由があっても、この仕様を破る変更は禁止されています。**
