@@ -712,6 +712,16 @@ type TranslationKeys = {
     intermediatePlus: string
     advanced: string
   }
+
+  // 言語レベル定義説明
+  languageLevelDefinitions: {
+    title: string
+    beginner: string
+    elementary: string
+    intermediate: string
+    upperIntermediate: string
+    advanced: string
+  }
 }
 
 const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -1367,6 +1377,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       intermediate: '中級',
       intermediatePlus: '中級上',
       advanced: '上級'
+    },
+
+    languageLevelDefinitions: {
+      title: '言語レベルの目安：',
+      beginner: '初級：あいさつや簡単な自己紹介など、短い定型文でやり取りできる',
+      elementary: '初級上：ゆっくりなら日常の簡単な会話ができる（買い物・道案内など）',
+      intermediate: '中級：日常会話は概ね問題なく、多少複雑な話題でも会話を続けられる',
+      upperIntermediate: '中級上：仕事や旅行などの実用的な会話を自然に行え、細かなニュアンスもある程度伝えられる',
+      advanced: '上級：幅広い話題で自然に会話でき、抽象的な内容や微妙な表現も適切に伝えられる'
     }
   },
 
@@ -2021,6 +2040,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       intermediate: 'Intermediate',
       intermediatePlus: 'Upper intermediate',
       advanced: 'Advanced'
+    },
+
+    languageLevelDefinitions: {
+      title: 'Language Level Guidelines:',
+      beginner: 'Beginner: Can handle greetings and simple self-introductions using short set phrases.',
+      elementary: 'Upper Beginner: Can manage simple everyday conversations if spoken slowly (shopping, asking directions, etc.).',
+      intermediate: 'Intermediate: Can handle most everyday conversations and keep a conversation going even on somewhat complex topics.',
+      upperIntermediate: 'Upper Intermediate: Can communicate naturally in practical situations such as work or travel, and convey nuances to some extent.',
+      advanced: 'Advanced: Can converse naturally on a wide range of topics and express abstract ideas and subtle meanings appropriately.'
     }
   },
 
@@ -2675,6 +2703,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       intermediate: '중급',
       intermediatePlus: '중급 상',
       advanced: '고급'
+    },
+
+    languageLevelDefinitions: {
+      title: '언어 수준 안내:',
+      beginner: '초급: 인사나 간단한 자기소개 등 짧은 정형 문장으로 의사소통할 수 있습니다.',
+      elementary: '초급 상: 천천히 말해주면 일상적인 간단한 대화가 가능합니다(쇼핑, 길 안내 등).',
+      intermediate: '중급: 일상 대화는 대체로 문제없고, 다소 복잡한 주제도 대화를 이어갈 수 있습니다.',
+      upperIntermediate: '중급 상: 업무나 여행 등 실용적인 상황에서 자연스럽게 대화할 수 있고, 미묘한 뉘앙스도 어느 정도 전달할 수 있습니다.',
+      advanced: '상급: 다양한 주제로 자연스럽게 대화할 수 있으며, 추상적인 내용과 미묘한 표현도 적절히 전달할 수 있습니다.'
     }
   },
 
@@ -3328,6 +3365,15 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       intermediate: '中級',
       intermediatePlus: '中級以上',
       advanced: '高級'
+    },
+
+    languageLevelDefinitions: {
+      title: '語言程度說明：',
+      beginner: '初級：可以用簡短的固定表達進行問候與簡單自我介紹等交流。',
+      elementary: '初級上：對方放慢語速時，可進行簡單的日常對話（購物、問路等）。',
+      intermediate: '中級：基本能應對日常會話，也能在較複雜的話題上持續交流。',
+      upperIntermediate: '中級上：能較自然地進行工作、旅行等實用情境的對話，並能在一定程度上傳達細微語氣與含義。',
+      advanced: '上級：能圍繞廣泛話題自然交流，並能恰當表達抽象內容與微妙含義。'
     }
   }
 }
