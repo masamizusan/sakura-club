@@ -5196,7 +5196,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                     <div className="col-span-2">
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('profile.languages')}
+                          {t('profile.languages')} <span className="text-red-500">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3">
                           {t('profile.languageHelp')}
