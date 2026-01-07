@@ -431,6 +431,7 @@
     "selectJapaneseLevel": "Select Japanese level",
     "selectEnglishLevel": "Select English level",
     "selectVisitSchedule": "Select visit schedule",
-    "selectTravelCompanion": "Select travel companion"
+    "selectTravelCompanion": "Select travel companion",
+    "selectPrefecture": "Select prefecture"
   }
 }

@@ -409,6 +409,7 @@
     "selectJapaneseLevel": "일본어 수준 선택",
     "selectEnglishLevel": "영어 수준 선택",
     "selectVisitSchedule": "방문 일정 선택",
-    "selectTravelCompanion": "동행자 선택"
+    "selectTravelCompanion": "동행자 선택",
+    "selectPrefecture": "현 선택"
   }
 }

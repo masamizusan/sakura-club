@@ -377,6 +377,7 @@
     "selectEnglishLevel": "英語レベルを選択",
     "selectVisitSchedule": "訪問予定時期を選択",
     "selectTravelCompanion": "同行者を選択",
+    "selectPrefecture": "都道府県を選択",
     "enterCustomCulture": "その他の日本文化を入力（任意）"
   },
   "levels": {

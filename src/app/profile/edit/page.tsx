@@ -5071,13 +5071,13 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       
                       {/* 言語レベル定義説明 */}
                       <div className="mb-3 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-xs font-medium text-gray-700 mb-2">言語レベルの目安：</p>
+                        <p className="text-xs font-medium text-gray-700 mb-2">{t('languageLevelDefinitions.title')}</p>
                         <div className="text-xs text-gray-600 space-y-1">
-                          <div><span className="font-medium">初級：</span>あいさつや簡単な自己紹介など、短い定型文でやり取りできる</div>
-                          <div><span className="font-medium">初級上：</span>ゆっくりなら日常の簡単な会話ができる（買い物・道案内など）</div>
-                          <div><span className="font-medium">中級：</span>日常会話は概ね問題なく、多少複雑な話題でも会話を続けられる</div>
-                          <div><span className="font-medium">中級上：</span>仕事や旅行などの実用的な会話を自然に行え、細かなニュアンスもある程度伝えられる</div>
-                          <div><span className="font-medium">上級：</span>幅広い話題で自然に会話でき、抽象的な内容や微妙な表現も適切に伝えられる</div>
+                          <div>{t('languageLevelDefinitions.beginner')}</div>
+                          <div>{t('languageLevelDefinitions.elementary')}</div>
+                          <div>{t('languageLevelDefinitions.intermediate')}</div>
+                          <div>{t('languageLevelDefinitions.upperIntermediate')}</div>
+                          <div>{t('languageLevelDefinitions.advanced')}</div>
                         </div>
                       </div>
                       
@@ -5240,14 +5240,14 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        都道府県 <span className="text-red-500">*</span>
+                        {t('profile.prefecture')} <span className="text-red-500">*</span>
                       </label>
                       <Select
                         value={watch('prefecture') || ''}
                         onValueChange={(value) => setValue('prefecture', value)}
                       >
                         <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
-                          <SelectValue placeholder="都道府県を選択" />
+                          <SelectValue placeholder={t('placeholders.selectPrefecture')} />
                         </SelectTrigger>
                         <SelectContent>
                           {PREFECTURES.map((prefecture) => (
@@ -5278,13 +5278,13 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       
                       {/* 言語レベル定義説明 */}
                       <div className="mb-3 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-xs font-medium text-gray-700 mb-2">言語レベルの目安：</p>
+                        <p className="text-xs font-medium text-gray-700 mb-2">{t('languageLevelDefinitions.title')}</p>
                         <div className="text-xs text-gray-600 space-y-1">
-                          <div><span className="font-medium">初級：</span>あいさつや簡単な自己紹介など、短い定型文でやり取りできる</div>
-                          <div><span className="font-medium">初級上：</span>ゆっくりなら日常の簡単な会話ができる（買い物・道案内など）</div>
-                          <div><span className="font-medium">中級：</span>日常会話は概ね問題なく、多少複雑な話題でも会話を続けられる</div>
-                          <div><span className="font-medium">中級上：</span>仕事や旅行などの実用的な会話を自然に行え、細かなニュアンスもある程度伝えられる</div>
-                          <div><span className="font-medium">上級：</span>幅広い話題で自然に会話でき、抽象的な内容や微妙な表現も適切に伝えられる</div>
+                          <div>{t('languageLevelDefinitions.beginner')}</div>
+                          <div>{t('languageLevelDefinitions.elementary')}</div>
+                          <div>{t('languageLevelDefinitions.intermediate')}</div>
+                          <div>{t('languageLevelDefinitions.upperIntermediate')}</div>
+                          <div>{t('languageLevelDefinitions.advanced')}</div>
                         </div>
                       </div>
                       
