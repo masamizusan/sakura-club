@@ -5058,6 +5058,171 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   </div>
                 )}
 
+                {/* ✨ 使用言語＋言語レベル（外国人男性用） */}
+                {isForeignMale && (
+                  <div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('profile.languages')} <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        {t('profile.languageHelp')}
+                      </p>
+                      
+                      {/* 言語スキル一覧表示 */}
+                      <div className="space-y-3 mb-3">
+                        {languageSkills.map((skill, index) => (
+                          <div key={index} className="flex gap-3 items-center p-3 border rounded-lg bg-gray-50">
+                            <div className="flex-1">
+                              <Select
+                                value={skill.language || ''}
+                                onValueChange={(value: LanguageCode) => {
+                                  const newSkills = [...languageSkills]
+                                  newSkills[index] = { ...skill, language: value }
+                                  
+                                  console.log('🗣️ LANGUAGE CHANGE - State update:', {
+                                    oldSkills: languageSkills,
+                                    newSkills,
+                                    changedIndex: index,
+                                    newLanguage: value
+                                  })
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('profile.languagePlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[
+                                    { value: 'ja', label: t('languageOptions.japanese') },
+                                    { value: 'en', label: t('languageOptions.english') },
+                                    { value: 'ko', label: t('languageOptions.korean') },
+                                    { value: 'zh-TW', label: t('languageOptions.chineseTraditional') }
+                                  ].map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <Select
+                                value={skill.level || ''}
+                                onValueChange={(value: LanguageLevelCode) => {
+                                  const newSkills = [...languageSkills]
+                                  newSkills[index] = { ...skill, level: value }
+                                  
+                                  console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
+                                    oldSkills: languageSkills,
+                                    newSkills,
+                                    changedIndex: index,
+                                    newLevel: value
+                                  })
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('profile.languageLevelPlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[
+                                    { value: 'native', label: t('languageLevels.native') },
+                                    { value: 'beginner', label: t('languageLevels.beginner') },
+                                    { value: 'beginner_plus', label: t('languageLevels.beginnerPlus') },
+                                    { value: 'intermediate', label: t('languageLevels.intermediate') },
+                                    { value: 'intermediate_plus', label: t('languageLevels.intermediatePlus') },
+                                    { value: 'advanced', label: t('languageLevels.advanced') }
+                                  ].map((level) => (
+                                    <SelectItem key={level.value} value={level.value}>
+                                      {level.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {languageSkills.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newSkills = languageSkills.filter((_, i) => i !== index)
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                削除
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* 言語追加ボタン */}
+                      {languageSkills.length < 4 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newSkills: LanguageSkill[] = [...languageSkills, { language: '', level: '' }]
+                            
+                            // 🚀 即座反映: setState → setValue の順序で同期実行
+                            setLanguageSkills(newSkills)
+                            setValue('language_skills', newSkills, { 
+                              shouldDirty: true, 
+                              shouldValidate: true 
+                            })
+                            
+                            // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                            console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
+                          }}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {t('profile.languageAddButton')}
+                        </Button>
+                      )}
+                      
+                      {/* エラーメッセージ表示 */}
+                      {errors.language_skills && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {t(errors.language_skills.message as string)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* 居住地（日本人女性のみ） */}
                 {isJapaneseFemale && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -5085,6 +5250,171 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       )}
                     </div>
 
+                  </div>
+                )}
+
+                {/* ✨ 使用言語＋言語レベル（日本人女性用） */}
+                {isJapaneseFemale && (
+                  <div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('profile.languages')} <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mb-3">
+                        {t('profile.languageHelp')}
+                      </p>
+                      
+                      {/* 言語スキル一覧表示 */}
+                      <div className="space-y-3 mb-3">
+                        {languageSkills.map((skill, index) => (
+                          <div key={index} className="flex gap-3 items-center p-3 border rounded-lg bg-gray-50">
+                            <div className="flex-1">
+                              <Select
+                                value={skill.language || ''}
+                                onValueChange={(value: LanguageCode) => {
+                                  const newSkills = [...languageSkills]
+                                  newSkills[index] = { ...skill, language: value }
+                                  
+                                  console.log('🗣️ LANGUAGE CHANGE - State update:', {
+                                    oldSkills: languageSkills,
+                                    newSkills,
+                                    changedIndex: index,
+                                    newLanguage: value
+                                  })
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('profile.languagePlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[
+                                    { value: 'ja', label: t('languageOptions.japanese') },
+                                    { value: 'en', label: t('languageOptions.english') },
+                                    { value: 'ko', label: t('languageOptions.korean') },
+                                    { value: 'zh-TW', label: t('languageOptions.chineseTraditional') }
+                                  ].map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <Select
+                                value={skill.level || ''}
+                                onValueChange={(value: LanguageLevelCode) => {
+                                  const newSkills = [...languageSkills]
+                                  newSkills[index] = { ...skill, level: value }
+                                  
+                                  console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
+                                    oldSkills: languageSkills,
+                                    newSkills,
+                                    changedIndex: index,
+                                    newLevel: value
+                                  })
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('profile.languageLevelPlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {[
+                                    { value: 'native', label: t('languageLevels.native') },
+                                    { value: 'beginner', label: t('languageLevels.beginner') },
+                                    { value: 'beginner_plus', label: t('languageLevels.beginnerPlus') },
+                                    { value: 'intermediate', label: t('languageLevels.intermediate') },
+                                    { value: 'intermediate_plus', label: t('languageLevels.intermediatePlus') },
+                                    { value: 'advanced', label: t('languageLevels.advanced') }
+                                  ].map((level) => (
+                                    <SelectItem key={level.value} value={level.value}>
+                                      {level.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            {languageSkills.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newSkills = languageSkills.filter((_, i) => i !== index)
+                                  
+                                  // 🚀 即座反映: setState → setValue の順序で同期実行
+                                  setLanguageSkills(newSkills)
+                                  setValue('language_skills', newSkills, { 
+                                    shouldDirty: true, 
+                                    shouldValidate: true 
+                                  })
+                                  
+                                  // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                                  console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                削除
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* 言語追加ボタン */}
+                      {languageSkills.length < 4 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newSkills: LanguageSkill[] = [...languageSkills, { language: '', level: '' }]
+                            
+                            // 🚀 即座反映: setState → setValue の順序で同期実行
+                            setLanguageSkills(newSkills)
+                            setValue('language_skills', newSkills, { 
+                              shouldDirty: true, 
+                              shouldValidate: true 
+                            })
+                            
+                            // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
+                            console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
+                          }}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {t('profile.languageAddButton')}
+                        </Button>
+                      )}
+                      
+                      {/* エラーメッセージ表示 */}
+                      {errors.language_skills && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {t(errors.language_skills.message as string)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -5190,169 +5520,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    
-                    {/* ✨ 使用言語＋言語レベル（新機能） */}
-                    <div className="col-span-2">
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('profile.languages')} <span className="text-red-500">*</span>
-                        </label>
-                        <p className="text-xs text-gray-500 mb-3">
-                          {t('profile.languageHelp')}
-                        </p>
-                        
-                        {/* 言語スキル一覧表示 */}
-                        <div className="space-y-3 mb-3">
-                          {languageSkills.map((skill, index) => (
-                            <div key={index} className="flex gap-3 items-center p-3 border rounded-lg bg-gray-50">
-                              <div className="flex-1">
-                                <Select
-                                  value={skill.language || ''}
-                                  onValueChange={(value: LanguageCode) => {
-                                    const newSkills = [...languageSkills]
-                                    newSkills[index] = { ...skill, language: value }
-                                    
-                                    console.log('🗣️ LANGUAGE CHANGE - State update:', {
-                                      oldSkills: languageSkills,
-                                      newSkills,
-                                      changedIndex: index,
-                                      newLanguage: value
-                                    })
-                                    
-                                    // 🚀 即座反映: setState → setValue の順序で同期実行
-                                    setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills, { 
-                                      shouldDirty: true, 
-                                      shouldValidate: true 
-                                    })
-                                    
-                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                    console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={t('profile.languagePlaceholder')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {[
-                                      { value: 'ja', label: t('languageOptions.japanese') },
-                                      { value: 'en', label: t('languageOptions.english') },
-                                      { value: 'ko', label: t('languageOptions.korean') },
-                                      { value: 'zh-TW', label: t('languageOptions.chineseTraditional') }
-                                    ].map((option) => (
-                                      <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              <div className="flex-1">
-                                <Select
-                                  value={skill.level || ''}
-                                  onValueChange={(value: LanguageLevelCode) => {
-                                    const newSkills = [...languageSkills]
-                                    newSkills[index] = { ...skill, level: value }
-                                    
-                                    console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
-                                      oldSkills: languageSkills,
-                                      newSkills,
-                                      changedIndex: index,
-                                      newLevel: value
-                                    })
-                                    
-                                    // 🚀 即座反映: setState → setValue の順序で同期実行
-                                    setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills, { 
-                                      shouldDirty: true, 
-                                      shouldValidate: true 
-                                    })
-                                    
-                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                    console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
-                                  }}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={t('profile.languageLevelPlaceholder')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {[
-                                      { value: 'native', label: t('languageLevels.native') },
-                                      { value: 'beginner', label: t('languageLevels.beginner') },
-                                      { value: 'beginner_plus', label: t('languageLevels.beginnerPlus') },
-                                      { value: 'intermediate', label: t('languageLevels.intermediate') },
-                                      { value: 'intermediate_plus', label: t('languageLevels.intermediatePlus') },
-                                      { value: 'advanced', label: t('languageLevels.advanced') }
-                                    ].map((level) => (
-                                      <SelectItem key={level.value} value={level.value}>
-                                        {level.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              
-                              {languageSkills.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const newSkills = languageSkills.filter((_, i) => i !== index)
-                                    
-                                    // 🚀 即座反映: setState → setValue の順序で同期実行
-                                    setLanguageSkills(newSkills)
-                                    setValue('language_skills', newSkills, { 
-                                      shouldDirty: true, 
-                                      shouldValidate: true 
-                                    })
-                                    
-                                    // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                    console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
-                                  }}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  削除
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* 言語追加ボタン */}
-                        {languageSkills.length < 4 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const newSkills: LanguageSkill[] = [...languageSkills, { language: '', level: '' }]
-                              
-                              // 🚀 即座反映: setState → setValue の順序で同期実行
-                              setLanguageSkills(newSkills)
-                              setValue('language_skills', newSkills, { 
-                                shouldDirty: true, 
-                                shouldValidate: true 
-                              })
-                              
-                              // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                              console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
-                            }}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            {t('profile.languageAddButton')}
-                          </Button>
-                        )}
-                        
-                        {/* エラーメッセージ表示 */}
-                        {errors.language_skills && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {t(errors.language_skills.message as string)}
-                          </p>
-                        )}
-                      </div>
                     </div>
                     
                     {/* 既存システム（非表示・後方互換用） */}
