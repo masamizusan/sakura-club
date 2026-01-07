@@ -5497,38 +5497,35 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         </label>
                         <p className="text-xs text-gray-500 mb-3">{t('profile.prefectureSelectionRule')}</p>
 
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="prefectures">
-                            <AccordionTrigger className="text-sm font-medium text-gray-700 hover:text-red-700">
-                              {t('profile.selectPrefecturesWithCount')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-2">
-                                {PREFECTURES.map((prefecture) => (
-                                  <button
-                                    key={prefecture.value}
-                                    type="button"
-                                    onClick={() => togglePlannedPrefecture(prefecture.value)}
-                                    disabled={!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3}
-                                    className={`
-                                      px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                      ${selectedPlannedPrefectures.includes(prefecture.value)
-                                        ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                                      }
-                                      ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
-                                        ? 'opacity-50 cursor-not-allowed'
-                                        : 'cursor-pointer hover:shadow-md'
-                                      }
-                                    `}
-                                  >
-                                    {prefecture.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
+                        {/* 選択状況の表示 */}
+                        <div className="text-sm font-medium text-gray-700 mb-4">
+                          {t('profile.selectPrefecturesWithCount')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
+                        </div>
+
+                        {/* 都道府県選択グリッド（常時表示） */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {PREFECTURES.map((prefecture) => (
+                            <button
+                              key={prefecture.value}
+                              type="button"
+                              onClick={() => togglePlannedPrefecture(prefecture.value)}
+                              disabled={!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3}
+                              className={`
+                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                ${selectedPlannedPrefectures.includes(prefecture.value)
+                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                }
+                                ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : 'cursor-pointer hover:shadow-md'
+                                }
+                              `}
+                            >
+                              {prefecture.label}
+                            </button>
+                          ))}
+                        </div>
 
                         {errors.planned_prefectures && (
                           <p className="text-red-500 text-sm mt-1">{t(errors.planned_prefectures.message as string)}</p>
