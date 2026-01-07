@@ -333,6 +333,14 @@
     "advanced": "高級（流利對話）",
     "native": "母語水準"
   },
+  "languageLevelDefinitions": {
+    "title": "語言水準指引：",
+    "beginner": "初級：可以用簡短的固定表達進行問候與簡單自我介紹等交流。",
+    "elementary": "初級上：對方放慢語速時，可進行簡單的日常對話（購物、問路等）。",
+    "intermediate": "中級：基本能應對日常會話，也能在較複雜的話題上持續交流。",
+    "upperIntermediate": "中級上：能較自然地進行工作、旅行等實用情境的對話，並能在一定程度上傳達細微語氣與含義。",
+    "advanced": "上級：能圍繞廣泛話題自然交流，並能恰當表達抽象內容與微妙含義。"
+  },
   "maritalStatus": {
     "none": "不填寫",
     "single": "未婚",

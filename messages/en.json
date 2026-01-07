@@ -340,6 +340,14 @@
     "advanced": "Advanced (Fluent conversation)",
     "native": "Native level"
   },
+  "languageLevelDefinitions": {
+    "title": "Language Level Guidelines:",
+    "beginner": "Beginner: Can handle greetings and simple self-introductions using short set phrases.",
+    "elementary": "Upper Beginner: Can manage simple everyday conversations if spoken slowly (shopping, asking directions, etc.).",
+    "intermediate": "Intermediate: Can handle most everyday conversations and keep a conversation going even on somewhat complex topics.",
+    "upperIntermediate": "Upper Intermediate: Can communicate naturally in practical situations such as work or travel, and convey nuances to some extent.",
+    "advanced": "Advanced: Can converse naturally on a wide range of topics and express abstract ideas and subtle meanings appropriately."
+  },
   "maritalStatus": {
     "none": "Not specified",
     "single": "Single",
