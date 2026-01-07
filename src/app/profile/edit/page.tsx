@@ -5570,7 +5570,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                 {/* 興味・趣味セクション */}
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
+                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span> （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
                     {t('profile.selectCultureNote')}
