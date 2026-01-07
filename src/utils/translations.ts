@@ -3393,12 +3393,38 @@ export function getTranslation(language: SupportedLanguage, key: string): string
 }
 
 /**
- * React Hook風のヘルパー関数
+ * React Hook風のヘルパー関数（従来版・後方互換性のため保持）
  */
 export function useTranslation(language: SupportedLanguage) {
   return {
     t: (key: string) => getTranslation(language, key),
     language
+  }
+}
+
+/**
+ * 統一言語プロバイダー連携版のuseTranslation
+ * LanguageContextと統合され、アプリ全体で統一された言語を使用
+ */
+export function useUnifiedTranslation() {
+  // 動的インポートでサーキュラー依存を回避
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { useLanguage } = require('@/contexts/LanguageContext')
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { currentLanguage } = useLanguage()
+    
+    return {
+      t: (key: string) => getTranslation(currentLanguage, key),
+      language: currentLanguage
+    }
+  } catch (error) {
+    // フォールバック: LanguageProviderが利用できない場合（初期ロード時など）
+    console.warn('LanguageProvider not available, falling back to Japanese')
+    return {
+      t: (key: string) => getTranslation('ja', key),
+      language: 'ja' as SupportedLanguage
+    }
   }
 }
 

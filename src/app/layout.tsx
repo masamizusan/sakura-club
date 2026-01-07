@@ -3,6 +3,7 @@ import { Inter, Noto_Sans_JP } from 'next/font/google'
 import './globals.css'
 import SimpleHeader from '@/components/layout/SimpleHeader'
 import AuthProvider from '@/components/auth/AuthProvider'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 
 const inter = Inter({ subsets: ['latin'] })
 const notoSansJP = Noto_Sans_JP({ 
@@ -24,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="ja" className={`${inter.className} ${notoSansJP.variable}`}>
       <body className="antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

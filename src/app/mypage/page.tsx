@@ -31,10 +31,13 @@ import {
   LogOut,
   Calendar
 } from 'lucide-react'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { useUnifiedTranslation } from '@/utils/translations'
 
 function MyPageContent() {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const { t, language } = useUnifiedTranslation()
   const [profile, setProfile] = useState<any>(null)
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
@@ -327,8 +330,9 @@ function MyPageContent() {
       
       <div className="bg-white shadow-sm md:ml-64">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-gray-900">マイページ</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">{t('mypage.title') || 'マイページ'}</h1>
+            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
           </div>
         </div>
       </div>

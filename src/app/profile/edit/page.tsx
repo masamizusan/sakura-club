@@ -30,8 +30,9 @@ import {
 
 // 🧮 統一されたプロフィール完成度計算システム使用
 // normalizeProfile と calculateCompletion を使用して一貫した計算を実現
-import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
-import { useTranslation } from '@/utils/translations'
+import { type SupportedLanguage } from '@/utils/language'
+import { useUnifiedTranslation } from '@/utils/translations'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
 import { 
   type LanguageSkill, 
   type LanguageCode, 
@@ -508,9 +509,8 @@ function ProfileEditContent() {
   // 🌸 TASK3: typeクエリが無い場合の安全化（真っさら画面防止）
   const hasValidType = profileType === 'foreign-male' || profileType === 'japanese-female'
   
-  // 言語設定
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
-  const { t } = useTranslation(currentLanguage)
+  // 統一言語設定
+  const { t, language: currentLanguage } = useUnifiedTranslation()
   
   // 翻訳システム初期化確認
   useEffect(() => {
@@ -1931,7 +1931,7 @@ function ProfileEditContent() {
         ko: `${year}년 이후`,
         'zh-tw': `${year}年以後`
       }
-      return labels[currentLanguage] || value
+      return labels[currentLanguage as SupportedLanguage] || value
     }
 
     // YYYY-season 形式の処理
@@ -3673,15 +3673,11 @@ function ProfileEditContent() {
 
         // 🌐 言語設定の初期化
         const nationality = profile?.nationality || ((signupData as any)?.nationality)
-        let detectedLanguage: SupportedLanguage
         
-        // 国籍から言語を判定（日本人女性も選択可能に）
-        detectedLanguage = determineLanguage(nationality)
-        
-        setCurrentLanguage(detectedLanguage)
+        // 統一言語システムでは言語は自動管理されるため、ここでの設定は不要
+        console.log('🌐 Language managed by unified system')
         console.log('🌐 Language initialization:', {
           nationality,
-          detectedLanguage,
           isJapaneseFemale,
           source: 'profile load'
         })
@@ -4849,25 +4845,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
           {/* 言語切り替えボタン（全ユーザー対応） */}
           <div className="flex justify-end mb-4">
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-gray-600" />
-              <Select
-                value={currentLanguage}
-                onValueChange={(value: SupportedLanguage) => {
-                  setCurrentLanguage(value)
-                  saveLanguagePreference(value)
-                  console.log('🌐 Language changed to:', value)
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ja">🇯🇵 日本語</SelectItem>
-                  <SelectItem value="en">🇺🇸 English</SelectItem>
-                  <SelectItem value="ko">🇰🇷 한국어</SelectItem>
-                  <SelectItem value="zh-tw">🇹🇼 繁體中文（台湾）</SelectItem>
-                </SelectContent>
-              </Select>
+              <UnifiedLanguageSwitcher size="md" showIcon={true} />
             </div>
           </div>
 

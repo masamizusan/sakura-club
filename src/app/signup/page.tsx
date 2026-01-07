@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { authService, AuthError } from '@/lib/auth'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
-import { determineLanguage, saveLanguagePreference, getLanguageDisplayName, type SupportedLanguage } from '@/utils/language'
-import { useTranslation } from '@/utils/translations'
+import { type SupportedLanguage } from '@/utils/language'
+import { useUnifiedTranslation } from '@/utils/translations'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -57,17 +58,10 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const router = useRouter()
   
-  // 翻訳関数の取得
-  const { t } = useTranslation(currentLanguage)
-
-  // ページ読み込み時の言語検出
-  useEffect(() => {
-    const detectedLanguage = determineLanguage()
-    setCurrentLanguage(detectedLanguage)
-  }, [])
+  // 統一翻訳関数の取得
+  const { t, language: currentLanguage } = useUnifiedTranslation()
 
   const {
     register,
@@ -322,23 +316,7 @@ export default function SignupPage() {
               </Link>
               
               {/* Language Switcher */}
-              <div className="flex items-center space-x-2">
-                <Globe className="w-4 h-4 text-gray-500" />
-                <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
-                  setCurrentLanguage(value)
-                  saveLanguagePreference(value)
-                }}>
-                  <SelectTrigger className="w-24 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ja">日本語</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ko">한국어</SelectItem>
-                    <SelectItem value="zh-tw">繁體中文</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <UnifiedLanguageSwitcher size="sm" showIcon={true} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('signup.title')}</h1>
           </div>

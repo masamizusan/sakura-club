@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
-import { useTranslation } from '@/utils/translations'
+import { useUnifiedTranslation } from '@/utils/translations'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
@@ -637,9 +638,8 @@ function ProfilePreviewContent() {
   const [hasError, setHasError] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
   
-  // 言語切り替え状態
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
-  const { t } = useTranslation(currentLanguage)
+  // 統一言語設定
+  const { t, language: currentLanguage } = useUnifiedTranslation()
   
   // Supabase client for image resolution
   const supabase = createClient()
@@ -777,26 +777,7 @@ function ProfilePreviewContent() {
           
           {/* 言語切り替えボタン */}
           <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-white" />
-            <Select
-              value={currentLanguage}
-              onValueChange={(value: SupportedLanguage) => {
-                console.log('Language switching to:', value)
-                setCurrentLanguage(value)
-                // 強制的に再レンダリングを促す
-                setHasError(false)
-              }}
-            >
-              <SelectTrigger className="w-40 bg-orange-600 border-orange-400 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ja">🇯🇵 日本語</SelectItem>
-                <SelectItem value="en">🇺🇸 English</SelectItem>
-                <SelectItem value="ko">🇰🇷 한국어</SelectItem>
-                <SelectItem value="zh-tw">🇹🇼 繁體中文（台湾）</SelectItem>
-              </SelectContent>
-            </Select>
+            <UnifiedLanguageSwitcher size="md" showIcon={true} className="[&>div>div>button]:bg-orange-600 [&>div>div>button]:border-orange-400 [&>div>div>button]:text-white" />
           </div>
         </div>
       </div>
