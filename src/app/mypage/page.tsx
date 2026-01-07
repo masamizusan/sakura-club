@@ -33,10 +33,12 @@ import {
 } from 'lucide-react'
 import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
 import { useUnifiedTranslation } from '@/utils/translations'
+import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 
 function MyPageContent() {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const languageRouter = useLanguageAwareRouter()
   const { t, language } = useUnifiedTranslation()
   const [profile, setProfile] = useState<any>(null)
   const [profileCompletion, setProfileCompletion] = useState(0)
@@ -441,8 +443,13 @@ function MyPageContent() {
                       console.log('🎯 MyPage→Edit遷移: 画像なし - localStorage クリア完了')
                     }
                     
+                    const editParams = new URLSearchParams({
+                      fromMyPage: 'true',
+                      type: profileType
+                    })
+                    
                     setTimeout(() => {
-                      router.push(`/profile/edit?fromMyPage=true&type=${profileType}`)
+                      languageRouter.push('/profile/edit', editParams)
                     }, 100)
                   } catch (error) {
                     console.error('❌ プロフィール編集遷移エラー:', error)

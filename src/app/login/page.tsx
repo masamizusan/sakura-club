@@ -11,25 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
-import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
-import { useTranslation } from '@/utils/translations'
+import { type SupportedLanguage } from '@/utils/language'
+import { useUnifiedTranslation } from '@/utils/translations'
+import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
   const router = useRouter()
+  const languageRouter = useLanguageAwareRouter()
   const searchParams = useSearchParams()
   
-  // 翻訳関数の取得
-  const { t } = useTranslation(currentLanguage)
-
-  // ページ読み込み時の言語検出
-  useEffect(() => {
-    const detectedLanguage = determineLanguage()
-    setCurrentLanguage(detectedLanguage)
-  }, [])
+  // 통합 번역 시스템
+  const { t, language: currentLanguage } = useUnifiedTranslation()
 
   const {
     register,
@@ -57,11 +53,11 @@ function LoginForm() {
       
       console.log('Redirecting to:', destination)
       
-      // Force page reload to ensure authentication state is updated
+      // 언어 인식 네비게이션으로 언어 상태 유지
       if (redirectTo) {
-        window.location.href = destination
+        navigateWithLanguage(destination)
       } else {
-        router.push(destination)
+        languageRouter.push(destination)
         router.refresh()
       }
     } catch (error) {
@@ -96,23 +92,7 @@ function LoginForm() {
             </div>
             
             {/* Language Switcher */}
-            <div className="flex items-center space-x-2">
-              <Globe className="w-4 h-4 text-gray-500" />
-              <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
-                setCurrentLanguage(value)
-                saveLanguagePreference(value)
-              }}>
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ja">日本語</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ko">한국어</SelectItem>
-                  <SelectItem value="zh-tw">繁體中文</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('login.title')}</h2>
           <p className="text-gray-600">{t('login.subtitle')}</p>

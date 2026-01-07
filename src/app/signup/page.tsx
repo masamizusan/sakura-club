@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -59,6 +60,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
   const router = useRouter()
+  const languageRouter = useLanguageAwareRouter()
   
   // 統一翻訳関数の取得
   const { t, language: currentLanguage } = useUnifiedTranslation()
@@ -244,7 +246,7 @@ export default function SignupPage() {
           nationality: data.prefecture, // 男性の場合は国籍、女性の場合は都道府県
           prefecture: data.prefecture
         })
-        router.push(`/register/complete?${params.toString()}`)
+        languageRouter.push(`/register/complete`, params)
       } else {
         console.log('Direct login successful, redirecting to profile edit')
         // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
@@ -257,7 +259,7 @@ export default function SignupPage() {
           nationality: data.prefecture,
           prefecture: data.prefecture
         })
-        router.push(`/profile/edit?${profileParams.toString()}`)
+        languageRouter.push(`/profile/edit`, profileParams)
       }
       
     } catch (error) {
@@ -291,8 +293,8 @@ export default function SignupPage() {
         localStorage.setItem('devTestMode', 'true')
         
         alert('メール送信でエラーが発生しましたが、プロフィール作成を続行できます。')
-        // 確実な遷移のためwindow.location.hrefを使用
-        window.location.href = `/profile/edit?${profileParams.toString()}`
+        // 언어 인식 네비게이션 사용
+        navigateWithLanguage(`/profile/edit`, profileParams)
         return
       }
       

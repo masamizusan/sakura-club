@@ -1,7 +1,12 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { SupportedLanguage, determineLanguage, saveLanguagePreference } from '@/utils/language'
+import { SupportedLanguage } from '@/utils/language'
+import { 
+  determineLanguageWithCookie,
+  saveLanguageToCookie,
+  getLanguageFromCookie 
+} from '@/utils/languageCookie'
 
 interface LanguageContextType {
   currentLanguage: SupportedLanguage
@@ -21,18 +26,37 @@ export function LanguageProvider({ children, initialLanguage }: LanguageProvider
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // サーバーサイドレンダリング対応：クライアントサイドでのみ言語を決定
-    const detectedLanguage = determineLanguage()
+    // URL parameters에서 lang 확인 (navigation 시 전달된 언어)
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlLanguage = urlParams.get('lang') as SupportedLanguage
+    
+    let detectedLanguage: SupportedLanguage
+    
+    if (urlLanguage && ['ja', 'en', 'ko', 'zh-tw'].includes(urlLanguage)) {
+      // URL에서 전달된 언어가 있으면 우선 사용하고 cookie에 저장
+      detectedLanguage = urlLanguage
+      saveLanguageToCookie(urlLanguage)
+    } else {
+      // Cookie優先システムで言語를 결정
+      detectedLanguage = determineLanguageWithCookie()
+    }
+    
     setCurrentLanguage(detectedLanguage)
     setIsLoading(false)
     
-    console.log('🌍 Language Provider initialized with:', detectedLanguage)
+    console.log('🌍 Language Provider initialized with cookie system:', {
+      detectedLanguage,
+      urlLanguage,
+      cookieExists: !!getLanguageFromCookie()
+    })
   }, [])
 
   const setLanguage = (language: SupportedLanguage) => {
     console.log('🌍 Language changed from', currentLanguage, 'to', language)
     setCurrentLanguage(language)
-    saveLanguagePreference(language)
+    
+    // Cookie優先永続化（1年間）
+    saveLanguageToCookie(language)
     
     // HTML lang属性を更新（SEOとアクセシビリティのため）
     if (typeof document !== 'undefined') {
