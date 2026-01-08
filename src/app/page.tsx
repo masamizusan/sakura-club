@@ -3,31 +3,26 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Heart, Shield, Globe } from 'lucide-react'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
-import { useTranslation } from '@/utils/translations'
+import { useUnifiedTranslation } from '@/utils/translations'
+import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { useLanguageAwareRouter } from '@/utils/languageNavigation'
+import { type SupportedLanguage } from '@/utils/language'
 
 export default function HomePage() {
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>('ja')
-  const { t } = useTranslation(currentLanguage)
-
-  // ページ読み込み時の言語検出
-  useEffect(() => {
-    const detectedLanguage = determineLanguage()
-    setCurrentLanguage(detectedLanguage)
-  }, [])
+  // 統一翻訳システムを使用
+  const { t, language: currentLanguage } = useUnifiedTranslation()
 
   return (
     <div className="min-h-screen">
-      <Header currentLanguage={currentLanguage} setCurrentLanguage={setCurrentLanguage} t={t} />
+      <Header t={t} />
       <HeroSection t={t} />
       <FeaturesSection t={t} />
     </div>
   )
 }
 
-function Header({ currentLanguage, setCurrentLanguage, t }: { currentLanguage: SupportedLanguage, setCurrentLanguage: (lang: SupportedLanguage) => void, t: any }) {
+function Header({ t }: { t: any }) {
+  const languageRouter = useLanguageAwareRouter()
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4">
@@ -50,31 +45,21 @@ function Header({ currentLanguage, setCurrentLanguage, t }: { currentLanguage: S
 
           {/* Language & Auth Buttons */}
           <div className="flex items-center space-x-4">
-            {/* Language Switcher */}
-            <div className="flex items-center space-x-2">
-              <Globe className="w-4 h-4 text-gray-500" />
-              <Select value={currentLanguage} onValueChange={(value: SupportedLanguage) => {
-                setCurrentLanguage(value)
-                saveLanguagePreference(value)
-              }}>
-                <SelectTrigger className="w-24 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ja">日本語</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ko">한국어</SelectItem>
-                  <SelectItem value="zh-tw">繁體中文</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* 統一言語切り替えコンポーネント */}
+            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
 
-            <Link href="/login">
-              <Button variant="outline">{t('homepage.login')}</Button>
-            </Link>
-            <Link href="/signup">
-              <Button variant="sakura">{t('homepage.signup')}</Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              onClick={() => languageRouter.push('/login')}
+            >
+              {t('homepage.login')}
+            </Button>
+            <Button 
+              variant="sakura"
+              onClick={() => languageRouter.push('/signup')}
+            >
+              {t('homepage.signup')}
+            </Button>
           </div>
         </div>
       </div>
@@ -83,6 +68,8 @@ function Header({ currentLanguage, setCurrentLanguage, t }: { currentLanguage: S
 }
 
 function HeroSection({ t }: { t: any }) {
+  const languageRouter = useLanguageAwareRouter()
+  
   return (
     <section className="bg-gradient-to-br from-pink-50 via-white to-sakura-50 py-20">
       <div className="container mx-auto px-4">
@@ -101,17 +88,22 @@ function HeroSection({ t }: { t: any }) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signup">
-                <Button size="lg" className="bg-red-500 hover:bg-red-600 text-white px-8 py-3">
-                  {t('homepage.getStartedFree')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="px-8 py-3">
-                  {t('homepage.loginHere')}
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-3"
+                onClick={() => languageRouter.push('/signup')}
+              >
+                {t('homepage.getStartedFree')}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="px-8 py-3"
+                onClick={() => languageRouter.push('/login')}
+              >
+                {t('homepage.loginHere')}
+              </Button>
             </div>
           </div>
 
