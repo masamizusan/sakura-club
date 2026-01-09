@@ -45,6 +45,14 @@ export function UnifiedLanguageSwitcher({
     ? currentLanguage 
     : 'ja'
 
+  // デバッグログ（一時的）
+  console.log('🔍 UnifiedLanguageSwitcher Debug:', {
+    currentLanguage,
+    safeCurrentLanguage,
+    isLoading,
+    availableKeys: Object.keys(LANGUAGE_LABELS)
+  })
+
   if (isLoading) {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
@@ -57,13 +65,13 @@ export function UnifiedLanguageSwitcher({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
-      <Select value={safeCurrentLanguage} onValueChange={handleLanguageChange}>
+      <Select 
+        value={safeCurrentLanguage} 
+        defaultValue="ja"
+        onValueChange={handleLanguageChange}
+      >
         <SelectTrigger className={sizeClasses[size]}>
-          <SelectValue 
-            placeholder="言語を選択"
-          >
-            {LANGUAGE_LABELS[safeCurrentLanguage]}
-          </SelectValue>
+          <SelectValue placeholder="言語を選択" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
