@@ -40,33 +40,11 @@ export function UnifiedLanguageSwitcher({
     setLanguage(value)
   }
 
-  // フォールバック処理を強化：確実にjaを使用
-  const safeCurrentLanguage: SupportedLanguage = 
-    currentLanguage && Object.keys(LANGUAGE_LABELS).includes(currentLanguage) 
-      ? currentLanguage 
-      : 'ja'
+  // フォールバック処理：指示書3-2に従い必ずjaにフォールバック
+  const safeCurrentLanguage: SupportedLanguage = currentLanguage ?? 'ja'
 
-  // ローディング中または初期化中の場合
-  if (isLoading || !currentLanguage) {
-    return (
-      <div className={`flex items-center space-x-2 ${className}`}>
-        {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
-        <Select value="ja" onValueChange={handleLanguageChange}>
-          <SelectTrigger className={sizeClasses[size]}>
-            <SelectValue>
-              {LANGUAGE_LABELS.ja}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
-            <SelectItem value="en">{LANGUAGE_LABELS.en}</SelectItem>
-            <SelectItem value="ko">{LANGUAGE_LABELS.ko}</SelectItem>
-            <SelectItem value="zh-tw">{LANGUAGE_LABELS['zh-tw']}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    )
-  }
+  // 指示書3-3: LANGUAGE_LABELSの固定マップで安定表示を保証
+  const displayLabel = LANGUAGE_LABELS[safeCurrentLanguage]
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
@@ -76,8 +54,9 @@ export function UnifiedLanguageSwitcher({
         onValueChange={handleLanguageChange}
       >
         <SelectTrigger className={sizeClasses[size]}>
+          {/* 指示書3-1: SelectValue子要素で明示的に表示（最重要） */}
           <SelectValue>
-            {LANGUAGE_LABELS[safeCurrentLanguage]}
+            {displayLabel}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
