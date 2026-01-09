@@ -40,17 +40,15 @@ export function UnifiedLanguageSwitcher({
     setLanguage(value)
   }
 
-  // フォールバック処理：指示書3-2に従い必ずjaにフォールバック
+  // 1) フォールバックを固定（空欄ゼロ保証）
   const safeCurrentLanguage: SupportedLanguage = currentLanguage ?? 'ja'
+  const label = LANGUAGE_LABELS[safeCurrentLanguage] ?? LANGUAGE_LABELS['ja']
 
-  // 指示書3-3: LANGUAGE_LABELSの固定マップで安定表示を保証
-  const displayLabel = LANGUAGE_LABELS[safeCurrentLanguage]
-
-  // 🔍 指示書5: 値の確認（ログで確定）
-  console.log('🔍 Language Selector Debug:', {
+  // デバッグログ（最終確認用）
+  console.log('🔍 Language Selector Final:', {
     currentLanguage,
     safeCurrentLanguage,
-    displayLabel,
+    label,
     isLoading
   })
 
@@ -62,9 +60,8 @@ export function UnifiedLanguageSwitcher({
         onValueChange={handleLanguageChange}
       >
         <SelectTrigger className={`${sizeClasses[size]} min-w-[96px] flex items-center justify-between gap-2 text-white bg-transparent border border-white/50`}>
-          {/* 🔍 指示書2-1: 固定文字で表示テスト + CSS強制修正 */}
+          {/* 2) Radixの自動表示に依存しない確実な表示 */}
           <span 
-            id="lang-debug-text"
             className="inline-flex items-center text-sm text-white opacity-100 visible min-w-[60px]"
             style={{ 
               color: 'white', 
@@ -74,12 +71,8 @@ export function UnifiedLanguageSwitcher({
               display: 'inline-flex' 
             }}
           >
-            日本語
+            {label}
           </span>
-          {/* 元のSelectValue（一時的にコメントアウト） */}
-          {/* <SelectValue>
-            {displayLabel}
-          </SelectValue> */}
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
