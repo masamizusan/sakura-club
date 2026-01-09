@@ -61,9 +61,21 @@ export function UnifiedLanguageSwitcher({
         value={safeCurrentLanguage} 
         onValueChange={handleLanguageChange}
       >
-        <SelectTrigger className={sizeClasses[size]}>
-          {/* 🔍 テスト：固定文字列で表示確認 */}
-          <span className="min-w-[3rem] inline-flex opacity-100 visible">日本語</span>
+        <SelectTrigger className={`${sizeClasses[size]} min-w-[96px] flex items-center justify-between gap-2 text-white bg-transparent border border-white/50`}>
+          {/* 🔍 指示書2-1: 固定文字で表示テスト + CSS強制修正 */}
+          <span 
+            id="lang-debug-text"
+            className="inline-flex items-center text-sm text-white opacity-100 visible min-w-[60px]"
+            style={{ 
+              color: 'white', 
+              fontSize: '14px', 
+              opacity: 1, 
+              visibility: 'visible',
+              display: 'inline-flex' 
+            }}
+          >
+            日本語
+          </span>
           {/* 元のSelectValue（一時的にコメントアウト） */}
           {/* <SelectValue>
             {displayLabel}
