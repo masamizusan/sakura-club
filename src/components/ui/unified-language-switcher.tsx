@@ -11,6 +11,14 @@ interface UnifiedLanguageSwitcherProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
+// 固定言語ラベルマップ（翻訳辞書に依存しない安定表示）
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
+  ja: '日本語',
+  en: 'English', 
+  ko: '한국어',
+  'zh-tw': '繁體中文'
+}
+
 /**
  * 統一言語切り替えコンポーネント
  * カスタム翻訳システムベースで、全画面で統一された言語管理を提供
@@ -32,6 +40,11 @@ export function UnifiedLanguageSwitcher({
     setLanguage(value)
   }
 
+  // フォールバック処理：currentLanguageが不正な場合はjaを使用
+  const safeCurrentLanguage = currentLanguage && Object.keys(LANGUAGE_LABELS).includes(currentLanguage) 
+    ? currentLanguage 
+    : 'ja'
+
   if (isLoading) {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
@@ -44,15 +57,19 @@ export function UnifiedLanguageSwitcher({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
-      <Select value={currentLanguage} onValueChange={handleLanguageChange}>
+      <Select value={safeCurrentLanguage} onValueChange={handleLanguageChange}>
         <SelectTrigger className={sizeClasses[size]}>
-          <SelectValue />
+          <SelectValue 
+            placeholder="言語を選択"
+          >
+            {LANGUAGE_LABELS[safeCurrentLanguage]}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ja">日本語</SelectItem>
-          <SelectItem value="en">English</SelectItem>
-          <SelectItem value="ko">한국어</SelectItem>
-          <SelectItem value="zh-tw">繁體中文</SelectItem>
+          <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
+          <SelectItem value="en">{LANGUAGE_LABELS.en}</SelectItem>
+          <SelectItem value="ko">{LANGUAGE_LABELS.ko}</SelectItem>
+          <SelectItem value="zh-tw">{LANGUAGE_LABELS['zh-tw']}</SelectItem>
         </SelectContent>
       </Select>
     </div>
