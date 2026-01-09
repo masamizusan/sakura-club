@@ -40,24 +40,30 @@ export function UnifiedLanguageSwitcher({
     setLanguage(value)
   }
 
-  // フォールバック処理：currentLanguageが不正な場合はjaを使用
-  const safeCurrentLanguage = currentLanguage && Object.keys(LANGUAGE_LABELS).includes(currentLanguage) 
-    ? currentLanguage 
-    : 'ja'
+  // フォールバック処理を強化：確実にjaを使用
+  const safeCurrentLanguage: SupportedLanguage = 
+    currentLanguage && Object.keys(LANGUAGE_LABELS).includes(currentLanguage) 
+      ? currentLanguage 
+      : 'ja'
 
-  // デバッグログ（一時的）
-  console.log('🔍 UnifiedLanguageSwitcher Debug:', {
-    currentLanguage,
-    safeCurrentLanguage,
-    isLoading,
-    availableKeys: Object.keys(LANGUAGE_LABELS)
-  })
-
-  if (isLoading) {
+  // ローディング中または初期化中の場合
+  if (isLoading || !currentLanguage) {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        {showIcon && <Globe className="w-4 h-4 text-gray-400" />}
-        <div className={`${sizeClasses[size]} bg-gray-100 rounded animate-pulse`}></div>
+        {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
+        <Select value="ja" onValueChange={handleLanguageChange}>
+          <SelectTrigger className={sizeClasses[size]}>
+            <SelectValue>
+              {LANGUAGE_LABELS.ja}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
+            <SelectItem value="en">{LANGUAGE_LABELS.en}</SelectItem>
+            <SelectItem value="ko">{LANGUAGE_LABELS.ko}</SelectItem>
+            <SelectItem value="zh-tw">{LANGUAGE_LABELS['zh-tw']}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     )
   }
@@ -67,11 +73,12 @@ export function UnifiedLanguageSwitcher({
       {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
       <Select 
         value={safeCurrentLanguage} 
-        defaultValue="ja"
         onValueChange={handleLanguageChange}
       >
         <SelectTrigger className={sizeClasses[size]}>
-          <SelectValue placeholder="言語を選択" />
+          <SelectValue>
+            {LANGUAGE_LABELS[safeCurrentLanguage]}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
