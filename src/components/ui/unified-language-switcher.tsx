@@ -46,6 +46,14 @@ export function UnifiedLanguageSwitcher({
   // 指示書3-3: LANGUAGE_LABELSの固定マップで安定表示を保証
   const displayLabel = LANGUAGE_LABELS[safeCurrentLanguage]
 
+  // 🔍 指示書5: 値の確認（ログで確定）
+  console.log('🔍 Language Selector Debug:', {
+    currentLanguage,
+    safeCurrentLanguage,
+    displayLabel,
+    isLoading
+  })
+
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {showIcon && <Globe className="w-4 h-4 text-gray-500" />}
@@ -54,10 +62,12 @@ export function UnifiedLanguageSwitcher({
         onValueChange={handleLanguageChange}
       >
         <SelectTrigger className={sizeClasses[size]}>
-          {/* 指示書3-1: SelectValue子要素で明示的に表示（最重要） */}
-          <SelectValue>
+          {/* 🔍 テスト：固定文字列で表示確認 */}
+          <span className="min-w-[3rem] inline-flex opacity-100 visible">日本語</span>
+          {/* 元のSelectValue（一時的にコメントアウト） */}
+          {/* <SelectValue>
             {displayLabel}
-          </SelectValue>
+          </SelectValue> */}
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ja">{LANGUAGE_LABELS.ja}</SelectItem>
