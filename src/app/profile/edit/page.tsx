@@ -177,10 +177,10 @@ const getMaritalStatusOptions = (t: any) => [
 ]
 
 // 職業オプション
-// 職業選択肢（性別に応じて動的に変更）
+// 職業選択肢（ユーザー種別に応じて表示を変更）
 const getOccupationOptions = (t: any, isMale: boolean = false) => [
   { value: 'none', label: t('occupations.noEntry') },
-  { value: isMale ? '主夫' : '主婦', label: isMale ? '主夫' : '主婦' },
+  { value: isMale ? '主夫' : '主婦', label: isMale ? t('occupations.houseHusband') : t('occupations.housewife') },
   { value: '会社員', label: t('occupations.companyEmployee') },
   { value: '公務員', label: t('occupations.publicServant') },
   { value: '経営者・役員', label: t('occupations.executiveManager') },

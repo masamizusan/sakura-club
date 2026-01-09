@@ -62,7 +62,7 @@ const getTravelCompanionLabel = (value: string, t: any): string => {
 }
 
 // 職業の表示を多言語対応で変換するヘルパー関数
-const getOccupationLabel = (value: string, t: any): string => {
+const getOccupationLabel = (value: string, t: any, isForeignMale: boolean = false): string => {
   const occupationLabels: Record<string, string> = {
     'noEntry': t('occupations.noEntry'),
     '経営者・役員': t('occupations.executiveManager'),
@@ -71,9 +71,9 @@ const getOccupationLabel = (value: string, t: any): string => {
     '自営業': t('occupations.selfEmployed'),
     'フリーランス': t('occupations.freelance'),
     '学生': t('occupations.student'),
-    '主婦': t('occupations.housewife'),
-    '主夫': t('occupations.houseHusband'),
-    '主婦、主夫': t('occupations.housewife'),
+    '主婦': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
+    '主夫': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
+    '主婦、主夫': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
     'その他': t('occupations.other')
   }
   return occupationLabels[value] || value
@@ -816,27 +816,36 @@ function ProfilePreviewContent() {
 
               {/* 基本プロフィール */}
               <div className="space-y-3 text-sm">
-                {/* 1. 国籍（外国人男性の場合のみ）/ 居住地（日本人女性の場合） */}
-                {gender === 'male' && nationality && nationality !== '日本' && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.nationality')}:</span>
-                    <span className="text-gray-600">{getNationalityLabel(nationality, t)}</span>
-                  </div>
-                )}
-                {gender === 'female' && prefecture && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
-                    <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}</span>
-                  </div>
-                )}
-                
-                {/* 2. 職業 */}
-                {shouldDisplayValue(occupation) && (
-                  <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.occupation')}:</span>
-                    <span className="text-gray-600">{getOccupationLabel(occupation, t)}</span>
-                  </div>
-                )}
+                {(() => {
+                  // 外国人男性判定
+                  const isForeignMale = gender === 'male' && nationality && nationality !== '日本'
+                  
+                  return (
+                    <>
+                      {/* 1. 国籍（外国人男性の場合のみ）/ 居住地（日本人女性の場合） */}
+                      {isForeignMale && (
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-20">{t('profile.nationality')}:</span>
+                          <span className="text-gray-600">{getNationalityLabel(nationality, t)}</span>
+                        </div>
+                      )}
+                      {gender === 'female' && prefecture && (
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
+                          <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}</span>
+                        </div>
+                      )}
+                      
+                      {/* 2. 職業 */}
+                      {shouldDisplayValue(occupation) && (
+                        <div className="flex items-center">
+                          <span className="font-medium text-gray-700 w-20">{t('profile.occupation')}:</span>
+                          <span className="text-gray-600">{getOccupationLabel(occupation, t, isForeignMale)}</span>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
                 
                 {/* 3. 身長 */}
                 {shouldDisplayValue(height) && (
