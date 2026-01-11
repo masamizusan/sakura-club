@@ -34,12 +34,63 @@ import {
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 function MyPageContent() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const languageRouter = useLanguageAwareRouter()
   const { t, language } = useUnifiedTranslation()
+  const { currentLanguage } = useLanguage()
+  
+  // 🌍 MyPage専用翻訳辞書
+  const mypageTranslations: Record<string, Record<string, string>> = {
+    ja: {
+      title: 'マイページ',
+      profileCompletionTitle: 'プロフィール完成度',
+      itemsFilled: '{filled}/{total}項目入力済み',
+      editProfileButton: 'プロフィールを編集する',
+      logout: 'ログアウト',
+      loggingOut: 'ログアウト中...'
+    },
+    en: {
+      title: 'My Page',
+      profileCompletionTitle: 'Profile Completion',
+      itemsFilled: '{filled}/{total} items completed',
+      editProfileButton: 'Edit Profile',
+      logout: 'Logout',
+      loggingOut: 'Logging out...'
+    },
+    ko: {
+      title: '마이페이지',
+      profileCompletionTitle: '프로필 완성도',
+      itemsFilled: '{filled}/{total}개 항목 입력완료',
+      editProfileButton: '프로필 편집하기',
+      logout: '로그아웃',
+      loggingOut: '로그아웃 중...'
+    },
+    'zh-tw': {
+      title: '我的頁面',
+      profileCompletionTitle: '個人資料完整度',
+      itemsFilled: '已填寫 {filled}/{total} 個項目',
+      editProfileButton: '編輯個人資料',
+      logout: '登出',
+      loggingOut: '登出中...'
+    }
+  }
+  
+  // MyPage専用翻訳関数
+  const getMypageTranslation = (key: string, replacements: Record<string, string> = {}) => {
+    const translations = mypageTranslations[currentLanguage] || mypageTranslations['ja']
+    let translation = translations[key] || mypageTranslations['ja'][key] || key
+    
+    // プレースホルダーを置換
+    Object.keys(replacements).forEach(placeholder => {
+      translation = translation.replace(`{${placeholder}}`, replacements[placeholder])
+    })
+    
+    return translation
+  }
   const [profile, setProfile] = useState<any>(null)
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
@@ -333,7 +384,7 @@ function MyPageContent() {
       <div className="bg-white shadow-sm md:ml-64">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">{t('mypage.title') || 'マイページ'}</h1>
+            <h1 className="text-xl font-bold text-gray-900">{getMypageTranslation('title')}</h1>
             <LanguageSelector variant="light" size="sm" showIcon={true} />
           </div>
         </div>
@@ -386,7 +437,7 @@ function MyPageContent() {
             {/* Profile Completion */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">プロフィール完成度</span>
+                <span className="text-sm font-medium text-gray-700">{getMypageTranslation('profileCompletionTitle')}</span>
                 <span className="text-sm font-bold text-orange-600">{profileCompletion}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -396,7 +447,7 @@ function MyPageContent() {
                 ></div>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                {totalItems > 0 ? `${completedItems}/${totalItems}項目入力済み` : '計算中...'}
+                {totalItems > 0 ? getMypageTranslation('itemsFilled', { filled: completedItems.toString(), total: totalItems.toString() }) : '計算中...'}
               </p>
             </div>
 
@@ -457,7 +508,7 @@ function MyPageContent() {
                 }}
               >
                 <Edit3 className="w-4 h-4 mr-2" />
-                プロフィールを編集する
+                {getMypageTranslation('editProfileButton')}
               </Button>
             </div>
           </div>
@@ -467,7 +518,7 @@ function MyPageContent() {
             <div className="flex items-center justify-between py-2">
               <div className="flex items-center">
                 <LogOut className="w-5 h-5 text-gray-400 mr-3" />
-                <span className="text-gray-700">ログアウト</span>
+                <span className="text-gray-700">{getMypageTranslation('logout')}</span>
               </div>
               <Button
                 variant="outline"
@@ -476,7 +527,7 @@ function MyPageContent() {
                 disabled={isLoggingOut}
                 className="text-red-600 border-red-200 hover:bg-red-50"
               >
-                {isLoggingOut ? 'ログアウト中...' : 'ログアウト'}
+                {isLoggingOut ? getMypageTranslation('loggingOut') : getMypageTranslation('logout')}
               </Button>
             </div>
           </div>

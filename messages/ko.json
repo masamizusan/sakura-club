@@ -40,6 +40,17 @@
     "footprints": "발자국",
     "mypage": "마이페이지"
   },
+  "mypage": {
+    "title": "마이페이지",
+    "profileCompletionTitle": "프로필 완성도",
+    "itemsFilled": "{filled}/{total}개 항목 입력완료",
+    "editProfileButton": "프로필 편집하기",
+    "logout": "로그아웃",
+    "loggingOut": "로그아웃 중..."
+  },
+  "preview": {
+    "headerTitle": "미리보기｜상대가 보는 내 모습"
+  },
   "navigation": {
     "home": "홈",
     "dashboard": "대시보드",

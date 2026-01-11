@@ -40,6 +40,17 @@
     "footprints": "足跡",
     "mypage": "我的頁面"
   },
+  "mypage": {
+    "title": "我的頁面",
+    "profileCompletionTitle": "個人資料完整度",
+    "itemsFilled": "已填寫 {filled}/{total} 個項目",
+    "editProfileButton": "編輯個人資料",
+    "logout": "登出",
+    "loggingOut": "登出中..."
+  },
+  "preview": {
+    "headerTitle": "預覽｜對方看到的樣子"
+  },
   "navigation": {
     "home": "首頁",
     "dashboard": "儀表板",

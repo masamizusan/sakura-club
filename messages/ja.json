@@ -48,6 +48,17 @@
     "footprints": "足跡",
     "mypage": "マイページ"
   },
+  "mypage": {
+    "title": "マイページ",
+    "profileCompletionTitle": "プロフィール完成度",
+    "itemsFilled": "{filled}/{total}項目入力済み",
+    "editProfileButton": "プロフィールを編集する",
+    "logout": "ログアウト",
+    "loggingOut": "ログアウト中..."
+  },
+  "preview": {
+    "headerTitle": "プレビュー｜相手からの見え方"
+  },
   "navigation": {
     "home": "ホーム",
     "dashboard": "ダッシュボード",

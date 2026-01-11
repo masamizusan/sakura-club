@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
@@ -640,6 +641,29 @@ function ProfilePreviewContent() {
   
   // 統一言語設定
   const { t, language: currentLanguage } = useUnifiedTranslation()
+  const { currentLanguage: contextLanguage } = useLanguage()
+  
+  // 🌍 Preview専用翻訳辞書
+  const previewTranslations: Record<string, Record<string, string>> = {
+    ja: {
+      headerTitle: 'プレビュー｜相手からの見え方'
+    },
+    en: {
+      headerTitle: 'Preview | How others see you'
+    },
+    ko: {
+      headerTitle: '미리보기｜상대가 보는 내 모습'
+    },
+    'zh-tw': {
+      headerTitle: '預覽｜對方看到的樣子'
+    }
+  }
+  
+  // Preview専用翻訳関数
+  const getPreviewTranslation = (key: string) => {
+    const translations = previewTranslations[contextLanguage] || previewTranslations['ja']
+    return translations[key] || previewTranslations['ja'][key] || key
+  }
   
   // Supabase client for image resolution
   const supabase = createClient()
@@ -772,7 +796,7 @@ function ProfilePreviewContent() {
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
             </Button>
-            <h1 className="text-xl font-bold">プレビュー | 相手からの見え方</h1>
+            <h1 className="text-xl font-bold">{getPreviewTranslation('headerTitle')}</h1>
           </div>
           
           {/* 言語切り替えボタン */}

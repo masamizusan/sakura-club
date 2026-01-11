@@ -40,6 +40,17 @@
     "footprints": "Footprints",
     "mypage": "My Page"
   },
+  "mypage": {
+    "title": "My Page",
+    "profileCompletionTitle": "Profile Completion",
+    "itemsFilled": "{filled}/{total} items completed",
+    "editProfileButton": "Edit Profile",
+    "logout": "Logout",
+    "loggingOut": "Logging out..."
+  },
+  "preview": {
+    "headerTitle": "Preview | How others see you"
+  },
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
