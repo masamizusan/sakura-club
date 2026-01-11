@@ -168,6 +168,31 @@ const getPersonalityOptions = (t: any) => [
 // 後方互換性のため、フラットな配列も保持（翻訳対応）
 const getHobbyOptions = (t: any) => getCultureCategories(t).flatMap(category => category.items)
 
+// 🛠️ タグ正規化関数：重複・空文字・nullを除去
+const normalizeTags = (tags: any[]): string[] => {
+  if (!Array.isArray(tags)) {
+    console.warn('⚠️ normalizeTags: 入力が配列ではありません:', typeof tags, tags)
+    return []
+  }
+  
+  const normalized = tags
+    .filter(tag => tag !== null && tag !== undefined && tag !== '') // null/undefined/空文字を除去
+    .map(tag => String(tag).trim()) // 文字列化＋前後空白除去
+    .filter(tag => tag.length > 0) // 空文字を再度除去
+    .filter((tag, index, array) => array.indexOf(tag) === index) // 重複除去
+  
+  console.log('🧹 NORMALIZE TAGS:', {
+    input: tags,
+    input_length: tags.length,
+    output: normalized,
+    output_length: normalized.length,
+    removed_count: tags.length - normalized.length,
+    duplicates_removed: tags.length - new Set(tags.filter(t => t !== null && t !== undefined && t !== '')).size
+  })
+  
+  return normalized
+}
+
 // 結婚状況オプション
 // 結婚状況選択肢（翻訳対応）
 const getMaritalStatusOptions = (t: any) => [
@@ -4176,23 +4201,33 @@ function ProfileEditContent() {
       }
 
       // 🎯 CRITICAL FIX: personality/culture_tagsを正しいフィールドから生成
-      // 🚨 NULL禁止: 保存時は必ず配列化（null/undefined→[]正規化）
+      // 🚨 NULL禁止 + 重複・空値除去: 保存時は必ず正規化（null/undefined→[]、重複除去）
       const rawPersonalityTags = Array.isArray(selectedPersonality) ? selectedPersonality : []
       const rawCultureTags = Array.isArray(selectedHobbies) ? selectedHobbies : []
       
-      // 🚨 CRITICAL: normalizeTextArray()で必ずstring[]に変換（null禁止）
-      const personalityTags = normalizeTextArray(rawPersonalityTags) ?? []  // 性格（personality_tags）
-      const cultureTags = normalizeTextArray(rawCultureTags) ?? []  // 共有したい日本文化（culture_tags）
+      // 🧹 FIRST: カスタム正規化で重複・空値・無効値を除去
+      const cleanPersonalityTags = normalizeTags(rawPersonalityTags)
+      const cleanCultureTags = normalizeTags(rawCultureTags)
       
-      // 🔍 CRITICAL: 最終string[]確認ログ
+      // 🚨 CRITICAL: normalizeTextArray()で必ずstring[]に変換（null禁止）
+      const personalityTags = normalizeTextArray(cleanPersonalityTags) ?? []  // 性格（personality_tags）
+      const cultureTags = normalizeTextArray(cleanCultureTags) ?? []  // 共有したい日本文化（culture_tags）
+      
+      // 🔍 CRITICAL: 最終string[]確認ログ（正規化効果含む）
       console.log('🛡️ NORMALIZED PERSONALITY_TAGS VERIFICATION:', {
         raw_selectedPersonality: selectedPersonality,
         raw_selectedHobbies: selectedHobbies,
+        clean_personality_normalized: cleanPersonalityTags,
+        clean_culture_normalized: cleanCultureTags,
         personalityTags_final: personalityTags,
         cultureTags_final: cultureTags,
+        normalization_effect: {
+          personality_cleaning: `${rawPersonalityTags.length} -> ${cleanPersonalityTags.length} (removed ${rawPersonalityTags.length - cleanPersonalityTags.length})`,
+          culture_cleaning: `${rawCultureTags.length} -> ${cleanCultureTags.length} (removed ${rawCultureTags.length - cleanCultureTags.length})`
+        },
         personalityTags_isStringArray: Array.isArray(personalityTags) && personalityTags.every(item => typeof item === 'string'),
         cultureTags_isStringArray: Array.isArray(cultureTags) && cultureTags.every(item => typeof item === 'string'),
-        guarantee: 'normalizeTextArray()で必ずstring[]変換済み'
+        guarantee: '重複・空値除去 + normalizeTextArray()で必ずstring[]変換済み'
       })
       
       // 🚨 NULL禁止正規化ログ
@@ -4735,19 +4770,47 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
   // Personality selection handler
   const togglePersonality = (trait: string) => {
     setSelectedPersonality(prev => {
-      const newTraits = prev.includes(trait)
-        ? prev.filter(t => t !== trait)  // 単純にfilterのみ（空配列も許可）
-        : prev.includes('その他')
-          ? [trait]
-          : [...prev, trait]
+      // 🚨 DEBUG: 性格タグ選択前の状態確認（正規化ベース）
+      const normalizedPrev = normalizeTags(prev)
+      console.log('🎯 PERSONALITY TAG DEBUG - BEFORE TOGGLE:', {
+        trait_clicked: trait,
+        prev_raw: prev,
+        prev_normalized: normalizedPrev,
+        prev_count_raw: prev.length,
+        prev_count_normalized: normalizedPrev.length,
+        will_add: !normalizedPrev.includes(trait),
+        will_remove: normalizedPrev.includes(trait),
+        has_other: normalizedPrev.includes('その他'),
+        task_a1_debug: '選択前の状態確認（正規化ベース）'
+      })
       
-      // 🌟 CRITICAL: フォームにも確実に反映（setValue統一）
-      setValue('personality', newTraits, { shouldDirty: true, shouldValidate: true })
+      const newTraits = normalizedPrev.includes(trait)
+        ? normalizedPrev.filter(t => t !== trait)  // 正規化済みから削除
+        : normalizedPrev.includes('その他')
+          ? [trait]  // その他をリセットして新しい項目のみ
+          : [...normalizedPrev, trait]  // 正規化済みに追加
+      
+      // 🧹 結果も正規化（念のため）
+      const finalTraits = normalizeTags(newTraits)
+      
+      // 🚨 DEBUG: 性格タグ選択後の状態確認（正規化ベース）
+      console.log('🎯 PERSONALITY TAG DEBUG - AFTER TOGGLE:', {
+        trait_clicked: trait,
+        new_raw: newTraits,
+        new_normalized: finalTraits,
+        new_count: finalTraits.length,
+        state_change: `${normalizedPrev.length} -> ${finalTraits.length}`,
+        contamination_removed: newTraits.length !== finalTraits.length,
+        task_a2_debug: '選択後の状態確認（正規化ベース）'
+      })
+      
+      // 🌟 CRITICAL: フォームにも確実に反映（正規化済みを使用）
+      setValue('personality', finalTraits, { shouldDirty: true, shouldValidate: true })
       
       // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-      console.log('📝 Personality toggled:', trait, '→', newTraits.length, 'total traits')
+      console.log('📝 Personality toggled:', trait, '→', finalTraits.length, 'total traits (normalized)')
       
-      return newTraits
+      return finalTraits
     })
   }
 
@@ -5707,32 +5770,63 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
                 {/* 性格セクション - 日本文化の前に移動 */}
                 <div className="space-y-4">
+                  {/* 🚨 DEBUG: 性格タグ表示前の確認（正規化ベース） */}
+                  {(() => {
+                    const normalizedPersonality = normalizeTags(selectedPersonality)
+                    const visibleSelectedTraits = getPersonalityOptions(t).filter(trait => normalizedPersonality.includes(trait.label))
+                    const countMismatch = normalizedPersonality.length !== visibleSelectedTraits.length
+                    
+                    console.log('🎯 PERSONALITY DISPLAY DEBUG (NORMALIZED):', {
+                      selectedPersonality_raw: selectedPersonality,
+                      selectedPersonality_normalized: normalizedPersonality,
+                      raw_count: selectedPersonality.length,
+                      normalized_count: normalizedPersonality.length,
+                      available_options: getPersonalityOptions(t).map(t => t.label),
+                      visible_selected_traits: visibleSelectedTraits.map(t => t.label),
+                      visible_count: visibleSelectedTraits.length,
+                      count_mismatch: countMismatch,
+                      contamination_candidates: normalizedPersonality.filter(trait => 
+                        !getPersonalityOptions(t).some(option => option.label === trait)
+                      ),
+                      cleaning_effect: selectedPersonality.length - normalizedPersonality.length,
+                      task_b1_normalized_check: 'UI表示vs正規化済み配列確認'
+                    })
+                    
+                    return null // このdebugは画面に何も表示しない
+                  })()}
+                  
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('profile.personalitySection')}（{selectedPersonality.length}/5 {t('profile.selectedCount')}）
+                    {t('profile.personalitySection')}（{normalizeTags(selectedPersonality).length}/5 {t('profile.selectedCount')}）
                   </label>
                   <p className="text-xs text-gray-500 mb-3">{t('profile.selectPersonalityNote')}</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {getPersonalityOptions(t).map((trait) => (
-                      <button
-                        key={trait.key}
-                        type="button"
-                        onClick={() => togglePersonality(trait.label)}
-                        disabled={!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5}
-                        className={`
-                          px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                          ${selectedPersonality.includes(trait.label)
-                            ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
-                          }
-                          ${(!selectedPersonality.includes(trait.label) && selectedPersonality.length >= 5)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer hover:shadow-md'
-                          }
-                        `}
-                      >
-                        {trait.label}
-                      </button>
-                    ))}
+                    {getPersonalityOptions(t).map((trait) => {
+                      const normalizedPersonality = normalizeTags(selectedPersonality)
+                      const isSelected = normalizedPersonality.includes(trait.label)
+                      const isDisabled = !isSelected && normalizedPersonality.length >= 5
+                      
+                      return (
+                        <button
+                          key={trait.key}
+                          type="button"
+                          onClick={() => togglePersonality(trait.label)}
+                          disabled={isDisabled}
+                          className={`
+                            px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                            ${isSelected
+                              ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                            }
+                            ${isDisabled
+                              ? 'opacity-50 cursor-not-allowed'
+                              : 'cursor-pointer hover:shadow-md'
+                            }
+                          `}
+                        >
+                          {trait.label}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 
