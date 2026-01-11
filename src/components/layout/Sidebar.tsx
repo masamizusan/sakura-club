@@ -9,7 +9,7 @@ import {
   History, 
   User
 } from 'lucide-react'
-import { useUnifiedTranslation } from '@/utils/translations'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface SidebarProps {
   className?: string
@@ -17,21 +17,59 @@ interface SidebarProps {
 
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
-  const { t } = useUnifiedTranslation()
+  const { currentLanguage } = useLanguage()
+  
+  // 🌍 Sidebar専用翻訳辞書
+  const sidebarTranslations: Record<string, Record<string, string>> = {
+    ja: {
+      search: 'さがす',
+      messages: 'メッセージ',
+      matches: 'お相手から',
+      footprints: '足跡',
+      mypage: 'マイページ'
+    },
+    en: {
+      search: 'Search',
+      messages: 'Messages',
+      matches: 'Likes',
+      footprints: 'Footprints',
+      mypage: 'My Page'
+    },
+    ko: {
+      search: '검색',
+      messages: '메시지',
+      matches: '관심',
+      footprints: '발자국',
+      mypage: '마이페이지'
+    },
+    'zh-tw': {
+      search: '搜尋',
+      messages: '訊息',
+      matches: '喜歡我的人',
+      footprints: '足跡',
+      mypage: '我的頁面'
+    }
+  }
+  
+  // デバッグログを追加
+  console.log('🔍 Sidebar Debug:', {
+    currentLanguage,
+    availableTranslations: Object.keys(sidebarTranslations),
+    currentDict: sidebarTranslations[currentLanguage] || sidebarTranslations['ja']
+  })
   
   // フォールバック機能付きの翻訳関数
-  const getSafeTranslation = (key: string, fallback: string) => {
-    const translation = t(key)
-    // 翻訳が見つからない場合（キーがそのまま返される）はフォールバックを使用
-    return translation === key ? fallback : translation
+  const getSafeTranslation = (key: string) => {
+    const translations = sidebarTranslations[currentLanguage] || sidebarTranslations['ja']
+    return translations[key] || sidebarTranslations['ja'][key] || key
   }
   
   const sidebarItems = [
-    { id: 'search', icon: Search, labelKey: 'sidebar.search', fallback: 'さがす', href: '/dashboard' },
-    { id: 'messages', icon: MessageCircle, labelKey: 'sidebar.messages', fallback: 'メッセージ', href: '/messages' },
-    { id: 'liked', icon: Heart, labelKey: 'sidebar.matches', fallback: 'お相手から', href: '/matches' },
-    { id: 'footprints', icon: History, labelKey: 'sidebar.footprints', fallback: '足跡', href: '/footprints' },
-    { id: 'profile', icon: User, labelKey: 'sidebar.mypage', fallback: 'マイページ', href: '/mypage' },
+    { id: 'search', icon: Search, labelKey: 'search', href: '/dashboard' },
+    { id: 'messages', icon: MessageCircle, labelKey: 'messages', href: '/messages' },
+    { id: 'liked', icon: Heart, labelKey: 'matches', href: '/matches' },
+    { id: 'footprints', icon: History, labelKey: 'footprints', href: '/footprints' },
+    { id: 'profile', icon: User, labelKey: 'mypage', href: '/mypage' },
   ]
 
   return (
@@ -61,7 +99,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="font-medium">{getSafeTranslation(item.labelKey, item.fallback)}</span>
+                <span className="font-medium">{getSafeTranslation(item.labelKey)}</span>
               </Link>
             )
           })}
