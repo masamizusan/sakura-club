@@ -9,6 +9,7 @@ import {
   History, 
   User
 } from 'lucide-react'
+import { useUnifiedTranslation } from '@/utils/translations'
 
 interface SidebarProps {
   className?: string
@@ -16,13 +17,14 @@ interface SidebarProps {
 
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
+  const { t } = useUnifiedTranslation()
   
   const sidebarItems = [
-    { id: 'search', icon: Search, label: 'さがす', href: '/dashboard' },
-    { id: 'messages', icon: MessageCircle, label: 'メッセージ', href: '/messages' },
-    { id: 'liked', icon: Heart, label: 'お相手から', href: '/matches' },
-    { id: 'footprints', icon: History, label: '足跡', href: '/footprints' },
-    { id: 'profile', icon: User, label: 'マイページ', href: '/mypage' },
+    { id: 'search', icon: Search, labelKey: 'sidebar.search', href: '/dashboard' },
+    { id: 'messages', icon: MessageCircle, labelKey: 'sidebar.messages', href: '/messages' },
+    { id: 'liked', icon: Heart, labelKey: 'sidebar.matches', href: '/matches' },
+    { id: 'footprints', icon: History, labelKey: 'sidebar.footprints', href: '/footprints' },
+    { id: 'profile', icon: User, labelKey: 'sidebar.mypage', href: '/mypage' },
   ]
 
   return (
@@ -52,7 +54,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                 }`}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
               </Link>
             )
           })}

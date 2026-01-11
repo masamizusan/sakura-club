@@ -41,6 +41,13 @@
     "remove": "削除",
     "upload": "アップロード"
   },
+  "sidebar": {
+    "search": "さがす",
+    "messages": "メッセージ",
+    "matches": "お相手から",
+    "footprints": "足跡",
+    "mypage": "マイページ"
+  },
   "navigation": {
     "home": "ホーム",
     "dashboard": "ダッシュボード",

@@ -33,6 +33,13 @@
     "no": "아니요",
     "or": "또는"
   },
+  "sidebar": {
+    "search": "검색",
+    "messages": "메시지",
+    "matches": "매칭",
+    "footprints": "발자국",
+    "mypage": "마이페이지"
+  },
   "navigation": {
     "home": "홈",
     "dashboard": "대시보드",

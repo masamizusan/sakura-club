@@ -33,6 +33,13 @@
     "no": "No",
     "or": "or"
   },
+  "sidebar": {
+    "search": "Search",
+    "messages": "Messages",
+    "matches": "Matches",
+    "footprints": "Footprints",
+    "mypage": "My Page"
+  },
   "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
