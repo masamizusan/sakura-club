@@ -14,7 +14,7 @@ import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-r
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -92,7 +92,7 @@ function LoginForm() {
             </div>
             
             {/* Language Switcher */}
-            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
+            <LanguageSelector variant="light" size="sm" showIcon={true} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('login.title')}</h2>
           <p className="text-gray-600">{t('login.subtitle')}</p>

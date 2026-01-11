@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
@@ -777,7 +777,7 @@ function ProfilePreviewContent() {
           
           {/* 言語切り替えボタン */}
           <div className="flex items-center gap-2">
-            <UnifiedLanguageSwitcher size="md" showIcon={true} className="[&>div>div>button]:bg-orange-600 [&>div>div>button]:border-orange-400 [&>div>div>button]:text-white" />
+            <LanguageSelector variant="dark" size="md" showIcon={true} />
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ import {
 // normalizeProfile と calculateCompletion を使用して一貫した計算を実現
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { 
   type LanguageSkill, 
   type LanguageCode, 
@@ -4845,7 +4845,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
           {/* 言語切り替えボタン（全ユーザー対応） */}
           <div className="flex justify-end mb-4">
             <div className="flex items-center gap-2">
-              <UnifiedLanguageSwitcher size="md" showIcon={true} />
+              <LanguageSelector variant="light" size="md" showIcon={true} />
             </div>
           </div>
 

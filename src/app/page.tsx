@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowRight, Heart, Shield, Globe } from 'lucide-react'
 import Link from 'next/link'
 import { useUnifiedTranslation } from '@/utils/translations'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { type SupportedLanguage } from '@/utils/language'
 
@@ -46,7 +46,7 @@ function Header({ t }: { t: any }) {
           {/* Language & Auth Buttons */}
           <div className="flex items-center space-x-4">
             {/* 統一言語切り替えコンポーネント */}
-            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
+            <LanguageSelector variant="light" size="sm" showIcon={true} />
 
             <Button 
               variant="outline" 

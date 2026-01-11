@@ -31,7 +31,7 @@ import {
   LogOut,
   Calendar
 } from 'lucide-react'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 
@@ -334,7 +334,7 @@ function MyPageContent() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-900">{t('mypage.title') || 'マイページ'}</h1>
-            <UnifiedLanguageSwitcher size="sm" showIcon={true} />
+            <LanguageSelector variant="light" size="sm" showIcon={true} />
           </div>
         </div>
       </div>

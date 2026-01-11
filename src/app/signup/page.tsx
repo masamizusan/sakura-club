@@ -13,7 +13,7 @@ import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
-import { UnifiedLanguageSwitcher } from '@/components/ui/unified-language-switcher'
+import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
 
 // 多言語対応の登録スキーマ生成関数
@@ -318,7 +318,7 @@ export default function SignupPage() {
               </Link>
               
               {/* Language Switcher */}
-              <UnifiedLanguageSwitcher size="sm" showIcon={true} />
+              <LanguageSelector variant="light" size="sm" showIcon={true} />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('signup.title')}</h1>
           </div>
