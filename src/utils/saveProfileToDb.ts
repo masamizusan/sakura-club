@@ -50,6 +50,7 @@ export async function saveProfileToDb(
     userId,
     operation: operation.operation,
     hasAvatarUrl: !!payload.avatar_url,
+    hasPhotoUrls: !!payload.photo_urls,
     entryPoint
   })
 
@@ -62,6 +63,32 @@ export async function saveProfileToDb(
       console.log('📋 avatar input kind: not_provided')
       console.log('📋 upload attempted: false')
       console.log('📋 final avatar_url for DB: not_provided')
+    }
+
+    // 2. photo_urls処理 - 複数画像対応
+    if (payload.photo_urls !== undefined) {
+      console.log('🖼️ Processing photo_urls array...', { count: Array.isArray(payload.photo_urls) ? payload.photo_urls.length : 0 })
+      
+      if (Array.isArray(payload.photo_urls)) {
+        // 各画像URLを Storage に保存
+        const processedUrls = []
+        for (let i = 0; i < Math.min(payload.photo_urls.length, 3); i++) { // 最大3枚制限
+          const url = payload.photo_urls[i]
+          if (url && typeof url === 'string') {
+            const processedUrl = await ensureAvatarStored(supabase, userId, url)
+            processedUrls.push(processedUrl)
+          }
+        }
+        payload.photo_urls = processedUrls
+        
+        // avatar_url との同期（メイン画像）
+        if (processedUrls.length > 0) {
+          payload.avatar_url = processedUrls[0]
+          console.log('🔄 avatar_url synced with photo_urls[0]')
+        }
+      } else {
+        payload.photo_urls = []
+      }
     }
 
     // 2. 🛡️ Base64遮断安全装置（必須）

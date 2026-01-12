@@ -190,7 +190,12 @@ export default function MultiImageUploader({
         {/* 既存の画像 */}
         {images.map((image, index) => (
           <div key={image.id} className="relative">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-sakura-300 transition-colors">
+            {/* 画像コンテナ - メイン画像は特別なスタイリング */}
+            <div className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
+              image.isMain 
+                ? 'border-sakura-500 shadow-lg ring-2 ring-sakura-200' 
+                : 'border-gray-200 hover:border-sakura-300'
+            }`}>
               <img
                 src={image.url}
                 alt={`プロフィール写真 ${index + 1}`}
@@ -198,10 +203,10 @@ export default function MultiImageUploader({
               />
             </div>
             
-            {/* メインバッジ */}
+            {/* メインバッジ - より目立つデザイン */}
             {image.isMain && (
-              <div className="absolute top-2 left-2 bg-sakura-600 text-white text-xs px-2 py-1 rounded-full">
-                {t('photos.main')}
+              <div className="absolute top-2 left-2 bg-gradient-to-r from-sakura-600 to-sakura-700 text-white text-xs px-3 py-1 rounded-full shadow-md border border-white">
+                <span className="font-semibold">{t('photos.main')}</span>
               </div>
             )}
             
@@ -237,16 +242,16 @@ export default function MultiImageUploader({
               </Button>
             </div>
             
-            {/* 下部ボタン */}
+            {/* 下部ボタン - メイン重複表示改善 */}
             <div className="absolute bottom-2 left-2 right-2 space-y-1">
               {!image.isMain && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full text-xs h-6"
+                  className="w-full text-xs h-6 bg-white bg-opacity-90 hover:bg-opacity-100"
                   onClick={() => handleSetMainImage(image.id)}
                 >
-                  メインに設定
+                  {t('photos.setAsMain')}
                 </Button>
               )}
               {image.isEdited && (

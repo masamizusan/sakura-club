@@ -460,18 +460,28 @@ function MyPageContent() {
                     const isForeignMale = profile?.gender === 'male' && profile?.nationality && profile?.nationality !== '日本'
                     const profileType = isForeignMale ? 'foreign-male' : 'japanese-female'
                     
-                    // 🎯 SSOT統一: MyPage→編集遷移時の画像データ保存
-                    // 🔥 修正: 画像あり判定をdata URI、HTTP、Storage path全てOKにする
-                    const hasAvatar = typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0
-                    console.log('🔍 MyPage hasAvatar判定:', {
-                      hasAvatar,
-                      avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
-                      avatar_url_length: profile?.avatar_url?.length || 0,
-                      judgment_basis: 'string + length > 0 (data URI/HTTP/Storage path全てOK)'
-                    })
+                    // 🎯 SSOT統一: MyPage→編集遷移時の画像データ保存（photo_urls優先）
+                    let imageData = []
                     
-                    if (hasAvatar) {
-                      const imageData = [{
+                    // 🖼️ STEP 1: photo_urls優先（最大3枚対応）
+                    if (Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0) {
+                      imageData = profile.photo_urls.map((url: string, index: number) => ({
+                        id: `photo_${index}`,
+                        url: url,
+                        originalUrl: url,
+                        isMain: index === 0, // 先頭をメイン画像
+                        isEdited: false
+                      }))
+                      
+                      console.log('🔄 MyPage→Edit: photo_urlsから画像データ構築:', {
+                        photo_urls_count: profile.photo_urls.length,
+                        imageData_length: imageData.length,
+                        main_image: imageData[0]?.url?.substring(0, 30) + '...'
+                      })
+                    }
+                    // 🔧 STEP 2: avatar_url後方互換
+                    else if (typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0) {
+                      imageData = [{
                         id: '1',
                         url: profile.avatar_url,
                         originalUrl: profile.avatar_url,
@@ -479,17 +489,20 @@ function MyPageContent() {
                         isEdited: false
                       }]
                       
+                      console.log('🔄 MyPage→Edit: avatar_urlから画像データ構築（後方互換）:', {
+                        avatar_url_preview: profile.avatar_url.substring(0, 30) + '...',
+                        isBase64: profile.avatar_url.startsWith('data:image/')
+                      })
+                    }
+                    
+                    if (imageData.length > 0) {
                       localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
-                      
                       console.log('🎯 MyPage→Edit遷移: 画像データ保存完了', {
-                        avatar_url_exists: !!profile.avatar_url,
-                        isBase64: profile.avatar_url.startsWith('data:image/'),
-                        saved_to_localStorage: true,
-                        imageData_length: imageData.length,
-                        purpose: 'UI表示と完成度計算の統一'
+                        saved_count: imageData.length,
+                        source: Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0 ? 'photo_urls' : 'avatar_url',
+                        purpose: '複数画像データの永続化'
                       })
                     } else {
-                      // 画像がない場合はlocalStorageをクリア
                       localStorage.removeItem('currentProfileImages')
                       console.log('🎯 MyPage→Edit遷移: 画像なし - localStorage クリア完了')
                     }

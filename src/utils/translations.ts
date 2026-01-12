@@ -860,6 +860,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       confirm: '確定'
     },
 
+    photos: {
+      profilePhotos: 'プロフィール写真',
+      maxPhotos: '最大',
+      main: 'メイン',
+      setAsMain: 'メインに設定',
+      addPhoto: '写真を追加',
+      fileSizeError: 'ファイルサイズは5MB以下にしてください',
+      fileTypeError: 'JPEG、PNG、WebP、HEIC形式の画像ファイルを選択してください',
+      mainPhotoNote: 'メイン写真は最初に表示されます',
+      fileSizeNote: '各写真は5MB以下にしてください',
+      editingNote: 'アップロード後にクロップや補正ができます'
+    },
+
     errors: {
       required: 'この項目は必須です',
       nicknameRequired: 'ニックネームを入力してください',
@@ -1522,6 +1535,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectAll: 'Select All',
       clearAll: 'Clear All',
       confirm: 'Confirm'
+    },
+
+    photos: {
+      profilePhotos: 'Profile Photos',
+      maxPhotos: 'max',
+      main: 'Main',
+      setAsMain: 'Set as Main',
+      addPhoto: 'Add Photo',
+      fileSizeError: 'File size must be 5MB or less',
+      fileTypeError: 'Please select JPEG, PNG, WebP, or HEIC image files',
+      mainPhotoNote: 'Main photo will be displayed first',
+      fileSizeNote: 'Each photo must be 5MB or less',
+      editingNote: 'You can crop and adjust photos after upload'
     },
 
     errors: {
@@ -2187,6 +2213,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       confirm: '확인'
     },
 
+    photos: {
+      profilePhotos: '프로필 사진',
+      maxPhotos: '최대',
+      main: '메인',
+      setAsMain: '메인으로 설정',
+      addPhoto: '사진 추가',
+      fileSizeError: '파일 크기는 5MB 이하여야 합니다',
+      fileTypeError: 'JPEG, PNG, WebP, HEIC 형식의 이미지 파일을 선택해주세요',
+      mainPhotoNote: '메인 사진이 가장 먼저 표시됩니다',
+      fileSizeNote: '각 사진은 5MB 이하여야 합니다',
+      editingNote: '업로드 후 크롭 및 보정이 가능합니다'
+    },
+
     errors: {
       required: '이 항목은 필수입니다',
       nicknameRequired: '닉네임을 입력해 주세요',
@@ -2848,6 +2887,19 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       selectAll: '全選',
       clearAll: '全部清除',
       confirm: '確認'
+    },
+
+    photos: {
+      profilePhotos: '個人照片',
+      maxPhotos: '最多',
+      main: '主要',
+      setAsMain: '設為主要照片',
+      addPhoto: '新增照片',
+      fileSizeError: '檔案大小必須在5MB以下',
+      fileTypeError: '請選擇JPEG、PNG、WebP、HEIC格式的圖片檔案',
+      mainPhotoNote: '主要照片將首先顯示',
+      fileSizeNote: '每張照片必須在5MB以下',
+      editingNote: '上傳後可進行裁剪和調整'
     },
 
     errors: {

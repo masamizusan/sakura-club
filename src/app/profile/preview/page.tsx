@@ -767,7 +767,8 @@ function ProfilePreviewContent() {
     travel_companion = '',
     personality = [],
     custom_culture: customCulture = '',
-    image: profileImage = ''
+    image: profileImage = '',
+    photo_urls = [] // 🖼️ NEW: 複数画像対応
   } = previewData
 
   // エラー画面
@@ -810,10 +811,22 @@ function ProfilePreviewContent() {
       <div className="py-12 px-4">
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            {/* プロフィール画像 */}
+            {/* プロフィール画像 - 複数画像対応 */}
             <div className="relative aspect-square bg-gray-100">
               {(() => {
-                const avatarSrc = resolveAvatarSrc(profileImage, supabase)
+                // 🖼️ STEP 1: photo_urls優先表示（複数画像対応）
+                let displayImage = null
+                if (Array.isArray(photo_urls) && photo_urls.length > 0) {
+                  displayImage = photo_urls[0] // メイン画像
+                  console.log('🔄 プレビュー画像: photo_urls[0]使用:', displayImage)
+                }
+                // 🔧 STEP 2: 後方互換でprofileImage使用
+                else if (profileImage) {
+                  displayImage = profileImage
+                  console.log('🔄 プレビュー画像: profileImage使用（後方互換）:', displayImage)
+                }
+
+                const avatarSrc = resolveAvatarSrc(displayImage, supabase)
                 return avatarSrc ? (
                   <img
                     src={avatarSrc}
@@ -826,6 +839,28 @@ function ProfilePreviewContent() {
                   </div>
                 )
               })()}
+              
+              {/* 🖼️ サブ画像表示（2枚目以降があれば小さく表示） */}
+              {Array.isArray(photo_urls) && photo_urls.length > 1 && (
+                <div className="absolute bottom-2 right-2 flex gap-1">
+                  {photo_urls.slice(1, 3).map((url, index) => {
+                    const subAvatarSrc = resolveAvatarSrc(url, supabase)
+                    return subAvatarSrc ? (
+                      <img
+                        key={`sub_${index}`}
+                        src={subAvatarSrc}
+                        alt={`サブ画像${index + 1}`}
+                        className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : null
+                  })}
+                  {photo_urls.length > 3 && (
+                    <div className="w-12 h-12 rounded-lg bg-black bg-opacity-50 flex items-center justify-center border-2 border-white shadow-sm">
+                      <span className="text-white text-xs">+{photo_urls.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* プロフィール情報 */}

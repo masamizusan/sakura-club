@@ -2859,15 +2859,30 @@ function ProfileEditContent() {
                   }
               }
               
-              // localStorageに画像データがない場合、プロフィールデータから取得
-              if (finalImages.length === 0 && profileData.avatar_url) {
-                finalImages = [{
-                  id: 'main',
-                  url: profileData.avatar_url,
-                  originalUrl: profileData.avatar_url,
-                  isMain: true,
-                  isEdited: false
-                }]
+              // localStorageに画像データがない場合、DBから取得（photo_urls優先）
+              if (finalImages.length === 0) {
+                // 🖼️ STEP 1: photo_urlsから復元（最優先）
+                if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0) {
+                  console.log('🔄 photo_urlsから画像復元:', profileData.photo_urls.length, '枚')
+                  finalImages = profileData.photo_urls.map((url: string, index: number) => ({
+                    id: `photo_${index}`,
+                    url: url,
+                    originalUrl: url,
+                    isMain: index === 0, // 先頭をメイン画像
+                    isEdited: false
+                  }))
+                }
+                // 🔧 STEP 2: photo_urlsが空でavatar_urlがある場合（後方互換）
+                else if (profileData.avatar_url) {
+                  console.log('🔄 avatar_urlから画像復元（後方互換）')
+                  finalImages = [{
+                    id: 'main',
+                    url: profileData.avatar_url,
+                    originalUrl: profileData.avatar_url,
+                    isMain: true,
+                    isEdited: false
+                  }]
+                }
               }
               
               if (finalImages.length > 0) {
@@ -4315,8 +4330,10 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🔧 AVATAR: ensureAvatarStored()で変換済みのURLを設定
-        avatar_url: null, // ⚠️ この行は下で置換される
+        // 🖼️ NEW: photo_urls - 複数画像のDB保存対応
+        photo_urls: uploadedImageUrls.length > 0 ? uploadedImageUrls : [],
+        // 🔧 AVATAR: ensureAvatarStored()で変換済みのURLを設定 + photo_urlsと同期
+        avatar_url: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null, // メイン画像
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
