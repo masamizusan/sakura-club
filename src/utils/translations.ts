@@ -470,6 +470,7 @@ type TranslationKeys = {
     profilePhotos: string
     maxPhotos: string
     main: string
+    setAsMain: string
     addPhoto: string
     mainPhotoNote: string
     fileSizeNote: string
@@ -477,6 +478,7 @@ type TranslationKeys = {
     fileSizeError: string
     fileTypeError: string
   }
+
 
   // 国籍・都道府県選択肢
   nationalities: {
@@ -1150,18 +1152,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       optional: '任意',
       required: '必須'
     },
-    
-    photos: {
-      profilePhotos: 'プロフィール写真',
-      maxPhotos: '最大',
-      main: 'メイン',
-      addPhoto: '写真を追加',
-      mainPhotoNote: '1枚目がメイン写真として表示されます',
-      fileSizeNote: '各写真は5MB以下にしてください',
-      editingNote: 'トリミングやぼかし加工ができます',
-      fileSizeError: '画像ファイルは5MB以下にしてください',
-      fileTypeError: '対応している画像ファイルを選択してください (JPEG, PNG, WebP, HEIC)'
-    },
 
     nationalities: {
       japan: '日本',
@@ -1827,18 +1817,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       optional: 'Optional',
       required: 'Required'
     },
-    
-    photos: {
-      profilePhotos: 'Profile Photos',
-      maxPhotos: 'Max',
-      main: 'Main',
-      addPhoto: 'Add Photo',
-      mainPhotoNote: 'The first photo will be displayed as your main photo',
-      fileSizeNote: 'Please keep each photo under 5MB',
-      editingNote: 'You can crop and blur your photos',
-      fileSizeError: 'Please keep image files under 5MB',
-      fileTypeError: 'Please select a supported image file (JPEG, PNG, WebP, HEIC)'
-    },
 
     nationalities: {
       japan: 'Japan',
@@ -2503,18 +2481,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       optional: '선택사항',
       required: '필수'
     },
-    
-    photos: {
-      profilePhotos: '프로필 사진',
-      maxPhotos: '최대',
-      main: '메인',
-      addPhoto: '사진 추가',
-      mainPhotoNote: '첫 번째 사진이 메인 사진으로 표시됩니다',
-      fileSizeNote: '각 사진은 5MB 이내로 업로드해 주세요',
-      editingNote: '사진을 자르거나 흐림 효과를 적용할 수 있습니다',
-      fileSizeError: '이미지 파일은 5MB 이하로 해주세요',
-      fileTypeError: '지원하는 이미지 파일을 선택해 주세요 (JPEG, PNG, WebP, HEIC)'
-    },
 
     nationalities: {
       japan: '일본',
@@ -3177,18 +3143,6 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       complete: '完成',
       optional: '選填',
       required: '必填'
-    },
-    
-    photos: {
-      profilePhotos: '個人資料照片',
-      maxPhotos: '最多',
-      main: '主要',
-      addPhoto: '新增照片',
-      mainPhotoNote: '第一張照片將顯示為您的主要照片',
-      fileSizeNote: '每張照片請控制在 5MB 以內',
-      editingNote: '您可以裁剪或套用模糊效果',
-      fileSizeError: '請將圖片檔案保持在5MB以下',
-      fileTypeError: '請選擇支援的圖片檔案 (JPEG, PNG, WebP, HEIC)'
     },
 
     nationalities: {
