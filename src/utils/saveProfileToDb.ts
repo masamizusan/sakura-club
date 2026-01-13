@@ -65,28 +65,56 @@ export async function saveProfileToDb(
       console.log('📋 final avatar_url for DB: not_provided')
     }
 
-    // 2. photo_urls処理 - 複数画像対応
+    // 2. photo_urls処理 - 複数画像対応（修正版）
     if (payload.photo_urls !== undefined) {
-      console.log('🖼️ Processing photo_urls array...', { count: Array.isArray(payload.photo_urls) ? payload.photo_urls.length : 0 })
+      console.log('🖼️ Processing photo_urls array...', { 
+        count: Array.isArray(payload.photo_urls) ? payload.photo_urls.length : 0,
+        first_url_preview: Array.isArray(payload.photo_urls) && payload.photo_urls[0] 
+          ? payload.photo_urls[0].substring(0, 50) + '...' 
+          : 'none'
+      })
       
-      if (Array.isArray(payload.photo_urls)) {
+      if (Array.isArray(payload.photo_urls) && payload.photo_urls.length > 0) {
+        console.log('🔍 photo_urls内容詳細:', payload.photo_urls.map((url: string, i: number) => ({
+          index: i,
+          url_preview: url ? url.substring(0, 50) + '...' : 'empty',
+          is_data_uri: url ? url.startsWith('data:image/') : false,
+          is_http_url: url ? url.startsWith('http') : false
+        })))
+        
         // 各画像URLを Storage に保存
         const processedUrls = []
-        for (let i = 0; i < Math.min(payload.photo_urls.length, 3); i++) { // 最大3枚制限
+        for (let i = 0; i < Math.min(payload.photo_urls.length, 3); i++) {
           const url = payload.photo_urls[i]
-          if (url && typeof url === 'string') {
+          if (url && typeof url === 'string' && url.trim().length > 0) {
+            console.log(`🔄 Processing photo_urls[${i}]:`, {
+              original: url.substring(0, 50) + '...',
+              type: url.startsWith('data:') ? 'base64' : url.startsWith('http') ? 'url' : 'other'
+            })
+            
             const processedUrl = await ensureAvatarStored(supabase, userId, url)
             processedUrls.push(processedUrl)
+            
+            console.log(`✅ Processed photo_urls[${i}]:`, {
+              result: processedUrl ? processedUrl.substring(0, 50) + '...' : 'null'
+            })
           }
         }
+        
         payload.photo_urls = processedUrls
+        console.log('🖼️ photo_urls処理完了:', {
+          original_count: Array.isArray(payload.photo_urls) ? payload.photo_urls.length : 0,
+          processed_count: processedUrls.length,
+          all_processed_urls: processedUrls.map((url: string | null) => url ? url.substring(0, 50) + '...' : 'null')
+        })
         
         // avatar_url との同期（メイン画像）
         if (processedUrls.length > 0) {
           payload.avatar_url = processedUrls[0]
-          console.log('🔄 avatar_url synced with photo_urls[0]')
+          console.log('🔄 avatar_url synced with photo_urls[0]:', payload.avatar_url.substring(0, 50) + '...')
         }
       } else {
+        console.log('🖼️ photo_urls is empty or not array, setting to []')
         payload.photo_urls = []
       }
     }
