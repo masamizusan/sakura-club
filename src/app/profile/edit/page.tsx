@@ -4268,7 +4268,7 @@ function ProfileEditContent() {
             if (uploadError) {
               console.error('🚨 [POSSIBILITY D] Storage upload FAILED:', {
                 error_message: uploadError.message,
-                error_code: uploadError.statusCode,
+                error_details: uploadError,
                 bucket: 'profile-images',
                 filename: fileName,
                 user_id: user.id,
