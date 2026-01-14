@@ -53,9 +53,18 @@ export async function ensureAvatarStored(
       const res = await fetch(avatarUrlOrDataUrl)
       const blob = await res.blob()
       
-      // ファイル拡張子決定
+      // 🚨 3) ユニークファイル名生成（上書き防止）
       const ext = blob.type === "image/png" ? "png" : "jpg"
-      const path = `${userId}/avatar.${ext}`
+      const timestamp = Date.now()
+      const random = Math.random().toString(36).substring(7)
+      const uniqueKey = `${timestamp}_${random}`
+      const path = `${userId}/photo_${uniqueKey}.${ext}`
+      
+      console.log('🚨 [STORAGE OVERWRITE CHECK] ユニークパス生成:', {
+        old_pattern: 'userId/avatar.ext (固定名)',
+        new_pattern: 'userId/photo_{timestamp}_{random}.ext',
+        generated_path: path
+      })
       
       console.log('📁 Storage upload starting:', {
         path,
@@ -63,10 +72,10 @@ export async function ensureAvatarStored(
         blobSize: Math.round(blob.size / 1024) + 'KB'
       })
       
-      // Storage アップロード
+      // 🚨 Storage アップロード（複数画像対応bucket）
       const up = await supabase.storage
-        .from("avatars")
-        .upload(path, blob, { contentType: blob.type, upsert: true })
+        .from("profile-images")  // 複数画像対応bucket
+        .upload(path, blob, { contentType: blob.type, upsert: false })  // upsert: false で上書き防止
       
       if (up.error) {
         console.log('📋 upload success: false')
@@ -76,8 +85,8 @@ export async function ensureAvatarStored(
       
       console.log('✅ Storage upload success:', up.data.path)
       
-      // Public URL取得
-      const pub = supabase.storage.from("avatars").getPublicUrl(path)
+      // Public URL取得（bucketも修正）
+      const pub = supabase.storage.from("profile-images").getPublicUrl(path)
       const publicUrl = pub.data.publicUrl ?? null
       
       if (!publicUrl) {

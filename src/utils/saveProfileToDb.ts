@@ -129,8 +129,8 @@ export async function saveProfileToDb(
           console.log('🔄 avatar_url set to null (photo_urls empty)')
         }
       } else {
-        console.log('🖼️ photo_urls is empty or not array, setting to []')
-        payload.photo_urls = []
+        console.log('🖼️ photo_urls is empty or not array, excluding from payload to prevent overwrite')
+        delete payload.photo_urls  // 🚨 FIX: 空配列上書き防止 - payloadから削除
       }
     }
 

@@ -1146,6 +1146,9 @@ function ProfileEditContent() {
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
   const [isImageChanging, setIsImageChanging] = useState(false)
   
+  // 🚨 4) didTouchPhotosフラグ（破壊防止の最短手）
+  const [didTouchPhotos, setDidTouchPhotos] = useState(false)
+  
   // 写真変更時のコールバック関数
   const handleImagesChange = useCallback(async (
     newImages: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>,
@@ -1261,6 +1264,10 @@ function ProfileEditContent() {
         }
       }
     
+      // 🚨 4) 画像変更フラグ設定（破壊防止）
+      setDidTouchPhotos(true)
+      console.log('🚨 [TOUCH FLAG] didTouchPhotos = true (画像操作検出)')
+      
       // ① まずUI/state を更新（functional updateで安全に）
       setIsImageChanging(true)
       setProfileImages(prev => {
@@ -4482,13 +4489,42 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🚨 A. 統一された画像状態算出 + アップロード処理統合
-        photo_urls: (() => {
-          // 🔍 保存直前の詳細ログ（指示書要求）
+        // 🚨 4) didTouchPhotosフラグによる条件付きphoto_urls処理
+        ...(didTouchPhotos ? {
+          photo_urls: (() => {
+          // 🔍 2) 画像フロー詳細ログ（指示書要求）
           console.log('[DEBUG] profileImages length', profileImages.length)
+          console.log('🖼️ [IMAGE FLOW] profileImages詳細:', profileImages.map((img, i) => ({
+            index: i,
+            id: img.id,
+            url_type: img.url ? (
+              img.url.startsWith('blob:') ? 'blob' :
+              img.url.startsWith('data:') ? 'data' :
+              img.url.startsWith('https://') ? 'https' : 'other'
+            ) : 'none',
+            url_preview: img.url ? img.url.substring(0, 40) + '...' : 'none',
+            originalUrl_type: img.originalUrl ? (
+              img.originalUrl.startsWith('blob:') ? 'blob' :
+              img.originalUrl.startsWith('data:') ? 'data' :
+              img.originalUrl.startsWith('https://') ? 'https' : 'other'
+            ) : 'none',
+            originalUrl_preview: img.originalUrl ? img.originalUrl.substring(0, 40) + '...' : 'none',
+            isMain: img.isMain,
+            isEdited: img.isEdited
+          })))
           
           // 基本の画像状態を統一関数で算出
           const basePhotoUrls = calculateFinalPhotoUrls()
+          console.log('🖼️ [IMAGE FLOW] finalPhotoUrls詳細:', basePhotoUrls.map((url, i) => ({
+            index: i,
+            url_type: url ? (
+              url.startsWith('blob:') ? 'blob' :
+              url.startsWith('data:') ? 'data' :
+              url.startsWith('https://') ? 'https' : 'other'
+            ) : 'none',
+            url_preview: url ? url.substring(0, 40) + '...' : 'none',
+            is_valid_for_db: url && !url.startsWith('blob:') && !url.startsWith('data:')
+          })))
           
           if (basePhotoUrls.length === 0) {
             console.log('[SAVE] photo_urls: 画像なし', [], 0)
@@ -4506,7 +4542,7 @@ function ProfileEditContent() {
             }
           }).filter(Boolean)
           
-          console.log('[SAVE] photo_urls payload', finalUrls, finalUrls?.length)
+          console.log('[SAVE] photo_urls', finalUrls, finalUrls.length)  // 指示書要求ログ
           
           // 🔍 期待値チェック（指示書要求）
           if (profileImages.length >= 3) {
@@ -4527,30 +4563,38 @@ function ProfileEditContent() {
             console.warn('⚠️ payload photo_urls不足:', finalUrls.length, '≠ 3（部分的）')
           }
           
-          return finalUrls
-        })(),
-        // 🚨 A. avatar_url = photo_urls[0] 同期（統一算出）
-        avatar_url: (() => {
-          const finalPhotoUrls = calculateFinalPhotoUrls()
-          if (finalPhotoUrls.length === 0) {
-            console.log('[SAVE] avatar_url: null (画像なし)')
-            return null
-          }
-          
-          // メイン画像のインデックス取得
-          const mainImage = profileImages.find(img => img.isMain) || profileImages[0]
-          const mainIndex = profileImages.findIndex(img => img.id === mainImage?.id)
-          
-          // アップロード済みならそれを、そうでなければ元URL
-          const finalAvatar = uploadedImageUrls[mainIndex] || finalPhotoUrls[0]
-          console.log('[SAVE] avatar_url', finalAvatar ? finalAvatar.substring(0, 30) + '...' : null)
-          return finalAvatar
-        })(),
+            return finalUrls
+          })(),
+          // 🚨 A. avatar_url = photo_urls[0] 同期（統一算出）
+          avatar_url: (() => {
+            const finalPhotoUrls = calculateFinalPhotoUrls()
+            if (finalPhotoUrls.length === 0) {
+              console.log('[SAVE] avatar_url: null (画像なし)')
+              return null
+            }
+            
+            // メイン画像のインデックス取得
+            const mainImage = profileImages.find(img => img.isMain) || profileImages[0]
+            const mainIndex = profileImages.findIndex(img => img.id === mainImage?.id)
+            
+            // アップロード済みならそれを、そうでなければ元URL
+            const finalAvatar = uploadedImageUrls[mainIndex] || finalPhotoUrls[0]
+            console.log('[SAVE] avatar_url', finalAvatar)  // 指示書要求ログ
+            return finalAvatar
+          })()
+        } : {
+          // 🚨 4) 画像を触っていない場合はphoto_urls/avatar_urlをpayloadから除外（破壊防止）
+        }),
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
 
-      // 🚨 CRITICAL: updateData全体構造確認（photo_urls重点チェック）
+      // 🚨 4) didTouchPhotosフラグ状態ログ
+      console.log('🚨 [TOUCH FLAG STATUS] didTouchPhotos:', didTouchPhotos)
+      console.log('🚨 [TOUCH FLAG] photo_urls処理方針:', didTouchPhotos ? '含める（画像操作あり）' : 'EXCLUDE（画像未操作）')
+      
+      // 🚨 1) NETWORK犯人特定ログ（指示書要求）
+      console.log('🚨 [NETWORK CULPRIT CHECK] updateData全体:', updateData)
       console.log('🔥 SAVE PAYLOAD VERIFICATION - photo_urls重点チェック:', {
         // 🖼️ photo_urls完全検証
         photo_urls_value: updateData.photo_urls,
@@ -4824,6 +4868,45 @@ function ProfileEditContent() {
       
       const updateResult = saveResult.data
       const updateError = null
+      
+      // 🚨 5) 保存成功後のDB値でstate同期（再発防止）
+      if (saveResult.success && saveResult.data?.[0]) {
+        const dbProfile = saveResult.data[0]
+        console.log('🚨 [DB SYNC] 保存成功後の同期開始:', {
+          db_photo_urls: dbProfile.photo_urls,
+          db_avatar_url: dbProfile.avatar_url,
+          db_photo_urls_length: Array.isArray(dbProfile.photo_urls) ? dbProfile.photo_urls.length : 0
+        })
+        
+        // DB値でprofileImages状態を同期
+        if (Array.isArray(dbProfile.photo_urls) && dbProfile.photo_urls.length > 0) {
+          const syncedImages = dbProfile.photo_urls.map((url: string, index: number) => ({
+            id: `synced_${index}`,
+            url: url,
+            originalUrl: url,
+            isMain: index === 0,
+            isEdited: false
+          }))
+          
+          setProfileImages(prev => {
+            console.log('[DB SYNC] profileImages同期:', { prev_length: prev.length, synced_length: syncedImages.length })
+            return syncedImages
+          })
+          
+          // didTouchPhotosをリセット（同期完了）
+          setDidTouchPhotos(false)
+          console.log('🚨 [TOUCH FLAG] didTouchPhotos = false (DB同期完了)')
+          
+          // sessionStorage/localStorageも同期
+          const imageStorageKey = `currentProfileImages_${user?.id || 'test'}`
+          try {
+            sessionStorage.setItem(imageStorageKey, JSON.stringify(syncedImages))
+            console.log('🚨 [DB SYNC] sessionStorage同期完了')
+          } catch (e) {
+            console.warn('sessionStorage同期失敗:', e)
+          }
+        }
+      }
       
       // 🔍 CRITICAL: updateの戻りで"更新件数"を確定する
       const updateRowCount = updateResult?.length || 0
