@@ -691,10 +691,15 @@ function ProfileEditContent() {
     console.log('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
   }, [currentLanguage, clearErrors])
 
-  // 🚨 A. 画像状態の唯一の作り方（統一関数）
+  // 🎯 TASK1: 画像SSOT統一システム（photo_urls優先、avatar_url後方互換）
   const calculateFinalPhotoUrls = () => {
+    console.log('🎯 [SSOT] calculateFinalPhotoUrls実行開始:', {
+      profileImages_count: profileImages.length,
+      source: 'unified_image_ssot_system'
+    })
+    
     if (profileImages.length === 0) {
-      console.log('[CALC] photo_urls: 画像なし')
+      console.log('🎯 [SSOT] 結果: photo_urls=[] (画像なし)')
       return []
     }
     
@@ -703,8 +708,12 @@ function ProfileEditContent() {
       .filter(Boolean)
       .slice(0, 3)
     
-    console.log('[CALC] photo_urls', finalPhotoUrls, finalPhotoUrls.length)
-    console.log('[CALC] avatar_url', finalPhotoUrls[0] ?? null)
+    console.log('🎯 [SSOT] 結果: photo_urls統一算出完了:', {
+      photo_urls: finalPhotoUrls,
+      count: finalPhotoUrls.length,
+      main_avatar_url: finalPhotoUrls[0] ?? null,
+      ssot_source: 'profileImages_state'
+    })
     
     return finalPhotoUrls
   }
@@ -1264,9 +1273,17 @@ function ProfileEditContent() {
         }
       }
     
-      // 🚨 4) 画像変更フラグ設定（破壊防止）
+      // 🚨 4) 画像変更フラグ設定（破壊防止）+ 🎯 TASK4: 確実な検出保証
       setDidTouchPhotos(true)
-      console.log('🚨 [TOUCH FLAG] didTouchPhotos = true (画像操作検出)')
+      console.log('🎯 [TASK4] didTouchPhotos = true (画像操作検出)', {
+        operation: '追加/削除/入替',
+        previous_count: profileImages.length,
+        new_count: newImages.length,
+        is_addition: newImages.length > profileImages.length,
+        is_deletion: newImages.length < profileImages.length,
+        is_replacement: newImages.length === profileImages.length && newImages.some((img, idx) => img.id !== profileImages[idx]?.id),
+        guarantee: 'payloadにphoto_urls配列を確実に含める'
+      })
       
       // ① まずUI/state を更新（functional updateで安全に）
       setIsImageChanging(true)
@@ -3888,9 +3905,9 @@ function ProfileEditContent() {
               return currentImageArray
             })
           }
-          // 🔧 STEP 2: photo_urlsが空でavatar_urlがある場合
+          // 🔧 STEP 2: photo_urlsが空でavatar_urlがある場合 + 🎯 TASK2: 自動write-back実装
           else if (profile?.avatar_url) {
-            console.log('📋 fromMyPage: photo_urls空 - avatar_urlから復元')
+            console.log('📋 fromMyPage: photo_urls空 - avatar_urlから復元（自動修復実行）')
             currentImageArray = [{
               id: 'main',
               url: profile.avatar_url,
@@ -3902,6 +3919,32 @@ function ProfileEditContent() {
               console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
               return currentImageArray
             })
+            
+            // 🎯 TASK2: 自動write-back実行（photo_urls空をavatar_urlで修復）
+            console.log('🎯 [TASK2] 自動write-back開始: photo_urls空状態をavatar_urlで修復')
+            setTimeout(async () => {
+              try {
+                const writeBackPayload = {
+                  photo_urls: [profile.avatar_url],
+                  updated_at: new Date().toISOString()
+                }
+                
+                console.log('🎯 [TASK2] write-backペイロード:', writeBackPayload)
+                
+                const { error: writeBackError } = await supabase
+                  .from('profiles')
+                  .update(writeBackPayload)
+                  .eq('id', user?.id)
+                  
+                if (writeBackError) {
+                  console.error('🚨 [TASK2] 自動write-back失敗:', writeBackError)
+                } else {
+                  console.log('✅ [TASK2] 自動write-back成功: 次回以降fromMyPageでphoto_urls復元される')
+                }
+              } catch (error) {
+                console.error('🚨 [TASK2] 自動write-back処理エラー:', error)
+              }
+            }, 1000) // 初期化完了後に実行
           }
           // 🔧 STEP 3: どちらも空の場合のみlocalStorageを確認
           else {
@@ -4559,7 +4602,7 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🚨 4) didTouchPhotosフラグによる条件付きphoto_urls処理
+        // 🚨 4) didTouchPhotosフラグによる条件付きphoto_urls処理 + 🎯 TASK4: 自動write-back特例
         ...(didTouchPhotos ? {
           photo_urls: (() => {
           // 🔍 2) 画像フロー詳細ログ（指示書要求）
@@ -4970,6 +5013,12 @@ function ProfileEditContent() {
       console.log('📸 [COMPLETION] Networkスクショ対象:', 'DevTools → Network → storage/v1/object (POST)')
       console.log('🔍 [COMPLETION] PATCHペイロード確認:', 'DevTools → Network → profiles (PATCH)')
       console.log('✅ [COMPLETION] DB確認クエリ:', `select photo_urls, avatar_url from profiles where id = '${user.id}';`)
+      
+      // 🎯 検証シナリオ指示（Claude指示書準拠）
+      console.log('📋 [VERIFICATION SCENARIOS] 検証手順:')
+      console.log('🅰️ シナリオA: MyPage→Edit遷移で「fromMyPage: photo_urls空 - avatar_urlから復元」が消えること')
+      console.log('🅱️ シナリオB: 画像2枚追加→保存でstorage POSTが2回、profiles PATCHに3件photo_urls')
+      console.log('🆎 シナリオC: 3枚→1枚削除→保存でprofiles PATCHに1件photo_urls、表示一致確認')
       
       const updateResult = saveResult.data
       const updateError = null

@@ -185,12 +185,28 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
     judgment_basis: 'data URI/HTTP/Storage path全てOK（base64除外を撤廃）'
   })
   
-  // 🔥 Task B修正: has_profile_imageフラグはtrueの場合のみ優先（falseは実データにフォールバック）
-  if ((profile as any).has_profile_image === true) {
-    console.log('🎯 has_profile_imageフラグ=true: 強制的に画像あり判定')
-    return true
+  // 🎯 TASK3: 強制has_profile_image=true撤去 → 条件極小化
+  const hasProfileImageFlag = (profile as any).has_profile_image === true
+  if (hasProfileImageFlag) {
+    // 🔍 強制trueを条件化：fromMyPageかつavatar_urlありの場合のみ許可
+    const isFromMyPageRecovery = Boolean((profile as any).fromMyPage && profile.avatar_url)
+    if (isFromMyPageRecovery) {
+      console.log('🎯 [TASK3] 条件付き強制判定: fromMyPage+avatar_url復元時のみ', {
+        fromMyPage: (profile as any).fromMyPage,
+        has_avatar_url: Boolean(profile.avatar_url),
+        condition_met: 'fromMyPage復元の最終防波堤として有効'
+      })
+      return true
+    } else {
+      console.log('🎯 [TASK3] 強制フラグ無効化: 条件不一致のため実データ判定に進む', {
+        has_profile_image_flag: hasProfileImageFlag,
+        fromMyPage: (profile as any).fromMyPage,
+        has_avatar_url: Boolean(profile.avatar_url),
+        action: '実データ（avatar_url/imageArray）による正規判定'
+      })
+    }
   }
-  // has_profile_image=false/null/undefinedの場合は実データ（avatar_url/imageArray）で判定
+  // 実データ（avatar_url/imageArray）で正規判定
   
   // 🌸 優先度2: imageArray（フォーム状態）- プロフィール編集中のみ
   if (Array.isArray(imageArray) && imageArray.length > 0) {
