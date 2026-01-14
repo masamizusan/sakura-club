@@ -4936,7 +4936,7 @@ function ProfileEditContent() {
         photo_urls_isArray: Array.isArray(updateData.photo_urls),
         photo_urls_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array',
         photo_urls_preview: Array.isArray(updateData.photo_urls) 
-          ? updateData.photo_urls.map(url => url ? url.substring(0, 50) + '...' : 'null')
+          ? updateData.photo_urls.map((url: string) => url ? url.substring(0, 50) + '...' : 'null')
           : 'not_array',
         avatar_url_value: updateData.avatar_url,
         avatar_url_preview: updateData.avatar_url ? updateData.avatar_url.substring(0, 50) + '...' : 'null',
