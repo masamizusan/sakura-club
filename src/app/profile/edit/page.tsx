@@ -4053,18 +4053,32 @@ function ProfileEditContent() {
       // 写真をアップロード
       const uploadedImageUrls: string[] = []
       
+      console.log('🖼️ 画像処理開始:', {
+        profileImagesLength: profileImages.length,
+        profileImages: profileImages.map((img, i) => ({
+          index: i,
+          id: img.id,
+          isEdited: img.isEdited,
+          isMain: img.isMain,
+          url_preview: img.url ? img.url.substring(0, 50) + '...' : 'null',
+          originalUrl_preview: img.originalUrl ? img.originalUrl.substring(0, 50) + '...' : 'null'
+        }))
+      })
+
       for (const image of profileImages) {
-        if (image.isEdited && image.originalUrl.startsWith('blob:')) {
+        // 新規アップロード（blob:で始まる画像）かどうかをチェック
+        if (image.url && image.url.startsWith('blob:')) {
           try {
+            console.log('📤 新規画像アップロード開始:', image.id)
             // Blob URLから実際のファイルを取得
-            const response = await fetch(image.originalUrl)
+            const response = await fetch(image.url)
             const blob = await response.blob()
             
             // ファイル名を生成（拡張子を推定）
             const fileExtension = blob.type.split('/')[1] || 'jpg'
             const fileName = `profile_${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExtension}`
             
-            console.log('📤 アップロード開始:', fileName)
+            console.log('📤 アップロード詳細:', fileName, blob.type, blob.size)
             
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('avatars')
@@ -4084,23 +4098,34 @@ function ProfileEditContent() {
               .getPublicUrl(uploadData.path)
 
             uploadedImageUrls.push(publicUrl)
-            console.log('✅ アップロード成功:', publicUrl)
+            console.log('✅ 新規アップロード成功:', publicUrl)
           } catch (uploadError) {
             console.error('❌ 個別画像のアップロードエラー:', uploadError)
             throw uploadError
           }
         } else {
-          // 既存の画像URLをそのまま使用
-          // image.url または image.originalUrl のいずれかを使用
+          // 既存の画像URLをそのまま使用（Supabase StorageのURL等）
           const existingUrl = image.url || image.originalUrl
           if (existingUrl && !existingUrl.startsWith('blob:')) {
             uploadedImageUrls.push(existingUrl)
-            console.log('✅ 既存画像URL使用:', existingUrl)
+            console.log('✅ 既存画像URL追加:', {
+              imageId: image.id,
+              url: existingUrl.substring(0, 60) + '...'
+            })
           } else {
-            console.log('⚠️ 無効な既存画像URL:', existingUrl)
+            console.warn('⚠️ 無効な画像URL:', {
+              imageId: image.id,
+              url: existingUrl?.substring(0, 60) + '...',
+              isBlob: existingUrl?.startsWith('blob:') || false
+            })
           }
         }
       }
+
+      console.log('🖼️ 画像処理完了:', {
+        uploadedImageUrls: uploadedImageUrls.length,
+        urls: uploadedImageUrls.map(url => url.substring(0, 60) + '...')
+      })
 
       // メイン画像を決定
       const mainImageIndex = profileImages.findIndex(img => img.isMain)
@@ -4342,6 +4367,12 @@ function ProfileEditContent() {
       console.log('🔥 UPDATE DATA FULL STRUCTURE COMPARISON:', {
         // personality_tags検証
         personality_tags_value: updateData.personality_tags,
+        // 🖼️ photo_urls検証
+        photo_urls_value: updateData.photo_urls,
+        photo_urls_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array',
+        photo_urls_preview: Array.isArray(updateData.photo_urls) 
+          ? updateData.photo_urls.map((url: string) => url ? url.substring(0, 50) + '...' : 'null')
+          : 'not_array',
         personality_tags_type: typeof updateData.personality_tags,
         personality_tags_isNull: updateData.personality_tags === null,
         personality_tags_isUndefined: updateData.personality_tags === undefined,
@@ -4568,11 +4599,31 @@ function ProfileEditContent() {
       )
       
       if (!saveResult.success) {
-        console.error('❌ Profile save failed through unified pipeline')
+        console.error('❌ Profile save failed through unified pipeline:', {
+          error: saveResult.error,
+          operation: saveResult.operation,
+          entryPoint: saveResult.entryPoint,
+          photo_urls_attempted: updateData.photo_urls,
+          avatar_url_attempted: updateData.avatar_url,
+          uploadedImageUrls_count: uploadedImageUrls.length,
+          profileImages_count: profileImages.length
+        })
         setError(`プロフィールの保存に失敗しました: ${saveResult.error}`)
         setIsSubmitting(false)
         return
       }
+      
+      // 🖼️ CRITICAL: photo_urls保存成功確認
+      console.log('✅ Profile save SUCCESS - photo_urls verification:', {
+        operation: saveResult.operation,
+        entryPoint: saveResult.entryPoint,
+        attempted_photo_urls: updateData.photo_urls,
+        attempted_avatar_url: updateData.avatar_url,
+        saved_data_check: saveResult.data?.[0] ? {
+          photo_urls: saveResult.data[0].photo_urls,
+          avatar_url: saveResult.data[0].avatar_url
+        } : 'no_data_returned'
+      })
       
       const updateResult = saveResult.data
       const updateError = null
