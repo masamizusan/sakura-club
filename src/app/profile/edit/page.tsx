@@ -4406,20 +4406,39 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🖼️ CRITICAL: photo_urls - 既存画像も含む全画像をDB保存
+        // 🖼️ CRITICAL: photo_urls - 既存画像も含む全画像をDB保存（修正版）
         photo_urls: (() => {
           // profileImagesに基づいてphoto_urls配列を構築（既存＋新規）
           if (profileImages.length > 0) {
-            const allImageUrls = profileImages.map(img => {
-              // 新規アップロード画像の場合はuploadedImageUrlsから取得
-              const uploadedIndex = profileImages.findIndex(pImg => pImg.id === img.id)
-              return uploadedImageUrls[uploadedIndex] || img.url || img.originalUrl
+            const allImageUrls = profileImages.map((img, imgIndex) => {
+              // 🔧 FIX: 既存画像の場合はuploadedImageUrlsを使わず直接URLを取得
+              // 新規アップロード画像の場合のみuploadedImageUrlsから取得
+              if (uploadedImageUrls[imgIndex]) {
+                // 新規アップロード済み画像：Storage URL使用
+                console.log(`🆕 Image ${imgIndex}: Using uploaded URL (Storage)`)
+                return uploadedImageUrls[imgIndex]
+              } else {
+                // 既存画像：元のURL使用（DB由来）
+                const existingUrl = img.url || img.originalUrl
+                console.log(`📸 Image ${imgIndex}: Using existing URL (DB)`, {
+                  url_preview: existingUrl ? existingUrl.substring(0, 50) + '...' : 'null',
+                  is_storage_url: existingUrl ? existingUrl.includes('/storage/') : false,
+                  is_blob: existingUrl ? existingUrl.startsWith('blob:') : false
+                })
+                return existingUrl
+              }
             }).filter(url => url && !url.startsWith('blob:'))
             
-            console.log('🖼️ photo_urls構築:', {
+            console.log('🖼️ photo_urls構築完了:', {
               profileImages_count: profileImages.length,
               uploadedImageUrls_count: uploadedImageUrls.length,
-              final_photo_urls: allImageUrls.map(url => url.substring(0, 50) + '...')
+              final_photo_urls_count: allImageUrls.length,
+              final_photo_urls: allImageUrls.map(url => url.substring(0, 50) + '...'),
+              url_types: allImageUrls.map(url => ({
+                storage: url.includes('/storage/'),
+                data_uri: url.startsWith('data:'),
+                http: url.startsWith('http')
+              }))
             })
             
             return allImageUrls
@@ -4428,12 +4447,25 @@ function ProfileEditContent() {
             return []
           }
         })(),
-        // 🔧 AVATAR: photo_urlsの先頭画像と同期
+        // 🔧 AVATAR: photo_urlsの先頭画像と同期（修正版）
         avatar_url: (() => {
           if (profileImages.length > 0) {
             const mainImage = profileImages.find(img => img.isMain) || profileImages[0]
             const mainIndex = profileImages.findIndex(img => img.id === mainImage.id)
-            return uploadedImageUrls[mainIndex] || mainImage.url || mainImage.originalUrl
+            
+            // 🔧 FIX: 同様の修正 - 新規と既存を区別して処理
+            if (uploadedImageUrls[mainIndex]) {
+              // 新規アップロード済みメイン画像：Storage URL使用
+              console.log(`🆕 Avatar: Using uploaded URL (Storage) at index ${mainIndex}`)
+              return uploadedImageUrls[mainIndex]
+            } else {
+              // 既存メイン画像：元のURL使用（DB由来）
+              const existingUrl = mainImage.url || mainImage.originalUrl
+              console.log(`📸 Avatar: Using existing URL (DB)`, {
+                url_preview: existingUrl ? existingUrl.substring(0, 50) + '...' : 'null'
+              })
+              return existingUrl
+            }
           }
           return null
         })(),

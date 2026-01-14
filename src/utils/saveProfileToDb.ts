@@ -82,22 +82,33 @@ export async function saveProfileToDb(
           is_http_url: url ? url.startsWith('http') : false
         })))
         
-        // 各画像URLを Storage に保存
+        // 各画像URLを Storage に保存（最適化版）
         const processedUrls = []
         for (let i = 0; i < Math.min(payload.photo_urls.length, 3); i++) {
           const url = payload.photo_urls[i]
           if (url && typeof url === 'string' && url.trim().length > 0) {
             console.log(`🔄 Processing photo_urls[${i}]:`, {
               original: url.substring(0, 50) + '...',
-              type: url.startsWith('data:') ? 'base64' : url.startsWith('http') ? 'url' : 'other'
+              type: url.startsWith('data:') ? 'base64' : 
+                    url.startsWith('http') ? 'http_url' : 
+                    url.includes('/storage/') ? 'storage_url' : 'other'
             })
             
-            const processedUrl = await ensureAvatarStored(supabase, userId, url)
-            processedUrls.push(processedUrl)
-            
-            console.log(`✅ Processed photo_urls[${i}]:`, {
-              result: processedUrl ? processedUrl.substring(0, 50) + '...' : 'null'
-            })
+            // 🔧 FIX: 既にStorage URLまたはHTTP URLの場合は変換をスキップ
+            if (url.includes('/storage/') || url.startsWith('http')) {
+              // 既存の正当なURL：そのまま使用
+              console.log(`✅ Existing URL used as-is: photo_urls[${i}]`)
+              processedUrls.push(url)
+            } else {
+              // data URIやblob URLの場合のみ変換
+              const processedUrl = await ensureAvatarStored(supabase, userId, url)
+              processedUrls.push(processedUrl)
+              
+              console.log(`✅ Converted photo_urls[${i}]:`, {
+                from: url.startsWith('data:') ? 'data_uri' : 'blob_url',
+                result: processedUrl ? processedUrl.substring(0, 50) + '...' : 'null'
+              })
+            }
           }
         }
         
