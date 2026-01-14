@@ -33,6 +33,9 @@ export async function POST(request: NextRequest) {
         city: '大阪市',
         interests: ['読書', '映画鑑賞'],
         bio: 'よろしくお願いします！',
+        // 🔧 CRITICAL: 配列フィールド明示的初期化（nullガード強化）
+        photo_urls: [],
+        language_skills: [],
         updated_at: new Date().toISOString()
       })
 

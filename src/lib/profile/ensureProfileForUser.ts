@@ -192,7 +192,10 @@ export async function ensureProfileForUserSafe(
       name: null,
       gender: null,
       birth_date: null,
-      avatar_url: null // ✅ OK: 画像は未設定が正解（Base64は絶対にセットしない）
+      avatar_url: null, // ✅ OK: 画像は未設定が正解（Base64は絶対にセットしない）
+      // 🔧 CRITICAL: 配列フィールド明示的初期化（nullガード強化）
+      photo_urls: [],
+      language_skills: []
     }
 
     // 🚨 CRITICAL: saveProfileToDb統一パイプライン使用でBase64遮断保証

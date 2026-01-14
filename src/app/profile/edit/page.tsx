@@ -3486,7 +3486,9 @@ function ProfileEditContent() {
               return profile.language_skills
             }
             return generateLanguageSkillsFromLegacy(profile as any) || []
-          })()
+          })(),
+          // 🔧 CRITICAL: photo_urls明示的初期化（新規は必ず[]、既存はDB値維持）
+          photo_urls: isNewUser ? [] : (profile?.photo_urls || [])
         }
         
         console.log('🔍 CRITICAL: resetData language_skills check:', {

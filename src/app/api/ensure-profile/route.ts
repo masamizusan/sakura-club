@@ -116,7 +116,10 @@ export async function POST(request: NextRequest) {
       // テストモード識別
       name: isTestMode ? null : null,
       gender: null,
-      birth_date: null
+      birth_date: null,
+      // 🔧 CRITICAL: 配列フィールド明示的初期化（nullガード強化）
+      photo_urls: [],
+      language_skills: []
     }
 
     const { data: newProfile, error: insertError } = await supabaseServiceRole
