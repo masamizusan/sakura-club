@@ -4481,6 +4481,21 @@ function ProfileEditContent() {
 
             uploadedImageUrls.push(publicUrl)
             console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} SUCCESS:`, publicUrl)
+            
+            // 🚨 ✅ 指示書対応: アップロード成功後にprofileImages状態を即座に更新
+            const targetIndex = profileImages.findIndex(img => img.id === image.id)
+            if (targetIndex !== -1) {
+              setProfileImages(prev => {
+                const next = [...prev]
+                next[targetIndex] = {
+                  ...next[targetIndex],
+                  url: publicUrl,        // ✅ blobではなくstorage URL
+                  originalUrl: publicUrl
+                }
+                return next
+              })
+              console.log(`🚨 [UPLOAD STATE] profileImages[${targetIndex}] updated with storage URL:`, publicUrl.substring(0, 50) + '...')
+            }
           } catch (uploadError) {
             console.error('❌ 個別画像のアップロードエラー:', uploadError)
             throw uploadError
@@ -4927,6 +4942,11 @@ function ProfileEditContent() {
         })
       }
       
+      // 🧪 指示書要求: 保存クリック時の必須デバッグログ
+      console.log("🧪 SAVE DEBUG profileImages:", profileImages)
+      console.log("🧪 SAVE DEBUG safePhotoUrls:", updateData.photo_urls)
+      console.log("🧪 SAVE DEBUG payload.photo_urls length:", Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array')
+      
       // 🚨 ✅ TASK3: 最終保存payload検証（最優先：3枚URL保存確保）
       console.log('🚨 [TASK3] 最終保存payload検証 - photo_urls重点確認:', {
         did_touch_photos: didTouchPhotos,
@@ -5112,6 +5132,9 @@ function ProfileEditContent() {
         if (verifyError) {
           console.error('🚨 [TASK4] DB確認エラー:', verifyError)
         } else {
+          // 🧪 指示書要求: DB保存後の必須確認ログ
+          console.log("✅ DB VERIFY AFTER SAVE:", dbVerification)
+          
           console.log('🚨 [TASK4] DB直接確認完了 - 保存成功検証:', {
             user_id: user.id,
             db_photo_urls: dbVerification.photo_urls,
