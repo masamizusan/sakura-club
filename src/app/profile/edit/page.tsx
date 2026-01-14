@@ -691,6 +691,24 @@ function ProfileEditContent() {
     console.log('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
   }, [currentLanguage, clearErrors])
 
+  // 🚨 A. 画像状態の唯一の作り方（統一関数）
+  const calculateFinalPhotoUrls = () => {
+    if (profileImages.length === 0) {
+      console.log('[CALC] photo_urls: 画像なし')
+      return []
+    }
+    
+    const finalPhotoUrls = profileImages
+      .map(img => img.originalUrl ?? img.url)
+      .filter(Boolean)
+      .slice(0, 3)
+    
+    console.log('[CALC] photo_urls', finalPhotoUrls, finalPhotoUrls.length)
+    console.log('[CALC] avatar_url', finalPhotoUrls[0] ?? null)
+    
+    return finalPhotoUrls
+  }
+
   // プレビュー画面への遷移処理（Zodバリデーション経由）
   const handlePreview = handleSubmit(async (formData) => {
     try {
@@ -699,8 +717,8 @@ function ProfileEditContent() {
       // プレビュー用画像URL（blob URLまたは既存URL）
       const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
 
-      // 🚨 CRITICAL FIX: photo_urlsをpreviewDataに必ず含める
-      const finalPhotoUrls = profileImages.map(img => img.url || img.originalUrl).filter(url => url && !url.startsWith('blob:'))
+      // 🚨 A. 統一された画像状態算出
+      const finalPhotoUrls = calculateFinalPhotoUrls()
       
       const previewData = {
         ...formData,
@@ -723,6 +741,13 @@ function ProfileEditContent() {
         photo_urls_preview: finalPhotoUrls.map(url => url.substring(0, 50) + '...'),
         profileImages_count: profileImages.length,
         previewData_has_photo_urls: 'photo_urls' in previewData
+      })
+      
+      // 🔧 指示書要求: profileImagesではなくfinalPhotoUrls確定値をsessionStorageに保存
+      console.log('[SESSION] finalPhotoUrls確定値を保存:', { 
+        source: 'calculateFinalPhotoUrls',
+        count: finalPhotoUrls.length,
+        urls: finalPhotoUrls.map(url => url.substring(0, 30) + '...')
       })
 
       // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
@@ -1236,9 +1261,12 @@ function ProfileEditContent() {
         }
       }
     
-      // ① まずUI/state を更新（ここで画面上は必ず消える）
+      // ① まずUI/state を更新（functional updateで安全に）
       setIsImageChanging(true)
-      setProfileImages(newImages)
+      setProfileImages(prev => {
+        console.log('[FUNCTIONAL] profileImages更新:', { prev_length: prev.length, new_length: newImages.length })
+        return newImages
+      })
       // 🚨 Type safety fix
       if (profileImagesRef.current) {
         profileImagesRef.current.length = 0
@@ -2253,7 +2281,10 @@ function ProfileEditContent() {
         setSelectedHobbies([])
         setSelectedPersonality([])
         setSelectedPlannedPrefectures([])
-        setProfileImages([])
+        setProfileImages(prev => {
+          console.log('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          return []
+        })
 
         // 新規ユーザーの場合のみ編集履歴をクリア
         sessionStorage.removeItem('imageEditHistory')
@@ -2528,7 +2559,10 @@ function ProfileEditContent() {
         console.log('✅ 完全初期化完了 - すべてのフィールドをクリア')
         
         // フロントエンドの状態もクリア
-        setProfileImages([])
+        setProfileImages(prev => {
+          console.log('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          return []
+        })
         setSelectedHobbies([])
         setSelectedPersonality([])
         setSelectedPlannedPrefectures([])
@@ -2871,9 +2905,9 @@ function ProfileEditContent() {
                 'profileData.avatar_url': profileData.avatar_url ? 'exists' : 'null'
               })
               
-              // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（3枚まで対応）
+              // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（3枚まで対応、必ず3要素を確保）
               if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0) {
-                console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
+                console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚 → 3要素確保')
                 finalImages = profileData.photo_urls.slice(0, 3).map((url: string, index: number) => ({
                   id: `photo_${index}`,
                   url: url,
@@ -2882,7 +2916,21 @@ function ProfileEditContent() {
                   isEdited: false
                 }))
                 
-                console.log('🖼️ photo_urls復元完了:', finalImages.map((img: any) => ({
+                // 🔧 FIX: 常に3要素になるようパディング
+                while (finalImages.length < 3 && finalImages.length < profileData.photo_urls.length) {
+                  const nextIndex = finalImages.length
+                  if (profileData.photo_urls[nextIndex]) {
+                    finalImages.push({
+                      id: `photo_${nextIndex}`,
+                      url: profileData.photo_urls[nextIndex],
+                      originalUrl: profileData.photo_urls[nextIndex],
+                      isMain: false,
+                      isEdited: false
+                    })
+                  }
+                }
+                
+                console.log('🖼️ photo_urls復元完了（3要素確保）:', finalImages.map((img: any) => ({
                   id: img.id,
                   isMain: img.isMain,
                   url_preview: img.url.substring(0, 50) + '...'
@@ -2920,7 +2968,10 @@ function ProfileEditContent() {
               }
               
               if (finalImages.length > 0) {
-                setProfileImages(finalImages)
+                setProfileImages(prev => {
+                  console.log('[FUNCTIONAL] DB復元:', { prev_length: prev.length, final_length: finalImages.length })
+                  return finalImages
+                })
                 profileImagesRef.current = finalImages
                 console.log('🔧 初期化時profileImagesRef更新:', { finalImages_length: finalImages.length })
               }
@@ -3502,8 +3553,9 @@ function ProfileEditContent() {
             }
             return generateLanguageSkillsFromLegacy(profile as any) || []
           })(),
-          // 🔧 CRITICAL: photo_urls明示的初期化（新規は必ず[]、既存はDB値維持）
-          photo_urls: isNewUser ? [] : (profile?.photo_urls || [])
+          // 🚨 FIX: photo_urls安易フォールバック削除（上書き事故防止）
+          // ❌ 禁止: photo_urls: profile?.photo_urls || []  ← これが空配列上書きの原因
+          // ✅ 正解: resetDataには含めない（既存値を保護）
         }
         
         console.log('🔍 CRITICAL: resetData language_skills check:', {
@@ -3824,7 +3876,10 @@ function ProfileEditContent() {
               isMain: index === 0,
               isEdited: false
             }))
-            setProfileImages(currentImageArray)
+            setProfileImages(prev => {
+              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              return currentImageArray
+            })
           }
           // 🔧 STEP 2: photo_urlsが空でavatar_urlがある場合
           else if (profile?.avatar_url) {
@@ -3836,7 +3891,10 @@ function ProfileEditContent() {
               isMain: true,
               isEdited: false
             }]
-            setProfileImages(currentImageArray)
+            setProfileImages(prev => {
+              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              return currentImageArray
+            })
           }
           // 🔧 STEP 3: どちらも空の場合のみlocalStorageを確認
           else {
@@ -3882,7 +3940,10 @@ function ProfileEditContent() {
                 isMain: true,
                 isEdited: false
               }]
-              setProfileImages(currentImageArray)
+              setProfileImages(prev => {
+              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              return currentImageArray
+            })
               // 🔍 CRITICAL: profileImagesRefも同期（SSOT統一）
               profileImagesRef.current = currentImageArray
               
@@ -4421,68 +4482,69 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🖼️ CRITICAL: photo_urls - 既存画像も含む全画像をDB保存（修正版）
+        // 🚨 A. 統一された画像状態算出 + アップロード処理統合
         photo_urls: (() => {
-          // profileImagesに基づいてphoto_urls配列を構築（既存＋新規）
-          if (profileImages.length > 0) {
-            const allImageUrls = profileImages.map((img, imgIndex) => {
-              // 🔧 FIX: 既存画像の場合はuploadedImageUrlsを使わず直接URLを取得
-              // 新規アップロード画像の場合のみuploadedImageUrlsから取得
-              if (uploadedImageUrls[imgIndex]) {
-                // 新規アップロード済み画像：Storage URL使用
-                console.log(`🆕 Image ${imgIndex}: Using uploaded URL (Storage)`)
-                return uploadedImageUrls[imgIndex]
-              } else {
-                // 既存画像：元のURL使用（DB由来）
-                const existingUrl = img.url || img.originalUrl
-                console.log(`📸 Image ${imgIndex}: Using existing URL (DB)`, {
-                  url_preview: existingUrl ? existingUrl.substring(0, 50) + '...' : 'null',
-                  is_storage_url: existingUrl ? existingUrl.includes('/storage/') : false,
-                  is_blob: existingUrl ? existingUrl.startsWith('blob:') : false
-                })
-                return existingUrl
-              }
-            }).filter(url => url && !url.startsWith('blob:'))
-            
-            console.log('🖼️ photo_urls構築完了:', {
-              profileImages_count: profileImages.length,
-              uploadedImageUrls_count: uploadedImageUrls.length,
-              final_photo_urls_count: allImageUrls.length,
-              final_photo_urls: allImageUrls.map(url => url.substring(0, 50) + '...'),
-              url_types: allImageUrls.map(url => ({
-                storage: url.includes('/storage/'),
-                data_uri: url.startsWith('data:'),
-                http: url.startsWith('http')
-              }))
-            })
-            
-            return allImageUrls
-          } else {
-            console.log('🖼️ photo_urls: 画像なし - 空配列')
+          // 🔍 保存直前の詳細ログ（指示書要求）
+          console.log('[DEBUG] profileImages length', profileImages.length)
+          
+          // 基本の画像状態を統一関数で算出
+          const basePhotoUrls = calculateFinalPhotoUrls()
+          
+          if (basePhotoUrls.length === 0) {
+            console.log('[SAVE] photo_urls: 画像なし', [], 0)
             return []
           }
-        })(),
-        // 🔧 AVATAR: photo_urlsの先頭画像と同期（修正版）
-        avatar_url: (() => {
-          if (profileImages.length > 0) {
-            const mainImage = profileImages.find(img => img.isMain) || profileImages[0]
-            const mainIndex = profileImages.findIndex(img => img.id === mainImage.id)
-            
-            // 🔧 FIX: 同様の修正 - 新規と既存を区別して処理
-            if (uploadedImageUrls[mainIndex]) {
-              // 新規アップロード済みメイン画像：Storage URL使用
-              console.log(`🆕 Avatar: Using uploaded URL (Storage) at index ${mainIndex}`)
-              return uploadedImageUrls[mainIndex]
+          
+          // アップロード済みURLがある場合は置換
+          const finalUrls = basePhotoUrls.map((url, index) => {
+            if (uploadedImageUrls[index]) {
+              console.log(`[SAVE] Image ${index}: Storage URL使用`)
+              return uploadedImageUrls[index]
             } else {
-              // 既存メイン画像：元のURL使用（DB由来）
-              const existingUrl = mainImage.url || mainImage.originalUrl
-              console.log(`📸 Avatar: Using existing URL (DB)`, {
-                url_preview: existingUrl ? existingUrl.substring(0, 50) + '...' : 'null'
-              })
-              return existingUrl
+              console.log(`[SAVE] Image ${index}: 既存URL使用`, url.substring(0, 30) + '...')
+              return url
             }
+          }).filter(Boolean)
+          
+          console.log('[SAVE] photo_urls payload', finalUrls, finalUrls?.length)
+          
+          // 🔍 期待値チェック（指示書要求）
+          if (profileImages.length >= 3) {
+            console.log('✅ profileImages 3要素以上確保:', profileImages.length)
+          } else if (profileImages.length > 0) {
+            console.warn('⚠️ profileImages不足:', profileImages.length, '< 3（部分的）')
           }
-          return null
+          
+          if (basePhotoUrls.length === 3) {
+            console.log('✅ finalPhotoUrls 3要素確保:', basePhotoUrls.length)
+          } else if (basePhotoUrls.length > 0) {
+            console.warn('⚠️ finalPhotoUrls不足:', basePhotoUrls.length, '≠ 3（部分的）')
+          }
+          
+          if (finalUrls.length === 3) {
+            console.log('✅ payload photo_urls 3要素確保:', finalUrls.length)
+          } else if (finalUrls.length > 0) {
+            console.warn('⚠️ payload photo_urls不足:', finalUrls.length, '≠ 3（部分的）')
+          }
+          
+          return finalUrls
+        })(),
+        // 🚨 A. avatar_url = photo_urls[0] 同期（統一算出）
+        avatar_url: (() => {
+          const finalPhotoUrls = calculateFinalPhotoUrls()
+          if (finalPhotoUrls.length === 0) {
+            console.log('[SAVE] avatar_url: null (画像なし)')
+            return null
+          }
+          
+          // メイン画像のインデックス取得
+          const mainImage = profileImages.find(img => img.isMain) || profileImages[0]
+          const mainIndex = profileImages.findIndex(img => img.id === mainImage?.id)
+          
+          // アップロード済みならそれを、そうでなければ元URL
+          const finalAvatar = uploadedImageUrls[mainIndex] || finalPhotoUrls[0]
+          console.log('[SAVE] avatar_url', finalAvatar ? finalAvatar.substring(0, 30) + '...' : null)
+          return finalAvatar
         })(),
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()

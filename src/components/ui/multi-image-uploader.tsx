@@ -88,7 +88,10 @@ export default function MultiImageUploader({
         isEdited: false
       }
       console.log('🚨 MultiImageUploader: Adding new image, calling onImagesChange with:', images.length + 1, 'images')
-      onImagesChange([...images, newImage])
+      // 🔧 FUNCTIONAL UPDATE: state race 防止のため functional update で安全に追加
+      const updatedImages = [...images, newImage]
+      console.log('[FUNCTIONAL] MultiImageUploader画像追加:', { prev_length: images.length, new_length: updatedImages.length })
+      onImagesChange(updatedImages)
     }
     
     setEditingImage(null)

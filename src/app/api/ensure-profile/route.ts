@@ -117,8 +117,7 @@ export async function POST(request: NextRequest) {
       name: isTestMode ? null : null,
       gender: null,
       birth_date: null,
-      // 🔧 CRITICAL: 配列フィールド明示的初期化（nullガード強化）
-      photo_urls: [],
+      // 🔧 FIXED: 新規プロフィールでは画像なし状態で初期化、空配列上書きを回避
       language_skills: []
     }
 

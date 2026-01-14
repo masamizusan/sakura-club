@@ -1337,8 +1337,11 @@ function ProfilePreviewContent() {
                           const currentPreviewData = sessionStorage.getItem(previewDataKey)
                           if (currentPreviewData) {
                             const parsedData = JSON.parse(currentPreviewData)
-                            // DB値で重要フィールドを上書き
-                            parsedData.photo_urls = savedProfile.photo_urls || []
+                            // 🚨 B. DB値で重要フィールドを上書き（安易フォールバック排除）
+                            if (Array.isArray(savedProfile.photo_urls)) {
+                              parsedData.photo_urls = savedProfile.photo_urls
+                            }
+                            // ❌ 禁止: photo_urls = savedProfile.photo_urls || [] ← 空配列上書き原因
                             parsedData.avatar_url = savedProfile.avatar_url
                             parsedData.image = savedProfile.avatar_url || savedProfile.photo_urls?.[0] || parsedData.image
                             
