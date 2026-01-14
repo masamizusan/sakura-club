@@ -4187,6 +4187,7 @@ function ProfileEditContent() {
       // 写真をアップロード
       const uploadedImageUrls: string[] = []
       
+      // 🚨 [NETWORK CULPRIT DETECTION] アップロード処理の詳細分析開始
       console.log('🖼️ 画像処理開始:', {
         profileImagesLength: profileImages.length,
         profileImages: profileImages.map((img, i) => ({
@@ -4199,27 +4200,87 @@ function ProfileEditContent() {
         }))
       })
 
+      // 🚨 [NETWORK CULPRIT DETECTION] アップロードリクエスト数予測
+      const blobImages = profileImages.filter(img => img.url && img.url.startsWith('blob:'))
+      console.log('🚨 [NETWORK CULPRIT] アップロード対象画像数:', {
+        total_images: profileImages.length,
+        new_upload_required: blobImages.length,
+        expected_storage_requests: blobImages.length,
+        prediction: `${blobImages.length}ファイル = ${blobImages.length}リクエスト予定`
+      })
+      
+      let actualStorageRequests = 0 // リクエスト数カウンター
+
       for (const image of profileImages) {
         // 新規アップロード（blob:で始まる画像）かどうかをチェック
         if (image.url && image.url.startsWith('blob:')) {
           try {
+            // 🚨 [NETWORK CULPRIT] リクエスト番号を記録
+            actualStorageRequests++
+            console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} START:`, {
+              image_id: image.id,
+              request_number: actualStorageRequests,
+              total_expected: blobImages.length,
+              url_preview: image.url.substring(0, 50) + '...'
+            })
+            
             console.log('📤 新規画像アップロード開始:', image.id)
             // Blob URLから実際のファイルを取得
             const response = await fetch(image.url)
             const blob = await response.blob()
             
-            // ファイル名を生成（拡張子を推定）
+            // 🚨 [STORAGE OVERWRITE PREVENTION] ユニークファイル名生成（ensureAvatarStored.ts準拠）
             const fileExtension = blob.type.split('/')[1] || 'jpg'
-            const fileName = `profile_${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExtension}`
+            const timestamp = Date.now()
+            const random = Math.random().toString(36).substr(2, 9)
+            const fileName = `${user.id}/photo_${timestamp}_${random}.${fileExtension}`
+            
+            console.log('🚨 [STORAGE OVERWRITE CHECK] ProfileEdit独自アップロード:', {
+              old_pattern: `profile_${user.id}_${timestamp}_${random}.${fileExtension}`,
+              new_pattern: `${user.id}/photo_${timestamp}_${random}.${fileExtension}`,
+              generated_path: fileName,
+              bucket: 'profile-images',
+              overwrite_prevention: 'upsert: false',
+              note: 'ensureAvatarStored.ts と統一パターンに変更'
+            })
             
             console.log('📤 アップロード詳細:', fileName, blob.type, blob.size)
             
+            // 🚨 [POSSIBILITY D] Storageバケット権限チェック（アップロード前）
+            console.log('🚨 [POSSIBILITY D] Storage权限确认:', {
+              bucket: 'profile-images',
+              user_id: user.id,
+              filename: fileName,
+              content_type: blob.type,
+              size_kb: Math.round(blob.size / 1024),
+              upsert_disabled: 'upsert: false（上書き防止）',
+              rls_note: 'profile-images bucketのRLSポリシー確認必要'
+            })
+
             const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('avatars')
+              .from('profile-images')  // 🚨 bucket統一: ensureAvatarStored.tsと同じbucket使用
               .upload(fileName, blob, {
                 cacheControl: '3600',
-                upsert: false
+                upsert: false  // 🚨 上書き防止
               })
+              
+            // 🚨 [POSSIBILITY D] アップロードエラー詳細分析
+            if (uploadError) {
+              console.error('🚨 [POSSIBILITY D] Storage upload FAILED:', {
+                error_message: uploadError.message,
+                error_code: uploadError.statusCode,
+                bucket: 'profile-images',
+                filename: fileName,
+                user_id: user.id,
+                possible_causes: [
+                  'バケットRLSポリシーでアップロード拒否',
+                  'ファイルサイズ制限超過',
+                  'バケット容量制限',
+                  'ネットワーク接続問題'
+                ],
+                troubleshoot: 'Supabase Dashboard → Storage → profile-images → Policies確認'
+              })
+            }
 
             if (uploadError) {
               console.error('❌ アップロードエラー:', uploadError)
@@ -4228,11 +4289,11 @@ function ProfileEditContent() {
 
             // パブリックURLを取得
             const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
+              .from('profile-images')  // 🚨 bucket統一: getPublicUrlも同じbucket
               .getPublicUrl(uploadData.path)
 
             uploadedImageUrls.push(publicUrl)
-            console.log('✅ 新規アップロード成功:', publicUrl)
+            console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} SUCCESS:`, publicUrl)
           } catch (uploadError) {
             console.error('❌ 個別画像のアップロードエラー:', uploadError)
             throw uploadError
@@ -4256,6 +4317,15 @@ function ProfileEditContent() {
         }
       }
 
+      // 🚨 [NETWORK CULPRIT] 最終リクエスト数検証
+      console.log('🚨 [NETWORK CULPRIT] アップロード完了 - リクエスト数検証:', {
+        expected_requests: blobImages.length,
+        actual_requests: actualStorageRequests,
+        match: blobImages.length === actualStorageRequests,
+        verification: `予測:${blobImages.length}件 → 実行:${actualStorageRequests}件`,
+        network_analysis_note: 'DevToolsのNetwork tab でstorage/v1/object POSTを確認してください'
+      })
+      
       console.log('🖼️ 画像処理完了:', {
         uploadedImageUrls: uploadedImageUrls.length,
         urls: uploadedImageUrls.map(url => url.substring(0, 60) + '...')
@@ -4589,6 +4659,14 @@ function ProfileEditContent() {
         updated_at: new Date().toISOString()
       }
 
+      // 🚨 [POSSIBILITY B] payload漏れ完全防止チェック
+      console.log('🚨 [POSSIBILITY B] DB保存payload漏れ防止チェック:', {
+        didTouchPhotos_flag: didTouchPhotos,
+        payload_strategy: didTouchPhotos ? '画像操作あり → photo_urls含める' : '画像未操作 → photo_urls除外（破壊防止）',
+        preventive_measure: 'didTouchPhotosフラグによる条件付きpayload構築',
+        risk_without_flag: 'photo_urlsが常にpayloadに含まれると、初期化時や意図しないタイミングで空配列で上書きされるリスク'
+      })
+      
       // 🚨 4) didTouchPhotosフラグ状態ログ
       console.log('🚨 [TOUCH FLAG STATUS] didTouchPhotos:', didTouchPhotos)
       console.log('🚨 [TOUCH FLAG] photo_urls処理方針:', didTouchPhotos ? '含める（画像操作あり）' : 'EXCLUDE（画像未操作）')
@@ -4866,6 +4944,33 @@ function ProfileEditContent() {
         } : 'no_data_returned'
       })
       
+      // 🏆 [COMPLETION EVIDENCE] 最終完了条件チェック
+      const completionEvidence = {
+        '1. Network Requests': {
+          expected_storage_requests: blobImages.length,
+          actual_storage_requests: actualStorageRequests,
+          match: blobImages.length === actualStorageRequests,
+          verification: `${actualStorageRequests}件のstorage/v1/object POSTリクエスト実行済み`
+        },
+        '2. PATCH Payload': {
+          photo_urls_included: !!updateData.photo_urls,
+          photo_urls_count: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 0,
+          didTouchPhotos_flag: didTouchPhotos,
+          payload_decision: didTouchPhotos ? 'photo_urls含める' : 'photo_urls除外'
+        },
+        '3. DB Confirmation': {
+          save_success: saveResult.success,
+          db_photo_urls: saveResult.data?.[0]?.photo_urls || null,
+          db_photo_urls_count: Array.isArray(saveResult.data?.[0]?.photo_urls) ? saveResult.data[0].photo_urls.length : 0,
+          db_avatar_url: saveResult.data?.[0]?.avatar_url || null
+        }
+      }
+      
+      console.log('🏆 [COMPLETION EVIDENCE] 指示書要求の3点証明:', completionEvidence)
+      console.log('📸 [COMPLETION] Networkスクショ対象:', 'DevTools → Network → storage/v1/object (POST)')
+      console.log('🔍 [COMPLETION] PATCHペイロード確認:', 'DevTools → Network → profiles (PATCH)')
+      console.log('✅ [COMPLETION] DB確認クエリ:', `select photo_urls, avatar_url from profiles where id = '${user.id}';`)
+      
       const updateResult = saveResult.data
       const updateError = null
       
@@ -4897,11 +5002,23 @@ function ProfileEditContent() {
           setDidTouchPhotos(false)
           console.log('🚨 [TOUCH FLAG] didTouchPhotos = false (DB同期完了)')
           
-          // sessionStorage/localStorageも同期
+          // 🚨 [POSSIBILITY C] sessionStorage復元上書き防止チェック
           const imageStorageKey = `currentProfileImages_${user?.id || 'test'}`
+          console.log('🚨 [POSSIBILITY C] sessionStorage上書きチェック:', {
+            storage_key: imageStorageKey,
+            before_write_check: 'DB保存成功後の安全な同期タイミング',
+            synced_images_count: syncedImages.length,
+            risk_prevention: 'DB保存成功確認後のみsessionStorage更新',
+            timing: 'DB SYNC完了後（破壊タイミングではない）'
+          })
+          
           try {
             sessionStorage.setItem(imageStorageKey, JSON.stringify(syncedImages))
-            console.log('🚨 [DB SYNC] sessionStorage同期完了')
+            console.log('🚨 [DB SYNC] sessionStorage同期完了:', {
+              key: imageStorageKey,
+              stored_count: syncedImages.length,
+              verification: 'DB値と同期済み'
+            })
           } catch (e) {
             console.warn('sessionStorage同期失敗:', e)
           }
