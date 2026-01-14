@@ -87,6 +87,8 @@ const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
   self_introduction: z.string().min(100, t('errors.selfIntroMinimum')).max(1000, t('errors.selfIntroMaximum')),
+  // 🚨 CRITICAL FIX: photo_urlsをZodスキーマに追加（バリデーション時削除防止）
+  photo_urls: z.array(z.string()).default([]).optional(),
 })
 
 // 条件付きバリデーション関数
@@ -697,6 +699,9 @@ function ProfileEditContent() {
       // プレビュー用画像URL（blob URLまたは既存URL）
       const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
 
+      // 🚨 CRITICAL FIX: photo_urlsをpreviewDataに必ず含める
+      const finalPhotoUrls = profileImages.map(img => img.url || img.originalUrl).filter(url => url && !url.startsWith('blob:'))
+      
       const previewData = {
         ...formData,
         hobbies: selectedHobbies,
@@ -706,9 +711,19 @@ function ProfileEditContent() {
         travel_companion: formData.travel_companion || '',
         image: previewImageUrl,
         profile_image: previewImageUrl,
+        // 🚨 CRITICAL FIX: photo_urls配列を必ずセット（根本問題解決）
+        photo_urls: finalPhotoUrls,
         // 🚀 CRITICAL FIX: 最新のlanguageSkills stateを必ず含める
         language_skills: languageSkills
       }
+      
+      console.log('🚨 PREVIEW DATA VERIFICATION - photo_urls追加確認:', {
+        photo_urls_value: finalPhotoUrls,
+        photo_urls_count: finalPhotoUrls.length,
+        photo_urls_preview: finalPhotoUrls.map(url => url.substring(0, 50) + '...'),
+        profileImages_count: profileImages.length,
+        previewData_has_photo_urls: 'photo_urls' in previewData
+      })
 
       // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
       const previewDataKey = `previewData_${user?.id || 'anonymous'}`

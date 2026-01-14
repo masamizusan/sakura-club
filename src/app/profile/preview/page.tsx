@@ -1232,7 +1232,9 @@ function ProfilePreviewContent() {
                         'membership_type',
                         'is_verified',
                         // 🚨 SSOT追加: language_skillsをDB永続化（指示書対応）
-                        'language_skills'
+                        'language_skills',
+                        // 🚨 CRITICAL FIX: photo_urlsをwhitelistに追加（根本問題解決）
+                        'photo_urls'
                         // 'updated_at' ← 絶対に入れない（DB側で自動更新に任せる）
                       ])
 
@@ -1319,6 +1321,37 @@ function ProfilePreviewContent() {
                         prefecture_excluded: true,
                         residence_preserved: 'residence' in sanitizedPayload
                       })
+
+                      // 🚨 CRITICAL FIX: 5-2 DB結果による状態同期（再発防止）
+                      if (saveResult.data && saveResult.data[0]) {
+                        const savedProfile = saveResult.data[0]
+                        console.log('🔄 DB結果による状態同期開始:', {
+                          db_photo_urls: savedProfile.photo_urls,
+                          db_avatar_url: savedProfile.avatar_url,
+                          db_photo_urls_count: Array.isArray(savedProfile.photo_urls) ? savedProfile.photo_urls.length : 0
+                        })
+                        
+                        // sessionStorageの保存データをDB結果で上書き
+                        const previewDataKey = `previewData_${user?.id || 'anonymous'}`
+                        try {
+                          const currentPreviewData = sessionStorage.getItem(previewDataKey)
+                          if (currentPreviewData) {
+                            const parsedData = JSON.parse(currentPreviewData)
+                            // DB値で重要フィールドを上書き
+                            parsedData.photo_urls = savedProfile.photo_urls || []
+                            parsedData.avatar_url = savedProfile.avatar_url
+                            parsedData.image = savedProfile.avatar_url || savedProfile.photo_urls?.[0] || parsedData.image
+                            
+                            sessionStorage.setItem(previewDataKey, JSON.stringify(parsedData))
+                            console.log('✅ SessionStorage更新完了:', {
+                              updated_photo_urls: parsedData.photo_urls,
+                              updated_count: Array.isArray(parsedData.photo_urls) ? parsedData.photo_urls.length : 0
+                            })
+                          }
+                        } catch (sessionError) {
+                          console.warn('⚠️ SessionStorage更新失敗（影響なし）:', sessionError)
+                        }
+                      }
 
                       // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
                       console.log('🎯 Profile保存完了 - MyPageに遷移')

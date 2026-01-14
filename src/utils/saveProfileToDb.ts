@@ -119,10 +119,14 @@ export async function saveProfileToDb(
           all_processed_urls: processedUrls.map((url: string | null) => url ? url.substring(0, 50) + '...' : 'null')
         })
         
-        // avatar_url との同期（メイン画像）
+        // avatar_url との同期（メイン画像）- 5-3 整合ルール固定
         if (processedUrls.length > 0) {
           payload.avatar_url = processedUrls[0]
           console.log('🔄 avatar_url synced with photo_urls[0]:', payload.avatar_url.substring(0, 50) + '...')
+        } else {
+          // photo_urls空配列の場合はavatar_urlもnullに統一
+          payload.avatar_url = null
+          console.log('🔄 avatar_url set to null (photo_urls empty)')
         }
       } else {
         console.log('🖼️ photo_urls is empty or not array, setting to []')
