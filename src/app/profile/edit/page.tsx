@@ -3922,29 +3922,88 @@ function ProfileEditContent() {
             
             // 🎯 TASK2: 自動write-back実行（photo_urls空をavatar_urlで修復）
             console.log('🎯 [TASK2] 自動write-back開始: photo_urls空状態をavatar_urlで修復')
-            setTimeout(async () => {
-              try {
-                const writeBackPayload = {
-                  photo_urls: [profile.avatar_url],
-                  updated_at: new Date().toISOString()
-                }
-                
-                console.log('🎯 [TASK2] write-backペイロード:', writeBackPayload)
-                
-                const { error: writeBackError } = await supabase
-                  .from('profiles')
-                  .update(writeBackPayload)
-                  .eq('id', user?.id)
+            
+            // 🎯 Step A&B: 条件厳密化 + 詳細エラーログ + 二度実行防止
+            const writeBackKey = `writeBack_${user?.id}_completed`
+            const alreadyCompleted = sessionStorage.getItem(writeBackKey)
+            
+            if (!alreadyCompleted) {
+              setTimeout(async () => {
+                try {
+                  // 🎯 Step B: 条件の厳密チェック
+                  const urlParamsLocal = new URLSearchParams(window.location.search)
+                  const isFromMyPageCheck = urlParamsLocal.get('fromMyPage') === 'true'
+                  const photoUrlsEmpty = Array.isArray(profile?.photo_urls) && profile.photo_urls.length === 0
+                  const avatarUrlExists = profile?.avatar_url && typeof profile.avatar_url === 'string' && profile.avatar_url.trim().length > 0
                   
-                if (writeBackError) {
-                  console.error('🚨 [TASK2] 自動write-back失敗:', writeBackError)
-                } else {
-                  console.log('✅ [TASK2] 自動write-back成功: 次回以降fromMyPageでphoto_urls復元される')
+                  console.log('🎯 [TASK2] write-back条件チェック:', {
+                    isFromMyPage: isFromMyPageCheck,
+                    photoUrlsEmpty,
+                    avatarUrlExists,
+                    photo_urls: profile?.photo_urls,
+                    avatar_url: profile?.avatar_url,
+                    userId: user?.id
+                  })
+                  
+                  if (!isFromMyPageCheck || !photoUrlsEmpty || !avatarUrlExists || !user?.id) {
+                    console.log('🎯 [TASK2] write-back条件不一致 - スキップ')
+                    return
+                  }
+                  
+                  // 🎯 Step B: payload安全化
+                  const avatarUrl = profile.avatar_url.trim()
+                  const writeBackPayload = {
+                    photo_urls: [avatarUrl] // 必ず文字列配列
+                  }
+                  
+                  console.log('🎯 [TASK2] write-backペイロード:', {
+                    payload: writeBackPayload,
+                    avatarUrl_type: typeof avatarUrl,
+                    avatarUrl_length: avatarUrl.length
+                  })
+                  
+                  // 🎯 Step A: 詳細エラーログ + select()で結果確認
+                  const { data, error: writeBackError } = await supabase
+                    .from('profiles')
+                    .update(writeBackPayload)
+                    .eq('id', user.id)
+                    .select('id, photo_urls')
+                    
+                  if (writeBackError) {
+                    console.error('🚨 [TASK2] write-back failed - 詳細エラー情報:', {
+                      message: writeBackError.message,
+                      details: (writeBackError as any).details,
+                      hint: (writeBackError as any).hint,
+                      code: (writeBackError as any).code,
+                      avatarUrl,
+                      userId: user.id,
+                      payload: writeBackPayload,
+                      error_object: writeBackError
+                    })
+                  } else {
+                    console.log('✅ [TASK2] write-back success - 結果確認:', {
+                      updated_data: data,
+                      count: data?.length || 0,
+                      photo_urls_after: data?.[0]?.photo_urls,
+                      verification: data?.[0]?.photo_urls?.length > 0 ? '修復成功' : '修復失敗'
+                    })
+                    
+                    // 🎯 Step C: 成功時のみ二度実行防止フラグ設定
+                    sessionStorage.setItem(writeBackKey, 'true')
+                    console.log('🎯 [TASK2] 次回以降のfromMyPage遷移では復元ログが出なくなります')
+                  }
+                } catch (error) {
+                  console.error('🚨 [TASK2] write-back処理エラー - 予期しないエラー:', {
+                    error,
+                    error_type: typeof error,
+                    error_message: error instanceof Error ? error.message : 'unknown',
+                    error_stack: error instanceof Error ? error.stack : 'no stack'
+                  })
                 }
-              } catch (error) {
-                console.error('🚨 [TASK2] 自動write-back処理エラー:', error)
-              }
-            }, 1000) // 初期化完了後に実行
+              }, 1000) // 初期化完了後に実行
+            } else {
+              console.log('🎯 [TASK2] write-back既完了 - スキップ')
+            }
           }
           // 🔧 STEP 3: どちらも空の場合のみlocalStorageを確認
           else {
