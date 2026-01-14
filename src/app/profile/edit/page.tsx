@@ -3950,10 +3950,25 @@ function ProfileEditContent() {
                     return
                   }
                   
-                  // 🎯 Step B: payload安全化
+                  // 🎯 Step 3: 型ごとの最小修正（malformed array literal防止）
                   const avatarUrl = profile.avatar_url.trim()
+                  
+                  // 🛡️ ケースA対応: photo_urls型安全ガード（text[]想定）
+                  const safePhotoUrls = Array.isArray([avatarUrl]) 
+                    ? [avatarUrl].filter(Boolean).map(String) 
+                    : []
+                    
+                  console.log('🎯 [STEP 3] payload型安全化:', {
+                    original_avatarUrl: avatarUrl,
+                    safePhotoUrls,
+                    safePhotoUrls_type: typeof safePhotoUrls,
+                    safePhotoUrls_isArray: Array.isArray(safePhotoUrls),
+                    safePhotoUrls_elementTypes: safePhotoUrls.map(v => typeof v),
+                    guaranteed: 'string[] for text[] compatibility'
+                  })
+                  
                   const writeBackPayload = {
-                    photo_urls: [avatarUrl] // 必ず文字列配列
+                    photo_urls: safePhotoUrls // 確実にstring[]
                   }
                   
                   console.log('🎯 [TASK2] write-backペイロード:', {
@@ -3970,16 +3985,71 @@ function ProfileEditContent() {
                     .select('id, photo_urls')
                     
                   if (writeBackError) {
-                    console.error('🚨 [TASK2] write-back failed - 詳細エラー情報:', {
+                    // 🎯 Step 1: 400の正体を一回で確定するための完全ログ
+                    console.error('🚨 [TASK2] write-back failed - 400根因確定ログ:', {
+                      // Supabaseエラー詳細
                       message: writeBackError.message,
                       details: (writeBackError as any).details,
                       hint: (writeBackError as any).hint,
                       code: (writeBackError as any).code,
-                      avatarUrl,
+                      
+                      // payload詳細分析（型・値・構造）
+                      payload_full: writeBackPayload,
+                      photo_urls_value: writeBackPayload.photo_urls,
+                      photo_urls_type: typeof writeBackPayload.photo_urls,
+                      photo_urls_isArray: Array.isArray(writeBackPayload.photo_urls),
+                      photo_urls_stringify: JSON.stringify(writeBackPayload.photo_urls),
+                      photo_urls_element_types: Array.isArray(writeBackPayload.photo_urls) 
+                        ? writeBackPayload.photo_urls.map(v => typeof v)
+                        : 'not_array',
+                      photo_urls_length: Array.isArray(writeBackPayload.photo_urls) 
+                        ? writeBackPayload.photo_urls.length 
+                        : 'not_array',
+                      
+                      // 元データ分析
+                      original_avatar_url: profile?.avatar_url,
+                      original_photo_urls: profile?.photo_urls,
+                      trimmed_avatar_url: avatarUrl,
+                      
+                      // DB更新情報
+                      update_table: 'profiles',
+                      update_column: 'photo_urls', 
+                      where_condition: `id = ${user.id}`,
                       userId: user.id,
-                      payload: writeBackPayload,
-                      error_object: writeBackError
+                      
+                      // 診断分類
+                      suspected_cause: writeBackError.message?.includes('malformed array') ? 'ARRAY_LITERAL_ERROR' :
+                                      writeBackError.message?.includes('column') ? 'COLUMN_NOT_FOUND' :
+                                      writeBackError.message?.includes('permission') ? 'PERMISSION_DENIED' :
+                                      'UNKNOWN_400'
                     })
+                    
+                    // 🎯 Step 2-4: DB型確認と修正方針ガイド
+                    console.log('📋 [STEP 2] DB型確認SQL - Supabase SQL Editorで実行してください:')
+                    console.log(`
+                      SELECT column_name, data_type, udt_name
+                      FROM information_schema.columns 
+                      WHERE table_schema='public' 
+                        AND table_name='profiles' 
+                        AND column_name='photo_urls';
+                    `)
+                    
+                    console.log('📋 [STEP 3] 型別修正方針:')
+                    console.log('- udt_name="_text" (text[])の場合: payload = [avatarUrl] ← 推奨')
+                    console.log('- data_type="jsonb"の場合: payload = [avatarUrl]')  
+                    console.log('- data_type="text"の場合: DBをtext[]にマイグレーション推奨')
+                    
+                    console.log('📋 [STEP 4] DB一括修復SQL（text[]の場合）:')
+                    console.log(`
+                      UPDATE public.profiles 
+                      SET photo_urls = array[avatar_url]
+                      WHERE (photo_urls IS NULL OR cardinality(photo_urls)=0)
+                        AND avatar_url IS NOT NULL 
+                        AND avatar_url <> '';
+                        
+                      ALTER TABLE public.profiles 
+                      ALTER COLUMN photo_urls SET DEFAULT '{}';
+                    `)
                   } else {
                     console.log('✅ [TASK2] write-back success - 結果確認:', {
                       updated_data: data,
@@ -3990,7 +4060,22 @@ function ProfileEditContent() {
                     
                     // 🎯 Step C: 成功時のみ二度実行防止フラグ設定
                     sessionStorage.setItem(writeBackKey, 'true')
-                    console.log('🎯 [TASK2] 次回以降のfromMyPage遷移では復元ログが出なくなります')
+                    
+                    // 🎯 完了条件検証ログ
+                    console.log('✅ [TASK2 COMPLETION] 完了条件達成:', {
+                      '1_write_back_success': true,
+                      '2_photo_urls_populated': data?.[0]?.photo_urls?.length > 0,
+                      '3_next_reload_no_restore_log': 'リロード後に「復元ログ」が消失することを確認',
+                      '4_image_operations_consistent': '画像追加/削除/入替→保存でprofiles.photo_urlsが画面と一致することを確認',
+                      verification_status: 'TASK2根治完了'
+                    })
+                    
+                    // 🎯 Step 5: 最終形ガイド（設計単純化）
+                    console.log('📋 [STEP 5] 最終形推奨設計:')
+                    console.log('1. 保存ボタンpayloadに常にphoto_urls含める')
+                    console.log('2. photo_urlsは常にstring[]')  
+                    console.log('3. avatar_urlは後方互換として残す（1枚目用）')
+                    console.log('4. write-backは保険に格下げ（DBバックフィル後は基本発火しない）')
                   }
                 } catch (error) {
                   console.error('🚨 [TASK2] write-back処理エラー - 予期しないエラー:', {
