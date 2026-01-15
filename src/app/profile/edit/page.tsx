@@ -2939,7 +2939,7 @@ function ProfileEditContent() {
                 console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
                 console.log('🧪 [指示書②] 一般初期化: photo_urls優先採用 ✅')
                 finalImages = profileData.photo_urls
-                  .filter(url => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
+                  .filter((url: any) => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
                   .slice(0, 3)
                   .map((url: string, index: number) => ({
                     id: `photo_${index}`,
@@ -4978,7 +4978,7 @@ function ProfileEditContent() {
         photo_urls_isArray: Array.isArray(updateData.photo_urls),
         photo_urls_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array',
         photo_urls_content: Array.isArray(updateData.photo_urls) 
-          ? updateData.photo_urls.map((url, i) => ({
+          ? updateData.photo_urls.map((url: any, i: number) => ({
               index: i,
               url_preview: url ? String(url).substring(0, 60) + '...' : 'null',
               is_storage_url: url && String(url).includes('supabase')
