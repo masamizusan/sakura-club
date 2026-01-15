@@ -2929,40 +2929,31 @@ function ProfileEditContent() {
                 'profileData.avatar_url': profileData.avatar_url ? 'exists' : 'null'
               })
               
-              // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（3枚まで対応、必ず3要素を確保）
-              if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0) {
-                console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚 → 3要素確保')
-                finalImages = profileData.photo_urls.slice(0, 3).map((url: string, index: number) => ({
-                  id: `photo_${index}`,
-                  url: url,
-                  originalUrl: url,
-                  isMain: index === 0, // 先頭をメイン画像
-                  isEdited: false
-                }))
+              // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（指示書対応：厳密判定）
+              if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0 && profileData.photo_urls.some(url => url && typeof url === 'string' && url.trim() !== '')) {
+                console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
+                console.log('🧪 [指示書②] 一般初期化: photo_urls優先採用 ✅')
+                finalImages = profileData.photo_urls
+                  .filter(url => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
+                  .slice(0, 3)
+                  .map((url: string, index: number) => ({
+                    id: `photo_${index}`,
+                    url: url,
+                    originalUrl: url,
+                    isMain: index === 0, // 先頭をメイン画像
+                    isEdited: false
+                  }))
                 
-                // 🔧 FIX: 常に3要素になるようパディング
-                while (finalImages.length < 3 && finalImages.length < profileData.photo_urls.length) {
-                  const nextIndex = finalImages.length
-                  if (profileData.photo_urls[nextIndex]) {
-                    finalImages.push({
-                      id: `photo_${nextIndex}`,
-                      url: profileData.photo_urls[nextIndex],
-                      originalUrl: profileData.photo_urls[nextIndex],
-                      isMain: false,
-                      isEdited: false
-                    })
-                  }
-                }
-                
-                console.log('🖼️ photo_urls復元完了（3要素確保）:', finalImages.map((img: any) => ({
+                console.log('🖼️ photo_urls復元完了:', finalImages.map((img: any) => ({
                   id: img.id,
                   isMain: img.isMain,
                   url_preview: img.url.substring(0, 50) + '...'
                 })))
               }
-              // 🔧 STEP 2: photo_urlsが空の場合のみavatar_url使用（後方互換）
-              else if (profileData.avatar_url) {
-                console.log('📋 photo_urls空 - avatar_urlから1枚復元（後方互換）')
+              // 🔧 STEP 2: photo_urlsが本当に空の場合のみavatar_url使用（後方互換）
+              else if (profileData.avatar_url && (!Array.isArray(profileData.photo_urls) || profileData.photo_urls.length === 0)) {
+                console.log('📋 photo_urls本当に空 - avatar_urlから1枚復元（後方互換）')
+                console.log('🧪 [指示書②] 一般初期化: avatar_urlフォールバック採用')
                 finalImages = [{
                   id: 'main',
                   url: profileData.avatar_url,
@@ -3886,28 +3877,38 @@ function ProfileEditContent() {
         // 🔧 画像設定と完成度計算に使用する配列を決定
         let currentImageArray: Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }> = []
 
-        // 🖼️ fromMyPageでもDBのphoto_urls最優先で画像を読み込み
+        // 🖼️ 指示書対応: photo_urls優先で画像を読み込み（1枚戻りバグ修正）
         if (isFromMyPage) {
           console.log('🔄 fromMyPage: DBのphoto_urls最優先で画像復元')
           
-          // 🔥 STEP 1: DBのphoto_urlsから復元（最優先）
-          if (Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0) {
+          // 🧪 指示書要求: 必須チェックポイント①② - DBから取得直後の状態確認
+          console.log('🧪 [指示書①] profile.photo_urls:', profile?.photo_urls)
+          console.log('🧪 [指示書①] profile.avatar_url:', profile?.avatar_url)
+          console.log('🧪 [指示書②] 編集画面戻り時の判定開始')
+          
+          // 🔥 修正: photo_urls判定を厳密化（空配列でなく実際のデータ有無をチェック）
+          if (Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0 && profile.photo_urls.some(url => url && typeof url === 'string' && url.trim() !== '')) {
             console.log('✅ fromMyPage: DBのphoto_urlsから復元:', profile.photo_urls.length, '枚')
-            currentImageArray = profile.photo_urls.slice(0, 3).map((url: string, index: number) => ({
-              id: `photo_${index}`,
-              url: url,
-              originalUrl: url,
-              isMain: index === 0,
-              isEdited: false
-            }))
+            console.log('🧪 [指示書②] state初期化: photo_urls優先採用 ✅')
+            currentImageArray = profile.photo_urls
+              .filter(url => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
+              .slice(0, 3)
+              .map((url: string, index: number) => ({
+                id: `photo_${index}`,
+                url: url,
+                originalUrl: url,
+                isMain: index === 0,
+                isEdited: false
+              }))
             setProfileImages(prev => {
               console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
               return currentImageArray
             })
           }
-          // 🔧 STEP 2: photo_urlsが空でavatar_urlがある場合 + 🎯 TASK2: 自動write-back実装
+          // 🔧 フォールバック: photo_urlsが本当に空の場合のみavatar_urlから復元
           else if (profile?.avatar_url) {
-            console.log('📋 fromMyPage: photo_urls空 - avatar_urlから復元（自動修復実行）')
+            console.log('📋 fromMyPage: photo_urls本当に空 - avatar_urlからフォールバック復元')
+            console.log('🧪 [指示書②] state初期化: avatar_urlフォールバック採用')
             currentImageArray = [{
               id: 'main',
               url: profile.avatar_url,
@@ -4946,6 +4947,14 @@ function ProfileEditContent() {
       console.log("🧪 SAVE DEBUG profileImages:", profileImages)
       console.log("🧪 SAVE DEBUG safePhotoUrls:", updateData.photo_urls)
       console.log("🧪 SAVE DEBUG payload.photo_urls length:", Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array')
+      
+      // 🧪 指示書要求: 修正②の確認（常に配列で保存）
+      console.log("🧪 [指示書修正②] 配列保存確認:", {
+        photo_urls_type: typeof updateData.photo_urls,
+        photo_urls_isArray: Array.isArray(updateData.photo_urls),
+        photo_urls_filtered: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.filter(Boolean) : 'not_array',
+        max_3_slice: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.slice(0, 3) : 'not_array'
+      })
       
       // 🚨 ✅ TASK3: 最終保存payload検証（最優先：3枚URL保存確保）
       console.log('🚨 [TASK3] 最終保存payload検証 - photo_urls重点確認:', {
