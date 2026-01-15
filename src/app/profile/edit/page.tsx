@@ -1429,6 +1429,16 @@ function ProfileEditContent() {
         // sessionStorageエラーでもUIは継続
       }
     
+      // ✅ TASK2: アップロード中のPATCH処理を停止（最終保存時のみ）
+      console.log('🚨 [TASK2] アップロード中のDB更新を停止 - 最終保存時のみに変更', {
+        newImages_count: newImages.length,
+        hasBlobs: newImages.some(img => img.url.startsWith('blob:')),
+        reason: '3枚アップ時に各画像ごとにPATCHが発生するのを防ぐ',
+        solution: '保存ボタンクリック時に1回だけphoto_urls=[url1,url2,url3]をPATCH'
+      })
+      
+      // 🚨 NOTE: DB更新処理を完全にコメントアウト（最終保存時のみに変更）
+      /*
       // ④ 本番のみ：安全なDB更新
       try {
         // メイン画像を探す（blob URLでない場合のみ）
@@ -1492,14 +1502,9 @@ function ProfileEditContent() {
         } else {
           console.log('⚠️ blob URL画像のため、データベース保存をスキップ')
         }
-      } catch (dbError) {
-        console.error('🚨 IMAGE_DB_FAILED:', {
-          error: dbError instanceof Error ? dbError.message : dbError,
-          stack: dbError instanceof Error ? dbError.stack : 'no stack',
-          user_id: user.id
-        })
-        // DBエラーでもUIは継続（throwしない）
-      }
+      */
+      
+      console.log('✅ [TASK2] アップロード中のPATCH停止完了 - 保存時のみに統一')
     // 🌸 TASK4: 削除時の確実な状態確認
     if (newImages.length === 0 && currentImageIds.length > 0) {
       console.log('🗑️ 画像削除検出: state/ref/sessionStorageを完全同期', {
@@ -2930,7 +2935,7 @@ function ProfileEditContent() {
               })
               
               // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（指示書対応：厳密判定）
-              if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0 && profileData.photo_urls.some(url => url && typeof url === 'string' && url.trim() !== '')) {
+              if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0 && profileData.photo_urls.some((url: any) => url && typeof url === 'string' && url.trim() !== '')) {
                 console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
                 console.log('🧪 [指示書②] 一般初期化: photo_urls優先採用 ✅')
                 finalImages = profileData.photo_urls
@@ -4762,55 +4767,54 @@ function ProfileEditContent() {
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
-        // 🚨 ✅ TASK1: didTouchPhotosフラグによる条件付きphoto_urls処理（修正版）
-        ...(didTouchPhotos ? {
-          photo_urls: (() => {
-            console.log('🚨 [TASK1] photo_urls保存処理開始 - 3枚URL保存確保')
-            
-            // 🎯 FIXED: 直接profileImagesからURL配列を構築（シンプル化）
-            const safePhotoUrls = Array.isArray(profileImages) 
-              ? profileImages
-                  .map((img, index) => {
-                    // 新規アップロード済みURLがあれば優先、なければ既存URL使用
-                    const finalUrl = uploadedImageUrls[index] || img.url || img.originalUrl
-                    console.log(`🔍 [TASK1] Image ${index}:`, {
-                      hasUploadedUrl: !!uploadedImageUrls[index],
-                      finalUrl_preview: finalUrl ? finalUrl.substring(0, 40) + '...' : 'null'
-                    })
-                    return finalUrl
+        // 🚨 ✅ TASK1 FIXED: 常にphoto_urls全配列を保存（条件付き除去を廃止）
+        photo_urls: (() => {
+          console.log('🚨 [TASK1] photo_urls保存処理開始 - 3枚URL保存確保（無条件）')
+          
+          // 🎯 FIXED: 直接profileImagesから全てのURLを配列として構築
+          const safePhotoUrls = Array.isArray(profileImages) 
+            ? profileImages
+                .map((img, index) => {
+                  // 新規アップロード済みURLがあれば優先、なければ既存URL使用
+                  const finalUrl = uploadedImageUrls[index] || img.url || img.originalUrl
+                  console.log(`🔍 [TASK1] Image ${index}:`, {
+                    hasUploadedUrl: !!uploadedImageUrls[index],
+                    uploadedUrl_preview: uploadedImageUrls[index] ? uploadedImageUrls[index].substring(0, 40) + '...' : 'none',
+                    existingUrl_preview: (img.url || img.originalUrl) ? (img.url || img.originalUrl).substring(0, 40) + '...' : 'none',
+                    finalUrl_preview: finalUrl ? finalUrl.substring(0, 40) + '...' : 'null'
                   })
-                  .filter(url => url && typeof url === 'string' && !url.startsWith('blob:') && !url.startsWith('data:'))
-                  .map(url => String(url)) // 🛡️ 型安全性保証
-              : []
+                  return finalUrl
+                })
+                .filter(url => url && typeof url === 'string' && !url.startsWith('blob:') && !url.startsWith('data:'))
+                .map(url => String(url)) // 🛡️ 型安全性保証
+            : []
+          
+          console.log('🚨 [TASK1] 最終photo_urls配列確定:', {
+            original_profileImages_count: profileImages.length,
+            uploadedImageUrls_count: uploadedImageUrls.length,
+            uploadedImageUrls_preview: uploadedImageUrls.map(url => url.substring(0, 40) + '...'),
+            final_safePhotoUrls_count: safePhotoUrls.length,
+            safePhotoUrls_full: safePhotoUrls,
+            expected_result: '3枚アップ時は[url1,url2,url3]として保存される'
+          })
+          
+          return safePhotoUrls
+        })(),
+        // 🚨 A. avatar_url = photo_urls[0] 同期（簡素化版）
+        avatar_url: (() => {
+          // 🎯 FIXED: photo_urlsと同じロジックで[0]を取得
+          const firstImageUrl = profileImages[0] 
+            ? (uploadedImageUrls[0] || profileImages[0].url || profileImages[0].originalUrl)
+            : null
             
-            console.log('🚨 [TASK1] 最終photo_urls配列確定:', {
-              original_profileImages_count: profileImages.length,
-              uploadedImageUrls_count: uploadedImageUrls.length,
-              final_safePhotoUrls_count: safePhotoUrls.length,
-              safePhotoUrls_preview: safePhotoUrls.map(url => url.substring(0, 40) + '...'),
-              expected_result: '3枚アップ時は[url1,url2,url3]として保存される'
-            })
-            
-            return safePhotoUrls
-          })(),
-          // 🚨 A. avatar_url = photo_urls[0] 同期（簡素化版）
-          avatar_url: (() => {
-            // 🎯 FIXED: photo_urlsと同じロジックで[0]を取得
-            const firstImageUrl = profileImages[0] 
-              ? (uploadedImageUrls[0] || profileImages[0].url || profileImages[0].originalUrl)
-              : null
-              
-            if (!firstImageUrl || firstImageUrl.startsWith('blob:') || firstImageUrl.startsWith('data:')) {
-              console.log('🚨 [TASK1] avatar_url: null (有効な画像なし)')
-              return null
-            }
-            
-            console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
-            return firstImageUrl
-          })()
-        } : {
-          // 🚨 4) 画像を触っていない場合はphoto_urls/avatar_urlをpayloadから除外（破壊防止）
-        }),
+          if (!firstImageUrl || firstImageUrl.startsWith('blob:') || firstImageUrl.startsWith('data:')) {
+            console.log('🚨 [TASK1] avatar_url: null (有効な画像なし)')
+            return null
+          }
+          
+          console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
+          return firstImageUrl
+        })(),
         profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
         updated_at: new Date().toISOString()
       }
@@ -4947,6 +4951,45 @@ function ProfileEditContent() {
       console.log("🧪 SAVE DEBUG profileImages:", profileImages)
       console.log("🧪 SAVE DEBUG safePhotoUrls:", updateData.photo_urls)
       console.log("🧪 SAVE DEBUG payload.photo_urls length:", Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array')
+      
+      // ✅ TASK3: 最重要デバッグログ（3枚画像保存確保のため）
+      console.log("🚨 [TASK3] CRITICAL PAYLOAD DEBUG - 3枚URL保存の完全検証:", {
+        // ===== UPLOAD処理確認 =====
+        uploadedImageUrls_count: uploadedImageUrls.length,
+        uploadedImageUrls_details: uploadedImageUrls.map((url, i) => ({
+          index: i,
+          url_type: typeof url,
+          url_preview: url ? url.substring(0, 60) + '...' : 'null',
+          is_storage_url: url && url.includes('supabase'),
+          is_valid: url && typeof url === 'string' && !url.startsWith('blob:') && !url.startsWith('data:')
+        })),
+        // ===== PROFILE IMAGES確認 =====
+        profileImages_count: profileImages.length,
+        profileImages_details: profileImages.map((img, i) => ({
+          index: i,
+          has_url: !!img.url,
+          has_originalUrl: !!img.originalUrl,
+          url_preview: img.url ? img.url.substring(0, 60) + '...' : 'none',
+          originalUrl_preview: img.originalUrl ? img.originalUrl.substring(0, 60) + '...' : 'none'
+        })),
+        // ===== 最終PAYLOAD確認 =====
+        photo_urls_in_payload: updateData.photo_urls,
+        photo_urls_type: typeof updateData.photo_urls,
+        photo_urls_isArray: Array.isArray(updateData.photo_urls),
+        photo_urls_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array',
+        photo_urls_content: Array.isArray(updateData.photo_urls) 
+          ? updateData.photo_urls.map((url, i) => ({
+              index: i,
+              url_preview: url ? String(url).substring(0, 60) + '...' : 'null',
+              is_storage_url: url && String(url).includes('supabase')
+            }))
+          : 'not_array',
+        avatar_url_in_payload: updateData.avatar_url,
+        avatar_url_preview: updateData.avatar_url ? String(updateData.avatar_url).substring(0, 60) + '...' : 'null',
+        // ===== 期待値確認 =====
+        expected_behavior: '3枚アップロード時: photo_urls=[storage_url_1, storage_url_2, storage_url_3], avatar_url=storage_url_1',
+        critical_check: Array.isArray(updateData.photo_urls) && updateData.photo_urls.length === 3 ? '✅ 3枚配列OK' : '❌ 3枚配列NG'
+      })
       
       // 🧪 指示書要求: 修正②の確認（常に配列で保存）
       console.log("🧪 [指示書修正②] 配列保存確認:", {
