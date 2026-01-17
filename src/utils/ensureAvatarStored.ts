@@ -43,13 +43,14 @@ export async function ensureAvatarStored(
     return avatarUrlOrDataUrl
   }
 
-  // 3. dataURLならBlob化してupload
-  if (avatarUrlOrDataUrl.startsWith("data:image/")) {
-    console.log('📋 avatar input kind: data_url')
+  // 3. dataURL または blob URL なら Blob化してupload
+  if (avatarUrlOrDataUrl.startsWith("data:image/") || avatarUrlOrDataUrl.startsWith("blob:")) {
+    const inputKind = avatarUrlOrDataUrl.startsWith("data:image/") ? 'data_uri' : 'blob_url'
+    console.log(`📋 avatar input kind: ${inputKind}`)
     console.log('📋 upload attempted: true')
-    
+
     try {
-      // dataURL → Blob変換
+      // dataURL または blob URL → Blob変換
       const res = await fetch(avatarUrlOrDataUrl)
       const blob = await res.blob()
       
@@ -99,7 +100,8 @@ export async function ensureAvatarStored(
       
       console.log('📋 upload success: true')
       console.log('📋 final avatar_url for DB:', publicUrl.substring(0, 30) + '...')
-      console.log('🎉 Base64 → Storage conversion complete:', {
+      console.log(`🎉 ${inputKind === 'data_uri' ? 'Base64' : 'Blob URL'} → Storage conversion complete:`, {
+        inputKind,
         originalSize: avatarUrlOrDataUrl.length,
         newUrlSize: publicUrl.length,
         savedBytes: savedBytes > 0 ? savedBytes : 'N/A'
