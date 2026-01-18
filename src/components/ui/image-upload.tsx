@@ -64,14 +64,14 @@ export function ImageUpload({
         const oldFileName = currentImageUrl.split('/').pop()
         if (oldFileName) {
           await supabase.storage
-            .from('profile-images')
+            .from('avatars')
             .remove([`${userId}/${oldFileName}`])
         }
       }
 
       // 新しい画像をアップロード
       const { data, error } = await supabase.storage
-        .from('profile-images')
+        .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: true
@@ -83,7 +83,7 @@ export function ImageUpload({
 
       // 公開URLを取得
       const { data: { publicUrl } } = supabase.storage
-        .from('profile-images')
+        .from('avatars')
         .getPublicUrl(fileName)
 
       // プロフィールテーブルを更新
@@ -119,7 +119,7 @@ export function ImageUpload({
       const fileName = currentImageUrl.split('/').pop()
       if (fileName) {
         await supabase.storage
-          .from('profile-images')
+          .from('avatars')
           .remove([`${userId}/${fileName}`])
       }
 

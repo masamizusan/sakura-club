@@ -1062,21 +1062,14 @@ function ProfileEditContent() {
 
   // プロフィール画像の変更を監視して完成度を再計算
   // 🌸 TASK3: profileImages state更新後に必ず完成度再計算を1回実行
-  useEffect(() => {
-    // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
-    if (isInitializing) {
-      console.log('🛑 画像監視: skipped because isInitializing=true', { isInitializing })
-      return
-    }
-    
-    console.log('📝 profileImages state updated:', profileImages.length, 'images')
-    
-    // 🌸 TASK3: state確定後に1回だけ完成度再計算を実行
-    if (isHydrated) {
-      console.log('🌸 TASK3: profileImages変更後の強制完成度再計算実行')
-      updateCompletionUnified('profileImages-state-change')
-    }
-  }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
+  // ✅ SSOT維持: profileImages state監視を削除（多重発火防止）
+  // setValue('profile_images')により、MAIN WATCHが変更を検知するため、この監視は不要
+  // useEffect(() => {
+  //   console.log('📝 profileImages state updated:', profileImages.length, 'images')
+  //   if (isHydrated && !isInitializing) {
+  //     updateCompletionUnified('profileImages-state-change')  // ← 削除（多重発火の原因）
+  //   }
+  // }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
 
   // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
   const forceInitialCompletionCalculation = useCallback(() => {
@@ -1317,76 +1310,14 @@ function ProfileEditContent() {
         isDeletion: isDeletion,
         explicitDeletion: isExplicitDeletion
       })
-      
-      // 🔧 CRITICAL: UI更新直後に必ず完成度更新（TESTモード・本番共通）
-      try {
-        // 🚨 CRASH GUARD: updateCompletionUnified呼び出し前の安全チェック
-        if (typeof updateCompletionUnified !== 'function') {
-          console.error('[DEBUG] updateCompletionUnified is not function', {
-            type: typeof updateCompletionUnified,
-            value: updateCompletionUnified,
-            source: 'handleImagesChange'
-          })
-          throw new Error('updateCompletionUnified is not a function')
-        }
-        
-        updateCompletionUnified(
-          isDeletion ? 'image-delete-immediate' : 'image-change-immediate', 
-          newImages
-        )
-        console.log('🧨 completion updated immediately after UI change', { 
-          newImagesLength: newImages.length,
-          explicitImages: true,
-          triggerSource: isDeletion ? 'delete' : 'change'
-        })
-        
-        // 🔧 TESTモード用Single Source of Truth: 固定キーで完成度保存
-        if (isTestMode) {
-          setTimeout(() => {
-            try {
-              const currentFormData = getValues()
-              const completionResult = calculateCompletionFromForm(
-                {
-                  ...currentFormData,
-                  hobbies: selectedHobbies,
-                  personality: selectedPersonality,
-                  language_skills: languageSkills,
-                  planned_prefectures: selectedPlannedPrefectures
-                },
-                isForeignMale ? 'foreign-male' : 'japanese-female',
-                newImages
-              )
-              
-              const testModeKey = `SC_PROFILE_DRAFT_TEST_MODE_${user?.id || 'anonymous'}`
-              const testData = {
-                completion: completionResult.completion,
-                completedItems: completionResult.completedFields,
-                totalItems: completionResult.totalFields,
-                images: newImages,
-                formData: currentFormData,
-                timestamp: new Date().toISOString(),
-                source: 'PROFILE_EDIT_IMAGE_CHANGE'
-              }
-              
-              localStorage.setItem(testModeKey, JSON.stringify(testData))
-              console.log('🧪 TEST MODE: Saved completion to user-specific localStorage key', {
-                key: testModeKey,
-                completion: completionResult.completion,
-                images: newImages.length
-              })
-            } catch (saveError) {
-              console.error('🚨 TEST MODE localStorage save failed:', saveError)
-            }
-          }, 50)
-        }
-        
-      } catch (error) {
-        console.error('🚨 ERROR in immediate completion update:', {
-          error: error instanceof Error ? error.message : error,
-          stack: error instanceof Error ? error.stack : 'no stack'
-        })
-        // 絶対にthrowしない
-      }
+
+      // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
+      // setValue('profile_images')により、MAIN WATCHが変更を検知して1回だけ計算を実行
+      console.log('📸 画像変更: フォーム値更新完了（完成度計算はMAIN WATCHが担当）', {
+        newImagesLength: newImages.length,
+        isDeletion,
+        ssotMode: 'MAIN_WATCH_ONLY'
+      })
       
       // ② TESTモード時の処理分岐（DB保存は継続）
       if (isTestMode) {
@@ -1544,32 +1475,15 @@ function ProfileEditContent() {
         console.log('✅ initializingRef.current = false 強制設定完了')
       }
       
-      // 🔧 STEP 3: 両方のフラグがfalseの状態で強制再計算
-      console.log('🔥 画像変更完了時の強制完成度再計算実行', {
+      // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
+      // setValue('profile_images')の変更により、MAIN WATCHが自動的に検知して計算を実行
+      console.log('📸 画像変更完了: フラグリセット完了（完成度計算はMAIN WATCHが担当）', {
         isImageChanging: false,
         isInitializing: initializingRef.current,
         finalImageCount: profileImagesRef.current.length,
-        isDeletion: newImages.length < currentImageIds.length
+        isDeletion: newImages.length < currentImageIds.length,
+        ssotMode: 'MAIN_WATCH_ONLY'
       })
-      // 🌸 TASK4: 削除時の確実な再計算（queued対応込み + explicitImages）
-      try {
-        updateCompletionUnified(
-          newImages.length < currentImageIds.length ? 'image-delete' : 'image-change-finalize',
-          newImages
-        )
-        console.log('🧨 production mode completion updated', { 
-          newImagesLength: newImages.length,
-          explicitImages: true,
-          isDeletion: newImages.length < currentImageIds.length
-        })
-      } catch (error) {
-        console.error('🚨 ERROR in completion calculation after image change:', {
-          error: error instanceof Error ? error.message : error,
-          stack: error instanceof Error ? error.stack : 'no stack',
-          isDeletion: newImages.length < currentImageIds.length
-        })
-        // 絶対にthrowしない
-      }
     }, 100)
     
     } catch (error) {
@@ -4432,7 +4346,7 @@ function ProfileEditContent() {
               old_pattern: `profile_${user.id}_${timestamp}_${random}.${fileExtension}`,
               new_pattern: `${user.id}/photo_${timestamp}_${random}.${fileExtension}`,
               generated_path: fileName,
-              bucket: 'profile-images',
+              bucket: 'avatars',
               overwrite_prevention: 'upsert: false',
               note: 'ensureAvatarStored.ts と統一パターンに変更'
             })
@@ -4441,17 +4355,17 @@ function ProfileEditContent() {
             
             // 🚨 [POSSIBILITY D] Storageバケット権限チェック（アップロード前）
             console.log('🚨 [POSSIBILITY D] Storage权限确认:', {
-              bucket: 'profile-images',
+              bucket: 'avatars',
               user_id: user.id,
               filename: fileName,
               content_type: blob.type,
               size_kb: Math.round(blob.size / 1024),
               upsert_disabled: 'upsert: false（上書き防止）',
-              rls_note: 'profile-images bucketのRLSポリシー確認必要'
+              rls_note: 'avatars bucketのRLSポリシー確認必要'
             })
 
             const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('profile-images')  // 🚨 bucket統一: ensureAvatarStored.tsと同じbucket使用
+              .from('avatars')  // 🚨 bucket統一: ensureAvatarStored.tsと同じbucket使用
               .upload(fileName, blob, {
                 cacheControl: '3600',
                 upsert: false  // 🚨 上書き防止
@@ -4462,7 +4376,7 @@ function ProfileEditContent() {
               console.error('🚨 [POSSIBILITY D] Storage upload FAILED:', {
                 error_message: uploadError.message,
                 error_details: uploadError,
-                bucket: 'profile-images',
+                bucket: 'avatars',
                 filename: fileName,
                 user_id: user.id,
                 possible_causes: [
@@ -4471,7 +4385,7 @@ function ProfileEditContent() {
                   'バケット容量制限',
                   'ネットワーク接続問題'
                 ],
-                troubleshoot: 'Supabase Dashboard → Storage → profile-images → Policies確認'
+                troubleshoot: 'Supabase Dashboard → Storage → avatars → Policies確認'
               })
             }
 
@@ -4482,7 +4396,7 @@ function ProfileEditContent() {
 
             // パブリックURLを取得
             const { data: { publicUrl } } = supabase.storage
-              .from('profile-images')  // 🚨 bucket統一: getPublicUrlも同じbucket
+              .from('avatars')  // 🚨 bucket統一: getPublicUrlも同じbucket
               .getPublicUrl(uploadData.path)
 
             uploadedImageUrls.push(publicUrl)
