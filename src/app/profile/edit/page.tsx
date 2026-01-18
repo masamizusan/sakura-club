@@ -3160,10 +3160,19 @@ function ProfileEditContent() {
         
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
         const getDefaults = () => {
+          // 🚨 FIX: DBのresidenceカラムを優先参照（都道府県復元）
+          const prefectureValue = (signupData as any).prefecture || profile?.residence || profile?.prefecture || ''
+          console.log('🔍 prefecture初期化:', {
+            signupData_prefecture: (signupData as any).prefecture,
+            profile_residence: profile?.residence,
+            profile_prefecture: profile?.prefecture,
+            final: prefectureValue
+          })
+
           const baseDefaults = {
             gender: (signupData as any).gender || profile?.gender || (isForeignMale ? 'male' : 'female'),
             nationality: (signupData as any).nationality || profile?.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
-            prefecture: (signupData as any).prefecture || profile?.prefecture || '',
+            prefecture: prefectureValue,
             birth_date: (signupData as any).birth_date || profile?.birth_date || '',
             age: (signupData as any).age ? parseInt((signupData as any).age) : profile?.age || 18,
           }
@@ -4671,6 +4680,7 @@ function ProfileEditContent() {
         age: data.age,
         birth_date: data.birth_date,
         prefecture: data.prefecture,
+        residence: data.prefecture,   // 🚨 FIX: residenceにも保存（DB復元用）
         occupation: data.occupation === 'none' ? null : data.occupation,
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,

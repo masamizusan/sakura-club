@@ -114,7 +114,8 @@ type TranslationKeys = {
     city: string
     selectOccupation: string
     selectNationality: string
-    selectPrefectures: string
+    selectPrefecture: string  // 単数形（日本人女性用）
+    selectPrefectures: string // 複数形（外国人男性用）
     selectBodyType: string
     selectMaritalStatus: string
     selectJapaneseLevel: string
@@ -834,6 +835,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       city: '市区町村名を入力',
       selectOccupation: '職業を選択',
       selectNationality: '国籍を選択',
+      selectPrefecture: '都道府県を選択',
       selectPrefectures: '都道府県を選択',
       selectBodyType: '体型を選択',
       selectMaritalStatus: '婚姻状況を選択',
@@ -1499,6 +1501,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       city: 'Enter city name',
       selectOccupation: 'Select occupation',
       selectNationality: 'Select nationality',
+      selectPrefecture: 'Select prefecture',
       selectPrefectures: 'Select prefectures',
       selectBodyType: 'Select body type',
       selectMaritalStatus: 'Select marital status',
@@ -2163,6 +2166,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       city: '시명을 입력하세요',
       selectOccupation: '직업 선택',
       selectNationality: '국적 선택',
+      selectPrefecture: '현 선택',
       selectPrefectures: '현 선택',
       selectBodyType: '체형 선택',
       selectMaritalStatus: '혼인 상태 선택',
@@ -2827,6 +2831,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       city: '請輸入市區名稱',
       selectOccupation: '選擇職業',
       selectNationality: '選擇國籍',
+      selectPrefecture: '選擇都道府縣',
       selectPrefectures: '選擇都道府縣',
       selectBodyType: '選擇體型',
       selectMaritalStatus: '選擇婚姻狀態',
