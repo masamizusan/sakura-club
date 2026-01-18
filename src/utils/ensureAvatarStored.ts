@@ -73,9 +73,9 @@ export async function ensureAvatarStored(
         blobSize: Math.round(blob.size / 1024) + 'KB'
       })
       
-      // 🚨 Storage アップロード（複数画像対応bucket）
+      // 🚨 Storage アップロード（既存avatarsバケット使用）
       const up = await supabase.storage
-        .from("profile-images")  // 複数画像対応bucket
+        .from("avatars")  // 既存バケット使用（profile-imagesは未作成のためavatarsに統一）
         .upload(path, blob, { contentType: blob.type, upsert: false })  // upsert: false で上書き防止
       
       if (up.error) {
@@ -85,9 +85,9 @@ export async function ensureAvatarStored(
       }
       
       console.log('✅ Storage upload success:', up.data.path)
-      
-      // Public URL取得（bucketも修正）
-      const pub = supabase.storage.from("profile-images").getPublicUrl(path)
+
+      // Public URL取得（avatarsバケット）
+      const pub = supabase.storage.from("avatars").getPublicUrl(path)
       const publicUrl = pub.data.publicUrl ?? null
       
       if (!publicUrl) {
