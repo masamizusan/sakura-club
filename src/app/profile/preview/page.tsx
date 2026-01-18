@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -638,6 +638,9 @@ function ProfilePreviewContent() {
   // エラーハンドリング用の状態
   const [hasError, setHasError] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
+
+  // 🚨 未保存警告用フラグ（Option B実装）
+  const isConfirmedRef = useRef(false)
   
   // 統一言語設定
   const { t, language: currentLanguage } = useUnifiedTranslation()
@@ -733,6 +736,32 @@ function ProfilePreviewContent() {
     }
   }, [searchParams])
 
+  // 🚨 beforeunload（タブ閉じ・リロード対策）
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isConfirmedRef.current) return // 保存済みなら警告しない
+      e.preventDefault()
+      e.returnValue = '変更内容が保存されていません。このページを離れますか？'
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
+  // 🚨 popstate（ブラウザバック対策）
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (isConfirmedRef.current) return // 保存済みなら警告しない
+      const ok = window.confirm('変更内容が保存されていません。このページを離れますか？')
+      if (!ok) {
+        history.pushState(null, '', location.href)
+      }
+    }
+    // 初期履歴エントリー追加
+    history.pushState(null, '', location.href)
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   // データが読み込まれていない場合
   if (!previewData) {
     return (
@@ -810,6 +839,12 @@ function ProfilePreviewContent() {
       {/* プレビューコンテンツ */}
       <div className="py-12 px-4">
         <div className="max-w-md mx-auto">
+          {/* 🚨 未保存警告バナー（Option B実装 - 最優先） */}
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            ⚠️ この画面はまだ保存されていません。<br />
+            「この内容で確定」を押すまで、画像や変更内容はDBに保存されません。
+          </div>
+
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* プロフィール画像 - 複数画像対応 */}
             <div className="relative aspect-square bg-gray-100">
@@ -1358,7 +1393,10 @@ function ProfilePreviewContent() {
 
                       // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
                       console.log('🎯 Profile保存完了 - MyPageに遷移')
-                      
+
+                      // 🚨 保存完了フラグ設定（未保存警告を無効化）
+                      isConfirmedRef.current = true
+
                       if (window.opener) {
                         window.opener.location.href = '/mypage'
                         window.close()
