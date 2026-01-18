@@ -1207,27 +1207,42 @@ function ProfilePreviewContent() {
                         willSaveToDB: true
                       })
 
+                      // 🚨 指示書①: photo_urls取得（3枚保存の根本修正）
+                      const finalPhotoUrls = Array.isArray(photo_urls) && photo_urls.length > 0
+                        ? photo_urls
+                        : (previewData.profile_image || profileImage ? [previewData.profile_image || profileImage] : [])
+
+                      console.log("🚨 CONFIRM SAVE PAYLOAD CHECK", {
+                        finalPhotoUrlsCount: finalPhotoUrls?.length,
+                        finalPhotoUrls,
+                        avatarUrlWillBe: finalPhotoUrls?.[0],
+                        previewData_photo_urls: previewData.photo_urls,
+                        photo_urls_variable: photo_urls,
+                      })
+
                       const savePayload: any = {
                         id: user.id,
                         user_id: user.id,
                         // 基本情報
                         name: nickname || null,
-                        bio: selfIntroduction || null, 
+                        bio: selfIntroduction || null,
                         age: age ? Number(age) : null,
                         birth_date: previewData.birth_date || previewData.birthday || previewData.dob || null,
                         gender: gender || null,
                         nationality: nationality || null,
                         prefecture: prefecture || null,
                         // 🚀 CRITICAL: personality_tags必須（指示書対応）
-                        personality_tags: personality && personality.length > 0 
+                        personality_tags: personality && personality.length > 0
                           ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
                           : null,
-                        // 🚀 CRITICAL: interests必須（指示書対応）  
+                        // 🚀 CRITICAL: interests必須（指示書対応）
                         interests: hobbies && hobbies.length > 0 ? hobbies : null,
                         // 🚨 SSOT: language_skills必須DB保存（指示書対応）
                         language_skills: normalizedLanguageSkills,
+                        // 🚨 指示書①: photo_urls必須（3枚保存の根本修正）
+                        photo_urls: finalPhotoUrls.length > 0 ? finalPhotoUrls : null,
                         // 🚀 CRITICAL: avatar_url必須（指示書対応）
-                        avatar_url: previewData.profile_image || profileImage || null,
+                        avatar_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
                         // その他項目
                         occupation: occupation || null,
                         height: height || null,
@@ -1290,11 +1305,13 @@ function ProfilePreviewContent() {
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                       })
 
-                      // 🚀 Step 3: upsert直前ログ（指示書対応）
-                      console.log('🚀 PROFILE UPSERT PAYLOAD', {
+                      // 🚀 Step 3: upsert直前ログ（指示書①対応）
+                      console.log("🚨 UPSERT PAYLOAD", {
+                        photo_urls_count: Array.isArray(sanitizedPayload.photo_urls) ? sanitizedPayload.photo_urls.length : 0,
+                        photo_urls: sanitizedPayload.photo_urls,
+                        avatar_url: sanitizedPayload.avatar_url,
                         personality_tags: sanitizedPayload.personality_tags,
                         interests: sanitizedPayload.interests,
-                        avatar_url: sanitizedPayload.avatar_url,
                         payload_keys: Object.keys(sanitizedPayload),
                         residence_present: 'residence' in sanitizedPayload,
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
