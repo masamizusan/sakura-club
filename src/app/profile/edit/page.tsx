@@ -1164,14 +1164,19 @@ function ProfileEditContent() {
         localStorage.getItem('devTestMode') === 'true'
       )
       
-      // 🚨 IMAGE_DELETE_START: error boundary発火時の原因特定ログ
+      // ✅ REF基準: 削除前の画像配列を確実に取得（state依存禁止）
+      const prevImages = profileImagesRef.current ?? []
+      const prevCount = deleteInfo?.prevLength ?? prevImages.length
+      const nextCount = newImages.length
+
+      // 🚨 IMAGE_DELETE_START: error boundary発火時の原因特定ログ（REF基準）
       console.log('🚨 IMAGE_DELETE_START', {
         timestamp: new Date().toISOString(),
         isTestMode: isTestMode,
         userId: user?.id || 'undefined',
-        imagesLength: profileImages.length,
-        newImagesLength: newImages.length,
-        isDeletion: newImages.length < profileImages.length,
+        prevCount: prevCount,  // ✅ REF基準（state依存削除）
+        nextCount: nextCount,
+        isDeletionFlag: deleteInfo?.isDeletion ?? false,
         sessionAvailable: typeof sessionStorage !== 'undefined',
         windowAvailable: typeof window !== 'undefined',
         // 🔍 スタックトレース用情報
@@ -1180,12 +1185,12 @@ function ProfileEditContent() {
         hydrated: isHydrated,
         initializing: isInitializing
       })
-    
-    // 🔧 CRITICAL FIX: 削除フラグがある場合は同一判定を完全スキップ
+
+    // 🔧 CRITICAL FIX: 削除判定をREF基準で行う（state依存禁止）
     const isExplicitDeletion = deleteInfo?.isDeletion === true
-    const currentImageIds = profileImages.map(img => img.id).sort()
+    const currentImageIds = prevImages.map(img => img.id).sort()  // ✅ REF基準
     const newImageIds = newImages.map(img => img.id).sort()
-    const isDeletion = newImageIds.length < currentImageIds.length || isExplicitDeletion
+    const isDeletion = isExplicitDeletion || (nextCount < prevCount)  // ✅ 明示的な削除フラグ優先
     const isSameImageSet = currentImageIds.length === newImageIds.length && 
                           currentImageIds.every((id, index) => id === newImageIds[index])
     
@@ -1266,15 +1271,20 @@ function ProfileEditContent() {
         }
       }
     
-      // 🚨 4) 画像変更フラグ設定（破壊防止）+ 🎯 TASK4: 確実な検出保証
+      // 🚨 4) 画像変更フラグ設定（破壊防止）+ 🎯 TASK4: 確実な検出保証（REF基準）
       setDidTouchPhotos(true)
-      console.log('🎯 [TASK4] didTouchPhotos = true (画像操作検出)', {
-        operation: '追加/削除/入替',
-        previous_count: profileImages.length,
-        new_count: newImages.length,
-        is_addition: newImages.length > profileImages.length,
-        is_deletion: newImages.length < profileImages.length,
-        is_replacement: newImages.length === profileImages.length && newImages.some((img, idx) => img.id !== profileImages[idx]?.id),
+
+      // ✅ REF基準: is_addition / is_deletion の正確な判定（削除なのに追加扱い防止）
+      const isAddition = !isDeletion && (nextCount > prevCount)
+      const isDeletionFinal = isDeletion || (nextCount < prevCount)
+
+      console.log('🎯 [TASK4] didTouchPhotos = true (画像操作検出・REF基準)', {
+        operation: isAddition ? '追加' : isDeletionFinal ? '削除' : '入替',
+        previous_count: prevCount,  // ✅ REF基準
+        new_count: nextCount,
+        is_addition: isAddition,  // ✅ 削除フラグ優先で誤判定防止
+        is_deletion: isDeletionFinal,
+        is_replacement: nextCount === prevCount && newImages.some((img, idx) => img.id !== prevImages[idx]?.id),
         guarantee: 'payloadにphoto_urls配列を確実に含める'
       })
       
@@ -1436,13 +1446,12 @@ function ProfileEditContent() {
       */
       
       console.log('✅ [TASK2] アップロード中のPATCH停止完了 - 保存時のみに統一')
-    // 🌸 TASK4: 削除時の確実な状態確認
-    if (newImages.length === 0 && currentImageIds.length > 0) {
-      console.log('🗑️ 画像削除検出: state/ref/sessionStorageを完全同期', {
-        beforeDelete: currentImageIds.length,
-        afterDelete: newImages.length,
-        profileImages_state: profileImages.length,
-        profileImagesRef: profileImagesRef.current.length
+    // 🌸 TASK4: 削除時の確実な状態確認（REF基準）
+    if (nextCount === 0 && prevCount > 0) {
+      console.log('🗑️ 画像全削除検出: state/ref/sessionStorageを完全同期（REF基準）', {
+        beforeDelete: prevCount,  // ✅ REF基準
+        afterDelete: nextCount,
+        profileImagesRef_will_be: newImages.length
       })
     }
     
