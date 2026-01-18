@@ -128,9 +128,15 @@ export async function saveProfileToDb(
           payload.avatar_url = null
           console.log('🔄 avatar_url set to null (photo_urls empty)')
         }
+      } else if (Array.isArray(payload.photo_urls) && payload.photo_urls.length === 0) {
+        // 🚨 CRITICAL FIX: 空配列[]は有効な値として保持（画像全削除をDBに反映）
+        console.log('🖼️ photo_urls is empty array - will update DB to clear images')
+        payload.avatar_url = null  // avatar_urlもnullに同期
+        console.log('🔄 avatar_url set to null (photo_urls is empty array)')
       } else {
-        console.log('🖼️ photo_urls is empty or not array, excluding from payload to prevent overwrite')
-        delete payload.photo_urls  // 🚨 FIX: 空配列上書き防止 - payloadから削除
+        // undefinedやnullの場合のみpayloadから削除（意図しない上書き防止）
+        console.log('🖼️ photo_urls is undefined/null, excluding from payload to prevent overwrite')
+        delete payload.photo_urls
       }
     }
 
