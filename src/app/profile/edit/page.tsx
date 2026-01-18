@@ -1075,14 +1075,15 @@ function ProfileEditContent() {
 
   // プロフィール画像の変更を監視して完成度を再計算
   // 🌸 TASK3: profileImages state更新後に必ず完成度再計算を1回実行
-  // ✅ SSOT維持: profileImages state監視を削除（多重発火防止）
-  // setValue('profile_images')により、MAIN WATCHが変更を検知するため、この監視は不要
-  // useEffect(() => {
-  //   console.log('📝 profileImages state updated:', profileImages.length, 'images')
-  //   if (isHydrated && !isInitializing) {
-  //     updateCompletionUnified('profileImages-state-change')  // ← 削除（多重発火の原因）
-  //   }
-  // }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
+  // 🚨 CRITICAL FIX: didTouchPhotosRef=true の時のみ再計算（MyPage→Edit遷移では発火しない）
+  useEffect(() => {
+    // didTouchPhotosRef.current が true の時のみ（画像操作後のみ）
+    if (didTouchPhotosRef.current && isHydrated && !isInitializing) {
+      console.log('📝 profileImages state updated (didTouchPhotos=true):', profileImages.length, 'images')
+      console.log('🔄 画像操作後の完成度再計算を実行')
+      updateCompletionUnified('profileImages-state-change-after-touch')
+    }
+  }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
 
   // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
   const forceInitialCompletionCalculation = useCallback(() => {
@@ -1287,6 +1288,7 @@ function ProfileEditContent() {
     
       // 🚨 4) 画像変更フラグ設定（破壊防止）+ 🎯 TASK4: 確実な検出保証（REF基準）
       setDidTouchPhotos(true)
+      didTouchPhotosRef.current = true  // 🚨 CRITICAL: refも同期（完成度計算で参照）
 
       // ✅ REF基準: is_addition / is_deletion の正確な判定（削除なのに追加扱い防止）
       const isAddition = !isDeletion && (nextCount > prevCount)
