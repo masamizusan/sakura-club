@@ -183,14 +183,15 @@ const normalizeTags = (tags: any[]): string[] => {
     .filter(tag => tag.length > 0) // 空文字を再度除去
     .filter((tag, index, array) => array.indexOf(tag) === index) // 重複除去
   
-  console.log('🧹 NORMALIZE TAGS:', {
-    input: tags,
-    input_length: tags.length,
-    output: normalized,
-    output_length: normalized.length,
-    removed_count: tags.length - normalized.length,
-    duplicates_removed: tags.length - new Set(tags.filter(t => t !== null && t !== undefined && t !== '')).size
-  })
+  // 🔧 ログスパム修正: NORMALIZE TAGSログを削除（変更がある場合のみ出力）
+  const removedCount = tags.length - normalized.length
+  if (removedCount > 0) {
+    console.log('🧹 NORMALIZE TAGS: 変更あり', {
+      input_length: tags.length,
+      output_length: normalized.length,
+      removed_count: removedCount
+    })
+  }
   
   return normalized
 }
@@ -861,11 +862,23 @@ function ProfileEditContent() {
       }
       
       // 🔥 Task A修正: DBのavatar_urlから画像補完（MyPage→Edit 100%維持）
+      // 🚨 CRITICAL FIX: didTouchPhotos=true の時は補完を完全無効化（画像削除が正しく反映されるように）
+      if (didTouchPhotosRef.current === true) {
+        console.log('🚫 avatar_url補完スキップ: didTouchPhotos=true（画像操作後は編集中の配列を信頼）', {
+          didTouchPhotosRef: didTouchPhotosRef.current,
+          profileImagesRef_length: profileImagesRef.current.length,
+          reason: '画像削除後に0枚を正しく検出するため'
+        })
+        // 補完しない → 空配列を返す
+        return []
+      }
+
       if (typeof dbProfile?.avatar_url === "string" && dbProfile.avatar_url.trim().length > 0) {
         console.log('🛡️ 画像補完: DBのavatar_urlから画像データ生成', {
           avatar_url_preview: dbProfile.avatar_url.substring(0, 30) + '...',
           avatar_url_type: typeof dbProfile.avatar_url,
-          补完_reason: 'MyPage→Edit完成度100%維持のため',
+          补完_reason: 'MyPage→Edit完成度100%維持のため（didTouchPhotos=false時のみ）',
+          didTouchPhotosRef: didTouchPhotosRef.current,
           data_uri_ok: true,
           storage_path_ok: true
         })
@@ -1147,9 +1160,10 @@ function ProfileEditContent() {
   // 削除された古いコード（305-519行目）は正常に削除されました
   // 写真変更フラグ（デバウンス計算との競合を避けるため）
   const [isImageChanging, setIsImageChanging] = useState(false)
-  
+
   // 🚨 4) didTouchPhotosフラグ（破壊防止の最短手）
   const [didTouchPhotos, setDidTouchPhotos] = useState(false)
+  const didTouchPhotosRef = useRef(false)  // ✅ 完成度計算からの参照用ref
   
   // 写真変更時のコールバック関数
   const handleImagesChange = useCallback(async (
