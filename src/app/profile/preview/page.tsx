@@ -1230,7 +1230,7 @@ function ProfilePreviewContent() {
                         birth_date: previewData.birth_date || previewData.birthday || previewData.dob || null,
                         gender: gender || null,
                         nationality: nationality || null,
-                        prefecture: prefecture || null,
+                        residence: prefecture || null,  // 🚨 FIX: DBカラム名はresidence
                         // 🚀 CRITICAL: personality_tags必須（指示書対応）
                         personality_tags: personality && personality.length > 0
                           ? personality.filter((p: string) => p && p.trim()).map((p: string) => p.trim())
