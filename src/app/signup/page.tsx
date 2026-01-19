@@ -250,6 +250,10 @@ export default function SignupPage() {
       } else {
         console.log('Direct login successful, redirecting to profile edit')
         // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
+        // 🚨 FIX: サインアップ時のemailをsessionStorageに保存（プロフィール作成時に使用）
+        sessionStorage.setItem('sc_signup_email', data.email)
+        console.log('📧 サインアップemail保存:', data.email)
+
         const profileParams = new URLSearchParams({
           type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
           nickname: data.nickname,
@@ -278,6 +282,10 @@ export default function SignupPage() {
         const age = calculateAge(data.birth_date)
         
         // プロフィール編集画面に直接遷移（開発テストモード有効）
+        // 🚨 FIX: サインアップ時のemailをsessionStorageに保存（プロフィール作成時に使用）
+        sessionStorage.setItem('sc_signup_email', data.email)
+        console.log('📧 サインアップemail保存（エラー時）:', data.email)
+
         const profileParams = new URLSearchParams({
           type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
           nickname: data.nickname,
@@ -288,7 +296,7 @@ export default function SignupPage() {
           prefecture: data.prefecture,
           devTest: 'true' // 開発テストモードを有効化
         })
-        
+
         // localStorage にも開発テストモードを設定
         localStorage.setItem('devTestMode', 'true')
         

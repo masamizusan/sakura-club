@@ -100,18 +100,30 @@ export async function ensureProfileForUserSafe(
         hasEmail: !!existingProfile.email
       })
 
-      // 🚨 FIX: 既存プロフィールのemailがnullの場合はプレースホルダーで更新
+      // 🚨 FIX: 既存プロフィールのemailがnullの場合は更新
+      // 優先順位: sessionStorage(サインアップ時のemail) > user.email > プレースホルダー
       if (!existingProfile.email) {
-        const placeholderEmail = user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
+        let signupEmail: string | null = null
+        if (typeof window !== 'undefined') {
+          signupEmail = sessionStorage.getItem('sc_signup_email')
+          if (signupEmail) {
+            // 使用後は削除（一度だけ使用）
+            sessionStorage.removeItem('sc_signup_email')
+            console.log('📧 sessionStorageからサインアップemail取得:', signupEmail)
+          }
+        }
+        const finalEmail = signupEmail || user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
         console.log('📧 既存プロフィールのemail更新:', {
           profileId: existingProfile.id,
           oldEmail: existingProfile.email,
-          newEmail: placeholderEmail
+          signupEmail,
+          userEmail: user.email,
+          finalEmail
         })
 
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
-          .update({ email: placeholderEmail })
+          .update({ email: finalEmail })
           .eq('id', existingProfile.id)
           .select('*')
           .single()
@@ -189,6 +201,12 @@ export async function ensureProfileForUserSafe(
     const testMode = isTestMode()
     if (testMode) {
       console.log('🧪 テストモード検出 - API経由でプロフィール作成を試行')
+      // 🚨 FIX: sessionStorageからサインアップemailを取得してAPIに渡す
+      let apiSignupEmail: string | null = null
+      if (typeof window !== 'undefined') {
+        apiSignupEmail = sessionStorage.getItem('sc_signup_email')
+        console.log('📧 API呼び出し用email取得:', apiSignupEmail || 'なし')
+      }
       try {
         const apiResponse = await fetch('/api/ensure-profile', {
           method: 'POST',
@@ -197,7 +215,7 @@ export async function ensureProfileForUserSafe(
           },
           body: JSON.stringify({
             userId: user.id,
-            email: user.email,
+            email: apiSignupEmail || user.email, // サインアップemailを優先
             isTestMode: true
           })
         })
@@ -222,17 +240,27 @@ export async function ensureProfileForUserSafe(
     }
 
     // 4-2. 🛡️ 統一パイプライン経由でのプロフィール作成（Base64遮断保証）
-    // 🚨 FIX: テストモード（匿名ユーザー）の場合はプレースホルダーemailを設定
-    const placeholderEmail = user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
+    // 🚨 FIX: サインアップ時のemailを優先、なければプレースホルダー
+    let signupEmail: string | null = null
+    if (typeof window !== 'undefined') {
+      signupEmail = sessionStorage.getItem('sc_signup_email')
+      if (signupEmail) {
+        // 使用後は削除（一度だけ使用）
+        sessionStorage.removeItem('sc_signup_email')
+        console.log('📧 sessionStorageからサインアップemail取得（新規作成）:', signupEmail)
+      }
+    }
+    const profileEmail = signupEmail || user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
     console.log('📧 Profile email設定:', {
+      signupEmail,
       hasUserEmail: !!user.email,
       isTestMode: testMode,
-      finalEmail: placeholderEmail
+      finalEmail: profileEmail
     })
 
     const newProfileData = {
       user_id: user.id,
-      email: placeholderEmail,
+      email: profileEmail,
       created_at: new Date().toISOString(),
       // 最小限の初期値（UIバリデーションと整合）
       name: null,

@@ -70,18 +70,20 @@ export async function POST(request: NextRequest) {
         hasEmail: !!existingProfile.email
       })
 
-      // 🚨 FIX: 既存プロフィールのemailがnullの場合はプレースホルダーで更新
+      // 🚨 FIX: 既存プロフィールのemailがnullの場合は更新
+      // 優先順位: クライアントから渡されたemail(サインアップ時のemail) > プレースホルダー
       if (!existingProfile.email) {
-        const placeholderEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
+        const finalEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
         console.log('📧 API: 既存プロフィールのemail更新:', {
           profileId: existingProfile.id,
           oldEmail: existingProfile.email,
-          newEmail: placeholderEmail
+          signupEmail: email || 'なし',
+          finalEmail
         })
 
         const { data: updatedProfile, error: updateError } = await supabaseServiceRole
           .from('profiles')
-          .update({ email: placeholderEmail })
+          .update({ email: finalEmail })
           .eq('id', existingProfile.id)
           .select('*')
           .single()
@@ -146,17 +148,17 @@ export async function POST(request: NextRequest) {
     // 4. 新規プロフィール作成（Service Roleでの確実な作成）
     console.log('🆕 ensureProfile API: Creating new profile with service role')
 
-    // 🚨 FIX: テストモード（匿名ユーザー）の場合はプレースホルダーemailを設定
-    const placeholderEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
+    // 🚨 FIX: サインアップ時のemailを優先、なければプレースホルダー
+    const profileEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
     console.log('📧 API Profile email設定:', {
-      hasEmail: !!email,
+      signupEmail: email || 'なし',
       isTestMode,
-      finalEmail: placeholderEmail
+      finalEmail: profileEmail
     })
 
     const newProfileData = {
       user_id: userId,
-      email: placeholderEmail,
+      email: profileEmail,
       created_at: new Date().toISOString(),
       // テストモード識別
       name: isTestMode ? null : null,
