@@ -184,9 +184,17 @@ export async function ensureProfileForUserSafe(
     }
 
     // 4-2. 🛡️ 統一パイプライン経由でのプロフィール作成（Base64遮断保証）
+    // 🚨 FIX: テストモード（匿名ユーザー）の場合はプレースホルダーemailを設定
+    const placeholderEmail = user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
+    console.log('📧 Profile email設定:', {
+      hasUserEmail: !!user.email,
+      isTestMode: testMode,
+      finalEmail: placeholderEmail
+    })
+
     const newProfileData = {
       user_id: user.id,
-      email: user.email,
+      email: placeholderEmail,
       created_at: new Date().toISOString(),
       // 最小限の初期値（UIバリデーションと整合）
       name: null,

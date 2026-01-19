@@ -108,10 +108,18 @@ export async function POST(request: NextRequest) {
 
     // 4. 新規プロフィール作成（Service Roleでの確実な作成）
     console.log('🆕 ensureProfile API: Creating new profile with service role')
-    
+
+    // 🚨 FIX: テストモード（匿名ユーザー）の場合はプレースホルダーemailを設定
+    const placeholderEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
+    console.log('📧 API Profile email設定:', {
+      hasEmail: !!email,
+      isTestMode,
+      finalEmail: placeholderEmail
+    })
+
     const newProfileData = {
       user_id: userId,
-      email: email,
+      email: placeholderEmail,
       created_at: new Date().toISOString(),
       // テストモード識別
       name: isTestMode ? null : null,
