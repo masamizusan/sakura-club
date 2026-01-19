@@ -91,13 +91,51 @@ export async function ensureProfileForUserSafe(
       }
     }
 
-    // 2. プロフィールが既に存在する場合はそれを返す
+    // 2. プロフィールが既に存在する場合
     if (existingProfile) {
       console.log('✅ ensureProfileForUser: Profile found', {
         profileId: existingProfile.id,
         userId: existingProfile.user_id,
-        hasName: !!existingProfile.name
+        hasName: !!existingProfile.name,
+        hasEmail: !!existingProfile.email
       })
+
+      // 🚨 FIX: 既存プロフィールのemailがnullの場合はプレースホルダーで更新
+      if (!existingProfile.email) {
+        const placeholderEmail = user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
+        console.log('📧 既存プロフィールのemail更新:', {
+          profileId: existingProfile.id,
+          oldEmail: existingProfile.email,
+          newEmail: placeholderEmail
+        })
+
+        const { data: updatedProfile, error: updateError } = await supabase
+          .from('profiles')
+          .update({ email: placeholderEmail })
+          .eq('id', existingProfile.id)
+          .select('*')
+          .single()
+
+        if (updateError) {
+          console.warn('⚠️ email更新失敗（続行可能）:', updateError)
+          // 更新失敗でも既存プロフィールを返す
+          return {
+            success: true,
+            profile: existingProfile,
+            reason: 'Profile found (email update failed)',
+            canContinue: true
+          }
+        }
+
+        console.log('✅ 既存プロフィールのemail更新成功')
+        return {
+          success: true,
+          profile: updatedProfile,
+          reason: 'Profile found and email updated',
+          canContinue: true
+        }
+      }
+
       return {
         success: true,
         profile: existingProfile,

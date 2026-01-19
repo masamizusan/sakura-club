@@ -63,9 +63,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2. 既存プロフィールがある場合はそれを返す
+    // 2. 既存プロフィールがある場合
     if (existingProfile) {
-      console.log('✅ ensureProfile API: Profile already exists')
+      console.log('✅ ensureProfile API: Profile already exists', {
+        profileId: existingProfile.id,
+        hasEmail: !!existingProfile.email
+      })
+
+      // 🚨 FIX: 既存プロフィールのemailがnullの場合はプレースホルダーで更新
+      if (!existingProfile.email) {
+        const placeholderEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
+        console.log('📧 API: 既存プロフィールのemail更新:', {
+          profileId: existingProfile.id,
+          oldEmail: existingProfile.email,
+          newEmail: placeholderEmail
+        })
+
+        const { data: updatedProfile, error: updateError } = await supabaseServiceRole
+          .from('profiles')
+          .update({ email: placeholderEmail })
+          .eq('id', existingProfile.id)
+          .select('*')
+          .single()
+
+        if (updateError) {
+          console.warn('⚠️ API: email更新失敗（続行可能）:', updateError)
+          return NextResponse.json({
+            success: true,
+            profile: existingProfile,
+            reason: 'Profile already exists (email update failed)'
+          })
+        }
+
+        console.log('✅ API: 既存プロフィールのemail更新成功')
+        return NextResponse.json({
+          success: true,
+          profile: updatedProfile,
+          reason: 'Profile exists and email updated'
+        })
+      }
+
       return NextResponse.json({
         success: true,
         profile: existingProfile,
