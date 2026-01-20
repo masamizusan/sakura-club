@@ -861,7 +861,7 @@ function ProfileEditContent() {
         return formImages
       }
       
-      // 🔥 Task A修正: DBのavatar_urlから画像補完（MyPage→Edit 100%維持）
+      // 🔥 Task A修正: DBのavatar_urlから画像補完（条件付き抑制版）
       // 🚨 CRITICAL FIX: didTouchPhotos=true の時は補完を完全無効化（画像削除が正しく反映されるように）
       if (didTouchPhotosRef.current === true) {
         console.log('🚫 avatar_url補完スキップ: didTouchPhotos=true（画像操作後は編集中の配列を信頼）', {
@@ -873,14 +873,43 @@ function ProfileEditContent() {
         return []
       }
 
-      if (typeof dbProfile?.avatar_url === "string" && dbProfile.avatar_url.trim().length > 0) {
-        console.log('🛡️ 画像補完: DBのavatar_urlから画像データ生成', {
+      // 🔥 TASK A追加: photo_urlsが明示的に空配列の場合は補完しない
+      // （ユーザーが0枚で保存した意図を尊重）
+      const dbPhotoUrls = dbProfile?.photo_urls
+      if (Array.isArray(dbPhotoUrls) && dbPhotoUrls.length === 0) {
+        console.log('🚫 avatar_url補完スキップ: photo_urls=[]（0枚保存を尊重）', {
+          photo_urls: dbPhotoUrls,
+          avatar_url: dbProfile?.avatar_url ? 'exists' : 'null',
+          reason: 'DBにphoto_urls=[]が明示的に保存されている'
+        })
+        return []
+      }
+
+      // 🔥 TASK A追加: photo_urlsに有効なURLがある場合はそれを使用
+      if (Array.isArray(dbPhotoUrls) && dbPhotoUrls.length > 0 && dbPhotoUrls.some((url: any) => url && typeof url === 'string' && url.trim() !== '')) {
+        console.log('🖼️ 画像ソース決定: DBのphoto_urlsを使用', {
+          photo_urls_count: dbPhotoUrls.length,
+          source: 'db_photo_urls'
+        })
+        return dbPhotoUrls
+          .filter((url: any) => url && typeof url === 'string' && url.trim() !== '')
+          .slice(0, 3)
+          .map((url: string, index: number) => ({
+            id: `db_photo_${index}`,
+            url: url,
+            originalUrl: url,
+            isMain: index === 0,
+            isEdited: false
+          }))
+      }
+
+      // 🔧 最後の保険: avatar_urlがあり、photo_urlsがnull/undefinedの場合のみ補完（互換性維持）
+      if (typeof dbProfile?.avatar_url === "string" && dbProfile.avatar_url.trim().length > 0 && !Array.isArray(dbPhotoUrls)) {
+        console.log('🛡️ 画像補完: DBのavatar_urlから画像データ生成（photo_urls=null時のみ）', {
           avatar_url_preview: dbProfile.avatar_url.substring(0, 30) + '...',
-          avatar_url_type: typeof dbProfile.avatar_url,
-          补完_reason: 'MyPage→Edit完成度100%維持のため（didTouchPhotos=false時のみ）',
-          didTouchPhotosRef: didTouchPhotosRef.current,
-          data_uri_ok: true,
-          storage_path_ok: true
+          photo_urls_status: dbPhotoUrls === null ? 'null' : dbPhotoUrls === undefined ? 'undefined' : 'other',
+          补完_reason: 'photo_urlsがnull/undefinedの旧データ互換性維持',
+          didTouchPhotosRef: didTouchPhotosRef.current
         })
         return [{
           id: 'db-avatar',
@@ -1085,21 +1114,27 @@ function ProfileEditContent() {
     }
   }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
 
-  // 🔧 CRITICAL: 初期化完了後の強制計算関数（isInitializingガード無視）
+  // 🔧 CRITICAL: 初期化完了後の強制計算関数
+  // 🔥 TASK B修正: refを使用してスキップノイズを解消
   const forceInitialCompletionCalculation = useCallback(() => {
     console.log('🔥 forceInitialCompletionCalculation start')
-    
-    // 🔧 修正2: 実行条件を厳密化（35%問題解決）
-    if (isInitializing) {
-      console.log('⏸️ forceInitialCompletionCalculation: skipped - isInitializing=true')
+
+    // 🔧 TASK B: refを使用（stateは非同期更新なのでタイミング問題あり）
+    // initializingRef.current を使うことで、setTimeoutからの呼び出しでも正確に判定できる
+    const isStillInitializing = initializingRef.current
+
+    console.log('🔍 forceInitialCompletionCalculation: 状態チェック', {
+      initializingRef_current: isStillInitializing,
+      isInitializing_state: isInitializing,
+      isHydrated_state: isHydrated
+    })
+
+    // refがtrueの場合のみスキップ（stateではなくrefを信頼）
+    if (isStillInitializing) {
+      console.log('⏸️ forceInitialCompletionCalculation: skipped - initializingRef=true')
       return
     }
-    
-    if (!isHydrated) {
-      console.log('⏸️ forceInitialCompletionCalculation: skipped - isHydrated=false')
-      return
-    }
-    
+
     console.log('✅ forceInitialCompletionCalculation: 実行条件満たした')
     
     try {
@@ -4717,11 +4752,12 @@ function ProfileEditContent() {
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
         // 🚨 ✅ TASK1 FIXED: 常にphoto_urls全配列を保存（条件付き除去を廃止）
+        // 🔥 TASK C: 0枚保存時は空配列を確実にDBに保存
         photo_urls: (() => {
           console.log('🚨 [TASK1] photo_urls保存処理開始 - 3枚URL保存確保（無条件）')
-          
+
           // 🎯 FIXED: 直接profileImagesから全てのURLを配列として構築
-          const safePhotoUrls = Array.isArray(profileImages) 
+          const safePhotoUrls = Array.isArray(profileImages)
             ? profileImages
                 .map((img, index) => {
                   // 新規アップロード済みURLがあれば優先、なければ既存URL使用
@@ -4737,30 +4773,48 @@ function ProfileEditContent() {
                 .filter(url => url && typeof url === 'string' && !url.startsWith('blob:') && !url.startsWith('data:'))
                 .map(url => String(url)) // 🛡️ 型安全性保証
             : []
-          
+
+          // 🔥 TASK C: 0枚保存の明示的ログ
+          if (safePhotoUrls.length === 0) {
+            console.log('📸 [TASK C] 0枚保存検出 - photo_urls=[]をDBに保存:', {
+              profileImages_count: profileImages.length,
+              uploadedImageUrls_count: uploadedImageUrls.length,
+              final_result: '空配列[]',
+              db_effect: 'photo_urls=[], avatar_url=null で保存される'
+            })
+          }
+
           console.log('🚨 [TASK1] 最終photo_urls配列確定:', {
             original_profileImages_count: profileImages.length,
             uploadedImageUrls_count: uploadedImageUrls.length,
             uploadedImageUrls_preview: uploadedImageUrls.map(url => url.substring(0, 40) + '...'),
             final_safePhotoUrls_count: safePhotoUrls.length,
             safePhotoUrls_full: safePhotoUrls,
-            expected_result: '3枚アップ時は[url1,url2,url3]として保存される'
+            expected_result: safePhotoUrls.length === 0
+              ? '0枚 → photo_urls=[] として保存'
+              : `${safePhotoUrls.length}枚アップ時は[url1,...] として保存される`
           })
-          
+
           return safePhotoUrls
         })(),
         // 🚨 A. avatar_url = photo_urls[0] 同期（簡素化版）
+        // 🔥 TASK C: 0枚保存時はavatar_url=null を確実に保存
         avatar_url: (() => {
           // 🎯 FIXED: photo_urlsと同じロジックで[0]を取得
-          const firstImageUrl = profileImages[0] 
+          const firstImageUrl = profileImages[0]
             ? (uploadedImageUrls[0] || profileImages[0].url || profileImages[0].originalUrl)
             : null
-            
+
           if (!firstImageUrl || firstImageUrl.startsWith('blob:') || firstImageUrl.startsWith('data:')) {
-            console.log('🚨 [TASK1] avatar_url: null (有効な画像なし)')
+            console.log('📸 [TASK C] avatar_url: null (有効な画像なし)', {
+              profileImages_length: profileImages.length,
+              firstImageUrl: firstImageUrl || 'null',
+              reason: firstImageUrl?.startsWith('blob:') ? 'blob:スキップ' :
+                      firstImageUrl?.startsWith('data:') ? 'data:スキップ' : '画像なし'
+            })
             return null
           }
-          
+
           console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
           return firstImageUrl
         })(),

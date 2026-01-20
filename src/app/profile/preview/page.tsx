@@ -1207,17 +1207,33 @@ function ProfilePreviewContent() {
                         willSaveToDB: true
                       })
 
-                      // 🚨 指示書①: photo_urls取得（3枚保存の根本修正）
-                      const finalPhotoUrls = Array.isArray(photo_urls) && photo_urls.length > 0
-                        ? photo_urls
-                        : (previewData.profile_image || profileImage ? [previewData.profile_image || profileImage] : [])
+                      // 🚨 TASK C: photo_urls取得（0枚保存対応版）
+                      // 🔥 修正: photo_urlsが空配列の場合はフォールバックしない（0枚保存を尊重）
+                      let finalPhotoUrls: string[] = []
+                      if (Array.isArray(photo_urls) && photo_urls.length > 0) {
+                        // photo_urlsに有効な値がある
+                        finalPhotoUrls = photo_urls
+                        console.log('📸 TASK C: photo_urlsから画像使用:', photo_urls.length, '枚')
+                      } else if (Array.isArray(photo_urls) && photo_urls.length === 0) {
+                        // photo_urlsが明示的に空配列 → 0枚保存（フォールバックしない）
+                        finalPhotoUrls = []
+                        console.log('📸 TASK C: 0枚保存を検出 - photo_urls=[]')
+                      } else if (previewData.profile_image || profileImage) {
+                        // photo_urlsがない場合のみ後方互換フォールバック
+                        finalPhotoUrls = [previewData.profile_image || profileImage]
+                        console.log('📸 TASK C: 後方互換フォールバック - profile_image使用')
+                      }
 
-                      console.log("🚨 CONFIRM SAVE PAYLOAD CHECK", {
+                      console.log("🚨 TASK C: CONFIRM SAVE PAYLOAD CHECK", {
                         finalPhotoUrlsCount: finalPhotoUrls?.length,
                         finalPhotoUrls,
-                        avatarUrlWillBe: finalPhotoUrls?.[0],
+                        avatarUrlWillBe: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
                         previewData_photo_urls: previewData.photo_urls,
                         photo_urls_variable: photo_urls,
+                        photo_urls_isArray: Array.isArray(photo_urls),
+                        photo_urls_isEmpty: Array.isArray(photo_urls) && photo_urls.length === 0,
+                        willSavePhotoUrlsAsNull: finalPhotoUrls.length === 0,
+                        willSaveAvatarUrlAsNull: finalPhotoUrls.length === 0
                       })
 
                       const savePayload: any = {
