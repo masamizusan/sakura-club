@@ -1,15 +1,86 @@
 /**
  * 🛡️ saveProfileToDb - profiles書き込み統一パイプライン（指示書準拠）
- * 
+ *
  * 目的: 全てのprofiles書き込みを1箇所に集約し、Base64のDB混入を完全阻止
- * 
+ *
  * 必須処理順序:
  * 1. payload.avatar_url = await ensureAvatarStored(...)
  * 2. blockBase64FromDB(payload)（ここで data:image/ が残ってたら throw）
  * 3. DB書き込み（insert/update/upsert）
+ * 4. 🆕 TASK D: 削除された画像をStorageから掃除（差分削除）
  */
 
 import { ensureAvatarStored, blockBase64FromDB } from '@/utils/ensureAvatarStored'
+
+/**
+ * 🗑️ TASK D: Storage URL から path を抽出
+ * URL例: https://xxx.supabase.co/storage/v1/object/public/avatars/<userId>/photo_xxx.jpg
+ * → path: <userId>/photo_xxx.jpg
+ */
+function extractStoragePath(url: string): string | null {
+  if (!url || typeof url !== 'string') return null
+
+  // avatars バケットのパスを抽出
+  const match = url.match(/\/storage\/v1\/object\/public\/avatars\/(.+)$/)
+  if (match && match[1]) {
+    return match[1]
+  }
+  return null
+}
+
+/**
+ * 🗑️ TASK D: 削除された画像をStorageから掃除（差分削除）
+ *
+ * @param supabase - Supabaseクライアント
+ * @param prevUrls - DB保存前のphoto_urls
+ * @param nextUrls - DB保存後のphoto_urls
+ */
+async function cleanupRemovedImages(
+  supabase: any,
+  prevUrls: string[],
+  nextUrls: string[]
+): Promise<void> {
+  // 削除対象 = prev - next
+  const removedUrls = prevUrls.filter(url => !nextUrls.includes(url))
+
+  if (removedUrls.length === 0) {
+    console.log('🗑️ TASK D: 削除対象なし')
+    return
+  }
+
+  console.log('🗑️ TASK D: Storage掃除開始', {
+    prevCount: prevUrls.length,
+    nextCount: nextUrls.length,
+    removedCount: removedUrls.length,
+    removedUrls: removedUrls.map(u => u.substring(0, 60) + '...')
+  })
+
+  // URL → Storage path に変換
+  const paths = removedUrls
+    .map(url => extractStoragePath(url))
+    .filter((path): path is string => path !== null)
+
+  if (paths.length === 0) {
+    console.log('🗑️ TASK D: 有効なStorage pathなし（外部URLの可能性）')
+    return
+  }
+
+  console.log('🗑️ TASK D: 削除対象パス', paths)
+
+  try {
+    const { error } = await supabase.storage.from('avatars').remove(paths)
+
+    if (error) {
+      // Storage削除失敗はログのみ（DBは既に成功しているため）
+      console.error('⚠️ TASK D: Storage削除エラー（DB保存は成功）', error)
+    } else {
+      console.log('✅ TASK D: Storage掃除完了', { deletedPaths: paths })
+    }
+  } catch (err) {
+    // 例外もログのみ（DBは既に成功しているため）
+    console.error('⚠️ TASK D: Storage削除例外（DB保存は成功）', err)
+  }
+}
 
 export interface ProfileDbOperation {
   operation: 'insert' | 'update' | 'upsert'
@@ -53,6 +124,29 @@ export async function saveProfileToDb(
     hasPhotoUrls: !!payload.photo_urls,
     entryPoint
   })
+
+  // 🗑️ TASK D: 差分削除用に現在のphoto_urlsを取得
+  let prevPhotoUrls: string[] = []
+
+  try {
+    // photo_urlsが更新される場合のみ、現在値を取得
+    if (payload.photo_urls !== undefined) {
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('photo_urls')
+        .eq('id', userId)
+        .single()
+
+      prevPhotoUrls = Array.isArray(currentProfile?.photo_urls) ? currentProfile.photo_urls : []
+      console.log('🗑️ TASK D: 現在のphoto_urls取得', {
+        count: prevPhotoUrls.length,
+        urls: prevPhotoUrls.map((u: string) => u?.substring(0, 50) + '...')
+      })
+    }
+  } catch (fetchErr) {
+    // 取得失敗しても保存は続行（新規ユーザーの場合など）
+    console.log('🗑️ TASK D: 現在のphoto_urls取得スキップ（新規または取得エラー）')
+  }
 
   try {
     // 1. avatar_url処理 - ensureAvatarStored で確実に変換
@@ -209,6 +303,15 @@ export async function saveProfileToDb(
       entryPoint,
       recordCount: dbResult.data?.length || 0
     })
+
+    // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）
+    if (payload.photo_urls !== undefined && prevPhotoUrls.length > 0) {
+      const nextPhotoUrls = Array.isArray(payload.photo_urls) ? payload.photo_urls : []
+      // 非同期で実行（保存結果を待たない）
+      cleanupRemovedImages(supabase, prevPhotoUrls, nextPhotoUrls).catch(err => {
+        console.error('⚠️ TASK D: Storage掃除バックグラウンドエラー', err)
+      })
+    }
 
     return {
       success: true,
