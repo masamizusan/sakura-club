@@ -1232,7 +1232,8 @@ function ProfilePreviewContent() {
                         photo_urls_variable: photo_urls,
                         photo_urls_isArray: Array.isArray(photo_urls),
                         photo_urls_isEmpty: Array.isArray(photo_urls) && photo_urls.length === 0,
-                        willSavePhotoUrlsAsNull: finalPhotoUrls.length === 0,
+                        // 🔥 TASK C: 0枚時は空配列[]を送信（nullではない）
+                        willSavePhotoUrlsAs: finalPhotoUrls.length === 0 ? '[] (empty array)' : `[${finalPhotoUrls.length} urls]`,
                         willSaveAvatarUrlAsNull: finalPhotoUrls.length === 0
                       })
 
@@ -1255,8 +1256,9 @@ function ProfilePreviewContent() {
                         interests: hobbies && hobbies.length > 0 ? hobbies : null,
                         // 🚨 SSOT: language_skills必須DB保存（指示書対応）
                         language_skills: normalizedLanguageSkills,
-                        // 🚨 指示書①: photo_urls必須（3枚保存の根本修正）
-                        photo_urls: finalPhotoUrls.length > 0 ? finalPhotoUrls : null,
+                        // 🚨 TASK C FIX: photo_urls必須（0枚保存時は空配列[]を確実にDBに送信）
+                        // 🔥 修正: nullではなく空配列[]を送信することで、saveProfileToDbで正しく処理される
+                        photo_urls: finalPhotoUrls, // 0枚=[], N枚=[url1,...urlN]
                         // 🚀 CRITICAL: avatar_url必須（指示書対応）
                         avatar_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
                         // その他項目
