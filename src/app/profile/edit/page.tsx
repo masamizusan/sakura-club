@@ -4746,9 +4746,8 @@ function ProfileEditContent() {
         english_level: null,
         bio: data.self_introduction,   // 🔧 修正: self_introduction → bio
         interests: consolidatedInterests,
-        // 🚨 CRITICAL: personality を無条件でSupabaseに保存（唯一の真実化）
-        personality: personalityTags,      // 🆕 personality フィールドも無条件保存
         // ✅ Triple-save機能復旧（personality/culture分離）+ NULL禁止保証
+        // 注意: personality カラムはDBに存在しない。personality_tags のみ使用
         personality_tags: personalityTags,  // 必ず配列（[]またはデータ）として保存
         culture_tags: cultureTags,         // 必ず配列（[]またはデータ）として保存
         // 🚨 ✅ TASK1 FIXED: 常にphoto_urls全配列を保存（条件付き除去を廃止）
@@ -4877,18 +4876,15 @@ function ProfileEditContent() {
       // 🔍 NOTE: personality_tags/culture_tagsは既にnormalizeTextArray()で正規化済み
       // updateDataに設定された値は必ずstring[]または[]（null/undefined絶対なし）
       
-      // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality値
-      console.log('🗄️ SUPABASE PERSONALITY UNCONDITIONAL SAVE:', {
-        updateData_personality: updateData.personality,
+      // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality_tags値
+      console.log('🗄️ SUPABASE PERSONALITY_TAGS SAVE:', {
         updateData_personality_tags: updateData.personality_tags,
-        both_fields_identical: JSON.stringify(updateData.personality) === JSON.stringify(updateData.personality_tags),
-        personality_type: typeof updateData.personality,
-        personality_isArray: Array.isArray(updateData.personality),
-        personality_length: updateData.personality?.length || 0,
-        UNCONDITIONAL_SAVE_VERIFICATION: {
-          personality_field: 'ALWAYS included in payload',
+        personality_tags_type: typeof updateData.personality_tags,
+        personality_tags_isArray: Array.isArray(updateData.personality_tags),
+        personality_tags_length: updateData.personality_tags?.length || 0,
+        SAVE_VERIFICATION: {
           personality_tags_field: 'ALWAYS included in payload',
-          empty_array_handling: Array.isArray(updateData.personality) && updateData.personality.length === 0 ? 'WILL CLEAR DB' : 'WILL UPDATE DB'
+          empty_array_handling: Array.isArray(updateData.personality_tags) && updateData.personality_tags.length === 0 ? 'WILL CLEAR DB' : 'WILL UPDATE DB'
         }
       })
 
