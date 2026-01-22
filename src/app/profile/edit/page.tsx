@@ -4377,31 +4377,40 @@ function ProfileEditContent() {
       })
 
       // 🚨 [NETWORK CULPRIT DETECTION] アップロードリクエスト数予測
-      const blobImages = profileImages.filter(img => img.url && img.url.startsWith('blob:'))
+      // 🔧 FIX: blob: と data:image (base64) の両方をアップロード対象にする
+      const needsUploadImages = profileImages.filter(img =>
+        img.url && (img.url.startsWith('blob:') || img.url.startsWith('data:image'))
+      )
       console.log('🚨 [NETWORK CULPRIT] アップロード対象画像数:', {
         total_images: profileImages.length,
-        new_upload_required: blobImages.length,
-        expected_storage_requests: blobImages.length,
-        prediction: `${blobImages.length}ファイル = ${blobImages.length}リクエスト予定`
+        new_upload_required: needsUploadImages.length,
+        blob_count: profileImages.filter(img => img.url?.startsWith('blob:')).length,
+        base64_count: profileImages.filter(img => img.url?.startsWith('data:image')).length,
+        expected_storage_requests: needsUploadImages.length,
+        prediction: `${needsUploadImages.length}ファイル = ${needsUploadImages.length}リクエスト予定`
       })
-      
+
       let actualStorageRequests = 0 // リクエスト数カウンター
 
       for (const image of profileImages) {
-        // 新規アップロード（blob:で始まる画像）かどうかをチェック
-        if (image.url && image.url.startsWith('blob:')) {
+        // 🔧 FIX: blob: または data:image (base64) はアップロードが必要
+        const needsUpload = image.url && (image.url.startsWith('blob:') || image.url.startsWith('data:image'))
+        if (needsUpload) {
           try {
             // 🚨 [NETWORK CULPRIT] リクエスト番号を記録
             actualStorageRequests++
+            const isBase64 = image.url.startsWith('data:image')
             console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} START:`, {
               image_id: image.id,
               request_number: actualStorageRequests,
-              total_expected: blobImages.length,
+              total_expected: needsUploadImages.length,
+              url_type: isBase64 ? 'base64' : 'blob',
               url_preview: image.url.substring(0, 50) + '...'
             })
-            
-            console.log('📤 新規画像アップロード開始:', image.id)
-            // Blob URLから実際のファイルを取得
+
+            console.log('📤 新規画像アップロード開始:', image.id, isBase64 ? '(base64)' : '(blob)')
+            // 🔧 FIX: Blob URL と Base64 Data URL の両方を処理
+            // fetch() は data: URL も blob: URL も処理可能
             const response = await fetch(image.url)
             const blob = await response.blob()
             
@@ -4490,19 +4499,24 @@ function ProfileEditContent() {
             throw uploadError
           }
         } else {
-          // 既存の画像URLをそのまま使用（Supabase StorageのURL等）
+          // 既存のStorage URL（https://...）をそのまま使用
           const existingUrl = image.url || image.originalUrl
-          if (existingUrl && !existingUrl.startsWith('blob:')) {
+          // 🔧 FIX: blob:とdata:image以外（=Storage URL）のみ追加
+          const isValidStorageUrl = existingUrl &&
+            !existingUrl.startsWith('blob:') &&
+            !existingUrl.startsWith('data:image')
+          if (isValidStorageUrl) {
             uploadedImageUrls.push(existingUrl)
-            console.log('✅ 既存画像URL追加:', {
+            console.log('✅ 既存Storage URL追加:', {
               imageId: image.id,
               url: existingUrl.substring(0, 60) + '...'
             })
           } else {
-            console.warn('⚠️ 無効な画像URL:', {
+            console.warn('⚠️ 無効な画像URL（アップロードが必要だがスキップされた可能性）:', {
               imageId: image.id,
               url: existingUrl?.substring(0, 60) + '...',
-              isBlob: existingUrl?.startsWith('blob:') || false
+              isBlob: existingUrl?.startsWith('blob:') || false,
+              isBase64: existingUrl?.startsWith('data:image') || false
             })
           }
         }
@@ -4510,10 +4524,10 @@ function ProfileEditContent() {
 
       // 🚨 [NETWORK CULPRIT] 最終リクエスト数検証
       console.log('🚨 [NETWORK CULPRIT] アップロード完了 - リクエスト数検証:', {
-        expected_requests: blobImages.length,
+        expected_requests: needsUploadImages.length,
         actual_requests: actualStorageRequests,
-        match: blobImages.length === actualStorageRequests,
-        verification: `予測:${blobImages.length}件 → 実行:${actualStorageRequests}件`,
+        match: needsUploadImages.length === actualStorageRequests,
+        verification: `予測:${needsUploadImages.length}件 → 実行:${actualStorageRequests}件`,
         network_analysis_note: 'DevToolsのNetwork tab でstorage/v1/object POSTを確認してください'
       })
       
@@ -4714,8 +4728,8 @@ function ProfileEditContent() {
         gender: data.gender,
         age: data.age,
         birth_date: data.birth_date,
-        prefecture: data.prefecture,
-        residence: data.prefecture,   // 🚨 FIX: residenceにも保存（DB復元用）
+        // 注意: prefectureカラムはDBに存在しない。residenceのみ使用
+        residence: data.prefecture,   // フォームのprefecture値をDB上のresidenceカラムに保存
         occupation: data.occupation === 'none' ? null : data.occupation,
         height: data.height ? data.height : null,
         body_type: data.body_type === 'none' ? null : data.body_type,
@@ -5212,9 +5226,9 @@ function ProfileEditContent() {
       // 🏆 [COMPLETION EVIDENCE] 最終完了条件チェック
       const completionEvidence = {
         '1. Network Requests': {
-          expected_storage_requests: blobImages.length,
+          expected_storage_requests: needsUploadImages.length,
           actual_storage_requests: actualStorageRequests,
-          match: blobImages.length === actualStorageRequests,
+          match: needsUploadImages.length === actualStorageRequests,
           verification: `${actualStorageRequests}件のstorage/v1/object POSTリクエスト実行済み`
         },
         '2. PATCH Payload': {
