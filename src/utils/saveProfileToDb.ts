@@ -461,6 +461,16 @@ export async function saveProfileToDb(
       throw blockError
     }
 
+    // 2.5 🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（保険）
+    const forbiddenKeys = ['profile_images', 'personality', 'prefecture']
+    for (const key of forbiddenKeys) {
+      if (key in payload) {
+        console.warn(`🚫 Forbidden key "${key}" detected and removed from payload`)
+        delete (payload as any)[key]
+      }
+    }
+    console.log('✅ FINAL PAYLOAD KEYS (saveProfileToDb):', Object.keys(payload))
+
     // 3. DB書き込み実行
     let dbResult: any
 

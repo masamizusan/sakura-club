@@ -4831,9 +4831,22 @@ function ProfileEditContent() {
           console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
           return firstImageUrl
         })(),
-        profile_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
+        // 注意: profile_imagesカラムはDBに存在しない。photo_urlsのみ使用
+        // profile_images は削除済み - photo_urls + avatar_url のみでDB保存
         updated_at: new Date().toISOString()
       }
+
+      // 🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（保険）
+      const forbiddenKeys = ['profile_images', 'personality', 'prefecture']
+      for (const key of forbiddenKeys) {
+        if (key in updateData) {
+          console.warn(`🚫 Forbidden key "${key}" detected and removed from updateData`)
+          delete (updateData as any)[key]
+        }
+      }
+
+      // ✅ UPDATE PAYLOAD KEYS確認（再発防止）
+      console.log('✅ UPDATE PAYLOAD KEYS:', Object.keys(updateData))
 
       // 🚨 [POSSIBILITY B] payload漏れ完全防止チェック
       console.log('🚨 [POSSIBILITY B] DB保存payload漏れ防止チェック:', {
