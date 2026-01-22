@@ -17,7 +17,7 @@ import { ensureAvatarStored, blockBase64FromDB } from '@/utils/ensureAvatarStore
  * URL例: https://xxx.supabase.co/storage/v1/object/public/avatars/<userId>/photo_xxx.jpg
  * → path: <userId>/photo_xxx.jpg
  */
-function extractStoragePath(url: string): string | null {
+export function extractStoragePath(url: string): string | null {
   if (!url || typeof url !== 'string') return null
 
   // avatars バケットのパスを抽出
@@ -36,14 +36,24 @@ function extractStoragePath(url: string): string | null {
  * @param prevUrls - DB保存前のphoto_urls
  * @param nextUrls - DB保存後のphoto_urls
  * @param entryPoint - 呼び出し元識別子
+ * @returns CleanupResult 削除結果
  */
-async function cleanupRemovedImages(
+export interface CleanupResult {
+  success: boolean
+  deletedCount: number
+  deletedPaths: string[]
+  oldCount: number
+  newCount: number
+  errorMessage: string | null
+}
+
+export async function cleanupRemovedImages(
   supabase: any,
   userId: string,
   prevUrls: string[],
   nextUrls: string[],
   entryPoint: string
-): Promise<void> {
+): Promise<CleanupResult> {
   // 削除対象 = prev - next
   const removedUrls = prevUrls.filter(url => !nextUrls.includes(url))
 
@@ -75,7 +85,14 @@ async function cleanupRemovedImages(
       entry_point: entryPoint
     })
 
-    return
+    return {
+      success: true,
+      deletedCount: 0,
+      deletedPaths: [],
+      oldCount: prevUrls.length,
+      newCount: nextUrls.length,
+      errorMessage: null
+    }
   }
 
   // URL → Storage path に変換
@@ -110,7 +127,14 @@ async function cleanupRemovedImages(
       entry_point: entryPoint
     })
 
-    return
+    return {
+      success: true,
+      deletedCount: 0,
+      deletedPaths: [],
+      oldCount: prevUrls.length,
+      newCount: nextUrls.length,
+      errorMessage: 'No valid storage paths (external URLs)'
+    }
   }
 
   try {
@@ -135,6 +159,15 @@ async function cleanupRemovedImages(
         error_message: error.message || JSON.stringify(error),
         entry_point: entryPoint
       })
+
+      return {
+        success: false,
+        deletedCount: 0,
+        deletedPaths: paths,
+        oldCount: prevUrls.length,
+        newCount: nextUrls.length,
+        errorMessage: error.message || JSON.stringify(error)
+      }
     } else {
       // ✅✅✅ TASKD_PROOF: 削除成功
       console.info('✅✅✅ [TASKD_PROOF] DELETE_RESULT', {
@@ -155,6 +188,15 @@ async function cleanupRemovedImages(
         error_message: null,
         entry_point: entryPoint
       })
+
+      return {
+        success: true,
+        deletedCount: paths.length,
+        deletedPaths: paths,
+        oldCount: prevUrls.length,
+        newCount: nextUrls.length,
+        errorMessage: null
+      }
     }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
@@ -177,6 +219,15 @@ async function cleanupRemovedImages(
       error_message: `Exception: ${errorMessage}`,
       entry_point: entryPoint
     })
+
+    return {
+      success: false,
+      deletedCount: 0,
+      deletedPaths: paths,
+      oldCount: prevUrls.length,
+      newCount: nextUrls.length,
+      errorMessage: `Exception: ${errorMessage}`
+    }
   }
 }
 
@@ -472,6 +523,7 @@ export async function saveProfileToDb(
     })
 
     // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）+ 証跡保存
+    // 🚨 CRITICAL FIX: awaitで完了を待つ（ページ遷移前に確実に実行）
     if (payload.photo_urls !== undefined) {
       const nextPhotoUrls = Array.isArray(payload.photo_urls) ? payload.photo_urls : []
 
@@ -489,14 +541,22 @@ export async function saveProfileToDb(
         to_delete_urls: deletedUrls.map((u: string) => u?.substring(0, 60) + '...')
       })
 
-      // 非同期で実行（保存結果を待たない）- userIdとentryPointを追加
-      cleanupRemovedImages(supabase, userId, prevPhotoUrls, nextPhotoUrls, entryPoint).catch(err => {
-        console.error('❌❌❌ [TASKD_PROOF] CLEANUP_BACKGROUND_ERROR', {
+      // 🚨 TASK D FIX: awaitで完了を待つ（非同期だとページ遷移で中断される）
+      try {
+        const cleanupResult = await cleanupRemovedImages(supabase, userId, prevPhotoUrls, nextPhotoUrls, entryPoint)
+        console.info('✅✅✅ [TASKD_PROOF] CLEANUP_COMPLETE', {
+          userId,
+          entryPoint,
+          result: cleanupResult
+        })
+      } catch (err) {
+        // cleanup失敗してもDB保存は成功扱い（ログは残す）
+        console.error('❌❌❌ [TASKD_PROOF] CLEANUP_ERROR', {
           userId,
           entryPoint,
           error: err instanceof Error ? err.message : 'Unknown error'
         })
-      })
+      }
     }
 
     return {
