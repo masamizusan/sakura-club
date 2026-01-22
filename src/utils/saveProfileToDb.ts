@@ -29,56 +29,202 @@ function extractStoragePath(url: string): string | null {
 }
 
 /**
- * 🗑️ TASK D: 削除された画像をStorageから掃除（差分削除）
+ * 🗑️ TASK D: 削除された画像をStorageから掃除（差分削除）+ 証跡DB保存
  *
  * @param supabase - Supabaseクライアント
+ * @param userId - ユーザーID
  * @param prevUrls - DB保存前のphoto_urls
  * @param nextUrls - DB保存後のphoto_urls
+ * @param entryPoint - 呼び出し元識別子
  */
 async function cleanupRemovedImages(
   supabase: any,
+  userId: string,
   prevUrls: string[],
-  nextUrls: string[]
+  nextUrls: string[],
+  entryPoint: string
 ): Promise<void> {
   // 削除対象 = prev - next
   const removedUrls = prevUrls.filter(url => !nextUrls.includes(url))
 
+  // ✅✅✅ TASKD_PROOF: 開始ログ（削除対象なしも記録）
+  console.info('✅✅✅ [TASKD_PROOF] CLEANUP_START', {
+    userId,
+    oldCount: prevUrls.length,
+    newCount: nextUrls.length,
+    toDeleteCount: removedUrls.length,
+    entryPoint
+  })
+
+  // 削除対象なし → 証跡のみ保存して終了
   if (removedUrls.length === 0) {
-    console.log('🗑️ TASK D: 削除対象なし')
+    console.info('✅✅✅ [TASKD_PROOF] NO_DELETE_NEEDED', {
+      userId,
+      reason: '差分なし（削除対象画像なし）'
+    })
+
+    // 証跡DB保存（削除なしも記録）
+    await saveCleanupLog(supabase, {
+      user_id: userId,
+      deleted_paths: [],
+      requested_delete_count: 0,
+      old_photo_urls: prevUrls,
+      new_photo_urls: nextUrls,
+      success: true,
+      error_message: null,
+      entry_point: entryPoint
+    })
+
     return
   }
-
-  console.log('🗑️ TASK D: Storage掃除開始', {
-    prevCount: prevUrls.length,
-    nextCount: nextUrls.length,
-    removedCount: removedUrls.length,
-    removedUrls: removedUrls.map(u => u.substring(0, 60) + '...')
-  })
 
   // URL → Storage path に変換
   const paths = removedUrls
     .map(url => extractStoragePath(url))
     .filter((path): path is string => path !== null)
 
+  // ✅✅✅ TASKD_PROOF: 削除対象パス一覧
+  console.info('✅✅✅ [TASKD_PROOF] DELETE_START', {
+    userId,
+    pathsToDelete: paths,
+    oldCount: prevUrls.length,
+    newCount: nextUrls.length,
+    removedUrls: removedUrls.map(u => u.substring(0, 80))
+  })
+
   if (paths.length === 0) {
-    console.log('🗑️ TASK D: 有効なStorage pathなし（外部URLの可能性）')
+    console.info('✅✅✅ [TASKD_PROOF] SKIP_DELETE', {
+      userId,
+      reason: '有効なStorage pathなし（外部URLの可能性）'
+    })
+
+    // 証跡DB保存（変換失敗も記録）
+    await saveCleanupLog(supabase, {
+      user_id: userId,
+      deleted_paths: [],
+      requested_delete_count: removedUrls.length,
+      old_photo_urls: prevUrls,
+      new_photo_urls: nextUrls,
+      success: true,
+      error_message: 'No valid storage paths (external URLs)',
+      entry_point: entryPoint
+    })
+
     return
   }
 
-  console.log('🗑️ TASK D: 削除対象パス', paths)
-
   try {
-    const { error } = await supabase.storage.from('avatars').remove(paths)
+    const { error, data } = await supabase.storage.from('avatars').remove(paths)
 
     if (error) {
-      // Storage削除失敗はログのみ（DBは既に成功しているため）
-      console.error('⚠️ TASK D: Storage削除エラー（DB保存は成功）', error)
+      // ❌❌❌ TASKD_PROOF: 削除失敗
+      console.error('❌❌❌ [TASKD_PROOF] DELETE_FAILED', {
+        userId,
+        pathsToDelete: paths,
+        error: error.message || JSON.stringify(error)
+      })
+
+      // 証跡DB保存（失敗）
+      await saveCleanupLog(supabase, {
+        user_id: userId,
+        deleted_paths: paths,
+        requested_delete_count: paths.length,
+        old_photo_urls: prevUrls,
+        new_photo_urls: nextUrls,
+        success: false,
+        error_message: error.message || JSON.stringify(error),
+        entry_point: entryPoint
+      })
     } else {
-      console.log('✅ TASK D: Storage掃除完了', { deletedPaths: paths })
+      // ✅✅✅ TASKD_PROOF: 削除成功
+      console.info('✅✅✅ [TASKD_PROOF] DELETE_RESULT', {
+        userId,
+        deleted: paths,
+        result: 'SUCCESS',
+        deletedCount: paths.length
+      })
+
+      // 証跡DB保存（成功）
+      await saveCleanupLog(supabase, {
+        user_id: userId,
+        deleted_paths: paths,
+        requested_delete_count: paths.length,
+        old_photo_urls: prevUrls,
+        new_photo_urls: nextUrls,
+        success: true,
+        error_message: null,
+        entry_point: entryPoint
+      })
     }
   } catch (err) {
-    // 例外もログのみ（DBは既に成功しているため）
-    console.error('⚠️ TASK D: Storage削除例外（DB保存は成功）', err)
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+
+    // ❌❌❌ TASKD_PROOF: 例外発生
+    console.error('❌❌❌ [TASKD_PROOF] DELETE_EXCEPTION', {
+      userId,
+      pathsToDelete: paths,
+      error: errorMessage
+    })
+
+    // 証跡DB保存（例外）
+    await saveCleanupLog(supabase, {
+      user_id: userId,
+      deleted_paths: paths,
+      requested_delete_count: paths.length,
+      old_photo_urls: prevUrls,
+      new_photo_urls: nextUrls,
+      success: false,
+      error_message: `Exception: ${errorMessage}`,
+      entry_point: entryPoint
+    })
+  }
+}
+
+/**
+ * 🗂️ TASK D: 証跡DB保存（profile_photo_cleanup_logs）
+ */
+interface CleanupLogData {
+  user_id: string
+  deleted_paths: string[]
+  requested_delete_count: number
+  old_photo_urls: string[]
+  new_photo_urls: string[]
+  success: boolean
+  error_message: string | null
+  entry_point: string
+}
+
+async function saveCleanupLog(
+  supabase: any,
+  logData: CleanupLogData
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('profile_photo_cleanup_logs')
+      .insert(logData)
+
+    if (error) {
+      // 証跡保存失敗は警告のみ（メイン処理には影響させない）
+      console.warn('⚠️ [TASKD_PROOF] LOG_SAVE_FAILED', {
+        error: error.message,
+        logData: {
+          user_id: logData.user_id,
+          requested_delete_count: logData.requested_delete_count,
+          success: logData.success
+        }
+      })
+    } else {
+      console.info('✅✅✅ [TASKD_PROOF] LOG_SAVED', {
+        user_id: logData.user_id,
+        deleted_count: logData.deleted_paths.length,
+        success: logData.success
+      })
+    }
+  } catch (err) {
+    // 証跡保存例外は警告のみ
+    console.warn('⚠️ [TASKD_PROOF] LOG_SAVE_EXCEPTION', {
+      error: err instanceof Error ? err.message : 'Unknown error'
+    })
   }
 }
 
@@ -304,12 +450,16 @@ export async function saveProfileToDb(
       recordCount: dbResult.data?.length || 0
     })
 
-    // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）
-    if (payload.photo_urls !== undefined && prevPhotoUrls.length > 0) {
+    // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）+ 証跡保存
+    if (payload.photo_urls !== undefined) {
       const nextPhotoUrls = Array.isArray(payload.photo_urls) ? payload.photo_urls : []
-      // 非同期で実行（保存結果を待たない）
-      cleanupRemovedImages(supabase, prevPhotoUrls, nextPhotoUrls).catch(err => {
-        console.error('⚠️ TASK D: Storage掃除バックグラウンドエラー', err)
+      // 非同期で実行（保存結果を待たない）- userIdとentryPointを追加
+      cleanupRemovedImages(supabase, userId, prevPhotoUrls, nextPhotoUrls, entryPoint).catch(err => {
+        console.error('❌❌❌ [TASKD_PROOF] CLEANUP_BACKGROUND_ERROR', {
+          userId,
+          entryPoint,
+          error: err instanceof Error ? err.message : 'Unknown error'
+        })
       })
     }
 
