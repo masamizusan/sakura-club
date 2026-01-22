@@ -471,6 +471,21 @@ export async function saveProfileToDb(
     }
     console.log('✅ FINAL PAYLOAD KEYS (saveProfileToDb):', Object.keys(payload))
 
+    // 🛡️🛡️🛡️ ABSOLUTE FINAL CHECK: DB書き込み直前の最終確認
+    console.log('🛡️🛡️🛡️ ABSOLUTE FINAL CHECK BEFORE DB WRITE:', {
+      'profile_images_in_payload': ('profile_images' in payload),
+      'personality_in_payload': ('personality' in payload),
+      'prefecture_in_payload': ('prefecture' in payload),
+      'all_keys': Object.keys(payload),
+      'payload_stringified_keys': JSON.stringify(Object.keys(payload))
+    })
+
+    // 🛡️ 念のための最終削除（万が一に備えて）
+    if ('profile_images' in payload) {
+      console.error('🚨🚨🚨 CRITICAL: profile_images STILL in payload at final check! Removing.')
+      delete (payload as any).profile_images
+    }
+
     // 3. DB書き込み実行
     let dbResult: any
 

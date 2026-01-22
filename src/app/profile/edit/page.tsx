@@ -1353,16 +1353,13 @@ function ProfileEditContent() {
         profileImagesRef.current = newImages
       }
       
-      // 🚨 CRITICAL FIX: RHFフォーム値にも確実に同期（A案修正）
-      (setValue as any)('profile_images', newImages, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      })
-      
-      console.log('🚨 RHF同期完了:', { 
-        setValue_profile_images_length: newImages.length,
-        form_will_detect_change: true
+      // 🚨 REMOVED: profile_imagesはDBに存在しないためsetValueを削除
+      // 画像はprofileImages stateとprofileImagesRef.currentで管理する
+      // RHFフォーム値への同期は不要（DBカラムに存在しない項目をフォームに入れない）
+
+      console.log('🚨 画像state更新完了（RHFへのprofile_images同期は廃止）:', {
+        profileImages_length: newImages.length,
+        ref_length: profileImagesRef.current.length
       })
       
       console.log('🧨 UI/state更新完了:', { 
@@ -1373,8 +1370,8 @@ function ProfileEditContent() {
       })
 
       // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
-      // setValue('profile_images')により、MAIN WATCHが変更を検知して1回だけ計算を実行
-      console.log('📸 画像変更: フォーム値更新完了（完成度計算はMAIN WATCHが担当）', {
+      // 画像はprofileImages state + profileImagesRefで管理（RHFフォーム値は不使用）
+      console.log('📸 画像変更: state/ref更新完了（完成度計算はMAIN WATCHが担当）', {
         newImagesLength: newImages.length,
         isDeletion,
         ssotMode: 'MAIN_WATCH_ONLY'
@@ -1536,7 +1533,7 @@ function ProfileEditContent() {
       }
       
       // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
-      // setValue('profile_images')の変更により、MAIN WATCHが自動的に検知して計算を実行
+      // 画像はprofileImages state + profileImagesRefで管理（RHFフォーム値は不使用）
       console.log('📸 画像変更完了: フラグリセット完了（完成度計算はMAIN WATCHが担当）', {
         isImageChanging: false,
         isInitializing: initializingRef.current,
@@ -5162,9 +5159,32 @@ function ProfileEditContent() {
 
       // 🚨 CRITICAL: 統一パイプライン経由でDB保存（Base64完全遮断）
       console.log('🔧 PROFILE SAVE: Starting unified pipeline...')
-      
+
+      // 🛡️🛡️🛡️ FINAL CHECK: profile_images 混入チェック（最終防衛）
+      console.log('🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE:', {
+        'Object.keys(updateData)': Object.keys(updateData),
+        'profile_images_in_updateData': ('profile_images' in updateData),
+        'personality_in_updateData': ('personality' in updateData),
+        'prefecture_in_updateData': ('prefecture' in updateData),
+        'updateData_stringified_keys': JSON.stringify(Object.keys(updateData))
+      })
+
+      // 🛡️ ABSOLUTE FINAL GUARD: 念のため再度削除
+      if ('profile_images' in updateData) {
+        console.error('🚨🚨🚨 EMERGENCY: profile_images still in updateData! Removing now.')
+        delete (updateData as any).profile_images
+      }
+      if ('personality' in updateData) {
+        console.error('🚨🚨🚨 EMERGENCY: personality still in updateData! Removing now.')
+        delete (updateData as any).personality
+      }
+      if ('prefecture' in updateData) {
+        console.error('🚨🚨🚨 EMERGENCY: prefecture still in updateData! Removing now.')
+        delete (updateData as any).prefecture
+      }
+
       const { updateProfile } = await import('@/utils/saveProfileToDb')
-      
+
       const saveResult = await updateProfile(
         supabase,
         user.id,
