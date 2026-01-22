@@ -263,30 +263,51 @@ export async function saveProfileToDb(
   
   // 📍 エントリーポイント特定ログ（必須）
   console.log('📍 profiles write entry:', entryPoint)
+
+  // 🔍 TASK D DEBUG: 入力されたphoto_urlsを最初に記録（処理前の状態）
+  const inputPhotoUrls = Array.isArray(payload.photo_urls) ? [...payload.photo_urls] : []
+
   console.log('🔧 saveProfileToDb: 開始', {
     userId,
     operation: operation.operation,
     hasAvatarUrl: !!payload.avatar_url,
     hasPhotoUrls: !!payload.photo_urls,
+    inputPhotoUrlsCount: inputPhotoUrls.length,
     entryPoint
   })
 
-  // 🗑️ TASK D: 差分削除用に現在のphoto_urlsを取得
+  // ✅✅✅ [TASKD_PROOF] INPUT_RECEIVED: 呼び出し元から受け取った値を記録
+  console.info('✅✅✅ [TASKD_PROOF] INPUT_RECEIVED', {
+    userId,
+    entryPoint,
+    inputPhotoUrlsCount: inputPhotoUrls.length,
+    inputPhotoUrls: inputPhotoUrls.map((u: string) => u?.substring(0, 60) + '...')
+  })
+
+  // 🗑️ TASK D: 差分削除用に現在のphoto_urlsを取得（DB保存前の値）
   let prevPhotoUrls: string[] = []
 
   try {
     // photo_urlsが更新される場合のみ、現在値を取得
     if (payload.photo_urls !== undefined) {
-      const { data: currentProfile } = await supabase
+      const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('photo_urls')
         .eq('id', userId)
         .single()
 
+      if (fetchError) {
+        console.log('🗑️ TASK D: DB取得エラー（新規ユーザーの可能性）', fetchError.message)
+      }
+
       prevPhotoUrls = Array.isArray(currentProfile?.photo_urls) ? currentProfile.photo_urls : []
-      console.log('🗑️ TASK D: 現在のphoto_urls取得', {
-        count: prevPhotoUrls.length,
-        urls: prevPhotoUrls.map((u: string) => u?.substring(0, 50) + '...')
+
+      // ✅✅✅ [TASKD_PROOF] DB_CURRENT_STATE: DBの現在値を記録
+      console.info('✅✅✅ [TASKD_PROOF] DB_CURRENT_STATE', {
+        userId,
+        dbPhotoUrlsCount: prevPhotoUrls.length,
+        dbPhotoUrls: prevPhotoUrls.map((u: string) => u?.substring(0, 60) + '...'),
+        willCompareWith: inputPhotoUrls.length + '枚（入力値）'
       })
     }
   } catch (fetchErr) {
@@ -453,6 +474,21 @@ export async function saveProfileToDb(
     // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）+ 証跡保存
     if (payload.photo_urls !== undefined) {
       const nextPhotoUrls = Array.isArray(payload.photo_urls) ? payload.photo_urls : []
+
+      // ✅✅✅ [TASKD_PROOF] DIFF_CALCULATION: 差分計算の入力値を記録
+      const deletedUrls = prevPhotoUrls.filter(url => !nextPhotoUrls.includes(url))
+
+      console.info('✅✅✅ [TASKD_PROOF] DIFF_CALCULATION', {
+        userId,
+        entryPoint,
+        old_count: prevPhotoUrls.length,
+        new_count: nextPhotoUrls.length,
+        deleted_count: deletedUrls.length,
+        old_urls: prevPhotoUrls.map((u: string) => u?.substring(0, 60) + '...'),
+        new_urls: nextPhotoUrls.map((u: string) => u?.substring(0, 60) + '...'),
+        to_delete_urls: deletedUrls.map((u: string) => u?.substring(0, 60) + '...')
+      })
+
       // 非同期で実行（保存結果を待たない）- userIdとentryPointを追加
       cleanupRemovedImages(supabase, userId, prevPhotoUrls, nextPhotoUrls, entryPoint).catch(err => {
         console.error('❌❌❌ [TASKD_PROOF] CLEANUP_BACKGROUND_ERROR', {
