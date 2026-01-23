@@ -4827,15 +4827,15 @@ function ProfileEditContent() {
 
           console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
           return firstImageUrl
-        })(),
+        })()
         // 注意: profile_imagesカラムはDBに存在しない。photo_urlsのみ使用
         // profile_images は削除済み - photo_urls + avatar_url のみでDB保存
-        updated_at: new Date().toISOString()
+        // 🚨 updated_at は DB に存在しないため削除済み（DB側トリガーで自動更新）
       }
 
       // 🛡️🛡️🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（最終防衛）
       // 🚨 CRITICAL: このリストに含まれるキーは絶対にDBに送信されない
-      const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+      const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
       for (const key of FORBIDDEN_KEYS) {
         if (key in updateData) {
           console.warn(`🚫 [profile/edit] Forbidden key "${key}" detected and removed from updateData`)
@@ -5170,7 +5170,7 @@ function ProfileEditContent() {
       console.log('🔧 PROFILE SAVE: Starting unified pipeline...')
 
       // 🛡️🛡️🛡️ ABSOLUTE FINAL GUARD: DB保存直前の最終防衛（forbidden keys完全排除）
-      const FINAL_FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+      const FINAL_FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
       for (const key of FINAL_FORBIDDEN_KEYS) {
         if (key in updateData) {
           console.error(`🚨🚨🚨 EMERGENCY: ${key} still in updateData! Removing now.`)

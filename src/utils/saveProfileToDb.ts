@@ -463,7 +463,7 @@ export async function saveProfileToDb(
 
     // 2.5 🛡️🛡️🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（最終防衛）
     // 🚨 CRITICAL: このリストに含まれるキーは絶対にDBに送信されない
-    const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+    const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
 
     // 🔥 STEP 1: 初回削除
     for (const key of FORBIDDEN_KEYS) {
