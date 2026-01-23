@@ -170,11 +170,25 @@ export default function MultiImageUploader({
   }
 
   const handleSetMainImage = (imageId: string) => {
-    const updatedImages = images.map(img => ({
-      ...img,
-      isMain: img.id === imageId
-    }))
-    onImagesChange(updatedImages)
+    // 🛡️ メイン画像変更: 選択した画像を配列の先頭に移動 + isMainフラグ更新
+    // DB保存時は photo_urls[0] = avatar_url のため、先頭に移動が必須
+    const mainImage = images.find(img => img.id === imageId)
+    if (!mainImage) return
+
+    const otherImages = images.filter(img => img.id !== imageId)
+    const reorderedImages = [
+      { ...mainImage, isMain: true },
+      ...otherImages.map(img => ({ ...img, isMain: false }))
+    ]
+
+    console.log('🔄 MAIN PHOTO CHANGE:', {
+      newMainId: imageId,
+      newMainUrl: mainImage.url?.substring(0, 50) + '...',
+      newOrder: reorderedImages.map(img => ({ id: img.id, isMain: img.isMain })),
+      photo_urls_0_will_be: mainImage.url?.substring(0, 50) + '...'
+    })
+
+    onImagesChange(reorderedImages)
   }
 
   const triggerFileInput = () => {

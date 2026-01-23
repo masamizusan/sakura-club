@@ -1241,15 +1241,29 @@ function ProfileEditContent() {
     const currentImageIds = prevImages.map(img => img.id).sort()  // ✅ REF基準
     const newImageIds = newImages.map(img => img.id).sort()
     const isDeletion = isExplicitDeletion || (nextCount < prevCount)  // ✅ 明示的な削除フラグ優先
-    const isSameImageSet = currentImageIds.length === newImageIds.length && 
+    const isSameImageSet = currentImageIds.length === newImageIds.length &&
                           currentImageIds.every((id, index) => id === newImageIds[index])
-    
+
+    // 🛡️ メイン画像変更（順序変更）を検出：ソートなしで順序比較
+    const currentOrder = prevImages.map(img => img.id)
+    const newOrder = newImages.map(img => img.id)
+    const isOrderChanged = currentOrder.length === newOrder.length &&
+                           !currentOrder.every((id, index) => id === newOrder[index])
+
     if (isExplicitDeletion) {
       console.log('🧨 削除フラグ検出: 同一判定を完全無効化', {
         deleteInfo,
         current_ids: currentImageIds,
         new_ids: newImageIds,
         forcedProcessing: true
+      })
+    } else if (isOrderChanged) {
+      // 🛡️ メイン画像変更（順序変更）は必ず処理する
+      console.log('🔄 MAIN PHOTO REORDER DETECTED - 順序変更を処理:', {
+        current_order: currentOrder,
+        new_order: newOrder,
+        new_main_id: newImages[0]?.id,
+        new_main_url: newImages[0]?.url?.substring(0, 50) + '...'
       })
     } else if (isSameImageSet && !isDeletion) {
       console.log('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
@@ -4852,6 +4866,19 @@ function ProfileEditContent() {
         'images_in_updateData': ('images' in updateData),
         'profile_image_in_updateData': ('profile_image' in updateData),
         'all_forbidden_keys_removed': FORBIDDEN_KEYS.every(key => !(key in updateData))
+      })
+
+      // 🛡️ FINAL CHECK MAIN PHOTO SYNC: メイン画像同期の証拠ログ
+      console.log('🛡️ FINAL CHECK MAIN PHOTO SYNC:', {
+        'photo_urls[0]': Array.isArray(updateData.photo_urls) && updateData.photo_urls[0]
+          ? updateData.photo_urls[0].substring(0, 60) + '...'
+          : 'none',
+        'avatar_url': updateData.avatar_url
+          ? updateData.avatar_url.substring(0, 60) + '...'
+          : 'null',
+        'photo_urls_count': Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 0,
+        'avatar_url_in_payload': 'avatar_url' in updateData,
+        'sync_ok': Array.isArray(updateData.photo_urls) && updateData.photo_urls[0] === updateData.avatar_url
       })
 
       // 🚨 [POSSIBILITY B] payload漏れ完全防止チェック
