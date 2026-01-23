@@ -1307,7 +1307,8 @@ function ProfilePreviewContent() {
                       ])
 
                       // ② 念のためブラックリストで最終除去（今後の地雷対策）
-                      const BLOCKED_KEYS = new Set(['updated_at', 'prefecture', 'planned_stations'])
+                      // 🚨 CRITICAL: profile_images等DBに存在しないカラムを完全ブロック
+                      const BLOCKED_KEYS = new Set(['updated_at', 'prefecture', 'planned_stations', 'profile_images', 'personality', 'images', 'profile_image'])
 
                       const sanitizedPayload = Object.fromEntries(
                         Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k) && !BLOCKED_KEYS.has(k))

@@ -4833,17 +4833,26 @@ function ProfileEditContent() {
         updated_at: new Date().toISOString()
       }
 
-      // 🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（保険）
-      const forbiddenKeys = ['profile_images', 'personality', 'prefecture']
-      for (const key of forbiddenKeys) {
+      // 🛡️🛡️🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（最終防衛）
+      // 🚨 CRITICAL: このリストに含まれるキーは絶対にDBに送信されない
+      const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+      for (const key of FORBIDDEN_KEYS) {
         if (key in updateData) {
-          console.warn(`🚫 Forbidden key "${key}" detected and removed from updateData`)
+          console.warn(`🚫 [profile/edit] Forbidden key "${key}" detected and removed from updateData`)
           delete (updateData as any)[key]
         }
       }
 
-      // ✅ UPDATE PAYLOAD KEYS確認（再発防止）
-      console.log('✅ UPDATE PAYLOAD KEYS:', Object.keys(updateData))
+      // ✅ UPDATE PAYLOAD KEYS確認（証拠ログ - 必須出力）
+      console.log('✅ UPDATE PAYLOAD KEYS (profile/edit):', Object.keys(updateData))
+      console.log('🛡️ FORBIDDEN KEYS CHECK:', {
+        'profile_images_in_updateData': ('profile_images' in updateData),
+        'personality_in_updateData': ('personality' in updateData),
+        'prefecture_in_updateData': ('prefecture' in updateData),
+        'images_in_updateData': ('images' in updateData),
+        'profile_image_in_updateData': ('profile_image' in updateData),
+        'all_forbidden_keys_removed': FORBIDDEN_KEYS.every(key => !(key in updateData))
+      })
 
       // 🚨 [POSSIBILITY B] payload漏れ完全防止チェック
       console.log('🚨 [POSSIBILITY B] DB保存payload漏れ防止チェック:', {
@@ -5160,28 +5169,26 @@ function ProfileEditContent() {
       // 🚨 CRITICAL: 統一パイプライン経由でDB保存（Base64完全遮断）
       console.log('🔧 PROFILE SAVE: Starting unified pipeline...')
 
-      // 🛡️🛡️🛡️ FINAL CHECK: profile_images 混入チェック（最終防衛）
+      // 🛡️🛡️🛡️ ABSOLUTE FINAL GUARD: DB保存直前の最終防衛（forbidden keys完全排除）
+      const FINAL_FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+      for (const key of FINAL_FORBIDDEN_KEYS) {
+        if (key in updateData) {
+          console.error(`🚨🚨🚨 EMERGENCY: ${key} still in updateData! Removing now.`)
+          delete (updateData as any)[key]
+        }
+      }
+
+      // 🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE: 証拠ログ（必須出力）
       console.log('🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE:', {
-        'Object.keys(updateData)': Object.keys(updateData),
+        'UPDATE_PAYLOAD_KEYS': Object.keys(updateData),
         'profile_images_in_updateData': ('profile_images' in updateData),
         'personality_in_updateData': ('personality' in updateData),
         'prefecture_in_updateData': ('prefecture' in updateData),
-        'updateData_stringified_keys': JSON.stringify(Object.keys(updateData))
+        'images_in_updateData': ('images' in updateData),
+        'profile_image_in_updateData': ('profile_image' in updateData),
+        'all_forbidden_removed': FINAL_FORBIDDEN_KEYS.every(key => !(key in updateData)),
+        'payload_key_count': Object.keys(updateData).length
       })
-
-      // 🛡️ ABSOLUTE FINAL GUARD: 念のため再度削除
-      if ('profile_images' in updateData) {
-        console.error('🚨🚨🚨 EMERGENCY: profile_images still in updateData! Removing now.')
-        delete (updateData as any).profile_images
-      }
-      if ('personality' in updateData) {
-        console.error('🚨🚨🚨 EMERGENCY: personality still in updateData! Removing now.')
-        delete (updateData as any).personality
-      }
-      if ('prefecture' in updateData) {
-        console.error('🚨🚨🚨 EMERGENCY: prefecture still in updateData! Removing now.')
-        delete (updateData as any).prefecture
-      }
 
       const { updateProfile } = await import('@/utils/saveProfileToDb')
 

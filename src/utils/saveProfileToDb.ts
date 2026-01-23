@@ -461,30 +461,47 @@ export async function saveProfileToDb(
       throw blockError
     }
 
-    // 2.5 🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（保険）
-    const forbiddenKeys = ['profile_images', 'personality', 'prefecture']
-    for (const key of forbiddenKeys) {
+    // 2.5 🛡️🛡️🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（最終防衛）
+    // 🚨 CRITICAL: このリストに含まれるキーは絶対にDBに送信されない
+    const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image'] as const
+
+    // 🔥 STEP 1: 初回削除
+    for (const key of FORBIDDEN_KEYS) {
       if (key in payload) {
-        console.warn(`🚫 Forbidden key "${key}" detected and removed from payload`)
+        console.warn(`🚫 [STEP1] Forbidden key "${key}" detected and removed from payload`)
         delete (payload as any)[key]
       }
     }
-    console.log('✅ FINAL PAYLOAD KEYS (saveProfileToDb):', Object.keys(payload))
 
-    // 🛡️🛡️🛡️ ABSOLUTE FINAL CHECK: DB書き込み直前の最終確認
-    console.log('🛡️🛡️🛡️ ABSOLUTE FINAL CHECK BEFORE DB WRITE:', {
-      'profile_images_in_payload': ('profile_images' in payload),
-      'personality_in_payload': ('personality' in payload),
-      'prefecture_in_payload': ('prefecture' in payload),
-      'all_keys': Object.keys(payload),
-      'payload_stringified_keys': JSON.stringify(Object.keys(payload))
+    // 🔥 STEP 2: 安全なpayloadを新規オブジェクトとして再構築（プロトタイプ汚染防止）
+    const sanitizedPayload: Record<string, any> = {}
+    for (const [key, value] of Object.entries(payload)) {
+      if (!FORBIDDEN_KEYS.includes(key as any)) {
+        sanitizedPayload[key] = value
+      } else {
+        console.warn(`🚫 [STEP2] Forbidden key "${key}" blocked during sanitization`)
+      }
+    }
+
+    // 🛡️🛡️🛡️ FINAL CHECK: DB書き込み直前の最終確認ログ（必須出力）
+    console.log('🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE:', {
+      'profile_images_in_sanitized': ('profile_images' in sanitizedPayload),
+      'personality_in_sanitized': ('personality' in sanitizedPayload),
+      'prefecture_in_sanitized': ('prefecture' in sanitizedPayload),
+      'UPDATE_PAYLOAD_KEYS': Object.keys(sanitizedPayload),
+      'payload_key_count': Object.keys(sanitizedPayload).length
     })
 
-    // 🛡️ 念のための最終削除（万が一に備えて）
-    if ('profile_images' in payload) {
-      console.error('🚨🚨🚨 CRITICAL: profile_images STILL in payload at final check! Removing.')
-      delete (payload as any).profile_images
+    // 🔥 STEP 3: 念のための最終削除（万が一に備えて）
+    for (const key of FORBIDDEN_KEYS) {
+      if (key in sanitizedPayload) {
+        console.error(`🚨🚨🚨 CRITICAL: ${key} STILL in sanitizedPayload at final check! Removing.`)
+        delete sanitizedPayload[key]
+      }
     }
+
+    // payloadをsanitizedPayloadで置き換え
+    payload = sanitizedPayload
 
     // 3. DB書き込み実行
     let dbResult: any
