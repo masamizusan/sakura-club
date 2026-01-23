@@ -503,6 +503,47 @@ export async function saveProfileToDb(
     // payloadをsanitizedPayloadで置き換え
     payload = sanitizedPayload
 
+    // 🛡️🛡️🛡️ タスクB: 保存直前にbase64混入をブロック（最終防衛）
+    if (Array.isArray(payload.photo_urls)) {
+      // 1) photo_urls から data:image を除去
+      const cleanPhotoUrls = payload.photo_urls.filter((url: string) => {
+        const isDataUrl = url && url.startsWith('data:')
+        if (isDataUrl) {
+          console.warn(`🚫 DATA URL REMOVED from photo_urls: ${url.substring(0, 30)}...`)
+        }
+        return !isDataUrl
+      })
+
+      // 2) もし photo_urls[0] が data:image だったら（除去後に空になったら）警告
+      const hasDataUrlInOriginal = payload.photo_urls.some((url: string) => url && url.startsWith('data:'))
+
+      // 3) avatar_url = photo_urls[0] を強制同期
+      payload.photo_urls = cleanPhotoUrls
+      payload.avatar_url = cleanPhotoUrls.length > 0 ? cleanPhotoUrls[0] : null
+
+      // 4) 証拠ログ出力
+      console.log('🛡️ FINAL CHECK MAIN PHOTO SYNC:', {
+        'photo_urls_0': cleanPhotoUrls[0] ? cleanPhotoUrls[0].substring(0, 60) + '...' : 'null',
+        'avatar_url': payload.avatar_url ? payload.avatar_url.substring(0, 60) + '...' : 'null',
+        'photo_urls_count': cleanPhotoUrls.length,
+        'sync_ok': cleanPhotoUrls.length === 0 || cleanPhotoUrls[0] === payload.avatar_url,
+        'has_data_url_in_photo_urls': hasDataUrlInOriginal
+      })
+
+      // 5) もし除去後も data:image が残っていたら保存禁止
+      const stillHasDataUrl = cleanPhotoUrls.some((url: string) => url && url.startsWith('data:'))
+      if (stillHasDataUrl) {
+        console.error('🚫 BLOCK SAVE: photo_urls contains data:image')
+        throw new Error('BLOCK SAVE: photo_urls contains data:image - upload failed')
+      }
+    }
+
+    // avatar_url 単体のチェック
+    if (payload.avatar_url && payload.avatar_url.startsWith('data:')) {
+      console.error('🚫 BLOCK SAVE: avatar_url is data:image')
+      throw new Error('BLOCK SAVE: avatar_url is data:image - upload failed')
+    }
+
     // 3. DB書き込み実行
     let dbResult: any
 
@@ -563,6 +604,25 @@ export async function saveProfileToDb(
       entryPoint,
       recordCount: dbResult.data?.length || 0
     })
+
+    // 🛡️ タスクC: DB保存後のメイン画像確認ログ
+    if (dbResult.data && dbResult.data[0]) {
+      const savedProfile = dbResult.data[0]
+      const dbPhotoUrls = Array.isArray(savedProfile.photo_urls) ? savedProfile.photo_urls : []
+      const dbAvatarUrl = savedProfile.avatar_url
+      const mainPhotoMatch = dbPhotoUrls.length === 0 || dbPhotoUrls[0] === dbAvatarUrl
+
+      console.log('✅ DB MAIN PHOTO CONFIRMED:', {
+        'avatar_url': dbAvatarUrl ? dbAvatarUrl.substring(0, 60) + '...' : 'null',
+        'photo_urls[0]': dbPhotoUrls[0] ? dbPhotoUrls[0].substring(0, 60) + '...' : 'null',
+        'photo_urls_count': dbPhotoUrls.length,
+        'avatar_url === photo_urls[0]': mainPhotoMatch
+      })
+
+      if (!mainPhotoMatch && dbPhotoUrls.length > 0) {
+        console.warn('⚠️ MAIN PHOTO MISMATCH: avatar_url と photo_urls[0] が不一致')
+      }
+    }
 
     // 🗑️ TASK D: DB保存成功後にStorage掃除（差分削除）+ 証跡保存
     // 🚨 CRITICAL FIX: awaitで完了を待つ（ページ遷移前に確実に実行）

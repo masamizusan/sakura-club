@@ -1135,13 +1135,39 @@ function ProfileEditContent() {
       return
     }
 
-    console.log('✅ forceInitialCompletionCalculation: 実行条件満たした')
-    
+    // 🛡️ タスクA: フォームデータが揃うまで force calc をスキップ（ちらつき防止）
+    // 既存ユーザー（fromMyPage）の場合、DBからデータが読み込まれるまで待つ
+    const currentProfileImages = profileImagesRef.current
+    const hasHobbies = selectedHobbies.length > 0
+    const hasPersonality = selectedPersonality.length > 0
+    const hasImages = currentProfileImages.length > 0
+    const formReady = hasHobbies || hasPersonality || hasImages
+
+    // fromMyPage遷移時は必ずデータがあるはずなので、揃う前にスキップ
+    const isFromMyPage = typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('fromMyPage') === 'true'
+
+    if (isFromMyPage && !formReady) {
+      console.log('🛑 FORCE CALC SKIPPED: form not ready', {
+        hasHobbies,
+        hasPersonality,
+        hasImages,
+        reason: 'fromMyPage遷移だがデータ未読込 → MAIN WATCHに任せる'
+      })
+      return
+    }
+
+    console.log('✅ FORCE CALC EXECUTED: form ready', {
+      hasHobbies,
+      hasPersonality,
+      hasImages,
+      isFromMyPage
+    })
+
     try {
       // 🔧 最新フォーム値を直接取得
       const currentFormData = getValues()
-      const currentProfileImages = profileImagesRef.current
-      
+
       console.log('⚡ FORCE CALC: フォームデータ収集', {
         formData_keys: Object.keys(currentFormData),
         images_length: currentProfileImages.length,
