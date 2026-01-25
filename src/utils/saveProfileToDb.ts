@@ -315,6 +315,31 @@ export async function saveProfileToDb(
   // 📍 エントリーポイント特定ログ（必須）
   console.log('📍 profiles write entry:', entryPoint)
 
+  // 🛡️ CRITICAL: セッションユーザーIDと引数userIdの一致チェック（誤保存防止）
+  try {
+    const { data: { user: sessionUser }, error: sessionError } = await supabase.auth.getUser()
+
+    if (sessionError) {
+      console.warn('🔒 saveProfileToDb: セッション取得エラー（続行）', sessionError.message)
+    } else if (sessionUser && sessionUser.id !== userId) {
+      console.error('🚨 USER_ID_MISMATCH BLOCK SAVE', {
+        sessionUser: sessionUser.id,
+        payloadUser: userId,
+        entryPoint
+      })
+      throw new Error(`User mismatch - blocked for safety (session: ${sessionUser.id}, payload: ${userId})`)
+    } else {
+      console.log('✅ saveProfileToDb: ユーザーID一致確認OK', { userId })
+    }
+  } catch (sessionCheckErr: any) {
+    // User mismatchエラーの場合は再throw
+    if (sessionCheckErr?.message?.includes('User mismatch')) {
+      throw sessionCheckErr
+    }
+    // その他のエラーは警告のみ（セッション取得失敗時も保存は続行）
+    console.warn('🔒 saveProfileToDb: セッションチェック例外（続行）', sessionCheckErr?.message)
+  }
+
   // 🔍 TASK D DEBUG: 入力されたphoto_urlsを最初に記録（処理前の状態）
   const inputPhotoUrls = Array.isArray(payload.photo_urls) ? [...payload.photo_urls] : []
 

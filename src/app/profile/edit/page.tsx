@@ -632,17 +632,54 @@ function ProfileEditContent() {
   const profileImagesRef = useRef<Array<{ id: string; url: string; originalUrl: string; isMain: boolean; isEdited: boolean }>>([])
   // 🌸 TASK1: hydration完了後のqueued再計算用フラグ
   const queuedRecalcRef = useRef<boolean>(false)
+  // 🛡️ CRITICAL: ユーザーID変更検出の誤発火防止用ref
+  const prevUserIdRef = useRef<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
   // 🚨 CRITICAL FIX: ユーザー切り替え時の画像リセット（原因A対策）
+  // 🛡️ 誤発火防止: 初回・初期化中・fromMyPage遷移時はリセットしない
   useEffect(() => {
-    if (user?.id) {
-      console.log('🎯 ユーザーID変更検出 - 画像リセット実行:', { userId: user.id })
+    const currentUserId = user?.id ?? null
+    const prevUserId = prevUserIdRef.current
+
+    // fromMyPage判定（URLパラメータから）
+    const isFromMyPage = typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('fromMyPage') === 'true'
+
+    // 🛡️ 初回（prevUserIdがない）は変更判定しない - refを更新して終了
+    if (!prevUserId) {
+      prevUserIdRef.current = currentUserId
+      console.log('🔒 ユーザーID変更検出: 初回スキップ（prevUserId未設定）', { currentUserId })
+      return
+    }
+
+    // 🛡️ 初期化中は判定禁止
+    if (isInitializing || initializingRef.current) {
+      console.log('🔒 ユーザーID変更検出: 初期化中スキップ', { currentUserId, prevUserId })
+      return
+    }
+
+    // 🛡️ MyPageからの遷移はリセット禁止（最重要）
+    if (isFromMyPage) {
+      prevUserIdRef.current = currentUserId
+      console.log('🔒 ユーザーID変更検出: fromMyPage遷移スキップ', { currentUserId, prevUserId })
+      return
+    }
+
+    // 🎯 両方揃っていて、明確に変わった時だけ "変更検出"
+    if (currentUserId && prevUserId !== currentUserId) {
+      console.log('🎯 ユーザーID変更検出 - 画像リセット実行:', {
+        prevUserId,
+        currentUserId,
+        reason: 'USER_ACTUALLY_CHANGED'
+      })
       setProfileImages([])
       profileImagesRef.current = []
     }
-  }, [user?.id])
+
+    prevUserIdRef.current = currentUserId
+  }, [user?.id, isInitializing])
 
   // Profile type flags
   // URLパラメータからの判定を優先し、なければユーザーのプロフィールから判定
