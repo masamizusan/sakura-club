@@ -1433,12 +1433,9 @@ function ProfilePreviewContent() {
                       // 🚨 保存完了フラグ設定（未保存警告を無効化）
                       isConfirmedRef.current = true
 
-                      if (window.opener) {
-                        window.opener.location.href = '/mypage'
-                        window.close()
-                      } else {
-                        window.location.href = '/mypage'
-                      }
+                      // 🛡️ 同一タブ遷移に統一（window.opener廃止）
+                      console.log('✅ MYPAGE_NAVIGATE_MODE: same-tab (router.push)')
+                      router.push('/mypage')
 
                     } catch (error) {
                       console.error('❌ CRITICAL: Profile保存処理でエラー:', error)

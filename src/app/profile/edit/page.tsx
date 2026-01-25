@@ -764,13 +764,19 @@ function ProfileEditContent() {
       const previewDataKey = `previewData_${user?.id || 'anonymous'}`
       sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
 
-      const previewWindow = window.open(`/profile/preview?userId=${user?.id || ''}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
-      if (!previewWindow) {
-        alert('ポップアップがブロックされています。ブラウザの設定を確認してください。')
-      }
+      // 🛡️ 同一タブ遷移に統一（別タブ廃止）
+      // 現在のURLパラメータ（type/lang）を維持したままプレビューへ
+      const currentType = searchParams?.get('type') || ''
+      const currentLang = searchParams?.get('lang') || 'ja'
+      const previewUrl = `/profile/preview?userId=${user?.id || ''}${currentType ? `&type=${currentType}` : ''}&lang=${currentLang}`
+
+      console.log('✅ PREVIEW_OPEN_MODE: same-tab (router.push)')
+      console.log('🚀 NAVIGATE_TO_PREVIEW_SAME_TAB:', { url: previewUrl })
+
+      router.push(previewUrl)
     } catch (error) {
       console.error('❌ Error opening preview:', error)
-      alert('プレビューの開用でエラーが発生しました。もう一度お試しください。')
+      alert('プレビューの表示でエラーが発生しました。もう一度お試しください。')
     }
   }, (errors) => {
     console.error('❌ フォームバリデーションエラー:', errors)
