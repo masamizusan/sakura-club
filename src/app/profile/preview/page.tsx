@@ -12,6 +12,7 @@ import { LanguageSelector } from '@/components/LanguageSelector'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
+import { logger, maskImageValue, sanitizePayload } from '@/utils/logger'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -853,12 +854,12 @@ function ProfilePreviewContent() {
                 let displayImage = null
                 if (Array.isArray(photo_urls) && photo_urls.length > 0) {
                   displayImage = photo_urls[0] // メイン画像
-                  console.log('🔄 プレビュー画像: photo_urls[0]使用:', displayImage)
+                  logger.debug('🔄 プレビュー画像: photo_urls[0]使用:', maskImageValue(displayImage))
                 }
                 // 🔧 STEP 2: 後方互換でprofileImage使用
                 else if (profileImage) {
                   displayImage = profileImage
-                  console.log('🔄 プレビュー画像: profileImage使用（後方互換）:', displayImage)
+                  logger.debug('🔄 プレビュー画像: profileImage使用（後方互換）:', maskImageValue(displayImage))
                 }
 
                 const avatarSrc = resolveAvatarSrc(displayImage, supabase)
@@ -1324,8 +1325,8 @@ function ProfilePreviewContent() {
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
                       })
 
-                      // 🚀 Step 3: upsert直前ログ（指示書①対応）
-                      console.log("🚨 UPSERT PAYLOAD", {
+                      // 🚀 Step 3: upsert直前ログ（指示書①対応）- Base64マスク版
+                      logger.debug("🚨 UPSERT PAYLOAD", sanitizePayload({
                         photo_urls_count: Array.isArray(sanitizedPayload.photo_urls) ? sanitizedPayload.photo_urls.length : 0,
                         photo_urls: sanitizedPayload.photo_urls,
                         avatar_url: sanitizedPayload.avatar_url,
@@ -1334,8 +1335,7 @@ function ProfilePreviewContent() {
                         payload_keys: Object.keys(sanitizedPayload),
                         residence_present: 'residence' in sanitizedPayload,
                         planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
-                        full_payload: sanitizedPayload
-                      })
+                      }))
 
                       // 🚨 SSOT保存保証ログ（指示書対応）
                       console.log('🚀 PROFILE UPSERT FINAL PAYLOAD CHECK', {
@@ -1346,11 +1346,11 @@ function ProfilePreviewContent() {
                       })
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
-                      console.log('📍 profiles write entry: profile/preview confirm')
-                      
+                      logger.info('📍 profiles write entry: profile/preview confirm')
+
                       // 🔍 保存前詳細ログ（avatar変換追跡用）
                       const preConversionAvatarUrl = sanitizedPayload.avatar_url
-                      console.log('🔍 PRE-CONVERSION AVATAR DEBUG:', {
+                      logger.debug('🔍 PRE-CONVERSION AVATAR DEBUG:', {
                         avatar_url_exists: !!preConversionAvatarUrl,
                         avatar_url_type: typeof preConversionAvatarUrl,
                         avatar_url_length: (typeof preConversionAvatarUrl === 'string' ? preConversionAvatarUrl.length : 0),

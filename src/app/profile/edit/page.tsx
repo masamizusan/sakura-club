@@ -995,12 +995,26 @@ function ProfileEditContent() {
       const currentData = watch()
       const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
       
+      // 🎯 後方互換FIX: avatar_urlをDBからフォールバック取得
+      // photo_urls=[]でもavatar_urlがDBにあれば画像あり判定させる
+      const formAvatarUrl = (currentDataWithoutCustomCulture as any).avatar_url
+      const effectiveAvatarUrl = formAvatarUrl || dbProfile?.avatar_url || ''
+
+      console.log('🎯 AVATAR_URL後方互換チェック:', {
+        form_avatar_url: formAvatarUrl ? 'exists' : 'empty',
+        db_avatar_url: dbProfile?.avatar_url ? 'exists' : 'empty',
+        effective: effectiveAvatarUrl ? 'set' : 'empty',
+        source: formAvatarUrl ? 'form' : (dbProfile?.avatar_url ? 'db_fallback' : 'none')
+      })
+
       const formValuesForCompletion = {
         ...currentDataWithoutCustomCulture,
         hobbies: selectedHobbies,
         personality: selectedPersonality,
         language_skills: languageSkills,
         planned_prefectures: selectedPlannedPrefectures,
+        // 🎯 後方互換: avatar_urlを明示的に含める（photo_urls=[]でもDBのavatar_urlで救済）
+        avatar_url: effectiveAvatarUrl,
       }
 
       // 🌸 必須確認ログ - 全タスク要求を満たす統合ログ
