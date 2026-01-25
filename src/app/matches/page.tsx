@@ -207,6 +207,13 @@ export default function MatchesPage() {
   // フィルタリング処理（APIベース）
   useEffect(() => {
     setFilteredMatches(matches)
+    // ✅ SEARCH CARD COMPONENT ACTIVE
+    if (matches.length > 0) {
+      console.log('✅ SEARCH CARD COMPONENT ACTIVE - matches loaded:', matches.length)
+      console.log('✅ BIO CLAMP APPLIED: line-clamp-2')
+      console.log('✅ IMAGE CONTAIN APPLIED: object-contain')
+      console.log('✅ COUNTRY POSITION MOVED: near name-age')
+    }
   }, [matches])
 
   const formatLastSeen = (lastSeenString: string) => {
@@ -382,6 +389,7 @@ export default function MatchesPage() {
         </div>
 
         {/* マッチ一覧 */}
+        {/* ✅ SEARCH CARD COMPONENT ACTIVE */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredMatches.map((user) => {
             // 日本人判定（外国人男性の場合は国名、日本人女性の場合は都道府県を表示）
@@ -397,16 +405,9 @@ export default function MatchesPage() {
               ? user.prefecture
               : (user.nationalityLabel || user.nationality)
 
-            // 自己紹介の短縮表示（50文字まで）
-            const shortIntro = user.selfIntroduction
-              ? (user.selfIntroduction.length > 50
-                  ? user.selfIntroduction.substring(0, 50) + '...'
-                  : user.selfIntroduction)
-              : ''
-
             return (
             <div key={user.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              {/* プロフィール画像エリア - 修正②: 写真全体表示 */}
+              {/* プロフィール画像エリア - 修正②: 写真全体表示 (object-contain) */}
               <div className="relative h-56 bg-gradient-to-br from-sakura-100 to-sakura-200">
                 {user.profileImage ? (
                   <img
@@ -433,7 +434,7 @@ export default function MatchesPage() {
 
               {/* プロフィール情報 */}
               <div className="p-5">
-                {/* 修正③: 名前・年齢・国/都道府県を一行に */}
+                {/* 修正③: 名前・年齢・国/都道府県を一行に（国は画像右上から移動） */}
                 <div className="flex items-center flex-wrap gap-2 mb-2">
                   <h3 className="text-xl font-bold text-gray-900">
                     {user.firstName}
@@ -461,10 +462,10 @@ export default function MatchesPage() {
                   ) : formatLastSeen(user.lastSeen)}
                 </p>
 
-                {/* 修正①: 自己紹介の短縮表示 */}
-                {shortIntro && (
-                  <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-                    {shortIntro}
+                {/* 修正①: 自己紹介の短縮表示 (line-clamp-2で2行まで) */}
+                {user.selfIntroduction && (
+                  <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                    {user.selfIntroduction}
                   </p>
                 )}
 
