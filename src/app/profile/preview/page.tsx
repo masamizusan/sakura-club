@@ -841,8 +841,8 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto">
           {/* 🚨 未保存警告バナー（Option B実装 - 最優先） */}
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            ⚠️ この画面はまだ保存されていません。<br />
-            「この内容で確定」を押すまで、画像や変更内容はDBに保存されません。
+            ⚠️ まだ変更は反映されていません<br />
+            「この内容で確定」を押すと、プロフィールに反映されます。
           </div>
 
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
