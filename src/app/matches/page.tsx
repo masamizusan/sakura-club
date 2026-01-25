@@ -383,128 +383,121 @@ export default function MatchesPage() {
 
         {/* マッチ一覧 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredMatches.map((user) => (
+          {filteredMatches.map((user) => {
+            // 日本人判定（外国人男性の場合は国名、日本人女性の場合は都道府県を表示）
+            const isJapanese = !user.nationality ||
+              user.nationality === '' ||
+              user.nationality.toLowerCase() === 'jp' ||
+              user.nationality.toLowerCase() === 'japan' ||
+              user.nationality === '日本' ||
+              user.nationality.toLowerCase() === 'japanese'
+
+            // 表示する地域情報（外国人男性→国名、日本人女性→都道府県）
+            const locationLabel = isJapanese
+              ? user.prefecture
+              : (user.nationalityLabel || user.nationality)
+
+            // 自己紹介の短縮表示（50文字まで）
+            const shortIntro = user.selfIntroduction
+              ? (user.selfIntroduction.length > 50
+                  ? user.selfIntroduction.substring(0, 50) + '...'
+                  : user.selfIntroduction)
+              : ''
+
+            return (
             <div key={user.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              {/* プロフィール画像エリア */}
-              <div className="relative h-48 bg-gradient-to-br from-sakura-200 to-sakura-300">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <User className="w-16 h-16 text-white opacity-50" />
-                </div>
-                
+              {/* プロフィール画像エリア - 修正②: 写真全体表示 */}
+              <div className="relative h-56 bg-gradient-to-br from-sakura-100 to-sakura-200">
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={`${user.firstName}のプロフィール画像`}
+                    className="w-full h-full object-contain bg-white"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <User className="w-20 h-20 text-sakura-300" />
+                  </div>
+                )}
+
                 {/* オンライン状態 */}
                 {user.isOnline && (
-                  <div className="absolute top-4 left-4">
-                    <div className="flex items-center bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+                  <div className="absolute top-3 left-3">
+                    <div className="flex items-center bg-green-500 text-white px-2 py-1 rounded-full text-xs shadow">
                       <div className="w-2 h-2 bg-white rounded-full mr-1"></div>
                       オンライン
                     </div>
                   </div>
                 )}
-
-                {/* マッチ度 */}
-                <div className="absolute top-4 right-4">
-                  <div className="bg-sakura-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    {user.matchPercentage}% マッチ
-                  </div>
-                </div>
-
-                {/* 国籍バッジ */}
-                <div className="absolute bottom-4 left-4">
-                  <div className="flex items-center bg-white/90 px-2 py-1 rounded-full text-xs">
-                    <Globe className="w-3 h-3 mr-1" />
-                    {user.nationalityLabel}
-                  </div>
-                </div>
               </div>
 
               {/* プロフィール情報 */}
-              <div className="p-6">
-                {/* 名前と年齢 */}
-                <div className="flex items-center justify-between mb-2">
+              <div className="p-5">
+                {/* 修正③: 名前・年齢・国/都道府県を一行に */}
+                <div className="flex items-center flex-wrap gap-2 mb-2">
                   <h3 className="text-xl font-bold text-gray-900">
-                    {user.firstName} {user.lastName}, {user.age}
+                    {user.firstName}
                   </h3>
-                  <div className="flex items-center text-sakura-600">
-                    <Star className="w-4 h-4 fill-current" />
-                  </div>
-                </div>
-
-                {/* 場所と距離 */}
-                <div className="flex items-center text-gray-600 mb-3">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  <span className="text-sm">{user.prefecture} {user.city}</span>
-                  {user.distanceKm && (
-                    <span className="text-sm ml-2">• {user.distanceKm}km</span>
+                  <span className="text-lg text-gray-700">{user.age}歳</span>
+                  {locationLabel && (
+                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                      {isJapanese ? (
+                        <MapPin className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Globe className="w-3 h-3 mr-1" />
+                      )}
+                      {locationLabel}
+                    </span>
                   )}
                 </div>
 
-                {/* 共通の興味 */}
-                {user.commonInterests.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-sm text-gray-600 mb-1">共通の興味:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {user.commonInterests.map((interest, index) => (
-                        <span 
-                          key={index}
-                          className="bg-sakura-100 text-sakura-700 px-2 py-1 rounded-full text-xs"
-                        >
-                          {interest}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                {/* 最終ログイン */}
+                <p className="text-xs text-gray-500 mb-3">
+                  {user.isOnline ? (
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                      オンライン中
+                    </span>
+                  ) : formatLastSeen(user.lastSeen)}
+                </p>
+
+                {/* 修正①: 自己紹介の短縮表示 */}
+                {shortIntro && (
+                  <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+                    {shortIntro}
+                  </p>
                 )}
 
-                {/* 趣味 */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-1">趣味:</p>
-                  <div className="flex flex-wrap gap-1">
+                {/* 趣味タグ（コンパクト表示） */}
+                {user.hobbies && user.hobbies.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-4">
                     {user.hobbies.slice(0, 3).map((hobby, index) => (
-                      <span 
+                      <span
                         key={index}
-                        className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs"
+                        className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
                       >
                         {hobby}
                       </span>
                     ))}
                     {user.hobbies.length > 3 && (
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
                         +{user.hobbies.length - 3}
                       </span>
                     )}
                   </div>
-                </div>
-
-                {/* 自己紹介 */}
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {user.selfIntroduction}
-                </p>
-
-                {/* 最終ログイン */}
-                <p className="text-xs text-gray-500 mb-4">
-                  {user.isOnline ? 'オンライン中' : formatLastSeen(user.lastSeen)}
-                </p>
+                )}
 
                 {/* アクションボタン */}
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
-                    onClick={() => handlePass(user.id)}
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    パス
-                  </Button>
                   <Link href={`/profile/${user.id}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       <User className="w-4 h-4 mr-1" />
-                      詳細
+                      プロフィール
                     </Button>
                   </Link>
-                  <Button 
-                    variant="sakura" 
-                    size="sm" 
+                  <Button
+                    variant="sakura"
+                    size="sm"
                     className="flex-1"
                     onClick={() => handleLike(user.id)}
                   >
@@ -514,7 +507,8 @@ export default function MatchesPage() {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* 結果が0件の場合 */}
