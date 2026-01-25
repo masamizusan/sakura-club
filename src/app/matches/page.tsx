@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  Heart, 
-  X, 
-  MessageCircle, 
-  MapPin, 
+import {
+  Heart,
+  X,
+  MessageCircle,
+  MapPin,
   Calendar,
   Star,
   Filter,
@@ -20,6 +20,7 @@ import {
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import AuthGuard from '@/components/auth/AuthGuard'
+import { useAuth } from '@/store/authStore'
 
 // ユーザープロフィールの型定義
 interface UserProfile {
@@ -114,6 +115,7 @@ const SAMPLE_MATCHES: UserProfile[] = [
 ]
 
 export default function MatchesPage() {
+  const { user, isLoading: authLoading } = useAuth()
   const [matches, setMatches] = useState<UserProfile[]>([])
   const [filteredMatches, setFilteredMatches] = useState<UserProfile[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -121,33 +123,70 @@ export default function MatchesPage() {
   const [selectedAge, setSelectedAge] = useState('すべて')
   const [isLoading, setIsLoading] = useState(true)
 
+  // 🔍 DEBUG: 現在のユーザー情報を表示
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 Matches Page: Current user info:', {
+        id: user.id,
+        firstName: user.firstName,
+        nationality: user.nationality,
+        gender: (user as any).gender
+      })
+    }
+  }, [user])
+
   // データ取得
   useEffect(() => {
     const fetchMatches = async () => {
+      // 認証読み込み中は待機
+      if (authLoading) {
+        console.log('⏳ Matches: Waiting for auth...')
+        return
+      }
+
       try {
         setIsLoading(true)
-        
+
         // クエリパラメータの作成
         const params = new URLSearchParams()
         if (searchTerm) params.append('search', searchTerm)
         if (selectedNationality !== 'すべて') params.append('nationality', selectedNationality)
         if (selectedAge !== 'すべて') params.append('age', selectedAge)
-        
+
+        // 🚀 CRITICAL: 現在のユーザーIDをAPIに渡す
+        if (user?.id) {
+          params.append('currentUserId', user.id)
+          console.log('🎯 Matches: Sending currentUserId to API:', user.id)
+        } else {
+          console.log('⚠️ Matches: No user ID available')
+        }
+
         // 開発テストモードの確認
         const urlParams = new URLSearchParams(window.location.search)
         const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
-        
+
         if (devTestFlag) {
           params.append('devTest', 'true')
           console.log('🧪 Adding devTest parameter to matches API request')
         }
-        
+
         const response = await fetch(`/api/matches?${params.toString()}`)
         const result = await response.json()
 
-        if (response.ok) {
-          setMatches(result.matches || [])
-          console.log('📊 Matches loaded successfully:', result.matches?.length || 0, 'candidates')
+        console.log('📊 Matches API response:', {
+          ok: response.ok,
+          matchCount: result.matches?.length || 0,
+          dataSource: result.dataSource,
+          error: result.error
+        })
+
+        if (response.ok && result.matches && result.matches.length > 0) {
+          setMatches(result.matches)
+          console.log('✅ Matches loaded from Supabase:', result.matches.length, 'candidates')
+        } else if (response.ok && (!result.matches || result.matches.length === 0)) {
+          // Supabaseに該当ユーザーがいない場合は空配列を設定
+          console.log('📭 No matching users found in database')
+          setMatches([])
         } else {
           console.error('Failed to fetch matches:', result.error)
           // フォールバックとしてサンプルデータを使用
@@ -163,7 +202,7 @@ export default function MatchesPage() {
     }
 
     fetchMatches()
-  }, [searchTerm, selectedNationality, selectedAge])
+  }, [searchTerm, selectedNationality, selectedAge, user?.id, authLoading])
 
   // フィルタリング処理（APIベース）
   useEffect(() => {

@@ -93,74 +93,98 @@ export async function GET(request: NextRequest) {
     })))
 
     // マッチング候補取得（フィルタリングあり）
+    // 🚀 STEP 1: まず全プロフィールを取得（自分以外）
     let profileQuery = supabase
       .from('profiles')
       .select('*')
 
-    // マッチングロジック実装
+    // 自分を除外
+    if (currentUserId) {
+      profileQuery = profileQuery.neq('id', currentUserId)
+    }
+
+    const { data: allProfiles, error: fetchError } = await profileQuery.limit(50)
+
+    if (fetchError) {
+      console.error('❌ Supabase fetch error:', fetchError)
+      return NextResponse.json({
+        matches: [],
+        total: 0,
+        hasMore: false,
+        error: `Database error: ${fetchError.message}`,
+        dataSource: 'ERROR'
+      })
+    }
+
+    console.log('📊 All profiles fetched (excluding self):', allProfiles?.length || 0)
+
+    // 🚀 STEP 2: JavaScriptでフィルタリング（より柔軟な判定）
+    let filteredProfiles = allProfiles || []
+
     if (currentUserProfile) {
-      const isCurrentUserForeignMale = currentUserProfile.nationality !== 'JP' && 
-                                       currentUserProfile.nationality !== '日本'
-      const isCurrentUserJapaneseFemale = (currentUserProfile.nationality === 'JP' || 
-                                          currentUserProfile.nationality === '日本') &&
-                                         currentUserProfile.gender === 'female'
+      // 日本人判定のヘルパー関数
+      const isJapanese = (nationality: string | null | undefined): boolean => {
+        if (!nationality) return true // NULL/undefined/空文字は日本人とみなす
+        const n = nationality.toLowerCase().trim()
+        return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
+      }
+
+      const currentNationality = currentUserProfile.nationality
+      const currentGender = currentUserProfile.gender
+
+      // 現在のユーザーが外国人男性かどうか
+      const isCurrentUserForeignMale = !isJapanese(currentNationality) && currentGender === 'male'
+      // 現在のユーザーが日本人女性かどうか
+      const isCurrentUserJapaneseFemale = isJapanese(currentNationality) && currentGender === 'female'
 
       console.log('🎯 Matching logic:', {
         isCurrentUserForeignMale,
         isCurrentUserJapaneseFemale,
-        currentUserNationality: currentUserProfile.nationality,
-        currentUserGender: currentUserProfile.gender
+        currentUserNationality: currentNationality,
+        currentUserGender: currentGender,
+        isCurrentUserJapanese: isJapanese(currentNationality)
       })
 
       if (isCurrentUserForeignMale) {
         // 外国人男性 → 日本人女性のみ表示
-        // 国籍が'JP'、'日本'、またはNULL/空の場合を含める（日本人とみなす）
-        profileQuery = profileQuery
-          .or('nationality.in.(JP,日本),nationality.is.null,nationality.eq.')
-          .neq('id', currentUserId) // 自分を除外
-        console.log('🔍 Foreign male → showing Japanese females (including NULL nationality)')
-        console.log('🔍 Query filter: (nationality IN ["JP", "日本"] OR nationality IS NULL OR nationality = "") AND id != ' + currentUserId)
+        filteredProfiles = filteredProfiles.filter(p => {
+          const targetIsJapanese = isJapanese(p.nationality)
+          const targetIsFemale = p.gender === 'female'
+          console.log(`  Filter check: ${p.name} - isJapanese: ${targetIsJapanese}, isFemale: ${targetIsFemale}, nationality: "${p.nationality}"`)
+          return targetIsJapanese && targetIsFemale
+        })
+        console.log('🔍 Foreign male → showing Japanese females:', filteredProfiles.length)
       } else if (isCurrentUserJapaneseFemale) {
         // 日本人女性 → 外国人男性のみ表示
-        profileQuery = profileQuery
-          .not('nationality', 'in', '("JP","日本")')
-          .neq('id', currentUserId) // 自分を除外
-        console.log('🔍 Japanese female → showing foreign males only')
+        filteredProfiles = filteredProfiles.filter(p => {
+          const targetIsForeign = !isJapanese(p.nationality)
+          const targetIsMale = p.gender === 'male'
+          console.log(`  Filter check: ${p.name} - isForeign: ${targetIsForeign}, isMale: ${targetIsMale}, nationality: "${p.nationality}"`)
+          return targetIsForeign && targetIsMale
+        })
+        console.log('🔍 Japanese female → showing foreign males:', filteredProfiles.length)
       } else {
-        // その他の場合は自分以外を表示
-        profileQuery = profileQuery.neq('id', currentUserId)
-        console.log('🔍 Other user → showing all except self')
+        // その他の場合は全員表示（自分以外）
+        console.log('🔍 Other user type → showing all:', filteredProfiles.length)
       }
     }
 
-    const { data: profiles, error } = await profileQuery.limit(10)
+    const profiles = filteredProfiles.slice(0, 10) // 最大10件
       
     console.log('🔍 First profile structure check:', profiles?.[0] ? Object.keys(profiles[0]) : 'No profiles')
-    
-    console.log('📊 Database query result:', {
+
+    console.log('📊 Final filtered result:', {
       profileCount: profiles?.length || 0,
-      error: error?.message || null,
       hasData: !!profiles && profiles.length > 0,
       currentUserNationality: currentUserProfile?.nationality,
       filterApplied: !!currentUserProfile,
-      allProfiles: profiles?.map(p => ({
+      matchedProfiles: profiles?.map(p => ({
         name: p.name,
         nationality: p.nationality,
         gender: p.gender
       }))
     })
-    
-    if (error) {
-      console.error('❌ Supabase error:', error)
-      return NextResponse.json({
-        matches: [],
-        total: 0,
-        hasMore: false,
-        error: `Database error: ${error.message}`,
-        dataSource: 'ERROR'
-      })
-    }
-    
+
     if (!profiles || profiles.length === 0) {
       console.log('⚠️ No profiles found in database')
       return NextResponse.json({
