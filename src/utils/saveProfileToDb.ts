@@ -367,10 +367,34 @@ export async function saveProfileToDb(
   }
 
   try {
-    // 1. avatar_url処理 - ensureAvatarStored で確実に変換
+    // ✅ Upload cache for this save operation (prevents double upload of same data_uri)
+    const uploadCache = new Map<string, string>()
+
+    const ensureAvatarStoredCached = async (input: string | null | undefined): Promise<string | null> => {
+      if (!input) return input as null
+
+      // ✅ If already converted in this save cycle, reuse it
+      const cached = uploadCache.get(input)
+      if (cached) {
+        console.log('🧠 Upload cache hit - reusing stored URL:', cached.substring(0, 50) + '...')
+        return cached
+      }
+
+      const result = await ensureAvatarStored(supabase, userId, input)
+
+      // ✅ Only cache if input was data_uri and output is URL
+      if (typeof input === 'string' && input.startsWith('data:') && typeof result === 'string' && result.startsWith('http')) {
+        uploadCache.set(input, result)
+        console.log('🧠 Upload cache set - stored new URL')
+      }
+
+      return result
+    }
+
+    // 1. avatar_url処理 - ensureAvatarStoredCached で確実に変換（キャッシュ有効）
     if (payload.avatar_url !== undefined) {
       console.log('🔄 Processing avatar_url...')
-      payload.avatar_url = await ensureAvatarStored(supabase, userId, payload.avatar_url)
+      payload.avatar_url = await ensureAvatarStoredCached(payload.avatar_url)
     } else {
       console.log('📋 avatar input kind: not_provided')
       console.log('📋 upload attempted: false')
@@ -412,8 +436,8 @@ export async function saveProfileToDb(
               console.log(`✅ Existing URL used as-is: photo_urls[${i}]`)
               processedUrls.push(url)
             } else {
-              // data URIやblob URLの場合のみ変換
-              const processedUrl = await ensureAvatarStored(supabase, userId, url)
+              // data URIやblob URLの場合のみ変換（キャッシュ有効）
+              const processedUrl = await ensureAvatarStoredCached(url)
               processedUrls.push(processedUrl)
               
               console.log(`✅ Converted photo_urls[${i}]:`, {
