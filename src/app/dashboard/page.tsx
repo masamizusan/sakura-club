@@ -51,16 +51,17 @@ function DashboardContent() {
   const [matches, setMatches] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // データ取得
+  // データ取得（キャッシュ禁止・最新データ取得）
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         setIsLoading(true)
-        
+        const fetchStartTime = new Date().toISOString()
+
         // 開発テストモードの確認
         const urlParams = new URLSearchParams(window.location.search)
         const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
-        
+
         const params = new URLSearchParams()
         if (devTestFlag) {
           params.append('devTest', 'true')
@@ -71,19 +72,47 @@ function DashboardContent() {
         if (user?.id) {
           params.append('currentUserId', user.id)
         }
-        
+
+        // 🚀 キャッシュバスター（CDN/ブラウザキャッシュ回避）
+        params.append('_t', Date.now().toString())
+
         console.log('🔍 Dashboard: Current user info:', {
           userId: user?.id,
           userNationality: user?.nationality,
-          userGender: user?.gender
+          userGender: (user as any)?.gender
         })
-        
-        const response = await fetch(`/api/matches?${params.toString()}`)
+
+        // ✅ CACHE MODE: no-store（キャッシュ完全禁止）
+        console.log('✅ CACHE MODE: no-store, revalidate=0')
+        const response = await fetch(`/api/matches?${params.toString()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
         const result = await response.json()
 
         if (response.ok) {
           setMatches(result.matches || [])
-          console.log('📊 Dashboard matches loaded:', result.matches?.length || 0, 'candidates')
+
+          // ✅ DASHBOARD SEARCH FETCH ログ
+          console.log('✅ DASHBOARD SEARCH FETCH:', {
+            fetched_at: fetchStartTime,
+            api_fetched_at: result.fetchedAt,
+            matchCount: result.matches?.length || 0,
+            dataSource: result.dataSource
+          })
+
+          // ✅ PROFILE UPDATED_AT ログ（各プロフィールの更新時刻）
+          result.matches?.forEach((m: any) => {
+            console.log('✅ PROFILE UPDATED_AT:', {
+              userId: m.id,
+              name: m.firstName,
+              updated_at: m.lastSeen,
+              residence: m.residence
+            })
+          })
         } else {
           console.error('Failed to fetch dashboard matches:', result.error)
           setMatches([])
@@ -97,7 +126,7 @@ function DashboardContent() {
     }
 
     fetchMatches()
-  }, [])
+  }, [user?.id])
 
   const sidebarItems = [
     { id: 'search', icon: Search, label: 'さがす', isPage: false, href: undefined },

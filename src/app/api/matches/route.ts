@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 export const runtime = 'nodejs'
+
+// キャッシュ防止ヘッダー
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 // GET: マッチング候補の取得
 export async function GET(request: NextRequest) {
@@ -292,29 +300,34 @@ export async function GET(request: NextRequest) {
       }
     })
     
+    const fetchedAt = new Date().toISOString()
+
     console.log('✅ SUCCESS: Returning filtered Supabase data:', {
       totalMatches: formattedMatches.length,
-      currentUserType: currentUserProfile ? 
-        (currentUserProfile.nationality !== 'JP' && currentUserProfile.nationality !== '日本' ? 'foreign_male' : 'japanese_female') : 
+      fetchedAt,
+      currentUserType: currentUserProfile ?
+        (currentUserProfile.nationality !== 'JP' && currentUserProfile.nationality !== '日本' ? 'foreign_male' : 'japanese_female') :
         'unknown',
-      profiles: formattedMatches.map(p => ({ name: p.firstName, nationality: p.nationality }))
+      profiles: formattedMatches.map(p => ({ name: p.firstName, nationality: p.nationality, updated_at: p.lastSeen }))
     })
-    
+
     return NextResponse.json({
       matches: formattedMatches,
       total: formattedMatches.length,
       hasMore: false,
+      fetchedAt,
       dataSource: 'REAL_SUPABASE_DATA'
-    })
-    
+    }, { headers: noCacheHeaders })
+
   } catch (error) {
     console.error('💥 CRITICAL ERROR in matches API:', error)
     return NextResponse.json({
       matches: [],
       total: 0,
       hasMore: false,
+      fetchedAt: new Date().toISOString(),
       error: `Server error: ${error}`,
       dataSource: 'CRITICAL_ERROR'
-    }, { status: 500 })
+    }, { status: 500, headers: noCacheHeaders })
   }
 }
