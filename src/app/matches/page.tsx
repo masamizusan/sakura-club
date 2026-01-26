@@ -406,17 +406,23 @@ export default function MatchesPage() {
               : (user.nationalityLabel || user.nationality)
 
             return (
-            <div key={user.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+            <div key={user.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 relative" data-card-version="SEARCHCARD_V2">
+              {/* 🔴 UI_PATCH バージョン表示（検証用・後で削除） */}
+              <div className="absolute bottom-2 right-2 z-10 text-[10px] text-gray-400 bg-white/80 px-1 rounded">
+                UI_PATCH: SEARCHCARD_V2
+              </div>
+
               {/* プロフィール画像エリア - 修正②: 写真全体表示 (object-contain) */}
-              <div className="relative h-56 bg-gradient-to-br from-sakura-100 to-sakura-200">
+              <div className="relative h-56 bg-gray-50" data-fix="image-container">
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}
                     alt={`${user.firstName}のプロフィール画像`}
-                    className="w-full h-full object-contain bg-white"
+                    className="w-full h-full object-contain"
+                    data-fix="object-contain"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
                     <User className="w-20 h-20 text-sakura-300" />
                   </div>
                 )}
@@ -435,13 +441,13 @@ export default function MatchesPage() {
               {/* プロフィール情報 */}
               <div className="p-5">
                 {/* 修正③: 名前・年齢・国/都道府県を一行に（国は画像右上から移動） */}
-                <div className="flex items-center flex-wrap gap-2 mb-2">
+                <div className="flex items-center flex-wrap gap-2 mb-2" data-fix="name-location-row">
                   <h3 className="text-xl font-bold text-gray-900">
                     {user.firstName}
                   </h3>
                   <span className="text-lg text-gray-700">{user.age}歳</span>
                   {locationLabel && (
-                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full" data-fix="location-badge">
                       {isJapanese ? (
                         <MapPin className="w-3 h-3 mr-1" />
                       ) : (
@@ -464,7 +470,7 @@ export default function MatchesPage() {
 
                 {/* 修正①: 自己紹介の短縮表示 (line-clamp-2で2行まで) */}
                 {user.selfIntroduction && (
-                  <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                  <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2" data-fix="bio-clamp">
                     {user.selfIntroduction}
                   </p>
                 )}
