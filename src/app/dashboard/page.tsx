@@ -28,8 +28,10 @@ interface UserProfile {
   firstName: string
   lastName: string
   age: number
+  gender?: string
   nationality: string
   nationalityLabel: string
+  residence?: string
   prefecture: string
   city: string
   occupation?: string
@@ -142,34 +144,43 @@ function DashboardContent() {
       console.log('✅ BIO CLAMP APPLIED: line-clamp-2')
       console.log('✅ IMAGE CONTAIN APPLIED: object-contain')
       console.log('✅ COUNTRY POSITION MOVED: near name-age')
-      console.log('✅ LOCATION BADGE APPLIED: prefecture/residence')
+      console.log('✅ LOCATION BADGE APPLIED: residence for japanese female')
 
       return (
         <div className="space-y-6">
           {matches.map((match) => {
-            // 日本人判定（外国人男性→国名、日本人女性→都道府県）
-            const isJapanese = !match.nationality ||
-              match.nationality === '' ||
-              match.nationality.toLowerCase() === 'jp' ||
-              match.nationality.toLowerCase() === 'japan' ||
-              match.nationality === '日本' ||
-              match.nationality.toLowerCase() === 'japanese'
+            // 日本人女性判定（gender === 'female' をシンプルに採用）
+            const isJapaneseFemale = match.gender === 'female'
 
-            // 表示する地域情報（フォールバック対応）
-            // 日本人女性: prefecture → city の順でフォールバック
+            // city が JSON の場合の処理
+            let cityValue = match.city || ''
+            if (cityValue && typeof cityValue === 'string' && cityValue.startsWith('{')) {
+              try {
+                const cityObj = JSON.parse(cityValue)
+                cityValue = cityObj.city || ''
+              } catch (e) {
+                // パース失敗時はそのまま使用
+              }
+            }
+
+            // 表示する地域情報（SSOT確定版）
+            // 日本人女性: residence → city の順でフォールバック
             // 外国人男性: nationalityLabel → nationality
-            const locationLabel = isJapanese
-              ? (match.prefecture || match.city || '')
+            const locationLabel = isJapaneseFemale
+              ? (match.residence || cityValue || '')
               : (match.nationalityLabel || match.nationality || '')
 
-            // デバッグログ
-            console.log('📍 Location badge:', {
+            // 📍 LOCATION BADGE CHECK（必須ログ）
+            console.log('📍 LOCATION BADGE CHECK', {
+              id: match.id,
               name: match.firstName,
-              isJapanese,
-              prefecture: match.prefecture,
-              city: match.city,
+              gender: match.gender,
               nationality: match.nationality,
-              locationLabel
+              residence: match.residence,
+              city: match.city,
+              cityValue,
+              locationLabel,
+              isJapaneseFemale
             })
 
             return (
@@ -212,7 +223,7 @@ function DashboardContent() {
                   <span className="text-xl text-gray-600">{match.age}歳</span>
                   {locationLabel && (
                     <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full" data-fix="location-badge">
-                      {isJapanese ? (
+                      {isJapaneseFemale ? (
                         <MapPin className="w-3 h-3 mr-1" />
                       ) : (
                         <Globe className="w-3 h-3 mr-1" />
