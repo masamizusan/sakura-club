@@ -136,20 +136,48 @@ function DashboardContent() {
         )
       }
 
+      // ✅ DASHBOARD CARD COMPONENT ACTIVE
+      console.log('✅ DASHBOARD CARD COMPONENT ACTIVE')
+      console.log('✅ BIO CLAMP APPLIED: line-clamp-2')
+      console.log('✅ IMAGE CONTAIN APPLIED: object-contain')
+      console.log('✅ COUNTRY POSITION MOVED: near name-age')
+
       return (
         <div className="space-y-6">
-          {matches.map((match) => (
-            <div key={match.id} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto">
-              {/* Profile Image */}
-              <div className="relative h-80 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
+          {matches.map((match) => {
+            // 日本人判定（外国人男性→国名、日本人女性→都道府県）
+            const isJapanese = !match.nationality ||
+              match.nationality === '' ||
+              match.nationality.toLowerCase() === 'jp' ||
+              match.nationality.toLowerCase() === 'japan' ||
+              match.nationality === '日本' ||
+              match.nationality.toLowerCase() === 'japanese'
+
+            // 表示する地域情報
+            const locationLabel = isJapanese
+              ? match.prefecture
+              : (match.nationalityLabel || match.nationality)
+
+            return (
+            <div key={match.id} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto relative" data-card-version="SEARCHCARD_V2">
+              {/* 🔴 UI_PATCH バージョン表示（検証用） */}
+              <div className="absolute bottom-2 right-2 z-10 text-[10px] text-gray-400 bg-white/80 px-1 rounded">
+                UI_PATCH: SEARCHCARD_V2
+              </div>
+
+              {/* Profile Image - 修正②: object-contain で全体表示 */}
+              <div className="relative h-80 bg-gray-100 flex items-center justify-center" data-fix="image-container">
                 {match.profileImage ? (
-                  <img 
-                    src={match.profileImage} 
+                  <img
+                    src={match.profileImage}
                     alt={`${match.firstName} ${match.lastName}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
+                    data-fix="object-contain"
                   />
                 ) : (
-                  <Users className="w-24 h-24 text-sakura-400" />
+                  <div className="w-full h-full bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
+                    <Users className="w-24 h-24 text-sakura-400" />
+                  </div>
                 )}
                 {match.isOnline && (
                   <div className="absolute top-4 left-4 flex items-center bg-green-500 text-white px-3 py-1 rounded-full text-sm">
@@ -157,27 +185,23 @@ function DashboardContent() {
                     オンライン中
                   </div>
                 )}
-                
-                {/* 国籍バッジ */}
-                <div className="absolute top-4 right-4">
-                  <div className="bg-white/90 px-2 py-1 rounded-full text-xs">
-                    {match.nationalityLabel}
-                  </div>
-                </div>
+                {/* 修正③: 国籍バッジを画像右上から削除（名前横に移動） */}
               </div>
 
               {/* Profile Info */}
               <div className="p-6">
-                <div className="flex items-center mb-3">
-                  <h3 className="text-2xl font-bold text-gray-900 mr-3">
-                    {match.firstName} {match.lastName}
+                {/* 修正③: 名前・年齢・国/都道府県を一行に */}
+                <div className="flex items-center flex-wrap gap-2 mb-3" data-fix="name-location-row">
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {match.firstName}
                   </h3>
                   <span className="text-xl text-gray-600">{match.age}歳</span>
-                </div>
-
-                <div className="flex items-center text-gray-600 mb-4">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  <span>{match.prefecture} {match.city}</span>
+                  {locationLabel && (
+                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full" data-fix="location-badge">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {locationLabel}
+                    </span>
+                  )}
                 </div>
 
                 {/* プロフィール詳細情報 */}
@@ -206,7 +230,8 @@ function DashboardContent() {
                   </div>
                 )}
 
-                <p className="text-gray-700 mb-4 leading-relaxed">
+                {/* 修正①: 自己紹介 line-clamp-2 で2行まで */}
+                <p className="text-gray-700 mb-4 leading-relaxed line-clamp-2" data-fix="bio-clamp">
                   {match.selfIntroduction}
                 </p>
 
@@ -239,7 +264,8 @@ function DashboardContent() {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )
     }
