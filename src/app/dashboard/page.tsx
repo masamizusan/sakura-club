@@ -7,12 +7,13 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuth } from '@/store/authStore'
 import Link from 'next/link'
-import { 
-  Heart, 
-  Users, 
-  MessageCircle, 
+import {
+  Heart,
+  Users,
+  MessageCircle,
   Search,
   MapPin,
+  Globe,
   Star,
   Clock,
   User,
@@ -141,6 +142,7 @@ function DashboardContent() {
       console.log('✅ BIO CLAMP APPLIED: line-clamp-2')
       console.log('✅ IMAGE CONTAIN APPLIED: object-contain')
       console.log('✅ COUNTRY POSITION MOVED: near name-age')
+      console.log('✅ LOCATION BADGE APPLIED: prefecture/residence')
 
       return (
         <div className="space-y-6">
@@ -153,10 +155,22 @@ function DashboardContent() {
               match.nationality === '日本' ||
               match.nationality.toLowerCase() === 'japanese'
 
-            // 表示する地域情報
+            // 表示する地域情報（フォールバック対応）
+            // 日本人女性: prefecture → city の順でフォールバック
+            // 外国人男性: nationalityLabel → nationality
             const locationLabel = isJapanese
-              ? match.prefecture
-              : (match.nationalityLabel || match.nationality)
+              ? (match.prefecture || match.city || '')
+              : (match.nationalityLabel || match.nationality || '')
+
+            // デバッグログ
+            console.log('📍 Location badge:', {
+              name: match.firstName,
+              isJapanese,
+              prefecture: match.prefecture,
+              city: match.city,
+              nationality: match.nationality,
+              locationLabel
+            })
 
             return (
             <div key={match.id} className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-md mx-auto relative" data-card-version="SEARCHCARD_V2">
@@ -198,7 +212,11 @@ function DashboardContent() {
                   <span className="text-xl text-gray-600">{match.age}歳</span>
                   {locationLabel && (
                     <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full" data-fix="location-badge">
-                      <MapPin className="w-3 h-3 mr-1" />
+                      {isJapanese ? (
+                        <MapPin className="w-3 h-3 mr-1" />
+                      ) : (
+                        <Globe className="w-3 h-3 mr-1" />
+                      )}
                       {locationLabel}
                     </span>
                   )}
