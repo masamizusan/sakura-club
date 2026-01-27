@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { AuthUser, authService } from '@/lib/auth'
+import { clearAllUserStorage } from '@/utils/userStorage'
 
 // グローバルな初期化フラグ
 let globalInitialized = false
@@ -66,17 +67,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const currentState = get()
           const currentUserId = currentState.user?.id
           const newUserId = newUser?.id
-          
-          console.log('Auth state listener triggered:', { 
-            hasNewUser: !!newUser, 
-            currentUserId, 
-            newUserId,
+
+          console.log('Auth state listener triggered:', {
+            hasNewUser: !!newUser,
+            currentUserId: currentUserId?.slice(0, 8),
+            newUserId: newUserId?.slice(0, 8),
             shouldUpdate: currentUserId !== newUserId
           })
-          
-          // ユーザーが実際に変わった場合のみ状態を更新
+
+          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのlocalStorageをクリア
           if (currentUserId !== newUserId) {
-            console.log('Updating user state')
+            console.log('🧹 User changed - clearing previous user storage')
+            clearAllUserStorage(currentUserId)
+            console.log('✅ AUTH USER:', { id: newUserId?.slice(0, 8), email: newUser?.email })
             set({ user: newUser })
           }
         })
@@ -96,6 +99,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     try {
       set({ isLoading: true })
+      const currentUser = get().user
+      // 🚨 CRITICAL: サインアウト時にユーザー固有のlocalStorageをクリア
+      console.log('🧹 SignOut - clearing user storage for:', currentUser?.id?.slice(0, 8))
+      clearAllUserStorage(currentUser?.id)
       await authService.signOut()
       set({ user: null })
     } catch (error) {

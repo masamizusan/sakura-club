@@ -316,20 +316,33 @@ export async function saveProfileToDb(
   console.log('📍 profiles write entry:', entryPoint)
 
   // 🛡️ CRITICAL: セッションユーザーIDと引数userIdの一致チェック（誤保存防止）
+  let authUid: string | null = null
   try {
     const { data: { user: sessionUser }, error: sessionError } = await supabase.auth.getUser()
 
     if (sessionError) {
       console.warn('🔒 saveProfileToDb: セッション取得エラー（続行）', sessionError.message)
-    } else if (sessionUser && sessionUser.id !== userId) {
-      console.error('🚨 USER_ID_MISMATCH BLOCK SAVE', {
-        sessionUser: sessionUser.id,
-        payloadUser: userId,
-        entryPoint
+    } else if (sessionUser) {
+      authUid = sessionUser.id
+
+      // ✅ AUTH USER ログ（必須）
+      console.log('✅ AUTH USER:', {
+        id: sessionUser.id?.slice(0, 8) + '...',
+        email: sessionUser.email
       })
-      throw new Error(`User mismatch - blocked for safety (session: ${sessionUser.id}, payload: ${userId})`)
-    } else {
-      console.log('✅ saveProfileToDb: ユーザーID一致確認OK', { userId })
+
+      if (sessionUser.id !== userId) {
+        // 🚨 CRITICAL: ユーザーID不一致 → 保存をブロック
+        console.error('🚨 USER_ID_MISMATCH BLOCK SAVE', {
+          sessionUser: sessionUser.id,
+          payloadUser: userId,
+          sessionEmail: sessionUser.email,
+          entryPoint
+        })
+        throw new Error(`User mismatch - blocked for safety (session: ${sessionUser.id}, payload: ${userId})`)
+      } else {
+        console.log('✅ saveProfileToDb: ユーザーID一致確認OK', { userId: userId?.slice(0, 8) })
+      }
     }
   } catch (sessionCheckErr: any) {
     // User mismatchエラーの場合は再throw
@@ -339,6 +352,14 @@ export async function saveProfileToDb(
     // その他のエラーは警告のみ（セッション取得失敗時も保存は続行）
     console.warn('🔒 saveProfileToDb: セッションチェック例外（続行）', sessionCheckErr?.message)
   }
+
+  // ✅ PROFILE SAVE ログ（必須）
+  console.log('✅ PROFILE SAVE:', {
+    authUid: authUid?.slice(0, 8) || 'unknown',
+    targetRowId: userId?.slice(0, 8),
+    payloadUserId: payload.id?.slice(0, 8) || payload.user_id?.slice(0, 8) || 'not_in_payload',
+    entryPoint
+  })
 
   // 🔍 TASK D DEBUG: 入力されたphoto_urlsを最初に記録（処理前の状態）
   const inputPhotoUrls = Array.isArray(payload.photo_urls) ? [...payload.photo_urls] : []
@@ -368,13 +389,20 @@ export async function saveProfileToDb(
     if (payload.photo_urls !== undefined) {
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('photo_urls')
+        .select('id, email, photo_urls')
         .eq('id', userId)
         .single()
 
       if (fetchError) {
         console.log('🗑️ TASK D: DB取得エラー（新規ユーザーの可能性）', fetchError.message)
       }
+
+      // ✅ PROFILE FETCH ログ（必須）
+      console.log('✅ PROFILE FETCH:', {
+        requestedUserId: userId?.slice(0, 8),
+        returnedProfileId: currentProfile?.id?.slice(0, 8) || 'null',
+        returnedEmail: currentProfile?.email || 'null'
+      })
 
       prevPhotoUrls = Array.isArray(currentProfile?.photo_urls) ? currentProfile.photo_urls : []
 
