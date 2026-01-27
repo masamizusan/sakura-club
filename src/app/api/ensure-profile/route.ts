@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * 🛡️ テストモード用プロフィール確保API（RLS回避版）
- * 
+ * 🛡️ テストモード用プロフィール確保API（RLS回避版 + 認証検証付き）
+ *
  * 目的:
  * - 匿名ユーザー・テストユーザーでのプロフィール作成を確実に実行
  * - service_role を使用してRLS制限を回避
  * - 新規登録→プロフィール編集の遷移を保証
+ *
+ * 🚨 SECURITY: リクエストのuserIdと認証ユーザーIDの一致を必ず検証
  */
 
 interface EnsureProfileRequest {
@@ -30,7 +33,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Service Role Client（RLS回避）
+    // 🚨 SECURITY FIX: 認証ユーザーIDとリクエストuserIdの一致を検証
+    const supabaseAuth = createServerClient(request)
+    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser()
+
+    if (authError || !authUser) {
+      console.warn('🚨 ensureProfile API: 認証失敗またはユーザーなし', {
+        authError: authError?.message,
+        hasAuthUser: !!authUser
+      })
+      return NextResponse.json(
+        { error: '認証が必要です' },
+        { status: 401 }
+      )
+    }
+
+    // 🚨 CRITICAL: リクエストのuserIdと認証ユーザーIDが一致することを確認
+    if (authUser.id !== userId) {
+      console.error('🚨 ensureProfile API: USER_ID_MISMATCH - 他人のプロフィール操作を拒否', {
+        authUserId: authUser.id?.slice(0, 8),
+        requestUserId: userId?.slice(0, 8),
+        authEmail: authUser.email
+      })
+      return NextResponse.json(
+        { error: 'Forbidden: Cannot modify another user\'s profile' },
+        { status: 403 }
+      )
+    }
+
+    console.log('✅ ensureProfile API: 認証検証OK', {
+      authUserId: authUser.id?.slice(0, 8),
+      authEmail: authUser.email
+    })
+
+    // Service Role Client（RLS回避）- 認証検証後のみ使用
     const supabaseServiceRole = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

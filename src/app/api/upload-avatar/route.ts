@@ -1,15 +1,18 @@
 /**
- * 🚀 /api/upload-avatar - サーバーサイドStorage upload
- * 
+ * 🚀 /api/upload-avatar - サーバーサイドStorage upload（認証検証付き）
+ *
  * 目的: Base64 avatar を Supabase Storage にアップロードし、storage path を返却
  * 特徴: Service Role使用でTest mode/Auth制限を回避
- * 
+ *
+ * 🚨 SECURITY: リクエストのuserIdと認証ユーザーIDの一致を必ず検証
+ *
  * Input: { userId: string, dataUrl: string }
  * Output: { success: boolean, path?: string, error?: string }
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 import { parseDataUrl, generateStoragePath } from '@/utils/base64Utils'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -49,7 +52,7 @@ interface UploadAvatarResponse {
 export async function POST(request: NextRequest): Promise<NextResponse<UploadAvatarResponse>> {
   try {
     console.log('🚀 /api/upload-avatar: Starting server-side upload...')
-    
+
     // 1. 環境変数確認
     if (!supabaseAdmin || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('❌ Missing required environment variables or Supabase client not initialized')
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         error: 'Server configuration error: Missing Supabase credentials'
       }, { status: 500 })
     }
-    
+
     // 2. リクエスト解析
     let body: UploadAvatarRequest
     try {
@@ -70,9 +73,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         error: 'Invalid JSON payload'
       }, { status: 400 })
     }
-    
+
     const { userId, dataUrl } = body
-    
+
     // 3. バリデーション
     if (!userId || typeof userId !== 'string') {
       return NextResponse.json({
@@ -80,6 +83,39 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         error: 'Missing or invalid userId'
       }, { status: 400 })
     }
+
+    // 🚨 SECURITY FIX: 認証ユーザーIDとリクエストuserIdの一致を検証
+    const supabaseAuth = createServerClient(request)
+    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser()
+
+    if (authError || !authUser) {
+      console.warn('🚨 upload-avatar API: 認証失敗またはユーザーなし', {
+        authError: authError?.message,
+        hasAuthUser: !!authUser
+      })
+      return NextResponse.json({
+        success: false,
+        error: '認証が必要です'
+      }, { status: 401 })
+    }
+
+    // 🚨 CRITICAL: リクエストのuserIdと認証ユーザーIDが一致することを確認
+    if (authUser.id !== userId) {
+      console.error('🚨 upload-avatar API: USER_ID_MISMATCH - 他人のStorage操作を拒否', {
+        authUserId: authUser.id?.slice(0, 8),
+        requestUserId: userId?.slice(0, 8),
+        authEmail: authUser.email
+      })
+      return NextResponse.json({
+        success: false,
+        error: 'Forbidden: Cannot upload to another user\'s storage'
+      }, { status: 403 })
+    }
+
+    console.log('✅ upload-avatar API: 認証検証OK', {
+      authUserId: authUser.id?.slice(0, 8),
+      authEmail: authUser.email
+    })
     
     if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
       return NextResponse.json({
