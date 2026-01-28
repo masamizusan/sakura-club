@@ -74,14 +74,14 @@ export async function processAvatarForSave(
     console.log('🚨 Base64 detected → Starting Storage conversion...')
     
     try {
+      // 🔒 SECURITY: userIdはAPIサーバー側でauthUser.idから取得（リクエストに含めない）
       const response = await fetch('/api/upload-avatar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId,
-          dataUrl: avatarUrl
+          dataUrl: avatarUrl  // userIdは送らない - サーバー側で認証から取得
         })
       })
       

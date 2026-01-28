@@ -1,44 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * 🛡️ テストモード用プロフィール確保API（RLS回避版 + 認証検証付き）
+ * 🛡️ プロフィール確保API（RLS準拠版）
  *
  * 目的:
- * - 匿名ユーザー・テストユーザーでのプロフィール作成を確実に実行
- * - service_role を使用してRLS制限を回避
+ * - ユーザーのプロフィール存在を確認・作成
  * - 新規登録→プロフィール編集の遷移を保証
  *
- * 🚨 SECURITY: リクエストのuserIdと認証ユーザーIDの一致を必ず検証
+ * 🔒 SECURITY:
+ * - userIdをリクエストから受け取らない（偽装不可能）
+ * - authUser.idのみを使用
+ * - ユーザーセッションクライアントでRLSが効く
  */
-
-interface EnsureProfileRequest {
-  userId: string
-  email?: string
-  isTestMode?: boolean
-}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as EnsureProfileRequest
-    const { userId, email, isTestMode } = body
+    // 🔒 ユーザーセッションクライアント（RLS有効）
+    const supabase = createServerClient(request)
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      )
-    }
-
-    // 🚨 SECURITY FIX: 認証ユーザーIDとリクエストuserIdの一致を検証
-    const supabaseAuth = createServerClient(request)
-    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser()
-
+    // 未認証チェック
     if (authError || !authUser) {
-      console.warn('🚨 ensureProfile API: 認証失敗またはユーザーなし', {
+      console.warn('🚨 ensureProfile API: 認証失敗', {
         authError: authError?.message,
         hasAuthUser: !!authUser
       })
@@ -48,44 +34,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🚨 CRITICAL: リクエストのuserIdと認証ユーザーIDが一致することを確認
-    if (authUser.id !== userId) {
-      console.error('🚨 ensureProfile API: USER_ID_MISMATCH - 他人のプロフィール操作を拒否', {
-        authUserId: authUser.id?.slice(0, 8),
-        requestUserId: userId?.slice(0, 8),
-        authEmail: authUser.email
-      })
-      return NextResponse.json(
-        { error: 'Forbidden: Cannot modify another user\'s profile' },
-        { status: 403 }
-      )
-    }
+    // 🔒 CRITICAL: userIdはauthUser.idのみを使用（リクエストからは受け取らない）
+    const userId = authUser.id
+    const userEmail = authUser.email
 
-    console.log('✅ ensureProfile API: 認証検証OK', {
-      authUserId: authUser.id?.slice(0, 8),
-      authEmail: authUser.email
+    console.log('✅ ensureProfile API: 認証OK', {
+      userId: userId?.slice(0, 8),
+      email: userEmail
     })
 
-    // Service Role Client（RLS回避）- 認証検証後のみ使用
-    const supabaseServiceRole = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    console.log('🛡️ ensureProfile API: Starting profile creation with service role:', {
-      userId,
-      email,
-      isTestMode
-    })
-
-    // 1. 既存プロフィールの確認
-    const { data: existingProfile, error: searchError } = await supabaseServiceRole
+    // 1. 既存プロフィールの確認（user_idベース）
+    const { data: existingProfile, error: searchError } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
@@ -102,38 +61,31 @@ export async function POST(request: NextRequest) {
     // 2. 既存プロフィールがある場合
     if (existingProfile) {
       console.log('✅ ensureProfile API: Profile already exists', {
-        profileId: existingProfile.id,
+        profileId: existingProfile.id?.slice(0, 8),
         hasEmail: !!existingProfile.email
       })
 
-      // 🚨 FIX: 既存プロフィールのemailがnullの場合は更新
-      // 優先順位: クライアントから渡されたemail(サインアップ時のemail) > プレースホルダー
-      if (!existingProfile.email) {
-        const finalEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
-        console.log('📧 API: 既存プロフィールのemail更新:', {
-          profileId: existingProfile.id,
-          oldEmail: existingProfile.email,
-          signupEmail: email || 'なし',
-          finalEmail
-        })
+      // emailがnullの場合は更新
+      if (!existingProfile.email && userEmail) {
+        console.log('📧 API: 既存プロフィールのemail更新')
 
-        const { data: updatedProfile, error: updateError } = await supabaseServiceRole
+        const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
-          .update({ email: finalEmail })
+          .update({ email: userEmail })
           .eq('id', existingProfile.id)
           .select('*')
           .single()
 
         if (updateError) {
-          console.warn('⚠️ API: email更新失敗（続行可能）:', updateError)
+          console.warn('⚠️ API: email更新失敗（RLS拒否の可能性）:', updateError)
+          // 更新失敗でも既存プロフィールを返す
           return NextResponse.json({
             success: true,
             profile: existingProfile,
-            reason: 'Profile already exists (email update failed)'
+            reason: 'Profile exists (email update blocked by RLS)'
           })
         }
 
-        console.log('✅ API: 既存プロフィールのemail更新成功')
         return NextResponse.json({
           success: true,
           profile: updatedProfile,
@@ -149,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Legacy profile（id = auth.uid）の確認・移行
-    const { data: legacyProfile, error: legacyError } = await supabaseServiceRole
+    const { data: legacyProfile, error: legacyError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -157,8 +109,8 @@ export async function POST(request: NextRequest) {
 
     if (!legacyError && legacyProfile) {
       console.log('🔧 ensureProfile API: Migrating legacy profile')
-      
-      const { data: updatedProfile, error: updateError } = await supabaseServiceRole
+
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({ user_id: userId })
         .eq('id', userId)
@@ -166,7 +118,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (updateError) {
-        console.error('🚨 ensureProfile API: Legacy migration failed', updateError)
+        console.error('🚨 ensureProfile API: Legacy migration failed (RLS)', updateError)
         return NextResponse.json(
           { error: `Legacy migration failed: ${updateError.message}` },
           { status: 500 }
@@ -181,53 +133,42 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. 新規プロフィール作成（Service Roleでの確実な作成）
-    console.log('🆕 ensureProfile API: Creating new profile with service role')
-
-    // 🚨 FIX: サインアップ時のemailを優先、なければプレースホルダー
-    const profileEmail = email || `test-${userId.substring(0, 8)}@test.sakura-club.local`
-    console.log('📧 API Profile email設定:', {
-      signupEmail: email || 'なし',
-      isTestMode,
-      finalEmail: profileEmail
-    })
+    // 4. 新規プロフィール作成（ユーザーセッションクライアント経由 = RLS適用）
+    console.log('🆕 ensureProfile API: Creating new profile with user session')
 
     const newProfileData = {
       user_id: userId,
-      email: profileEmail,
+      email: userEmail || null,
       created_at: new Date().toISOString(),
-      // テストモード識別
-      name: isTestMode ? null : null,
+      name: null,
       gender: null,
       birth_date: null,
-      // 🔧 FIXED: 新規プロフィールでは画像なし状態で初期化、空配列上書きを回避
       language_skills: []
     }
 
-    const { data: newProfile, error: insertError } = await supabaseServiceRole
+    const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
       .insert(newProfileData)
       .select('*')
       .single()
 
     if (insertError) {
-      console.error('🚨 ensureProfile API: Insert failed even with service role', insertError)
+      console.error('🚨 ensureProfile API: Insert failed (RLS may block)', insertError)
       return NextResponse.json(
         { error: `Insert failed: ${insertError.message}` },
         { status: 500 }
       )
     }
 
-    console.log('✅ ensureProfile API: New profile created successfully', {
-      profileId: newProfile.id,
-      userId: newProfile.user_id,
-      isTestMode
+    console.log('✅ ensureProfile API: New profile created', {
+      profileId: newProfile.id?.slice(0, 8),
+      userId: newProfile.user_id?.slice(0, 8)
     })
 
     return NextResponse.json({
       success: true,
       profile: newProfile,
-      reason: 'New profile created with service role'
+      reason: 'New profile created'
     })
 
   } catch (error) {

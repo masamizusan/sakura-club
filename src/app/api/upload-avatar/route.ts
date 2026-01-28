@@ -1,12 +1,14 @@
 /**
- * 🚀 /api/upload-avatar - サーバーサイドStorage upload（認証検証付き）
+ * 🚀 /api/upload-avatar - サーバーサイドStorage upload（RLS準拠版）
  *
  * 目的: Base64 avatar を Supabase Storage にアップロードし、storage path を返却
- * 特徴: Service Role使用でTest mode/Auth制限を回避
  *
- * 🚨 SECURITY: リクエストのuserIdと認証ユーザーIDの一致を必ず検証
+ * 🔒 SECURITY:
+ * - userIdをリクエストから受け取らない（偽装不可能）
+ * - authUser.idのみを使用
+ * - Storage操作はservice_role使用（Storageポリシー用）
  *
- * Input: { userId: string, dataUrl: string }
+ * Input: { dataUrl: string }
  * Output: { success: boolean, path?: string, error?: string }
  */
 
@@ -19,8 +21,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const BUCKET_NAME = 'avatars'
 
-// Service Role Client（RLS回避・Storage権限フル）
-// ビルド時は環境変数が無い場合があるのでnull許可
+// Service Role Client（Storage操作用 - Storageポリシーは別管理）
 let supabaseAdmin: any = null
 if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
   supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -32,8 +33,8 @@ if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 interface UploadAvatarRequest {
-  userId: string
   dataUrl: string
+  // userId は受け取らない（authUser.idを使用）
 }
 
 interface UploadAvatarResponse {
@@ -62,6 +63,29 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
       }, { status: 500 })
     }
 
+    // 🔒 認証チェック（ユーザーセッションクライアント）
+    const supabaseAuth = createServerClient(request)
+    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser()
+
+    if (authError || !authUser) {
+      console.warn('🚨 upload-avatar API: 認証失敗', {
+        authError: authError?.message,
+        hasAuthUser: !!authUser
+      })
+      return NextResponse.json({
+        success: false,
+        error: '認証が必要です'
+      }, { status: 401 })
+    }
+
+    // 🔒 CRITICAL: userIdはauthUser.idのみを使用（リクエストからは受け取らない）
+    const userId = authUser.id
+
+    console.log('✅ upload-avatar API: 認証OK', {
+      userId: userId?.slice(0, 8),
+      email: authUser.email
+    })
+
     // 2. リクエスト解析
     let body: UploadAvatarRequest
     try {
@@ -74,62 +98,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
       }, { status: 400 })
     }
 
-    const { userId, dataUrl } = body
+    const { dataUrl } = body
 
     // 3. バリデーション
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing or invalid userId'
-      }, { status: 400 })
-    }
-
-    // 🚨 SECURITY FIX: 認証ユーザーIDとリクエストuserIdの一致を検証
-    const supabaseAuth = createServerClient(request)
-    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser()
-
-    if (authError || !authUser) {
-      console.warn('🚨 upload-avatar API: 認証失敗またはユーザーなし', {
-        authError: authError?.message,
-        hasAuthUser: !!authUser
-      })
-      return NextResponse.json({
-        success: false,
-        error: '認証が必要です'
-      }, { status: 401 })
-    }
-
-    // 🚨 CRITICAL: リクエストのuserIdと認証ユーザーIDが一致することを確認
-    if (authUser.id !== userId) {
-      console.error('🚨 upload-avatar API: USER_ID_MISMATCH - 他人のStorage操作を拒否', {
-        authUserId: authUser.id?.slice(0, 8),
-        requestUserId: userId?.slice(0, 8),
-        authEmail: authUser.email
-      })
-      return NextResponse.json({
-        success: false,
-        error: 'Forbidden: Cannot upload to another user\'s storage'
-      }, { status: 403 })
-    }
-
-    console.log('✅ upload-avatar API: 認証検証OK', {
-      authUserId: authUser.id?.slice(0, 8),
-      authEmail: authUser.email
-    })
-    
     if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
       return NextResponse.json({
         success: false,
         error: 'Missing or invalid dataUrl. Expected data:image/* format.'
       }, { status: 400 })
     }
-    
+
     console.log('📋 Upload request:', {
-      userId,
+      userId: userId?.slice(0, 8),
       dataUrlSize: Math.round(dataUrl.length / 1024) + 'KB',
       dataUrlPreview: dataUrl.substring(0, 50) + '...'
     })
-    
+
     // 4. Base64 → Buffer 変換
     let parsed: ReturnType<typeof parseDataUrl>
     try {
@@ -141,27 +125,27 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         error: 'Invalid data URL format'
       }, { status: 400 })
     }
-    
+
     const { buffer, contentType, ext } = parsed
-    
-    // 5. Storage path 生成
+
+    // 5. Storage path 生成（authUser.idを使用）
     const storagePath = generateStoragePath(userId, ext)
-    
+
     console.log('📁 Storage upload starting:', {
       storagePath,
       contentType,
       bufferSize: Math.round(buffer.length / 1024) + 'KB'
     })
-    
-    // 6. Supabase Storage アップロード
+
+    // 6. Supabase Storage アップロード（service_role - Storage専用）
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
       .upload(storagePath, buffer, {
         contentType,
         cacheControl: '3600',
-        upsert: true // 上書き運用
+        upsert: true
       })
-    
+
     if (uploadError) {
       console.error('❌ Storage upload failed:', uploadError)
       return NextResponse.json({
@@ -169,16 +153,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         error: `Storage upload failed: ${uploadError.message}`
       }, { status: 500 })
     }
-    
+
     console.log('✅ Storage upload success:', uploadData.path)
-    
+
     // 7. Public URL 生成
     const { data: publicUrlData } = supabaseAdmin.storage
       .from(BUCKET_NAME)
       .getPublicUrl(storagePath)
-    
+
     const publicUrl = publicUrlData.publicUrl
-    
+
     // 8. メタデータ作成
     const meta = {
       originalSize: dataUrl.length,
@@ -186,20 +170,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
       savedBytes: dataUrl.length - storagePath.length,
       ext
     }
-    
+
     console.log('🎉 Upload complete:', {
       path: storagePath,
       publicUrl: publicUrl?.substring(0, 60) + '...',
       savedBytes: Math.round(meta.savedBytes / 1024) + 'KB'
     })
-    
+
     return NextResponse.json({
       success: true,
       path: storagePath,
       publicUrl,
       meta
     })
-    
+
   } catch (error) {
     console.error('❌ /api/upload-avatar unexpected error:', error)
     return NextResponse.json({
@@ -209,9 +193,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
   }
 }
 
-// OPTIONS handler for CORS（Next.js App Routerでは通常不要だが念のため）
+// OPTIONS handler for CORS
 export async function OPTIONS(): Promise<NextResponse> {
-  return new NextResponse(null, { 
+  return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',

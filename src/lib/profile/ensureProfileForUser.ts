@@ -208,16 +208,13 @@ export async function ensureProfileForUserSafe(
         console.log('📧 API呼び出し用email取得:', apiSignupEmail || 'なし')
       }
       try {
+        // 🔒 SECURITY: userIdはAPIサーバー側でauthUser.idから取得（リクエストに含めない）
         const apiResponse = await fetch('/api/ensure-profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userId: user.id,
-            email: apiSignupEmail || user.email, // サインアップemailを優先
-            isTestMode: true
-          })
+          body: JSON.stringify({})  // userIdは送らない - サーバー側で認証から取得
         })
 
         if (apiResponse.ok) {
