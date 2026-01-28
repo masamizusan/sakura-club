@@ -390,7 +390,7 @@ export async function saveProfileToDb(
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('id, email, photo_urls')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single()
 
       if (fetchError) {
@@ -776,7 +776,7 @@ export async function updateProfile(
     updateData,
     {
       operation: 'update',
-      whereClause: { id: userId }
+      whereClause: { user_id: userId }
     },
     entryPoint
   )
@@ -810,7 +810,7 @@ export async function upsertProfile(
   userId: string,
   upsertData: any,
   entryPoint: string,
-  conflictKeys: string[] = ['id']
+  conflictKeys: string[] = ['user_id']
 ): Promise<SaveProfileResult> {
   return saveProfileToDb(
     supabase,

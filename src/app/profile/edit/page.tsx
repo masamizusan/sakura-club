@@ -2250,7 +2250,7 @@ function ProfileEditContent() {
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_url: null })
-        .eq('id', user?.id)
+        .eq('user_id', user?.id)
       
       if (error) {
         console.error('Avatar削除エラー:', error)
@@ -2293,7 +2293,7 @@ function ProfileEditContent() {
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id, created_at, email') // セキュリティ確認のためemailも取得
-        .eq('id', user?.id) // 🛡️ 厳格なユーザーID一致確認
+        .eq('user_id', user?.id) // 🛡️ 厳格なユーザーID一致確認
         .single()
       
       if (checkError && checkError?.code !== 'PGRST116') {
@@ -2323,7 +2323,7 @@ function ProfileEditContent() {
             // 存在しない可能性があるため除外
             // profile_image, profile_images, images等も除外
           })
-          .eq('id', user?.id)
+          .eq('user_id', user?.id)
         
         if (resetError) {
           console.error('❌ Failed to reset profile to NULL state:', resetError)
@@ -2648,7 +2648,7 @@ function ProfileEditContent() {
           hobbies: null,
           marital_status: null
         })
-        .eq('id', user?.id)
+        .eq('user_id', user?.id)
       
       if (error) {
         console.error('❌ データクリアエラー:', error)
@@ -3403,13 +3403,13 @@ function ProfileEditContent() {
               avatar_url: null,
               personality: null
             })
-            .eq('id', user?.id)
+            .eq('user_id', user?.id)
           
           // データベースからプロフィールを再取得してクリーンな状態にする
           const { data: cleanProfile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user?.id)
+            .eq('user_id', user?.id)
             .single()
           
           if (cleanProfile) {
@@ -3454,13 +3454,13 @@ function ProfileEditContent() {
               height: null,
               avatar_url: null
             })
-            .eq('id', user?.id) // 🛡️ 主要条件：ユーザーID一致
+            .eq('user_id', user?.id) // 🛡️ 主要条件：ユーザーID一致
             .eq('email', authUser?.user?.email) // 🛡️ 追加条件：email一致
           
           const { data: cleanProfile } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', user?.id)
+            .eq('user_id', user?.id)
             .single()
           
           if (cleanProfile) {
@@ -4064,7 +4064,7 @@ function ProfileEditContent() {
                   const { data, error: writeBackError } = await supabase
                     .from('profiles')
                     .update(writeBackPayload)
-                    .eq('id', user.id)
+                    .eq('user_id', user.id)
                     .select('id, photo_urls')
                     
                   if (writeBackError) {
@@ -5341,9 +5341,9 @@ function ProfileEditContent() {
         const { data: dbVerification, error: verifyError } = await supabase
           .from('profiles')
           .select('photo_urls, avatar_url')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single()
-          
+
         if (verifyError) {
           console.error('🚨 [TASK4] DB確認エラー:', verifyError)
         } else {

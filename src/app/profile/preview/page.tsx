@@ -1239,7 +1239,6 @@ function ProfilePreviewContent() {
                       })
 
                       const savePayload: any = {
-                        id: user.id,
                         user_id: user.id,
                         // 基本情報
                         name: nickname || null,
@@ -1277,7 +1276,6 @@ function ProfilePreviewContent() {
 
                       // 🔧 CRITICAL: allowlistによるDBスキーマ厳格制限（指示書対応）
                       const ALLOWED_PROFILE_KEYS = new Set([
-                        'id',
                         'user_id',
                         'name',
                         'bio',
@@ -1365,7 +1363,7 @@ function ProfilePreviewContent() {
                         user.id,
                         sanitizedPayload,
                         'profile/preview/page.tsx/confirm',
-                        ['id']
+                        ['user_id']
                       )
                       
                       // 🔍 保存後詳細ログ（結果確認用）

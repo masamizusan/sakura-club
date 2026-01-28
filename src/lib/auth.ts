@@ -85,7 +85,7 @@ export const authService = {
         const { error: profileError } = await supabase
           .from('profiles')
           .update(profileUpdateData)
-          .eq('id', authData.user.id)
+          .eq('user_id', authData.user.id)
 
         if (profileError) {
           console.error('Profile update error:', profileError)
@@ -337,7 +337,7 @@ export const authService = {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single()
 
       // If profile doesn't exist, return basic user info

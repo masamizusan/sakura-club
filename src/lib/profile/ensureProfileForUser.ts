@@ -124,7 +124,7 @@ export async function ensureProfileForUserSafe(
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
           .update({ email: finalEmail })
-          .eq('id', existingProfile.id)
+          .eq('user_id', user.id)
           .select('*')
           .single()
 

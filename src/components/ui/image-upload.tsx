@@ -93,7 +93,7 @@ export function ImageUpload({
           profile_image: publicUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId)
+        .eq('user_id', userId)
 
       if (updateError) {
         throw updateError
@@ -130,7 +130,7 @@ export function ImageUpload({
           profile_image: null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', userId)
+        .eq('user_id', userId)
 
       if (updateError) {
         throw updateError

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
           .update({ email: userEmail })
-          .eq('id', existingProfile.id)
+          .eq('user_id', userId)
           .select('*')
           .single()
 
