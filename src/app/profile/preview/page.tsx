@@ -642,6 +642,7 @@ function ProfilePreviewContent() {
 
   // 🚨 未保存警告用フラグ（Option B実装）
   const isConfirmedRef = useRef(false)
+  const isSavingRef = useRef(false) // 🔒 二重保存防止ミューテックス
   
   // 統一言語設定
   const { t, language: currentLanguage } = useUnifiedTranslation()
@@ -1169,6 +1170,13 @@ function ProfilePreviewContent() {
                 <Button
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={async () => {
+                    // 🔒 二重保存防止
+                    if (isSavingRef.current) {
+                      console.log('🔒 CONFIRM_BLOCKED_DUPLICATE: 保存処理実行中 - 二重実行を防止')
+                      return
+                    }
+                    isSavingRef.current = true
+
                     // 🚀 CRITICAL: 指示書対応 - シンプルで確実な保存処理
                     console.log('🚀 プレビュー確定ボタンクリック - 保存処理開始')
 
@@ -1187,11 +1195,9 @@ function ProfilePreviewContent() {
                       // 🚨 SSOT: language_skills を必ずDBに保存（指示書対応）
                       let sessionLanguageSkills = []
                       try {
-                        const urlParams = new URLSearchParams(window.location.search)
-                        const userId = urlParams.get('userId') || user.id
-                        const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
-                        let savedData = sessionStorage.getItem(previewDataKey)
-                        if (!savedData) savedData = sessionStorage.getItem('previewData')
+                        // 🔒 SECURITY: userIdはauthUser.idのみ使用（URLパラメータは信頼しない）
+                        const previewDataKey = `previewData_${user.id}`
+                        const savedData = sessionStorage.getItem(previewDataKey)
                         if (savedData) {
                           const sessionData = JSON.parse(savedData)
                           sessionLanguageSkills = Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
@@ -1247,12 +1253,20 @@ function ProfilePreviewContent() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({})
                         })
-                        if (!ensureRes.ok) {
+                        if (ensureRes.status === 401) {
+                          // 🚨 401 = セッションが無効。保存を続行すると別ユーザーに書き込む危険
+                          console.error('🚨 ensure-profile 401: セッション無効 - 保存中止')
+                          throw new Error('認証セッションが無効です。再ログインしてください。')
+                        } else if (!ensureRes.ok) {
                           console.error('🚨 ensure-profile failed:', ensureRes.status)
+                          // 401以外は既存行がある前提で続行
                         } else {
                           console.log('✅ ensure-profile: 行の存在保証完了')
                         }
                       } catch (ensureErr) {
+                        if ((ensureErr as Error).message?.includes('認証セッション')) {
+                          throw ensureErr // 401エラーはそのまま上に投げる
+                        }
                         console.error('🚨 ensure-profile error:', ensureErr)
                       }
 
@@ -1454,6 +1468,7 @@ function ProfilePreviewContent() {
 
                     } catch (error) {
                       console.error('❌ CRITICAL: Profile保存処理でエラー:', error)
+                      isSavingRef.current = false // 🔒 エラー時はミューテックス解除（リトライ可能に）
                       alert('プロフィールの保存に失敗しました: ' + (error as Error).message)
                       return // エラー時は遷移しない
                     }

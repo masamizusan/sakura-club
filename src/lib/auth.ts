@@ -96,6 +96,12 @@ export const authService = {
         console.log('Email confirmation required, profile will be updated after verification')
       }
 
+      // 🔒 実ユーザーログインフラグ設定（signUpでもセッションがあれば設定）
+      if (typeof window !== 'undefined' && authData.user && authData.session) {
+        localStorage.setItem('sc_real_login_user', authData.user.id)
+        localStorage.removeItem('sc_test_anon_done')
+      }
+
       // Supabaseの設定に従ってメール認証の要否を判定
       const forceEmailConfirmation = !authData.session
       
@@ -159,6 +165,14 @@ export const authService = {
         throw new AuthError(error.message)
       }
 
+      // 🔒 CRITICAL: 実ユーザーログイン成功フラグを設定
+      // ensureTestAnonSessionが実ユーザーのセッションを匿名で上書きするのを防止
+      if (typeof window !== 'undefined' && authData.user) {
+        localStorage.setItem('sc_real_login_user', authData.user.id)
+        // 匿名セッション完了フラグをクリア（実ユーザーが優先）
+        localStorage.removeItem('sc_test_anon_done')
+      }
+
       return {
         user: authData.user,
         session: authData.session,
@@ -174,8 +188,13 @@ export const authService = {
 
   async signOut() {
     const supabase = createClient()
-    
+
     try {
+      // 🔒 ログアウト時に実ユーザーフラグをクリア
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sc_real_login_user')
+        localStorage.removeItem('sc_test_anon_done')
+      }
       const { error } = await supabase.auth.signOut()
       if (error) {
         throw new AuthError(error.message)
@@ -208,11 +227,24 @@ export const authService = {
   // 🆕 匿名ログイン機能（テストモード用）- user_id固定対応
   async ensureTestAnonSession() {
     const supabase = createClient()
-    
+
     try {
+      // 🚨 CRITICAL: 実ユーザーがログイン済みなら匿名セッションを絶対に作らない
+      // 実ユーザーのセッションが匿名ユーザーで上書きされる事故を防止
+      if (typeof window !== 'undefined') {
+        const realLoginUser = localStorage.getItem('sc_real_login_user')
+        if (realLoginUser) {
+          console.log('🔒 ensureTestAnonSession: 実ユーザーログイン済み - anonymous sign-in 完全スキップ', {
+            realUserId: realLoginUser.slice(0, 8),
+            skipReason: 'REAL_USER_LOGGED_IN'
+          })
+          return { user: null, session: null }
+        }
+      }
+
       // 🛡️ CRITICAL FIX: 既存セッションチェック - 重複実行防止
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
+
       if (session?.user) {
         console.log('🔒 ensureTestAnonSession: 既存セッション発見 - anonymous sign-in スキップ', {
           userId: session.user.id,
@@ -220,30 +252,29 @@ export const authService = {
         })
         return { user: session.user, session }
       }
-      
+
       // 🛡️ CRITICAL FIX: localStorage保険フラグで絶対スキップ（増殖防止）
       if (typeof window !== 'undefined') {
         const anonDone = localStorage.getItem('sc_test_anon_done')
         if (anonDone === '1') {
           console.log('🔒 ensureTestAnonSession: localStorage保険フラグ発見 - 絶対スキップ（増殖防止）')
-          // 🚨 CRITICAL: フラグがある場合は絶対に再実行しない
           return { user: null, session: null }
         }
       }
-      
+
       console.log('🧪 ensureTestAnonSession: 新規anonymous sign-in実行...')
       const { data, error } = await supabase.auth.signInAnonymously()
-      
+
       if (error) {
         console.error('❌ Anonymous sign-in failed:', error)
         throw new AuthError(`匿名ログインに失敗しました: ${error.message}`)
       }
-      
+
       // 🔒 成功時の保険フラグ設定
       if (typeof window !== 'undefined') {
         localStorage.setItem('sc_test_anon_done', '1')
       }
-      
+
       console.log('✅ ensureTestAnonSession: 新規anonymous sign-in成功', {
         userId: data.user?.id,
         sessionExists: !!data.session

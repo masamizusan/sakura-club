@@ -156,45 +156,11 @@ export async function ensureProfileForUserSafe(
       }
     }
 
-    // 3. 既存データ救済: id = auth.uid の行があるかチェック
-    console.log('🔍 ensureProfileForUser: Checking legacy profile by id')
-    const { data: legacyProfile, error: legacyError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
+    // 🔒 Legacy id fallback 完全撤廃（混線の温床）
+    // 以前は .eq('id', user.id) で検索していたが、別ユーザーのプロフィールを
+    // 拾う可能性があるため廃止。user_id のみを信頼する。
 
-    if (!legacyError && legacyProfile) {
-      console.log('🔧 ensureProfileForUser: Found legacy profile, updating user_id')
-      
-      // legacy profile に user_id を設定
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({ user_id: user.id })
-        .eq('id', user.id)
-        .select('*')
-        .single()
-
-      if (updateError) {
-        console.error('🚨 ensureProfileForUser: Legacy update failed', updateError)
-        return {
-          success: false,
-          profile: null,
-          reason: `Legacy update failed: ${updateError.message}`,
-          canContinue: true // 更新失敗でも画面は表示可能
-        }
-      } else {
-        console.log('✅ ensureProfileForUser: Legacy profile updated')
-        return {
-          success: true,
-          profile: updatedProfile,
-          reason: 'Legacy profile updated',
-          canContinue: true
-        }
-      }
-    }
-
-    // 4. 新規プロフィール作成
+    // 3. 新規プロフィール作成
     console.log('🆕 ensureProfileForUser: Creating new profile')
     
     // 4-1. テストモードの場合は先にAPI経由で試行（RLS回避）

@@ -100,40 +100,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 3. Legacy profile（id = auth.uid）の確認・移行
-    const { data: legacyProfile, error: legacyError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle()
+    // 🔒 Legacy id fallback 完全撤廃（混線の温床）
 
-    if (!legacyError && legacyProfile) {
-      console.log('🔧 ensureProfile API: Migrating legacy profile')
-
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({ user_id: userId })
-        .eq('id', userId)
-        .select('*')
-        .single()
-
-      if (updateError) {
-        console.error('🚨 ensureProfile API: Legacy migration failed (RLS)', updateError)
-        return NextResponse.json(
-          { error: `Legacy migration failed: ${updateError.message}` },
-          { status: 500 }
-        )
-      }
-
-      console.log('✅ ensureProfile API: Legacy profile migrated')
-      return NextResponse.json({
-        success: true,
-        profile: updatedProfile,
-        reason: 'Legacy profile migrated'
-      })
-    }
-
-    // 4. 新規プロフィール作成（ユーザーセッションクライアント経由 = RLS適用）
+    // 3. 新規プロフィール作成（ユーザーセッションクライアント経由 = RLS適用）
     console.log('🆕 ensureProfile API: Creating new profile with user session')
 
     const newProfileData = {
