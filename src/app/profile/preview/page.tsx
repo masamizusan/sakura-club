@@ -1255,8 +1255,10 @@ function ProfilePreviewContent() {
                         })
                         if (ensureRes.status === 401) {
                           // 🚨 401 = セッションが無効。保存を続行すると別ユーザーに書き込む危険
-                          console.error('🚨 ensure-profile 401: セッション無効 - 保存中止')
-                          throw new Error('認証セッションが無効です。再ログインしてください。')
+                          console.error('🚨 ensure-profile 401: セッション無効 - 保存中止→ログインへ退避')
+                          isSavingRef.current = false
+                          router.replace('/login?reason=ensure_401')
+                          return
                         } else if (!ensureRes.ok) {
                           console.error('🚨 ensure-profile failed:', ensureRes.status)
                           // 401以外は既存行がある前提で続行
@@ -1264,9 +1266,6 @@ function ProfilePreviewContent() {
                           console.log('✅ ensure-profile: 行の存在保証完了')
                         }
                       } catch (ensureErr) {
-                        if ((ensureErr as Error).message?.includes('認証セッション')) {
-                          throw ensureErr // 401エラーはそのまま上に投げる
-                        }
                         console.error('🚨 ensure-profile error:', ensureErr)
                       }
 

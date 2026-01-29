@@ -75,11 +75,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             shouldUpdate: currentUserId !== newUserId
           })
 
-          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのlocalStorageをクリア
-          if (currentUserId !== newUserId) {
-            console.log('🧹 User changed - clearing previous user storage')
+          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのストレージをクリア＋退避
+          if (currentUserId && newUserId && currentUserId !== newUserId) {
+            console.log('🚨 USER SWITCH DETECTED - 全ストレージクリア＋マイページ退避', {
+              prevUserId: currentUserId.slice(0, 8),
+              newUserId: newUserId.slice(0, 8),
+              action: 'CLEAR_AND_REDIRECT'
+            })
             clearAllUserStorage(currentUserId)
-            console.log('✅ AUTH USER:', { id: newUserId?.slice(0, 8), email: newUser?.email })
+            set({ user: newUser })
+            // 🔒 補強A: ユーザー切替を検出したら即座にマイページへ退避
+            // edit/preview等で別ユーザーのデータが表示される混線を根絶
+            if (typeof window !== 'undefined') {
+              const path = window.location.pathname
+              if (path.includes('/profile/edit') || path.includes('/profile/preview')) {
+                console.log('🔒 USER_SWITCH_GUARD: edit/previewからmypageへ強制退避')
+                window.location.replace('/mypage?reason=user_switched')
+              }
+            }
+          } else if (currentUserId !== newUserId) {
+            // 初回セットや null→user の通常遷移
             set({ user: newUser })
           }
         })

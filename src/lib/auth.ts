@@ -229,14 +229,25 @@ export const authService = {
     const supabase = createClient()
 
     try {
-      // 🚨 CRITICAL: 実ユーザーがログイン済みなら匿名セッションを絶対に作らない
-      // 実ユーザーのセッションが匿名ユーザーで上書きされる事故を防止
+      // 🚨 CRITICAL GUARD 1: 実ユーザーがログイン済みなら匿名セッションを絶対に作らない
       if (typeof window !== 'undefined') {
         const realLoginUser = localStorage.getItem('sc_real_login_user')
         if (realLoginUser) {
           console.log('🔒 ensureTestAnonSession: 実ユーザーログイン済み - anonymous sign-in 完全スキップ', {
             realUserId: realLoginUser.slice(0, 8),
             skipReason: 'REAL_USER_LOGGED_IN'
+          })
+          return { user: null, session: null }
+        }
+
+        // 🚨 CRITICAL GUARD 2: edit/preview/mypageでは匿名化を絶対に禁止
+        const pathname = window.location.pathname
+        if (pathname.includes('/profile/edit') ||
+            pathname.includes('/profile/preview') ||
+            pathname.includes('/mypage')) {
+          console.log('🔒 ensureTestAnonSession: 匿名禁止ルート - 完全スキップ', {
+            route: pathname,
+            skipReason: 'BLOCKED_ROUTE'
           })
           return { user: null, session: null }
         }
@@ -318,14 +329,34 @@ export const authService = {
       let user = session?.user || null
       
       // 🆕 STEP 1.5: テストモード時はセッション無しで匿名ログイン実行（user_id固定版）
-      if (!user && this.isTestModeActive()) {
-        console.log('🧪 Test mode detected with no session - ensuring anonymous session')
+      // 🚨 CRITICAL: 3重ガードで匿名化事故を根絶
+      //   ガード1: sc_real_login_user === true → 完全スキップ
+      //   ガード2: isTestModeActive() !== true → スキップ
+      //   ガード3: 匿名禁止ルート（edit/preview/mypage）→ スキップ
+      const realLoginUser = typeof window !== 'undefined' ? localStorage.getItem('sc_real_login_user') : null
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+      const isAnonBlockedRoute = currentPath.includes('/profile/edit') ||
+                                  currentPath.includes('/profile/preview') ||
+                                  currentPath.includes('/mypage')
+
+      if (!user && !realLoginUser && this.isTestModeActive() && !isAnonBlockedRoute) {
+        console.log('🧪 Test mode detected with no session - ensuring anonymous session', {
+          route: currentPath,
+          isBlockedRoute: false
+        })
         try {
           const { user: anonUser } = await this.ensureTestAnonSession()
           user = anonUser
         } catch (error) {
           console.error('❌ Anonymous session ensure failed, proceeding with null user:', error)
         }
+      } else if (!user && (realLoginUser || isAnonBlockedRoute)) {
+        console.log('🔒 getCurrentUser: 匿名セッション生成を禁止', {
+          realLoginUser: realLoginUser?.slice(0, 8),
+          isAnonBlockedRoute,
+          route: currentPath,
+          reason: realLoginUser ? 'REAL_USER_LOGGED_IN' : 'BLOCKED_ROUTE'
+        })
       }
       
       // 🔧 STEP 2: セッションでユーザー取得できた場合
