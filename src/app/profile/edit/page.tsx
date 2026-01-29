@@ -669,13 +669,21 @@ function ProfileEditContent() {
 
     // 🎯 両方揃っていて、明確に変わった時だけ "変更検出"
     if (currentUserId && prevUserId !== currentUserId) {
-      console.log('🎯 ユーザーID変更検出 - 画像リセット実行:', {
+      console.log('🚨 ユーザーID変更検出 - セッション切替 → マイページへリダイレクト:', {
         prevUserId,
         currentUserId,
         reason: 'USER_ACTUALLY_CHANGED'
       })
+      // 🔒 混線防止: 旧ユーザーのsessionStorageを破棄してマイページへ強制遷移
+      try {
+        const { clearAllUserStorage } = require('@/utils/userStorage')
+        clearAllUserStorage(prevUserId)
+      } catch (e) { /* ignore */ }
       setProfileImages([])
       profileImagesRef.current = []
+      prevUserIdRef.current = currentUserId
+      router.push('/mypage')
+      return
     }
 
     prevUserIdRef.current = currentUserId
@@ -799,7 +807,9 @@ function ProfileEditContent() {
 
       // 🔒 セキュリティ強化: ユーザー固有のプレビューデータ保存
       const previewDataKey = `previewData_${user?.id || 'anonymous'}`
-      sessionStorage.setItem(previewDataKey, JSON.stringify(previewData))
+      // 🔒 __ownerUserId を埋め込み、プレビュー側で所有者を検証可能にする
+      const previewDataWithOwner = { ...previewData, __ownerUserId: user?.id }
+      sessionStorage.setItem(previewDataKey, JSON.stringify(previewDataWithOwner))
 
       // 🛡️ 同一タブ遷移に統一（別タブ廃止）
       // 現在のURLパラメータ（type/lang）を維持したままプレビューへ

@@ -94,32 +94,67 @@ export function clearAllUserStorage(previousUserId?: string | null): void {
     previousUserId: previousUserId?.slice(0, 8)
   })
 
-  // 1. 旧形式のキー（名前空間なし）を全て削除
+  // 1. 旧形式のキー（名前空間なし）を全て削除 — localStorage + sessionStorage
+  const LEGACY_SESSION_KEYS = [
+    'previewData', 'imageEditHistory', 'profileEditSaveDebug'
+  ]
   USER_SPECIFIC_KEYS.forEach(key => {
     localStorage.removeItem(key)
   })
+  LEGACY_SESSION_KEYS.forEach(key => {
+    sessionStorage.removeItem(key)
+  })
 
-  // 2. 前ユーザーの名前空間付きキーを削除
+  // 2. 前ユーザーの名前空間付きキーを削除（localStorage + sessionStorage）
   if (previousUserId) {
     USER_SPECIFIC_KEYS.forEach(key => {
       const storageKey = getUserStorageKey(previousUserId, key)
       localStorage.removeItem(storageKey)
     })
+    // sessionStorage: previewData_${userId}, currentProfileImages_${userId}, etc.
+    const sessionNamespacedPrefixes = [
+      `previewData_${previousUserId}`,
+      `currentProfileImages_${previousUserId}`,
+      `imageStateTimestamp_${previousUserId}`,
+      `imageChangeTime_${previousUserId}`,
+      `writeBack_${previousUserId}_completed`,
+    ]
+    sessionNamespacedPrefixes.forEach(key => {
+      sessionStorage.removeItem(key)
+    })
   }
 
-  // 3. プレフィックス付きの全キーを削除（安全策）
-  const keysToRemove: string[] = []
+  // 3. プレフィックス付きの全キーを削除（安全策）— localStorage
+  const lsKeysToRemove: string[] = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
     if (key && key.startsWith(STORAGE_PREFIX)) {
-      keysToRemove.push(key)
+      lsKeysToRemove.push(key)
     }
   }
-  keysToRemove.forEach(key => {
+  lsKeysToRemove.forEach(key => {
     localStorage.removeItem(key)
   })
 
-  console.log('✅ clearAllUserStorage: Cleared', keysToRemove.length, 'namespaced keys + legacy keys')
+  // 4. sessionStorage: previewData_ / currentProfileImages_ 等の全namespaced keyを削除
+  const ssKeysToRemove: string[] = []
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i)
+    if (key && (
+      key.startsWith('previewData_') ||
+      key.startsWith('currentProfileImages_') ||
+      key.startsWith('imageStateTimestamp_') ||
+      key.startsWith('imageChangeTime_') ||
+      key.startsWith('writeBack_')
+    )) {
+      ssKeysToRemove.push(key)
+    }
+  }
+  ssKeysToRemove.forEach(key => {
+    sessionStorage.removeItem(key)
+  })
+
+  console.log('✅ clearAllUserStorage: Cleared', lsKeysToRemove.length, 'ls +', ssKeysToRemove.length, 'ss namespaced keys + legacy keys')
 }
 
 /**

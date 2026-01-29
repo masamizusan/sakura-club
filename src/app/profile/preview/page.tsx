@@ -674,34 +674,33 @@ function ProfilePreviewContent() {
 
   // 🔒 セキュリティ強化: ユーザー固有のsessionStorageからデータを取得
   useEffect(() => {
+    const loadPreviewData = async () => {
     try {
-      // まず新形式（ユーザー固有）のキーを試す
-      const urlParams = new URLSearchParams(window.location.search)
-      const userId = urlParams.get('userId') // URLパラメータからユーザーIDを取得
-      const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
-      
-      
-      let savedData = sessionStorage.getItem(previewDataKey)
-      
-      // 新形式がない場合は旧形式も試す（後方互換性）
-      if (!savedData && previewDataKey !== 'previewData') {
-        savedData = sessionStorage.getItem('previewData')
+      // 🔒 SECURITY: userIdはauthUser.idのみ使用（URLパラメータは信頼しない）
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      const authUserId = authUser?.id
+      const previewDataKey = authUserId ? `previewData_${authUserId}` : null
+
+      let savedData: string | null = null
+      if (previewDataKey) {
+        savedData = sessionStorage.getItem(previewDataKey)
       }
-      
-      // それでもない場合は全てのpreviewData関連キーを探す
-      if (!savedData) {
-        const allKeys = Object.keys(sessionStorage)
-        const previewKeys = allKeys.filter(key => key.startsWith('previewData'))
-        
-        if (previewKeys.length > 0) {
-          // 最初に見つかったpreviewDataキーを使用
-          savedData = sessionStorage.getItem(previewKeys[0])
-        }
-      }
-      
+
+      // 🔒 レガシーキーへのフォールバックは廃止（混線の温床）
+
       if (savedData) {
         const parsedData = JSON.parse(savedData)
-        setPreviewData(parsedData)
+        // 🔒 __ownerUserId 検証: 別ユーザーのデータなら破棄
+        if (parsedData.__ownerUserId && authUserId && parsedData.__ownerUserId !== authUserId) {
+          console.error('🚨 PREVIEW DATA OWNER MISMATCH - 破棄', {
+            ownerUserId: parsedData.__ownerUserId?.slice(0, 8),
+            authUserId: authUserId?.slice(0, 8)
+          })
+          sessionStorage.removeItem(previewDataKey!)
+          // fallback to URL params below
+        } else {
+          setPreviewData(parsedData)
+        }
       } else {
         // フォールバック：URLパラメータから取得
         const fallbackData = {
@@ -735,6 +734,8 @@ function ProfilePreviewContent() {
       console.error('❌ Error loading preview data:', error)
       setHasError(true)
     }
+    }
+    loadPreviewData()
   }, [searchParams])
 
   // 🚨 beforeunload（タブ閉じ・リロード対策）
