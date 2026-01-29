@@ -1190,6 +1190,26 @@ function ProfilePreviewContent() {
                         throw new Error('ユーザー情報の取得に失敗しました')
                       }
 
+                      // 🔒 SSOT_ID_CHECK: Preview confirm時のユーザーID恒久監視
+                      {
+                        const realLoginUser = localStorage.getItem('sc_real_login_user')
+                        const idMatch = !realLoginUser || realLoginUser === user.id
+                        if (process.env.NODE_ENV !== 'production' || !idMatch) {
+                          console.log('🔒 SSOT_ID_CHECK', {
+                            route: '/profile/preview/confirm',
+                            authUid: user.id?.slice(0, 8),
+                            realLoginUser: realLoginUser?.slice(0, 8) || 'none',
+                            ok: idMatch
+                          })
+                        }
+                        if (!idMatch) {
+                          console.error('🚨 SSOT_ID_CHECK FAILED: Preview authUser !== sc_real_login_user — 混線検出→退避')
+                          isSavingRef.current = false
+                          router.replace('/login?reason=ssot_mismatch')
+                          return
+                        }
+                      }
+
                       // 🚀 Step 2: 保存ペイロード準備（指示書対応）
 
                       // 🚨 SSOT: language_skills を必ずDBに保存（指示書対応）
@@ -1372,6 +1392,42 @@ function ProfilePreviewContent() {
                         isArray: Array.isArray(sanitizedPayload.language_skills),
                         length: Array.isArray(sanitizedPayload.language_skills) ? sanitizedPayload.language_skills.length : null,
                       })
+
+                      // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                      // 🔒 PRE-SAVE ASSERT GATE（保存前の安全条件を全て明文化）
+                      // これらが1つでも失敗したら保存を即中断
+                      // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                      {
+                        // Assert 1: authUser が存在する
+                        if (!user?.id) {
+                          console.error('🚨 PRE-SAVE ASSERT FAILED: authUser is null')
+                          isSavingRef.current = false
+                          router.replace('/login?reason=no_auth')
+                          return
+                        }
+                        // Assert 2: sc_real_login_user と authUser.id が一致
+                        const realLogin = localStorage.getItem('sc_real_login_user')
+                        if (realLogin && realLogin !== user.id) {
+                          console.error('🚨 PRE-SAVE ASSERT FAILED: owner mismatch', {
+                            realLogin: realLogin.slice(0, 8),
+                            authUid: user.id.slice(0, 8)
+                          })
+                          isSavingRef.current = false
+                          router.replace('/login?reason=owner_mismatch')
+                          return
+                        }
+                        // Assert 3: __ownerUserId（sessionStorageのプレビューデータ所有者）と一致
+                        if (previewData?.__ownerUserId && previewData.__ownerUserId !== user.id) {
+                          console.error('🚨 PRE-SAVE ASSERT FAILED: previewData owner mismatch', {
+                            owner: previewData.__ownerUserId?.slice(0, 8),
+                            authUid: user.id.slice(0, 8)
+                          })
+                          isSavingRef.current = false
+                          router.replace('/mypage?reason=preview_owner_mismatch')
+                          return
+                        }
+                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed')
+                      }
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
                       logger.info('📍 profiles write entry: profile/preview confirm')

@@ -177,6 +177,20 @@ function MyPageContent() {
           hasProfile: !!profileData,
           profileFields: Object.keys(profileData || {}).length
         })
+
+        // 🔒 SSOT_ID_CHECK: ユーザーID一致の恒久監視（混線即検知）
+        const idMatch = !profileData || profileData.user_id === user.id
+        if (process.env.NODE_ENV !== 'production' || !idMatch) {
+          console.log('🔒 SSOT_ID_CHECK', {
+            route: '/mypage',
+            authUid: user.id?.slice(0, 8),
+            profileUserId: profileData?.user_id?.slice(0, 8) || 'none',
+            ok: idMatch
+          })
+        }
+        if (!idMatch) {
+          console.error('🚨 SSOT_ID_CHECK FAILED: MyPage profile.user_id !== authUser.id — 混線検出')
+        }
         
         // 🔍 Base64検出警告（TASK C: 再発防止）
         const { detectBase64InImageFields } = await import('@/utils/imageResolver')

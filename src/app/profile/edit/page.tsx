@@ -3179,6 +3179,22 @@ function ProfileEditContent() {
           profile_language_skills: profile?.language_skills
         })
 
+        // 🔒 SSOT_ID_CHECK: ユーザーID一致の恒久監視（混線即検知）
+        {
+          const idMatch = !profile || profile.user_id === user?.id
+          if (process.env.NODE_ENV !== 'production' || !idMatch) {
+            console.log('🔒 SSOT_ID_CHECK', {
+              route: '/profile/edit',
+              authUid: user?.id?.slice(0, 8),
+              profileUserId: profile?.user_id?.slice(0, 8) || 'none',
+              ok: idMatch
+            })
+          }
+          if (!idMatch) {
+            console.error('🚨 SSOT_ID_CHECK FAILED: Edit profile.user_id !== authUser.id — 混線検出')
+          }
+        }
+
         console.log('========== PROFILE EDIT DEBUG START ==========')
         console.log('Loaded profile data:', profile)
         console.log('🔍 Critical fields debug (Edit Page):')
