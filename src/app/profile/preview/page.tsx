@@ -1238,8 +1238,25 @@ function ProfilePreviewContent() {
                         willSaveAvatarUrlAsNull: finalPhotoUrls.length === 0
                       })
 
+                      // 🔒 A案: ensure-profile で行の存在を保証してから UPDATE のみ
+                      console.log('🔒 ensure-profile: 行の存在保証開始')
+                      try {
+                        const ensureRes = await fetch('/api/ensure-profile', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({})
+                        })
+                        if (!ensureRes.ok) {
+                          console.error('🚨 ensure-profile failed:', ensureRes.status)
+                        } else {
+                          console.log('✅ ensure-profile: 行の存在保証完了')
+                        }
+                      } catch (ensureErr) {
+                        console.error('🚨 ensure-profile error:', ensureErr)
+                      }
+
                       const savePayload: any = {
-                        user_id: user.id,
+                        // 🔒 id/user_id/email/created_at はペイロードに含めない（UPDATE専用）
                         // 基本情報
                         name: nickname || null,
                         bio: selfIntroduction || null,
@@ -1276,7 +1293,6 @@ function ProfilePreviewContent() {
 
                       // 🔧 CRITICAL: allowlistによるDBスキーマ厳格制限（指示書対応）
                       const ALLOWED_PROFILE_KEYS = new Set([
-                        'user_id',
                         'name',
                         'bio',
                         'age',
@@ -1307,7 +1323,7 @@ function ProfilePreviewContent() {
 
                       // ② 念のためブラックリストで最終除去（今後の地雷対策）
                       // 🚨 CRITICAL: profile_images等DBに存在しないカラムを完全ブロック
-                      const BLOCKED_KEYS = new Set(['updated_at', 'prefecture', 'planned_stations', 'profile_images', 'personality', 'images', 'profile_image'])
+                      const BLOCKED_KEYS = new Set(['id', 'user_id', 'email', 'created_at', 'updated_at', 'prefecture', 'planned_stations', 'profile_images', 'personality', 'images', 'profile_image'])
 
                       const sanitizedPayload = Object.fromEntries(
                         Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k) && !BLOCKED_KEYS.has(k))
@@ -1357,13 +1373,13 @@ function ProfilePreviewContent() {
                         is_http_url: /^https?:\/\//.test(preConversionAvatarUrl as string || '')
                       })
                       
-                      const { upsertProfile } = await import('@/utils/saveProfileToDb')
-                      const saveResult = await upsertProfile(
+                      // 🔒 A案: UPDATE専用（upsert禁止）
+                      const { updateProfile } = await import('@/utils/saveProfileToDb')
+                      const saveResult = await updateProfile(
                         supabase,
                         user.id,
                         sanitizedPayload,
-                        'profile/preview/page.tsx/confirm',
-                        ['user_id']
+                        'profile/preview/page.tsx/confirm'
                       )
                       
                       // 🔍 保存後詳細ログ（結果確認用）
@@ -1374,14 +1390,14 @@ function ProfilePreviewContent() {
                       })
 
                       if (!saveResult.success) {
-                        console.error('❌ PROFILE UPSERT FAILED via unified pipeline')
+                        console.error('❌ PROFILE UPDATE FAILED via unified pipeline')
                         console.error('❌ Error:', saveResult.error)
                         console.error('❌ PAYLOAD KEYS', Object.keys(sanitizedPayload))
-                        throw new Error(saveResult.error || 'Profile upsert failed')
+                        throw new Error(saveResult.error || 'Profile update failed')
                       }
 
-                      // ✅ Step 5: upsert完了ログ（指示書対応）
-                      console.log('✅ PROFILE UPSERT SUCCESS', {
+                      // ✅ Step 5: UPDATE完了ログ
+                      console.log('✅ PROFILE UPDATE SUCCESS', {
                         userId: user.id,
                         timestamp: new Date().toISOString(),
                         saved_personality_tags: sanitizedPayload.personality_tags,
