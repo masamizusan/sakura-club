@@ -2304,7 +2304,7 @@ function ProfileEditContent() {
         .from('profiles')
         .select('id, created_at, email') // セキュリティ確認のためemailも取得
         .eq('user_id', user?.id) // 🛡️ 厳格なユーザーID一致確認
-        .single()
+        .maybeSingle()
       
       if (checkError && checkError?.code !== 'PGRST116') {
         // PGRST116以外のエラーは処理停止
@@ -3487,8 +3487,8 @@ function ProfileEditContent() {
             .from('profiles')
             .select('*')
             .eq('user_id', user?.id)
-            .single()
-          
+            .maybeSingle()
+
           if (cleanProfile) {
             profile = cleanProfile
           }
@@ -5373,10 +5373,10 @@ function ProfileEditContent() {
           .from('profiles')
           .select('photo_urls, avatar_url')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
-        if (verifyError) {
-          console.error('🚨 [TASK4] DB確認エラー:', verifyError)
+        if (verifyError || !dbVerification) {
+          console.error('🚨 [TASK4] DB確認エラー:', verifyError || 'no data')
         } else {
           // 🧪 指示書要求: DB保存後の必須確認ログ
           console.log("✅ DB VERIFY AFTER SAVE:", dbVerification)
@@ -5602,7 +5602,7 @@ function ProfileEditContent() {
         .from('profiles')
         .select('id, personality_tags, culture_tags')
         .eq('id', finalUid)
-        .single()
+        .maybeSingle()
         
       console.log('🔍 SELECT DOUBLE-CHECK:', {
         finalUid: finalUid,

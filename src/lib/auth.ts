@@ -400,7 +400,7 @@ export const authService = {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
       // If profile doesn't exist, return basic user info
       if (profileError || !profile) {

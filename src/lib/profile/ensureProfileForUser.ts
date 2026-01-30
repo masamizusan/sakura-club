@@ -126,7 +126,7 @@ export async function ensureProfileForUserSafe(
           .update({ email: finalEmail })
           .eq('user_id', user.id)
           .select('*')
-          .single()
+          .maybeSingle()
 
         if (updateError) {
           console.warn('⚠️ email更新失敗（続行可能）:', updateError)
@@ -174,13 +174,20 @@ export async function ensureProfileForUserSafe(
         console.log('📧 API呼び出し用email取得:', apiSignupEmail || 'なし')
       }
       try {
-        // 🔒 SECURITY: userIdはAPIサーバー側でauthUser.idから取得（リクエストに含めない）
+        // 🔒 Bearer方式: Cookie同期に依存せず access_token を直接渡す
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        const accessToken = currentSession?.access_token
+        if (!accessToken) {
+          console.warn('⚠️ テストモード: access_token取得不可 - API呼び出しスキップ')
+          // Bearer無しでAPIは呼ばず、直接クライアントupsertにフォールバック
+        } else {
         const apiResponse = await fetch('/api/ensure-profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({})  // userIdは送らない - サーバー側で認証から取得
+          body: JSON.stringify({})
         })
 
         if (apiResponse.ok) {
@@ -195,8 +202,9 @@ export async function ensureProfileForUserSafe(
             }
           }
         }
-        
+
         console.warn('⚠️ テストモード: API失敗、通常方法にフォールバック')
+        } // close else (accessToken exists)
       } catch (apiError) {
         console.warn('⚠️ テストモード: API呼び出し失敗、通常方法にフォールバック:', apiError)
       }

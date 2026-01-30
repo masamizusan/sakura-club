@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           .update({ email: userEmail })
           .eq('user_id', userId)
           .select('*')
-          .single()
+          .maybeSingle()
 
         if (updateError) {
           console.warn('⚠️ API: email更新失敗（RLS拒否の可能性）:', updateError)
