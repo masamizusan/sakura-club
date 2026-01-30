@@ -97,3 +97,105 @@ SELECT id, user_id, name FROM profiles WHERE user_id IS NULL;
 SELECT id, user_id, name, avatar_url, photo_urls, personality_tags
 FROM profiles WHERE user_id = '2b6f201e-aebb-4c8c-9ee2-e1c2a96c8302';
 ```
+
+## 運用チェック（週1 / 障害時）
+
+以下のクエリは**読み取り専用（SELECT）**です。変更を伴いません。
+Supabase SQL Editorでそのまま実行可能です。
+
+### チェック1: ユーザーID不整合の検出（0件が正常）
+
+```sql
+-- profile_photo_cleanup_logs で auth_uid ≠ user_id の危険イベントを検出
+-- 直近7日間で不整合が0件であること
+SELECT *
+FROM profile_photo_cleanup_logs
+WHERE created_at > now() - interval '7 days'
+  AND user_id NOT IN (
+    SELECT user_id FROM profiles WHERE user_id IS NOT NULL
+  );
+-- 期待: 0行
+```
+
+### チェック2: photo_urls と avatar_url の整合性（0件が正常）
+
+```sql
+-- photo_urls が空配列なのに avatar_url が残っている不整合を検出
+SELECT id, user_id, name,
+       avatar_url,
+       photo_urls::text as photo_urls_raw,
+       CASE
+         WHEN (photo_urls IS NULL OR photo_urls::text = '[]' OR photo_urls::text = 'null')
+              AND avatar_url IS NOT NULL AND avatar_url != ''
+         THEN 'MISMATCH: photo_urls empty but avatar_url exists'
+         WHEN photo_urls IS NOT NULL AND photo_urls::text != '[]' AND photo_urls::text != 'null'
+              AND (avatar_url IS NULL OR avatar_url = '')
+         THEN 'MISMATCH: photo_urls exists but avatar_url empty'
+         ELSE 'OK'
+       END as check_result
+FROM profiles
+WHERE (
+  -- photo_urls空なのにavatar_urlあり
+  ((photo_urls IS NULL OR photo_urls::text = '[]' OR photo_urls::text = 'null')
+   AND avatar_url IS NOT NULL AND avatar_url != '')
+  OR
+  -- photo_urlsありなのにavatar_urlなし
+  (photo_urls IS NOT NULL AND photo_urls::text != '[]' AND photo_urls::text != 'null'
+   AND (avatar_url IS NULL OR avatar_url = ''))
+);
+-- 期待: 0行（不整合なし）
+```
+
+### チェック3: profiles重複・孤立行の検出（0件が正常）
+
+```sql
+-- user_id重複
+SELECT user_id, count(*) as cnt
+FROM profiles
+WHERE user_id IS NOT NULL
+GROUP BY user_id
+HAVING count(*) > 1;
+-- 期待: 0行
+
+-- user_id未設定の孤立行
+SELECT id, name, email, created_at
+FROM profiles
+WHERE user_id IS NULL;
+-- 期待: 0行
+```
+
+### チェック4: 直近の保存が正しいユーザーで行われたか（証跡確認）
+
+```sql
+-- 直近の cleanup_logs が正当なユーザーの操作か確認
+SELECT
+  l.user_id as log_user_id,
+  p.user_id as profile_user_id,
+  l.deleted_paths,
+  l.created_at,
+  CASE WHEN l.user_id = p.user_id THEN 'OK' ELSE 'MISMATCH' END as check
+FROM profile_photo_cleanup_logs l
+LEFT JOIN profiles p ON l.user_id = p.user_id
+WHERE l.created_at > now() - interval '7 days'
+ORDER BY l.created_at DESC
+LIMIT 20;
+-- 期待: 全行が check = 'OK'
+```
+
+### 運用ルール
+
+| 頻度 | 対象 | アクション |
+|------|------|-----------|
+| 週1回 | チェック1〜3 | 全て0行であることを確認。異常があればSlack通知 |
+| 障害時 | チェック1〜4 | 全て実行。MISMATCH行があれば該当user_idを調査 |
+| デプロイ後 | チェック2〜3 | マイグレーション影響の即時確認 |
+
+### PRE_SAVE_BLOCKED reason 定数一覧
+
+| reason | 意味 | 退避先 |
+|--------|------|--------|
+| `no_auth_user` | authUser が null（セッション切れ） | `/login` |
+| `real_login_mismatch` | `sc_real_login_user` ≠ `authUser.id`（別ユーザーに切り替わった） | `/login` |
+| `owner_user_mismatch` | `__ownerUserId` ≠ `authUser.id`（プレビューデータの所有者不一致） | `/mypage` |
+| `ensure_401` | ensure-profile API が 401（サーバー側で認証失敗） | `/login` |
+| `user_switched` | authStore でユーザーID変更を検出 | `/mypage` |

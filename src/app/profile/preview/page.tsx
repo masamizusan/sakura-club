@@ -1203,9 +1203,10 @@ function ProfilePreviewContent() {
                           })
                         }
                         if (!idMatch) {
-                          console.error('🚨 SSOT_ID_CHECK FAILED: Preview authUser !== sc_real_login_user — 混線検出→退避')
+                          const reason = 'real_login_mismatch'
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: '/profile/preview/confirm', authUid: user.id?.slice(0, 8), realLoginUser: realLoginUser?.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace('/login?reason=ssot_mismatch')
+                          router.replace(`/login?reason=${reason}`)
                           return
                         }
                       }
@@ -1396,37 +1397,43 @@ function ProfilePreviewContent() {
                       // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                       // 🔒 PRE-SAVE ASSERT GATE（保存前の安全条件を全て明文化）
                       // これらが1つでも失敗したら保存を即中断
+                      //
+                      // 退避reason定数:
+                      //   no_auth_user          … authUser が null
+                      //   real_login_mismatch   … sc_real_login_user ≠ authUser.id
+                      //   owner_user_mismatch   … __ownerUserId ≠ authUser.id
                       // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                       {
+                        const ROUTE = '/profile/preview/confirm'
+                        const authUid = user?.id || null
+                        const realLogin = typeof window !== 'undefined' ? localStorage.getItem('sc_real_login_user') : null
+                        const ownerUserId = previewData?.__ownerUserId || null
+
                         // Assert 1: authUser が存在する
-                        if (!user?.id) {
-                          console.error('🚨 PRE-SAVE ASSERT FAILED: authUser is null')
+                        if (!authUid) {
+                          const reason = 'no_auth_user'
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid, realLogin, ownerUserId })
                           isSavingRef.current = false
-                          router.replace('/login?reason=no_auth')
+                          router.replace(`/login?reason=${reason}`)
                           return
                         }
                         // Assert 2: sc_real_login_user と authUser.id が一致
-                        const realLogin = localStorage.getItem('sc_real_login_user')
-                        if (realLogin && realLogin !== user.id) {
-                          console.error('🚨 PRE-SAVE ASSERT FAILED: owner mismatch', {
-                            realLogin: realLogin.slice(0, 8),
-                            authUid: user.id.slice(0, 8)
-                          })
+                        if (realLogin && realLogin !== authUid) {
+                          const reason = 'real_login_mismatch'
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin.slice(0, 8), ownerUserId: ownerUserId?.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace('/login?reason=owner_mismatch')
+                          router.replace(`/login?reason=${reason}`)
                           return
                         }
-                        // Assert 3: __ownerUserId（sessionStorageのプレビューデータ所有者）と一致
-                        if (previewData?.__ownerUserId && previewData.__ownerUserId !== user.id) {
-                          console.error('🚨 PRE-SAVE ASSERT FAILED: previewData owner mismatch', {
-                            owner: previewData.__ownerUserId?.slice(0, 8),
-                            authUid: user.id.slice(0, 8)
-                          })
+                        // Assert 3: __ownerUserId と authUser.id が一致
+                        if (ownerUserId && ownerUserId !== authUid) {
+                          const reason = 'owner_user_mismatch'
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin?.slice(0, 8), ownerUserId: ownerUserId.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace('/mypage?reason=preview_owner_mismatch')
+                          router.replace(`/mypage?reason=${reason}`)
                           return
                         }
-                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed')
+                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed', { route: ROUTE, authUid: authUid.slice(0, 8) })
                       }
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
