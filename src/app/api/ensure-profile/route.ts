@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,15 +13,42 @@ export const dynamic = 'force-dynamic'
  *
  * 🔒 SECURITY:
  * - userIdをリクエストから受け取らない（偽装不可能）
- * - authUser.idのみを使用
+ * - authUser.idのみを使用（JWTから取得）
+ * - Authorization Bearerで認証（Cookie同期不要）
  * - ユーザーセッションクライアントでRLSが効く
  */
 
 export async function POST(request: NextRequest) {
   try {
-    // 🔒 ユーザーセッションクライアント（RLS有効）
-    const supabase = createServerClient(request)
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+    // 🔒 Authorization Bearer からアクセストークンを取得
+    const authHeader = request.headers.get('Authorization')
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+    let supabase
+    let authUser
+    let authError
+
+    if (bearerToken) {
+      // Bearer方式: トークンから直接 Supabase client を生成（RLS有効）
+      supabase = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: { Authorization: `Bearer ${bearerToken}` }
+          }
+        }
+      )
+      const result = await supabase.auth.getUser(bearerToken)
+      authUser = result.data?.user
+      authError = result.error
+    } else {
+      // フォールバック: Cookie方式（通常のブラウザセッション）
+      supabase = createServerClient(request)
+      const result = await supabase.auth.getUser()
+      authUser = result.data?.user
+      authError = result.error
+    }
 
     // 未認証チェック
     if (authError || !authUser) {

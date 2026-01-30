@@ -1267,11 +1267,27 @@ function ProfilePreviewContent() {
                       })
 
                       // 🔒 A案: ensure-profile で行の存在を保証してから UPDATE のみ
+                      // 🔒 Bearer方式: Cookie同期に依存せず access_token を直接渡す
                       console.log('🔒 ensure-profile: 行の存在保証開始')
                       try {
+                        const { data: { session: currentSession } } = await supabase.auth.getSession()
+                        const accessToken = currentSession?.access_token
+                        if (!accessToken) {
+                          console.error('🚫 PRE_SAVE_BLOCKED', {
+                            reason: 'no_access_token',
+                            route: '/profile/preview/confirm',
+                            authUid: user?.id?.slice(0, 8) || null,
+                          })
+                          isSavingRef.current = false
+                          router.replace('/login?reason=no_auth_user')
+                          return
+                        }
                         const ensureRes = await fetch('/api/ensure-profile', {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`
+                          },
                           body: JSON.stringify({})
                         })
                         if (ensureRes.status === 401) {
