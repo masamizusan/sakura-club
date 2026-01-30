@@ -1466,15 +1466,15 @@ function ProfilePreviewContent() {
                         is_http_url: /^https?:\/\//.test(preConversionAvatarUrl as string || '')
                       })
                       
-                      // 🔒 A案: UPDATE専用（upsert禁止）
-                      const { updateProfile } = await import('@/utils/saveProfileToDb')
-                      const saveResult = await updateProfile(
+                      // 🔒 A案: UPDATE優先、行が無ければINSERT fallback
+                      const { updateProfile, insertProfile } = await import('@/utils/saveProfileToDb')
+                      let saveResult = await updateProfile(
                         supabase,
                         user.id,
                         sanitizedPayload,
                         'profile/preview/page.tsx/confirm'
                       )
-                      
+
                       // 🔍 保存後詳細ログ（結果確認用）
                       console.log('🔍 POST-CONVERSION RESULT:', {
                         save_success: saveResult.success,
@@ -1482,11 +1482,33 @@ function ProfilePreviewContent() {
                         final_data_count: saveResult.data?.length || 0
                       })
 
+                      // 🔒 UPDATE成功だが0行更新 = profilesに行が無い → INSERT fallback
+                      if (saveResult.success && (!saveResult.data || saveResult.data.length === 0)) {
+                        console.warn('⚠️ UPDATE returned 0 rows - profile row missing, attempting INSERT fallback')
+                        const insertPayload = {
+                          ...sanitizedPayload,
+                          user_id: user.id,
+                          email: user.email || null,
+                          created_at: new Date().toISOString(),
+                        }
+                        saveResult = await insertProfile(
+                          supabase,
+                          user.id,
+                          insertPayload,
+                          'profile/preview/page.tsx/confirm/INSERT_FALLBACK'
+                        )
+                        console.log('🔍 INSERT FALLBACK RESULT:', {
+                          save_success: saveResult.success,
+                          save_error: saveResult.error || 'none',
+                          final_data_count: saveResult.data?.length || 0
+                        })
+                      }
+
                       if (!saveResult.success) {
-                        console.error('❌ PROFILE UPDATE FAILED via unified pipeline')
+                        console.error('❌ PROFILE SAVE FAILED via unified pipeline')
                         console.error('❌ Error:', saveResult.error)
                         console.error('❌ PAYLOAD KEYS', Object.keys(sanitizedPayload))
-                        throw new Error(saveResult.error || 'Profile update failed')
+                        throw new Error(saveResult.error || 'Profile save failed')
                       }
 
                       // ✅ Step 5: UPDATE完了ログ

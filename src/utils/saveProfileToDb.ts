@@ -391,7 +391,7 @@ export async function saveProfileToDb(
         .from('profiles')
         .select('id, email, photo_urls')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
       if (fetchError) {
         console.log('🗑️ TASK D: DB取得エラー（新規ユーザーの可能性）', fetchError.message)
@@ -539,8 +539,12 @@ export async function saveProfileToDb(
     }
 
     // 2.5 🛡️🛡️🛡️ FORBIDDEN KEYS GUARD: DBに存在しないカラムを強制削除（最終防衛）
-    // 🚨 CRITICAL: このリストに含まれるキーは絶対にDBに送信されない
-    const FORBIDDEN_KEYS = ['id', 'created_at', 'email', 'profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
+    // 🚨 CRITICAL: INSERT時は email/created_at が必要（NOT NULL制約）
+    const ALWAYS_FORBIDDEN = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
+    const UPDATE_ONLY_FORBIDDEN = ['id', 'created_at', 'email'] as const
+    const FORBIDDEN_KEYS = operation.operation === 'insert'
+      ? [...ALWAYS_FORBIDDEN]  // INSERT: email/created_at/id は許可
+      : [...ALWAYS_FORBIDDEN, ...UPDATE_ONLY_FORBIDDEN] as readonly string[]
 
     // 🔥 STEP 1: 初回削除
     for (const key of FORBIDDEN_KEYS) {

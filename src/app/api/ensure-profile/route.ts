@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .insert(newProfileData)
       .select('*')
-      .single()
+      .maybeSingle()
 
     if (insertError) {
       console.error('🚨 ensureProfile API: Insert failed (RLS may block)', insertError)
