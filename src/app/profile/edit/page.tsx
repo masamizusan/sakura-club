@@ -5326,13 +5326,18 @@ function ProfileEditContent() {
         'payload_key_count': Object.keys(updateData).length
       })
 
-      const { updateProfile } = await import('@/utils/saveProfileToDb')
+      // 🔒 UPSERT一本化: id=authUser.id で確実にINSERT or UPDATE
+      const { upsertProfile } = await import('@/utils/saveProfileToDb')
+      updateData.id = user.id
+      updateData.user_id = user.id
+      updateData.email = user.email || null
 
-      const saveResult = await updateProfile(
+      const saveResult = await upsertProfile(
         supabase,
         user.id,
         updateData,
-        'profile/edit/page.tsx/onSubmit'
+        'profile/edit/page.tsx/onSubmit',
+        ['id']
       )
       
       if (!saveResult.success) {

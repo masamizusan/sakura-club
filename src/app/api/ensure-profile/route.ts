@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
     console.log('🆕 ensureProfile API: Creating new profile with user session')
 
     const newProfileData = {
+      id: userId,
       user_id: userId,
       email: userEmail || null,
       created_at: new Date().toISOString(),
@@ -143,9 +144,10 @@ export async function POST(request: NextRequest) {
       language_skills: []
     }
 
+    // UPSERT: 既に行があれば更新、無ければ作成（onConflict: id）
     const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
-      .insert(newProfileData)
+      .upsert(newProfileData, { onConflict: 'id' })
       .select('*')
       .maybeSingle()
 

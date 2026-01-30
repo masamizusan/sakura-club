@@ -542,8 +542,9 @@ export async function saveProfileToDb(
     // 🚨 CRITICAL: INSERT時は email/created_at が必要（NOT NULL制約）
     const ALWAYS_FORBIDDEN = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
     const UPDATE_ONLY_FORBIDDEN = ['id', 'created_at', 'email'] as const
-    const FORBIDDEN_KEYS = operation.operation === 'insert'
-      ? [...ALWAYS_FORBIDDEN]  // INSERT: email/created_at/id は許可
+    const isWriteNew = operation.operation === 'insert' || operation.operation === 'upsert'
+    const FORBIDDEN_KEYS = isWriteNew
+      ? [...ALWAYS_FORBIDDEN]  // INSERT/UPSERT: email/created_at/id は許可（NOT NULL制約対応）
       : [...ALWAYS_FORBIDDEN, ...UPDATE_ONLY_FORBIDDEN] as readonly string[]
 
     // 🔥 STEP 1: 初回削除

@@ -1466,13 +1466,20 @@ function ProfilePreviewContent() {
                         is_http_url: /^https?:\/\//.test(preConversionAvatarUrl as string || '')
                       })
                       
-                      // 🔒 A案: UPDATE優先、行が無ければINSERT fallback
-                      const { updateProfile, insertProfile } = await import('@/utils/saveProfileToDb')
-                      let saveResult = await updateProfile(
+                      // 🔒 UPSERT一本化: id=authUser.id で確実にINSERT or UPDATE
+                      const { upsertProfile } = await import('@/utils/saveProfileToDb')
+                      const upsertPayload = {
+                        ...sanitizedPayload,
+                        id: user.id,
+                        user_id: user.id,
+                        email: user.email || null,
+                      }
+                      const saveResult = await upsertProfile(
                         supabase,
                         user.id,
-                        sanitizedPayload,
-                        'profile/preview/page.tsx/confirm'
+                        upsertPayload,
+                        'profile/preview/page.tsx/confirm',
+                        ['id']
                       )
 
                       // 🔍 保存後詳細ログ（結果確認用）
@@ -1481,28 +1488,6 @@ function ProfilePreviewContent() {
                         save_error: saveResult.error || 'none',
                         final_data_count: saveResult.data?.length || 0
                       })
-
-                      // 🔒 UPDATE成功だが0行更新 = profilesに行が無い → INSERT fallback
-                      if (saveResult.success && (!saveResult.data || saveResult.data.length === 0)) {
-                        console.warn('⚠️ UPDATE returned 0 rows - profile row missing, attempting INSERT fallback')
-                        const insertPayload = {
-                          ...sanitizedPayload,
-                          user_id: user.id,
-                          email: user.email || null,
-                          created_at: new Date().toISOString(),
-                        }
-                        saveResult = await insertProfile(
-                          supabase,
-                          user.id,
-                          insertPayload,
-                          'profile/preview/page.tsx/confirm/INSERT_FALLBACK'
-                        )
-                        console.log('🔍 INSERT FALLBACK RESULT:', {
-                          save_success: saveResult.success,
-                          save_error: saveResult.error || 'none',
-                          final_data_count: saveResult.data?.length || 0
-                        })
-                      }
 
                       if (!saveResult.success) {
                         console.error('❌ PROFILE SAVE FAILED via unified pipeline')

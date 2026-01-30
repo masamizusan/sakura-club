@@ -222,6 +222,7 @@ export async function ensureProfileForUserSafe(
     })
 
     const newProfileData = {
+      id: user.id,
       user_id: user.id,
       email: profileEmail,
       created_at: new Date().toISOString(),
@@ -234,13 +235,14 @@ export async function ensureProfileForUserSafe(
       language_skills: []
     }
 
-    // 🚨 CRITICAL: saveProfileToDb統一パイプライン使用でBase64遮断保証
-    const { insertProfile } = await import('@/utils/saveProfileToDb')
-    const saveResult = await insertProfile(
+    // 🚨 CRITICAL: upsert一本化（id=authUser.id で確実にINSERT or UPDATE）
+    const { upsertProfile } = await import('@/utils/saveProfileToDb')
+    const saveResult = await upsertProfile(
       supabase,
       user.id,
       newProfileData,
-      'ensureProfileForUser/clientSide'
+      'ensureProfileForUser/clientSide',
+      ['id']
     )
 
     let insertError: Error | null = null
