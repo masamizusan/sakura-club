@@ -203,6 +203,23 @@ function MyPageContent() {
         // 🆕 CRITICAL: localStorage処理を完全削除し、Supabaseデータのみで完成度計算
         setProfile(profileData)
         calculateProfileCompletion(profileData)
+
+        // 修繕H: 必須項目欠落ガード → プロフィール編集へ誘導
+        const pIsForeignMale = profileData?.gender === 'male' && profileData?.nationality && profileData?.nationality !== '日本'
+        const missingRequired = !profileData?.name || !profileData?.gender || !profileData?.birth_date
+          || (pIsForeignMale && !profileData?.nationality)
+          || (!pIsForeignMale && !profileData?.residence && !profileData?.prefecture)
+        if (missingRequired) {
+          console.log('⚠️ 修繕H: 必須項目欠落 → /profile/edit へ誘導', {
+            name: !!profileData?.name, gender: !!profileData?.gender,
+            birth_date: !!profileData?.birth_date,
+            nationality: profileData?.nationality, residence: profileData?.residence,
+          })
+          const pType = pIsForeignMale ? 'foreign-male' : 'japanese-female'
+          const params = new URLSearchParams({ type: pType, fromMyPage: 'true' })
+          languageRouter.push('/profile/edit', params)
+          return
+        }
         
       } catch (error) {
         console.error('❌ Error loading profile:', error)
@@ -463,7 +480,23 @@ function MyPageContent() {
                   {profile?.name || 'ユーザー'}
                 </h2>
                 <p className="text-gray-600">
-                  {profile?.age || '未設定'}歳 • {isForeignMale
+                  {(() => {
+                    // 修繕G: age null時はbirth_dateから算出
+                    let displayAge: string | number = '未設定'
+                    if (profile?.age) {
+                      displayAge = profile.age
+                    } else if (profile?.birth_date) {
+                      const m = String(profile.birth_date).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+                      if (m) {
+                        const [, y, mo, d] = m.map(Number)
+                        const t = new Date()
+                        let a = t.getFullYear() - y
+                        if (t.getMonth() + 1 < mo || (t.getMonth() + 1 === mo && t.getDate() < d)) a--
+                        if (a >= 0) displayAge = a
+                      }
+                    }
+                    return `${displayAge}歳`
+                  })()} • {isForeignMale
                     ? (profile?.nationality?.trim() || '未設定')
                     : (profile?.residence || profile?.prefecture || '未設定')}
                 </p>

@@ -365,9 +365,30 @@ const isJapaneseFemale = profileType === 'japanese-female'
 
 - `/login` で `autocomplete="current-password"` 警告が出る場合があるが、動作影響はない。余裕があればログインフォームに autocomplete を付与して警告を抑制する
 
+### 修繕G（年齢のDB反映＆表示の安定化）— 2026-02-02
+
+- `POST /api/auth/post-signup-profile` で `birth_date` が有効なら **サーバ側で age を算出**し、`profiles.age` を Null-only update で補完する。
+- 年齢算出は「今日の日付」と birth_date の月日比較で減算する一般的な方式（日付ベース、TZ非依存）。
+- **UIフォールバック（マイページ）**: `profile.age` が存在すればそれを使う → null なら `birth_date` から算出して表示 → それも無ければ「未設定」。
+- 変更ファイル:
+  - `src/app/api/auth/post-signup-profile/route.ts` — `calculateAgeFromBirthDate()` 追加、age null-only update
+  - `src/app/mypage/page.tsx` — 年齢表示で birth_date フォールバック
+
+### 修繕H（再ログイン時の必須項目欠落ガード）— 2026-02-02
+
+- `/mypage` でプロフィール読み込み後、**必須項目が欠落している場合は `/profile/edit` へリダイレクト**する。
+- 必須チェック項目:
+  - `name`
+  - `gender`
+  - `birth_date`
+  - 外国人男性: `nationality`
+  - 日本人女性: `residence` または `prefecture`
+- 目的: 「新規登録→未編集離脱→再ログイン」で /mypage に入れてしまう穴を塞ぎ、データ欠損を防ぐ。
+- 変更ファイル: `src/app/mypage/page.tsx` — loadProfile 内に必須欠落ガード追加
+
 ---
 
 **作成者**: Claude Code Assistant
 **作成日時**: 2025-09-24T21:30:00
-**最終更新**: 2026-02-01
+**最終更新**: 2026-02-02
 **プロジェクト状況**: 安定稼働中（課題あり） ⚠️

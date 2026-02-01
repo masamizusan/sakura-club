@@ -20,6 +20,20 @@ const ALLOWED_FIELDS = [
   'name', 'gender', 'birth_date', 'nationality', 'residence', 'language_skills'
 ] as const
 
+/** birth_date (YYYY-MM-DD) から年齢を算出（日付ベース、TZ非依存） */
+function calculateAgeFromBirthDate(birthDate: string): number | null {
+  const match = birthDate.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return null
+  const [, y, m, d] = match.map(Number)
+  const today = new Date()
+  const ty = today.getFullYear()
+  const tm = today.getMonth() + 1
+  const td = today.getDate()
+  let age = ty - y
+  if (tm < m || (tm === m && td < d)) age--
+  return age >= 0 ? age : null
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 🔒 認証
@@ -60,6 +74,15 @@ export async function POST(request: NextRequest) {
     for (const key of ALLOWED_FIELDS) {
       if (body[key] !== undefined && body[key] !== null && body[key] !== '') {
         filtered[key] = body[key]
+      }
+    }
+
+    // 修繕G: birth_date からサーバ側で age を算出
+    if (filtered.birth_date && typeof filtered.birth_date === 'string') {
+      const calculatedAge = calculateAgeFromBirthDate(filtered.birth_date)
+      if (calculatedAge !== null) {
+        filtered.age = calculatedAge
+        console.log('📅 post-signup-profile: age算出', { birth_date: filtered.birth_date, age: calculatedAge })
       }
     }
 
