@@ -28,26 +28,26 @@ const isTestModeActive = (): boolean => {
 export const createClient = () => {
   const isTestMode = isTestModeActive()
 
-  // 🔒 修繕C: タブ別インスタンス取得
+  // 🔒 修繕C: タブ別インスタンス取得（タブIDが未生成なら先に生成）
   let tabStorageKey: string | null = null
   if (isTestMode && typeof sessionStorage !== 'undefined') {
-    const tabId = sessionStorage.getItem('sc_test_tab_id')
-    if (tabId) {
-      tabStorageKey = `sakura-club-test-session-${tabId}`
-      const cached = testModeInstances.get(tabStorageKey)
-      if (cached) {
-        console.log(`既存のSupabaseクライアントを再利用 (TEST mode, tab:${tabId.slice(0,8)})`)
-        return cached
-      }
+    let tabId = sessionStorage.getItem('sc_test_tab_id')
+    if (!tabId) {
+      tabId = crypto.randomUUID()
+      sessionStorage.setItem('sc_test_tab_id', tabId)
+    }
+    tabStorageKey = `sakura-club-test-session-${tabId}`
+    const cached = testModeInstances.get(tabStorageKey)
+    if (cached) {
+      console.log(`既存のSupabaseクライアントを再利用 (TEST mode, tab:${tabId.slice(0,8)})`)
+      return cached
     }
   }
 
-  const currentInstance = isTestMode ? testModeInstance : supabaseInstance
-
-  // 既にインスタンスが存在する場合は再利用
-  if (currentInstance && !tabStorageKey) {
-    console.log(`既存のSupabaseクライアントを再利用 (${isTestMode ? 'TEST' : 'PROD'} mode)`)
-    return currentInstance
+  // PROD mode: シングルトン再利用
+  if (!isTestMode && supabaseInstance) {
+    console.log('既存のSupabaseクライアントを再利用 (PROD mode)')
+    return supabaseInstance
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
@@ -82,16 +82,10 @@ export const createClient = () => {
     console.log('使用するキー:', key?.substring(0, 20) + '...')
     
     // 🛡️ CRITICAL FIX: テストモード時もセッション永続化有効（user_id固定化）
-    // 🔒 修繕C: タブ単位でセッション分離（別タブで別アカウントログイン時の混線防止）
-    let testStorageKey = 'sakura-club-test-session'
-    if (isTestMode && typeof sessionStorage !== 'undefined') {
-      let tabSessionId = sessionStorage.getItem('sc_test_tab_id')
-      if (!tabSessionId) {
-        tabSessionId = crypto.randomUUID()
-        sessionStorage.setItem('sc_test_tab_id', tabSessionId)
-      }
-      testStorageKey = `sakura-club-test-session-${tabSessionId}`
-      console.log('🔒 テストモード: タブ固有storageKey:', testStorageKey)
+    // 🔒 修繕C: タブ単位でセッション分離（tabStorageKeyは上で確定済み）
+    const testStorageKey = tabStorageKey || 'sakura-club-test-session'
+    if (isTestMode) {
+      console.log('🔒 テストモード: storageKey:', testStorageKey)
     }
     const clientOptions = isTestMode ? {
       auth: {
@@ -107,11 +101,11 @@ export const createClient = () => {
     // モード別インスタンスに保存
     if (isTestMode) {
       testModeInstance = newInstance
-      // 🔒 修繕C: タブ別インスタンスも保存
+      // 🔒 修繕C: タブ別インスタンスを必ず保存（tabStorageKeyは上で確定済み）
       if (tabStorageKey) {
         testModeInstances.set(tabStorageKey, newInstance)
       }
-      console.log('🧪 テストモード専用Supabaseクライアント作成成功（セッション隔離）')
+      console.log('🧪 テストモード専用Supabaseクライアント作成成功（セッション隔離, key:', testStorageKey, ')')
     } else {
       supabaseInstance = newInstance
       console.log('🔧 本番Supabaseクライアント作成成功')

@@ -1225,7 +1225,7 @@ function ProfilePreviewContent() {
                           const reason = 'real_login_mismatch'
                           console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: '/profile/preview/confirm', authUid: user.id?.slice(0, 8), realLoginUser: realLoginUser?.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace(`/login?reason=${reason}`)
+                          setOwnerMismatchDetected(true)
                           return
                         }
                       }
@@ -1298,7 +1298,7 @@ function ProfilePreviewContent() {
                             authUid: user?.id?.slice(0, 8) || null,
                           })
                           isSavingRef.current = false
-                          router.replace('/login?reason=no_auth_user')
+                          setOwnerMismatchDetected(true)
                           return
                         }
                         const ensureRes = await fetch('/api/ensure-profile', {
@@ -1449,7 +1449,7 @@ function ProfilePreviewContent() {
                           const reason = 'no_auth_user'
                           console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid, realLogin, ownerUserId })
                           isSavingRef.current = false
-                          router.replace(`/login?reason=${reason}`)
+                          setOwnerMismatchDetected(true)
                           return
                         }
                         // Assert 2: sc_real_login_user と authUser.id が一致
@@ -1457,7 +1457,7 @@ function ProfilePreviewContent() {
                           const reason = 'real_login_mismatch'
                           console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin.slice(0, 8), ownerUserId: ownerUserId?.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace(`/login?reason=${reason}`)
+                          setOwnerMismatchDetected(true)
                           return
                         }
                         // Assert 3: __ownerUserId と authUser.id が一致
@@ -1465,7 +1465,7 @@ function ProfilePreviewContent() {
                           const reason = 'owner_user_mismatch'
                           console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin?.slice(0, 8), ownerUserId: ownerUserId.slice(0, 8) })
                           isSavingRef.current = false
-                          router.replace(`/mypage?reason=${reason}`)
+                          setOwnerMismatchDetected(true)
                           return
                         }
                         console.log('✅ PRE-SAVE ASSERT GATE: all checks passed', { route: ROUTE, authUid: authUid.slice(0, 8) })
