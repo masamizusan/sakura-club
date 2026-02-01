@@ -688,3 +688,91 @@ setDidInitialCalc(true)
 ---
 
 **🔒 この仕様は2026年1月6日時点で完璧に動作している状態を固定化したものです。どのような理由があっても、この仕様を破る変更は禁止されています。**
+
+---
+
+## 🔒 2026-02-01 現状固定メモ：新規登録直後のプロフィール初期反映（方案A）と表示仕様
+
+**この章は"現状固定"。ここに書いた仕様は崩さない。**
+
+### 目的
+
+- 新規登録 → プロフィール編集へ遷移した時点で、最低限の初期情報（name / gender / birth_date / nationality or residence 等）が profiles に保存される状態を保証する。
+- ユーザーがプロフィール編集を一切せずに離脱 → 再ログインしても、最低限の基本情報が残っていること。
+
+### 1) 新規追加API：/api/auth/post-signup-profile
+
+**ファイル**: `src/app/api/auth/post-signup-profile/route.ts`（新規作成）
+
+**仕様（絶対遵守）**
+
+- Bearer token でユーザー特定する（userId をリクエストBody等から受け取らない）。
+- **ホワイトリストのみ反映可**（それ以外は絶対に更新しない）
+  - `name`, `gender`, `birth_date`, `nationality`, `residence`, `language_skills`
+- **Null-only update（上書き禁止）**
+  - 既にDBに null以外の値が入っている項目は **絶対に上書きしない**
+  - 目的：プロフィール編集・プレビュー・マイページの挙動を崩さず、初期注入だけ行うため
+- プロフィール未作成時は upsert で新規作成する（存在しない場合の穴埋め）
+
+**重要**: このAPIの失敗は UX を止めない（後述の通り signup 側でブロックしない）
+
+### 2) Signup側の呼び出し
+
+**ファイル**: `src/app/signup/page.tsx`
+
+**仕様（絶対遵守）**
+
+- 新規登録成功後、プロフィール編集画面へ遷移する前に `result.session.access_token` を優先して `/api/auth/post-signup-profile` を呼ぶ。
+- フォールバック：
+  - AuthError などで `result.session` が取れない場合は `supabase.auth.getSession()` でトークン取得し直して呼ぶ。
+- **性別による初期セット規則**
+  - 男性：`nationality = data.prefecture`（入力UI上の国籍）
+  - 女性：`residence = data.prefecture`（入力UI上の居住地） + `nationality = '日本'`
+- **API失敗時はログ出力のみで遷移継続（ブロック禁止）**
+  - ここで詰まると新規登録が止まるため、必ず「握りつぶして進む」
+
+### 3) マイページ表示仕様（年齢の隣）
+
+**仕様**
+
+- マイページの「年齢の隣」に表示するのは固定ルール：
+  - **日本人女性**：居住地（residence）
+  - **外国人男性**：国籍（nationality）
+- 「未設定」を出す場合は、該当カラムが null/空のときのみ。
+  （本来は post-signup-profile で最低限埋まるのが理想）
+
+### 4) SSOT：ID混在/上書き防止の最終ルール（修繕D）
+
+- SSOT_ID_CHECK は `currentAuthUserId` vs `previewData.__ownerUserId` の一致確認のみで判断する。
+- `sc_real_login_user` は **ブロック判定に使用禁止**（判定の揺れ・誤爆を生むため）
+
+### 5) UI微修正（修繕F）
+
+- オーバーレイに **「マイページへ戻る」** 導線を置く（ユーザー迷子防止）
+
+### 6) 補足：autocomplete警告
+
+- autocomplete の警告については、ブラウザ側の挙動差があり得るため、致命ではない。
+- ただし、フォームの属性変更で別の副作用が出る可能性があるため、安易に全体へ波及させない。
+
+### 7) 運用メモ（重要）
+
+- profiles を削除しても auth.users 側は残るため、同一メールでの再登録に影響する。
+  「同じメールで新規登録し直したい」テストでは、Auth側のユーザー状態も考慮すること。
+- 新規登録時に「メール送信エラー」が出る場合があるが、プロフィール作成は継続可能（ブロックしない設計）。
+
+### 8) signup分岐の厳密化（2026-02-01追加）
+
+**仕様（絶対遵守）**
+
+- **パターンA（signup失敗 = error）**: エラー表示のみ。「続行できます」ポップアップは絶対に出さない。
+  - `User already registered` 系 → 「既に登録済みです。ログインしてください」+ ログイン画面リンク
+- **パターンB（error無し・session無し）**: `/register/complete` へ遷移（メール確認/ログイン誘導）。post-signup-profile は呼ばない（token無し）。
+- **パターンC（session有り）**: post-signup-profile 呼び出し → プロフィール編集画面へ遷移。
+- **スピナー**: `finally { setIsLoading(false) }` で全経路確実解除。
+
+### 9) 実装反映コミット
+
+- `5b993ef0` — 修繕D/F最終確定ルール文書化
+- `97c719a6` — post-signup-profile API新規作成 + signup連携
+- `a824e753` — signup分岐厳密化（既存ユーザー案内・誤続行防止・スピナー確実解除）
