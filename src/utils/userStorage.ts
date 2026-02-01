@@ -20,6 +20,8 @@ const USER_SPECIFIC_KEYS = [
   'updateProfileTimestamp',
   'profileDraft',
   'cachedProfile',
+  'imageEditHistory',
+  'profileEditSaveDebug',
 ]
 
 /**
@@ -118,6 +120,8 @@ export function clearAllUserStorage(previousUserId?: string | null): void {
       `imageStateTimestamp_${previousUserId}`,
       `imageChangeTime_${previousUserId}`,
       `writeBack_${previousUserId}_completed`,
+      `imageEditHistory_${previousUserId}`,
+      `profileEditSaveDebug_${previousUserId}`,
     ]
     sessionNamespacedPrefixes.forEach(key => {
       sessionStorage.removeItem(key)
@@ -145,7 +149,9 @@ export function clearAllUserStorage(previousUserId?: string | null): void {
       key.startsWith('currentProfileImages_') ||
       key.startsWith('imageStateTimestamp_') ||
       key.startsWith('imageChangeTime_') ||
-      key.startsWith('writeBack_')
+      key.startsWith('writeBack_') ||
+      key.startsWith('imageEditHistory_') ||
+      key.startsWith('profileEditSaveDebug_')
     )) {
       ssKeysToRemove.push(key)
     }

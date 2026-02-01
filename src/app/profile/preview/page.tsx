@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, User, Loader2, Globe } from 'lucide-react'
+import { ArrowLeft, User, Loader2, Globe, AlertCircle } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -639,6 +639,8 @@ function ProfilePreviewContent() {
   // エラーハンドリング用の状態
   const [hasError, setHasError] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
+  // 🔒 修繕A: オーナー不一致検出
+  const [ownerMismatchDetected, setOwnerMismatchDetected] = useState(false)
 
   // 🚨 未保存警告用フラグ（Option B実装）
   const isConfirmedRef = useRef(false)
@@ -698,6 +700,7 @@ function ProfilePreviewContent() {
             authUserId: authUserId?.slice(0, 8)
           })
           sessionStorage.removeItem(previewDataKey!)
+          setOwnerMismatchDetected(true)
           // fallback to URL params below
         } else {
           setPreviewData(parsedData)
@@ -818,6 +821,22 @@ function ProfilePreviewContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* 🔒 修繕A: オーナー不一致オーバーレイ */}
+      {ownerMismatchDetected && (
+        <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
+            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        </div>
+      )}
       {/* ヘッダー */}
       <div className="bg-orange-500 text-white py-4 px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">

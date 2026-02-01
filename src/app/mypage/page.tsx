@@ -29,7 +29,8 @@ import {
   X,
   History,
   LogOut,
-  Calendar
+  Calendar,
+  AlertCircle
 } from 'lucide-react'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useUnifiedTranslation } from '@/utils/translations'
@@ -92,6 +93,8 @@ function MyPageContent() {
     return translation
   }
   const [profile, setProfile] = useState<any>(null)
+  // 🔒 修繕A: ユーザーID不一致検出
+  const [userMismatchDetected, setUserMismatchDetected] = useState(false)
   const [profileCompletion, setProfileCompletion] = useState(0)
   const [completedItems, setCompletedItems] = useState(0)
   const [totalItems, setTotalItems] = useState(8)
@@ -115,7 +118,7 @@ function MyPageContent() {
         setIsLoading(true)
         
         // 🔍 CRITICAL: sessionStorageからプロフィール保存デバッグログを読み込み
-        const savedDebugData = sessionStorage.getItem('profileEditSaveDebug')
+        const savedDebugData = sessionStorage.getItem(`profileEditSaveDebug_${user?.id || 'testmode'}`)
         if (savedDebugData) {
           try {
             const debugData = JSON.parse(savedDebugData)
@@ -190,6 +193,7 @@ function MyPageContent() {
         }
         if (!idMatch) {
           console.error('🚨 SSOT_ID_CHECK FAILED: MyPage profile.user_id !== authUser.id — 混線検出')
+          setUserMismatchDetected(true)
         }
         
         // 🔍 Base64検出警告（TASK C: 再発防止）
@@ -393,8 +397,24 @@ function MyPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* 🔒 修繕A: ユーザーID不一致オーバーレイ */}
+      {userMismatchDetected && (
+        <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
+            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        </div>
+      )}
       <Sidebar className="w-64 hidden md:block" />
-      
+
       <div className="bg-white shadow-sm md:ml-64">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -612,7 +632,7 @@ function MyPageContent() {
           <button 
             onClick={() => {
               setSaveDebugData(null)
-              sessionStorage.removeItem('profileEditSaveDebug')
+              sessionStorage.removeItem(`profileEditSaveDebug_${user?.id || 'testmode'}`)
             }}
             style={{
               background: '#dc2626',

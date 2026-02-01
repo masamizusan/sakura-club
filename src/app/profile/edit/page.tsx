@@ -556,7 +556,7 @@ function ProfileEditContent() {
         sessionStorage.removeItem(`currentProfileImages_${safeUserId}`)
         sessionStorage.removeItem(`imageStateTimestamp_${safeUserId}`)
         sessionStorage.removeItem(`imageChangeTime_${safeUserId}`)
-        sessionStorage.removeItem('imageEditHistory')
+        sessionStorage.removeItem(`imageEditHistory_${safeUserId}`)
 
         // ユーザー固有キーも削除
         const sessionKeys = Object.keys(sessionStorage)
@@ -610,6 +610,8 @@ function ProfileEditContent() {
   const [isHydrated, setIsHydrated] = useState(false)
   // 🛡️ CRITICAL: チラつき防止 - 初期化専用フラグ（完成度計算ガード）
   const [isInitializing, setIsInitializing] = useState(true)
+  // 🔒 修繕A: 別タブでのプロフィール種類混線検出
+  const [typeMismatchDetected, setTypeMismatchDetected] = useState(false)
   
   // 🔍 DEBUG: isHydrated状態変化監視
   useEffect(() => {
@@ -620,6 +622,7 @@ function ProfileEditContent() {
       timestamp: new Date().toISOString()
     })
   }, [isHydrated, isInitializing])
+
   // 🔧 FIX: 初期化完了時の強制計算フラグ（0%バグ防止）
   const [didInitialCalc, setDidInitialCalc] = useState(false)
   // ✨ 新機能: 使用言語＋言語レベル状態管理
@@ -763,6 +766,22 @@ function ProfileEditContent() {
     
     return finalPhotoUrls
   }
+
+  // 🔒 修繕A: DBプロフィールのタイプとURLタイプの不一致検出
+  useEffect(() => {
+    if (!isHydrated || !user?.id) return
+    const formGender = getValues('gender')
+    const formNationality = getValues('nationality')
+    if (!formGender || !profileType) return
+    const JAPANESE_NATIONALITY_VALUES = ['日本', 'japan', 'Japan', 'JAPAN']
+    const isJapanese = JAPANESE_NATIONALITY_VALUES.includes(formNationality ?? '')
+    const dbIsForeignMale = formGender === 'male' && formNationality && !isJapanese
+    const dbType = dbIsForeignMale ? 'foreign-male' : 'japanese-female'
+    if (dbType !== profileType) {
+      console.error('🚨 修繕A: タイプ不一致検出', { dbType, urlType: profileType, gender: formGender, nationality: formNationality })
+      setTypeMismatchDetected(true)
+    }
+  }, [isHydrated, user?.id])
 
   // プレビュー画面への遷移処理（Zodバリデーション経由）
   const handlePreview = handleSubmit(async (formData) => {
@@ -1513,8 +1532,8 @@ function ProfileEditContent() {
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.setItem(safeImageKey, JSON.stringify(newImages))
           sessionStorage.setItem(safeTimestampKey, Date.now().toString())
-          sessionStorage.setItem('imageEditHistory', 'true')
-          
+          sessionStorage.setItem(`imageEditHistory_${user?.id || 'testmode'}`, 'true')
+
           console.log('💾 セッションストレージ更新完了:', safeImageKey)
         }
       } catch (sessionError) {
@@ -2394,7 +2413,7 @@ function ProfileEditContent() {
         })
 
         // 新規ユーザーの場合のみ編集履歴をクリア
-        sessionStorage.removeItem('imageEditHistory')
+        sessionStorage.removeItem(`imageEditHistory_${user?.id || 'testmode'}`)
         console.log('🔄 新規ユーザー: 画像編集履歴をクリア')
         
         console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
@@ -5540,7 +5559,7 @@ function ProfileEditContent() {
       }
       
       // sessionStorageに保存（MyPageで表示用）
-      sessionStorage.setItem('profileEditSaveDebug', JSON.stringify(saveDebugData))
+      sessionStorage.setItem(`profileEditSaveDebug_${user?.id || 'testmode'}`, JSON.stringify(saveDebugData))
       
       console.log('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', saveDebugData)
 
@@ -5830,6 +5849,22 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* 🔒 修繕A: タイプ不一致オーバーレイ */}
+      {typeMismatchDetected && (
+        <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
+            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        </div>
+      )}
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
       
