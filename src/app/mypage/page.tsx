@@ -204,6 +204,38 @@ function MyPageContent() {
         setProfile(profileData)
         calculateProfileCompletion(profileData)
 
+        // 修繕G': birth_dateあり＆age null → post-signup-profileで補完
+        if (profileData?.birth_date && !profileData?.age) {
+          try {
+            const { data: sessionData } = await supabase.auth.getSession()
+            const token = sessionData?.session?.access_token
+            if (token) {
+              console.log('📅 MyPage: age null検出 → post-signup-profileで補完試行')
+              const res = await fetch('/api/auth/post-signup-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ birth_date: profileData.birth_date })
+              })
+              const resBody = await res.json().catch(() => null)
+              console.log('📅 MyPage: age補完結果', { status: res.status, body: resBody })
+              if (resBody?.updatedFields?.includes('age')) {
+                // profileDataにも反映（再フェッチ不要）
+                const m = String(profileData.birth_date).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+                if (m) {
+                  const [, y, mo, d] = m.map(Number)
+                  const t = new Date()
+                  let a = t.getFullYear() - y
+                  if (t.getMonth() + 1 < mo || (t.getMonth() + 1 === mo && t.getDate() < d)) a--
+                  profileData.age = a
+                  setProfile({ ...profileData })
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ MyPage: age補完失敗（続行）:', e)
+          }
+        }
+
         // 修繕H: 必須項目欠落ガード → プロフィール編集へ誘導
         const pIsForeignMale = profileData?.gender === 'male' && profileData?.nationality && profileData?.nationality !== '日本'
         const missingRequired = !profileData?.name || !profileData?.gender || !profileData?.birth_date

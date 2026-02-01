@@ -77,15 +77,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 修繕G: birth_date からサーバ側で age を算出
-    if (filtered.birth_date && typeof filtered.birth_date === 'string') {
-      const calculatedAge = calculateAgeFromBirthDate(filtered.birth_date)
-      if (calculatedAge !== null) {
-        filtered.age = calculatedAge
-        console.log('📅 post-signup-profile: age算出', { birth_date: filtered.birth_date, age: calculatedAge })
-      }
-    }
-
     if (Object.keys(filtered).length === 0) {
       return NextResponse.json({ success: true, reason: 'No fields to update' })
     }
@@ -102,11 +93,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: fetchError.message }, { status: 500 })
     }
 
-    // Null-only update: 既存値がnull/空の項目のみ上書き
+    // 修繕G': birth_date から age をサーバ側算出（リクエスト値は信用しない）
+    // リクエストのbirth_date → 既存DBのbirth_date の順で使う
+    const birthDateSource = filtered.birth_date || existing?.birth_date
+    if (birthDateSource && typeof birthDateSource === 'string') {
+      const computedAge = calculateAgeFromBirthDate(birthDateSource)
+      if (computedAge !== null) {
+        filtered.age = computedAge
+        console.log('📅 post-signup-profile: age算出', {
+          birth_date: birthDateSource,
+          computedAge,
+          existingAge: existing?.age,
+          existingAgeType: typeof existing?.age,
+        })
+      }
+    }
+    // リクエストbodyのageは信用しない（サーバ算出のみ）
+    if (filtered.age === undefined) delete filtered.age
+
+    // Null-only update: 既存値がnull/空/0の項目のみ上書き
     const updateData: Record<string, any> = {}
     for (const [key, value] of Object.entries(filtered)) {
-      const existingValue = existing?.[key]
-      if (existingValue === null || existingValue === undefined || existingValue === '') {
+      const ev = existing?.[key]
+      // null / undefined / 空文字 / 0(age用) を「未設定」とみなす
+      const isEmpty = ev === null || ev === undefined || ev === ''
+        || (key === 'age' && (ev === 0 || ev === '0'))
+      if (isEmpty) {
         updateData[key] = value
       }
     }
@@ -116,14 +128,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, reason: 'All fields already have values' })
     }
 
-    console.log('📝 post-signup-profile: Updating fields', Object.keys(updateData))
+    console.log('📝 post-signup-profile: Updating fields', { keys: Object.keys(updateData), updateData })
 
     if (existing) {
       // UPDATE
-      const { error: updateError } = await supabase
+      const { data: updateResult, error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('user_id', userId)
+        .select('age, birth_date')
+        .maybeSingle()
+
+      console.log('📝 post-signup-profile: UPDATE result', { updateResult, updateError: updateError?.message })
 
       if (updateError) {
         console.error('🚨 post-signup-profile: update error', updateError)
