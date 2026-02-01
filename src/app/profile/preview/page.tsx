@@ -826,14 +826,22 @@ function ProfilePreviewContent() {
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
-            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
-            >
-              再読み込み
-            </button>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブまたは認証状態の切替を検出しました</h2>
+            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、再読み込みするかマイページへ戻ってください。</p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+              >
+                再読み込み
+              </button>
+              <button
+                onClick={() => window.location.href = '/mypage'}
+                className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                マイページへ戻る
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1209,21 +1217,23 @@ function ProfilePreviewContent() {
                         throw new Error('ユーザー情報の取得に失敗しました')
                       }
 
-                      // 🔒 SSOT_ID_CHECK: Preview confirm時のユーザーID恒久監視
+                      // 🔒 修繕D: SSOT_ID_CHECK を Supabase セッション vs previewOwner に一本化
+                      // sc_real_login_user はグローバルキーでタブ間で上書きされるため判定材料にしない
                       {
-                        const realLoginUser = localStorage.getItem('sc_real_login_user')
-                        const idMatch = !realLoginUser || realLoginUser === user.id
-                        if (process.env.NODE_ENV !== 'production' || !idMatch) {
-                          console.log('🔒 SSOT_ID_CHECK', {
-                            route: '/profile/preview/confirm',
-                            authUid: user.id?.slice(0, 8),
-                            realLoginUser: realLoginUser?.slice(0, 8) || 'none',
-                            ok: idMatch
-                          })
-                        }
-                        if (!idMatch) {
-                          const reason = 'real_login_mismatch'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: '/profile/preview/confirm', authUid: user.id?.slice(0, 8), realLoginUser: realLoginUser?.slice(0, 8) })
+                        const currentAuthUserId = user.id
+                        const previewOwnerUserId = previewData?.__ownerUserId || null
+                        const realLoginUser = localStorage.getItem('sc_real_login_user') // ログ用のみ
+                        const ownerMatch = !previewOwnerUserId || previewOwnerUserId === currentAuthUserId
+                        console.log('🔒 SSOT_ID_CHECK (修繕D)', {
+                          route: '/profile/preview/confirm',
+                          currentAuthUserId: currentAuthUserId?.slice(0, 8),
+                          previewOwnerUserId: previewOwnerUserId?.slice(0, 8) || 'none',
+                          realLoginUser_info_only: realLoginUser?.slice(0, 8) || 'none',
+                          ok: ownerMatch
+                        })
+                        if (!ownerMatch) {
+                          const reason = 'owner_user_mismatch'
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: '/profile/preview/confirm', currentAuthUserId: currentAuthUserId?.slice(0, 8), previewOwnerUserId: previewOwnerUserId?.slice(0, 8) })
                           isSavingRef.current = false
                           setOwnerMismatchDetected(true)
                           return
@@ -1430,45 +1440,35 @@ function ProfilePreviewContent() {
                       })
 
                       // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                      // 🔒 PRE-SAVE ASSERT GATE（保存前の安全条件を全て明文化）
-                      // これらが1つでも失敗したら保存を即中断
+                      // 🔒 PRE-SAVE ASSERT GATE（修繕D: Supabaseセッション vs previewOwner に一本化）
+                      // sc_real_login_user はグローバルキーでタブ間汚染するため判定材料から除外
                       //
                       // 退避reason定数:
                       //   no_auth_user          … authUser が null
-                      //   real_login_mismatch   … sc_real_login_user ≠ authUser.id
                       //   owner_user_mismatch   … __ownerUserId ≠ authUser.id
                       // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                       {
                         const ROUTE = '/profile/preview/confirm'
                         const authUid = user?.id || null
-                        const realLogin = typeof window !== 'undefined' ? localStorage.getItem('sc_real_login_user') : null
                         const ownerUserId = previewData?.__ownerUserId || null
 
                         // Assert 1: authUser が存在する
                         if (!authUid) {
                           const reason = 'no_auth_user'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid, realLogin, ownerUserId })
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid, ownerUserId })
                           isSavingRef.current = false
                           setOwnerMismatchDetected(true)
                           return
                         }
-                        // Assert 2: sc_real_login_user と authUser.id が一致
-                        if (realLogin && realLogin !== authUid) {
-                          const reason = 'real_login_mismatch'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin.slice(0, 8), ownerUserId: ownerUserId?.slice(0, 8) })
-                          isSavingRef.current = false
-                          setOwnerMismatchDetected(true)
-                          return
-                        }
-                        // Assert 3: __ownerUserId と authUser.id が一致
+                        // Assert 2: __ownerUserId と authUser.id が一致（唯一の比較軸）
                         if (ownerUserId && ownerUserId !== authUid) {
                           const reason = 'owner_user_mismatch'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), realLogin: realLogin?.slice(0, 8), ownerUserId: ownerUserId.slice(0, 8) })
+                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), ownerUserId: ownerUserId.slice(0, 8) })
                           isSavingRef.current = false
                           setOwnerMismatchDetected(true)
                           return
                         }
-                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed', { route: ROUTE, authUid: authUid.slice(0, 8) })
+                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed', { route: ROUTE, authUid: authUid.slice(0, 8), ownerUserId: ownerUserId?.slice(0, 8) || 'none' })
                       }
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
