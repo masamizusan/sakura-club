@@ -3141,15 +3141,18 @@ function ProfileEditContent() {
             console.error('❌ localStorage解析エラー (no user):', error)
           }
         } else {
-          console.log('⚠️ localStorageにプロフィールデータが見つかりません')
+          console.log('⚠️ localStorageにプロフィールデータが見つかりません - ユーザー認証待機')
+          // localStorageにデータがない場合（ログイン直後など）は
+          // loading状態を維持したままreturn → user確定後にuseEffectが再実行されDB fetchへ進む
+          return
         }
-        
+
         // ローディング状態を解除
         setIsLoading(false)
         setUserLoading(false)
-        
+
         // fromMyPage遷移処理完了
-        
+
         return
       }
       
