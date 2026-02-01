@@ -54,24 +54,46 @@ function LoginForm() {
       let destination: string
       if (redirectTo) {
         destination = redirectTo
-      } else if (result.user) {
+      } else {
         // profile_initialized を確認して遷移先を判定
         const supabase = createClient()
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('profile_initialized, gender, nationality')
-          .eq('user_id', result.user.id)
-          .maybeSingle()
 
-        if (!prof || prof.profile_initialized !== true) {
-          const type = prof?.gender === 'male' && prof?.nationality && prof.nationality !== '日本'
-            ? 'foreign-male' : 'japanese-female'
-          destination = `/profile/edit?type=${type}&fromMyPage=true`
-        } else {
-          destination = '/mypage'
+        // ユーザーID確定: result.user を優先、なければ getUser() で再取得
+        const authUser = result.user ?? (await supabase.auth.getUser()).data.user
+        const userId = authUser?.id
+        const email = authUser?.email ?? data.email ?? ''
+
+        let prof: { profile_initialized: boolean | null; gender: string | null; nationality: string | null } | null = null
+        if (userId) {
+          // profiles.id = user.id の設計なので PK で取得（最も確実）
+          const { data: profData } = await supabase
+            .from('profiles')
+            .select('profile_initialized, gender, nationality')
+            .eq('id', userId)
+            .maybeSingle()
+          prof = profData
         }
-      } else {
-        destination = '/mypage'
+
+        console.log('🔍 Login routing:', { userId: userId?.slice(0, 8), email, prof })
+
+        if (prof?.profile_initialized === true) {
+          destination = '/mypage'
+        } else {
+          // type 推定: DB優先 → email prefix fallback
+          let type: string
+          if (prof?.gender === 'male' && prof?.nationality && prof.nationality !== '日本') {
+            type = 'foreign-male'
+          } else if (prof?.gender === 'female' || prof?.nationality === '日本') {
+            type = 'japanese-female'
+          } else if (email.startsWith('fm.')) {
+            type = 'foreign-male'
+          } else if (email.startsWith('jf.')) {
+            type = 'japanese-female'
+          } else {
+            type = 'japanese-female'
+          }
+          destination = `/profile/edit?type=${type}&fromMyPage=true`
+        }
       }
 
       console.log('Redirecting to:', destination)
