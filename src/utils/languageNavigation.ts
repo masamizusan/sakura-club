@@ -11,17 +11,26 @@ import { getLanguageFromCookie } from './languageCookie'
  */
 export function createLanguageAwareUrl(path: string, params?: URLSearchParams): string {
   const language = getLanguageFromCookie()
-  
-  // If no language in cookie, use plain path
-  if (!language) {
-    return params ? `${path}?${params.toString()}` : path
+
+  // pathに既存のクエリパラメータがある場合を考慮してURLオブジェクトで処理
+  // 相対パスをパースするためダミーベースを使用
+  const base = 'http://dummy'
+  const url = new URL(path, base)
+
+  // 追加パラメータをマージ
+  if (params) {
+    params.forEach((value, key) => {
+      url.searchParams.set(key, value)
+    })
   }
-  
-  // Add language parameter to maintain language state
-  const finalParams = params ? new URLSearchParams(params) : new URLSearchParams()
-  finalParams.set('lang', language)
-  
-  return `${path}?${finalParams.toString()}`
+
+  // 言語パラメータを追加
+  if (language) {
+    url.searchParams.set('lang', language)
+  }
+
+  // ダミーベースを除去してパス+クエリを返す
+  return url.pathname + url.search
 }
 
 /**
