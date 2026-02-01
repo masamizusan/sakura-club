@@ -463,7 +463,9 @@ function MyPageContent() {
                   {profile?.name || 'ユーザー'}
                 </h2>
                 <p className="text-gray-600">
-                  {profile?.age || '未設定'}歳 • {profile?.residence || profile?.prefecture || '未設定'}
+                  {profile?.age || '未設定'}歳 • {isForeignMale
+                    ? (profile?.nationality?.trim() || '未設定')
+                    : (profile?.residence || profile?.prefecture || '未設定')}
                 </p>
               </div>
             </div>
