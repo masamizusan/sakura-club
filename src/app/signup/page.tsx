@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService, AuthError } from '@/lib/auth'
+import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
@@ -254,6 +255,35 @@ export default function SignupPage() {
         sessionStorage.setItem('sc_signup_email', data.email)
         console.log('📧 サインアップemail保存:', data.email)
 
+        // 📝 初期プロフィールデータをDBに保存（null-only update）
+        if (result.session?.access_token) {
+          try {
+            const isMale = data.gender === 'male'
+            const profileBody: Record<string, any> = {
+              name: data.nickname,
+              gender: data.gender,
+              birth_date: data.birth_date,
+            }
+            if (isMale) {
+              profileBody.nationality = data.prefecture
+            } else {
+              profileBody.residence = data.prefecture
+              profileBody.nationality = '日本'
+            }
+            await fetch('/api/auth/post-signup-profile', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${result.session.access_token}`
+              },
+              body: JSON.stringify(profileBody)
+            })
+            console.log('✅ 初期プロフィールDB保存完了')
+          } catch (e) {
+            console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
+          }
+        }
+
         const profileParams = new URLSearchParams({
           type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
           nickname: data.nickname,
@@ -299,7 +329,39 @@ export default function SignupPage() {
 
         // localStorage にも開発テストモードを設定
         localStorage.setItem('devTestMode', 'true')
-        
+
+        // 📝 初期プロフィールデータをDBに保存（null-only update）
+        try {
+          const supabase = createClient()
+          const { data: sessionData } = await supabase.auth.getSession()
+          const token = sessionData?.session?.access_token
+          if (token) {
+            const isMale = data.gender === 'male'
+            const profileBody: Record<string, any> = {
+              name: data.nickname,
+              gender: data.gender,
+              birth_date: data.birth_date,
+            }
+            if (isMale) {
+              profileBody.nationality = data.prefecture
+            } else {
+              profileBody.residence = data.prefecture
+              profileBody.nationality = '日本'
+            }
+            await fetch('/api/auth/post-signup-profile', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(profileBody)
+            })
+            console.log('✅ 初期プロフィールDB保存完了（AuthError時）')
+          }
+        } catch (e) {
+          console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
+        }
+
         alert('メール送信でエラーが発生しましたが、プロフィール作成を続行できます。')
         // 언어 인식 네비게이션 사용
         navigateWithLanguage(`/profile/edit`, profileParams)
