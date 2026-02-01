@@ -8,14 +8,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { authService, AuthError } from '@/lib/auth'
-import { createClient } from '@/lib/supabase'
+import { authService } from '@/lib/auth'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { LanguageSelector } from '@/components/LanguageSelector'
-import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
+import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -230,146 +229,86 @@ export default function SignupPage() {
       }
       
       const result = await authService.signUp(signupData)
-      console.log('Signup result:', result)
-      console.log('needsEmailConfirmation:', result.needsEmailConfirmation)
-      console.log('hasSession:', !!result.session)
-      
-      // メール認証が必要な場合は仮登録完了画面に遷移
-      if (result.needsEmailConfirmation) {
-        console.log('Redirecting to registration complete page')
-        // 仮登録完了画面にsignupデータを含めて遷移
+      console.log('📋 signUp結果:', {
+        userId: result.user?.id?.slice(0, 8),
+        hasSession: !!result.session,
+        hasAccessToken: !!result.session?.access_token,
+        needsEmailConfirmation: result.needsEmailConfirmation,
+      })
+
+      // --- パターンB: session無し（メール確認必要 or メール送信失敗） ---
+      if (!result.session?.access_token) {
+        console.log('⚠️ セッション/トークン無し → メール確認またはログインへ誘導')
         const params = new URLSearchParams({
           email: data.email,
           gender: data.gender,
           nickname: data.nickname,
           birth_date: data.birth_date,
           age: age.toString(),
-          nationality: data.prefecture, // 男性の場合は国籍、女性の場合は都道府県
+          nationality: data.prefecture,
           prefecture: data.prefecture
         })
         languageRouter.push(`/register/complete`, params)
-      } else {
-        console.log('Direct login successful, redirecting to profile edit')
-        // 直接ログインが成功した場合は性別に応じてプロフィール編集画面に遷移
-        // 🚨 FIX: サインアップ時のemailをsessionStorageに保存（プロフィール作成時に使用）
-        sessionStorage.setItem('sc_signup_email', data.email)
-        console.log('📧 サインアップemail保存:', data.email)
-
-        // 📝 初期プロフィールデータをDBに保存（null-only update）
-        if (result.session?.access_token) {
-          try {
-            const isMale = data.gender === 'male'
-            const profileBody: Record<string, any> = {
-              name: data.nickname,
-              gender: data.gender,
-              birth_date: data.birth_date,
-            }
-            if (isMale) {
-              profileBody.nationality = data.prefecture
-            } else {
-              profileBody.residence = data.prefecture
-              profileBody.nationality = '日本'
-            }
-            await fetch('/api/auth/post-signup-profile', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${result.session.access_token}`
-              },
-              body: JSON.stringify(profileBody)
-            })
-            console.log('✅ 初期プロフィールDB保存完了')
-          } catch (e) {
-            console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
-          }
-        }
-
-        const profileParams = new URLSearchParams({
-          type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
-          nickname: data.nickname,
-          gender: data.gender,
-          birth_date: data.birth_date,
-          age: age.toString(),
-          nationality: data.prefecture,
-          prefecture: data.prefecture
-        })
-        languageRouter.push(`/profile/edit`, profileParams)
-      }
-      
-    } catch (error) {
-      console.error('Signup error:', error)
-      
-      // メール送信エラーの場合は自動的にプロフィール編集画面に遷移
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.log('🔍 Error message analysis:', errorMessage)
-      
-      // すべてのAuthErrorでプロフィール編集画面に遷移（新規登録完了として扱う）
-      if (error instanceof AuthError) {
-        
-        console.log('📧 メール送信エラー検出 - プロフィール編集画面に自動遷移します')
-        
-        // 年齢を再計算
-        const age = calculateAge(data.birth_date)
-        
-        // プロフィール編集画面に直接遷移（開発テストモード有効）
-        // 🚨 FIX: サインアップ時のemailをsessionStorageに保存（プロフィール作成時に使用）
-        sessionStorage.setItem('sc_signup_email', data.email)
-        console.log('📧 サインアップemail保存（エラー時）:', data.email)
-
-        const profileParams = new URLSearchParams({
-          type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
-          nickname: data.nickname,
-          gender: data.gender,
-          birth_date: data.birth_date,
-          age: age.toString(),
-          nationality: data.prefecture,
-          prefecture: data.prefecture,
-          devTest: 'true' // 開発テストモードを有効化
-        })
-
-        // localStorage にも開発テストモードを設定
-        localStorage.setItem('devTestMode', 'true')
-
-        // 📝 初期プロフィールデータをDBに保存（null-only update）
-        try {
-          const supabase = createClient()
-          const { data: sessionData } = await supabase.auth.getSession()
-          const token = sessionData?.session?.access_token
-          if (token) {
-            const isMale = data.gender === 'male'
-            const profileBody: Record<string, any> = {
-              name: data.nickname,
-              gender: data.gender,
-              birth_date: data.birth_date,
-            }
-            if (isMale) {
-              profileBody.nationality = data.prefecture
-            } else {
-              profileBody.residence = data.prefecture
-              profileBody.nationality = '日本'
-            }
-            await fetch('/api/auth/post-signup-profile', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify(profileBody)
-            })
-            console.log('✅ 初期プロフィールDB保存完了（AuthError時）')
-          }
-        } catch (e) {
-          console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
-        }
-
-        alert('メール送信でエラーが発生しましたが、プロフィール作成を続行できます。')
-        // 언어 인식 네비게이션 사용
-        navigateWithLanguage(`/profile/edit`, profileParams)
         return
       }
-      
-      // AuthError以外の一般的なエラー
-      setSignupError(t('signup.signupFailed'))
+
+      // --- パターンC: session有り（直接ログイン成功） ---
+      console.log('✅ セッション取得成功 → プロフィール初期保存 & 編集画面へ')
+      sessionStorage.setItem('sc_signup_email', data.email)
+
+      // 📝 初期プロフィールデータをDBに保存（null-only update）
+      try {
+        const isMale = data.gender === 'male'
+        const profileBody: Record<string, any> = {
+          name: data.nickname,
+          gender: data.gender,
+          birth_date: data.birth_date,
+        }
+        if (isMale) {
+          profileBody.nationality = data.prefecture
+        } else {
+          profileBody.residence = data.prefecture
+          profileBody.nationality = '日本'
+        }
+        const res = await fetch('/api/auth/post-signup-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${result.session.access_token}`
+          },
+          body: JSON.stringify(profileBody)
+        })
+        const resBody = await res.json().catch(() => null)
+        console.log('📝 post-signup-profile:', { status: res.status, body: resBody })
+      } catch (e) {
+        console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
+      }
+
+      const profileParams = new URLSearchParams({
+        type: data.gender === 'male' ? 'foreign-male' : 'japanese-female',
+        nickname: data.nickname,
+        gender: data.gender,
+        birth_date: data.birth_date,
+        age: age.toString(),
+        nationality: data.prefecture,
+        prefecture: data.prefecture
+      })
+      languageRouter.push(`/profile/edit`, profileParams)
+
+    } catch (error) {
+      console.error('🚨 Signup error:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.log('🔍 Error message:', errorMessage)
+
+      // --- パターンA: signup自体が失敗 ---
+      // "User already registered" 系のエラー判定
+      const isAlreadyRegistered = /already registered|already been registered|duplicate|already exists/i.test(errorMessage)
+
+      if (isAlreadyRegistered) {
+        setSignupError('このメールアドレスは既に登録されています。ログインしてください。')
+      } else {
+        setSignupError(errorMessage || t('signup.signupFailed'))
+      }
     } finally {
       setIsLoading(false)
     }
@@ -398,6 +337,11 @@ export default function SignupPage() {
             {signupError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-700 text-sm">{signupError}</p>
+                {signupError.includes('既に登録') && (
+                  <Link href="/login" className="mt-2 inline-block text-sm text-sakura-600 underline hover:text-sakura-800">
+                    ログイン画面へ →
+                  </Link>
+                )}
               </div>
             )}
 
