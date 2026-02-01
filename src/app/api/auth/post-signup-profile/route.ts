@@ -16,6 +16,7 @@ export const dynamic = 'force-dynamic'
  */
 
 // ホワイトリスト: 受け付けるフィールド
+// ⚠️ profile_initialized は意図的に含めない（プレビュー確定時のみtrueにする）
 const ALLOWED_FIELDS = [
   'name', 'gender', 'birth_date', 'nationality', 'residence', 'language_skills'
 ] as const

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/client'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
@@ -46,13 +47,35 @@ function LoginForm() {
       
       // Wait a moment for session to be established
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Check for redirect parameter
       const redirectTo = searchParams?.get('redirectTo')
-      const destination = redirectTo || '/dashboard'
-      
+
+      let destination: string
+      if (redirectTo) {
+        destination = redirectTo
+      } else if (result.user) {
+        // profile_initialized を確認して遷移先を判定
+        const supabase = createClient()
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('profile_initialized, gender, nationality')
+          .eq('user_id', result.user.id)
+          .maybeSingle()
+
+        if (!prof || prof.profile_initialized !== true) {
+          const type = prof?.gender === 'male' && prof?.nationality && prof.nationality !== '日本'
+            ? 'foreign-male' : 'japanese-female'
+          destination = `/profile/edit?type=${type}&fromMyPage=true`
+        } else {
+          destination = '/mypage'
+        }
+      } else {
+        destination = '/mypage'
+      }
+
       console.log('Redirecting to:', destination)
-      
+
       // 언어 인식 네비게이션으로 언어 상태 유지
       if (redirectTo) {
         navigateWithLanguage(destination)

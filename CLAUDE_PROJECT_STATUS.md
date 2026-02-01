@@ -7,6 +7,23 @@
 **技術スタック**: Next.js 14.2.31 + TypeScript + Supabase + Tailwind CSS  
 **最終更新**: 2025-09-24T21:21:32
 
+## 🔒 指標A: profile_initialized によるログイン後遷移制御（2026-02-02実装）
+
+### 仕様
+- `profiles.profile_initialized` (boolean, default false) でプロフィール完成状態を管理
+- プレビュー確定保存時に `profile_initialized = true` をセット
+- ログイン後: `profile_initialized === true` → `/mypage`、それ以外 → `/profile/edit`
+- `post-signup-profile` API では `profile_initialized` を絶対に true にしない
+- バックフィル: name と bio が両方入っている既存ユーザーは `profile_initialized = true`
+
+### 変更ファイル
+- `supabase/migrations/20260202_add_profile_initialized.sql` — カラム追加+バックフィル
+- `src/app/profile/preview/page.tsx` — upsertPayload に `profile_initialized: true`
+- `src/app/login/page.tsx` — ログイン後遷移判定
+- `src/app/api/auth/post-signup-profile/route.ts` — コメント追記
+
+---
+
 ## 🎯 直近の作業内容と成果
 
 ### 完了済みタスク

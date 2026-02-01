@@ -1492,6 +1492,7 @@ function ProfilePreviewContent() {
                         id: user.id,
                         user_id: user.id,
                         email: user.email || null,
+                        profile_initialized: true,
                       }
                       const saveResult = await upsertProfile(
                         supabase,
