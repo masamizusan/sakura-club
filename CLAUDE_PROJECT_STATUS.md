@@ -349,7 +349,25 @@ const isJapaneseFemale = profileType === 'japanese-female'
 
 ---
 
-**作成者**: Claude Code Assistant  
-**作成日時**: 2025-09-24T21:30:00  
-**最終更新**: 2025-09-24T21:35:00  
+## 修繕D/F 最終確定（再発防止ルール）
+
+### 修繕D（根治）— SSOT_ID_CHECK一本化（必須ルール）
+
+- ブロック判定は `supabase.auth.getUser()` で取得した `currentAuthUserId` と、`previewData.__ownerUserId` の一致のみで行う
+- `sc_real_login_user`（グローバルlocalStorageキー）はログ出力用の補助情報。**ブロック判定に使用しない（禁止）**
+- **理由:** localStorageは別タブ/別ログインで上書きされるため、誤ブロックが発生する。タブ固有のSupabaseセッションを唯一の真実（SSOT）として扱う
+
+### 修繕F（UX）— ブロック後の復帰導線
+
+- ブロック用オーバーレイに **「マイページへ戻る」** ボタンを追加し、詰み状態を防止する
+
+### 補足（任意）
+
+- `/login` で `autocomplete="current-password"` 警告が出る場合があるが、動作影響はない。余裕があればログインフォームに autocomplete を付与して警告を抑制する
+
+---
+
+**作成者**: Claude Code Assistant
+**作成日時**: 2025-09-24T21:30:00
+**最終更新**: 2026-02-01
 **プロジェクト状況**: 安定稼働中（課題あり） ⚠️
