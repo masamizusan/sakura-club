@@ -3674,8 +3674,8 @@ function ProfileEditContent() {
           prefecture: !isForeignMale ? (defaults.prefecture || (isNewUser ? '' : (profile?.residence || profile?.prefecture || ''))) : undefined,
           // 外国人男性向け新フィールド
           planned_prefectures: isForeignMale ? (isNewUser ? [] : (profile?.planned_prefectures || [])) : undefined,
-          visit_schedule: isForeignMale ? (isNewUser ? undefined : (profile?.visit_schedule || undefined)) : undefined,
-          travel_companion: isForeignMale ? (isNewUser ? undefined : (profile?.travel_companion || undefined)) : undefined,
+          visit_schedule: isForeignMale ? (isNewUser ? '' : (profile?.visit_schedule || '')) : undefined,
+          travel_companion: isForeignMale ? (isNewUser ? '' : (profile?.travel_companion || '')) : undefined,
           occupation: isNewUser ? undefined : (parsedOptionalData.occupation || profile?.occupation || undefined),
           height: isNewUser ? undefined : (parsedOptionalData.height || profile?.height || undefined),
           body_type: isNewUser ? undefined : (parsedOptionalData.body_type || profile?.body_type || undefined),
@@ -3835,9 +3835,9 @@ function ProfileEditContent() {
             setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
 
-            const visitScheduleValue = isNewUser ? undefined :
+            const visitScheduleValue = isNewUser ? '' :
               (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'forms.noEntry'
-                ? profile!.visit_schedule : undefined)
+                ? profile!.visit_schedule : '')
             console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
             
             // 🧪 INIT/RESET WRITE [visit_schedule]
@@ -6581,7 +6581,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             const currentValue = watch('visit_schedule')
                             // sentinel値は未選択として表示
                             if (!currentValue || currentValue === 'no-entry' || currentValue === 'noEntry' || currentValue === 'none') {
-                              return undefined
+                              return ''
                             }
                             return currentValue
                           })()}
@@ -6641,7 +6641,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             const currentValue = watch('travel_companion')
                             // sentinel値は未選択として表示
                             if (!currentValue || currentValue === 'noEntry' || currentValue === 'no-entry' || currentValue === 'none' || currentValue === 'undecided') {
-                              return undefined
+                              return ''
                             }
                             return currentValue
                           })()}
