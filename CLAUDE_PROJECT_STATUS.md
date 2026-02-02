@@ -24,6 +24,14 @@
 
 ---
 
+## 🐛 fromMyPage クエリ結合バグ修正（2026-02-02）
+
+- **不具合原因**: `createLanguageAwareUrl` が既存クエリ付きパスに `?lang=ja` を二重付与し、`fromMyPage=true?lang=ja` となって `fromMyPage` が認識されなかった。結果、既存ユーザーが新規扱い分岐に入りニックネーム等が空になった。
+- **対策**: URL生成を `URL` オブジェクト + `URLSearchParams` に統一し、クエリパラメータを正しくマージするよう修正。
+- **変更ファイル**: `src/utils/languageNavigation.ts`
+
+---
+
 ## 🎯 直近の作業内容と成果
 
 ### 完了済みタスク
