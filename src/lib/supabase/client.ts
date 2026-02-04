@@ -1,8 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
+// 要件D: singleton に委譲（Multiple GoTrueClient 問題の根本解決）
+// @/lib/supabase の singleton を再 export することで、
+// どの import パスを使っても同一インスタンスが返る。
+export { createClient } from '@/lib/supabase'

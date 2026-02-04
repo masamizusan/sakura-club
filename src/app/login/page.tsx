@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
@@ -63,6 +63,12 @@ function LoginForm() {
         const userId = authUser?.id
         const email = authUser?.email ?? data.email ?? ''
 
+        // セッション共有確認ログ
+        const sessionCheck = await supabase.auth.getSession()
+        console.log('🔍 Login routing: supabase client session check', {
+          hasSession: !!sessionCheck.data.session
+        })
+
         let prof: { profile_initialized: boolean | null; gender: string | null; nationality: string | null } | null = null
         if (userId) {
           // profiles.id = user.id の設計なので PK で取得（最も確実）
@@ -92,7 +98,7 @@ function LoginForm() {
           } else {
             type = 'japanese-female'
           }
-          destination = `/profile/edit?type=${type}&fromMyPage=true`
+          destination = `/profile/edit?type=${type}`
         }
       }
 

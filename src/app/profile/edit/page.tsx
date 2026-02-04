@@ -611,7 +611,7 @@ function ProfileEditContent() {
   // 🛡️ CRITICAL: チラつき防止 - 初期化専用フラグ（完成度計算ガード）
   const [isInitializing, setIsInitializing] = useState(true)
   // 🔒 修繕A: 別タブでのプロフィール種類混線検出
-  const [typeMismatchDetected, setTypeMismatchDetected] = useState(false)
+  // typeMismatchDetected 削除: 修繕Aはモーダルではなく router.replace で自動矯正する
   
   // 🔍 DEBUG: isHydrated状態変化監視
   useEffect(() => {
@@ -767,7 +767,7 @@ function ProfileEditContent() {
     return finalPhotoUrls
   }
 
-  // 🔒 修繕A: DBプロフィールのタイプとURLタイプの不一致検出
+  // 🔒 修繕A: DBプロフィールのタイプとURLタイプの不一致検出 → 自動矯正
   useEffect(() => {
     if (!isHydrated || !user?.id) return
     const formGender = getValues('gender')
@@ -778,8 +778,11 @@ function ProfileEditContent() {
     const dbIsForeignMale = formGender === 'male' && formNationality && !isJapanese
     const dbType = dbIsForeignMale ? 'foreign-male' : 'japanese-female'
     if (dbType !== profileType) {
-      console.error('🚨 修繕A: タイプ不一致検出', { dbType, urlType: profileType, gender: formGender, nationality: formNationality })
-      setTypeMismatchDetected(true)
+      console.warn('🔧 修繕A: タイプ不一致検出 → 自動矯正', { dbType, urlType: profileType, gender: formGender, nationality: formNationality })
+      const url = new URL(window.location.href)
+      url.searchParams.set('type', dbType)
+      url.searchParams.delete('fromMyPage')
+      router.replace(url.pathname + url.search)
     }
   }, [isHydrated, user?.id])
 
@@ -5852,22 +5855,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
-      {/* 🔒 修繕A: タイプ不一致オーバーレイ */}
-      {typeMismatchDetected && (
-        <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
-            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
-            >
-              再読み込み
-            </button>
-          </div>
-        </div>
-      )}
+      {/* 修繕A: タイプ不一致時は router.replace で自動矯正（オーバーレイ廃止） */}
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
       
