@@ -1017,27 +1017,12 @@ function ProfilePreviewContent() {
                       const userId = urlParams.get('userId')
                       const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
                       
-                      console.log('🔍 Preview表示デバッグ:', {
-                        userId,
-                        previewDataKey,
-                        'sessionStorageKeys': Object.keys(sessionStorage).filter(k => k.includes('preview'))
-                      })
-                      
                       const sessionData = window.sessionStorage.getItem(previewDataKey)
                       if (sessionData) {
                         const parsedData = JSON.parse(sessionData)
-                        console.log('🔍 Preview表示: sessionDataから取得:', {
-                          'parsedData.language_skills': parsedData.language_skills,
-                          'language_skills存在': !!parsedData.language_skills,
-                          'language_skills配列長': parsedData.language_skills?.length
-                        })
-                        
                         if (parsedData.language_skills) {
                           effectiveLanguageSkills = parsedData.language_skills
-                          console.log('🔥 Preview表示: language_skills取得成功:', effectiveLanguageSkills)
                         }
-                      } else {
-                        console.log('🚨 Preview表示: sessionDataが見つかりません')
                       }
                     } catch (e) {
                       console.warn('Language skills session parse error:', e)
@@ -1198,14 +1183,11 @@ function ProfilePreviewContent() {
                   className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                   onClick={async () => {
                     // 🔒 二重保存防止
-                    if (isSavingRef.current) {
-                      console.log('🔒 CONFIRM_BLOCKED_DUPLICATE: 保存処理実行中 - 二重実行を防止')
-                      return
-                    }
+                    if (isSavingRef.current) return
                     isSavingRef.current = true
 
                     // 🚀 CRITICAL: 指示書対応 - シンプルで確実な保存処理
-                    console.log('🚀 プレビュー確定ボタンクリック - 保存処理開始')
+                    logger.debug('[PREVIEW] confirm start')
 
                     try {
                       // 🚀 Step 1: ユーザー認証確認
@@ -1224,13 +1206,7 @@ function ProfilePreviewContent() {
                         const previewOwnerUserId = previewData?.__ownerUserId || null
                         const realLoginUser = localStorage.getItem('sc_real_login_user') // ログ用のみ
                         const ownerMatch = !previewOwnerUserId || previewOwnerUserId === currentAuthUserId
-                        console.log('🔒 SSOT_ID_CHECK (修繕D)', {
-                          route: '/profile/preview/confirm',
-                          currentAuthUserId: currentAuthUserId?.slice(0, 8),
-                          previewOwnerUserId: previewOwnerUserId?.slice(0, 8) || 'none',
-                          realLoginUser_info_only: realLoginUser?.slice(0, 8) || 'none',
-                          ok: ownerMatch
-                        })
+                          logger.debug('[PREVIEW] SSOT check:', ownerMatch ? 'OK' : 'MISMATCH')
                         if (!ownerMatch) {
                           const reason = 'owner_user_mismatch'
                           console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: '/profile/preview/confirm', currentAuthUserId: currentAuthUserId?.slice(0, 8), previewOwnerUserId: previewOwnerUserId?.slice(0, 8) })
@@ -1258,46 +1234,21 @@ function ProfilePreviewContent() {
                       
                       const skills = previewData?.language_skills ?? sessionLanguageSkills ?? []
                       const normalizedLanguageSkills = Array.isArray(skills) ? skills : []
-                      console.log('🚨 SSOT language_skills保存準備:', {
-                        sessionSkills: sessionLanguageSkills,
-                        previewSkills: previewData?.language_skills,
-                        normalizedLength: normalizedLanguageSkills.length,
-                        willSaveToDB: true
-                      })
 
                       // 🚨 TASK C: photo_urls取得（0枚保存対応版）
                       // 🔥 修正: photo_urlsが空配列の場合はフォールバックしない（0枚保存を尊重）
                       let finalPhotoUrls: string[] = []
                       if (Array.isArray(photo_urls) && photo_urls.length > 0) {
-                        // photo_urlsに有効な値がある
                         finalPhotoUrls = photo_urls
-                        console.log('📸 TASK C: photo_urlsから画像使用:', photo_urls.length, '枚')
                       } else if (Array.isArray(photo_urls) && photo_urls.length === 0) {
-                        // photo_urlsが明示的に空配列 → 0枚保存（フォールバックしない）
                         finalPhotoUrls = []
-                        console.log('📸 TASK C: 0枚保存を検出 - photo_urls=[]')
                       } else if (previewData.profile_image || profileImage) {
-                        // photo_urlsがない場合のみ後方互換フォールバック
                         finalPhotoUrls = [previewData.profile_image || profileImage]
-                        console.log('📸 TASK C: 後方互換フォールバック - profile_image使用')
                       }
-
-                      console.log("🚨 TASK C: CONFIRM SAVE PAYLOAD CHECK", {
-                        finalPhotoUrlsCount: finalPhotoUrls?.length,
-                        finalPhotoUrls,
-                        avatarUrlWillBe: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
-                        previewData_photo_urls: previewData.photo_urls,
-                        photo_urls_variable: photo_urls,
-                        photo_urls_isArray: Array.isArray(photo_urls),
-                        photo_urls_isEmpty: Array.isArray(photo_urls) && photo_urls.length === 0,
-                        // 🔥 TASK C: 0枚時は空配列[]を送信（nullではない）
-                        willSavePhotoUrlsAs: finalPhotoUrls.length === 0 ? '[] (empty array)' : `[${finalPhotoUrls.length} urls]`,
-                        willSaveAvatarUrlAsNull: finalPhotoUrls.length === 0
-                      })
+                      logger.debug('[PREVIEW] photos:', finalPhotoUrls.length)
 
                       // 🔒 A案: ensure-profile で行の存在を保証してから UPDATE のみ
                       // 🔒 Bearer方式: Cookie同期に依存せず access_token を直接渡す
-                      console.log('🔒 ensure-profile: 行の存在保証開始')
                       try {
                         const { data: { session: currentSession } } = await supabase.auth.getSession()
                         const accessToken = currentSession?.access_token
@@ -1326,11 +1277,9 @@ function ProfilePreviewContent() {
                           router.replace('/login?reason=ensure_401')
                           return
                         } else if (!ensureRes.ok) {
-                          console.error('🚨 ensure-profile failed:', ensureRes.status)
-                          // 401以外は既存行がある前提で続行
-                        } else {
-                          console.log('✅ ensure-profile: 行の存在保証完了')
+                          logger.error('[PREVIEW] ensure-profile failed:', ensureRes.status)
                         }
+                        // 成功 or 既存行がある前提で続行
                       } catch (ensureErr) {
                         console.error('🚨 ensure-profile error:', ensureErr)
                       }
@@ -1409,35 +1358,7 @@ function ProfilePreviewContent() {
                         Object.entries(savePayload).filter(([k]) => ALLOWED_PROFILE_KEYS.has(k) && !BLOCKED_KEYS.has(k))
                       )
 
-                      // デバッグ：落としたキーを可視化（次の地雷発見が一瞬になる）
-                      const droppedKeys = Object.keys(savePayload).filter(k => !ALLOWED_PROFILE_KEYS.has(k))
-                      console.log('🧹 UPSERT SANITIZE', {
-                        allowed_count: Object.keys(sanitizedPayload).length,
-                        blocked_present: Object.keys(savePayload).filter(k => BLOCKED_KEYS.has(k)),
-                        payload_keys: Object.keys(sanitizedPayload),
-                        residence_present: 'residence' in sanitizedPayload,
-                        planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
-                      })
 
-                      // 🚀 Step 3: upsert直前ログ（指示書①対応）- Base64マスク版
-                      logger.debug("🚨 UPSERT PAYLOAD", sanitizePayload({
-                        photo_urls_count: Array.isArray(sanitizedPayload.photo_urls) ? sanitizedPayload.photo_urls.length : 0,
-                        photo_urls: sanitizedPayload.photo_urls,
-                        avatar_url: sanitizedPayload.avatar_url,
-                        personality_tags: sanitizedPayload.personality_tags,
-                        interests: sanitizedPayload.interests,
-                        payload_keys: Object.keys(sanitizedPayload),
-                        residence_present: 'residence' in sanitizedPayload,
-                        planned_prefectures_present: 'planned_prefectures' in sanitizedPayload,
-                      }))
-
-                      // 🚨 SSOT保存保証ログ（指示書対応）
-                      console.log('🚀 PROFILE UPSERT FINAL PAYLOAD CHECK', {
-                        has_language_skills: 'language_skills' in sanitizedPayload,
-                        language_skills: sanitizedPayload.language_skills,
-                        isArray: Array.isArray(sanitizedPayload.language_skills),
-                        length: Array.isArray(sanitizedPayload.language_skills) ? sanitizedPayload.language_skills.length : null,
-                      })
 
                       // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                       // 🔒 PRE-SAVE ASSERT GATE（修繕D: Supabaseセッション vs previewOwner に一本化）
@@ -1454,36 +1375,23 @@ function ProfilePreviewContent() {
 
                         // Assert 1: authUser が存在する
                         if (!authUid) {
-                          const reason = 'no_auth_user'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid, ownerUserId })
+                          logger.error('[PREVIEW] blocked: no_auth_user')
                           isSavingRef.current = false
                           setOwnerMismatchDetected(true)
                           return
                         }
                         // Assert 2: __ownerUserId と authUser.id が一致（唯一の比較軸）
                         if (ownerUserId && ownerUserId !== authUid) {
-                          const reason = 'owner_user_mismatch'
-                          console.error('🚫 PRE_SAVE_BLOCKED', { reason, route: ROUTE, authUid: authUid.slice(0, 8), ownerUserId: ownerUserId.slice(0, 8) })
+                          logger.error('[PREVIEW] blocked: owner_mismatch')
                           isSavingRef.current = false
                           setOwnerMismatchDetected(true)
                           return
                         }
-                        console.log('✅ PRE-SAVE ASSERT GATE: all checks passed', { route: ROUTE, authUid: authUid.slice(0, 8), ownerUserId: ownerUserId?.slice(0, 8) || 'none' })
                       }
 
                       // 🚨 Step 4: 統一パイプライン経由でBase64遮断保証upsert（指示書準拠）
                       logger.info('📍 profiles write entry: profile/preview confirm')
 
-                      // 🔍 保存前詳細ログ（avatar変換追跡用）
-                      const preConversionAvatarUrl = sanitizedPayload.avatar_url
-                      logger.debug('🔍 PRE-CONVERSION AVATAR DEBUG:', {
-                        avatar_url_exists: !!preConversionAvatarUrl,
-                        avatar_url_type: typeof preConversionAvatarUrl,
-                        avatar_url_length: (typeof preConversionAvatarUrl === 'string' ? preConversionAvatarUrl.length : 0),
-                        avatar_url_preview: (typeof preConversionAvatarUrl === 'string' ? preConversionAvatarUrl.substring(0, 30) + '...' : 'null'),
-                        is_data_url: (typeof preConversionAvatarUrl === 'string' && preConversionAvatarUrl.startsWith('data:image/')),
-                        is_http_url: /^https?:\/\//.test(preConversionAvatarUrl as string || '')
-                      })
                       
                       // 🔒 UPSERT一本化: id=authUser.id で確実にINSERT or UPDATE
                       const { upsertProfile } = await import('@/utils/saveProfileToDb')
@@ -1502,80 +1410,47 @@ function ProfilePreviewContent() {
                         ['id']
                       )
 
-                      // 🔍 保存後詳細ログ（結果確認用）
-                      console.log('🔍 POST-CONVERSION RESULT:', {
-                        save_success: saveResult.success,
-                        save_error: saveResult.error || 'none',
-                        final_data_count: saveResult.data?.length || 0
-                      })
-
                       if (!saveResult.success) {
-                        console.error('❌ PROFILE SAVE FAILED via unified pipeline')
-                        console.error('❌ Error:', saveResult.error)
-                        console.error('❌ PAYLOAD KEYS', Object.keys(sanitizedPayload))
+                        logger.error('[PREVIEW] save failed:', saveResult.error)
                         throw new Error(saveResult.error || 'Profile save failed')
                       }
 
-                      // ✅ Step 5: UPDATE完了ログ
-                      console.log('✅ PROFILE UPDATE SUCCESS', {
-                        userId: user.id,
-                        timestamp: new Date().toISOString(),
-                        saved_personality_tags: sanitizedPayload.personality_tags,
-                        saved_interests: sanitizedPayload.interests,
-                        planned_stations_excluded: true,
-                        prefecture_excluded: true,
-                        residence_preserved: 'residence' in sanitizedPayload
-                      })
+                      logger.debug('[PREVIEW] save OK:', user.id?.slice(0, 8))
 
                       // 🚨 CRITICAL FIX: 5-2 DB結果による状態同期（再発防止）
                       if (saveResult.data && saveResult.data[0]) {
                         const savedProfile = saveResult.data[0]
-                        console.log('🔄 DB結果による状態同期開始:', {
-                          db_photo_urls: savedProfile.photo_urls,
-                          db_avatar_url: savedProfile.avatar_url,
-                          db_photo_urls_count: Array.isArray(savedProfile.photo_urls) ? savedProfile.photo_urls.length : 0
-                        })
-                        
+
                         // sessionStorageの保存データをDB結果で上書き
                         const previewDataKey = `previewData_${user?.id || 'anonymous'}`
                         try {
                           const currentPreviewData = sessionStorage.getItem(previewDataKey)
                           if (currentPreviewData) {
                             const parsedData = JSON.parse(currentPreviewData)
-                            // 🚨 B. DB値で重要フィールドを上書き（安易フォールバック排除）
                             if (Array.isArray(savedProfile.photo_urls)) {
                               parsedData.photo_urls = savedProfile.photo_urls
                             }
-                            // ❌ 禁止: photo_urls = savedProfile.photo_urls || [] ← 空配列上書き原因
                             parsedData.avatar_url = savedProfile.avatar_url
                             parsedData.image = savedProfile.avatar_url || savedProfile.photo_urls?.[0] || parsedData.image
-                            
+
                             sessionStorage.setItem(previewDataKey, JSON.stringify(parsedData))
-                            console.log('✅ SessionStorage更新完了:', {
-                              updated_photo_urls: parsedData.photo_urls,
-                              updated_count: Array.isArray(parsedData.photo_urls) ? parsedData.photo_urls.length : 0
-                            })
                           }
                         } catch (sessionError) {
-                          console.warn('⚠️ SessionStorage更新失敗（影響なし）:', sessionError)
+                          logger.warn('[PREVIEW] session update failed')
                         }
                       }
-
-                      // 🎯 Step 6: upsert完了後にMyPage遷移（指示書対応）
-                      console.log('🎯 Profile保存完了 - MyPageに遷移')
 
                       // 🚨 保存完了フラグ設定（未保存警告を無効化）
                       isConfirmedRef.current = true
 
                       // 🛡️ 同一タブ遷移に統一（window.opener廃止）
-                      console.log('✅ MYPAGE_NAVIGATE_MODE: same-tab (router.push)')
                       router.push('/mypage')
 
                     } catch (error) {
-                      console.error('❌ CRITICAL: Profile保存処理でエラー:', error)
-                      isSavingRef.current = false // 🔒 エラー時はミューテックス解除（リトライ可能に）
+                      logger.error('[PREVIEW] save error:', (error as Error).message)
+                      isSavingRef.current = false
                       alert('プロフィールの保存に失敗しました: ' + (error as Error).message)
-                      return // エラー時は遷移しない
+                      return
                     }
                   }}
                 >

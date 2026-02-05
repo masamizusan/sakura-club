@@ -5,6 +5,7 @@
 
 import { useRouter } from 'next/navigation'
 import { getLanguageFromCookie } from './languageCookie'
+import { logger } from '@/utils/logger'
 
 /**
  * Create a language-aware URL that preserves user's language choice
@@ -41,13 +42,13 @@ export function useLanguageAwareRouter() {
   
   const push = (path: string, params?: URLSearchParams) => {
     const languageAwareUrl = createLanguageAwareUrl(path, params)
-    console.log('🌍 Language-aware navigation:', languageAwareUrl)
+    logger.debug('[NAV]', languageAwareUrl)
     router.push(languageAwareUrl)
   }
-  
+
   const replace = (path: string, params?: URLSearchParams) => {
     const languageAwareUrl = createLanguageAwareUrl(path, params)
-    console.log('🌍 Language-aware replace:', languageAwareUrl)
+    logger.debug('[NAV] replace:', languageAwareUrl)
     router.replace(languageAwareUrl)
   }
   
@@ -65,6 +66,6 @@ export function useLanguageAwareRouter() {
  */
 export function navigateWithLanguage(path: string, params?: URLSearchParams) {
   const languageAwareUrl = createLanguageAwareUrl(path, params)
-  console.log('🌍 Direct language navigation:', languageAwareUrl)
+  logger.debug('[NAV] direct:', languageAwareUrl)
   window.location.href = languageAwareUrl
 }

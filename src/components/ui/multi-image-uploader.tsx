@@ -6,6 +6,7 @@ import ImageEditor from './image-editor'
 import { Upload, X, Edit, Camera, User } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
 import { type SupportedLanguage } from '@/utils/language'
+import { logger } from '@/utils/logger'
 
 interface ProfileImage {
   id: string
@@ -76,7 +77,6 @@ export default function MultiImageUploader({
           ? { ...img, url: editedImageUrl, isEdited: true }
           : img
       )
-      console.log('🚨 MultiImageUploader: Calling onImagesChange with:', updatedImages.length, 'images')
       onImagesChange(updatedImages)
     } else {
       // 新しい画像を追加する場合
@@ -84,13 +84,11 @@ export default function MultiImageUploader({
         id: Date.now().toString(),
         url: editedImageUrl,
         originalUrl: editedImageUrl,
-        isMain: images.length === 0, // 最初の画像をメインに設定
+        isMain: images.length === 0,
         isEdited: false
       }
-      console.log('🚨 MultiImageUploader: Adding new image, calling onImagesChange with:', images.length + 1, 'images')
-      // 🔧 FUNCTIONAL UPDATE: state race 防止のため functional update で安全に追加
       const updatedImages = [...images, newImage]
-      console.log('[FUNCTIONAL] MultiImageUploader画像追加:', { prev_length: images.length, new_length: updatedImages.length })
+      logger.debug('[IMAGE] add:', images.length, '→', updatedImages.length)
       onImagesChange(updatedImages)
     }
     
@@ -115,57 +113,23 @@ export default function MultiImageUploader({
   }
 
   const handleImageDelete = (imageId: string) => {
-    // 🧨 削除開始ログ（最初に出力）
-    console.log('🧨 remove image start', { 
-      imageId, 
-      before: images.length,
-      targetImage: images.find(img => img.id === imageId)?.url || 'not found',
-      timestamp: new Date().toISOString()
-    })
-    
     try {
-      // 🔧 CRITICAL: 削除前のprevImagesを先に退避（比較用）
-      const prevImages = [...images]
-      const prevLength = prevImages.length
-      const prevIds = prevImages.map(img => img.id)
-      
-      // ① UI更新（nextImages生成）
+      const prevLength = images.length
       const nextImages = images.filter(img => img.id !== imageId)
-      
+
       // メイン画像を削除した場合、次の画像をメインに設定
       if (images.find(img => img.id === imageId)?.isMain && nextImages.length > 0) {
         nextImages[0].isMain = true
       }
-      
-      console.log('🧨 UI update completed', {
-        prev: prevLength,
-        after: nextImages.length,
-        removed: prevLength - nextImages.length,
-        prevIds: prevIds,
-        nextIds: nextImages.map(img => img.id),
-        isDeletion: nextImages.length < prevLength
-      })
-      
-      // ② 削除フラグ付きで親に伝える（同一判定スキップを無効化）
-      onImagesChange(nextImages, { 
+
+      logger.debug('[IMAGE] delete:', prevLength, '→', nextImages.length)
+      onImagesChange(nextImages, {
         isDeletion: true,
         prevLength: prevLength,
         deletedImageId: imageId
       })
-      
-      console.log('🧨 onImagesChange called with deletion flag - flow completed')
-      
     } catch (error) {
-      // 🧨 削除失敗ログ（詳細スタックトレース）
-      console.error('🧨 remove image failed', {
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : 'no stack',
-        imageId,
-        imagesLength: images.length,
-        timestamp: new Date().toISOString(),
-        callStack: (new Error()).stack?.split('\n').slice(1, 5) || 'no stack'
-      })
-      // ❗ 絶対にthrowしない
+      logger.error('[IMAGE] delete failed:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -181,13 +145,7 @@ export default function MultiImageUploader({
       ...otherImages.map(img => ({ ...img, isMain: false }))
     ]
 
-    console.log('🔄 MAIN PHOTO CHANGE:', {
-      newMainId: imageId,
-      newMainUrl: mainImage.url?.substring(0, 50) + '...',
-      newOrder: reorderedImages.map(img => ({ id: img.id, isMain: img.isMain })),
-      photo_urls_0_will_be: mainImage.url?.substring(0, 50) + '...'
-    })
-
+    logger.debug('[IMAGE] main change:', imageId)
     onImagesChange(reorderedImages)
   }
 

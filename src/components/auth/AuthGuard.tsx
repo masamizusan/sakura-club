@@ -4,35 +4,39 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/store/authStore'
 import { Loader2 } from 'lucide-react'
+import { logger } from '@/utils/logger'
 
 // 🔧 CRITICAL: テストモード同期判定関数 - 状態競合回避
 function isTestModeNow(): boolean {
   if (typeof window === 'undefined') return false
-  
+
+  // 🛡️ 本番環境では強制的にfalse（Test mode混入防止）
+  if (process.env.NODE_ENV === 'production') return false
+
   const urlParams = new URLSearchParams(window.location.search)
   const pathname = window.location.pathname
-  
+
   // 1) dev=skip-verification パラメータ
   if (urlParams.get('dev') === 'skip-verification') return true
-  
-  // 2) devTest フラグ  
+
+  // 2) devTest フラグ
   if (urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true') return true
-  
+
   // 3) /test ページ
   if (pathname.includes('/test')) return true
-  
+
   // 4) profile/edit with signup params
   if (pathname.includes('/profile/edit')) {
     const hasSignupParams = !!(urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname'))
     const isFromMyPage = urlParams.get('fromMyPage') === 'true'
     return hasSignupParams && !isFromMyPage
   }
-  
+
   // 5) matches/dashboard with devTest
   if ((pathname.includes('/matches') || pathname.includes('/dashboard')) && urlParams.get('devTest') === 'true') {
     return true
   }
-  
+
   return false
 }
 
@@ -55,7 +59,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     ...router,
     push: (url: string) => {
       if (isCurrentlyTestMode) {
-        console.log('🧪 Router push blocked in test mode:', url)
+        logger.debug('[AUTH_GUARD] router blocked (test mode)')
         return Promise.resolve(true)
       }
       return router.push(url)
@@ -64,55 +68,39 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
 
   // 🔧 CRITICAL: AuthGuard判定ロジック - redirect競合根治
   useEffect(() => {
-    console.log('🔍 AuthGuard state:', { 
-      user: !!user, 
-      isLoading,
-      authReady,
-      isCurrentlyTestMode,
-      hasRedirected: hasRedirected.current 
-    })
-    
     // 🔧 STEP 0: テストモードなら即座にchildren表示（redirectしない）
     if (isCurrentlyTestMode) {
-      console.log('🧪 Test mode active - skipping authentication completely')
-      hasRedirected.current = false // リダイレクトフラグをリセット
+      hasRedirected.current = false
       return
     }
-    
+
     // 🔧 STEP 1: authReadyになるまで待つ（ここでredirect禁止）
-    if (!authReady) {
-      console.log('⏳ Waiting for auth ready - no redirect yet')
-      return
-    }
-    
+    if (!authReady) return
+
     // 🔧 STEP 2: 特別ケース - マイページのプレビューデータ
     const isMyPage = typeof window !== 'undefined' && window.location.pathname.includes('/mypage')
     const hasPreviewData = typeof window !== 'undefined' && (
-      localStorage.getItem('previewCompleteData') || 
+      localStorage.getItem('previewCompleteData') ||
       localStorage.getItem('updateProfile') ||
       sessionStorage.getItem('previewData') ||
       Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
     )
-    
-    if (isMyPage && hasPreviewData && !user) {
-      console.log('🎯 MyPage with preview data - allowing access without full authentication')
-      return
-    }
-    
+
+    if (isMyPage && hasPreviewData && !user) return
+
     // 🔧 STEP 3: fromMyPage遷移は認証チェックスキップ
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.get('fromMyPage') === 'true') {
-        console.log('🎯 fromMyPage=true - skipping authentication check')
-        hasRedirected.current = false // リダイレクトフラグをリセット
+        hasRedirected.current = false
         return
       }
     }
-    
+
     // 🔧 STEP 4: authReady後にuser無ければloginへ
     if (!user && !hasRedirected.current) {
       hasRedirected.current = true
-      console.log('❌ No user and not test mode - redirecting to login')
+      logger.debug('[AUTH_GUARD] redirect to /login')
       safeRouter.push('/login')
     }
   }, [user, authReady, isCurrentlyTestMode, safeRouter])
@@ -121,10 +109,10 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!authReady) {
-        console.warn('Auth ready timeout reached')
+        logger.warn('[AUTH_GUARD] timeout')
         setTimeoutReached(true)
       }
-    }, 10000) // 10秒でタイムアウト
+    }, 10000)
 
     return () => clearTimeout(timer)
   }, [authReady])
@@ -167,7 +155,6 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
 
   // 🔧 STEP 0: テストモードなら即座に表示
   if (isCurrentlyTestMode) {
-    console.log('🧪 Test mode - rendering children directly')
     return <>{children}</>
   }
 
@@ -175,7 +162,6 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('fromMyPage') === 'true') {
-      console.log('🎯 fromMyPage=true - rendering children directly')
       return <>{children}</>
     }
   }
@@ -183,24 +169,21 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   // 🔧 STEP 2: マイページ+プレビューデータなら表示
   const isMyPage = typeof window !== 'undefined' && window.location.pathname.includes('/mypage')
   const hasPreviewData = typeof window !== 'undefined' && (
-    localStorage.getItem('previewCompleteData') || 
+    localStorage.getItem('previewCompleteData') ||
     localStorage.getItem('updateProfile') ||
     sessionStorage.getItem('previewData') ||
     Object.keys(sessionStorage).some(key => key.startsWith('previewData_'))
   )
-  
+
   if (isMyPage && hasPreviewData && !user) {
-    console.log('🎯 MyPage with preview data - rendering without full authentication')
     return <>{children}</>
   }
 
   // 🔧 STEP 3: ユーザー認証済みなら表示
   if (user) {
-    console.log('✅ Authenticated user - rendering children')
     return <>{children}</>
   }
 
   // 🔧 STEP 4: 認証なし・テストモードでもないなら待機（redirectは useEffect で処理）
-  console.log('⏳ No authentication - waiting for redirect...')
   return null
 }

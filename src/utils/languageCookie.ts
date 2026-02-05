@@ -4,6 +4,7 @@
  */
 
 import { SupportedLanguage } from './language'
+import { logger } from '@/utils/logger'
 
 const LANGUAGE_COOKIE_NAME = 'NEXT_LOCALE'
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60 // 1 year in seconds
@@ -18,8 +19,6 @@ export function saveLanguageToCookie(language: SupportedLanguage): void {
   expires.setFullYear(expires.getFullYear() + 1)
   
   document.cookie = `${LANGUAGE_COOKIE_NAME}=${language}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
-  
-  console.log(`🍪 Language saved to cookie: ${language}`)
 }
 
 /**
@@ -112,18 +111,18 @@ export function determineLanguageWithCookie(
     : getLanguageFromCookie()
   
   if (cookieLanguage) {
-    console.log(`🍪 Using cookie language: ${cookieLanguage}`)
+    logger.debug('[LANG] cookie:', cookieLanguage)
     return cookieLanguage
   }
 
   // 2. URL locale (for next-intl compatibility)
   if (urlLocale && ['ja', 'en', 'ko', 'zh-tw'].includes(urlLocale)) {
-    console.log(`🔗 Using URL locale: ${urlLocale}`)
+    logger.debug('[LANG] URL:', urlLocale)
     return urlLocale as SupportedLanguage
   }
 
   // 3. Browser Accept-Language (initial visit only)
   const browserLanguage = getBrowserLanguageEnhanced()
-  console.log(`🌐 Using browser language: ${browserLanguage}`)
+  logger.debug('[LANG] browser:', browserLanguage)
   return browserLanguage
 }
