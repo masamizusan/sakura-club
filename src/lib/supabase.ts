@@ -1,11 +1,14 @@
 import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 import { LanguageSkill } from '@/types/profile'
+import { logger } from '@/utils/logger'
 
 // シングルトンクライアント（モード別）
 let supabaseInstance: SupabaseClient | null = null
 let testModeInstance: SupabaseClient | null = null
 // 🔒 修繕C: タブ別テストモードインスタンス管理
 const testModeInstances = new Map<string, SupabaseClient>()
+// 初回ログ用フラグ
+let loggedOnce = false
 
 // テストモード検出（統一）
 const isTestModeActive = (): boolean => {
@@ -39,54 +42,32 @@ export const createClient = () => {
     tabStorageKey = `sakura-club-test-session-${tabId}`
     const cached = testModeInstances.get(tabStorageKey)
     if (cached) {
-      console.log(`既存のSupabaseクライアントを再利用 (TEST mode, tab:${tabId.slice(0,8)})`)
-      return cached
+      return cached // 再利用時はログ不要
     }
   }
 
   // PROD mode: シングルトン再利用
   if (!isTestMode && supabaseInstance) {
-    console.log('既存のSupabaseクライアントを再利用 (PROD mode)')
-    return supabaseInstance
+    return supabaseInstance // 再利用時はログ不要
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
-  console.log('Supabase環境変数チェック:', { 
-    hasUrl: !!url, 
-    hasKey: !!key,
-    url: url ? `${url.slice(0, 30)}...` : 'undefined',
-    keyPrefix: key ? `${key.slice(0, 10)}...` : 'undefined',
-    urlLength: url?.length,
-    keyLength: key?.length,
-    urlTrimmed: url?.trim() === url,
-    keyTrimmed: key?.trim() === key
-  })
-
   if (!url || !key) {
     const error = new Error('Supabase環境変数が設定されていません')
-    console.error('Supabase環境変数エラー:', error)
+    logger.error('[SUPABASE] 環境変数エラー')
     throw error
   }
 
   if (!url.startsWith('https://')) {
     const error = new Error(`無効なSupabase URL: ${url}`)
-    console.error('Supabase URLエラー:', error)
+    logger.error('[SUPABASE] URL形式エラー')
     throw error
   }
 
   try {
-    console.log(`新しいSupabaseクライアント作成中... (${isTestMode ? 'TEST' : 'PROD'} mode)`)
-    console.log('使用するURL:', url)
-    console.log('使用するキー:', key?.substring(0, 20) + '...')
-    
-    // 🛡️ CRITICAL FIX: テストモード時もセッション永続化有効（user_id固定化）
-    // 🔒 修繕C: タブ単位でセッション分離（tabStorageKeyは上で確定済み）
     const testStorageKey = tabStorageKey || 'sakura-club-test-session'
-    if (isTestMode) {
-      console.log('🔒 テストモード: storageKey:', testStorageKey)
-    }
     const clientOptions = isTestMode ? {
       auth: {
         persistSession: true, // 🛡️ セッション永続化で user_id 固定
@@ -101,19 +82,22 @@ export const createClient = () => {
     // モード別インスタンスに保存
     if (isTestMode) {
       testModeInstance = newInstance
-      // 🔒 修繕C: タブ別インスタンスを必ず保存（tabStorageKeyは上で確定済み）
       if (tabStorageKey) {
         testModeInstances.set(tabStorageKey, newInstance)
       }
-      console.log('🧪 テストモード専用Supabaseクライアント作成成功（セッション隔離, key:', testStorageKey, ')')
     } else {
       supabaseInstance = newInstance
-      console.log('🔧 本番Supabaseクライアント作成成功')
     }
-    
+
+    // 初回のみログ出力
+    if (!loggedOnce) {
+      loggedOnce = true
+      logger.debug('[SUPABASE] client created:', isTestMode ? 'TEST' : 'PROD')
+    }
+
     return newInstance
   } catch (error) {
-    console.error(`Supabaseクライアント作成エラー (${isTestMode ? 'TEST' : 'PROD'} mode):`, error)
+    logger.error('[SUPABASE] client creation failed')
     throw error
   }
 }

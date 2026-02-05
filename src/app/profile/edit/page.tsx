@@ -1109,30 +1109,6 @@ function ProfileEditContent() {
         fromSignup: urlParams.get('from') === 'signup'
       })
 
-      // 🔍 CRITICAL DEBUG: 完成度計算直前のデバッグログ（SSOT統一）
-      logger.debug('🚨 COMPLETION DEBUG - 計算直前チェック:', {
-        '1_profile_avatar_url': {
-          exists: !!dbProfile?.avatar_url,
-          type: typeof dbProfile?.avatar_url,
-          isBase64: dbProfile?.avatar_url?.startsWith('data:image/'),
-          preview: dbProfile?.avatar_url?.substring(0, 50) + '...'
-        },
-        '2_profileImages_state': {
-          length: profileImages.length,
-          sample: profileImages.slice(0, 2),
-          types: profileImages.map(img => typeof img)
-        },
-        '3_imagesForCalc_normalized': {
-          length: imagesForCalc.length,
-          sample: imagesForCalc.slice(0, 2),
-          allTypesCorrect: imagesForCalc.every((img: any) => typeof img.url === 'string' && typeof img.isMain === 'boolean')
-        },
-        '4_formValues_profile_images': {
-          raw: 'profile_images not in form values',
-          length: 'using profileImages state instead'
-        }
-      })
-      
       // 🚨 CRASH GUARD: calculateCompletionFromForm関数チェック
       let result: any
       if (typeof calculateCompletionFromForm !== 'function') {
@@ -1158,26 +1134,7 @@ function ProfileEditContent() {
         )
       }
       
-      // 🔍 CRITICAL DEBUG: hasProfileImages判定結果の詳細ログ
-      logger.debug('🚨 COMPLETION RESULT - hasProfileImages判定結果:', {
-        final_completion: result.completion,
-        hasImages_result: result.hasImages,
-        missing_fields: result.hasImages ? 'none' : 'profile_images',
-        calculation_source: 'calculateCompletionFromForm',
-        images_passed_to_calc: imagesForCalc.length,
-        // 🔥 Task A確認用デバッグログ
-        profile_avatar_url_exists: !!dbProfile?.avatar_url,
-        profile_avatar_url_preview: dbProfile?.avatar_url?.substring(0, 30) || 'null',
-        avatar_url_補完_success: rawImagesForCalc.some((img: any) => img.id === 'db-avatar'),
-        task_A_effectiveness: imagesForCalc.length > 0 ? 'SUCCESS' : 'NEED_CHECK'
-      })
-
-      logger.debug('🌟 updateCompletionUnified: 完了', {
-        completion: result.completion,
-        completedFields: result.completedFields,
-        totalFields: result.totalFields,
-        source: '統一ヘルパー関数'
-      })
+      logger.debug('[COMPLETION] result:', result.completion, '%', `(${result.completedFields}/${result.totalFields})`)
 
       setProfileCompletion(result.completion)
       setCompletedItems(result.completedFields)
@@ -1453,20 +1410,12 @@ function ProfileEditContent() {
       const isAddition = !isDeletion && (nextCount > prevCount)
       const isDeletionFinal = isDeletion || (nextCount < prevCount)
 
-      logger.debug('🎯 [TASK4] didTouchPhotos = true (画像操作検出・REF基準)', {
-        operation: isAddition ? '追加' : isDeletionFinal ? '削除' : '入替',
-        previous_count: prevCount,  // ✅ REF基準
-        new_count: nextCount,
-        is_addition: isAddition,  // ✅ 削除フラグ優先で誤判定防止
-        is_deletion: isDeletionFinal,
-        is_replacement: nextCount === prevCount && newImages.some((img, idx) => img.id !== prevImages[idx]?.id),
-        guarantee: 'payloadにphoto_urls配列を確実に含める'
-      })
+      logger.debug('[PHOTO]', isAddition ? 'add' : isDeletionFinal ? 'delete' : 'replace', `${prevCount}→${nextCount}`)
       
       // ① まずUI/state を更新（functional updateで安全に）
       setIsImageChanging(true)
       setProfileImages(prev => {
-        logger.debug('[FUNCTIONAL] profileImages更新:', { prev_length: prev.length, new_length: newImages.length })
+        // image state update
         return newImages
       })
       // 🚨 Type safety fix
@@ -2360,7 +2309,7 @@ function ProfileEditContent() {
         setSelectedPersonality([])
         setSelectedPlannedPrefectures([])
         setProfileImages(prev => {
-          logger.debug('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          // image state reset
           return []
         })
 
@@ -2384,25 +2333,7 @@ function ProfileEditContent() {
           })
           const isFromSignupTimeout = urlParamsLocal.get('from') === 'signup'
           
-          // 🚨 CRITICAL DEBUG: Edit screen completion calculation debug 
-          logger.debug('📝 EDIT SCREEN COMPLETION CALCULATION:', {
-            input_actualFormValues_personality: actualFormValues?.personality,
-            input_selectedPersonality: selectedPersonality,
-            input_formValues_type: typeof actualFormValues?.personality,
-            input_formValues_isArray: Array.isArray(actualFormValues?.personality),
-            input_formValues_length: actualFormValues?.personality?.length || 0,
-            input_profileImages: profileImages,
-            input_isForeignMale: isForeignMale,
-            input_isFromSignupTimeout: isFromSignupTimeout
-          })
-          
-          // 🚨 CRITICAL: 編集画面でもbuildProfileForCompletion使用（データソース統一）
-          logger.debug('📝 EDIT: actualFormValues personality check:', {
-            personality: actualFormValues?.personality,
-            selectedPersonality: selectedPersonality,
-            dbProfile_available: !!dbProfile,
-            source: 'buildProfileForCompletion経由の統一データソース'
-          })
+          // COMPLETION計算入力（debug時のみ詳細）
 
           // 🌟 SINGLE SOURCE OF TRUTH: フォーム値のみを使用した完成度計算
           const formValuesForEditCompletion = {
@@ -2421,25 +2352,7 @@ function ProfileEditContent() {
             isFromSignupTimeout // 新規ユーザーフラグとして使用
           )
           
-          logger.debug('📝 EDIT SCREEN: 🌟 統一フロー完了:', {
-            input_hobbies: formValuesForEditCompletion.hobbies,
-            input_personality: formValuesForEditCompletion.personality,
-            completion_percentage: result.completion,
-            requiredCompleted: result.requiredCompleted,
-            optionalCompleted: result.optionalCompleted,
-            totalFields: result.totalFields,
-            source: 'フォーム値のみ（SSOT編集画面版）'
-          })
-          
-          // 🚨 33%問題調査：完成済み必須項目の詳細
-          if (result.requiredFieldStatus) {
-            logger.debug('🚨 33% ISSUE DEBUG - COMPLETED REQUIRED FIELDS:', 
-              Object.entries(result.requiredFieldStatus)
-                .filter(([_, completed]) => completed)
-                .map(([field]) => field)
-            )
-            logger.debug('🚨 33% ISSUE DEBUG - ALL REQUIRED FIELD STATUS:', result.requiredFieldStatus)
-          }
+          logger.debug('[COMPLETION] secure init:', result.completion, '%')
           
           setProfileCompletion(result.completion)
           setCompletedItems(result.completedFields)
@@ -2638,7 +2551,7 @@ function ProfileEditContent() {
         
         // フロントエンドの状態もクリア
         setProfileImages(prev => {
-          logger.debug('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          // image state reset
           return []
         })
         setSelectedHobbies([])
@@ -3038,7 +2951,7 @@ function ProfileEditContent() {
               
               if (finalImages.length > 0) {
                 setProfileImages(prev => {
-                  logger.debug('[FUNCTIONAL] DB復元:', { prev_length: prev.length, final_length: finalImages.length })
+                  // image restored from DB
                   return finalImages
                 })
                 profileImagesRef.current = finalImages
@@ -3718,7 +3631,7 @@ function ProfileEditContent() {
                 isEdited: false
               }))
             setProfileImages(prev => {
-              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              // image restored
               return currentImageArray
             })
           }
@@ -3734,178 +3647,46 @@ function ProfileEditContent() {
               isEdited: false
             }]
             setProfileImages(prev => {
-              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              // image restored
               return currentImageArray
             })
             
             // 🎯 TASK2: 自動write-back実行（photo_urls空をavatar_urlで修復）
-            logger.debug('🎯 [TASK2] 自動write-back開始: photo_urls空状態をavatar_urlで修復')
-            
-            // 🎯 Step A&B: 条件厳密化 + 詳細エラーログ + 二度実行防止
             const writeBackKey = `writeBack_${user?.id}_completed`
             const alreadyCompleted = sessionStorage.getItem(writeBackKey)
-            
+
             if (!alreadyCompleted) {
               setTimeout(async () => {
                 try {
-                  // 🎯 Step B: 条件の厳密チェック
                   const urlParamsLocal = new URLSearchParams(window.location.search)
                   const isFromMyPageCheck = urlParamsLocal.get('fromMyPage') === 'true'
                   const photoUrlsEmpty = Array.isArray(profile?.photo_urls) && profile.photo_urls.length === 0
                   const avatarUrlExists = profile?.avatar_url && typeof profile.avatar_url === 'string' && profile.avatar_url.trim().length > 0
-                  
-                  logger.debug('🎯 [TASK2] write-back条件チェック:', {
-                    isFromMyPage: isFromMyPageCheck,
-                    photoUrlsEmpty,
-                    avatarUrlExists,
-                    photo_urls: profile?.photo_urls,
-                    avatar_url: profile?.avatar_url,
-                    userId: user?.id
-                  })
-                  
+
                   if (!isFromMyPageCheck || !photoUrlsEmpty || !avatarUrlExists || !user?.id) {
-                    logger.debug('🎯 [TASK2] write-back条件不一致 - スキップ')
-                    return
+                    return // 条件不一致
                   }
-                  
-                  // 🎯 Step 3: 型ごとの最小修正（malformed array literal防止）
+
                   const avatarUrl = profile.avatar_url.trim()
-                  
-                  // 🛡️ ケースA対応: photo_urls型安全ガード（text[]想定）
-                  const safePhotoUrls = Array.isArray([avatarUrl]) 
-                    ? [avatarUrl].filter(Boolean).map(String) 
-                    : []
-                    
-                  logger.debug('🎯 [STEP 3] payload型安全化:', {
-                    original_avatarUrl: avatarUrl,
-                    safePhotoUrls,
-                    safePhotoUrls_type: typeof safePhotoUrls,
-                    safePhotoUrls_isArray: Array.isArray(safePhotoUrls),
-                    safePhotoUrls_elementTypes: safePhotoUrls.map(v => typeof v),
-                    guaranteed: 'string[] for text[] compatibility'
-                  })
-                  
-                  const writeBackPayload = {
-                    photo_urls: safePhotoUrls // 確実にstring[]
-                  }
-                  
-                  logger.debug('🎯 [TASK2] write-backペイロード:', {
-                    payload: writeBackPayload,
-                    avatarUrl_type: typeof avatarUrl,
-                    avatarUrl_length: avatarUrl.length
-                  })
-                  
-                  // 🎯 Step A: 詳細エラーログ + select()で結果確認
+                  const safePhotoUrls = [avatarUrl].filter(Boolean).map(String)
+                  const writeBackPayload = { photo_urls: safePhotoUrls }
+
                   const { data, error: writeBackError } = await supabase
                     .from('profiles')
                     .update(writeBackPayload)
                     .eq('user_id', user.id)
                     .select('id, photo_urls')
-                    
+
                   if (writeBackError) {
-                    // 🎯 Step 1: 400の正体を一回で確定するための完全ログ
-                    logger.error('🚨 [TASK2] write-back failed - 400根因確定ログ:', {
-                      // Supabaseエラー詳細
-                      message: writeBackError.message,
-                      details: (writeBackError as any).details,
-                      hint: (writeBackError as any).hint,
-                      code: (writeBackError as any).code,
-                      
-                      // payload詳細分析（型・値・構造）
-                      payload_full: writeBackPayload,
-                      photo_urls_value: writeBackPayload.photo_urls,
-                      photo_urls_type: typeof writeBackPayload.photo_urls,
-                      photo_urls_isArray: Array.isArray(writeBackPayload.photo_urls),
-                      photo_urls_stringify: JSON.stringify(writeBackPayload.photo_urls),
-                      photo_urls_element_types: Array.isArray(writeBackPayload.photo_urls) 
-                        ? writeBackPayload.photo_urls.map(v => typeof v)
-                        : 'not_array',
-                      photo_urls_length: Array.isArray(writeBackPayload.photo_urls) 
-                        ? writeBackPayload.photo_urls.length 
-                        : 'not_array',
-                      
-                      // 元データ分析
-                      original_avatar_url: profile?.avatar_url,
-                      original_photo_urls: profile?.photo_urls,
-                      trimmed_avatar_url: avatarUrl,
-                      
-                      // DB更新情報
-                      update_table: 'profiles',
-                      update_column: 'photo_urls', 
-                      where_condition: `id = ${user.id}`,
-                      userId: user.id,
-                      
-                      // 診断分類
-                      suspected_cause: writeBackError.message?.includes('malformed array') ? 'ARRAY_LITERAL_ERROR' :
-                                      writeBackError.message?.includes('column') ? 'COLUMN_NOT_FOUND' :
-                                      writeBackError.message?.includes('permission') ? 'PERMISSION_DENIED' :
-                                      'UNKNOWN_400'
-                    })
-                    
-                    // 🎯 Step 2-4: DB型確認と修正方針ガイド
-                    logger.debug('📋 [STEP 2] DB型確認SQL - Supabase SQL Editorで実行してください:')
-                    logger.debug(`
-                      SELECT column_name, data_type, udt_name
-                      FROM information_schema.columns 
-                      WHERE table_schema='public' 
-                        AND table_name='profiles' 
-                        AND column_name='photo_urls';
-                    `)
-                    
-                    logger.debug('📋 [STEP 3] 型別修正方針:')
-                    logger.debug('- udt_name="_text" (text[])の場合: payload = [avatarUrl] ← 推奨')
-                    logger.debug('- data_type="jsonb"の場合: payload = [avatarUrl]')  
-                    logger.debug('- data_type="text"の場合: DBをtext[]にマイグレーション推奨')
-                    
-                    logger.debug('📋 [STEP 4] DB一括修復SQL（text[]の場合）:')
-                    logger.debug(`
-                      UPDATE public.profiles 
-                      SET photo_urls = array[avatar_url]
-                      WHERE (photo_urls IS NULL OR cardinality(photo_urls)=0)
-                        AND avatar_url IS NOT NULL 
-                        AND avatar_url <> '';
-                        
-                      ALTER TABLE public.profiles 
-                      ALTER COLUMN photo_urls SET DEFAULT '{}';
-                    `)
+                    logger.error('[TASK2] write-back failed:', writeBackError.message)
                   } else {
-                    logger.debug('✅ [TASK2] write-back success - 結果確認:', {
-                      updated_data: data,
-                      count: data?.length || 0,
-                      photo_urls_after: data?.[0]?.photo_urls,
-                      verification: data?.[0]?.photo_urls?.length > 0 ? '修復成功' : '修復失敗'
-                    })
-                    
-                    // 🎯 Step C: 成功時のみ二度実行防止フラグ設定
                     sessionStorage.setItem(writeBackKey, 'true')
-                    
-                    // 🎯 完了条件検証ログ
-                    logger.debug('✅ [TASK2 COMPLETION] 完了条件達成:', {
-                      '1_write_back_success': true,
-                      '2_photo_urls_populated': data?.[0]?.photo_urls?.length > 0,
-                      '3_next_reload_no_restore_log': 'リロード後に「復元ログ」が消失することを確認',
-                      '4_image_operations_consistent': '画像追加/削除/入替→保存でprofiles.photo_urlsが画面と一致することを確認',
-                      verification_status: 'TASK2根治完了'
-                    })
-                    
-                    // 🎯 Step 5: 最終形ガイド（設計単純化）
-                    logger.debug('📋 [STEP 5] 最終形推奨設計:')
-                    logger.debug('1. 保存ボタンpayloadに常にphoto_urls含める')
-                    logger.debug('2. photo_urlsは常にstring[]')  
-                    logger.debug('3. avatar_urlは後方互換として残す（1枚目用）')
-                    logger.debug('4. write-backは保険に格下げ（DBバックフィル後は基本発火しない）')
+                    logger.debug('[TASK2] write-back success:', data?.[0]?.photo_urls?.length, 'items')
                   }
                 } catch (error) {
-                  logger.error('🚨 [TASK2] write-back処理エラー - 予期しないエラー:', {
-                    error,
-                    error_type: typeof error,
-                    error_message: error instanceof Error ? error.message : 'unknown',
-                    error_stack: error instanceof Error ? error.stack : 'no stack'
-                  })
+                  logger.error('[TASK2] write-back error:', error instanceof Error ? error.message : 'unknown')
                 }
-              }, 1000) // 初期化完了後に実行
-            } else {
-              logger.debug('🎯 [TASK2] write-back既完了 - スキップ')
+              }, 1000)
             }
           }
           // 🔧 STEP 3: どちらも空の場合のみlocalStorageを確認
@@ -3929,21 +3710,13 @@ function ProfileEditContent() {
         // fromMyPageで画像が取得できなかった場合、または通常のフローの場合
         if (currentImageArray.length === 0) {
           if (shouldUseStorageImages) {
-            logger.debug('✅ セッションストレージから画像状態を復元:', storageImages)
             currentImageArray = storageImages
             setProfileImages(storageImages)
-            // 🔍 CRITICAL: MyPage→編集時のprofile_images missing修正（Task B）
             profileImagesRef.current = storageImages
-            logger.debug('🔧 TASK B FIX: sessionStorage画像復元でprofileImagesRef更新', {
-              storageImages_length: storageImages.length,
-              profileImagesRef_length: profileImagesRef.current.length
-            })
+            logger.debug('[INIT] images from sessionStorage:', storageImages.length)
           } else {
-            // 🎯 SSOT統一: avatar_urlがある場合は必ずprofileImages配列に反映
             if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
-              logger.debug('✅ プロフィール画像を設定（SSOT統一）:', profile!.avatar_url.substring(0, 50) + '...')
-              logger.debug('  - isBase64:', profile!.avatar_url.startsWith('data:image/'))
-              logger.debug('  - isNewUser:', isNewUser, ', avatar_urlを確実にprofileImagesに反映')
+              logger.debug('[INIT] images from avatar_url')
               
               currentImageArray = [{
                 id: '1',
@@ -3953,7 +3726,7 @@ function ProfileEditContent() {
                 isEdited: false
               }]
               setProfileImages(prev => {
-              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              // image restored
               return currentImageArray
             })
               // 🔍 CRITICAL: profileImagesRefも同期（SSOT統一）
@@ -5085,66 +4858,18 @@ function ProfileEditContent() {
           .maybeSingle()
 
         if (verifyError || !dbVerification) {
-          logger.error('🚨 [TASK4] DB確認エラー:', verifyError || 'no data')
+          logger.error('[TASK4] DB確認エラー:', verifyError?.message || 'no data')
         } else {
-          // 🧪 指示書要求: DB保存後の必須確認ログ
-          logger.debug("✅ DB VERIFY AFTER SAVE:", dbVerification)
-          
-          logger.debug('🚨 [TASK4] DB直接確認完了 - 保存成功検証:', {
-            user_id: user.id,
-            db_photo_urls: dbVerification.photo_urls,
-            db_photo_urls_type: typeof dbVerification.photo_urls,
-            db_photo_urls_isArray: Array.isArray(dbVerification.photo_urls),
-            db_photo_urls_length: Array.isArray(dbVerification.photo_urls) 
-              ? dbVerification.photo_urls.length 
-              : 'not_array',
-            db_avatar_url: dbVerification.avatar_url,
-            comparison: {
-              attempted_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 0,
-              actual_db_length: Array.isArray(dbVerification.photo_urls) ? dbVerification.photo_urls.length : 0,
-              match: Array.isArray(updateData.photo_urls) && Array.isArray(dbVerification.photo_urls) 
-                ? updateData.photo_urls.length === dbVerification.photo_urls.length
-                : false
-            },
-            final_verification: 'DBに実際に保存された値を確認完了'
-          })
+          const dbPhotos = Array.isArray(dbVerification.photo_urls) ? dbVerification.photo_urls.length : 0
+          logger.debug('[TASK4] DB verified:', dbPhotos, 'photos')
         }
       } catch (dbCheckError) {
-        logger.error('🚨 [TASK4] DB確認処理エラー:', dbCheckError)
+        logger.error('[TASK4] DB確認処理エラー:', dbCheckError instanceof Error ? dbCheckError.message : 'unknown')
       }
-      
-      // 🏆 [COMPLETION EVIDENCE] 最終完了条件チェック
-      const completionEvidence = {
-        '1. Network Requests': {
-          expected_storage_requests: needsUploadImages.length,
-          actual_storage_requests: actualStorageRequests,
-          match: needsUploadImages.length === actualStorageRequests,
-          verification: `${actualStorageRequests}件のstorage/v1/object POSTリクエスト実行済み`
-        },
-        '2. PATCH Payload': {
-          photo_urls_included: !!updateData.photo_urls,
-          photo_urls_count: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 0,
-          didTouchPhotos_flag: didTouchPhotos,
-          payload_decision: didTouchPhotos ? 'photo_urls含める' : 'photo_urls除外'
-        },
-        '3. DB Confirmation': {
-          save_success: saveResult.success,
-          db_photo_urls: saveResult.data?.[0]?.photo_urls || null,
-          db_photo_urls_count: Array.isArray(saveResult.data?.[0]?.photo_urls) ? saveResult.data[0].photo_urls.length : 0,
-          db_avatar_url: saveResult.data?.[0]?.avatar_url || null
-        }
-      }
-      
-      logger.debug('🏆 [COMPLETION EVIDENCE] 指示書要求の3点証明:', completionEvidence)
-      logger.debug('📸 [COMPLETION] Networkスクショ対象:', 'DevTools → Network → storage/v1/object (POST)')
-      logger.debug('🔍 [COMPLETION] PATCHペイロード確認:', 'DevTools → Network → profiles (PATCH)')
-      logger.debug('✅ [COMPLETION] DB確認クエリ:', `select photo_urls, avatar_url from profiles where id = '${user.id}';`)
-      
-      // 🎯 検証シナリオ指示（Claude指示書準拠）
-      logger.debug('📋 [VERIFICATION SCENARIOS] 検証手順:')
-      logger.debug('🅰️ シナリオA: MyPage→Edit遷移で「fromMyPage: photo_urls空 - avatar_urlから復元」が消えること')
-      logger.debug('🅱️ シナリオB: 画像2枚追加→保存でstorage POSTが2回、profiles PATCHに3件photo_urls')
-      logger.debug('🆎 シナリオC: 3枚→1枚削除→保存でprofiles PATCHに1件photo_urls、表示一致確認')
+
+      // 🏆 保存完了サマリー
+      const dbPhotosCount = Array.isArray(saveResult.data?.[0]?.photo_urls) ? saveResult.data[0].photo_urls.length : 0
+      logger.debug('[SAVE] complete:', { uploaded: actualStorageRequests, dbPhotos: dbPhotosCount, success: saveResult.success })
       
       const updateResult = saveResult.data
       const updateError = null

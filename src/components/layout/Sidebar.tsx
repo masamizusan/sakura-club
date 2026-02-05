@@ -1,15 +1,17 @@
 'use client'
 
+import { useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  Search, 
-  MessageCircle, 
-  Heart, 
-  History, 
+import {
+  Search,
+  MessageCircle,
+  Heart,
+  History,
   User
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { logger } from '@/utils/logger'
 
 interface SidebarProps {
   className?: string
@@ -18,6 +20,7 @@ interface SidebarProps {
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
   const { currentLanguage } = useLanguage()
+  const logged = useRef(false)
   
   // 🌍 Sidebar専用翻訳辞書
   const sidebarTranslations: Record<string, Record<string, string>> = {
@@ -51,12 +54,11 @@ export default function Sidebar({ className = '' }: SidebarProps) {
     }
   }
   
-  // デバッグログを追加
-  console.log('🔍 Sidebar Debug:', {
-    currentLanguage,
-    availableTranslations: Object.keys(sidebarTranslations),
-    currentDict: sidebarTranslations[currentLanguage] || sidebarTranslations['ja']
-  })
+  // 初回のみログ出力
+  if (!logged.current) {
+    logged.current = true
+    logger.debug('[SIDEBAR] lang:', currentLanguage)
+  }
   
   // フォールバック機能付きの翻訳関数
   const getSafeTranslation = (key: string) => {
