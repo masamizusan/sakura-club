@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
+import { logger } from '@/utils/logger'
 import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
 import { LanguageSelector } from '@/components/LanguageSelector'
 
@@ -41,9 +42,7 @@ function LoginForm() {
     setLoginError('')
     
     try {
-      console.log('Attempting login with:', { email: data.email })
       const result = await authService.signIn(data)
-      console.log('Login successful:', result)
       
       // Wait a moment for session to be established
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -54,6 +53,7 @@ function LoginForm() {
       let destination: string
       if (redirectTo) {
         destination = redirectTo
+        logger.debug('[LOGIN_ROUTING]', { destination, reason: 'redirectParam' })
       } else {
         // profile_initialized を確認して遷移先を判定
         const supabase = createClient()
@@ -63,15 +63,10 @@ function LoginForm() {
         const userId = authUser?.id
         const email = authUser?.email ?? data.email ?? ''
 
-        // セッション共有確認ログ
         const sessionCheck = await supabase.auth.getSession()
-        console.log('🔍 Login routing: supabase client session check', {
-          hasSession: !!sessionCheck.data.session
-        })
 
         let prof: { profile_initialized: boolean | null; gender: string | null; nationality: string | null } | null = null
         if (userId) {
-          // profiles.id = user.id の設計なので PK で取得（最も確実）
           const { data: profData } = await supabase
             .from('profiles')
             .select('profile_initialized, gender, nationality')
@@ -80,12 +75,9 @@ function LoginForm() {
           prof = profData
         }
 
-        console.log('🔍 Login routing:', { userId: userId?.slice(0, 8), email, prof })
-
         if (prof?.profile_initialized === true) {
           destination = '/mypage'
         } else {
-          // type 推定: DB優先 → email prefix fallback
           let type: string
           if (prof?.gender === 'male' && prof?.nationality && prof.nationality !== '日本') {
             type = 'foreign-male'
@@ -100,9 +92,15 @@ function LoginForm() {
           }
           destination = `/profile/edit?type=${type}`
         }
-      }
 
-      console.log('Redirecting to:', destination)
+        logger.debug('[LOGIN_ROUTING]', {
+          userId: userId?.slice(0, 8),
+          hasSession: !!sessionCheck.data.session,
+          profile_initialized: prof?.profile_initialized ?? null,
+          destination,
+          reason: prof?.profile_initialized ? 'profile_complete' : 'needs_profile'
+        })
+      }
 
       // 언어 인식 네비게이션으로 언어 상태 유지
       if (redirectTo) {
@@ -112,7 +110,7 @@ function LoginForm() {
         router.refresh()
       }
     } catch (error) {
-      console.error('Login error:', error)
+      logger.error('[LOGIN]', error)
       
       if (error instanceof AuthError) {
         setLoginError(error.message)
@@ -165,6 +163,7 @@ function LoginForm() {
               <Input
                 type="email"
                 placeholder={t('login.emailPlaceholder')}
+                autoComplete="email"
                 {...register('email')}
                 className={errors.email ? 'border-red-500' : ''}
               />
@@ -181,6 +180,7 @@ function LoginForm() {
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   placeholder={t('login.passwordPlaceholder')}
+                  autoComplete="current-password"
                   {...register('password')}
                   className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                 />

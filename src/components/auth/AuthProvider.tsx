@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { logger } from '@/utils/logger'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -12,15 +13,20 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const isInitialized = useAuthStore((state) => state.isInitialized)
   const isInitializing = useAuthStore((state) => state.isInitializing)
   const hasInitialized = useRef(false)
+  const mountCount = useRef(0)
 
   useEffect(() => {
-    // 既に初期化済みまたは初期化中の場合は何もしない
+    mountCount.current += 1
     if (hasInitialized.current || isInitialized || isInitializing) {
       return
     }
 
     hasInitialized.current = true
-    console.log('AuthProvider: Starting initialization')
+    logger.debug('[AUTH_PROVIDER]', {
+      env: process.env.NODE_ENV ?? 'unknown',
+      isStrictModeLikely: mountCount.current > 1,
+      mountCount: mountCount.current,
+    })
     initialize()
   }, [initialize, isInitialized, isInitializing])
 

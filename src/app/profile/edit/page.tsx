@@ -16,7 +16,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import MultiImageUploader from '@/components/ui/multi-image-uploader'
 import { User, Save, ArrowLeft, Loader2, AlertCircle, Camera, Globe } from 'lucide-react'
 import { z } from 'zod'
-import { 
+import {
   // 🚨 DEPRECATED: calculateProfileCompletion - 統一フローに移行済み
   normalizeProfile,
   calculateCompletion,
@@ -27,6 +27,7 @@ import {
   calculateCompletionFromForm,
   normalizeImagesForCompletion
 } from '@/utils/profileCompletion'
+import { logger } from '@/utils/logger'
 
 // 🧮 統一されたプロフィール完成度計算システム使用
 // normalizeProfile と calculateCompletion を使用して一貫した計算を実現
@@ -173,7 +174,7 @@ const getHobbyOptions = (t: any) => getCultureCategories(t).flatMap(category => 
 // 🛠️ タグ正規化関数：重複・空文字・nullを除去
 const normalizeTags = (tags: any[]): string[] => {
   if (!Array.isArray(tags)) {
-    console.warn('⚠️ normalizeTags: 入力が配列ではありません:', typeof tags, tags)
+    logger.warn('⚠️ normalizeTags: 入力が配列ではありません:', typeof tags, tags)
     return []
   }
   
@@ -186,7 +187,7 @@ const normalizeTags = (tags: any[]): string[] => {
   // 🔧 ログスパム修正: NORMALIZE TAGSログを削除（変更がある場合のみ出力）
   const removedCount = tags.length - normalized.length
   if (removedCount > 0) {
-    console.log('🧹 NORMALIZE TAGS: 変更あり', {
+    logger.debug('🧹 NORMALIZE TAGS: 変更あり', {
       input_length: tags.length,
       output_length: normalized.length,
       removed_count: removedCount
@@ -276,7 +277,7 @@ const getTravelCompanionOptions = (t: any) => {
   // 🧪 OPTIONS DEBUG - options生成結果をログ（1回だけ）
   if (typeof window !== 'undefined' && !(window as any).__DEBUG_COMPANION_OPTIONS_LOGGED__) {
     (window as any).__DEBUG_COMPANION_OPTIONS_LOGGED__ = true
-    console.log('🧪 OPTIONS DEBUG [travel_companion]', {
+    logger.debug('🧪 OPTIONS DEBUG [travel_companion]', {
       values: options?.map(o => o.value),
       labels: options?.map(o => o.label),
       hasFormsNoEntry: (options ?? []).some(o =>
@@ -549,7 +550,7 @@ function ProfileEditContent() {
   useEffect(() => {
     const isFromSignup = searchParams?.get('from') === 'signup'
     if (isFromSignup && typeof window !== 'undefined') {
-      console.log('🧹 新規ユーザー: デプロイ直後対策でストレージを早期クリア')
+      logger.debug('🧹 新規ユーザー: デプロイ直後対策でストレージを早期クリア')
       try {
         // 🌸 TASK5: test mode安全なキー使用でセッションストレージクリア
         const safeUserId = user?.id || 'testmode'
@@ -572,9 +573,9 @@ function ProfileEditContent() {
         localStorage.removeItem('updateProfile')
         localStorage.removeItem('previewCompleteData')
         
-        console.log('✅ 新規ユーザー: ストレージクリア完了')
+        logger.debug('✅ 新規ユーザー: ストレージクリア完了')
       } catch (e) {
-        console.warn('ストレージクリアエラー:', e)
+        logger.warn('ストレージクリアエラー:', e)
       }
     }
   }, [searchParams])
@@ -615,12 +616,7 @@ function ProfileEditContent() {
   
   // 🔍 DEBUG: isHydrated状態変化監視
   useEffect(() => {
-    console.log('🔍 HYDRATION_DEBUG: isHydrated状態変化', {
-      isHydrated,
-      isInitializing,
-      initializingRef: initializingRef.current,
-      timestamp: new Date().toISOString()
-    })
+    logger.debug('[HYDRATION]', { isHydrated, isInitializing })
   }, [isHydrated, isInitializing])
 
   // 🔧 FIX: 初期化完了時の強制計算フラグ（0%バグ防止）
@@ -653,26 +649,26 @@ function ProfileEditContent() {
     // 🛡️ 初回（prevUserIdがない）は変更判定しない - refを更新して終了
     if (!prevUserId) {
       prevUserIdRef.current = currentUserId
-      console.log('🔒 ユーザーID変更検出: 初回スキップ（prevUserId未設定）', { currentUserId })
+      logger.debug('🔒 ユーザーID変更検出: 初回スキップ（prevUserId未設定）', { currentUserId })
       return
     }
 
     // 🛡️ 初期化中は判定禁止
     if (isInitializing || initializingRef.current) {
-      console.log('🔒 ユーザーID変更検出: 初期化中スキップ', { currentUserId, prevUserId })
+      logger.debug('🔒 ユーザーID変更検出: 初期化中スキップ', { currentUserId, prevUserId })
       return
     }
 
     // 🛡️ MyPageからの遷移はリセット禁止（最重要）
     if (isFromMyPage) {
       prevUserIdRef.current = currentUserId
-      console.log('🔒 ユーザーID変更検出: fromMyPage遷移スキップ', { currentUserId, prevUserId })
+      logger.debug('🔒 ユーザーID変更検出: fromMyPage遷移スキップ', { currentUserId, prevUserId })
       return
     }
 
     // 🎯 両方揃っていて、明確に変わった時だけ "変更検出"
     if (currentUserId && prevUserId !== currentUserId) {
-      console.log('🚨 ユーザーID変更検出 - セッション切替 → マイページへリダイレクト:', {
+      logger.debug('🚨 ユーザーID変更検出 - セッション切替 → マイページへリダイレクト:', {
         prevUserId,
         currentUserId,
         reason: 'USER_ACTUALLY_CHANGED'
@@ -726,7 +722,7 @@ function ProfileEditContent() {
   const watchCompanion = watch('travel_companion')
 
   useEffect(() => {
-    console.log('🧪 WATCH VALUE DEBUG', {
+    logger.debug('🧪 WATCH VALUE DEBUG', {
       visit_schedule: watchVisit,
       travel_companion: watchCompanion,
       visitIsFormsKey: typeof watchVisit === 'string' && watchVisit.includes('forms.'),
@@ -737,18 +733,18 @@ function ProfileEditContent() {
   // 言語切り替え時エラー状態クリア（「韓国語のエラーが中国語UIに残る」状態を防ぐ）
   useEffect(() => {
     clearErrors()
-    console.log('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
+    logger.debug('🌐 Language switched to:', currentLanguage, '- Cleared all errors')
   }, [currentLanguage, clearErrors])
 
   // 🎯 TASK1: 画像SSOT統一システム（photo_urls優先、avatar_url後方互換）
   const calculateFinalPhotoUrls = () => {
-    console.log('🎯 [SSOT] calculateFinalPhotoUrls実行開始:', {
+    logger.debug('🎯 [SSOT] calculateFinalPhotoUrls実行開始:', {
       profileImages_count: profileImages.length,
       source: 'unified_image_ssot_system'
     })
     
     if (profileImages.length === 0) {
-      console.log('🎯 [SSOT] 結果: photo_urls=[] (画像なし)')
+      logger.debug('🎯 [SSOT] 結果: photo_urls=[] (画像なし)')
       return []
     }
     
@@ -757,7 +753,7 @@ function ProfileEditContent() {
       .filter(Boolean)
       .slice(0, 3)
     
-    console.log('🎯 [SSOT] 結果: photo_urls統一算出完了:', {
+    logger.debug('🎯 [SSOT] 結果: photo_urls統一算出完了:', {
       photo_urls: finalPhotoUrls,
       count: finalPhotoUrls.length,
       main_avatar_url: finalPhotoUrls[0] ?? null,
@@ -778,7 +774,7 @@ function ProfileEditContent() {
     const dbIsForeignMale = formGender === 'male' && formNationality && !isJapanese
     const dbType = dbIsForeignMale ? 'foreign-male' : 'japanese-female'
     if (dbType !== profileType) {
-      console.warn('🔧 修繕A: タイプ不一致検出 → 自動矯正', { dbType, urlType: profileType, gender: formGender, nationality: formNationality })
+      logger.warn('🔧 修繕A: タイプ不一致検出 → 自動矯正', { dbType, urlType: profileType, gender: formGender, nationality: formNationality })
       const url = new URL(window.location.href)
       url.searchParams.set('type', dbType)
       url.searchParams.delete('fromMyPage')
@@ -789,7 +785,7 @@ function ProfileEditContent() {
   // プレビュー画面への遷移処理（Zodバリデーション経由）
   const handlePreview = handleSubmit(async (formData) => {
     try {
-      console.log('✅ Zod validation passed - opening preview', formData)
+      logger.debug('✅ Zod validation passed - opening preview', formData)
       
       // プレビュー用画像URL（blob URLまたは既存URL）
       const previewImageUrl = profileImages.find(img => img.isMain)?.url || profileImages[0]?.url || null
@@ -812,7 +808,7 @@ function ProfileEditContent() {
         language_skills: languageSkills
       }
       
-      console.log('🚨 PREVIEW DATA VERIFICATION - photo_urls追加確認:', {
+      logger.debug('🚨 PREVIEW DATA VERIFICATION - photo_urls追加確認:', {
         photo_urls_value: finalPhotoUrls,
         photo_urls_count: finalPhotoUrls.length,
         photo_urls_preview: finalPhotoUrls.map(url => url.substring(0, 50) + '...'),
@@ -821,7 +817,7 @@ function ProfileEditContent() {
       })
       
       // 🔧 指示書要求: profileImagesではなくfinalPhotoUrls確定値をsessionStorageに保存
-      console.log('[SESSION] finalPhotoUrls確定値を保存:', { 
+      logger.debug('[SESSION] finalPhotoUrls確定値を保存:', { 
         source: 'calculateFinalPhotoUrls',
         count: finalPhotoUrls.length,
         urls: finalPhotoUrls.map(url => url.substring(0, 30) + '...')
@@ -839,16 +835,16 @@ function ProfileEditContent() {
       const currentLang = searchParams?.get('lang') || 'ja'
       const previewUrl = `/profile/preview?userId=${user?.id || ''}${currentType ? `&type=${currentType}` : ''}&lang=${currentLang}`
 
-      console.log('✅ PREVIEW_OPEN_MODE: same-tab (router.push)')
-      console.log('🚀 NAVIGATE_TO_PREVIEW_SAME_TAB:', { url: previewUrl })
+      logger.debug('✅ PREVIEW_OPEN_MODE: same-tab (router.push)')
+      logger.debug('🚀 NAVIGATE_TO_PREVIEW_SAME_TAB:', { url: previewUrl })
 
       router.push(previewUrl)
     } catch (error) {
-      console.error('❌ Error opening preview:', error)
+      logger.error('❌ Error opening preview:', error)
       alert('プレビューの表示でエラーが発生しました。もう一度お試しください。')
     }
   }, (errors) => {
-    console.error('❌ フォームバリデーションエラー:', errors)
+    logger.error('❌ フォームバリデーションエラー:', errors)
     
     // エラーメッセージを表示
     if (errors.language_skills) {
@@ -877,7 +873,7 @@ function ProfileEditContent() {
   const updateCompletionUnified = useCallback((source: string = 'unknown', explicitImages?: any[]) => {
     // 🚨 CRITICAL: ガード条件統一化 - isInitializingのみをチェック
     if (initializingRef.current === true) {
-      console.log('🛑 completion skipped because initializingRef=true', { 
+      logger.debug('🛑 completion skipped because initializingRef=true', { 
         source, 
         initializingRef: initializingRef.current,
         isInitializing,
@@ -889,7 +885,7 @@ function ProfileEditContent() {
     // 🌸 TASK1: 初期化完了前はqueuedRecalcフラグを立てる（永続スキップを禁止）
     if (!isHydrated) {
       queuedRecalcRef.current = true
-      console.log('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { 
+      logger.debug('🛡️ updateCompletionUnified: ハイドレーション未完了のため計算スキップ', { 
         triggerSource: source,
         isHydrated,
         isInitializing,
@@ -906,7 +902,7 @@ function ProfileEditContent() {
     }
     
     // 🔍 DEBUG: 計算実行時のログ
-    console.log('✅ updateCompletionUnified: 計算実行開始', {
+    logger.debug('✅ updateCompletionUnified: 計算実行開始', {
       source,
       isHydrated,
       isInitializing,
@@ -939,7 +935,7 @@ function ProfileEditContent() {
       // 🔥 Task A修正: DBのavatar_urlから画像補完（条件付き抑制版）
       // 🚨 CRITICAL FIX: didTouchPhotos=true の時は補完を完全無効化（画像削除が正しく反映されるように）
       if (didTouchPhotosRef.current === true) {
-        console.log('🚫 avatar_url補完スキップ: didTouchPhotos=true（画像操作後は編集中の配列を信頼）', {
+        logger.debug('🚫 avatar_url補完スキップ: didTouchPhotos=true（画像操作後は編集中の配列を信頼）', {
           didTouchPhotosRef: didTouchPhotosRef.current,
           profileImagesRef_length: profileImagesRef.current.length,
           reason: '画像削除後に0枚を正しく検出するため'
@@ -952,7 +948,7 @@ function ProfileEditContent() {
       // （ユーザーが0枚で保存した意図を尊重）
       const dbPhotoUrls = dbProfile?.photo_urls
       if (Array.isArray(dbPhotoUrls) && dbPhotoUrls.length === 0) {
-        console.log('🚫 avatar_url補完スキップ: photo_urls=[]（0枚保存を尊重）', {
+        logger.debug('🚫 avatar_url補完スキップ: photo_urls=[]（0枚保存を尊重）', {
           photo_urls: dbPhotoUrls,
           avatar_url: dbProfile?.avatar_url ? 'exists' : 'null',
           reason: 'DBにphoto_urls=[]が明示的に保存されている'
@@ -962,7 +958,7 @@ function ProfileEditContent() {
 
       // 🔥 TASK A追加: photo_urlsに有効なURLがある場合はそれを使用
       if (Array.isArray(dbPhotoUrls) && dbPhotoUrls.length > 0 && dbPhotoUrls.some((url: any) => url && typeof url === 'string' && url.trim() !== '')) {
-        console.log('🖼️ 画像ソース決定: DBのphoto_urlsを使用', {
+        logger.debug('🖼️ 画像ソース決定: DBのphoto_urlsを使用', {
           photo_urls_count: dbPhotoUrls.length,
           source: 'db_photo_urls'
         })
@@ -980,7 +976,7 @@ function ProfileEditContent() {
 
       // 🔧 最後の保険: avatar_urlがあり、photo_urlsがnull/undefinedの場合のみ補完（互換性維持）
       if (typeof dbProfile?.avatar_url === "string" && dbProfile.avatar_url.trim().length > 0 && !Array.isArray(dbPhotoUrls)) {
-        console.log('🛡️ 画像補完: DBのavatar_urlから画像データ生成（photo_urls=null時のみ）', {
+        logger.debug('🛡️ 画像補完: DBのavatar_urlから画像データ生成（photo_urls=null時のみ）', {
           avatar_url_preview: dbProfile.avatar_url.substring(0, 30) + '...',
           photo_urls_status: dbPhotoUrls === null ? 'null' : dbPhotoUrls === undefined ? 'undefined' : 'other',
           补完_reason: 'photo_urlsがnull/undefinedの旧データ互換性維持',
@@ -1033,19 +1029,19 @@ function ProfileEditContent() {
     // 🚨 CRASH GUARD: normalizeImagesForCompletion関数チェック
     let imagesForCalc: any[]
     if (typeof normalizeImagesForCompletion !== 'function') {
-      console.error('[DEBUG] normalizeImagesForCompletion is not function', {
+      logger.error('[DEBUG] normalizeImagesForCompletion is not function', {
         type: typeof normalizeImagesForCompletion,
         value: normalizeImagesForCompletion,
         source: 'updateCompletionUnified'
       })
       // フォールバック：空配列を返す
       imagesForCalc = []
-      console.warn('[FALLBACK] Using empty array for imagesForCalc due to function error')
+      logger.warn('[FALLBACK] Using empty array for imagesForCalc due to function error')
     } else {
       imagesForCalc = normalizeImagesForCompletion(rawImagesForCalc)
     }
     
-    console.log('🔧 updateCompletionUnified: 画像配列決定と正規化', {
+    logger.debug('🔧 updateCompletionUnified: 画像配列決定と正規化', {
       source,
       explicitImages_length: explicitImages?.length || 'not provided',
       profileImages_state_length: profileImages.length,
@@ -1069,7 +1065,7 @@ function ProfileEditContent() {
       const formAvatarUrl = (currentDataWithoutCustomCulture as any).avatar_url
       const effectiveAvatarUrl = formAvatarUrl || dbProfile?.avatar_url || ''
 
-      console.log('🎯 AVATAR_URL後方互換チェック:', {
+      logger.debug('🎯 AVATAR_URL後方互換チェック:', {
         form_avatar_url: formAvatarUrl ? 'exists' : 'empty',
         db_avatar_url: dbProfile?.avatar_url ? 'exists' : 'empty',
         effective: effectiveAvatarUrl ? 'set' : 'empty',
@@ -1087,7 +1083,7 @@ function ProfileEditContent() {
       }
 
       // 🌸 必須確認ログ - 全タスク要求を満たす統合ログ
-      console.log('🌟 updateCompletionUnified: 統一フロー実行', {
+      logger.debug('🌟 updateCompletionUnified: 統一フロー実行', {
         triggerSource: source,
         imagesCount: imagesForCalc.length,
         has_profile_image: imagesForCalc.length > 0,
@@ -1106,7 +1102,7 @@ function ProfileEditContent() {
       // ensureProfileForUser()により確実にプロフィールが存在するため、基本的にfalse
       const isNewUser = !dbProfile || (!dbProfile.name && !dbProfile.bio && !dbProfile.interests)
       
-      console.log('🔍 isNewUser DB-based determination:', {
+      logger.debug('🔍 isNewUser DB-based determination:', {
         hasDbProfile: !!dbProfile,
         isNewUser,
         userId: user?.id,
@@ -1114,7 +1110,7 @@ function ProfileEditContent() {
       })
 
       // 🔍 CRITICAL DEBUG: 完成度計算直前のデバッグログ（SSOT統一）
-      console.log('🚨 COMPLETION DEBUG - 計算直前チェック:', {
+      logger.debug('🚨 COMPLETION DEBUG - 計算直前チェック:', {
         '1_profile_avatar_url': {
           exists: !!dbProfile?.avatar_url,
           type: typeof dbProfile?.avatar_url,
@@ -1140,7 +1136,7 @@ function ProfileEditContent() {
       // 🚨 CRASH GUARD: calculateCompletionFromForm関数チェック
       let result: any
       if (typeof calculateCompletionFromForm !== 'function') {
-        console.error('[DEBUG] calculateCompletionFromForm is not function', {
+        logger.error('[DEBUG] calculateCompletionFromForm is not function', {
           type: typeof calculateCompletionFromForm,
           value: calculateCompletionFromForm,
           source: 'updateCompletionUnified'
@@ -1152,7 +1148,7 @@ function ProfileEditContent() {
           totalFields: isForeignMale ? 17 : 14,
           hasImages: false
         }
-        console.warn('[FALLBACK] Using default completion result due to function error')
+        logger.warn('[FALLBACK] Using default completion result due to function error')
       } else {
         result = calculateCompletionFromForm(
           formValuesForCompletion,
@@ -1163,7 +1159,7 @@ function ProfileEditContent() {
       }
       
       // 🔍 CRITICAL DEBUG: hasProfileImages判定結果の詳細ログ
-      console.log('🚨 COMPLETION RESULT - hasProfileImages判定結果:', {
+      logger.debug('🚨 COMPLETION RESULT - hasProfileImages判定結果:', {
         final_completion: result.completion,
         hasImages_result: result.hasImages,
         missing_fields: result.hasImages ? 'none' : 'profile_images',
@@ -1176,7 +1172,7 @@ function ProfileEditContent() {
         task_A_effectiveness: imagesForCalc.length > 0 ? 'SUCCESS' : 'NEED_CHECK'
       })
 
-      console.log('🌟 updateCompletionUnified: 完了', {
+      logger.debug('🌟 updateCompletionUnified: 完了', {
         completion: result.completion,
         completedFields: result.completedFields,
         totalFields: result.totalFields,
@@ -1187,7 +1183,7 @@ function ProfileEditContent() {
       setCompletedItems(result.completedFields)
       setTotalItems(result.totalFields)
     } catch (error) {
-      console.error('❌ updateCompletionUnified: エラー', error)
+      logger.error('❌ updateCompletionUnified: エラー', error)
     }
   }, [isInitializing, isHydrated, watch, selectedHobbies, selectedPersonality, languageSkills, selectedPlannedPrefectures, profileImages, isForeignMale])
 
@@ -1197,8 +1193,7 @@ function ProfileEditContent() {
   useEffect(() => {
     // didTouchPhotosRef.current が true の時のみ（画像操作後のみ）
     if (didTouchPhotosRef.current && isHydrated && !isInitializing) {
-      console.log('📝 profileImages state updated (didTouchPhotos=true):', profileImages.length, 'images')
-      console.log('🔄 画像操作後の完成度再計算を実行')
+      logger.debug('[SYNC] images:', profileImages.length, 'items')
       updateCompletionUnified('profileImages-state-change-after-touch')
     }
   }, [profileImages, isInitializing, isHydrated, updateCompletionUnified])
@@ -1206,13 +1201,13 @@ function ProfileEditContent() {
   // 🔧 CRITICAL: 初期化完了後の強制計算関数
   // 🔥 TASK B修正: refを使用してスキップノイズを解消
   const forceInitialCompletionCalculation = useCallback(() => {
-    console.log('🔥 forceInitialCompletionCalculation start')
+    logger.debug('🔥 forceInitialCompletionCalculation start')
 
     // 🔧 TASK B: refを使用（stateは非同期更新なのでタイミング問題あり）
     // initializingRef.current を使うことで、setTimeoutからの呼び出しでも正確に判定できる
     const isStillInitializing = initializingRef.current
 
-    console.log('🔍 forceInitialCompletionCalculation: 状態チェック', {
+    logger.debug('🔍 forceInitialCompletionCalculation: 状態チェック', {
       initializingRef_current: isStillInitializing,
       isInitializing_state: isInitializing,
       isHydrated_state: isHydrated
@@ -1220,7 +1215,7 @@ function ProfileEditContent() {
 
     // refがtrueの場合のみスキップ（stateではなくrefを信頼）
     if (isStillInitializing) {
-      console.log('⏸️ forceInitialCompletionCalculation: skipped - initializingRef=true')
+      logger.debug('⏸️ forceInitialCompletionCalculation: skipped - initializingRef=true')
       return
     }
 
@@ -1237,7 +1232,7 @@ function ProfileEditContent() {
       new URLSearchParams(window.location.search).get('fromMyPage') === 'true'
 
     if (isFromMyPage && !formReady) {
-      console.log('🛑 FORCE CALC SKIPPED: form not ready', {
+      logger.debug('🛑 FORCE CALC SKIPPED: form not ready', {
         hasHobbies,
         hasPersonality,
         hasImages,
@@ -1246,7 +1241,7 @@ function ProfileEditContent() {
       return
     }
 
-    console.log('✅ FORCE CALC EXECUTED: form ready', {
+    logger.debug('✅ FORCE CALC EXECUTED: form ready', {
       hasHobbies,
       hasPersonality,
       hasImages,
@@ -1257,7 +1252,7 @@ function ProfileEditContent() {
       // 🔧 最新フォーム値を直接取得
       const currentFormData = getValues()
 
-      console.log('⚡ FORCE CALC: フォームデータ収集', {
+      logger.debug('⚡ FORCE CALC: フォームデータ収集', {
         formData_keys: Object.keys(currentFormData),
         images_length: currentProfileImages.length,
         personality_length: selectedPersonality.length,
@@ -1278,13 +1273,13 @@ function ProfileEditContent() {
       const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
       const calculatedCompletion = calculateCompletionFromForm(completionInput, userType, currentProfileImages)
       
-      console.log('📊 force calculation result:', calculatedCompletion.completion)
+      logger.debug('📊 force calculation result:', calculatedCompletion.completion)
       
       // 🔧 完成度を直接設定
       setProfileCompletion(calculatedCompletion.completion)
       
     } catch (error) {
-      console.error('❌ FORCE CALC ERROR:', error)
+      logger.error('❌ FORCE CALC ERROR:', error)
       // エラー時は最低限の計算
       setProfileCompletion(0)
     }
@@ -1301,7 +1296,7 @@ function ProfileEditContent() {
       setValue('birth_date', birthDate)
       
       // 🔧 MAIN WATCH統一: フォーム値変更のみ（完成度再計算はメインwatchが担当）
-      console.log('📅 生年月日変更: フォーム値更新', { birthDate, age })
+      logger.debug('📅 生年月日変更: フォーム値更新', { birthDate, age })
     }
   }, [calculateAge, setValue])
 
@@ -1335,7 +1330,7 @@ function ProfileEditContent() {
       const nextCount = newImages.length
 
       // 🚨 IMAGE_DELETE_START: error boundary発火時の原因特定ログ（REF基準）
-      console.log('🚨 IMAGE_DELETE_START', {
+      logger.debug('🚨 IMAGE_DELETE_START', {
         timestamp: new Date().toISOString(),
         isTestMode: isTestMode,
         userId: user?.id || 'undefined',
@@ -1366,7 +1361,7 @@ function ProfileEditContent() {
                            !currentOrder.every((id, index) => id === newOrder[index])
 
     if (isExplicitDeletion) {
-      console.log('🧨 削除フラグ検出: 同一判定を完全無効化', {
+      logger.debug('🧨 削除フラグ検出: 同一判定を完全無効化', {
         deleteInfo,
         current_ids: currentImageIds,
         new_ids: newImageIds,
@@ -1374,14 +1369,14 @@ function ProfileEditContent() {
       })
     } else if (isOrderChanged) {
       // 🛡️ メイン画像変更（順序変更）は必ず処理する
-      console.log('🔄 MAIN PHOTO REORDER DETECTED - 順序変更を処理:', {
+      logger.debug('🔄 MAIN PHOTO REORDER DETECTED - 順序変更を処理:', {
         current_order: currentOrder,
         new_order: newOrder,
         new_main_id: newImages[0]?.id,
         new_main_url: newImages[0]?.url?.substring(0, 50) + '...'
       })
     } else if (isSameImageSet && !isDeletion) {
-      console.log('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
+      logger.debug('🚫 同じ画像セット（ID比較）のため処理をスキップ', {
         current_ids: currentImageIds,
         new_ids: newImageIds,
         isDeletion: false,
@@ -1389,7 +1384,7 @@ function ProfileEditContent() {
       })
       return
     } else if (isDeletion) {
-      console.log('🗑️ 削除操作検出: スキップ判定を無効化', {
+      logger.debug('🗑️ 削除操作検出: スキップ判定を無効化', {
         current_ids: currentImageIds,
         new_ids: newImageIds,
         fromLength: currentImageIds.length,
@@ -1397,7 +1392,7 @@ function ProfileEditContent() {
       })
     }
     
-    console.log('🎯 画像状態変更検出', {
+    logger.debug('🎯 画像状態変更検出', {
       from: currentImageIds.length + '枚',
       to: newImageIds.length + '枚',
       current_ids: currentImageIds,
@@ -1417,13 +1412,13 @@ function ProfileEditContent() {
         lastChange = sessionStorage.getItem(tempImageChangeKey)
       }
     } catch (storageError) {
-      console.error('🚨 READ_TIMESTAMP_FAILED:', storageError)
+      logger.error('🚨 READ_TIMESTAMP_FAILED:', storageError)
     }
     
     if (newImages.length === 0 && currentImageIds.length > 0 && lastChange) {
       const timeSinceLastChange = lastChangeTime - parseInt(lastChange)
       if (timeSinceLastChange < 500) { // 500ms以内の0枚イベントは無視
-        console.log('🛡️ 競合ガード: 直前の画像追加から500ms以内の0枚イベントを無視', {
+        logger.debug('🛡️ 競合ガード: 直前の画像追加から500ms以内の0枚イベントを無視', {
           timeSinceLastChange,
           previousImages: currentImageIds.length
         })
@@ -1446,7 +1441,7 @@ function ProfileEditContent() {
         try {
           sessionStorage.setItem(imageChangeKey, lastChangeTime.toString())
         } catch (storageError) {
-          console.error('🚨 TIMESTAMP_STORAGE_FAILED:', storageError)
+          logger.error('🚨 TIMESTAMP_STORAGE_FAILED:', storageError)
         }
       }
     
@@ -1458,7 +1453,7 @@ function ProfileEditContent() {
       const isAddition = !isDeletion && (nextCount > prevCount)
       const isDeletionFinal = isDeletion || (nextCount < prevCount)
 
-      console.log('🎯 [TASK4] didTouchPhotos = true (画像操作検出・REF基準)', {
+      logger.debug('🎯 [TASK4] didTouchPhotos = true (画像操作検出・REF基準)', {
         operation: isAddition ? '追加' : isDeletionFinal ? '削除' : '入替',
         previous_count: prevCount,  // ✅ REF基準
         new_count: nextCount,
@@ -1471,7 +1466,7 @@ function ProfileEditContent() {
       // ① まずUI/state を更新（functional updateで安全に）
       setIsImageChanging(true)
       setProfileImages(prev => {
-        console.log('[FUNCTIONAL] profileImages更新:', { prev_length: prev.length, new_length: newImages.length })
+        logger.debug('[FUNCTIONAL] profileImages更新:', { prev_length: prev.length, new_length: newImages.length })
         return newImages
       })
       // 🚨 Type safety fix
@@ -1486,12 +1481,12 @@ function ProfileEditContent() {
       // 画像はprofileImages stateとprofileImagesRef.currentで管理する
       // RHFフォーム値への同期は不要（DBカラムに存在しない項目をフォームに入れない）
 
-      console.log('🚨 画像state更新完了（RHFへのprofile_images同期は廃止）:', {
+      logger.debug('🚨 画像state更新完了（RHFへのprofile_images同期は廃止）:', {
         profileImages_length: newImages.length,
         ref_length: profileImagesRef.current.length
       })
       
-      console.log('🧨 UI/state更新完了:', { 
+      logger.debug('🧨 UI/state更新完了:', { 
         newImages_length: newImages.length,
         ref_length: profileImagesRef.current.length,
         isDeletion: isDeletion,
@@ -1500,7 +1495,7 @@ function ProfileEditContent() {
 
       // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
       // 画像はprofileImages state + profileImagesRefで管理（RHFフォーム値は不使用）
-      console.log('📸 画像変更: state/ref更新完了（完成度計算はMAIN WATCHが担当）', {
+      logger.debug('📸 画像変更: state/ref更新完了（完成度計算はMAIN WATCHが担当）', {
         newImagesLength: newImages.length,
         isDeletion,
         ssotMode: 'MAIN_WATCH_ONLY'
@@ -1508,7 +1503,7 @@ function ProfileEditContent() {
       
       // ② TESTモード時の処理分岐（DB保存は継続）
       if (isTestMode) {
-        console.log('🧪 TEST MODE: Local storage handled, but DB save continues', {
+        logger.debug('🧪 TEST MODE: Local storage handled, but DB save continues', {
           isTestMode: true,
           hasUserId: !!user?.id,
           willContinueToDbSave: true
@@ -1518,7 +1513,7 @@ function ProfileEditContent() {
       
       // userIdが無い場合のみ外部I/Oを停止（安全策として維持）
       if (!user?.id) {
-        console.log('🧪 No user ID, skipping all external I/O', {
+        logger.debug('🧪 No user ID, skipping all external I/O', {
           hasUserId: false,
           localStateOnly: true,
           completionAlreadyUpdated: true
@@ -1537,10 +1532,10 @@ function ProfileEditContent() {
           sessionStorage.setItem(safeTimestampKey, Date.now().toString())
           sessionStorage.setItem(`imageEditHistory_${user?.id || 'testmode'}`, 'true')
 
-          console.log('💾 セッションストレージ更新完了:', safeImageKey)
+          logger.debug('💾 セッションストレージ更新完了:', safeImageKey)
         }
       } catch (sessionError) {
-        console.error('🚨 IMAGE_DELETE_STORAGE_FAILED:', {
+        logger.error('🚨 IMAGE_DELETE_STORAGE_FAILED:', {
           error: sessionError instanceof Error ? sessionError.message : sessionError,
           stack: sessionError instanceof Error ? sessionError.stack : 'no stack'
         })
@@ -1548,7 +1543,7 @@ function ProfileEditContent() {
       }
     
       // ✅ TASK2: アップロード中のPATCH処理を停止（最終保存時のみ）
-      console.log('🚨 [TASK2] アップロード中のDB更新を停止 - 最終保存時のみに変更', {
+      logger.debug('🚨 [TASK2] アップロード中のDB更新を停止 - 最終保存時のみに変更', {
         newImages_count: newImages.length,
         hasBlobs: newImages.some(img => img.url.startsWith('blob:')),
         reason: '3枚アップ時に各画像ごとにPATCHが発生するのを防ぐ',
@@ -1570,7 +1565,7 @@ function ProfileEditContent() {
           avatarUrl = firstImage.url
         }
         
-        console.log('💾 データベース更新開始:', {
+        logger.debug('💾 データベース更新開始:', {
           hasImages: newImages.length > 0,
           hasBlobImages: newImages.some(img => img.url.startsWith('blob:')),
           avatarUrl,
@@ -1580,7 +1575,7 @@ function ProfileEditContent() {
         // blob URLでない場合のみデータベースに保存
         if (avatarUrl) {
           // 🛡️ 恒久ガード: base64はStorageにアップロードしてURLに変換
-          console.log('🛡️ Avatar URL normalization before DB save')
+          logger.debug('🛡️ Avatar URL normalization before DB save')
           const { normalizeAvatarUrl } = await import('@/utils/avatarStorage')
           const normalizeResult = await normalizeAvatarUrl(avatarUrl, user.id)
           
@@ -1590,7 +1585,7 @@ function ProfileEditContent() {
           
           const finalAvatarUrl = normalizeResult.avatarUrl
           if (normalizeResult.wasBase64) {
-            console.log('✅ Base64をStorage URLに変換:', finalAvatarUrl?.substring(0, 50) + '...')
+            logger.debug('✅ Base64をStorage URLに変換:', finalAvatarUrl?.substring(0, 50) + '...')
           }
           
           // 🔄 Storage path方式で保存
@@ -1601,11 +1596,11 @@ function ProfileEditContent() {
             throw new Error(`Avatar保存失敗: ${uploadResult.error}`)
           }
           
-          console.log(`🔄 Avatar saved to DB as storage path: ${uploadResult.storagePath}`)
+          logger.debug(`🔄 Avatar saved to DB as storage path: ${uploadResult.storagePath}`)
           
           // DB更新は既にupdateProfileAvatarで実行済み
-          console.log('✅ Storage path画像保存完了')
-          console.log('✅ 写真がデータベースに保存されました')
+          logger.debug('✅ Storage path画像保存完了')
+          logger.debug('✅ 写真がデータベースに保存されました')
         } else if (newImages.length === 0) {
           // 画像が完全に削除された場合は、データベースのavatar_urlをnullに更新
           const { error } = await supabase
@@ -1616,16 +1611,16 @@ function ProfileEditContent() {
           if (error) {
             throw new Error(`DB削除失敗: ${error.message}`)
           }
-          console.log('✅ 写真がデータベースから削除されました')
+          logger.debug('✅ 写真がデータベースから削除されました')
         } else {
-          console.log('⚠️ blob URL画像のため、データベース保存をスキップ')
+          logger.debug('⚠️ blob URL画像のため、データベース保存をスキップ')
         }
       */
       
-      console.log('✅ [TASK2] アップロード中のPATCH停止完了 - 保存時のみに統一')
+      logger.debug('✅ [TASK2] アップロード中のPATCH停止完了 - 保存時のみに統一')
     // 🌸 TASK4: 削除時の確実な状態確認（REF基準）
     if (nextCount === 0 && prevCount > 0) {
-      console.log('🗑️ 画像全削除検出: state/ref/sessionStorageを完全同期（REF基準）', {
+      logger.debug('🗑️ 画像全削除検出: state/ref/sessionStorageを完全同期（REF基準）', {
         beforeDelete: prevCount,  // ✅ REF基準
         afterDelete: nextCount,
         profileImagesRef_will_be: newImages.length
@@ -1634,14 +1629,14 @@ function ProfileEditContent() {
     
     // 🌸 TASK2: react-hook-form フィールドとの単一ソース同期（formには存在しないためコメントアウト）
     // avatar_urlフィールドはフォームスキーマに含まれていないため、state管理のみで十分
-    console.log('🔗 画像state同期完了:', {
+    logger.debug('🔗 画像state同期完了:', {
       images_count: newImages.length,
       state_updated: true,
       ref_updated: true
     })
     
     // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📸 写真変更: state更新完了', { 
+    logger.debug('📸 写真変更: state更新完了', { 
       images: newImages.length,
       isAddition: newImages.length > currentImageIds.length,
       isDeletion: newImages.length < currentImageIds.length
@@ -1649,21 +1644,21 @@ function ProfileEditContent() {
     
     // 🚨 CRITICAL: 画像変更完了時の確実な状態リセット
     setTimeout(() => {
-      console.log('📸 写真変更完了：フラグリセット開始')
+      logger.debug('📸 写真変更完了：フラグリセット開始')
       
       // 🔧 STEP 1: isImageChanging を確実に false に戻す
       setIsImageChanging(false)
-      console.log('✅ isImageChanging = false 設定完了')
+      logger.debug('✅ isImageChanging = false 設定完了')
       
       // 🔧 STEP 2: isInitializing も念のため確実に false に戻す
       if (initializingRef.current === true) {
         initializingRef.current = false
-        console.log('✅ initializingRef.current = false 強制設定完了')
+        logger.debug('✅ initializingRef.current = false 強制設定完了')
       }
       
       // ✅ SSOT維持: 完成度計算はMAIN WATCHに任せる（多重発火防止）
       // 画像はprofileImages state + profileImagesRefで管理（RHFフォーム値は不使用）
-      console.log('📸 画像変更完了: フラグリセット完了（完成度計算はMAIN WATCHが担当）', {
+      logger.debug('📸 画像変更完了: フラグリセット完了（完成度計算はMAIN WATCHが担当）', {
         isImageChanging: false,
         isInitializing: initializingRef.current,
         finalImageCount: profileImagesRef.current.length,
@@ -1674,7 +1669,7 @@ function ProfileEditContent() {
     
     } catch (error) {
       // 🌸 TASK4: Next.js error boundary捕捉前の確実ログ出力
-      console.error('🚨 CRITICAL ERROR in handleImagesChange:', {
+      logger.error('🚨 CRITICAL ERROR in handleImagesChange:', {
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : 'no stack',
         timestamp: new Date().toISOString(),
@@ -1690,21 +1685,21 @@ function ProfileEditContent() {
   // ALL useEffect hooks must be here (after all other hooks)
   // 強制初期化 - 複数のトリガーで確実に実行
   useEffect(() => {
-    console.log('🔍 Page load check - user:', user?.id)
+    logger.debug('🔍 Page load check - user:', user?.id)
     
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const hasType = urlParams.get('type')
       const hasNickname = urlParams.get('nickname')
       
-      console.log('🌐 Current URL:', window.location.href)
-      console.log('🔑 Type parameter:', hasType)
-      console.log('👤 Nickname parameter:', hasNickname)
+      logger.debug('🌐 Current URL:', window.location.href)
+      logger.debug('🔑 Type parameter:', hasType)
+      logger.debug('👤 Nickname parameter:', hasNickname)
       
       // MyPageからの遷移をチェック
       const isFromMyPageParam = urlParams.get('fromMyPage') === 'true'
       
-      console.log('🔍 URL PARAMETER ANALYSIS:', {
+      logger.debug('🔍 URL PARAMETER ANALYSIS:', {
         'fromMyPage param': urlParams.get('fromMyPage'),
         'isFromMyPageParam': isFromMyPageParam,
         'hasType': hasType,
@@ -1714,7 +1709,7 @@ function ProfileEditContent() {
       
       // 新規登録フロー判定：typeとnicknameのパラメータがあり、かつMyPageからの遷移でない場合のみ新規登録
       const isSignupFlow = hasType && hasNickname && !isFromMyPageParam
-      console.log('🚨 新規登録フロー判定:', { 
+      logger.debug('🚨 新規登録フロー判定:', { 
         hasType, 
         hasNickname, 
         isFromMyPageParam,
@@ -1723,18 +1718,18 @@ function ProfileEditContent() {
       
       // 🚨 新規登録フロー検出時のみ既存データを完全クリア（MyPageからの遷移は除外）
       const enableProfileDeletion = false  // 🛡️ 安全のため完全無効化
-      console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
+      logger.debug('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
-        console.log('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
+        logger.debug('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
         if (user) {
           secureProfileInitialization()
         } else {
-          console.log('⏳ ユーザー認証待ち...')
+          logger.debug('⏳ ユーザー認証待ち...')
           // ユーザー認証を待つ間隔実行
           const checkUser = setInterval(() => {
             if (user) {
-              console.log('👤 認証完了 - 遅延セキュア初期化実行')
+              logger.debug('👤 認証完了 - 遅延セキュア初期化実行')
               secureProfileInitialization()
               clearInterval(checkUser)
             }
@@ -1744,7 +1739,7 @@ function ProfileEditContent() {
           setTimeout(() => clearInterval(checkUser), 5000)
         }
       } else if (isFromMyPageParam) {
-        console.log('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
+        logger.debug('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
       }
     }
   }, [user])
@@ -1753,7 +1748,7 @@ function ProfileEditContent() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.action === 'updateProfile') {
-        console.log('🎯 Received update profile message from preview window')
+        logger.debug('🎯 Received update profile message from preview window')
         executeProfileUpdate()
       }
     }
@@ -1768,7 +1763,7 @@ function ProfileEditContent() {
         
         // 5秒以内のリクエストのみ有効とする
         if (currentTime - updateTime < 5000) {
-          console.log('🎯 Detected profile update request from localStorage')
+          logger.debug('🎯 Detected profile update request from localStorage')
           localStorage.removeItem('updateProfile')
           localStorage.removeItem('updateProfileTimestamp')
           executeProfileUpdate()
@@ -1777,22 +1772,22 @@ function ProfileEditContent() {
     }
 
     const executeProfileUpdate = () => {
-      console.log('🎯 executeProfileUpdate called - checking localStorage data')
+      logger.debug('🎯 executeProfileUpdate called - checking localStorage data')
       
       // プレビューからのlocalStorageデータを確認
       const previewOptionalData = localStorage.getItem('previewOptionalData')
       const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
       
-      console.log('🔍 localStorage previewOptionalData:', previewOptionalData)
-      console.log('🔍 localStorage previewExtendedInterests:', previewExtendedInterests)
+      logger.debug('🔍 localStorage previewOptionalData:', previewOptionalData)
+      logger.debug('🔍 localStorage previewExtendedInterests:', previewExtendedInterests)
       
       if (previewOptionalData) {
         try {
           const parsedData = JSON.parse(previewOptionalData)
-          console.log('🚨 occupation:', parsedData.occupation)
-          console.log('🚨 height:', parsedData.height)
-          console.log('🚨 body_type:', parsedData.body_type)
-          console.log('🚨 marital_status:', parsedData.marital_status)
+          logger.debug('🚨 occupation:', parsedData.occupation)
+          logger.debug('🚨 height:', parsedData.height)
+          logger.debug('🚨 body_type:', parsedData.body_type)
+          logger.debug('🚨 marital_status:', parsedData.marital_status)
           
           // フォームの値を更新
           setValue('occupation', parsedData.occupation || 'none')
@@ -1800,7 +1795,7 @@ function ProfileEditContent() {
           setValue('body_type', parsedData.body_type || 'average')
           setValue('marital_status', parsedData.marital_status || 'single')
         } catch (error) {
-          console.error('❌ Error parsing localStorage data:', error)
+          logger.error('❌ Error parsing localStorage data:', error)
         }
       }
       
@@ -1808,7 +1803,7 @@ function ProfileEditContent() {
       setTimeout(() => {
         const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
         if (submitButton) {
-          console.log('🎯 Clicking submit button after localStorage data processing')
+          logger.debug('🎯 Clicking submit button after localStorage data processing')
           submitButton.click()
         }
       }, 100)
@@ -1858,7 +1853,7 @@ function ProfileEditContent() {
           // 🛡️ CRITICAL: チラつき防止 - 初期化中は計算をスキップ
           // 🚨 CRITICAL: ガード条件統一 - initializingRefのみをチェック
           if (initializingRef.current === true) {
-            console.log('🛑 watch debounce: skipped because initializingRef=true', { 
+            logger.debug('🛑 watch debounce: skipped because initializingRef=true', { 
               initializingRef: initializingRef.current,
               isInitializing,
               reason: 'メインwatch統一ガード' 
@@ -1868,7 +1863,7 @@ function ProfileEditContent() {
           
           // 🚨 CRITICAL FIX: isImageChangingはデバウンス制御のみ、完全スキップは禁止
           if (isImageChanging) {
-            console.log('⏳ 写真変更中 - デバウンス時間を延長して計算実行', {
+            logger.debug('⏳ 写真変更中 - デバウンス時間を延長して計算実行', {
               isImageChanging,
               profileImagesLength: profileImages.length,
               action: 'debounce-延長（スキップ無し）'
@@ -1876,10 +1871,10 @@ function ProfileEditContent() {
             // スキップせず、デバウンス時間のみ延長
             timeoutId = setTimeout(() => {
               try {
-                console.log('📸 写真変更中だがデバウンス延長後に完成度計算実行')
+                logger.debug('📸 写真変更中だがデバウンス延長後に完成度計算実行')
                 updateCompletionUnified('watch-debounce-during-image-change')
               } catch (error) {
-                console.error('🚨 ERROR in watch debounce during image change:', {
+                logger.error('🚨 ERROR in watch debounce during image change:', {
                   error: error instanceof Error ? error.message : error,
                   stack: error instanceof Error ? error.stack : 'no stack'
                 })
@@ -1903,7 +1898,7 @@ function ProfileEditContent() {
           }
           
           // 🚨 原因特定ログ（修正後も残す）
-          console.log('🎯 MAIN WATCH: 完成度再計算実行（唯一の入口）', {
+          logger.debug('🎯 MAIN WATCH: 完成度再計算実行（唯一の入口）', {
             hobbies: selectedHobbies.length,
             personality: selectedPersonality.length, 
             prefectures: selectedPlannedPrefectures.length,
@@ -1920,7 +1915,7 @@ function ProfileEditContent() {
           try {
             updateCompletionUnified('watch-debounce')
           } catch (error) {
-            console.error('🚨 ERROR in watch debounce main:', {
+            logger.error('🚨 ERROR in watch debounce main:', {
               error: error instanceof Error ? error.message : error,
               stack: error instanceof Error ? error.stack : 'no stack'
             })
@@ -1938,90 +1933,44 @@ function ProfileEditContent() {
 
   // selectedHobbies変更時のフォーム同期と完成度再計算
   useEffect(() => {
-    console.log('🔍 selectedHobbies changed:', selectedHobbies)
-    
-    // 🔧 フォームフィールドへの同期（初期化中でも必須）
-    setValue('hobbies', selectedHobbies, { 
-      shouldDirty: true, 
-      shouldValidate: true 
+    setValue('hobbies', selectedHobbies, {
+      shouldDirty: true,
+      shouldValidate: true
     })
-    
-    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📝 selectedHobbies state updated:', selectedHobbies.length, 'items')
-    console.log('🔄 フォーム値同期完了: hobbies =', selectedHobbies.length, 'items')
+    logger.debug('[SYNC] hobbies:', selectedHobbies.length, 'items')
   }, [selectedHobbies, setValue])
 
   // selectedPersonality変更時のフォーム同期と完成度再計算
   useEffect(() => {
-    console.log('🔍 selectedPersonality changed:', selectedPersonality)
-    
-    // 🔧 フォームフィールドへの同期（初期化中でも必須）
-    setValue('personality', selectedPersonality, { 
-      shouldDirty: true, 
-      shouldValidate: true 
+    setValue('personality', selectedPersonality, {
+      shouldDirty: true,
+      shouldValidate: true
     })
-    
-    // 🚨 EDIT SCREEN PERSONALITY DEBUG - MyPageと同じログ形式
-    const currentData = watch()
-    const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
-    
-    // 完成度計算前の入力データをMyPageと同じ形式でログ出力
-    const normalizedProfile = {
-      ...currentDataWithoutCustomCulture,
-      hobbies: selectedHobbies,
-      personality: selectedPersonality, // 最新のselectedPersonalityを使用
-      planned_prefectures: selectedPlannedPrefectures,
-      language_skills: languageSkills, // ✅ State直接使用（再構築を避ける）
-    }
-    
-    console.log('🚨🚨🚨 EDIT SCREEN - PERSONALITY COMPLETION DEBUG 🚨🚨🚨')
-    console.log('='.repeat(80))
-    console.log('📊 完成度計算前のprofileData:')
-    console.log(`   isForeignMale: ${isForeignMale}`)
-    console.log(`   personality (selectedPersonality): ${Array.isArray(selectedPersonality) ? `Array(${selectedPersonality.length})` : selectedPersonality} = ${JSON.stringify(selectedPersonality)}`)
-    console.log(`   hobbies (selectedHobbies): ${Array.isArray(selectedHobbies) ? `Array(${selectedHobbies.length})` : selectedHobbies}`)
-    console.log(`   language_skills: ${Array.isArray(languageSkills) ? `Array(${languageSkills.length})` : languageSkills}`)
-    console.log(`   planned_prefectures: ${Array.isArray(selectedPlannedPrefectures) ? `Array(${selectedPlannedPrefectures.length})` : selectedPlannedPrefectures}`)
-    console.log('📋 normalizedProfile.personality詳細:')
-    console.log(`   personality: ${normalizedProfile.personality ? (Array.isArray(normalizedProfile.personality) ? `✅ | array has ${normalizedProfile.personality.length} items` : `✅ | ${normalizedProfile.personality}`) : '❌ | empty or null'}`)
-    console.log('='.repeat(80))
-    
-    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📝 selectedPersonality state updated:', selectedPersonality.length, 'items')
+    logger.debug('[SYNC] personality:', selectedPersonality.length, 'items')
   }, [selectedPersonality, setValue])
 
   // selectedPlannedPrefectures変更時のフォーム同期と完成度再計算
   useEffect(() => {
-    console.log('🔍 selectedPlannedPrefectures changed:', selectedPlannedPrefectures)
-    
-    // 🔧 フォームフィールドへの同期（初期化中でも必須）
-    setValue('planned_prefectures', selectedPlannedPrefectures, { 
-      shouldDirty: true, 
-      shouldValidate: true 
+    setValue('planned_prefectures', selectedPlannedPrefectures, {
+      shouldDirty: true,
+      shouldValidate: true
     })
-    
-    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📝 selectedPlannedPrefectures state updated:', selectedPlannedPrefectures.length, 'prefectures')
+    logger.debug('[SYNC] prefectures:', selectedPlannedPrefectures.length, 'items')
   }, [selectedPlannedPrefectures, setValue])
 
   // 🗣️ languageSkills変更時の専用完成度再計算とフォーム同期
   useEffect(() => {
-    console.log('🗣️ languageSkills changed:', languageSkills)
-    
-    // 🔧 フォームのlanguage_skillsフィールドに同期（初期化中でも必須）
-    setValue('language_skills', languageSkills, { 
-      shouldDirty: true, 
-      shouldValidate: true 
+    setValue('language_skills', languageSkills, {
+      shouldDirty: true,
+      shouldValidate: true
     })
-    
-    // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-    console.log('📝 languageSkills state updated:', languageSkills.length, 'skills')
+    logger.debug('[SYNC] languageSkills:', languageSkills.length, 'items')
   }, [languageSkills, setValue])
 
   // 🌸 TASK1: hydration完了時のqueued再計算処理
   useEffect(() => {
     if (isHydrated && queuedRecalcRef.current) {
-      console.log('🎯 hydration完了 - queued再計算実行', {
+      logger.debug('🎯 hydration完了 - queued再計算実行', {
         isHydrated,
         queuedRecalc: queuedRecalcRef.current,
         source: 'queued-after-hydration'
@@ -2195,7 +2144,7 @@ function ProfileEditContent() {
     // 🧪 OPTIONS DEBUG - options生成結果をログ（1回だけ）
     if (typeof window !== 'undefined' && !(window as any).__DEBUG_VISIT_OPTIONS_LOGGED__) {
       (window as any).__DEBUG_VISIT_OPTIONS_LOGGED__ = true
-      console.log('🧪 OPTIONS DEBUG [visit_schedule]', {
+      logger.debug('🧪 OPTIONS DEBUG [visit_schedule]', {
         values: options?.map(o => o.value),
         labels: options?.map(o => o.label),
         hasFormsNoEntry: (options ?? []).some(o =>
@@ -2267,7 +2216,7 @@ function ProfileEditContent() {
   const PREFECTURES = getPrefectures()
 
   // デバッグ用ログ
-  console.log('Profile type debug:', {
+  logger.debug('Profile type debug:', {
     profileType,
     isForeignMale,
     isJapaneseFemale,
@@ -2285,41 +2234,41 @@ function ProfileEditContent() {
         .eq('user_id', user?.id)
       
       if (error) {
-        console.error('Avatar削除エラー:', error)
+        logger.error('Avatar削除エラー:', error)
       } else {
-        console.log('Avatar強制削除完了')
+        logger.debug('Avatar強制削除完了')
         window.location.reload()
       }
     } catch (error) {
-      console.error('Avatar削除処理エラー:', error)
+      logger.error('Avatar削除処理エラー:', error)
     }
   }
 
   // 新規登録時の安全なプロフィール初期化（セキュリティ強化版）
   const secureProfileInitialization = async () => {
-    console.log('🛡️ secureProfileInitialization は安全のため無効化されています')
+    logger.debug('🛡️ secureProfileInitialization は安全のため無効化されています')
     return  // 🛡️ 安全のため処理を停止
     
     if (!user?.id) {
-      console.error('❌ User ID not available for profile initialization')
+      logger.error('❌ User ID not available for profile initialization')
       return
     }
 
     try {
-      console.log('🔐 安全なプロフィール初期化開始 - User ID:', user?.id)
+      logger.debug('🔐 安全なプロフィール初期化開始 - User ID:', user?.id)
       
       // 🛡️ セキュリティ強化: ユーザーID検証
-      console.log('🔒 SECURITY: Validating user authentication')
+      logger.debug('🔒 SECURITY: Validating user authentication')
       const { data: authUser, error: authError } = await supabase.auth.getUser()
       if (authError || !authUser?.user || authUser?.user?.id !== user?.id) {
-        console.error('🚨 SECURITY BREACH: User ID mismatch or invalid auth', {
+        logger.error('🚨 SECURITY BREACH: User ID mismatch or invalid auth', {
           authError,
           authUserId: authUser?.user?.id,
           providedUserId: user?.id
         })
         return
       }
-      console.log('✅ User authentication validated')
+      logger.debug('✅ User authentication validated')
       
       // まずプロフィールの存在確認（該当ユーザーのデータのみ）
       const { data: existingProfile, error: checkError } = await supabase
@@ -2330,16 +2279,16 @@ function ProfileEditContent() {
       
       if (checkError && checkError?.code !== 'PGRST116') {
         // PGRST116以外のエラーは処理停止
-        console.error('❌ Profile existence check error:', checkError)
+        logger.error('❌ Profile existence check error:', checkError)
         return
       }
       
       if (existingProfile) {
-        console.log('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
-        console.log('🔒 SECURITY: Profile belongs to authenticated user - proceeding with DELETE+INSERT')
+        logger.debug('⚠️ 既存プロフィール検出 - 安全な初期化を実行')
+        logger.debug('🔒 SECURITY: Profile belongs to authenticated user - proceeding with DELETE+INSERT')
         
         // 🧹 新規登録時: 全フィールドを確実にNULLクリア（「新しい紙に完全リセット」アプローチ）
-        console.log('🧹 NEW SIGNUP: Clearing ALL user data fields to NULL state')
+        logger.debug('🧹 NEW SIGNUP: Clearing ALL user data fields to NULL state')
         
         // 確実に存在するフィールドのみをNULLに設定（段階的アプローチ）
         const { error: resetError } = await supabase
@@ -2358,8 +2307,8 @@ function ProfileEditContent() {
           .eq('user_id', user?.id)
         
         if (resetError) {
-          console.error('❌ Failed to reset profile to NULL state:', resetError)
-          console.error('🔍 Reset error details:', {
+          logger.error('❌ Failed to reset profile to NULL state:', resetError)
+          logger.error('🔍 Reset error details:', {
             message: resetError?.message,
             details: resetError?.details,
             hint: resetError?.hint,
@@ -2368,8 +2317,8 @@ function ProfileEditContent() {
           return
         }
         
-        console.log('✅ PROFILE COMPLETELY RESET: All user data cleared to NULL')
-        console.log('🧹 Profile reset completed:', {
+        logger.debug('✅ PROFILE COMPLETELY RESET: All user data cleared to NULL')
+        logger.debug('🧹 Profile reset completed:', {
           method: 'SAFE_NULL_UPDATE',
           clearedFields: ['name', 'bio', 'interests', 'avatar_url'],
           note: 'Only existing columns updated to prevent schema errors',
@@ -2378,7 +2327,7 @@ function ProfileEditContent() {
           success: true
         })
       } else {
-        console.log('ℹ️ 新規プロフィール - 初期化不要')
+        logger.debug('ℹ️ 新規プロフィール - 初期化不要')
       }
       
       // フォームを完全に初期化（URLパラメータから基本情報のみ設定）
@@ -2411,24 +2360,24 @@ function ProfileEditContent() {
         setSelectedPersonality([])
         setSelectedPlannedPrefectures([])
         setProfileImages(prev => {
-          console.log('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          logger.debug('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
           return []
         })
 
         // 新規ユーザーの場合のみ編集履歴をクリア
         sessionStorage.removeItem(`imageEditHistory_${user?.id || 'testmode'}`)
-        console.log('🔄 新規ユーザー: 画像編集履歴をクリア')
+        logger.debug('🔄 新規ユーザー: 画像編集履歴をクリア')
         
-        console.log('✅ セキュアな新規登録状態でフォーム初期化完了')
+        logger.debug('✅ セキュアな新規登録状態でフォーム初期化完了')
         
         // 完成度を再計算（フォームsetValue完了後に実行）
         setTimeout(() => {
           // フォームの実際の値を取得して計算
           const actualFormValues = getValues()
-          console.log('🚀 Initial completion calculation with actual form values:', actualFormValues)
+          logger.debug('🚀 Initial completion calculation with actual form values:', actualFormValues)
           // 新規ユーザー判定
           const urlParamsLocal = new URLSearchParams(window.location.search)
-          console.log('🔍 Form nationality vs URL nationality:', {
+          logger.debug('🔍 Form nationality vs URL nationality:', {
             form_nationality: actualFormValues.nationality,
             url_nationality: urlParamsLocal.get('nationality'),
             should_match: true
@@ -2436,7 +2385,7 @@ function ProfileEditContent() {
           const isFromSignupTimeout = urlParamsLocal.get('from') === 'signup'
           
           // 🚨 CRITICAL DEBUG: Edit screen completion calculation debug 
-          console.log('📝 EDIT SCREEN COMPLETION CALCULATION:', {
+          logger.debug('📝 EDIT SCREEN COMPLETION CALCULATION:', {
             input_actualFormValues_personality: actualFormValues?.personality,
             input_selectedPersonality: selectedPersonality,
             input_formValues_type: typeof actualFormValues?.personality,
@@ -2448,7 +2397,7 @@ function ProfileEditContent() {
           })
           
           // 🚨 CRITICAL: 編集画面でもbuildProfileForCompletion使用（データソース統一）
-          console.log('📝 EDIT: actualFormValues personality check:', {
+          logger.debug('📝 EDIT: actualFormValues personality check:', {
             personality: actualFormValues?.personality,
             selectedPersonality: selectedPersonality,
             dbProfile_available: !!dbProfile,
@@ -2472,7 +2421,7 @@ function ProfileEditContent() {
             isFromSignupTimeout // 新規ユーザーフラグとして使用
           )
           
-          console.log('📝 EDIT SCREEN: 🌟 統一フロー完了:', {
+          logger.debug('📝 EDIT SCREEN: 🌟 統一フロー完了:', {
             input_hobbies: formValuesForEditCompletion.hobbies,
             input_personality: formValuesForEditCompletion.personality,
             completion_percentage: result.completion,
@@ -2484,12 +2433,12 @@ function ProfileEditContent() {
           
           // 🚨 33%問題調査：完成済み必須項目の詳細
           if (result.requiredFieldStatus) {
-            console.log('🚨 33% ISSUE DEBUG - COMPLETED REQUIRED FIELDS:', 
+            logger.debug('🚨 33% ISSUE DEBUG - COMPLETED REQUIRED FIELDS:', 
               Object.entries(result.requiredFieldStatus)
                 .filter(([_, completed]) => completed)
                 .map(([field]) => field)
             )
-            console.log('🚨 33% ISSUE DEBUG - ALL REQUIRED FIELD STATUS:', result.requiredFieldStatus)
+            logger.debug('🚨 33% ISSUE DEBUG - ALL REQUIRED FIELD STATUS:', result.requiredFieldStatus)
           }
           
           setProfileCompletion(result.completion)
@@ -2499,27 +2448,27 @@ function ProfileEditContent() {
       }
       
     } catch (error) {
-      console.error('❌ Secure profile initialization error:', error)
+      logger.error('❌ Secure profile initialization error:', error)
     }
   }
 
   // 強制初期化 - 複数のトリガーで確実に実行
   useEffect(() => {
-    console.log('🔍 Page load check - user:', user?.id)
+    logger.debug('🔍 Page load check - user:', user?.id)
     
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const hasType = urlParams.get('type')
       const hasNickname = urlParams.get('nickname')
       
-      console.log('🌐 Current URL:', window.location.href)
-      console.log('🔑 Type parameter:', hasType)
-      console.log('👤 Nickname parameter:', hasNickname)
+      logger.debug('🌐 Current URL:', window.location.href)
+      logger.debug('🔑 Type parameter:', hasType)
+      logger.debug('👤 Nickname parameter:', hasNickname)
       
       // MyPageからの遷移をチェック
       const isFromMyPageParam = urlParams.get('fromMyPage') === 'true'
       
-      console.log('🔍 URL PARAMETER ANALYSIS:', {
+      logger.debug('🔍 URL PARAMETER ANALYSIS:', {
         'fromMyPage param': urlParams.get('fromMyPage'),
         'isFromMyPageParam': isFromMyPageParam,
         'hasType': hasType,
@@ -2529,7 +2478,7 @@ function ProfileEditContent() {
       
       // 新規登録フロー判定：typeとnicknameのパラメータがあり、かつMyPageからの遷移でない場合のみ新規登録
       const isSignupFlow = hasType && hasNickname && !isFromMyPageParam
-      console.log('🚨 新規登録フロー判定:', { 
+      logger.debug('🚨 新規登録フロー判定:', { 
         hasType, 
         hasNickname, 
         isFromMyPageParam,
@@ -2538,18 +2487,18 @@ function ProfileEditContent() {
       
       // 🚨 新規登録フロー検出時のみ既存データを完全クリア（MyPageからの遷移は除外）
       const enableProfileDeletion = false  // 🛡️ 安全のため完全無効化
-      console.log('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
+      logger.debug('⚠️ プロフィール削除機能:', enableProfileDeletion ? '有効' : '無効')
       
       if (enableProfileDeletion) {
-        console.log('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
+        logger.debug('🚨 真の新規登録フロー検出！セキュアなプロフィール初期化開始')
         if (user) {
           secureProfileInitialization()
         } else {
-          console.log('⏳ ユーザー認証待ち...')
+          logger.debug('⏳ ユーザー認証待ち...')
           // ユーザー認証を待つ間隔実行
           const checkUser = setInterval(() => {
             if (user) {
-              console.log('👤 認証完了 - 遅延セキュア初期化実行')
+              logger.debug('👤 認証完了 - 遅延セキュア初期化実行')
               secureProfileInitialization()
               clearInterval(checkUser)
             }
@@ -2559,7 +2508,7 @@ function ProfileEditContent() {
           setTimeout(() => clearInterval(checkUser), 5000)
         }
       } else if (isFromMyPageParam) {
-        console.log('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
+        logger.debug('✅ MyPageからの安全な遷移検出 - データ削除をスキップ')
       }
     }
   }, [user])
@@ -2568,7 +2517,7 @@ function ProfileEditContent() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.action === 'updateProfile') {
-        console.log('🎯 Received update profile message from preview window')
+        logger.debug('🎯 Received update profile message from preview window')
         executeProfileUpdate()
       }
     }
@@ -2583,7 +2532,7 @@ function ProfileEditContent() {
         
         // 5秒以内のリクエストのみ有効とする
         if (currentTime - updateTime < 5000) {
-          console.log('🎯 Detected profile update request from localStorage')
+          logger.debug('🎯 Detected profile update request from localStorage')
           localStorage.removeItem('updateProfile')
           localStorage.removeItem('updateProfileTimestamp')
           executeProfileUpdate()
@@ -2592,22 +2541,22 @@ function ProfileEditContent() {
     }
 
     const executeProfileUpdate = () => {
-      console.log('🎯 executeProfileUpdate called - checking localStorage data')
+      logger.debug('🎯 executeProfileUpdate called - checking localStorage data')
       
       // プレビューからのlocalStorageデータを確認
       const previewOptionalData = localStorage.getItem('previewOptionalData')
       const previewExtendedInterests = localStorage.getItem('previewExtendedInterests')
       
-      console.log('🔍 localStorage previewOptionalData:', previewOptionalData)
-      console.log('🔍 localStorage previewExtendedInterests:', previewExtendedInterests)
+      logger.debug('🔍 localStorage previewOptionalData:', previewOptionalData)
+      logger.debug('🔍 localStorage previewExtendedInterests:', previewExtendedInterests)
       
       if (previewOptionalData) {
         try {
           const parsedData = JSON.parse(previewOptionalData)
-          console.log('🚨 occupation:', parsedData.occupation)
-          console.log('🚨 height:', parsedData.height)
-          console.log('🚨 body_type:', parsedData.body_type)
-          console.log('🚨 marital_status:', parsedData.marital_status)
+          logger.debug('🚨 occupation:', parsedData.occupation)
+          logger.debug('🚨 height:', parsedData.height)
+          logger.debug('🚨 body_type:', parsedData.body_type)
+          logger.debug('🚨 marital_status:', parsedData.marital_status)
           
           // フォームの値を更新
           setValue('occupation', parsedData.occupation || 'none')
@@ -2615,7 +2564,7 @@ function ProfileEditContent() {
           setValue('body_type', parsedData.body_type || 'average')
           setValue('marital_status', parsedData.marital_status || 'single')
         } catch (error) {
-          console.error('❌ Error parsing localStorage data:', error)
+          logger.error('❌ Error parsing localStorage data:', error)
         }
       }
       
@@ -2623,7 +2572,7 @@ function ProfileEditContent() {
       setTimeout(() => {
         const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement
         if (submitButton) {
-          console.log('🎯 Clicking submit button after localStorage data processing')
+          logger.debug('🎯 Clicking submit button after localStorage data processing')
           submitButton.click()
         }
       }, 100)
@@ -2658,13 +2607,13 @@ function ProfileEditContent() {
   }, [user])
 
   const forceCompleteReset = async () => {
-    console.log('🛡️ forceCompleteReset は安全のため無効化されています')
+    logger.debug('🛡️ forceCompleteReset は安全のため無効化されています')
     return  // 🛡️ 安全のため処理を停止
     
     if (!user) return
     
     try {
-      console.log('🧹 全データクリア中...')
+      logger.debug('🧹 全データクリア中...')
       
       // より包括的なデータクリア
       const { error } = await supabase
@@ -2683,13 +2632,13 @@ function ProfileEditContent() {
         .eq('user_id', user?.id)
       
       if (error) {
-        console.error('❌ データクリアエラー:', error)
+        logger.error('❌ データクリアエラー:', error)
       } else {
-        console.log('✅ 完全初期化完了 - すべてのフィールドをクリア')
+        logger.debug('✅ 完全初期化完了 - すべてのフィールドをクリア')
         
         // フロントエンドの状態もクリア
         setProfileImages(prev => {
-          console.log('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
+          logger.debug('[FUNCTIONAL] リセット:', { prev_length: prev.length, new_length: 0 })
           return []
         })
         setSelectedHobbies([])
@@ -2713,7 +2662,7 @@ function ProfileEditContent() {
         setTimeout(() => window.location.reload(), 1500)
       }
     } catch (error) {
-      console.error('初期化処理エラー:', error)
+      logger.error('初期化処理エラー:', error)
     }
   }
 
@@ -2732,14 +2681,14 @@ function ProfileEditContent() {
 
   // Load current user data
   useEffect(() => {
-    console.log('🚀 useEffect開始 - ユーザー:', user?.id)
+    logger.debug('🚀 useEffect開始 - ユーザー:', user?.id)
     
     // 🚨 CRITICAL DEBUG: 包括的エラーハンドリング追加
     const initializeProfileEdit = async () => {
-      console.log('🟡 isInitializing -> true (init start)')
-      console.log('🔍 PROFILE EDIT INITIALIZATION START')
-      console.log('  - User:', user?.id)
-      console.log('  - Search params:', window.location.search)
+      logger.debug('🟡 isInitializing -> true (init start)')
+      logger.debug('🔍 PROFILE EDIT INITIALIZATION START')
+      logger.debug('  - User:', user?.id)
+      logger.debug('  - Search params:', window.location.search)
       
       try {
         
@@ -2747,13 +2696,13 @@ function ProfileEditContent() {
         const urlParams = new URLSearchParams(window.location.search)
         const isFromMyPage = urlParams.get('fromMyPage') === 'true'
         
-        console.log('  - isFromMyPage:', isFromMyPage)
+        logger.debug('  - isFromMyPage:', isFromMyPage)
         
         await loadUserData()
         
       } catch (error) {
-        console.error('🚨 CRITICAL: Profile Edit Initialization Error:', error)
-        console.error('Error details:', {
+        logger.error('🚨 CRITICAL: Profile Edit Initialization Error:', error)
+        logger.error('Error details:', {
           message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
           name: error instanceof Error ? error.name : typeof error,
@@ -2763,7 +2712,7 @@ function ProfileEditContent() {
         })
         // エラーが発生した場合もページを表示するため、デフォルト初期化を実行
         try {
-          console.log('🛡️ Fallback initialization starting...')
+          logger.debug('🛡️ Fallback initialization starting...')
           // 最小限の安全な初期化
           const isForeignMale = profileType === 'foreign-male'
           reset({
@@ -2772,7 +2721,7 @@ function ProfileEditContent() {
             english_level: 'none'
           })
         } catch (fallbackError) {
-          console.error('🚨 Even fallback initialization failed:', fallbackError)
+          logger.error('🚨 Even fallback initialization failed:', fallbackError)
         }
       }
     }
@@ -2784,21 +2733,21 @@ function ProfileEditContent() {
       
       // テストモードの場合は認証をスキップ
       if (isTestMode() && !user) {
-        console.log('🧪 テストモード検出 - 認証をスキップして初期化処理を実行')
+        logger.debug('🧪 テストモード検出 - 認証をスキップして初期化処理を実行')
         
         // マイページからの遷移の場合はlocalStorageからデータを読み込み
         
         let initialData
         if (isFromMyPage) {
-          console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
+          logger.debug('🔄 マイページからの遷移 - localStorageからデータを読み込み')
           
           // localStorageからデータを取得
           const savedProfile = localStorage.getItem('updateProfile') || localStorage.getItem('previewCompleteData')
           if (savedProfile) {
             try {
               const profileData = JSON.parse(savedProfile)
-              console.log('📦 localStorage from profile data:', profileData)
-              console.log('🔍 ProfileEdit - japanese_level check:', {
+              logger.debug('📦 localStorage from profile data:', profileData)
+              logger.debug('🔍 ProfileEdit - japanese_level check:', {
                 'profileData.japanese_level': profileData.japanese_level,
                 'profileData.english_level': profileData.english_level,
                 'typeof japanese_level': typeof profileData.japanese_level
@@ -2828,7 +2777,7 @@ function ProfileEditContent() {
                 english_level: profileData.english_level || 'none',
               }
             } catch (error) {
-              console.error('❌ localStorage解析エラー:', error)
+              logger.error('❌ localStorage解析エラー:', error)
               initialData = null
             }
           }
@@ -2836,7 +2785,7 @@ function ProfileEditContent() {
         
         // localStorageにデータがない場合はURLパラメータから取得
         if (!initialData) {
-          console.log('🌐 URLパラメータからデータを取得')
+          logger.debug('🌐 URLパラメータからデータを取得')
           initialData = {
             nickname: urlParams.get('nickname') || '',
             gender: (urlParams.get('gender') as 'male' | 'female') || 'male',
@@ -2861,7 +2810,7 @@ function ProfileEditContent() {
           }
         }
         
-        console.log('🧪 テストモード - フォーム値設定:', initialData)
+        logger.debug('🧪 テストモード - フォーム値設定:', initialData)
         
         // フォームを初期化
         reset({
@@ -2892,23 +2841,23 @@ function ProfileEditContent() {
         setSelectedPlannedPrefectures(initialData.planned_prefectures)
         
         // 🔧 CRITICAL: テストモード分岐でも強制完成度計算を実行（0%再発防止）
-        console.log('✅ Form reset completed (test mode)')
-        console.log('🔥 FORCE CALC AFTER FORM RESET (test mode) - DELAYED')
+        logger.debug('✅ Form reset completed (test mode)')
+        logger.debug('🔥 FORCE CALC AFTER FORM RESET (test mode) - DELAYED')
         setTimeout(() => {
-          console.log('🎯 Executing delayed initial completion calculation (test mode)')
+          logger.debug('🎯 Executing delayed initial completion calculation (test mode)')
           forceInitialCompletionCalculation()
           setDidInitialCalc(true)
         }, 100)
         
         // 🚨 CRITICAL FIX: テストモード分岐でもisInitializing解除（リアルタイム更新復活）
-        console.log('🟢 isInitializing -> false (test mode end)')
+        logger.debug('🟢 isInitializing -> false (test mode end)')
         setIsInitializing(false)
         
         // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活）
-        console.log('🟢 initializingRef.current -> false (test mode end)')
+        logger.debug('🟢 initializingRef.current -> false (test mode end)')
         initializingRef.current = false
         
-        console.log('🌟 テストモード初期化完了 - リアルタイム計算解禁')
+        logger.debug('🌟 テストモード初期化完了 - リアルタイム計算解禁')
         setIsHydrated(true)
         
         // 画像設定は後の統合処理で行う
@@ -2923,16 +2872,16 @@ function ProfileEditContent() {
       
       // AuthGuardが認証確認中の場合は待機（ただし、fromMyPageの場合は待機しない）
       if (!user && !isFromMyPage) {
-        console.log('⏳ ユーザー認証確認中 - AuthGuardの処理完了を待機')
+        logger.debug('⏳ ユーザー認証確認中 - AuthGuardの処理完了を待機')
         return
       }
       
       // fromMyPageの場合でユーザーが存在しない場合は、localStorageのみで処理
       if (!user && isFromMyPage) {
-        console.log('🎯 fromMyPage=true + no user - using localStorage only')
+        logger.debug('🎯 fromMyPage=true + no user - using localStorage only')
         
         // localStorageからデータを読み込み
-        console.log('🔄 マイページからの遷移 - localStorageからデータを読み込み')
+        logger.debug('🔄 マイページからの遷移 - localStorageからデータを読み込み')
         
         // localStorage確認
         
@@ -2940,7 +2889,7 @@ function ProfileEditContent() {
         if (savedProfile) {
           try {
             const profileData = JSON.parse(savedProfile)
-            console.log('📦 localStorage profile data (no user):', profileData)
+            logger.debug('📦 localStorage profile data (no user):', profileData)
             
             const initialData = {
               nickname: profileData.name || profileData.nickname || '',
@@ -2966,8 +2915,8 @@ function ProfileEditContent() {
               english_level: profileData.english_level || 'none',
             }
             
-            console.log('🧪 fromMyPage initialData - フォーム値設定:', initialData)
-            console.log('🔍 [Profile Edit] japanese_level debug:', {
+            logger.debug('🧪 fromMyPage initialData - フォーム値設定:', initialData)
+            logger.debug('🔍 [Profile Edit] japanese_level debug:', {
               'raw profileData.japanese_level': profileData.japanese_level,
               'typeof raw': typeof profileData.japanese_level,
               'String() converted': String(profileData.japanese_level || 'none'),
@@ -3001,7 +2950,7 @@ function ProfileEditContent() {
               custom_culture: ''
             }
             
-            console.log('🚨 [CRITICAL] Form reset data:', {
+            logger.debug('🚨 [CRITICAL] Form reset data:', {
               'resetData.japanese_level': resetData.japanese_level,
               'initialData.japanese_level': initialData.japanese_level,
               'resetData === initialData': resetData.japanese_level === initialData.japanese_level
@@ -3011,7 +2960,7 @@ function ProfileEditContent() {
             
             // reset直後の確認
             setTimeout(() => {
-              console.log('🚨 [CRITICAL] Form after reset:', {
+              logger.debug('🚨 [CRITICAL] Form after reset:', {
                 'watch(japanese_level)': watch('japanese_level'),
                 'getValues().japanese_level': getValues().japanese_level,
                 'form is reset correctly': watch('japanese_level') === initialData.japanese_level
@@ -3027,7 +2976,7 @@ function ProfileEditContent() {
             try {
               let finalImages = []
               
-              console.log('🖼️ 画像復元開始 - DB photo_urls最優先モード:', {
+              logger.debug('🖼️ 画像復元開始 - DB photo_urls最優先モード:', {
                 'profileData.photo_urls': profileData.photo_urls,
                 'photo_urls_isArray': Array.isArray(profileData.photo_urls),
                 'photo_urls_length': profileData.photo_urls?.length || 0,
@@ -3036,8 +2985,8 @@ function ProfileEditContent() {
               
               // 🔥 STEP 1: DBのphoto_urlsを最優先で復元（指示書対応：厳密判定）
               if (Array.isArray(profileData.photo_urls) && profileData.photo_urls.length > 0 && profileData.photo_urls.some((url: any) => url && typeof url === 'string' && url.trim() !== '')) {
-                console.log('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
-                console.log('🧪 [指示書②] 一般初期化: photo_urls優先採用 ✅')
+                logger.debug('✅ DBのphoto_urlsから画像復元:', profileData.photo_urls.length, '枚')
+                logger.debug('🧪 [指示書②] 一般初期化: photo_urls優先採用 ✅')
                 finalImages = profileData.photo_urls
                   .filter((url: any) => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
                   .slice(0, 3)
@@ -3049,7 +2998,7 @@ function ProfileEditContent() {
                     isEdited: false
                   }))
                 
-                console.log('🖼️ photo_urls復元完了:', finalImages.map((img: any) => ({
+                logger.debug('🖼️ photo_urls復元完了:', finalImages.map((img: any) => ({
                   id: img.id,
                   isMain: img.isMain,
                   url_preview: img.url.substring(0, 50) + '...'
@@ -3057,8 +3006,8 @@ function ProfileEditContent() {
               }
               // 🔧 STEP 2: photo_urlsが本当に空の場合のみavatar_url使用（後方互換）
               else if (profileData.avatar_url && (!Array.isArray(profileData.photo_urls) || profileData.photo_urls.length === 0)) {
-                console.log('📋 photo_urls本当に空 - avatar_urlから1枚復元（後方互換）')
-                console.log('🧪 [指示書②] 一般初期化: avatar_urlフォールバック採用')
+                logger.debug('📋 photo_urls本当に空 - avatar_urlから1枚復元（後方互換）')
+                logger.debug('🧪 [指示書②] 一般初期化: avatar_urlフォールバック採用')
                 finalImages = [{
                   id: 'main',
                   url: profileData.avatar_url,
@@ -3074,40 +3023,40 @@ function ProfileEditContent() {
                   try {
                     const images = JSON.parse(savedImages)
                     if (images && images.length > 0) {
-                      console.log('📦 DBに画像なし - localStorage画像を補助的に使用')
+                      logger.debug('📦 DBに画像なし - localStorage画像を補助的に使用')
                       finalImages = images
                     }
                   } catch (e) {
-                    console.warn('localStorage画像データ解析失敗:', e)
+                    logger.warn('localStorage画像データ解析失敗:', e)
                   }
                 }
                 
                 if (finalImages.length === 0) {
-                  console.log('📭 画像データなし - 空の状態で開始')
+                  logger.debug('📭 画像データなし - 空の状態で開始')
                 }
               }
               
               if (finalImages.length > 0) {
                 setProfileImages(prev => {
-                  console.log('[FUNCTIONAL] DB復元:', { prev_length: prev.length, final_length: finalImages.length })
+                  logger.debug('[FUNCTIONAL] DB復元:', { prev_length: prev.length, final_length: finalImages.length })
                   return finalImages
                 })
                 profileImagesRef.current = finalImages
-                console.log('🔧 初期化時profileImagesRef更新:', { finalImages_length: finalImages.length })
+                logger.debug('🔧 初期化時profileImagesRef更新:', { finalImages_length: finalImages.length })
               }
               
             } catch (error) {
-              console.error('❌ 画像データ復元エラー (no user):', error)
+              logger.error('❌ 画像データ復元エラー (no user):', error)
             }
             
             // 🔧 CRITICAL: fromMyPage (user && isFromMyPage) でも強制完成度計算を実行（0%再発防止）
-            console.log('✅ Form reset completed (fromMyPage with user)')
-            console.log('🔥 FORCE CALC AFTER FORM RESET (fromMyPage)')
+            logger.debug('✅ Form reset completed (fromMyPage with user)')
+            logger.debug('🔥 FORCE CALC AFTER FORM RESET (fromMyPage)')
             
             // 少し遅延させてフォームresetの完了を確実にする
             setTimeout(() => {
               try {
-                console.error('🕵️ FROMMYPAGE_INVESTIGATION: About to force calc', {
+                logger.error('🕵️ FROMMYPAGE_INVESTIGATION: About to force calc', {
                   timestamp: new Date().toISOString(),
                   operation: 'FROMMYPAGE_FORCE_CALC',
                   initialData: {
@@ -3120,31 +3069,31 @@ function ProfileEditContent() {
                 })
                 
                 setTimeout(() => {
-                  console.log('🎯 Executing delayed initial completion calculation (fromMyPage)')
+                  logger.debug('🎯 Executing delayed initial completion calculation (fromMyPage)')
                   forceInitialCompletionCalculation()
                   setDidInitialCalc(true)
                 }, 100)
                 
                 // 🚨 CRITICAL FIX: fromMyPageでもisInitializing解除（リアルタイム更新復活）
-                console.log('🟢 isInitializing -> false (fromMyPage end)')
+                logger.debug('🟢 isInitializing -> false (fromMyPage end)')
                 setIsInitializing(false)
                 
                 // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活）
-                console.log('🟢 initializingRef.current -> false (fromMyPage end)')
+                logger.debug('🟢 initializingRef.current -> false (fromMyPage end)')
                 initializingRef.current = false
                 
-                console.log('🌟 fromMyPage初期化完了 - リアルタイム計算解禁')
+                logger.debug('🌟 fromMyPage初期化完了 - リアルタイム計算解禁')
                 setIsHydrated(true)
               } catch (calcError) {
-                console.error('🚨 ERROR in fromMyPage force calc:', calcError)
+                logger.error('🚨 ERROR in fromMyPage force calc:', calcError)
               }
             }, 150)
             
           } catch (error) {
-            console.error('❌ localStorage解析エラー (no user):', error)
+            logger.error('❌ localStorage解析エラー (no user):', error)
           }
         } else {
-          console.log('⚠️ localStorageにプロフィールデータが見つかりません - ユーザー認証待機')
+          logger.debug('⚠️ localStorageにプロフィールデータが見つかりません - ユーザー認証待機')
           // localStorageにデータがない場合（ログイン直後など）は
           // loading状態を維持したままreturn → user確定後にuseEffectが再実行されDB fetchへ進む
           return
@@ -3159,7 +3108,7 @@ function ProfileEditContent() {
         return
       }
       
-      console.log('✅ ユーザー確認完了 - プロフィール読み込み開始')
+      logger.debug('✅ ユーザー確認完了 - プロフィール読み込み開始')
 
       try {
         // 🔗 user_id ベースでプロフィール取得・作成を保証（遷移継続保証版）
@@ -3169,7 +3118,7 @@ function ProfileEditContent() {
 
         // 🔧 方針1: 403/406でも遷移を継続（DB失敗でも画面表示は可能）
         if (!ensureResult.success) {
-          console.warn('🚨 Profile ensure failed but continuing with UI initialization:', {
+          logger.warn('🚨 Profile ensure failed but continuing with UI initialization:', {
             reason: ensureResult.reason,
             canContinue: ensureResult.canContinue,
             userId: user?.id
@@ -3184,10 +3133,10 @@ function ProfileEditContent() {
           
           // DB失敗でも画面は表示 - 初期値でフォーム表示継続
           profile = null
-          console.log('🔥 DB失敗だが画面表示継続 - URLパラメータや初期値でフォーム初期化')
+          logger.debug('🔥 DB失敗だが画面表示継続 - URLパラメータや初期値でフォーム初期化')
         }
 
-        console.log('✅ Profile initialization result:', {
+        logger.debug('✅ Profile initialization result:', {
           profileExists: !!profile,
           profileId: profile?.id || 'none',
           userId: profile?.user_id || 'none',
@@ -3198,7 +3147,7 @@ function ProfileEditContent() {
 
         // 🚨 CRITICAL: DBプロフィールをstateに保存（buildProfileForCompletion用）
         setDbProfile(profile)
-        console.log('🔧 DB PROFILE SET:', {
+        logger.debug('🔧 DB PROFILE SET:', {
           profile_hobbies: profile?.hobbies,
           profile_personality: profile?.personality,
           profile_language_skills: profile?.language_skills
@@ -3208,7 +3157,7 @@ function ProfileEditContent() {
         {
           const idMatch = !profile || profile.user_id === user?.id
           if (process.env.NODE_ENV !== 'production' || !idMatch) {
-            console.log('🔒 SSOT_ID_CHECK', {
+            logger.debug('🔒 SSOT_ID_CHECK', {
               route: '/profile/edit',
               authUid: user?.id?.slice(0, 8),
               profileUserId: profile?.user_id?.slice(0, 8) || 'none',
@@ -3216,41 +3165,17 @@ function ProfileEditContent() {
             })
           }
           if (!idMatch) {
-            console.error('🚨 SSOT_ID_CHECK FAILED: Edit profile.user_id !== authUser.id — 混線検出')
+            logger.error('🚨 SSOT_ID_CHECK FAILED: Edit profile.user_id !== authUser.id — 混線検出')
           }
         }
 
-        console.log('========== PROFILE EDIT DEBUG START ==========')
-        console.log('Loaded profile data:', profile)
-        console.log('🔍 Critical fields debug (Edit Page):')
-        console.log('  - name:', profile?.name)
-        console.log('  - bio:', profile?.bio)
-        console.log('  - age:', profile?.age)
-        console.log('  - birth_date:', profile?.birth_date)
-        console.log('  - interests (raw):', profile?.interests)
-        console.log('  - height:', profile?.height)
-        console.log('  - occupation:', profile?.occupation)
-        console.log('  - body_type:', profile?.body_type)
-        console.log('  - marital_status:', profile?.marital_status)
-        
-        console.log('🔍 DETAILED FIELD VALUES FOR MYPAGE COMPARISON:')
-        console.log('Birth date related fields:', {
-          birth_date: profile?.birth_date,
-          date_of_birth: profile?.date_of_birth,
-          birthday: profile?.birthday,
-          dob: profile?.dob,
-          age: profile?.age
-        })
-        console.log('All occupation related fields:', {
+        logger.debug('[PROFILE_LOAD]', {
+          name: !!profile?.name,
+          age: profile?.age,
+          birth_date: !!profile?.birth_date,
           occupation: profile?.occupation,
-          job: profile?.job,
-          work: profile?.work
-        })
-        console.log('All height related fields:', {
           height: profile?.height,
-          height_cm: profile?.height_cm
         })
-        console.log('========== PROFILE EDIT DEBUG END ==========')
 
         // 👤 URLにtypeパラメータがない場合、プロフィールから判定
         if (!profileType) {
@@ -3258,12 +3183,7 @@ function ProfileEditContent() {
             ? 'foreign-male'
             : 'japanese-female'
           setUserBasedType(detectedType)
-          console.log('🔍 Auto-detected profile type:', {
-            gender: profile?.gender,
-            nationality: profile?.nationality,
-            detectedType,
-            reasoning: profile?.gender === 'male' ? 'Male gender detected' : 'Female or no gender detected'
-          })
+          logger.debug('[PROFILE_LOAD] type auto-detected:', detectedType)
         }
 
         // 🔍 専用カラム優先でフィールド値を取得するヘルパー関数
@@ -3295,25 +3215,13 @@ function ProfileEditContent() {
           japanese_level: getFieldValue('japanese_level')
         }
         
-        console.log('🔍 DEDICATED COLUMN FIELD ANALYSIS:')
-        console.log('Profile dedicated columns:', {
-          occupation: profile?.occupation,
-          height: profile?.height,
-          body_type: profile?.body_type,
-          marital_status: profile?.marital_status,
-          english_level: profile?.english_level,
-          japanese_level: profile?.japanese_level
-        })
-        console.log('📋 Merged optional data:', parsedOptionalData)
+        logger.debug('[PROFILE_LOAD] optional fields loaded')
         
         // マイページからの遷移かどうかを判定
         const urlParams = new URLSearchParams(window.location.search)
         const isFromMyPage = urlParams.get('fromMyPage') === 'true'
         
-        console.log('🔍 MyPage Transition Check:')
-        console.log('  - fromMyPage param:', isFromMyPage)
-        console.log('  - Current URL:', window.location.href)
-        console.log('  - Should skip signup data:', isFromMyPage)
+        logger.debug('[INIT] fromMyPage:', isFromMyPage)
         
         // マイページからの遷移の場合はURL パラメータからの初期化をスキップ
         let signupData = {}
@@ -3329,25 +3237,14 @@ function ProfileEditContent() {
           }
           
           // デバッグ用ログ
-          console.log('🔍 URL Parameters from signup:', {
-            nationality: urlParams.get('nationality'),
-            prefecture: urlParams.get('prefecture'),
-            isForeignMale: isForeignMale,
-            prefectureWillBeIgnored: isForeignMale && urlParams.get('prefecture'),
-            all_params: Object.fromEntries(urlParams.entries())
-          })
+          logger.debug('[INIT] signup params detected')
         }
         
         // プロフィールタイプに基づくデフォルト値（仮登録データを優先）
         const getDefaults = () => {
           // 🚨 FIX: DBのresidenceカラムを優先参照（都道府県復元）
           const prefectureValue = (signupData as any).prefecture || profile?.residence || profile?.prefecture || ''
-          console.log('🔍 prefecture初期化:', {
-            signupData_prefecture: (signupData as any).prefecture,
-            profile_residence: profile?.residence,
-            profile_prefecture: profile?.prefecture,
-            final: prefectureValue
-          })
+          logger.debug('[INIT] prefecture:', prefectureValue)
 
           const baseDefaults = {
             gender: (signupData as any).gender || profile?.gender || (isForeignMale ? 'male' : 'female'),
@@ -3357,12 +3254,7 @@ function ProfileEditContent() {
             age: (signupData as any).age ? parseInt((signupData as any).age) : profile?.age || 18,
           }
           
-          console.log('🏗️ getDefaults calculation:', {
-            signupData_nationality: (signupData as any).nationality,
-            profile_nationality: profile?.nationality,
-            isForeignMale,
-            final_nationality: baseDefaults.nationality
-          })
+          logger.debug('[INIT] defaults nationality:', baseDefaults.nationality)
           
           return baseDefaults
         }
@@ -3374,28 +3266,7 @@ function ProfileEditContent() {
         const hasSignupIdentifiers = urlParams.get('nickname') || urlParams.get('gender') || urlParams.get('birth_date')
         const isFromSignup = (hasSignupParams || hasSignupIdentifiers) && !isFromMyPage
         
-        console.log('=== Profile Edit Debug ===')
-        console.log('Current URL:', window.location.href)
-        console.log('Document referrer:', document.referrer)
-        console.log('Is from mypage:', isFromMyPage)
-        console.log('Has signup params:', hasSignupParams)
-        console.log('isFromSignup:', isFromSignup)
-        console.log('Signup data:', signupData)
-        console.log('isFromMyPage param:', isFromMyPage)
-        
-        console.log('🚨 DATA COMPARISON DEBUG - Profile Edit vs MyPage')
-        console.log('🔍 Raw profile data from DB (Profile Edit):')
-        console.log('  - name:', profile?.name)
-        console.log('  - bio:', profile?.bio) 
-        console.log('  - age:', profile?.age)
-        console.log('  - birth_date:', profile?.birth_date)
-        console.log('  - interests (raw):', profile?.interests)
-        console.log('  - height:', profile?.height)
-        console.log('  - occupation:', profile?.occupation)
-        console.log('  - marital_status:', profile?.marital_status)
-        console.log('  - body_type:', profile?.body_type)
-        
-        console.log('🔍 Parsed optional data (Profile Edit):', parsedOptionalData)
+        logger.debug('[INIT] flow:', { isFromMyPage, isFromSignup })
         
         // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
         // 🚨 危険なロジック修正: 茶道選択ユーザーを誤って新規ユーザー扱いしないよう修正
@@ -3403,47 +3274,18 @@ function ProfileEditContent() {
                           profile?.name === 'テスト'
         // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーを誤判定する危険
         
-        console.log('🚨 CRITICAL: New user determination logic:')
-        console.log('  - Original isTestData (with 茶道):', 
-                    profile?.bio?.includes('テスト用の自己紹介です') || 
-                    profile?.name === 'テスト' ||
-                    (profile?.interests?.length === 1 && profile?.interests[0] === '茶道'))
-        console.log('  - Safer isTestData (without 茶道):', isTestData)
-        console.log('  - Profile has bio:', !!profile?.bio)
-        console.log('  - Profile has interests:', !!profile?.interests)  
-        console.log('  - Profile has name:', !!profile?.name)
-        
         // 🔗 DB存在ベースでisNewUser判定（DB失敗や空プロフィールも考慮）
         const isNewUser = !profile || // DB失敗でprofileがnull
                          isFromSignup || // サインアップからの遷移
                          (!profile.name && !profile.bio && (!profile.interests || profile.interests.length === 0))
-        
-        console.log('🔍 New User Determination Debug:')
-        console.log('  - isFromMyPage:', isFromMyPage)
-        console.log('  - isTestData:', isTestData)
-        console.log('  - isFromSignup:', isFromSignup)
-        console.log('  - profile.bio exists:', !!profile?.bio)
-        console.log('  - profile.interests exists:', !!profile?.interests)
-        console.log('  - profile.name exists:', !!profile?.name)
-        console.log('  - FINAL isNewUser result:', isNewUser)
-        
-        // 🚨 33%問題調査：初期データ詳細ログ
-        console.log('🔍 INITIAL DATA FOR 33% ISSUE DEBUG:')
-        console.log('  - nickname:', profile?.name || profile?.first_name || '')
-        console.log('  - gender:', profile?.gender || 'male')
-        console.log('  - nationality:', profile?.nationality)
-        console.log('  - age:', profile?.age)
-        console.log('  - birth_date:', profile?.birth_date || profile?.date_of_birth)
-        console.log('  - planned_prefectures:', profile?.planned_prefectures)
-        console.log('  - hobbies/culture_tags:', profile?.hobbies || (profile as any)?.culture_tags)
-        console.log('  - personality:', profile?.personality || (profile as any)?.personality_tags)
-        console.log('  - language_skills:', profile?.language_skills)
+
+        logger.debug('[INIT] isNewUser:', isNewUser)
 
         // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
         // このブロックは現在無効化されています
         /*
         if (isFromSignup && user?.id) {
-          console.log('新規登録フロー検出 - プロフィールデータをクリア')
+          logger.debug('新規登録フロー検出 - プロフィールデータをクリア')
           await supabase
             .from('profiles')
             .update({
@@ -3465,7 +3307,7 @@ function ProfileEditContent() {
           
           if (cleanProfile) {
             profile = cleanProfile
-            console.log('プロフィールクリア完了:', profile)
+            logger.debug('プロフィールクリア完了:', profile)
           }
         }
         */
@@ -3476,24 +3318,10 @@ function ProfileEditContent() {
                           profile?.name === 'テスト'
         // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーデータを誤削除する危険
         
-        console.log('🚨 CRITICAL: Test data clear condition check:')
-        console.log('  - isTestData2:', isTestData2)
-        console.log('  - profile.name:', profile?.name)
-        console.log('  - isFromMyPage:', isFromMyPage)
-        console.log('  - Should clear data:', isTestData2 && user?.id)
-        console.log('  - 🛡️ SECURITY: Removed dangerous name-based condition')
-        
-        // 🚨 セキュリティ問題：MyPageからの遷移でもデータがクリアされる可能性
-        // MyPageからの遷移時はデータクリアを防ぐ
-        // 🔒 SECURITY FIX: 名前ベースの危険な条件を削除し、テストデータのみに限定
         const shouldClearData = isTestData2 && user?.id && !isFromMyPage
-        
-        console.log('🛡️ SECURITY FIX: Modified condition:')
-        console.log('  - shouldClearData (with MyPage protection):', shouldClearData)
-        
+
         if (shouldClearData) {
-          // 🛡️ セキュリティ強化: テストデータクリア時の追加検証
-          console.log('🔒 SECURITY: Applying additional verification for test data clear')
+          logger.debug('[INIT] test data clear')
           const { data: authUser } = await supabase.auth.getUser()
           
           await supabase
@@ -3532,7 +3360,7 @@ function ProfileEditContent() {
           
           // 1. personality_tagsカラムから性格データを取得（優先）+ NULL→[]正規化
           const rawPersonalityTags = (profile as any).personality_tags
-          console.log('🔍 PERSONALITY NULL→[]正規化チェック:', {
+          logger.debug('🔍 PERSONALITY NULL→[]正規化チェック:', {
             rawPersonalityTags,
             rawPersonalityTags_type: typeof rawPersonalityTags,
             rawPersonalityTags_isNull: rawPersonalityTags === null,
@@ -3579,7 +3407,7 @@ function ProfileEditContent() {
           }
         }
         
-        console.log('🔍 DATA EXTRACTION DEBUG:', {
+        logger.debug('🔍 DATA EXTRACTION DEBUG:', {
           'profile.personality (direct field)': profile?.personality,
           'profile.interests (array field)': profile?.interests, 
           'profile.custom_culture (direct field)': profile?.custom_culture,
@@ -3589,7 +3417,7 @@ function ProfileEditContent() {
           'isNewUser': isNewUser
         })
         
-        console.log('🔍 RAW DATABASE FIELDS CHECK:', {
+        logger.debug('🔍 RAW DATABASE FIELDS CHECK:', {
           'profile.interests type': typeof profile?.interests,
           'profile.interests isArray': Array.isArray(profile?.interests),
           'profile.interests content': profile?.interests,
@@ -3599,7 +3427,7 @@ function ProfileEditContent() {
         })
         
         // 状態更新は後でまとめて実行するため、ここでは実行しない
-        console.log('🔧 DATA EXTRACTED - WILL SET STATE LATER:', {
+        logger.debug('🔧 DATA EXTRACTED - WILL SET STATE LATER:', {
           'existingPersonality': existingPersonality,
           'existingHobbies': existingHobbies,
           'isNewUser': isNewUser
@@ -3611,36 +3439,25 @@ function ProfileEditContent() {
         if (isFromMyPage) {
           // MyPageからの遷移：既存の生年月日を必ず保持
           resetBirthDate = profile?.birth_date || profile?.date_of_birth || ''
-          console.log('🔄 MyPage遷移 - 既存birth_dateを保持:', resetBirthDate)
+          logger.debug('🔄 MyPage遷移 - 既存birth_dateを保持:', resetBirthDate)
         } else if (isNewUser) {
           // 新規ユーザー：signupデータまたは空
           resetBirthDate = defaults.birth_date || ''
-          console.log('🆕 新規ユーザー - signup birth_date使用:', resetBirthDate)
+          logger.debug('🆕 新規ユーザー - signup birth_date使用:', resetBirthDate)
         } else {
           // 既存ユーザー：既存データを使用
           resetBirthDate = profile?.birth_date || profile?.date_of_birth || defaults.birth_date || ''
-          console.log('👤 既存ユーザー - profile birth_date使用:', resetBirthDate)
+          logger.debug('👤 既存ユーザー - profile birth_date使用:', resetBirthDate)
         }
         
         // birth_dateが空でageが存在する場合のみ、年齢から生年を推定（推定値であることを明示）
         if (!resetBirthDate && profile?.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
           // MyPageからの遷移時は推定を行わず、ユーザーに実際の入力を促す
           resetBirthDate = ''
-          console.log(`⚠️ Birth date not found, age is ${profile?.age}. User should set actual birth_date.`)
+          logger.debug(`⚠️ Birth date not found, age is ${profile?.age}. User should set actual birth_date.`)
         }
         
-        console.log('🔍 Reset birth_date value:', {
-          isNewUser,
-          'defaults.birth_date': defaults.birth_date,
-          'profile.birth_date': profile?.birth_date,
-          'profile.date_of_birth': profile?.date_of_birth,
-          'profile.age': profile?.age,
-          resetBirthDate
-        })
-        
-        console.log('🔍 Form Reset Data Debug:')
-        console.log('  - nicknameValue:', nicknameValue)
-        console.log('  - resetBirthDate:', resetBirthDate)
+        logger.debug('[INIT] resetBirthDate:', resetBirthDate)
         // 🎯 A案修正: nationality正規化（都道府県名→適切な国名）
         const prefectureNames = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
         const rawNationality = defaults.nationality || profile?.nationality || ''
@@ -3648,25 +3465,7 @@ function ProfileEditContent() {
           ? (prefectureNames.includes(rawNationality) ? 'アメリカ' : (rawNationality || (isNewUser ? 'アメリカ' : '')))
           : 'japan'
         
-        console.log('  - 🌍 nationality calculation:', {
-          defaults_nationality: defaults.nationality,
-          profile_nationality: profile?.nationality,
-          rawNationality,
-          normalizedNationality,
-          isNewUser,
-          isForeignMale,
-          isPrefectureName: prefectureNames.includes(rawNationality),
-          final_nationality: normalizedNationality
-        })
-        console.log('  - parsedOptionalData.occupation:', parsedOptionalData.occupation)
-        console.log('  - parsedOptionalData.height:', parsedOptionalData.height)
-        console.log('  - parsedOptionalData.body_type:', parsedOptionalData.body_type)
-        console.log('  - parsedOptionalData.marital_status:', parsedOptionalData.marital_status)
-        console.log('  - parsedOptionalData.japanese_level:', parsedOptionalData.japanese_level)
-        console.log('  - parsedOptionalData.english_level:', parsedOptionalData.english_level)
-        console.log('  - existingHobbies:', existingHobbies)
-        console.log('  - existingPersonality:', existingPersonality)
-        console.log('  - existingCustomCulture:', existingCustomCulture)
+        logger.debug('[INIT] nationality:', normalizedNationality)
         
         const resetData = {
           nickname: nicknameValue,
@@ -3706,52 +3505,10 @@ function ProfileEditContent() {
           // ✅ 正解: resetDataには含めない（既存値を保護）
         }
         
-        console.log('🔍 CRITICAL: resetData language_skills check:', {
-          'profile.language_skills': profile?.language_skills,
-          'generated_from_legacy': generateLanguageSkillsFromLegacy(profile as any),
-          'resetData.language_skills': resetData.language_skills,
-          'resetData includes language_skills': 'language_skills' in resetData,
-          isNewUser
-        })
-        
-        console.log('🚨 Final Reset Data for Form:', resetData)
-        console.log('🔍 CRITICAL - Japanese Level in resetData:', {
-          'resetData.japanese_level': resetData.japanese_level,
-          'parsedOptionalData.japanese_level': parsedOptionalData.japanese_level,
-          'profile.japanese_level': profile?.japanese_level,
-          'isForeignMale': isForeignMale,
-          'isNewUser': isNewUser
-        })
-        
-        // フォームリセット前の詳細ログ
-        console.log('🔍 FORM RESET DETAILED ANALYSIS:')
-        console.log('About to reset form with following data:')
-        Object.keys(resetData).forEach(key => {
-          const value = (resetData as any)[key]
-          console.log(`  - ${key}: ${JSON.stringify(value)} (type: ${typeof value})`)
-        })
-        
-        // 🧪 INIT/RESET WRITE [visit_schedule & travel_companion]
-        if (resetData.visit_schedule !== undefined) {
-          console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
-            write: resetData.visit_schedule,
-            reason: 'main reset() call'
-          })
-        }
-        if (resetData.travel_companion !== undefined) {
-          console.log('🧪 INIT/RESET WRITE [travel_companion]', {
-            write: resetData.travel_companion,
-            reason: 'main reset() call'
-          })
-        }
-        
         reset(resetData)
-        console.log('✅ Form reset completed')
-        
-        // 🎯 A案修正: setValue完了後に初回完成度計算実行（prefecture→residence反映保証）
-        console.log('🔥 FORCE CALC AFTER FORM RESET - DELAYED FOR setValue COMPLETION')
+        logger.debug('[INIT] form reset completed')
+
         setTimeout(() => {
-          console.log('🎯 Executing delayed initial completion calculation')
           forceInitialCompletionCalculation()
           setDidInitialCalc(true)
         }, 100) // setValue完了を待つ
@@ -3767,35 +3524,25 @@ function ProfileEditContent() {
         if (isFromMyPage) {
           // MyPageからの遷移：既存の生年月日を必ず保持
           finalBirthDate = profile?.birth_date || profile?.date_of_birth || ''
-          console.log('🔄 setValue - MyPage遷移のbirth_date保持:', finalBirthDate)
+          logger.debug('🔄 setValue - MyPage遷移のbirth_date保持:', finalBirthDate)
         } else if (isNewUser) {
           // 新規ユーザー：signupデータまたは空
           finalBirthDate = defaults.birth_date || ''
-          console.log('🆕 setValue - 新規ユーザーbirth_date:', finalBirthDate)
+          logger.debug('🆕 setValue - 新規ユーザーbirth_date:', finalBirthDate)
         } else {
           // 既存ユーザー：既存データを使用
           finalBirthDate = profile?.birth_date || profile?.date_of_birth || defaults.birth_date || ''
-          console.log('👤 setValue - 既存ユーザーbirth_date:', finalBirthDate)
+          logger.debug('👤 setValue - 既存ユーザーbirth_date:', finalBirthDate)
         }
         
         // finalBirthDateが空でageが存在する場合のみ警告（推定値は設定しない）
         if (!finalBirthDate && profile?.age && typeof profile.age === 'number' && profile.age > 0 && profile.age < 120 && !isFromMyPage) {
           // 実際の生年月日がない場合は空文字のまま、ユーザーに入力を促す（MyPage遷移時は除く）
           finalBirthDate = ''
-          console.log(`⚠️ Birth date not found (setValue), age is ${profile?.age}. User should set actual birth_date.`)
+          logger.debug(`⚠️ Birth date not found (setValue), age is ${profile?.age}. User should set actual birth_date.`)
         }
         
-        console.log('🔍 Setting birth_date value:', {
-          isNewUser,
-          isFromMyPage,
-          'defaults.birth_date': defaults.birth_date,
-          'profile.birth_date': profile?.birth_date,
-          'profile.date_of_birth': profile?.date_of_birth,
-          'profile.age': profile?.age,
-          finalBirthDate
-        })
-        console.log('🔍 FORM FIELD SET VALUES DETAILED LOG:')
-        console.log('Setting birth_date:', finalBirthDate)
+        logger.debug('[INIT] setValue birth_date:', finalBirthDate)
         setValue('birth_date', finalBirthDate)
         
         // 国籍はresetDataで設定済み
@@ -3803,29 +3550,20 @@ function ProfileEditContent() {
         // 🚨 CRITICAL: foreign-maleではprefectureをセットしない（完成度計算混乱を避ける）
         if (!isForeignMale) {
           const prefectureValue = defaults.prefecture || (isNewUser ? '' : (profile?.residence || profile?.prefecture || ''));
-          console.log('Setting prefecture:', prefectureValue)
           setValue('prefecture', prefectureValue)
-        } else {
-          console.log('🚨 foreign-male用途: prefecture設定をスキップ')
         }
-        
+
         const ageValue = defaults.age || (isNewUser ? 18 : (profile?.age || 18))
-        console.log('Setting age:', ageValue)
         setValue('age', ageValue)
-        
+
         const hobbiesValue = isNewUser ? [] : existingHobbies
-        console.log('Setting hobbies:', hobbiesValue)
         setValue('hobbies', hobbiesValue)
-        
-        // 🎯 FIXED: 条件分岐でpersonalityデータが実際に存在する場合のみ設定
+
         const hasSavedPersonalityForForm = !isNewUser && Array.isArray(existingPersonality) && existingPersonality.length > 0
         const personalityValue: string[] = hasSavedPersonalityForForm ? existingPersonality : []
-        console.log('Setting personality:', personalityValue, 
-          hasSavedPersonalityForForm ? '(DBにpersonalityデータあり: 復元)' : '(DBにpersonalityデータなし: 空配列)')
         setValue('personality', personalityValue)
-        
+
         const customCultureValue = isNewUser ? '' : existingCustomCulture
-        console.log('Setting custom_culture:', customCultureValue)
         setValue('custom_culture', customCultureValue)
         
         // 外国人男性向けフィールドの設定
@@ -3834,75 +3572,36 @@ function ProfileEditContent() {
             // 新規ユーザーの場合は既存データを無視して空の状態で初期化
             const plannedPrefecturesValue = isNewUser ? [] :
               (Array.isArray(profile?.planned_prefectures) ? profile!.planned_prefectures : [])
-            console.log('Setting planned_prefectures:', plannedPrefecturesValue, 'isNewUser:', isNewUser)
             setValue('planned_prefectures', plannedPrefecturesValue, { shouldValidate: false })
             setSelectedPlannedPrefectures(plannedPrefecturesValue)
 
             const visitScheduleValue = isNewUser ? '' :
               (typeof profile?.visit_schedule === 'string' && profile.visit_schedule !== '' && profile.visit_schedule !== 'no-entry' && profile.visit_schedule !== 'forms.noEntry'
                 ? profile!.visit_schedule : '')
-            console.log('Setting visit_schedule:', visitScheduleValue, 'isNewUser:', isNewUser, 'DB value:', profile?.visit_schedule)
-            
-            // 🧪 INIT/RESET WRITE [visit_schedule]
-            console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
-              write: visitScheduleValue,
-              reason: 'profile initialization from DB'
-            })
             setValue('visit_schedule', visitScheduleValue, { shouldValidate: false })
 
             const travelCompanionValue = isNewUser ? 'undecided' :
               (typeof profile?.travel_companion === 'string' && profile.travel_companion !== '' && profile.travel_companion !== 'noEntry' && profile.travel_companion !== 'forms.noEntry'
                 ? profile!.travel_companion : 'undecided')
-            console.log('Setting travel_companion:', travelCompanionValue, 'isNewUser:', isNewUser, 'DB value:', profile?.travel_companion)
-            
-            // 🧪 INIT/RESET WRITE [travel_companion]
-            console.log('🧪 INIT/RESET WRITE [travel_companion]', {
-              write: travelCompanionValue,
-              reason: 'profile initialization from DB'
-            })
             setValue('travel_companion', travelCompanionValue, { shouldValidate: false })
 
+            logger.debug('[INIT] foreign-male fields set')
+
           } catch (error) {
-            console.error('🚨 外国人男性フィールド初期化エラー:', error)
+            logger.error('[INIT] foreign-male fields error', error)
             setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
-            // エラーが発生した場合はデフォルト値で初期化
             setValue('planned_prefectures', [], { shouldValidate: false })
-            
-            // 🧪 INIT/RESET WRITE [visit_schedule]
-            console.log('🧪 INIT/RESET WRITE [visit_schedule]', {
-              write: undefined,
-              reason: 'error fallback default'
-            })
             setValue('visit_schedule', undefined, { shouldValidate: false })
-            
-            // 🧪 INIT/RESET WRITE [travel_companion]
-            console.log('🧪 INIT/RESET WRITE [travel_companion]', {
-              write: 'undecided',
-              reason: 'error fallback default'
-            })
             setValue('travel_companion', 'undecided', { shouldValidate: false })
             setSelectedPlannedPrefectures([])
           }
         }
         
-        console.log('🔍 HOBBY/PERSONALITY INITIALIZATION DEBUG:')
-        console.log('  - existingHobbies:', existingHobbies)
-        console.log('  - existingPersonality:', existingPersonality)
-        console.log('  - isNewUser:', isNewUser)
-        
-        // 🎯 NEW: 条件分岐でpersonalityデータが実際に存在するかチェック
         const hasSavedPersonality = !isNewUser && Array.isArray(existingPersonality) && existingPersonality.length > 0
-        
+
         const finalHobbies = isNewUser ? [] : existingHobbies
         const finalPersonality: string[] = hasSavedPersonality ? existingPersonality : []
-        
-        console.log('🚨 FINAL STATE SETTING:')
-        console.log('  - hasSavedPersonality:', hasSavedPersonality)
-        console.log('  - setSelectedHobbies will be called with:', finalHobbies)
-        console.log('  - setSelectedPersonality will be called with:', finalPersonality, 
-          hasSavedPersonality ? '(DBにpersonalityデータあり: 復元)' : '(DBにpersonalityデータなし: 空配列)')
-        console.log('  - existingPersonality source:', existingPersonality)
-        console.log('  - isNewUser flag:', isNewUser)
+        logger.debug('[INIT] state:', { hobbies: finalHobbies.length, personality: finalPersonality.length })
         
         setSelectedHobbies(finalHobbies)
         setSelectedPersonality(finalPersonality)
@@ -3912,30 +3611,15 @@ function ProfileEditContent() {
         if (isNewUser) {
           // 新規ユーザー: 1行表示で開始
           initialLanguageSkills = [{ language: '', level: '' } as LanguageSkill]
-          console.log('🆕 New user: starting with one empty language skill row')
         } else {
-          // 既存ユーザー: Supabase language_skills → legacyフィールド の優先順位
           if (profile?.language_skills && Array.isArray(profile.language_skills) && profile.language_skills.length > 0) {
-            // 🚀 Supabase language_skillsが存在する場合は優先使用
             initialLanguageSkills = profile.language_skills
-            console.log('🔥 Using Supabase language_skills:', profile.language_skills)
           } else {
-            // フォールバック: 旧式カラムから生成、それも空なら1行表示
             const legacySkills = generateLanguageSkillsFromLegacy(profile as any) || []
             initialLanguageSkills = legacySkills.length > 0 ? legacySkills : [{ language: '', level: '' } as LanguageSkill]
-            console.log('🔄 Fallback to legacy fields or one empty row:', legacySkills.length > 0 ? legacySkills : 'one empty row')
           }
         }
-        
-        console.log('🔍 Language Skills 初期化:', {
-          isNewUser,
-          'profile.language_skills': profile?.language_skills || null,
-          'language_skills exists': profile?.language_skills ? 'YES' : 'NO',
-          'language_skills type': typeof profile?.language_skills,
-          'language_skills length': Array.isArray(profile?.language_skills) ? profile.language_skills.length : 'N/A',
-          'generated from legacy': isNewUser ? 'SKIPPED (new user)' : generateLanguageSkillsFromLegacy(profile as any),
-          'final initialLanguageSkills': initialLanguageSkills
-        })
+        logger.debug('[INIT] languageSkills:', initialLanguageSkills.length, 'items')
         
         setLanguageSkills(initialLanguageSkills)
         
@@ -3945,24 +3629,24 @@ function ProfileEditContent() {
           shouldValidate: false
         })
         
-        console.log('✅ STATE SETTING COMPLETED')
+        logger.debug('✅ STATE SETTING COMPLETED')
 
         // 🌐 言語設定の初期化
         const nationality = profile?.nationality || ((signupData as any)?.nationality)
         
         // 統一言語システムでは言語は自動管理されるため、ここでの設定は不要
-        console.log('🌐 Language managed by unified system')
-        console.log('🌐 Language initialization:', {
+        logger.debug('🌐 Language managed by unified system')
+        logger.debug('🌐 Language initialization:', {
           nationality,
           isJapaneseFemale,
           source: 'profile load'
         })
         
-        console.log('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
-        console.log('  - isNewUser:', isNewUser)
-        console.log('  - profile.avatar_url:', profile?.avatar_url)
-        console.log('  - profile.avatar_url exists:', !!profile?.avatar_url)
-        console.log('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile?.avatar_url)
+        logger.debug('🔍 PROFILE IMAGES INITIALIZATION CHECK:')
+        logger.debug('  - isNewUser:', isNewUser)
+        logger.debug('  - profile.avatar_url:', profile?.avatar_url)
+        logger.debug('  - profile.avatar_url exists:', !!profile?.avatar_url)
+        logger.debug('  - condition (!isNewUser && profile.avatar_url):', !isNewUser && profile?.avatar_url)
         
         // 🔒 セキュリティ強化: ユーザー固有のセッションストレージチェック
         // 🌸 TASK2: test modeでuser=undefinedの時に安全なキーを使用
@@ -3982,19 +3666,19 @@ function ProfileEditContent() {
             
             if (storageTimestamp && parseInt(storageTimestamp) > fiveMinutesAgo) {
               shouldUseStorageImages = true
-              console.log('💾 セッションストレージから最新の画像状態を使用:', storageImages.length, '枚')
+              logger.debug('💾 セッションストレージから最新の画像状態を使用:', storageImages.length, '枚')
             } else {
-              console.log('🕰️ セッションストレージの画像状態が古いため破棄')
+              logger.debug('🕰️ セッションストレージの画像状態が古いため破棄')
               sessionStorage.removeItem(userImageKey)
               sessionStorage.removeItem(userTimestampKey)
             }
           } catch (e) {
-            console.warn('❕ セッションストレージの画像データが破損')
+            logger.warn('❕ セッションストレージの画像データが破損')
             sessionStorage.removeItem(userImageKey)
             sessionStorage.removeItem(userTimestampKey)
           }
         } else if (isNewUser) {
-          console.log('🔒 新規ユーザー: セッションストレージの使用を禁止（セキュリティ保護）')
+          logger.debug('🔒 新規ユーザー: セッションストレージの使用を禁止（セキュリティ保護）')
           // 🌸 TASK5: 新規ユーザーの場合は全ユーザーのデータを完全削除
           const safeUserId = user?.id || 'testmode'
           sessionStorage.removeItem(`currentProfileImages_${safeUserId}`)
@@ -4012,17 +3696,17 @@ function ProfileEditContent() {
 
         // 🖼️ 指示書対応: photo_urls優先で画像を読み込み（1枚戻りバグ修正）
         if (isFromMyPage) {
-          console.log('🔄 fromMyPage: DBのphoto_urls最優先で画像復元')
+          logger.debug('🔄 fromMyPage: DBのphoto_urls最優先で画像復元')
           
           // 🧪 指示書要求: 必須チェックポイント①② - DBから取得直後の状態確認
-          console.log('🧪 [指示書①] profile.photo_urls:', profile?.photo_urls)
-          console.log('🧪 [指示書①] profile.avatar_url:', profile?.avatar_url)
-          console.log('🧪 [指示書②] 編集画面戻り時の判定開始')
+          logger.debug('🧪 [指示書①] profile.photo_urls:', profile?.photo_urls)
+          logger.debug('🧪 [指示書①] profile.avatar_url:', profile?.avatar_url)
+          logger.debug('🧪 [指示書②] 編集画面戻り時の判定開始')
           
           // 🔥 修正: photo_urls判定を厳密化（空配列でなく実際のデータ有無をチェック）
           if (Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0 && profile.photo_urls.some(url => url && typeof url === 'string' && url.trim() !== '')) {
-            console.log('✅ fromMyPage: DBのphoto_urlsから復元:', profile.photo_urls.length, '枚')
-            console.log('🧪 [指示書②] state初期化: photo_urls優先採用 ✅')
+            logger.debug('✅ fromMyPage: DBのphoto_urlsから復元:', profile.photo_urls.length, '枚')
+            logger.debug('🧪 [指示書②] state初期化: photo_urls優先採用 ✅')
             currentImageArray = profile.photo_urls
               .filter(url => url && typeof url === 'string' && url.trim() !== '') // 空文字除去
               .slice(0, 3)
@@ -4034,14 +3718,14 @@ function ProfileEditContent() {
                 isEdited: false
               }))
             setProfileImages(prev => {
-              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
               return currentImageArray
             })
           }
           // 🔧 フォールバック: photo_urlsが本当に空の場合のみavatar_urlから復元
           else if (profile?.avatar_url) {
-            console.log('📋 fromMyPage: photo_urls本当に空 - avatar_urlからフォールバック復元')
-            console.log('🧪 [指示書②] state初期化: avatar_urlフォールバック採用')
+            logger.debug('📋 fromMyPage: photo_urls本当に空 - avatar_urlからフォールバック復元')
+            logger.debug('🧪 [指示書②] state初期化: avatar_urlフォールバック採用')
             currentImageArray = [{
               id: 'main',
               url: profile.avatar_url,
@@ -4050,12 +3734,12 @@ function ProfileEditContent() {
               isEdited: false
             }]
             setProfileImages(prev => {
-              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
               return currentImageArray
             })
             
             // 🎯 TASK2: 自動write-back実行（photo_urls空をavatar_urlで修復）
-            console.log('🎯 [TASK2] 自動write-back開始: photo_urls空状態をavatar_urlで修復')
+            logger.debug('🎯 [TASK2] 自動write-back開始: photo_urls空状態をavatar_urlで修復')
             
             // 🎯 Step A&B: 条件厳密化 + 詳細エラーログ + 二度実行防止
             const writeBackKey = `writeBack_${user?.id}_completed`
@@ -4070,7 +3754,7 @@ function ProfileEditContent() {
                   const photoUrlsEmpty = Array.isArray(profile?.photo_urls) && profile.photo_urls.length === 0
                   const avatarUrlExists = profile?.avatar_url && typeof profile.avatar_url === 'string' && profile.avatar_url.trim().length > 0
                   
-                  console.log('🎯 [TASK2] write-back条件チェック:', {
+                  logger.debug('🎯 [TASK2] write-back条件チェック:', {
                     isFromMyPage: isFromMyPageCheck,
                     photoUrlsEmpty,
                     avatarUrlExists,
@@ -4080,7 +3764,7 @@ function ProfileEditContent() {
                   })
                   
                   if (!isFromMyPageCheck || !photoUrlsEmpty || !avatarUrlExists || !user?.id) {
-                    console.log('🎯 [TASK2] write-back条件不一致 - スキップ')
+                    logger.debug('🎯 [TASK2] write-back条件不一致 - スキップ')
                     return
                   }
                   
@@ -4092,7 +3776,7 @@ function ProfileEditContent() {
                     ? [avatarUrl].filter(Boolean).map(String) 
                     : []
                     
-                  console.log('🎯 [STEP 3] payload型安全化:', {
+                  logger.debug('🎯 [STEP 3] payload型安全化:', {
                     original_avatarUrl: avatarUrl,
                     safePhotoUrls,
                     safePhotoUrls_type: typeof safePhotoUrls,
@@ -4105,7 +3789,7 @@ function ProfileEditContent() {
                     photo_urls: safePhotoUrls // 確実にstring[]
                   }
                   
-                  console.log('🎯 [TASK2] write-backペイロード:', {
+                  logger.debug('🎯 [TASK2] write-backペイロード:', {
                     payload: writeBackPayload,
                     avatarUrl_type: typeof avatarUrl,
                     avatarUrl_length: avatarUrl.length
@@ -4120,7 +3804,7 @@ function ProfileEditContent() {
                     
                   if (writeBackError) {
                     // 🎯 Step 1: 400の正体を一回で確定するための完全ログ
-                    console.error('🚨 [TASK2] write-back failed - 400根因確定ログ:', {
+                    logger.error('🚨 [TASK2] write-back failed - 400根因確定ログ:', {
                       // Supabaseエラー詳細
                       message: writeBackError.message,
                       details: (writeBackError as any).details,
@@ -4159,8 +3843,8 @@ function ProfileEditContent() {
                     })
                     
                     // 🎯 Step 2-4: DB型確認と修正方針ガイド
-                    console.log('📋 [STEP 2] DB型確認SQL - Supabase SQL Editorで実行してください:')
-                    console.log(`
+                    logger.debug('📋 [STEP 2] DB型確認SQL - Supabase SQL Editorで実行してください:')
+                    logger.debug(`
                       SELECT column_name, data_type, udt_name
                       FROM information_schema.columns 
                       WHERE table_schema='public' 
@@ -4168,13 +3852,13 @@ function ProfileEditContent() {
                         AND column_name='photo_urls';
                     `)
                     
-                    console.log('📋 [STEP 3] 型別修正方針:')
-                    console.log('- udt_name="_text" (text[])の場合: payload = [avatarUrl] ← 推奨')
-                    console.log('- data_type="jsonb"の場合: payload = [avatarUrl]')  
-                    console.log('- data_type="text"の場合: DBをtext[]にマイグレーション推奨')
+                    logger.debug('📋 [STEP 3] 型別修正方針:')
+                    logger.debug('- udt_name="_text" (text[])の場合: payload = [avatarUrl] ← 推奨')
+                    logger.debug('- data_type="jsonb"の場合: payload = [avatarUrl]')  
+                    logger.debug('- data_type="text"の場合: DBをtext[]にマイグレーション推奨')
                     
-                    console.log('📋 [STEP 4] DB一括修復SQL（text[]の場合）:')
-                    console.log(`
+                    logger.debug('📋 [STEP 4] DB一括修復SQL（text[]の場合）:')
+                    logger.debug(`
                       UPDATE public.profiles 
                       SET photo_urls = array[avatar_url]
                       WHERE (photo_urls IS NULL OR cardinality(photo_urls)=0)
@@ -4185,7 +3869,7 @@ function ProfileEditContent() {
                       ALTER COLUMN photo_urls SET DEFAULT '{}';
                     `)
                   } else {
-                    console.log('✅ [TASK2] write-back success - 結果確認:', {
+                    logger.debug('✅ [TASK2] write-back success - 結果確認:', {
                       updated_data: data,
                       count: data?.length || 0,
                       photo_urls_after: data?.[0]?.photo_urls,
@@ -4196,7 +3880,7 @@ function ProfileEditContent() {
                     sessionStorage.setItem(writeBackKey, 'true')
                     
                     // 🎯 完了条件検証ログ
-                    console.log('✅ [TASK2 COMPLETION] 完了条件達成:', {
+                    logger.debug('✅ [TASK2 COMPLETION] 完了条件達成:', {
                       '1_write_back_success': true,
                       '2_photo_urls_populated': data?.[0]?.photo_urls?.length > 0,
                       '3_next_reload_no_restore_log': 'リロード後に「復元ログ」が消失することを確認',
@@ -4205,14 +3889,14 @@ function ProfileEditContent() {
                     })
                     
                     // 🎯 Step 5: 最終形ガイド（設計単純化）
-                    console.log('📋 [STEP 5] 最終形推奨設計:')
-                    console.log('1. 保存ボタンpayloadに常にphoto_urls含める')
-                    console.log('2. photo_urlsは常にstring[]')  
-                    console.log('3. avatar_urlは後方互換として残す（1枚目用）')
-                    console.log('4. write-backは保険に格下げ（DBバックフィル後は基本発火しない）')
+                    logger.debug('📋 [STEP 5] 最終形推奨設計:')
+                    logger.debug('1. 保存ボタンpayloadに常にphoto_urls含める')
+                    logger.debug('2. photo_urlsは常にstring[]')  
+                    logger.debug('3. avatar_urlは後方互換として残す（1枚目用）')
+                    logger.debug('4. write-backは保険に格下げ（DBバックフィル後は基本発火しない）')
                   }
                 } catch (error) {
-                  console.error('🚨 [TASK2] write-back処理エラー - 予期しないエラー:', {
+                  logger.error('🚨 [TASK2] write-back処理エラー - 予期しないエラー:', {
                     error,
                     error_type: typeof error,
                     error_message: error instanceof Error ? error.message : 'unknown',
@@ -4221,7 +3905,7 @@ function ProfileEditContent() {
                 }
               }, 1000) // 初期化完了後に実行
             } else {
-              console.log('🎯 [TASK2] write-back既完了 - スキップ')
+              logger.debug('🎯 [TASK2] write-back既完了 - スキップ')
             }
           }
           // 🔧 STEP 3: どちらも空の場合のみlocalStorageを確認
@@ -4231,13 +3915,13 @@ function ProfileEditContent() {
               if (savedImages) {
                 const parsedImages = JSON.parse(savedImages)
                 if (parsedImages && parsedImages.length > 0) {
-                  console.log('📦 fromMyPage: DBに画像なし - localStorage補助使用')
+                  logger.debug('📦 fromMyPage: DBに画像なし - localStorage補助使用')
                   currentImageArray = parsedImages
                   setProfileImages(parsedImages)
                 }
               }
             } catch (error) {
-              console.error('fromMyPage localStorage読み込みエラー:', error)
+              logger.error('fromMyPage localStorage読み込みエラー:', error)
             }
           }
         }
@@ -4245,21 +3929,21 @@ function ProfileEditContent() {
         // fromMyPageで画像が取得できなかった場合、または通常のフローの場合
         if (currentImageArray.length === 0) {
           if (shouldUseStorageImages) {
-            console.log('✅ セッションストレージから画像状態を復元:', storageImages)
+            logger.debug('✅ セッションストレージから画像状態を復元:', storageImages)
             currentImageArray = storageImages
             setProfileImages(storageImages)
             // 🔍 CRITICAL: MyPage→編集時のprofile_images missing修正（Task B）
             profileImagesRef.current = storageImages
-            console.log('🔧 TASK B FIX: sessionStorage画像復元でprofileImagesRef更新', {
+            logger.debug('🔧 TASK B FIX: sessionStorage画像復元でprofileImagesRef更新', {
               storageImages_length: storageImages.length,
               profileImagesRef_length: profileImagesRef.current.length
             })
           } else {
             // 🎯 SSOT統一: avatar_urlがある場合は必ずprofileImages配列に反映
             if (profile?.avatar_url && profile.avatar_url.trim() !== '') {
-              console.log('✅ プロフィール画像を設定（SSOT統一）:', profile!.avatar_url.substring(0, 50) + '...')
-              console.log('  - isBase64:', profile!.avatar_url.startsWith('data:image/'))
-              console.log('  - isNewUser:', isNewUser, ', avatar_urlを確実にprofileImagesに反映')
+              logger.debug('✅ プロフィール画像を設定（SSOT統一）:', profile!.avatar_url.substring(0, 50) + '...')
+              logger.debug('  - isBase64:', profile!.avatar_url.startsWith('data:image/'))
+              logger.debug('  - isNewUser:', isNewUser, ', avatar_urlを確実にprofileImagesに反映')
               
               currentImageArray = [{
                 id: '1',
@@ -4269,13 +3953,13 @@ function ProfileEditContent() {
                 isEdited: false
               }]
               setProfileImages(prev => {
-              console.log('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
+              logger.debug('[FUNCTIONAL] 画像復元:', { prev_length: prev.length, current_length: currentImageArray.length })
               return currentImageArray
             })
               // 🔍 CRITICAL: profileImagesRefも同期（SSOT統一）
               profileImagesRef.current = currentImageArray
               
-              console.log('🎯 SSOT統一: avatar_url→profileImages反映完了', {
+              logger.debug('🎯 SSOT統一: avatar_url→profileImages反映完了', {
                 currentImageArray_length: currentImageArray.length,
                 profileImagesRef_length: profileImagesRef.current.length,
                 avatar_url_exists: !!profile?.avatar_url,
@@ -4283,9 +3967,9 @@ function ProfileEditContent() {
                 ssot_fix: 'avatar_url確実反映でUI表示と完成度計算を統一'
               })
             } else {
-              console.log('❌ 画像なしで初期化（avatar_url無効）')
-              console.log('  - avatar_url存在:', !!profile?.avatar_url)
-              console.log('  - avatar_url値:', profile?.avatar_url)
+              logger.debug('❌ 画像なしで初期化（avatar_url無効）')
+              logger.debug('  - avatar_url存在:', !!profile?.avatar_url)
+              logger.debug('  - avatar_url値:', profile?.avatar_url)
               currentImageArray = []
             }
           }
@@ -4334,7 +4018,7 @@ function ProfileEditContent() {
           avatar_url: user?.avatarUrl || profile?.avatar_url, // userオブジェクトはavatarUrlのみ
         }
         // 🚨 CRITICAL: fromMyPage でもbuildProfileForCompletion使用（完全統一）
-        console.log('🔄 fromMyPage: 🌟 統一フロー初期化:', {
+        logger.debug('🔄 fromMyPage: 🌟 統一フロー初期化:', {
           profile_personality: profile?.personality,
           selectedPersonality: selectedPersonality,
           selectedHobbies: selectedHobbies,
@@ -4355,7 +4039,7 @@ function ProfileEditContent() {
 
         // 🛡️ CRITICAL: チラつき防止 - 初期化中は完成度計算をスキップ
         if (isInitializing) {
-          console.log('🛑 fromMyPage統一フロー: skipped because isInitializing=true', { isInitializing })
+          logger.debug('🛑 fromMyPage統一フロー: skipped because isInitializing=true', { isInitializing })
         } else {
           // 🌟 統一フロー: calculateCompletionFromForm使用（33%問題根本解決）
           const result = calculateCompletionFromForm(
@@ -4365,7 +4049,7 @@ function ProfileEditContent() {
             isNewUser
           )
         
-          console.log('🔄 fromMyPage: 🌟 統一フロー完了:', {
+          logger.debug('🔄 fromMyPage: 🌟 統一フロー完了:', {
             form_hobbies: formValuesForInitialCompletion.hobbies,
             form_personality: formValuesForInitialCompletion.personality,
             completion_percentage: result.completion,
@@ -4381,12 +4065,12 @@ function ProfileEditContent() {
         
         // 🗑️ REMOVED: fromMyPage専用completion再計算を削除
         // メインのwatch subscriptionとuseEffectロジックに統一
-        console.log('✅ Profile initialization completed - completion calculation handled by main logic')
+        logger.debug('✅ Profile initialization completed - completion calculation handled by main logic')
         
         // 🔧 FIX: 初期化完了後に一度だけcompletion計算を実行（33%問題解決）
         queueMicrotask(() => {
-          console.log('🔧 INITIALIZATION: Enabling watch-based completion calculation')
-          console.log('🟢 initializingRef.current -> false (normal init end)')
+          logger.debug('🔧 INITIALIZATION: Enabling watch-based completion calculation')
+          logger.debug('🟢 initializingRef.current -> false (normal init end)')
           initializingRef.current = false
           
           // 初期化完了直後に一度だけ正確なcompletion計算
@@ -4402,7 +4086,7 @@ function ProfileEditContent() {
             planned_prefectures: selectedPlannedPrefectures,
           }
 
-          console.log("🌟 初期化完了後: フォーム値のみで完成度計算", {
+          logger.debug("🌟 初期化完了後: フォーム値のみで完成度計算", {
             hobbies: formValuesForPostInit.hobbies,
             personality: formValuesForPostInit.personality,
             source: '初期化完了後一回限り計算時（SSOT）'
@@ -4410,7 +4094,7 @@ function ProfileEditContent() {
 
           // 🛡️ CRITICAL: チラつき防止 - 念のため初期化確認
           if (isInitializing) {
-            console.log('🛑 初期化完了後計算: skipped because isInitializing=true', { isInitializing })
+            logger.debug('🛑 初期化完了後計算: skipped because isInitializing=true', { isInitializing })
             return
           }
           
@@ -4422,7 +4106,7 @@ function ProfileEditContent() {
             false // 初期化完了後なので新規ユーザーフラグはfalse
           )
             
-          console.log('🔧 INITIAL: 🌟 統一フロー一回限り計算完了:', {
+          logger.debug('🔧 INITIAL: 🌟 統一フロー一回限り計算完了:', {
             completion_percentage: completionResult.completion,
             required_completed: completionResult.requiredCompleted,
             required_total: completionResult.requiredTotal,
@@ -4434,29 +4118,29 @@ function ProfileEditContent() {
           setTotalItems(completionResult.totalFields)
           
           // 🌟 CRITICAL: チラつき防止 - 初期化完了フラグを設定
-          console.log('✅ Profile initialization completed')
-          console.log('🟢 isInitializing -> false (normal init end)')
+          logger.debug('✅ Profile initialization completed')
+          logger.debug('🟢 isInitializing -> false (normal init end)')
           setIsInitializing(false)
           
           // 🌟 CRITICAL: 初期化完了フラグを設定（これより後はupdateCompletionUnified使用）
-          console.log('🌟 CRITICAL: 初期化完了 - isHydrated=true設定')
+          logger.debug('🌟 CRITICAL: 初期化完了 - isHydrated=true設定')
           setIsHydrated(true)
         })
 
       } catch (error) {
-        console.error('Error loading user data:', error)
+        logger.error('Error loading user data:', error)
         setError('ユーザー情報の読み込みに失敗しました')
       } finally {
         // 🚨 CRITICAL FIX: 例外が発生してもisInitializing確実解除（リアルタイム更新復活保証）
-        console.log('🟢 isInitializing -> false (finally block - guaranteed)')
+        logger.debug('🟢 isInitializing -> false (finally block - guaranteed)')
         setIsInitializing(false)
         
         // 🔧 CRITICAL FIX: initializingRef も確実に解除（watch復活保証）
-        console.log('🟢 initializingRef.current -> false (finally block - guaranteed)')
+        logger.debug('🟢 initializingRef.current -> false (finally block - guaranteed)')
         initializingRef.current = false
         
         // 🆕 CRITICAL FIX: エラー時でも確実にハイドレーション完了（29%固定問題解決）
-        console.log('🟢 isHydrated -> true (finally block - FORCE COMPLETE)')
+        logger.debug('🟢 isHydrated -> true (finally block - FORCE COMPLETE)')
         setIsHydrated(true)
         
         setUserLoading(false)
@@ -4469,9 +4153,9 @@ function ProfileEditContent() {
   // Form submission handler
   const onSubmit = async (data: ProfileEditFormData, event?: React.BaseSyntheticEvent) => {
     // 🟥 CRITICAL: 保存処理開始の絶対証明ログ（最上段）
-    console.log('🟥 SAVE CLICKED (ProfileEdit)')
+    logger.debug('🟥 SAVE CLICKED (ProfileEdit)')
     const saveClickedAt = new Date().toISOString()
-    console.log('🟥 SAVE TIMESTAMP:', saveClickedAt)
+    logger.debug('🟥 SAVE TIMESTAMP:', saveClickedAt)
     
     // 🔴 CRITICAL: デバッグパネル強制表示（保存ボタンクリック証明）
     setDebugPanel({
@@ -4487,15 +4171,15 @@ function ProfileEditContent() {
       saveClickedAt: saveClickedAt
     })
     
-    console.log('🚀 Form submission started')
-    console.log('📋 提出されたデータ:', data)
-    console.log('[Profile Submit] values.japanese_level:', data.japanese_level)
-    console.log('[Profile Submit] values.english_level:', data.english_level)
-    console.log('[Profile Submit] full values:', data)
-    console.log('📸 Current profile images:', profileImages)
+    logger.debug('🚀 Form submission started')
+    logger.debug('📋 提出されたデータ:', data)
+    logger.debug('[Profile Submit] values.japanese_level:', data.japanese_level)
+    logger.debug('[Profile Submit] values.english_level:', data.english_level)
+    logger.debug('[Profile Submit] full values:', data)
+    logger.debug('📸 Current profile images:', profileImages)
 
     if (!user) {
-      console.error('❌ No user found')
+      logger.error('❌ No user found')
       setError('ユーザー情報が見つかりません')
       return
     }
@@ -4509,7 +4193,7 @@ function ProfileEditContent() {
       const uploadedImageUrls: string[] = []
       
       // 🚨 [NETWORK CULPRIT DETECTION] アップロード処理の詳細分析開始
-      console.log('🖼️ 画像処理開始:', {
+      logger.debug('🖼️ 画像処理開始:', {
         profileImagesLength: profileImages.length,
         profileImages: profileImages.map((img, i) => ({
           index: i,
@@ -4526,7 +4210,7 @@ function ProfileEditContent() {
       const needsUploadImages = profileImages.filter(img =>
         img.url && (img.url.startsWith('blob:') || img.url.startsWith('data:image'))
       )
-      console.log('🚨 [NETWORK CULPRIT] アップロード対象画像数:', {
+      logger.debug('🚨 [NETWORK CULPRIT] アップロード対象画像数:', {
         total_images: profileImages.length,
         new_upload_required: needsUploadImages.length,
         blob_count: profileImages.filter(img => img.url?.startsWith('blob:')).length,
@@ -4545,7 +4229,7 @@ function ProfileEditContent() {
             // 🚨 [NETWORK CULPRIT] リクエスト番号を記録
             actualStorageRequests++
             const isBase64 = image.url.startsWith('data:image')
-            console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} START:`, {
+            logger.debug(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} START:`, {
               image_id: image.id,
               request_number: actualStorageRequests,
               total_expected: needsUploadImages.length,
@@ -4553,7 +4237,7 @@ function ProfileEditContent() {
               url_preview: image.url.substring(0, 50) + '...'
             })
 
-            console.log('📤 新規画像アップロード開始:', image.id, isBase64 ? '(base64)' : '(blob)')
+            logger.debug('📤 新規画像アップロード開始:', image.id, isBase64 ? '(base64)' : '(blob)')
             // 🔧 FIX: Blob URL と Base64 Data URL の両方を処理
             // fetch() は data: URL も blob: URL も処理可能
             const response = await fetch(image.url)
@@ -4565,7 +4249,7 @@ function ProfileEditContent() {
             const random = Math.random().toString(36).substr(2, 9)
             const fileName = `${user.id}/photo_${timestamp}_${random}.${fileExtension}`
             
-            console.log('🚨 [STORAGE OVERWRITE CHECK] ProfileEdit独自アップロード:', {
+            logger.debug('🚨 [STORAGE OVERWRITE CHECK] ProfileEdit独自アップロード:', {
               old_pattern: `profile_${user.id}_${timestamp}_${random}.${fileExtension}`,
               new_pattern: `${user.id}/photo_${timestamp}_${random}.${fileExtension}`,
               generated_path: fileName,
@@ -4574,10 +4258,10 @@ function ProfileEditContent() {
               note: 'ensureAvatarStored.ts と統一パターンに変更'
             })
             
-            console.log('📤 アップロード詳細:', fileName, blob.type, blob.size)
+            logger.debug('📤 アップロード詳細:', fileName, blob.type, blob.size)
             
             // 🚨 [POSSIBILITY D] Storageバケット権限チェック（アップロード前）
-            console.log('🚨 [POSSIBILITY D] Storage权限确认:', {
+            logger.debug('🚨 [POSSIBILITY D] Storage权限确认:', {
               bucket: 'avatars',
               user_id: user.id,
               filename: fileName,
@@ -4596,7 +4280,7 @@ function ProfileEditContent() {
               
             // 🚨 [POSSIBILITY D] アップロードエラー詳細分析
             if (uploadError) {
-              console.error('🚨 [POSSIBILITY D] Storage upload FAILED:', {
+              logger.error('🚨 [POSSIBILITY D] Storage upload FAILED:', {
                 error_message: uploadError.message,
                 error_details: uploadError,
                 bucket: 'avatars',
@@ -4613,7 +4297,7 @@ function ProfileEditContent() {
             }
 
             if (uploadError) {
-              console.error('❌ アップロードエラー:', uploadError)
+              logger.error('❌ アップロードエラー:', uploadError)
               throw uploadError
             }
 
@@ -4623,7 +4307,7 @@ function ProfileEditContent() {
               .getPublicUrl(uploadData.path)
 
             uploadedImageUrls.push(publicUrl)
-            console.log(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} SUCCESS:`, publicUrl)
+            logger.debug(`🚨 [NETWORK CULPRIT] Storage Request #${actualStorageRequests} SUCCESS:`, publicUrl)
             
             // 🚨 ✅ 指示書対応: アップロード成功後にprofileImages状態を即座に更新
             const targetIndex = profileImages.findIndex(img => img.id === image.id)
@@ -4637,10 +4321,10 @@ function ProfileEditContent() {
                 }
                 return next
               })
-              console.log(`🚨 [UPLOAD STATE] profileImages[${targetIndex}] updated with storage URL:`, publicUrl.substring(0, 50) + '...')
+              logger.debug(`🚨 [UPLOAD STATE] profileImages[${targetIndex}] updated with storage URL:`, publicUrl.substring(0, 50) + '...')
             }
           } catch (uploadError) {
-            console.error('❌ 個別画像のアップロードエラー:', uploadError)
+            logger.error('❌ 個別画像のアップロードエラー:', uploadError)
             throw uploadError
           }
         } else {
@@ -4652,12 +4336,12 @@ function ProfileEditContent() {
             !existingUrl.startsWith('data:image')
           if (isValidStorageUrl) {
             uploadedImageUrls.push(existingUrl)
-            console.log('✅ 既存Storage URL追加:', {
+            logger.debug('✅ 既存Storage URL追加:', {
               imageId: image.id,
               url: existingUrl.substring(0, 60) + '...'
             })
           } else {
-            console.warn('⚠️ 無効な画像URL（アップロードが必要だがスキップされた可能性）:', {
+            logger.warn('⚠️ 無効な画像URL（アップロードが必要だがスキップされた可能性）:', {
               imageId: image.id,
               url: existingUrl?.substring(0, 60) + '...',
               isBlob: existingUrl?.startsWith('blob:') || false,
@@ -4668,7 +4352,7 @@ function ProfileEditContent() {
       }
 
       // 🚨 [NETWORK CULPRIT] 最終リクエスト数検証
-      console.log('🚨 [NETWORK CULPRIT] アップロード完了 - リクエスト数検証:', {
+      logger.debug('🚨 [NETWORK CULPRIT] アップロード完了 - リクエスト数検証:', {
         expected_requests: needsUploadImages.length,
         actual_requests: actualStorageRequests,
         match: needsUploadImages.length === actualStorageRequests,
@@ -4676,7 +4360,7 @@ function ProfileEditContent() {
         network_analysis_note: 'DevToolsのNetwork tab でstorage/v1/object POSTを確認してください'
       })
       
-      console.log('🖼️ 画像処理完了:', {
+      logger.debug('🖼️ 画像処理完了:', {
         uploadedImageUrls: uploadedImageUrls.length,
         urls: uploadedImageUrls.map(url => url.substring(0, 60) + '...')
       })
@@ -4687,20 +4371,20 @@ function ProfileEditContent() {
         ? uploadedImageUrls[mainImageIndex] 
         : uploadedImageUrls[0] || null
 
-      console.log('🎯 Raw avatar URL (before Base64→Storage conversion):', rawAvatarUrl)
-      console.log('📸 All uploaded URLs:', uploadedImageUrls)
-      console.log('🔍 Profile images state:', profileImages)
+      logger.debug('🎯 Raw avatar URL (before Base64→Storage conversion):', rawAvatarUrl)
+      logger.debug('📸 All uploaded URLs:', uploadedImageUrls)
+      logger.debug('🔍 Profile images state:', profileImages)
 
       // 🔥 NEW: Base64→Storage変換処理（保存時のみ）
       let avatarUrl = rawAvatarUrl
       let conversionResult = null
 
       if (rawAvatarUrl) {
-        console.log('🚨 Checking for Base64→Storage conversion need...')
+        logger.debug('🚨 Checking for Base64→Storage conversion need...')
         
         // Base64判定とStorage変換
         if (rawAvatarUrl.startsWith('data:image/')) {
-          console.log('🔄 Base64 detected → Starting Storage conversion...')
+          logger.debug('🔄 Base64 detected → Starting Storage conversion...')
           
           try {
             // 🔒 SECURITY: userIdはAPIサーバー側でauthUser.idから取得（リクエストに含めない）
@@ -4724,26 +4408,26 @@ function ProfileEditContent() {
                   storagePath: result.path,
                   savedBytes: rawAvatarUrl.length - result.path.length
                 }
-                console.log('✅ Base64→Storage conversion success:', conversionResult)
+                logger.debug('✅ Base64→Storage conversion success:', conversionResult)
               } else {
-                console.warn('⚠️ Storage conversion failed, using original Base64:', result.error)
+                logger.warn('⚠️ Storage conversion failed, using original Base64:', result.error)
                 conversionResult = { converted: false, error: result.error }
               }
             } else {
-              console.warn('⚠️ Storage API error, using original Base64:', response.statusText)
+              logger.warn('⚠️ Storage API error, using original Base64:', response.statusText)
               conversionResult = { converted: false, error: response.statusText }
             }
           } catch (error) {
-            console.warn('⚠️ Storage conversion error, using original Base64:', error)
+            logger.warn('⚠️ Storage conversion error, using original Base64:', error)
             conversionResult = { converted: false, error: error instanceof Error ? error.message : 'Unknown error' }
           }
         } else {
-          console.log('✅ Non-Base64 image (HTTP/Storage path), no conversion needed')
+          logger.debug('✅ Non-Base64 image (HTTP/Storage path), no conversion needed')
           conversionResult = { converted: false, reason: 'Non-Base64 format' }
         }
       }
 
-      console.log('📊 Final image processing summary:', {
+      logger.debug('📊 Final image processing summary:', {
         totalImages: profileImages.length,
         uploadedUrls: uploadedImageUrls.length,
         mainImageIndex,
@@ -4808,7 +4492,7 @@ function ProfileEditContent() {
       const cultureTags = normalizeTextArray(cleanCultureTags) ?? []  // 共有したい日本文化（culture_tags）
       
       // 🔍 CRITICAL: 最終string[]確認ログ（正規化効果含む）
-      console.log('🛡️ NORMALIZED PERSONALITY_TAGS VERIFICATION:', {
+      logger.debug('🛡️ NORMALIZED PERSONALITY_TAGS VERIFICATION:', {
         raw_selectedPersonality: selectedPersonality,
         raw_selectedHobbies: selectedHobbies,
         clean_personality_normalized: cleanPersonalityTags,
@@ -4825,7 +4509,7 @@ function ProfileEditContent() {
       })
       
       // 🚨 NULL禁止正規化ログ
-      console.log('🔧 NULL禁止正規化完了:', {
+      logger.debug('🔧 NULL禁止正規化完了:', {
         selectedPersonality_original: selectedPersonality,
         selectedHobbies_original: selectedHobbies,
         personalityTags_normalized: personalityTags,
@@ -4838,7 +4522,7 @@ function ProfileEditContent() {
       })
       
       // 🚨 CRITICAL DEBUG: personality/culture保存値の詳細追跡
-      console.log('🧭 PERSONALITY & CULTURE SAVE DEBUG - DETAILED TRACKING:', {
+      logger.debug('🧭 PERSONALITY & CULTURE SAVE DEBUG - DETAILED TRACKING:', {
         // 性格（personality_tags）
         selectedPersonality_state: selectedPersonality,
         selectedPersonality_type: typeof selectedPersonality,
@@ -4888,7 +4572,7 @@ function ProfileEditContent() {
             skill.language !== 'none' && skill.level !== 'none'
           )
           
-          console.log('🔥 CRITICAL: language_skills保存処理:', {
+          logger.debug('🔥 CRITICAL: language_skills保存処理:', {
             'languageSkills_state': languageSkills,
             'validSkills_after_filter': validSkills,
             'will_save_to_supabase': validSkills,  // nullではなく配列を送信
@@ -4912,7 +4596,7 @@ function ProfileEditContent() {
         // 🚨 ✅ TASK1 FIXED: 常にphoto_urls全配列を保存（条件付き除去を廃止）
         // 🔥 TASK C: 0枚保存時は空配列を確実にDBに保存
         photo_urls: (() => {
-          console.log('🚨 [TASK1] photo_urls保存処理開始 - 3枚URL保存確保（無条件）')
+          logger.debug('🚨 [TASK1] photo_urls保存処理開始 - 3枚URL保存確保（無条件）')
 
           // 🎯 FIXED: 直接profileImagesから全てのURLを配列として構築
           const safePhotoUrls = Array.isArray(profileImages)
@@ -4920,7 +4604,7 @@ function ProfileEditContent() {
                 .map((img, index) => {
                   // 新規アップロード済みURLがあれば優先、なければ既存URL使用
                   const finalUrl = uploadedImageUrls[index] || img.url || img.originalUrl
-                  console.log(`🔍 [TASK1] Image ${index}:`, {
+                  logger.debug(`🔍 [TASK1] Image ${index}:`, {
                     hasUploadedUrl: !!uploadedImageUrls[index],
                     uploadedUrl_preview: uploadedImageUrls[index] ? uploadedImageUrls[index].substring(0, 40) + '...' : 'none',
                     existingUrl_preview: (img.url || img.originalUrl) ? (img.url || img.originalUrl).substring(0, 40) + '...' : 'none',
@@ -4934,7 +4618,7 @@ function ProfileEditContent() {
 
           // 🔥 TASK C: 0枚保存の明示的ログ
           if (safePhotoUrls.length === 0) {
-            console.log('📸 [TASK C] 0枚保存検出 - photo_urls=[]をDBに保存:', {
+            logger.debug('📸 [TASK C] 0枚保存検出 - photo_urls=[]をDBに保存:', {
               profileImages_count: profileImages.length,
               uploadedImageUrls_count: uploadedImageUrls.length,
               final_result: '空配列[]',
@@ -4942,7 +4626,7 @@ function ProfileEditContent() {
             })
           }
 
-          console.log('🚨 [TASK1] 最終photo_urls配列確定:', {
+          logger.debug('🚨 [TASK1] 最終photo_urls配列確定:', {
             original_profileImages_count: profileImages.length,
             uploadedImageUrls_count: uploadedImageUrls.length,
             uploadedImageUrls_preview: uploadedImageUrls.map(url => url.substring(0, 40) + '...'),
@@ -4964,7 +4648,7 @@ function ProfileEditContent() {
             : null
 
           if (!firstImageUrl || firstImageUrl.startsWith('blob:') || firstImageUrl.startsWith('data:')) {
-            console.log('📸 [TASK C] avatar_url: null (有効な画像なし)', {
+            logger.debug('📸 [TASK C] avatar_url: null (有効な画像なし)', {
               profileImages_length: profileImages.length,
               firstImageUrl: firstImageUrl || 'null',
               reason: firstImageUrl?.startsWith('blob:') ? 'blob:スキップ' :
@@ -4973,7 +4657,7 @@ function ProfileEditContent() {
             return null
           }
 
-          console.log('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
+          logger.debug('🚨 [TASK1] avatar_url確定:', firstImageUrl.substring(0, 40) + '...')
           return firstImageUrl
         })()
         // 注意: profile_imagesカラムはDBに存在しない。photo_urlsのみ使用
@@ -4986,14 +4670,14 @@ function ProfileEditContent() {
       const FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
       for (const key of FORBIDDEN_KEYS) {
         if (key in updateData) {
-          console.warn(`🚫 [profile/edit] Forbidden key "${key}" detected and removed from updateData`)
+          logger.warn(`🚫 [profile/edit] Forbidden key "${key}" detected and removed from updateData`)
           delete (updateData as any)[key]
         }
       }
 
       // ✅ UPDATE PAYLOAD KEYS確認（証拠ログ - 必須出力）
-      console.log('✅ UPDATE PAYLOAD KEYS (profile/edit):', Object.keys(updateData))
-      console.log('🛡️ FORBIDDEN KEYS CHECK:', {
+      logger.debug('✅ UPDATE PAYLOAD KEYS (profile/edit):', Object.keys(updateData))
+      logger.debug('🛡️ FORBIDDEN KEYS CHECK:', {
         'profile_images_in_updateData': ('profile_images' in updateData),
         'personality_in_updateData': ('personality' in updateData),
         'prefecture_in_updateData': ('prefecture' in updateData),
@@ -5003,7 +4687,7 @@ function ProfileEditContent() {
       })
 
       // 🛡️ FINAL CHECK MAIN PHOTO SYNC: メイン画像同期の証拠ログ
-      console.log('🛡️ FINAL CHECK MAIN PHOTO SYNC:', {
+      logger.debug('🛡️ FINAL CHECK MAIN PHOTO SYNC:', {
         'photo_urls[0]': Array.isArray(updateData.photo_urls) && updateData.photo_urls[0]
           ? updateData.photo_urls[0].substring(0, 60) + '...'
           : 'none',
@@ -5016,7 +4700,7 @@ function ProfileEditContent() {
       })
 
       // 🚨 [POSSIBILITY B] payload漏れ完全防止チェック
-      console.log('🚨 [POSSIBILITY B] DB保存payload漏れ防止チェック:', {
+      logger.debug('🚨 [POSSIBILITY B] DB保存payload漏れ防止チェック:', {
         didTouchPhotos_flag: didTouchPhotos,
         payload_strategy: didTouchPhotos ? '画像操作あり → photo_urls含める' : '画像未操作 → photo_urls除外（破壊防止）',
         preventive_measure: 'didTouchPhotosフラグによる条件付きpayload構築',
@@ -5024,12 +4708,12 @@ function ProfileEditContent() {
       })
       
       // 🚨 4) didTouchPhotosフラグ状態ログ
-      console.log('🚨 [TOUCH FLAG STATUS] didTouchPhotos:', didTouchPhotos)
-      console.log('🚨 [TOUCH FLAG] photo_urls処理方針:', didTouchPhotos ? '含める（画像操作あり）' : 'EXCLUDE（画像未操作）')
+      logger.debug('🚨 [TOUCH FLAG STATUS] didTouchPhotos:', didTouchPhotos)
+      logger.debug('🚨 [TOUCH FLAG] photo_urls処理方針:', didTouchPhotos ? '含める（画像操作あり）' : 'EXCLUDE（画像未操作）')
       
       // 🚨 1) NETWORK犯人特定ログ（指示書要求）
-      console.log('🚨 [NETWORK CULPRIT CHECK] updateData全体:', updateData)
-      console.log('🔥 SAVE PAYLOAD VERIFICATION - photo_urls重点チェック:', {
+      logger.debug('🚨 [NETWORK CULPRIT CHECK] updateData全体:', updateData)
+      logger.debug('🔥 SAVE PAYLOAD VERIFICATION - photo_urls重点チェック:', {
         // 🖼️ photo_urls完全検証
         photo_urls_value: updateData.photo_urls,
         photo_urls_length: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array',
@@ -5071,7 +4755,7 @@ function ProfileEditContent() {
       // updateDataに設定された値は必ずstring[]または[]（null/undefined絶対なし）
       
       // 🚨 CRITICAL DEBUG: Supabaseに送信される実際のpersonality_tags値
-      console.log('🗄️ SUPABASE PERSONALITY_TAGS SAVE:', {
+      logger.debug('🗄️ SUPABASE PERSONALITY_TAGS SAVE:', {
         updateData_personality_tags: updateData.personality_tags,
         personality_tags_type: typeof updateData.personality_tags,
         personality_tags_isArray: Array.isArray(updateData.personality_tags),
@@ -5083,7 +4767,7 @@ function ProfileEditContent() {
       })
 
       // 外国人男性の場合は国籍と専用フィールドも更新
-      console.log('🔍 保存時の外国人男性判定デバッグ:', {
+      logger.debug('🔍 保存時の外国人男性判定デバッグ:', {
         isForeignMale,
         effectiveProfileType,
         profileType,
@@ -5102,21 +4786,21 @@ function ProfileEditContent() {
         updateData.travel_companion = (data.travel_companion && data.travel_companion !== 'no-entry' && data.travel_companion !== 'noEntry') ? data.travel_companion : null
         updateData.planned_prefectures = (data.planned_prefectures && Array.isArray(data.planned_prefectures) && data.planned_prefectures.length > 0) ? data.planned_prefectures : null
 
-        console.log('🌍 外国人男性保存フィールド追加:', {
+        logger.debug('🌍 外国人男性保存フィールド追加:', {
           nationality: updateData.nationality,
           visit_schedule: updateData.visit_schedule,
           travel_companion: updateData.travel_companion,
           planned_prefectures: updateData.planned_prefectures,
         })
       } else {
-        console.log('❌ 外国人男性判定がfalseのため、専用フィールドは保存されません')
+        logger.debug('❌ 外国人男性判定がfalseのため、専用フィールドは保存されません')
       }
 
       // カスタム文化は既に consolidatedInterests に含まれているため、別途設定不要
 
-      console.log('[Profile Submit] updatePayload:', updateData)
-      console.log('[Profile Submit] updating user id:', user?.id)
-      console.log('🗣️ LANGUAGE SKILLS SAVE DEBUG - DETAILED:', {
+      logger.debug('[Profile Submit] updatePayload:', updateData)
+      logger.debug('[Profile Submit] updating user id:', user?.id)
+      logger.debug('🗣️ LANGUAGE SKILLS SAVE DEBUG - DETAILED:', {
         languageSkillsState: languageSkills,
         languageSkillsType: typeof languageSkills,
         languageSkillsIsArray: Array.isArray(languageSkills),
@@ -5132,8 +4816,8 @@ function ProfileEditContent() {
       
       // 🔍 CRITICAL: languageSkillsが空の場合の原因調査
       if (!languageSkills || languageSkills.length === 0) {
-        console.warn('🚨 CRITICAL: languageSkills is empty at save time!')
-        console.warn('🔍 Debugging languageSkills source:', {
+        logger.warn('🚨 CRITICAL: languageSkills is empty at save time!')
+        logger.warn('🔍 Debugging languageSkills source:', {
           stateLanguageSkills: languageSkills,
           formLanguageSkills: data.language_skills,
           watchLanguageSkills: watch('language_skills')
@@ -5141,12 +4825,12 @@ function ProfileEditContent() {
       }
       
       // 🧪 指示書要求: 保存クリック時の必須デバッグログ
-      console.log("🧪 SAVE DEBUG profileImages:", profileImages)
-      console.log("🧪 SAVE DEBUG safePhotoUrls:", updateData.photo_urls)
-      console.log("🧪 SAVE DEBUG payload.photo_urls length:", Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array')
+      logger.debug("🧪 SAVE DEBUG profileImages:", profileImages)
+      logger.debug("🧪 SAVE DEBUG safePhotoUrls:", updateData.photo_urls)
+      logger.debug("🧪 SAVE DEBUG payload.photo_urls length:", Array.isArray(updateData.photo_urls) ? updateData.photo_urls.length : 'not_array')
       
       // ✅ TASK3: 最重要デバッグログ（3枚画像保存確保のため）
-      console.log("🚨 [TASK3] CRITICAL PAYLOAD DEBUG - 3枚URL保存の完全検証:", {
+      logger.debug("🚨 [TASK3] CRITICAL PAYLOAD DEBUG - 3枚URL保存の完全検証:", {
         // ===== UPLOAD処理確認 =====
         uploadedImageUrls_count: uploadedImageUrls.length,
         uploadedImageUrls_details: uploadedImageUrls.map((url, i) => ({
@@ -5185,7 +4869,7 @@ function ProfileEditContent() {
       })
       
       // 🧪 指示書要求: 修正②の確認（常に配列で保存）
-      console.log("🧪 [指示書修正②] 配列保存確認:", {
+      logger.debug("🧪 [指示書修正②] 配列保存確認:", {
         photo_urls_type: typeof updateData.photo_urls,
         photo_urls_isArray: Array.isArray(updateData.photo_urls),
         photo_urls_filtered: Array.isArray(updateData.photo_urls) ? updateData.photo_urls.filter(Boolean) : 'not_array',
@@ -5193,7 +4877,7 @@ function ProfileEditContent() {
       })
       
       // 🚨 ✅ TASK3: 最終保存payload検証（最優先：3枚URL保存確保）
-      console.log('🚨 [TASK3] 最終保存payload検証 - photo_urls重点確認:', {
+      logger.debug('🚨 [TASK3] 最終保存payload検証 - photo_urls重点確認:', {
         did_touch_photos: didTouchPhotos,
         photo_urls_included: 'photo_urls' in updateData,
         photo_urls_value: updateData.photo_urls,
@@ -5208,13 +4892,13 @@ function ProfileEditContent() {
         expected_behavior: '3枚アップ時 → photo_urls=[url1,url2,url3], avatar_url=url1'
       })
       
-      console.log('📝 Final update data (field mapping fixed):', {
+      logger.debug('📝 Final update data (field mapping fixed):', {
         ...updateData,
         name_source: `nickname="${data.nickname}"`,
         bio_source: `self_introduction="${data.self_introduction}"`,
         field_mapping_fix: 'nickname→name, self_introduction→bio'
       })
-      console.log('🔍 Consolidated interests debug:', {
+      logger.debug('🔍 Consolidated interests debug:', {
         selectedHobbies,
         selectedPersonality,
         customCulture: data.custom_culture,
@@ -5223,7 +4907,7 @@ function ProfileEditContent() {
       })
 
       // データベース更新直前のデバッグ
-      console.log('🔥 SUPABASE UPDATE - Pre-update debug:', {
+      logger.debug('🔥 SUPABASE UPDATE - Pre-update debug:', {
         updateData_language_skills: updateData.language_skills,
         updateData_japanese_level: updateData.japanese_level,
         updateData_english_level: updateData.english_level,
@@ -5250,13 +4934,13 @@ function ProfileEditContent() {
       // 🚨 CRITICAL: user_id統一設定（空文字禁止）
       updateData.user_id = finalUid  // 🆕 CRITICAL: user_id=auth.uid()で統一（空文字禁止）
       
-      console.log('🔑 USER_ID UNIFICATION:', {
+      logger.debug('🔑 USER_ID UNIFICATION:', {
         finalUid: finalUid,
         updateData_user_id: updateData.user_id,
         note: 'id=finalUid AND user_id=finalUid で完全統一（RLS対応）'
       })
       
-      console.log('🔑 FINAL UPDATE CONDITION CHECK:', {
+      logger.debug('🔑 FINAL UPDATE CONDITION CHECK:', {
         original_user_id: user.id,
         current_user_id: finalUid,
         ids_match: user.id === finalUid,
@@ -5268,7 +4952,7 @@ function ProfileEditContent() {
       // 🔍 NOTE: normalizeTextArray関数は既に上で定義済み
 
       // 🔍 CRITICAL: updateData.personality_tags最終確認（二重正規化不要：既に正規化済み）
-      console.log('🛡️ FINAL PAYLOAD PERSONALITY_TAGS CHECK:', {
+      logger.debug('🛡️ FINAL PAYLOAD PERSONALITY_TAGS CHECK:', {
         personality_tags_in_updateData: updateData.personality_tags,
         personality_tags_type: typeof updateData.personality_tags,
         personality_tags_isArray: Array.isArray(updateData.personality_tags),
@@ -5284,30 +4968,30 @@ function ProfileEditContent() {
       
       // 🚨 CRITICAL: null/undefined最終防衛（念のため）
       if (updateData.personality_tags === null || updateData.personality_tags === undefined) {
-        console.error('❌ EMERGENCY: personality_tags is null/undefined after normalization - forcing to []')
+        logger.error('❌ EMERGENCY: personality_tags is null/undefined after normalization - forcing to []')
         updateData.personality_tags = []
       }
       if (updateData.culture_tags === null || updateData.culture_tags === undefined) {
-        console.error('❌ EMERGENCY: culture_tags is null/undefined after normalization - forcing to []')
+        logger.error('❌ EMERGENCY: culture_tags is null/undefined after normalization - forcing to []')
         updateData.culture_tags = []
       }
 
       // 🚨 CRITICAL: finalUidが空なら即エラー（保存中断）
       if (!finalUid) {
         const errorMsg = '🚨 CRITICAL: finalUid is empty - 保存処理を中断します'
-        console.error(errorMsg)
+        logger.error(errorMsg)
         alert(errorMsg)
         return
       }
 
       // 🔍 CRITICAL: update直前の接続確認（軽いselect）
-      console.log('🔍 PRE-UPDATE CONNECTION TEST: 接続確認のためのselect実行')
+      logger.debug('🔍 PRE-UPDATE CONNECTION TEST: 接続確認のためのselect実行')
       const { data: preSelectData, error: preSelectError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', finalUid)
         
-      console.log('🔍 PRE-UPDATE SELECT RESULT:', {
+      logger.debug('🔍 PRE-UPDATE SELECT RESULT:', {
         finalUid: finalUid,
         found_records: preSelectData?.length || 0,
         preSelectError: preSelectError ? String(preSelectError) : null,
@@ -5317,7 +5001,7 @@ function ProfileEditContent() {
       })
 
       if (preSelectData?.length === 0) {
-        console.error('🚨 CRITICAL: 更新対象行が存在しません - INSERTが別id/別環境の可能性')
+        logger.error('🚨 CRITICAL: 更新対象行が存在しません - INSERTが別id/別環境の可能性')
         setDebugPanel(prev => ({
           ...prev!,
           updateError: '更新対象行が存在しません',
@@ -5328,19 +5012,19 @@ function ProfileEditContent() {
       }
 
       // 🚨 CRITICAL: 統一パイプライン経由でDB保存（Base64完全遮断）
-      console.log('🔧 PROFILE SAVE: Starting unified pipeline...')
+      logger.debug('🔧 PROFILE SAVE: Starting unified pipeline...')
 
       // 🛡️🛡️🛡️ ABSOLUTE FINAL GUARD: DB保存直前の最終防衛（forbidden keys完全排除）
       const FINAL_FORBIDDEN_KEYS = ['profile_images', 'personality', 'prefecture', 'images', 'profile_image', 'updated_at'] as const
       for (const key of FINAL_FORBIDDEN_KEYS) {
         if (key in updateData) {
-          console.error(`🚨🚨🚨 EMERGENCY: ${key} still in updateData! Removing now.`)
+          logger.error(`🚨🚨🚨 EMERGENCY: ${key} still in updateData! Removing now.`)
           delete (updateData as any)[key]
         }
       }
 
       // 🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE: 証拠ログ（必須出力）
-      console.log('🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE:', {
+      logger.debug('🛡️🛡️🛡️ FINAL CHECK BEFORE DB SAVE:', {
         'UPDATE_PAYLOAD_KEYS': Object.keys(updateData),
         'profile_images_in_updateData': ('profile_images' in updateData),
         'personality_in_updateData': ('personality' in updateData),
@@ -5366,7 +5050,7 @@ function ProfileEditContent() {
       )
       
       if (!saveResult.success) {
-        console.error('❌ Profile save failed through unified pipeline:', {
+        logger.error('❌ Profile save failed through unified pipeline:', {
           error: saveResult.error,
           operation: saveResult.operation,
           entryPoint: saveResult.entryPoint,
@@ -5381,7 +5065,7 @@ function ProfileEditContent() {
       }
       
       // 🖼️ CRITICAL: photo_urls保存成功確認
-      console.log('✅ Profile save SUCCESS - photo_urls verification:', {
+      logger.debug('✅ Profile save SUCCESS - photo_urls verification:', {
         operation: saveResult.operation,
         entryPoint: saveResult.entryPoint,
         attempted_photo_urls: updateData.photo_urls,
@@ -5401,12 +5085,12 @@ function ProfileEditContent() {
           .maybeSingle()
 
         if (verifyError || !dbVerification) {
-          console.error('🚨 [TASK4] DB確認エラー:', verifyError || 'no data')
+          logger.error('🚨 [TASK4] DB確認エラー:', verifyError || 'no data')
         } else {
           // 🧪 指示書要求: DB保存後の必須確認ログ
-          console.log("✅ DB VERIFY AFTER SAVE:", dbVerification)
+          logger.debug("✅ DB VERIFY AFTER SAVE:", dbVerification)
           
-          console.log('🚨 [TASK4] DB直接確認完了 - 保存成功検証:', {
+          logger.debug('🚨 [TASK4] DB直接確認完了 - 保存成功検証:', {
             user_id: user.id,
             db_photo_urls: dbVerification.photo_urls,
             db_photo_urls_type: typeof dbVerification.photo_urls,
@@ -5426,7 +5110,7 @@ function ProfileEditContent() {
           })
         }
       } catch (dbCheckError) {
-        console.error('🚨 [TASK4] DB確認処理エラー:', dbCheckError)
+        logger.error('🚨 [TASK4] DB確認処理エラー:', dbCheckError)
       }
       
       // 🏆 [COMPLETION EVIDENCE] 最終完了条件チェック
@@ -5451,16 +5135,16 @@ function ProfileEditContent() {
         }
       }
       
-      console.log('🏆 [COMPLETION EVIDENCE] 指示書要求の3点証明:', completionEvidence)
-      console.log('📸 [COMPLETION] Networkスクショ対象:', 'DevTools → Network → storage/v1/object (POST)')
-      console.log('🔍 [COMPLETION] PATCHペイロード確認:', 'DevTools → Network → profiles (PATCH)')
-      console.log('✅ [COMPLETION] DB確認クエリ:', `select photo_urls, avatar_url from profiles where id = '${user.id}';`)
+      logger.debug('🏆 [COMPLETION EVIDENCE] 指示書要求の3点証明:', completionEvidence)
+      logger.debug('📸 [COMPLETION] Networkスクショ対象:', 'DevTools → Network → storage/v1/object (POST)')
+      logger.debug('🔍 [COMPLETION] PATCHペイロード確認:', 'DevTools → Network → profiles (PATCH)')
+      logger.debug('✅ [COMPLETION] DB確認クエリ:', `select photo_urls, avatar_url from profiles where id = '${user.id}';`)
       
       // 🎯 検証シナリオ指示（Claude指示書準拠）
-      console.log('📋 [VERIFICATION SCENARIOS] 検証手順:')
-      console.log('🅰️ シナリオA: MyPage→Edit遷移で「fromMyPage: photo_urls空 - avatar_urlから復元」が消えること')
-      console.log('🅱️ シナリオB: 画像2枚追加→保存でstorage POSTが2回、profiles PATCHに3件photo_urls')
-      console.log('🆎 シナリオC: 3枚→1枚削除→保存でprofiles PATCHに1件photo_urls、表示一致確認')
+      logger.debug('📋 [VERIFICATION SCENARIOS] 検証手順:')
+      logger.debug('🅰️ シナリオA: MyPage→Edit遷移で「fromMyPage: photo_urls空 - avatar_urlから復元」が消えること')
+      logger.debug('🅱️ シナリオB: 画像2枚追加→保存でstorage POSTが2回、profiles PATCHに3件photo_urls')
+      logger.debug('🆎 シナリオC: 3枚→1枚削除→保存でprofiles PATCHに1件photo_urls、表示一致確認')
       
       const updateResult = saveResult.data
       const updateError = null
@@ -5468,7 +5152,7 @@ function ProfileEditContent() {
       // 🚨 5) 保存成功後のDB値でstate同期（再発防止）
       if (saveResult.success && saveResult.data?.[0]) {
         const dbProfile = saveResult.data[0]
-        console.log('🚨 [DB SYNC] 保存成功後の同期開始:', {
+        logger.debug('🚨 [DB SYNC] 保存成功後の同期開始:', {
           db_photo_urls: dbProfile.photo_urls,
           db_avatar_url: dbProfile.avatar_url,
           db_photo_urls_length: Array.isArray(dbProfile.photo_urls) ? dbProfile.photo_urls.length : 0
@@ -5485,17 +5169,17 @@ function ProfileEditContent() {
           }))
           
           setProfileImages(prev => {
-            console.log('[DB SYNC] profileImages同期:', { prev_length: prev.length, synced_length: syncedImages.length })
+            logger.debug('[DB SYNC] profileImages同期:', { prev_length: prev.length, synced_length: syncedImages.length })
             return syncedImages
           })
           
           // didTouchPhotosをリセット（同期完了）
           setDidTouchPhotos(false)
-          console.log('🚨 [TOUCH FLAG] didTouchPhotos = false (DB同期完了)')
+          logger.debug('🚨 [TOUCH FLAG] didTouchPhotos = false (DB同期完了)')
           
           // 🚨 [POSSIBILITY C] sessionStorage復元上書き防止チェック
           const imageStorageKey = `currentProfileImages_${user?.id || 'test'}`
-          console.log('🚨 [POSSIBILITY C] sessionStorage上書きチェック:', {
+          logger.debug('🚨 [POSSIBILITY C] sessionStorage上書きチェック:', {
             storage_key: imageStorageKey,
             before_write_check: 'DB保存成功後の安全な同期タイミング',
             synced_images_count: syncedImages.length,
@@ -5505,13 +5189,13 @@ function ProfileEditContent() {
           
           try {
             sessionStorage.setItem(imageStorageKey, JSON.stringify(syncedImages))
-            console.log('🚨 [DB SYNC] sessionStorage同期完了:', {
+            logger.debug('🚨 [DB SYNC] sessionStorage同期完了:', {
               key: imageStorageKey,
               stored_count: syncedImages.length,
               verification: 'DB値と同期済み'
             })
           } catch (e) {
-            console.warn('sessionStorage同期失敗:', e)
+            logger.warn('sessionStorage同期失敗:', e)
           }
         }
       }
@@ -5520,7 +5204,7 @@ function ProfileEditContent() {
       const updateRowCount = updateResult?.length || 0
       
       // ✅ Avatar処理完了（DB更新前にensureAvatarStored()で処理済み）
-      console.log('✅ Avatar processing completed before DB update')
+      logger.debug('✅ Avatar processing completed before DB update')
       const hasError = Boolean(updateError)
       
       // 🔍 CRITICAL: .select()戻り値でpersonality_tags保存確認
@@ -5567,11 +5251,11 @@ function ProfileEditContent() {
       // sessionStorageに保存（MyPageで表示用）
       sessionStorage.setItem(`profileEditSaveDebug_${user?.id || 'testmode'}`, JSON.stringify(saveDebugData))
       
-      console.log('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', saveDebugData)
+      logger.debug('📊 UPDATE RESULT PERSONALITY_TAGS VERIFICATION:', saveDebugData)
 
       // 🚨 CRITICAL: エラーチェック
       if (hasError) {
-        console.error('❌ UPDATE ERROR DETECTED:', updateError)
+        logger.error('❌ UPDATE ERROR DETECTED:', updateError)
         setDebugPanel({
           show: true,
           uid: finalUid,
@@ -5589,7 +5273,7 @@ function ProfileEditContent() {
 
       // 🚨 CRITICAL: 0件更新チェック
       if (updateRowCount === 0) {
-        console.error('🚨 ZERO ROWS UPDATED - whereズレ / 行が存在しない / RLS')
+        logger.error('🚨 ZERO ROWS UPDATED - whereズレ / 行が存在しない / RLS')
         
         // 追加確認: 該当行が存在するかチェック
         const { data: existCheck } = await supabase
@@ -5606,7 +5290,7 @@ function ProfileEditContent() {
             : 'RLSがupdateを拒否している可能性'
         }
         
-        console.error('🔍 ZERO UPDATE ANALYSIS:', errorInfo)
+        logger.error('🔍 ZERO UPDATE ANALYSIS:', errorInfo)
         setDebugPanel({
           show: true,
           uid: finalUid,
@@ -5629,7 +5313,7 @@ function ProfileEditContent() {
         .eq('id', finalUid)
         .maybeSingle()
         
-      console.log('🔍 SELECT DOUBLE-CHECK:', {
+      logger.debug('🔍 SELECT DOUBLE-CHECK:', {
         finalUid: finalUid,
         dbSelect_personality_tags: dbSelect?.personality_tags,
         selectError: selectError ? String(selectError) : null
@@ -5640,7 +5324,7 @@ function ProfileEditContent() {
       const returnValuesMatch = JSON.stringify(updateReturnedPersonality) === JSON.stringify(selectReturnedPersonality)
       
       if (!returnValuesMatch) {
-        console.error('🚨 UPDATE-SELECT MISMATCH - RLS/権限/レプリカ等の疑い:', {
+        logger.error('🚨 UPDATE-SELECT MISMATCH - RLS/権限/レプリカ等の疑い:', {
           updateReturned: updateReturnedPersonality,
           selectReturned: selectReturnedPersonality
         })
@@ -5651,7 +5335,7 @@ function ProfileEditContent() {
       const personalityMatches = JSON.stringify(updateData.personality_tags) === JSON.stringify(dbSelect?.personality_tags)
       
       if (!personalityWasSaved) {
-        console.error('🚨 PERSONALITY_TAGS NULL IN DB - DB側で潰されてる / 型不一致 / trigger疑い:', {
+        logger.error('🚨 PERSONALITY_TAGS NULL IN DB - DB側で潰されてる / 型不一致 / trigger疑い:', {
           sent: updateData.personality_tags,
           db_result: dbSelect?.personality_tags,
           schema_check_sql: `select column_name, data_type, udt_name from information_schema.columns where table_name='profiles' and column_name in ('personality_tags','culture_tags');`
@@ -5697,7 +5381,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       }, 1500)
 
     } catch (error) {
-      console.error('❌ プロフィール更新エラー:', error)
+      logger.error('❌ プロフィール更新エラー:', error)
       setError(error instanceof Error ? error.message : 'プロフィールの更新に失敗しました')
     } finally {
       setIsSubmitting(false)
@@ -5717,7 +5401,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       setValue('hobbies', newHobbies, { shouldDirty: true, shouldValidate: true })
       
       // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-      console.log('📝 Hobby toggled:', hobby, '→', newHobbies.length, 'total hobbies')
+      logger.debug('📝 Hobby toggled:', hobby, '→', newHobbies.length, 'total hobbies')
       
       return newHobbies
     })
@@ -5728,7 +5412,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
     setSelectedPersonality(prev => {
       // 🚨 DEBUG: 性格タグ選択前の状態確認（正規化ベース）
       const normalizedPrev = normalizeTags(prev)
-      console.log('🎯 PERSONALITY TAG DEBUG - BEFORE TOGGLE:', {
+      logger.debug('🎯 PERSONALITY TAG DEBUG - BEFORE TOGGLE:', {
         trait_clicked: trait,
         prev_raw: prev,
         prev_normalized: normalizedPrev,
@@ -5750,7 +5434,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       const finalTraits = normalizeTags(newTraits)
       
       // 🚨 DEBUG: 性格タグ選択後の状態確認（正規化ベース）
-      console.log('🎯 PERSONALITY TAG DEBUG - AFTER TOGGLE:', {
+      logger.debug('🎯 PERSONALITY TAG DEBUG - AFTER TOGGLE:', {
         trait_clicked: trait,
         new_raw: newTraits,
         new_normalized: finalTraits,
@@ -5764,7 +5448,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       setValue('personality', finalTraits, { shouldDirty: true, shouldValidate: true })
       
       // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-      console.log('📝 Personality toggled:', trait, '→', finalTraits.length, 'total traits (normalized)')
+      logger.debug('📝 Personality toggled:', trait, '→', finalTraits.length, 'total traits (normalized)')
       
       return finalTraits
     })
@@ -5783,7 +5467,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       setValue('planned_prefectures', newPrefectures)
       
       // 🔧 MAIN WATCH統一: state更新のみ（完成度再計算はメインwatchが担当）
-      console.log('📝 Prefecture toggled:', prefecture, '→', newPrefectures.length, 'total prefectures')
+      logger.debug('📝 Prefecture toggled:', prefecture, '→', newPrefectures.length, 'total prefectures')
       
       return newPrefectures
     })
@@ -6033,10 +5717,10 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         return currentNationality === 'オランジ' ? 'オランダ' : currentNationality
                       })()}
                       onValueChange={(value) => {
-                        console.log('🔧 国籍選択変更:', value)
+                        logger.debug('🔧 国籍選択変更:', value)
                         setValue('nationality', value, { shouldValidate: true })
                         // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                        console.log('📝 Nationality changed:', value)
+                        logger.debug('📝 Nationality changed:', value)
                       }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
@@ -6090,7 +5774,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   const newSkills = [...languageSkills]
                                   newSkills[index] = { ...skill, language: value }
                                   
-                                  console.log('🗣️ LANGUAGE CHANGE - State update:', {
+                                  logger.debug('🗣️ LANGUAGE CHANGE - State update:', {
                                     oldSkills: languageSkills,
                                     newSkills,
                                     changedIndex: index,
@@ -6105,7 +5789,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                               >
                                 <SelectTrigger>
@@ -6133,7 +5817,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   const newSkills = [...languageSkills]
                                   newSkills[index] = { ...skill, level: value }
                                   
-                                  console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
+                                  logger.debug('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
                                     oldSkills: languageSkills,
                                     newSkills,
                                     changedIndex: index,
@@ -6148,7 +5832,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                               >
                                 <SelectTrigger>
@@ -6187,7 +5871,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                                 className="text-red-600 hover:text-red-700"
                               >
@@ -6215,7 +5899,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             })
                             
                             // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                            console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
+                            logger.debug('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
                           }}
                           className="text-blue-600 hover:text-blue-700"
                         >
@@ -6297,7 +5981,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   const newSkills = [...languageSkills]
                                   newSkills[index] = { ...skill, language: value }
                                   
-                                  console.log('🗣️ LANGUAGE CHANGE - State update:', {
+                                  logger.debug('🗣️ LANGUAGE CHANGE - State update:', {
                                     oldSkills: languageSkills,
                                     newSkills,
                                     changedIndex: index,
@@ -6312,7 +5996,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語変更完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                               >
                                 <SelectTrigger>
@@ -6340,7 +6024,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   const newSkills = [...languageSkills]
                                   newSkills[index] = { ...skill, level: value }
                                   
-                                  console.log('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
+                                  logger.debug('🗣️ LANGUAGE LEVEL CHANGE - State update:', {
                                     oldSkills: languageSkills,
                                     newSkills,
                                     changedIndex: index,
@@ -6355,7 +6039,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語レベル変更完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                               >
                                 <SelectTrigger>
@@ -6394,7 +6078,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                   })
                                   
                                   // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                                  console.log('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
+                                  logger.debug('✅ 言語削除完了 - useEffect[languageSkills]で自動計算される')
                                 }}
                                 className="text-red-600 hover:text-red-700"
                               >
@@ -6422,7 +6106,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                             })
                             
                             // 🔥 完成度は専用useEffectで自動計算（setTimeoutを除去し即座反映）
-                            console.log('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
+                            logger.debug('✅ 言語追加完了 - useEffect[languageSkills]で自動計算される')
                           }}
                           className="text-blue-600 hover:text-blue-700"
                         >
@@ -6453,7 +6137,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         onValueChange={(value) => {
                           setValue('occupation', value)
                           // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                          console.log('📝 Occupation changed:', value)
+                          logger.debug('📝 Occupation changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -6503,7 +6187,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         onValueChange={(value) => {
                           setValue('body_type', value)
                           // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                          console.log('📝 Body type changed:', value)
+                          logger.debug('📝 Body type changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -6528,7 +6212,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         onValueChange={(value) => {
                           setValue('marital_status', value as 'none' | 'single' | 'married')
                           // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                          console.log('📝 Marital status changed:', value)
+                          logger.debug('📝 Marital status changed:', value)
                         }}
                       >
                         <SelectTrigger>
@@ -6575,28 +6259,28 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           })()}
                           onValueChange={(value) => {
                             // 🧪 CHANGE DEBUG [visit_schedule] BEFORE
-                            console.log('🧪 CHANGE DEBUG [visit_schedule] BEFORE', {
+                            logger.debug('🧪 CHANGE DEBUG [visit_schedule] BEFORE', {
                               nextValue: value,
                               current: watch('visit_schedule'),
                             })
 
                             setValue('visit_schedule', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                            console.log('📝 Visit schedule changed:', value)
+                            logger.debug('📝 Visit schedule changed:', value)
                             
                             // 🔍 完成度計算デバッグログ（指示書対応）
-                            console.log('[FORM] visit_schedule:', value)
-                            console.log('[FORM] travel_companion:', watch('travel_companion'))
+                            logger.debug('[FORM] visit_schedule:', value)
+                            logger.debug('[FORM] travel_companion:', watch('travel_companion'))
 
                             // 🧪 setValue直後の確認（マイクロタスク/次tick）
                             queueMicrotask(() => {
-                              console.log('🧪 CHANGE DEBUG [visit_schedule] AFTER microtask', {
+                              logger.debug('🧪 CHANGE DEBUG [visit_schedule] AFTER microtask', {
                                 expected: value,
                                 actual: watch('visit_schedule')
                               })
                             })
                             setTimeout(() => {
-                              console.log('🧪 CHANGE DEBUG [visit_schedule] AFTER 0ms', {
+                              logger.debug('🧪 CHANGE DEBUG [visit_schedule] AFTER 0ms', {
                                 expected: value,
                                 actual: watch('visit_schedule')
                               })
@@ -6635,28 +6319,28 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           })()}
                           onValueChange={(value) => {
                             // 🧪 CHANGE DEBUG [travel_companion] BEFORE
-                            console.log('🧪 CHANGE DEBUG [travel_companion] BEFORE', {
+                            logger.debug('🧪 CHANGE DEBUG [travel_companion] BEFORE', {
                               nextValue: value,
                               current: watch('travel_companion'),
                             })
 
                             setValue('travel_companion', value)
                             // 🔧 MAIN WATCH統一: フォーム変更のみ（完成度再計算はメインwatchが担当）
-                            console.log('📝 Travel companion changed:', value)
+                            logger.debug('📝 Travel companion changed:', value)
                             
                             // 🔍 完成度計算デバッグログ（指示書対応）
-                            console.log('[FORM] visit_schedule:', watch('visit_schedule'))
-                            console.log('[FORM] travel_companion:', value)
+                            logger.debug('[FORM] visit_schedule:', watch('visit_schedule'))
+                            logger.debug('[FORM] travel_companion:', value)
 
                             // 🧪 setValue直後の確認（マイクロタスク/次tick）
                             queueMicrotask(() => {
-                              console.log('🧪 CHANGE DEBUG [travel_companion] AFTER microtask', {
+                              logger.debug('🧪 CHANGE DEBUG [travel_companion] AFTER microtask', {
                                 expected: value,
                                 actual: watch('travel_companion')
                               })
                             })
                             setTimeout(() => {
-                              console.log('🧪 CHANGE DEBUG [travel_companion] AFTER 0ms', {
+                              logger.debug('🧪 CHANGE DEBUG [travel_companion] AFTER 0ms', {
                                 expected: value,
                                 actual: watch('travel_companion')
                               })
@@ -6733,7 +6417,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                     const visibleSelectedTraits = getPersonalityOptions(t).filter(trait => normalizedPersonality.includes(trait.label))
                     const countMismatch = normalizedPersonality.length !== visibleSelectedTraits.length
                     
-                    console.log('🎯 PERSONALITY DISPLAY DEBUG (NORMALIZED):', {
+                    logger.debug('🎯 PERSONALITY DISPLAY DEBUG (NORMALIZED):', {
                       selectedPersonality_raw: selectedPersonality,
                       selectedPersonality_normalized: normalizedPersonality,
                       raw_count: selectedPersonality.length,

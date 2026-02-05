@@ -1,5 +1,33 @@
 // src/utils/logger.ts
-// 🛡️ ログユーティリティ - Base64画像マスク＋ログレベル切替
+// 🛡️ ログユーティリティ - レベル制御＋Base64画像マスク＋payload要約
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔒 本番安全弁（絶対ルール）
+//
+//   production + NEXT_PUBLIC_DEBUG 未設定 → warn 以上のみ出力
+//   debug / info は本番で"絶対に"出ない
+//
+// 確認手順（手動1回 — ビルド後に実行）:
+//   NODE_ENV=production node -e "
+//     process.env.NODE_ENV='production';
+//     const {logger}=require('./.next/server/chunks/...'); // or ブラウザDevTools
+//     logger.info('SHOULD_NOT_APPEAR');
+//     logger.debug('SHOULD_NOT_APPEAR');
+//     logger.warn('SHOULD_APPEAR');
+//   "
+//   → warn だけコンソールに出ればOK
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📏 payload ルール（チーム運用 — 抜け道防止）
+//
+//   loggerに渡してよい値: string / number / boolean / 短縮ID / 件数
+//   配列・オブジェクトを渡す場合: 必ず summarize() を通す
+//
+//   ✅ logger.debug('[SYNC] hobbies:', items.length, 'items')
+//   ✅ logger.debug('[LOAD]', summarize({ userId, name, hobbies }))
+//   ❌ logger.debug('[LOAD]', profile)          ← Object丸投げ禁止
+//   ❌ logger.debug('[LOAD]', photoUrls)        ← 配列丸投げ禁止
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
 
@@ -12,15 +40,18 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 };
 
 function getLogLevel(): LogLevel {
-  // ブラウザ側で使う前提なので NEXT_PUBLIC を優先
-  let v: string = "info";
-
   if (typeof process !== 'undefined' && process.env) {
-    v = process.env.NEXT_PUBLIC_LOG_LEVEL || process.env.LOG_LEVEL || "info";
-  }
+    // NEXT_PUBLIC_DEBUG=true → 全ログ出力（開発時デバッグ用）
+    if (process.env.NEXT_PUBLIC_DEBUG === 'true') return 'debug'
 
-  if (v in LEVEL_ORDER) return v as LogLevel;
-  return "info";
+    // クライアント側は NEXT_PUBLIC_ のみ参照可能
+    const v = process.env.NEXT_PUBLIC_LOG_LEVEL
+    if (v && v in LEVEL_ORDER) return v as LogLevel
+
+    // 本番は warn 以上のみ
+    if (process.env.NODE_ENV === 'production') return 'warn'
+  }
+  return 'info'
 }
 
 function shouldLog(level: LogLevel): boolean {
@@ -83,6 +114,35 @@ export function sanitizePayload(payload: any): any {
   } catch {
     return "[UNSERIALIZABLE_PAYLOAD]";
   }
+}
+
+/**
+ * オブジェクト・配列をログ安全な要約に変換する。
+ * logger に Object / Array を直接渡さず、必ずこの関数を通す。
+ *
+ * 変換ルール:
+ *   - string (id系): 先頭8文字に切り詰め
+ *   - 配列: "N items" + 先頭1件のみ
+ *   - ネストObject: 1階層目のみ（値は型+長さ）
+ *   - それ以外: そのまま
+ */
+export function summarize(obj: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v == null) {
+      out[k] = null
+    } else if (Array.isArray(v)) {
+      out[k] = `${v.length} items` + (v.length > 0 ? ` [0]=${typeof v[0] === 'string' ? v[0].slice(0, 30) : typeof v[0]}` : '')
+    } else if (typeof v === 'string') {
+      // id系は短縮、長文は切り詰め
+      out[k] = v.length > 40 ? v.slice(0, 8) + '...' : v
+    } else if (typeof v === 'object') {
+      out[k] = `{${Object.keys(v).length} keys}`
+    } else {
+      out[k] = v // number / boolean はそのまま
+    }
+  }
+  return out
 }
 
 /**

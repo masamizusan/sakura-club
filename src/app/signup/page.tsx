@@ -15,6 +15,7 @@ import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
+import { logger } from '@/utils/logger'
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -180,22 +181,19 @@ export default function SignupPage() {
     setSignupError('')
     
     // 🔒 セキュリティ強化: 新規登録時に古いセッションストレージを完全クリア
-    console.log('🧹 新規登録開始: セッションストレージクリーンアップ実行')
     try {
-      // 画像関連のセッションストレージを完全削除（両タイプ共通）
       for (let i = sessionStorage.length - 1; i >= 0; i--) {
         const key = sessionStorage.key(i)
-        if (key?.startsWith('currentProfileImages') || 
-            key?.startsWith('imageStateTimestamp') || 
+        if (key?.startsWith('currentProfileImages') ||
+            key?.startsWith('imageStateTimestamp') ||
             key?.startsWith('previewData') ||
             key === 'signupData') {
           sessionStorage.removeItem(key)
-          console.log('🗑️ 削除:', key)
         }
       }
-      console.log('✅ セッションストレージクリーンアップ完了')
+      logger.debug('[SIGNUP] sessionStorage cleanup done')
     } catch (error) {
-      console.error('⚠️ セッションストレージクリーンアップエラー:', error)
+      logger.error('[SIGNUP] sessionStorage cleanup', error)
     }
     
     try {
@@ -229,16 +227,15 @@ export default function SignupPage() {
       }
       
       const result = await authService.signUp(signupData)
-      console.log('📋 signUp結果:', {
+      logger.debug('[SIGNUP] result', {
         userId: result.user?.id?.slice(0, 8),
         hasSession: !!result.session,
         hasAccessToken: !!result.session?.access_token,
-        needsEmailConfirmation: result.needsEmailConfirmation,
       })
 
       // --- パターンB: session無し（メール確認必要 or メール送信失敗） ---
       if (!result.session?.access_token) {
-        console.log('⚠️ セッション/トークン無し → メール確認またはログインへ誘導')
+        logger.debug('[SIGNUP] no session → email confirm redirect')
         const params = new URLSearchParams({
           email: data.email,
           gender: data.gender,
@@ -252,8 +249,8 @@ export default function SignupPage() {
         return
       }
 
-      // --- パターンC: session有り（直接ログイン成功） ---
-      console.log('✅ セッション取得成功 → プロフィール初期保存 & 編集画面へ')
+      // --- パターンC: session有り ---
+      logger.debug('[SIGNUP] session acquired → profile init & edit')
       sessionStorage.setItem('sc_signup_email', data.email)
 
       // 📝 初期プロフィールデータをDBに保存（null-only update）
@@ -279,9 +276,9 @@ export default function SignupPage() {
           body: JSON.stringify(profileBody)
         })
         const resBody = await res.json().catch(() => null)
-        console.log('📝 post-signup-profile:', { status: res.status, body: resBody })
+        logger.debug('[SIGNUP] post-signup-profile', { status: res.status })
       } catch (e) {
-        console.warn('⚠️ 初期プロフィールDB保存失敗（続行）:', e)
+        logger.warn('[SIGNUP] post-signup-profile failed (continuing)', e)
       }
 
       const profileParams = new URLSearchParams({
@@ -296,9 +293,8 @@ export default function SignupPage() {
       languageRouter.push(`/profile/edit`, profileParams)
 
     } catch (error) {
-      console.error('🚨 Signup error:', error)
+      logger.error('[SIGNUP]', error)
       const errorMessage = error instanceof Error ? error.message : String(error)
-      console.log('🔍 Error message:', errorMessage)
 
       // --- パターンA: signup自体が失敗 ---
       // "User already registered" 系のエラー判定
@@ -354,6 +350,7 @@ export default function SignupPage() {
                 <Input
                   type="email"
                   placeholder={t('signup.emailPlaceholder')}
+                  autoComplete="email"
                   {...register('email')}
                   className={errors.email ? 'border-red-500' : ''}
                 />
@@ -371,6 +368,7 @@ export default function SignupPage() {
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder={t('signup.passwordPlaceholder')}
+                    autoComplete="new-password"
                     {...register('password')}
                     className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                   />
@@ -399,6 +397,7 @@ export default function SignupPage() {
                 </label>
                 <Input
                   placeholder={t('signup.nicknamePlaceholder')}
+                  autoComplete="nickname"
                   {...register('nickname')}
                   className={errors.nickname ? 'border-red-500' : ''}
                 />
@@ -448,6 +447,7 @@ export default function SignupPage() {
                 </label>
                 <Input
                   type="date"
+                  autoComplete="bday"
                   {...register('birth_date')}
                   min="1900-01-01"
                   max={new Date().toISOString().split('T')[0]}
