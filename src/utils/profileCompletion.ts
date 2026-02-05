@@ -6,6 +6,7 @@
 
 // ✨ 統一された言語スキル型を使用
 import { LanguageSkill, hasValidLanguageSkills } from '@/types/profile'
+import { logger } from '@/utils/logger'
 
 // 🚨 CRITICAL: self_introduction仮文言定義（未入力扱いにする）
 const DEFAULT_SELF_INTRODUCTIONS = [
@@ -173,62 +174,34 @@ function hasProfileImages(profile: ProfileData, imageArray?: any[], isNewUser: b
   // 🔥 恒久修正: data URI、HTTP、Storage path全てOKとする（MyPageアバター安定化）
   const hasAvatar = typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0
   const hasProfileImage = typeof profile?.profile_image === "string" && profile.profile_image.trim().length > 0
-  
   const imageCondition = hasAvatar || hasProfileImage
-  
-  console.log('🎯 FIXED - 画像判定恒久修正:', {
-    avatar_url_exists: !!profile.avatar_url,
-    avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
-    hasAvatar,
-    hasProfileImage,
-    imageCondition,
-    judgment_basis: 'data URI/HTTP/Storage path全てOK（base64除外を撤廃）'
-  })
-  
-  // 🎯 TASK3: 強制has_profile_image=true撤去 → 条件極小化
+
+  // TASK3: 強制has_profile_image=true撤去 → 条件極小化
   const hasProfileImageFlag = (profile as any).has_profile_image === true
   if (hasProfileImageFlag) {
-    // 🔍 強制trueを条件化：fromMyPageかつavatar_urlありの場合のみ許可
     const isFromMyPageRecovery = Boolean((profile as any).fromMyPage && profile.avatar_url)
     if (isFromMyPageRecovery) {
-      console.log('🎯 [TASK3] 条件付き強制判定: fromMyPage+avatar_url復元時のみ', {
-        fromMyPage: (profile as any).fromMyPage,
-        has_avatar_url: Boolean(profile.avatar_url),
-        condition_met: 'fromMyPage復元の最終防波堤として有効'
-      })
       return true
-    } else {
-      console.log('🎯 [TASK3] 強制フラグ無効化: 条件不一致のため実データ判定に進む', {
-        has_profile_image_flag: hasProfileImageFlag,
-        fromMyPage: (profile as any).fromMyPage,
-        has_avatar_url: Boolean(profile.avatar_url),
-        action: '実データ（avatar_url/imageArray）による正規判定'
-      })
     }
   }
-  // 実データ（avatar_url/imageArray）で正規判定
-  
-  // 🌸 優先度2: imageArray（フォーム状態）- プロフィール編集中のみ
+
+  // 優先度2: imageArray（フォーム状態）
   if (Array.isArray(imageArray) && imageArray.length > 0) {
     const validImages = imageArray.filter(img => {
       if (!img) return false
       const url = img.url || img.originalUrl || img.avatar_url
-      // 🔥 修正: base64除外を撤廃、すべての画像URL形式をOKとする
       return url && typeof url === 'string' && url.trim().length > 0
     })
     if (validImages.length > 0) {
-      console.log('🎯 imageArray判定: TRUE (編集中画像数:', validImages.length, ')')
       return true
     }
   }
-  
-  // 🌸 優先度3: 統一画像判定ロジック（data URI/HTTP/Storage path全てOK）
+
+  // 優先度3: 統一画像判定ロジック
   if (imageCondition) {
-    console.log('🎯 統一画像判定: TRUE - data URI/HTTP/Storage path全対応')
     return true
   }
-  
-  console.log('🎯 画像判定: FALSE (avatar_url/profile_imageが空文字または未定義)')
+
   return false
 }
 
@@ -332,55 +305,20 @@ function calculateCompletion14Fields(profile: ProfileData, imageArray?: any[]): 
   // 14. 共有したい日本文化（culture_tags）
   if (Array.isArray(profile.hobbies) && profile.hobbies.length > 0) {
     completedCount++
-    console.log('✅ Culture tags COMPLETED - profile.hobbies detected:', profile.hobbies)
   } else {
     missingFields.push('culture_tags')
-    console.log('❌ Culture tags MISSING:', {
-      profile_hobbies: profile.hobbies,
-      profile_hobbies_type: typeof profile.hobbies,
-      profile_hobbies_isArray: Array.isArray(profile.hobbies),
-      profile_hobbies_length: profile.hobbies?.length
-    })
   }
-  
+
   // 14. プロフィール画像
   const hasImagesResult = hasProfileImages(profile, imageArray)
-  
-  console.log('🚨 CRITICAL: プロフィール画像判定詳細 (日本人女性14項目)', {
-    hasProfileImages_result: hasImagesResult,
-    profile_avatar_url: profile.avatar_url ? `${profile.avatar_url.substring(0, 30)}...` : 'none',
-    profile_avatarUrl: profile.avatarUrl ? `${profile.avatarUrl.substring(0, 30)}...` : 'none',
-    profile_profile_image: profile.profile_image ? `${profile.profile_image.substring(0, 30)}...` : 'none',
-    imageArray_length: Array.isArray(imageArray) ? imageArray.length : 'not array',
-    imageArray_sample: Array.isArray(imageArray) ? imageArray.slice(0, 2) : 'not array',
-    profile_has_profile_image_flag: (profile as any).has_profile_image
-  })
-  
+
   if (hasImagesResult) {
     completedCount++
   } else {
     missingFields.push('profile_images')
   }
-  
+
   const percentage = Math.round((completedCount / 14) * 100)
-  
-  // 🧩 COMPLETION INTERNAL - city除外後14項目計算の確認
-  console.log("🧩 COMPLETION INTERNAL", {
-    completed: completedCount,
-    missing: missingFields,
-    totalExpected: 14,
-    missingCount: missingFields.length,
-    calculationCheck: completedCount + missingFields.length,
-    shouldEqual14: (completedCount + missingFields.length) === 14
-  })
-  
-  console.log('🌸 JAPANESE FEMALE COMPLETION (14 FIELDS):', {
-    'TOTAL FIELDS': 14,
-    'COMPLETED': completedCount,
-    'COMPLETION': `${percentage}%`,
-    'MISSING_FIELDS': missingFields,
-    'hasProfileImages_result': hasProfileImages(profile, imageArray)
-  })
   
   return {
     completed: completedCount,
@@ -496,26 +434,6 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
   
   const percentage = Math.round((completedCount / 17) * 100)
   
-  // 🧩 COMPLETION INTERNAL - 外国人男性版（参考用）
-  console.log("🧩 COMPLETION INTERNAL (FOREIGN MALE)", {
-    completed: completedCount,
-    missing: missingFields,
-    totalExpected: 17,
-    missingCount: missingFields.length,
-    calculationCheck: completedCount + missingFields.length,
-    shouldEqual17: (completedCount + missingFields.length) === 17
-  })
-  
-  console.log('🌸 SAKURA CLUB COMPLETION:', {
-    'TOTAL FIELDS': 17,
-    'COMPLETED': completedCount,
-    'COMPLETION': `${percentage}%`,
-    'MISSING_FIELDS': missingFields,
-    'completionInput.has_profile_image': (profile as any).has_profile_image,
-    'hasProfileImages_result': hasProfileImages(profile, imageArray),
-    'completedFields内訳_画像': hasProfileImages(profile, imageArray) ? 'TRUE' : 'FALSE'
-  })
-  
   return {
     completed: completedCount,
     total: 17,
@@ -584,7 +502,7 @@ export function calculateProfileCompletion(
   isNewUser: boolean = false
 ): ProfileCompletionResult {
 
-  console.warn('🚨 DEPRECATED: calculateProfileCompletion は廃止予定です。新統一システム (calculateCompletion) を使用してください')
+  logger.warn('[COMPLETION] DEPRECATED: use calculateCompletion instead')
   
   // 新統一システムにリダイレクト
   const normalized: NormalizedProfile = { ...profileData }
@@ -595,39 +513,19 @@ export function calculateProfileCompletion(
  * フォーム値から完成度計算
  */
 export function calculateCompletionFromForm(
-  formValues: any, 
+  formValues: any,
   userType: 'foreign-male' | 'japanese-female',
   imageArray: any[] = [],
   isNewUser: boolean = false
 ) {
-  console.log('🌟 calculateCompletionFromForm: 統一フロー開始', {
-    userType,
-    isNewUser,
-    imageArray_length: imageArray.length
-  })
-
-  // 🌸 SAKURA CLUB 仕様: buildCompletionInputFromFormで画像状態を確実にセット
   const profileData: ProfileData = buildCompletionInputFromForm(formValues, imageArray)
-  
-  // 🛡️ CRITICAL FIX: userTypeに基づいた項目数分岐
+
   let calculationResult: { completed: number; total: number; percentage: number }
-  
+
   if (userType === 'japanese-female') {
     calculationResult = calculateCompletion14Fields(profileData, imageArray)
-    console.log('📊 母数算出元 - 日本人女性14項目計算:', {
-      totalCount: calculationResult.total,
-      profileType: userType,
-      completedCount: calculationResult.completed,
-      source: 'calculateCompletion14Fields'
-    })
   } else {
     calculationResult = calculateCompletion17Fields(profileData, imageArray)
-    console.log('📊 母数算出元 - 外国人男性17項目計算:', {
-      totalCount: calculationResult.total,
-      profileType: userType,
-      completedCount: calculationResult.completed,
-      source: 'calculateCompletion17Fields'
-    })
   }
 
   const result: ProfileCompletionResult = {
@@ -642,14 +540,6 @@ export function calculateCompletionFromForm(
     requiredFieldStatus: {}
   }
 
-  console.log('🌟 calculateCompletionFromForm: 統一フロー完了', {
-    completion: result.completion,
-    completedFields: result.completedFields,
-    totalFields: result.totalFields,
-    userType,
-    source: userType === 'japanese-female' ? '15項目計算' : '17項目計算'
-  })
-
   return result
 }
 
@@ -657,11 +547,6 @@ export function calculateCompletionFromForm(
  * 正規化関数 - 旧システムとの互換性のため
  */
 export function normalizeProfile(rawProfile: any, userType: UserType): NormalizedProfile {
-  console.log('🧱 NORMALIZE PROFILE - INPUT:', {
-    userType,
-    rawProfileKeys: Object.keys(rawProfile || {})
-  })
-
   const normalized: NormalizedProfile = {
     ...rawProfile,
     // 基本的なフィールドマッピング
@@ -684,13 +569,6 @@ export function buildProfileForCompletion(
   selectedPersonality: string[] = [],
   languageSkills: any[] = []
 ): any {
-  console.log('🧱 BUILD PROFILE FOR COMPLETION - INPUT:', {
-    dbProfile: !!dbProfile,
-    selectedHobbies_length: selectedHobbies.length,
-    selectedPersonality_length: selectedPersonality.length,
-    languageSkills_length: languageSkills.length
-  })
-
   return {
     ...dbProfile,
     hobbies: selectedHobbies.length > 0 ? selectedHobbies : (dbProfile?.hobbies || []),
@@ -707,33 +585,6 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
   // 🌸 TASK2: 画像の有無を必ずセット（state/ref を一次ソース）
   const imagesCount = Array.isArray(imageArray) ? imageArray.length : 0
   const hasImages = imagesCount > 0
-  
-  // 🔍 CRITICAL DEBUG: buildCompletionInputFromForm詳細ログ
-  console.log('🌟 buildCompletionInputFromForm: フォーム値のみで入力オブジェクト作成', {
-    nickname: formValues.nickname,
-    hobbies_length: Array.isArray(formValues.hobbies) ? formValues.hobbies.length : 0,
-    personality_length: Array.isArray(formValues.personality) ? formValues.personality.length : 0,
-    language_skills_length: Array.isArray(formValues.language_skills) ? formValues.language_skills.length : 0,
-    
-    // 🚨 CRITICAL: 画像関連の詳細情報
-    imageArray_input: {
-      provided: Array.isArray(imageArray),
-      length: imagesCount,
-      sample: imageArray?.slice(0, 2),
-      types: imageArray?.map(img => typeof img)
-    },
-    
-    // formValuesからの画像関連情報
-    formValues_images: {
-      avatar_url: formValues.avatar_url ? `${formValues.avatar_url.substring(0, 30)}...` : 'none',
-      profile_images: formValues.profile_images,
-      avatarUrl: formValues.avatarUrl ? `${formValues.avatarUrl.substring(0, 30)}...` : 'none'
-    },
-    
-    // 最終判定
-    final_hasImages: hasImages,
-    final_imagesCount: imagesCount
-  })
 
   return {
     // 基本情報
@@ -760,14 +611,6 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
         s.language.trim() !== "" &&
         s.level.trim() !== ""
       )
-      
-      // 🔧 デバッグログ（35%問題特定用）
-      console.log("🔧 LANG_SKILLS DEBUG", { 
-        rawSkills: rawSkills.length, 
-        validSkills: validSkills.length,
-        completionInput_length: validSkills.length 
-      })
-      
       return validSkills
     })(),
     planned_prefectures: Array.isArray(formValues.planned_prefectures) 
@@ -799,22 +642,11 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
  * 安全装置関数 - 旧システムとの互換性のため
  */
 export function sanitizeForCompletion(input: any) {
-  console.log('🛡️ sanitizeForCompletion: 入力安全装置適用前', {
-    hobbies: input.hobbies,
-    personality: input.personality
-  })
-
   const sanitized = {
     ...input,
     hobbies: Array.isArray(input.hobbies) ? input.hobbies : [],
     personality: Array.isArray(input.personality) ? input.personality : [],
     language_skills: Array.isArray(input.language_skills) ? input.language_skills : []
   }
-
-  console.log('🛡️ sanitizeForCompletion: 安全装置適用後', {
-    hobbies: sanitized.hobbies,
-    personality: sanitized.personality
-  })
-
   return sanitized
 }

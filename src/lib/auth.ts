@@ -1,5 +1,6 @@
 import { createClient } from './supabase'
 import { SignupFormData, LoginFormData } from './validations/auth'
+import { logger } from '@/utils/logger'
 
 export interface AuthUser {
   id: string
@@ -31,15 +32,15 @@ export const authService = {
     
     try {
       // 0. 既存ユーザーのクリーンアップ（「新しい紙」方式）
-      console.log('🧹 新規登録開始 - 既存データクリーンアップ中...')
+      // signup start
       
       // 🚫 REMOVED: Client-side admin API calls (causes 403 errors)
       // Admin operations should be done server-side only
       // クライアントサイドでのadmin API呼び出しを削除（403エラーの原因）
-      console.log('⚠️ Admin cleanup skipped (client-side limitation)')
+      // admin cleanup skipped
       
       // 1. Create auth user (完全に新しいユーザー)
-      console.log('👤 新しいユーザー作成中...')
+      // creating new user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -80,7 +81,7 @@ export const authService = {
           bio: data.selfIntroduction,
         }
 
-        console.log('Updating profile with data:', profileUpdateData)
+        // updating profile
 
         const { error: profileError } = await supabase
           .from('profiles')
@@ -88,12 +89,12 @@ export const authService = {
           .eq('user_id', authData.user.id)
 
         if (profileError) {
-          console.error('Profile update error:', profileError)
+          logger.error('[AUTH] profile update error')
           throw new AuthError(`プロフィールの更新に失敗しました: ${profileError.message}`)
         }
       } else {
         // メール認証が必要な場合は、認証後に完了するため追加データを一時保存
-        console.log('Email confirmation required, profile will be updated after verification')
+        // email confirmation required
       }
 
       // 🔒 実ユーザーログインフラグ設定（signUpでもセッションがあれば設定）
@@ -132,31 +133,14 @@ export const authService = {
 
   async signIn(data: LoginFormData) {
     try {
-      console.log('サインイン開始:', { email: data.email })
       const supabase = createClient()
-      console.log('Supabaseクライアント取得完了')
-      
-      // 基本的な接続テスト
-      try {
-        console.log('Supabase接続テスト中...')
-        const { data: testData, error: testError } = await supabase.from('profiles').select('count').limit(1)
-        console.log('接続テスト結果:', { testData, testError })
-      } catch (testErr) {
-        console.error('接続テストエラー:', testErr)
-      }
-      
-      console.log('認証リクエスト送信中...')
+
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
 
-      console.log('サインイン結果:', { 
-        success: !error, 
-        hasUser: !!authData?.user,
-        hasSession: !!authData?.session,
-        error: error?.message 
-      })
+      logger.debug('[AUTH] signIn:', !error ? 'success' : error?.message)
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
@@ -178,7 +162,7 @@ export const authService = {
         session: authData.session,
       }
     } catch (error) {
-      console.error('サインインエラー:', error)
+      logger.error('[AUTH] signIn error')
       if (error instanceof AuthError) {
         throw error
       }
@@ -229,67 +213,49 @@ export const authService = {
     const supabase = createClient()
 
     try {
-      // 🚨 CRITICAL GUARD 1: 実ユーザーがログイン済みなら匿名セッションを絶対に作らない
+      // GUARD 1: 実ユーザーがログイン済みなら匿名セッションを作らない
       if (typeof window !== 'undefined') {
         const realLoginUser = localStorage.getItem('sc_real_login_user')
         if (realLoginUser) {
-          console.log('🔒 ensureTestAnonSession: 実ユーザーログイン済み - anonymous sign-in 完全スキップ', {
-            realUserId: realLoginUser.slice(0, 8),
-            skipReason: 'REAL_USER_LOGGED_IN'
-          })
           return { user: null, session: null }
         }
 
-        // 🚨 CRITICAL GUARD 2: edit/preview/mypageでは匿名化を絶対に禁止
+        // GUARD 2: edit/preview/mypageでは匿名化を禁止
         const pathname = window.location.pathname
         if (pathname.includes('/profile/edit') ||
             pathname.includes('/profile/preview') ||
             pathname.includes('/mypage')) {
-          console.log('🔒 ensureTestAnonSession: 匿名禁止ルート - 完全スキップ', {
-            route: pathname,
-            skipReason: 'BLOCKED_ROUTE'
-          })
           return { user: null, session: null }
         }
       }
 
-      // 🛡️ CRITICAL FIX: 既存セッションチェック - 重複実行防止
+      // 既存セッションチェック
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
       if (session?.user) {
-        console.log('🔒 ensureTestAnonSession: 既存セッション発見 - anonymous sign-in スキップ', {
-          userId: session.user.id,
-          skipReason: 'SESSION_EXISTS'
-        })
         return { user: session.user, session }
       }
 
-      // 🛡️ CRITICAL FIX: localStorage保険フラグで絶対スキップ（増殖防止）
+      // localStorage保険フラグ
       if (typeof window !== 'undefined') {
         const anonDone = localStorage.getItem('sc_test_anon_done')
         if (anonDone === '1') {
-          console.log('🔒 ensureTestAnonSession: localStorage保険フラグ発見 - 絶対スキップ（増殖防止）')
           return { user: null, session: null }
         }
       }
 
-      console.log('🧪 ensureTestAnonSession: 新規anonymous sign-in実行...')
       const { data, error } = await supabase.auth.signInAnonymously()
 
       if (error) {
-        console.error('❌ Anonymous sign-in failed:', error)
+        logger.error('[AUTH] anonymous sign-in failed:', error.message)
         throw new AuthError(`匿名ログインに失敗しました: ${error.message}`)
       }
 
-      // 🔒 成功時の保険フラグ設定
+      // 成功時の保険フラグ設定
       if (typeof window !== 'undefined') {
         localStorage.setItem('sc_test_anon_done', '1')
       }
 
-      console.log('✅ ensureTestAnonSession: 新規anonymous sign-in成功', {
-        userId: data.user?.id,
-        sessionExists: !!data.session
-      })
       return { user: data.user, session: data.session }
     } catch (error) {
       if (error instanceof AuthError) {
@@ -308,31 +274,16 @@ export const authService = {
     const supabase = createClient()
     
     try {
-      // 🔧 STEP 1: getSession()優先 - 軽量で403エラーなし
-      console.log('🔄 Getting session first (no 403 risk)')
+      // STEP 1: getSession()優先
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
+
       if (sessionError) {
-        console.error('🚨 Session error details:', {
-          message: sessionError.message,
-          status: sessionError.status || 'unknown',
-          name: sessionError.name || 'unknown',
-          stack: sessionError.stack || 'no stack'
-        })
-        
-        // 🚨 CRITICAL: refresh_token 400エラーの特別処理
-        if (sessionError.message?.includes('refresh_token') || sessionError.status === 400) {
-          console.error('🛑 REFRESH_TOKEN 400 ERROR DETECTED:', sessionError)
-        }
+        logger.error('[AUTH] session error:', sessionError.message)
       }
-      
+
       let user = session?.user || null
-      
-      // 🆕 STEP 1.5: テストモード時はセッション無しで匿名ログイン実行（user_id固定版）
-      // 🚨 CRITICAL: 3重ガードで匿名化事故を根絶
-      //   ガード1: sc_real_login_user === true → 完全スキップ
-      //   ガード2: isTestModeActive() !== true → スキップ
-      //   ガード3: 匿名禁止ルート（edit/preview/mypage）→ スキップ
+
+      // STEP 1.5: テストモード時は匿名ログイン実行（3重ガード）
       const realLoginUser = typeof window !== 'undefined' ? localStorage.getItem('sc_real_login_user') : null
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
       const isAnonBlockedRoute = currentPath.includes('/profile/edit') ||
@@ -340,71 +291,39 @@ export const authService = {
                                   currentPath.includes('/mypage')
 
       if (!user && !realLoginUser && this.isTestModeActive() && !isAnonBlockedRoute) {
-        console.log('🧪 Test mode detected with no session - ensuring anonymous session', {
-          route: currentPath,
-          isBlockedRoute: false
-        })
         try {
           const { user: anonUser } = await this.ensureTestAnonSession()
           user = anonUser
-        } catch (error) {
-          console.error('❌ Anonymous session ensure failed, proceeding with null user:', error)
+        } catch {
+          // Anonymous session ensure failed
         }
-      } else if (!user && (realLoginUser || isAnonBlockedRoute)) {
-        console.log('🔒 getCurrentUser: 匿名セッション生成を禁止', {
-          realLoginUser: realLoginUser?.slice(0, 8),
-          isAnonBlockedRoute,
-          route: currentPath,
-          reason: realLoginUser ? 'REAL_USER_LOGGED_IN' : 'BLOCKED_ROUTE'
-        })
       }
-      
-      // 🔧 STEP 2: セッションでユーザー取得できた場合
-      if (user) {
-        console.log('✅ User from session:', { id: user.id, email: user.email, hasSession: true })
-      } else {
-        console.log('❌ No user in session, trying getUser() fallback')
-        
-        // 🔧 STEP 3: fallbackとしてgetUser()（403は握りつぶす）
+
+      // STEP 2-3: getUser() fallback
+      if (!user) {
         try {
           const { data: userData, error: userError } = await supabase.auth.getUser()
-          
           if (userError) {
-            if (userError.status === 403 || String(userError.status) === '403') {
-              console.log('🛡️ getUser() returned 403 - handled gracefully, returning null')
-              return null
-            }
-            console.log('getUser() other error:', userError.message)
             return null
           }
-          
           user = userData.user
-          console.log('✅ User from getUser() fallback:', { id: user?.id, email: user?.email })
-        } catch (error: any) {
-          if (error.status === 403 || String(error.status) === '403') {
-            console.log('🛡️ getUser() threw 403 - handled gracefully, returning null')
-            return null
-          }
-          console.log('getUser() threw error:', error.message)
+        } catch {
           return null
         }
       }
-      
+
       if (!user) {
-        console.log('❌ No user found via session or getUser()')
         return null
       }
 
-      // 🔧 STEP 4: プロフィール取得
+      // STEP 4: プロフィール取得
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle()
 
-      // If profile doesn't exist, return basic user info
       if (profileError || !profile) {
-        console.log('⚠️ No profile found for user, returning basic auth info:', user.id)
         return {
           id: user.id,
           email: user.email || '',
@@ -424,7 +343,7 @@ export const authService = {
       }
 
       // Return complete profile data
-      console.log('✅ Complete user profile loaded:', { id: profile.id, name: profile.name })
+      logger.debug('[AUTH] profile loaded:', profile.id?.slice(0, 8))
       return {
         id: profile.id,
         email: profile.email,
@@ -442,7 +361,7 @@ export const authService = {
         membershipType: profile.membership_type || 'free',
       }
     } catch (error) {
-      console.error('❌ Error in getCurrentUser:', error)
+      logger.error('[AUTH] getCurrentUser error')
       return null
     }
   },
@@ -515,28 +434,14 @@ export const authService = {
     // 🆕 テストモード時も認証状態監視は継続（匿名ユーザーの状態変更を監視）
     const isTestMode = this.isTestModeActive()
     if (isTestMode) {
-      console.log('🧪 Test mode detected - monitoring anonymous auth state')
+      // test mode monitoring
     }
     
-    // 認証状態の変更を監視（重複コールバックを防ぐ）
+    // 認証状態の変更を監視
     return supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUserId = session?.user?.id || null
-      
-      console.log('🔍 Auth state change:', { 
-        event, 
-        hasSession: !!session, 
-        hasUser: !!session?.user,
-        currentUserId,
-        lastUserId,
-        shouldUpdate: currentUserId !== lastUserId
-      })
-      
-      // 🚨 CRITICAL: refresh_token エラーの詳細ログ
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('🔄 Token refreshed successfully')
-      } else if (event === 'SIGNED_OUT') {
-        console.log('🚪 Signed out event')
-      }
+
+      logger.debug('[AUTH] state:', event, currentUserId ? currentUserId.slice(0, 8) : 'none')
       
       // ユーザーIDが変わった場合のみコールバックを実行
       if (currentUserId !== lastUserId) {
