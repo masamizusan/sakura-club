@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
 
 const BUCKET_NAME = 'avatars'
 
@@ -82,12 +83,12 @@ export async function normalizeAvatarUrl(
   
   // 3. Base64 Data URLの場合は Storage にアップロード
   if (avatarUrl.startsWith('data:image/')) {
-    console.log('🛡️ Base64 Data URL detected, converting to Storage URL')
+    logger.debug('[AVATAR] base64→storage convert')
     
     try {
       // 3-1. Base64解析
       const { buffer, mimeType, extension, size } = parseBase64DataUrl(avatarUrl)
-      console.log(`📋 Parsed base64: ${mimeType}, ${Math.round(size / 1024)}KB`)
+      logger.debug('[AVATAR] parsed:', Math.round(size / 1024), 'KB')
       
       // サイズチェック（5MB制限）
       if (size > 5242880) {
@@ -115,7 +116,7 @@ export async function normalizeAvatarUrl(
         })
       
       if (uploadError) {
-        console.error('❌ Avatar upload failed:', uploadError)
+        logger.error('[AVATAR] upload failed:', uploadError.message)
         return {
           success: false,
           avatarUrl: null,
@@ -131,7 +132,7 @@ export async function normalizeAvatarUrl(
       
       const publicUrl = publicUrlData.publicUrl
       
-      console.log(`✅ Base64 converted to Storage URL: ${publicUrl.substring(0, 50)}...`)
+      logger.debug('[AVATAR] converted to storage')
       
       return {
         success: true,
@@ -141,7 +142,7 @@ export async function normalizeAvatarUrl(
       }
       
     } catch (error) {
-      console.error('❌ Base64 processing failed:', error)
+      logger.error('[AVATAR] base64 processing failed')
       return {
         success: false,
         avatarUrl: null,
@@ -152,7 +153,7 @@ export async function normalizeAvatarUrl(
   }
   
   // 4. その他の形式（不明）の場合は警告してnull
-  console.warn('⚠️ Unknown avatar URL format, setting to null:', avatarUrl.substring(0, 100))
+  logger.warn('[AVATAR] unknown format')
   return {
     success: true,
     avatarUrl: null,
@@ -181,7 +182,7 @@ export async function normalizeProfileAvatars(
     results.push(result)
     
     if (!result.success) {
-      console.error('❌ Avatar normalization failed:', result.error)
+      logger.error('[AVATAR] normalization failed:', result.error)
       // 失敗時はnullに設定（base64を保存しない）
       normalizedData.avatar_url = null
     } else {
@@ -195,7 +196,7 @@ export async function normalizeProfileAvatars(
     results.push(result)
     
     if (!result.success) {
-      console.error('❌ Profile image normalization failed:', result.error)
+      logger.error('[AVATAR] profile image normalization failed:', result.error)
       normalizedData.profile_image = null
     } else {
       normalizedData.profile_image = result.avatarUrl
@@ -205,7 +206,7 @@ export async function normalizeProfileAvatars(
   // 結果ログ
   const base64Count = results.filter(r => r.wasBase64).length
   if (base64Count > 0) {
-    console.log(`🛡️ Avatar normalization complete: ${base64Count} base64 images converted`)
+    logger.debug('[AVATAR] normalized:', base64Count, 'converted')
   }
   
   return {
@@ -228,8 +229,7 @@ export function detectBase64InProfile(profileData: any): boolean {
   }
   
   if (base64Fields.length > 0) {
-    console.error('🚨 Base64 Data URL detected in profile data:', base64Fields)
-    console.error('   This should be converted to Storage URL before saving to DB')
+    logger.error('[AVATAR] base64 detected:', base64Fields.join(', '))
     return true
   }
   

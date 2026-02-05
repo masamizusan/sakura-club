@@ -8,6 +8,7 @@
  */
 
 import { SupabaseClient, User } from '@supabase/supabase-js'
+import { logger } from '@/utils/logger'
 
 // AuthUserとUserの互換性のために型を拡張
 type AuthUserCompatible = User | {
@@ -62,7 +63,7 @@ export async function ensureProfileForUserSafe(
   user: AuthUserCompatible | null
 ): Promise<EnsureProfileResult> {
   if (!user?.id) {
-    console.log('🚫 ensureProfileForUser: No user provided')
+    logger.warn('[ENSURE_PROFILE] no user')
     return {
       success: false,
       profile: null,
@@ -72,7 +73,7 @@ export async function ensureProfileForUserSafe(
   }
 
   try {
-    console.log('🔍 ensureProfileForUser: Checking profile for user', user.id)
+    logger.debug('[ENSURE_PROFILE] check:', user.id?.slice(0, 8))
 
     // 1. user_id ベースでprofiles検索（統一ルール）
     const { data: existingProfile, error: searchError } = await supabase
@@ -82,44 +83,27 @@ export async function ensureProfileForUserSafe(
       .maybeSingle() // 0件でもエラーにしない
 
     if (searchError && searchError.code !== 'PGRST116') {
-      console.error('🚨 ensureProfileForUser: Search error', searchError)
+      logger.error('[ENSURE_PROFILE] search error:', searchError.message)
       return {
         success: false,
         profile: null,
         reason: `Search error: ${searchError.message}`,
-        canContinue: true // 検索失敗でも画面は表示可能
+        canContinue: true
       }
     }
 
     // 2. プロフィールが既に存在する場合
     if (existingProfile) {
-      console.log('✅ ensureProfileForUser: Profile found', {
-        profileId: existingProfile.id,
-        userId: existingProfile.user_id,
-        hasName: !!existingProfile.name,
-        hasEmail: !!existingProfile.email
-      })
-
-      // 🚨 FIX: 既存プロフィールのemailがnullの場合は更新
-      // 優先順位: sessionStorage(サインアップ時のemail) > user.email > プレースホルダー
+      // 既存プロフィールのemailがnullの場合は更新
       if (!existingProfile.email) {
         let signupEmail: string | null = null
         if (typeof window !== 'undefined') {
           signupEmail = sessionStorage.getItem('sc_signup_email')
           if (signupEmail) {
-            // 使用後は削除（一度だけ使用）
             sessionStorage.removeItem('sc_signup_email')
-            console.log('📧 sessionStorageからサインアップemail取得:', signupEmail)
           }
         }
         const finalEmail = signupEmail || user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
-        console.log('📧 既存プロフィールのemail更新:', {
-          profileId: existingProfile.id,
-          oldEmail: existingProfile.email,
-          signupEmail,
-          userEmail: user.email,
-          finalEmail
-        })
 
         const { data: updatedProfile, error: updateError } = await supabase
           .from('profiles')
@@ -129,8 +113,6 @@ export async function ensureProfileForUserSafe(
           .maybeSingle()
 
         if (updateError) {
-          console.warn('⚠️ email更新失敗（続行可能）:', updateError)
-          // 更新失敗でも既存プロフィールを返す
           return {
             success: true,
             profile: existingProfile,
@@ -139,7 +121,6 @@ export async function ensureProfileForUserSafe(
           }
         }
 
-        console.log('✅ 既存プロフィールのemail更新成功')
         return {
           success: true,
           profile: updatedProfile,
@@ -156,78 +137,55 @@ export async function ensureProfileForUserSafe(
       }
     }
 
-    // 🔒 Legacy id fallback 完全撤廃（混線の温床）
-    // 以前は .eq('id', user.id) で検索していたが、別ユーザーのプロフィールを
-    // 拾う可能性があるため廃止。user_id のみを信頼する。
-
     // 3. 新規プロフィール作成
-    console.log('🆕 ensureProfileForUser: Creating new profile')
-    
+    logger.debug('[ENSURE_PROFILE] creating new')
+
     // 4-1. テストモードの場合は先にAPI経由で試行（RLS回避）
     const testMode = isTestMode()
     if (testMode) {
-      console.log('🧪 テストモード検出 - API経由でプロフィール作成を試行')
-      // 🚨 FIX: sessionStorageからサインアップemailを取得してAPIに渡す
       let apiSignupEmail: string | null = null
       if (typeof window !== 'undefined') {
         apiSignupEmail = sessionStorage.getItem('sc_signup_email')
-        console.log('📧 API呼び出し用email取得:', apiSignupEmail || 'なし')
       }
       try {
-        // 🔒 Bearer方式: Cookie同期に依存せず access_token を直接渡す
         const { data: { session: currentSession } } = await supabase.auth.getSession()
         const accessToken = currentSession?.access_token
-        if (!accessToken) {
-          console.warn('⚠️ テストモード: access_token取得不可 - API呼び出しスキップ')
-          // Bearer無しでAPIは呼ばず、直接クライアントupsertにフォールバック
-        } else {
-        const apiResponse = await fetch('/api/ensure-profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({})
-        })
+        if (accessToken) {
+          const apiResponse = await fetch('/api/ensure-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({})
+          })
 
-        if (apiResponse.ok) {
-          const apiResult = await apiResponse.json()
-          if (apiResult.success && apiResult.profile) {
-            console.log('✅ テストモード: API経由でプロフィール作成成功')
-            return {
-              success: true,
-              profile: apiResult.profile,
-              reason: 'テストモード - API経由で作成成功',
-              canContinue: true
+          if (apiResponse.ok) {
+            const apiResult = await apiResponse.json()
+            if (apiResult.success && apiResult.profile) {
+              return {
+                success: true,
+                profile: apiResult.profile,
+                reason: 'テストモード - API経由で作成成功',
+                canContinue: true
+              }
             }
           }
         }
-
-        console.warn('⚠️ テストモード: API失敗、通常方法にフォールバック')
-        } // close else (accessToken exists)
-      } catch (apiError) {
-        console.warn('⚠️ テストモード: API呼び出し失敗、通常方法にフォールバック:', apiError)
+      } catch {
+        // API fallback
       }
     }
 
-    // 4-2. 🛡️ 統一パイプライン経由でのプロフィール作成（Base64遮断保証）
-    // 🚨 FIX: サインアップ時のemailを優先、なければプレースホルダー
+    // 4-2. 統一パイプライン経由でのプロフィール作成
     let signupEmail: string | null = null
     if (typeof window !== 'undefined') {
       signupEmail = sessionStorage.getItem('sc_signup_email')
       if (signupEmail) {
-        // 使用後は削除（一度だけ使用）
         sessionStorage.removeItem('sc_signup_email')
-        console.log('📧 sessionStorageからサインアップemail取得（新規作成）:', signupEmail)
       }
     }
     const profileEmail = signupEmail || user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
-    console.log('📧 Profile email設定:', {
-      signupEmail,
-      hasUserEmail: !!user.email,
-      isTestMode: testMode,
-      finalEmail: profileEmail
-    })
 
     const newProfileData = {
       id: user.id,
@@ -265,35 +223,21 @@ export async function ensureProfileForUserSafe(
     }
 
     if (insertError) {
-      // 🔧 方針1: 403/406は想定内として扱い、遷移を止めない
       const errorAny = insertError as any
       const is403 = errorAny.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('insufficient_privilege')
       const is406 = errorAny.code === 'PGRST116' || insertError.message?.includes('No rows')
-      
-      console.error('🚨 ensureProfileForUser: Insert failed (継続可能)', {
-        error: insertError,
-        code: errorAny.code,
-        message: insertError.message,
-        is403_RLS_suspected: is403,
-        is406_no_rows: is406,
-        testMode,
-        next_action: is403 ? 'Check RLS policies or use service_role API' : 'Check data constraints'
-      })
-      
+
+      logger.error('[ENSURE_PROFILE] insert failed:', insertError.message)
+
       return {
         success: false,
         profile: null,
-        reason: is403 ? '403 RLS疑い - DBプロフィール作成失敗（RLSポリシーまたはAPI必要）' : 
-                is406 ? '406 No rows - プロフィール作成失敗' : 
-                `Insert failed: ${insertError.message}`,
-        canContinue: true // 🔥 重要: DB失敗でも画面表示は継続
+        reason: is403 ? '403 RLS疑い' : is406 ? '406 No rows' : `Insert failed: ${insertError.message}`,
+        canContinue: true
       }
     }
 
-    console.log('✅ ensureProfileForUser: New profile created', {
-      profileId: newProfile.id,
-      userId: newProfile.user_id
-    })
+    logger.debug('[ENSURE_PROFILE] created:', newProfile.id?.slice(0, 8))
 
     return {
       success: true,
@@ -303,7 +247,7 @@ export async function ensureProfileForUserSafe(
     }
 
   } catch (error) {
-    console.error('🚨 ensureProfileForUser: Unexpected error (継続可能)', error)
+    logger.error('[ENSURE_PROFILE] unexpected error')
     return {
       success: false,
       profile: null,
@@ -349,13 +293,13 @@ export async function checkProfileExists(
       .maybeSingle()
 
     if (error && error.code !== 'PGRST116') {
-      console.error('🚨 checkProfileExists: Error', error)
+      logger.error('[CHECK_PROFILE] error')
       return false
     }
 
     return !!data
   } catch (error) {
-    console.error('🚨 checkProfileExists: Unexpected error', error)
+    logger.error('[CHECK_PROFILE] unexpected error')
     return false
   }
 }

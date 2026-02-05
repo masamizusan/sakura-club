@@ -10,6 +10,7 @@
  */
 
 import { createClient } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
 
 const BUCKET_NAME = 'avatars'
 
@@ -27,37 +28,29 @@ export function resolveAvatarSrc(
   
   // 1. null/undefined/空文字 → デフォルトアイコン
   if (!avatar_url || avatar_url.trim() === '') {
-    console.log('🖼️ resolveAvatarSrc: No avatar_url provided → null (default icon)')
     return null
   }
-  
+
   // 2. Base64 Data URL → そのまま表示（互換性保持）
   if (avatar_url.startsWith('data:image/')) {
-    console.log('🖼️ resolveAvatarSrc: Base64 detected → direct display (compatibility)')
     return avatar_url
   }
-  
+
   // 3. HTTP/HTTPS URL → そのまま表示
   if (avatar_url.startsWith('http://') || avatar_url.startsWith('https://')) {
-    console.log('🖼️ resolveAvatarSrc: HTTP URL detected → direct display')
     return avatar_url
   }
-  
+
   // 4. Storage path → publicURL変換
   try {
     const supabase = supabaseClient || createClient()
     const { data } = supabase.storage
       .from(BUCKET_NAME)
       .getPublicUrl(avatar_url)
-    
-    const publicUrl = data.publicUrl
-    
-    console.log('🖼️ resolveAvatarSrc: Storage path converted →', publicUrl?.substring(0, 60) + '...')
-    return publicUrl
-    
+
+    return data.publicUrl
   } catch (error) {
-    console.error('🚨 resolveAvatarSrc: Failed to resolve storage path:', error)
-    console.error('   avatar_url:', avatar_url)
+    logger.error('[IMAGE] resolve failed:', avatar_url?.slice(0, 30))
     return null
   }
 }
@@ -89,14 +82,6 @@ export function resolveProfileImageSrc(
     profileData.avatarUrl
   ].filter(Boolean) // null/undefined を除外
   
-  console.log('🔄 resolveProfileImageSrc: 段階的移行対応', {
-    avatar_path_exists: !!profileData.avatar_path,
-    avatar_url_exists: !!profileData.avatar_url,
-    avatar_path_preview: profileData.avatar_path?.substring(0, 30) || 'none',
-    avatar_url_preview: profileData.avatar_url?.substring(0, 30) || 'none',
-    migration_strategy: 'avatar_path優先'
-  })
-  
   // 最初に有効な値を解決
   for (const url of candidateUrls) {
     const resolved = resolveAvatarSrc(url, supabaseClient)
@@ -104,8 +89,7 @@ export function resolveProfileImageSrc(
       return resolved
     }
   }
-  
-  console.log('🖼️ resolveProfileImageSrc: No valid image found in profile data')
+
   return null
 }
 
@@ -122,9 +106,7 @@ export function generateAvatarPath(userId: string, fileExtension: string = 'jpg'
   // 拡張子の正規化（ドット削除）
   const ext = fileExtension.replace(/^\./, '').toLowerCase()
   
-  const path = `avatars/${userId}/avatar.${ext}`
-  console.log('🖼️ generateAvatarPath:', path)
-  return path
+  return `avatars/${userId}/avatar.${ext}`
 }
 
 /**
@@ -160,9 +142,7 @@ export function detectBase64InImageFields(data: any): boolean {
   }
   
   if (base64Fields.length > 0) {
-    console.warn('🚨 Base64 Data URL detected in image fields:', base64Fields)
-    console.warn('   This should be migrated to Storage path')
-    console.warn('   Run: npm run migrate-avatars')
+    logger.warn('[IMAGE] Base64 detected:', base64Fields.join(', '))
     return true
   }
   

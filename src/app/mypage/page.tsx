@@ -12,6 +12,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
+import { logger } from '@/utils/logger'
 import { resolveProfileImageSrc, resolveAvatarSrc } from '@/utils/imageResolver'
 import Link from 'next/link'
 import { 
@@ -105,94 +106,47 @@ function MyPageContent() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      console.log('🆕 UNIFIED MyPage loadProfile called, user:', !!user, user?.id)
-      
-      // 🆕 CRITICAL: ユーザーが存在しない場合はAuthProviderに委譲（重複実行防止）
       if (!user || !user.id) {
-        console.log('🧪 MyPage: No user found - waiting for AuthProvider initialization')
         setIsLoading(false)
         return
       }
 
       try {
         setIsLoading(true)
-        
-        // 🔍 CRITICAL: sessionStorageからプロフィール保存デバッグログを読み込み
+
+        // sessionStorageからデバッグデータ読み込み
         const savedDebugData = sessionStorage.getItem(`profileEditSaveDebug_${user?.id || 'testmode'}`)
         if (savedDebugData) {
           try {
-            const debugData = JSON.parse(savedDebugData)
-            setSaveDebugData(debugData)
-            console.log('📊 MyPage: プロフィール保存デバッグデータ読み込み:', debugData)
+            setSaveDebugData(JSON.parse(savedDebugData))
           } catch (e) {
-            console.error('sessionStorage parse error:', e)
+            // ignore parse error
           }
         }
-        
-        // 🔗 user_id ベースでプロフィール取得・作成を保証（遷移継続保証版）
-        console.log('🔄 Loading profile with ensureProfileForUserSafe:', user.id)
+
         const { ensureProfileForUserSafe } = await import('@/lib/profile/ensureProfileForUser')
         const ensureResult = await ensureProfileForUserSafe(supabase, user)
         const profileData = ensureResult.profile
-        
+
         if (!ensureResult.success) {
-          console.warn('🚨 MyPage: Profile ensure failed but continuing with minimal display:', {
-            reason: ensureResult.reason,
-            canContinue: ensureResult.canContinue,
-            userId: user.id
-          })
-          
-          // MyPageでは最低限の表示を継続（編集ボタンは表示）
+          logger.warn('[MYPAGE] profile ensure failed:', ensureResult.reason)
           if (ensureResult.canContinue) {
-            // プロフィールなしでも基本的なMyPage表示
             setProfile(null)
-            calculateProfileCompletion(null) // nullでも計算可能
+            calculateProfileCompletion(null)
             setIsLoading(false)
             return
           } else {
-            // 致命的エラーの場合のみ停止
             setIsLoading(false)
             return
           }
         }
-        
-        // 🔍 CRITICAL: MyPage profiles select直後のpersonality_tags確認（Task A-1）
-        console.log('🚨 MyPage PROFILES SELECT結果 PERSONALITY_TAGS確認:', {
-          profiles_select_successful: !!profileData,
-          profileData_personality_tags: profileData?.personality_tags,
-          profileData_personality_tags_type: typeof profileData?.personality_tags,
-          profileData_personality_tags_isNull: profileData?.personality_tags === null,
-          profileData_personality_tags_isArray: Array.isArray(profileData?.personality_tags),
-          profileData_personality_tags_length: profileData?.personality_tags?.length || 0,
-          other_fields_check: {
-            name: profileData?.name,
-            height: profileData?.height,
-            occupation: profileData?.occupation
-          },
-          task_A1_check: 'MyPageでのprofiles取得直後の状態確認'
-        })
 
-        // ensureProfileForUser() で確実にプロフィールが取得されるため、
-        // 追加のエラーハンドリングやプロフィール作成は不要
-        
-        console.log('✅ Profile data loaded from Supabase:', {
-          userId: user.id,
-          hasProfile: !!profileData,
-          profileFields: Object.keys(profileData || {}).length
-        })
+        logger.debug('[MYPAGE] loaded:', user.id?.slice(0, 8))
 
-        // 🔒 SSOT_ID_CHECK: ユーザーID一致の恒久監視（混線即検知）
+        // SSOT_ID_CHECK: ユーザーID一致監視
         const idMatch = !profileData || profileData.user_id === user.id
-        if (process.env.NODE_ENV !== 'production' || !idMatch) {
-          console.log('🔒 SSOT_ID_CHECK', {
-            route: '/mypage',
-            authUid: user.id?.slice(0, 8),
-            profileUserId: profileData?.user_id?.slice(0, 8) || 'none',
-            ok: idMatch
-          })
-        }
         if (!idMatch) {
-          console.error('🚨 SSOT_ID_CHECK FAILED: MyPage profile.user_id !== authUser.id — 混線検出')
+          logger.error('[MYPAGE] ID mismatch detected')
           setUserMismatchDetected(true)
         }
         
@@ -210,16 +164,13 @@ function MyPageContent() {
             const { data: sessionData } = await supabase.auth.getSession()
             const token = sessionData?.session?.access_token
             if (token) {
-              console.log('📅 MyPage: age null検出 → post-signup-profileで補完試行')
               const res = await fetch('/api/auth/post-signup-profile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ birth_date: profileData.birth_date })
               })
               const resBody = await res.json().catch(() => null)
-              console.log('📅 MyPage: age補完結果', { status: res.status, body: resBody })
               if (resBody?.updatedFields?.includes('age')) {
-                // profileDataにも反映（再フェッチ不要）
                 const m = String(profileData.birth_date).match(/^(\d{4})-(\d{2})-(\d{2})$/)
                 if (m) {
                   const [, y, mo, d] = m.map(Number)
@@ -232,7 +183,7 @@ function MyPageContent() {
               }
             }
           } catch (e) {
-            console.warn('⚠️ MyPage: age補完失敗（続行）:', e)
+            // age補完失敗（続行）
           }
         }
 
@@ -242,19 +193,15 @@ function MyPageContent() {
           || (pIsForeignMale && !profileData?.nationality)
           || (!pIsForeignMale && !profileData?.residence && !profileData?.prefecture)
         if (missingRequired) {
-          console.log('⚠️ 修繕H: 必須項目欠落 → /profile/edit へ誘導', {
-            name: !!profileData?.name, gender: !!profileData?.gender,
-            birth_date: !!profileData?.birth_date,
-            nationality: profileData?.nationality, residence: profileData?.residence,
-          })
+          logger.debug('[MYPAGE] missing required → redirect to edit')
           const pType = pIsForeignMale ? 'foreign-male' : 'japanese-female'
           const params = new URLSearchParams({ type: pType, fromMyPage: 'true' })
           languageRouter.push('/profile/edit', params)
           return
         }
-        
+
       } catch (error) {
-        console.error('❌ Error loading profile:', error)
+        logger.error('[MYPAGE] load error:', error instanceof Error ? error.message : 'unknown')
         setProfile(null)
         setProfileCompletion(0)
         setCompletedItems(0)
@@ -266,153 +213,60 @@ function MyPageContent() {
     loadProfile()
   }, [user, supabase])
 
-  // 🚨 CRITICAL FIX: 完成度計算単一化（Supabaseデータのみ）
+  // 完成度計算（Supabaseデータのみ）
   const calculateProfileCompletion = (profileData: any) => {
     const isForeignMale = profileData?.gender === 'male' && profileData?.nationality && profileData?.nationality !== '日本'
-    
-    console.log('🏠 MyPage: 統一完成度計算開始:', {
-      userId: user?.id,
-      hasProfileData: !!profileData,
-      isForeignMale
-    })
-    
-    // 🚨 SSOT: DB基準を最優先、sessionData補完は保存直後のUX補助のみ（指示書対応）
+
+    // sessionData補完（保存直後のUX補助のみ）
     const sessionSkills = (() => {
-      // DB基準優先：profileData.language_skillsがあれば補完不要
       if (Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0) {
-        console.log('🚨 SSOT: DB優先 - profileData.language_skillsを使用')
-        return [] // 補完不要
+        return [] // DB優先
       }
-      
       if (typeof window === 'undefined') return []
       try {
-        // 保存直後のUX補助としてのみsessionData使用
         const urlParams = new URLSearchParams(window.location.search)
         const userId = urlParams.get('userId') || user?.id
         const previewDataKey = userId ? `previewData_${userId}` : 'previewData'
-        
         let savedData = sessionStorage.getItem(previewDataKey)
         if (!savedData) savedData = sessionStorage.getItem('previewData')
-        
         if (savedData) {
           const sessionData = JSON.parse(savedData)
-          console.log('🚨 SSOT: DB補完 - sessionDataから一時補助')
           return Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
         }
-      } catch (error) {
-        console.warn('⚠️ language_skills session取得失敗:', error)
+      } catch {
+        // ignore
       }
       return []
     })()
 
-    // 正規化されたプロフィールデータを作成（Supabase実態に合わせたキーマッピング + NULL→[]正規化）
+    // 正規化
     const normalized: any = {
       ...profileData,
-      // 🔧 DB実態キーマッピング修正
-      nickname: profileData?.name || profileData?.nickname,           // DB: name
-      self_introduction: profileData?.bio || profileData?.self_introduction, // DB: bio
-      // 🛡️ avatar_url保護: NULL正規化の対象外（どんな値でも保持）
-      avatar_url: profileData?.avatar_url, // data URI/HTTP/Storage path全て保護
-      // 🚨 NULL→[]正規化: hobbies/personalityフィールドマッピング  
-      hobbies: Array.isArray(profileData?.culture_tags) 
-        ? profileData.culture_tags 
+      nickname: profileData?.name || profileData?.nickname,
+      self_introduction: profileData?.bio || profileData?.self_introduction,
+      avatar_url: profileData?.avatar_url,
+      hobbies: Array.isArray(profileData?.culture_tags)
+        ? profileData.culture_tags
         : (Array.isArray(profileData?.interests) ? profileData.interests : []),
-      personality: Array.isArray(profileData?.personality_tags) 
-        ? profileData.personality_tags 
-        : (Array.isArray(profileData?.personality) ? profileData.personality : []),  // DB: personality_tags配列（null→[]正規化）
-      // 🚨 SSOT: language_skills DB基準統合（指示書対応）
+      personality: Array.isArray(profileData?.personality_tags)
+        ? profileData.personality_tags
+        : (Array.isArray(profileData?.personality) ? profileData.personality : []),
       language_skills: Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0
-        ? profileData.language_skills  // DB優先
-        : sessionSkills               // 保存直後UX補助のみ
+        ? profileData.language_skills
+        : sessionSkills
     }
-    
-    // 🔍 DB実データ確認ログ（culture_tags問題特定用 + NULL→[]正規化確認）
-    console.log('🧩 DB DATA CHECK + NULL NORMALIZATION:', {
-      db_personality_tags: profileData?.personality_tags,
-      db_culture_tags: profileData?.culture_tags,
-      db_personality_tags_isNull: profileData?.personality_tags === null,
-      db_culture_tags_isNull: profileData?.culture_tags === null,
-      db_personality_tags_type: typeof profileData?.personality_tags,
-      db_culture_tags_type: typeof profileData?.culture_tags,
-      normalized_personality: normalized.personality,
-      normalized_hobbies: normalized.hobbies,
-      normalized_personality_length: normalized.personality?.length || 0,
-      normalized_hobbies_length: normalized.hobbies?.length || 0,
-      null_normalization_applied: {
-        personality_tags: profileData?.personality_tags === null ? 'null→[]変換済み' : '配列または他の値',
-        culture_tags: profileData?.culture_tags === null ? 'null→[]変換済み' : '配列または他の値'
-      }
-    })
-    
-    // 🚨 SINGLE SOURCE: 統一完成度計算システムのみを使用
+
     const { calculateCompletion } = require('@/utils/profileCompletion')
     const userType = isForeignMale ? 'foreign-male' : 'japanese-female'
-    
-    // 🔍 STEP2 DEBUG: 完成度計算に渡すデータの詳細確認
-    console.log('🔍 STEP2 DEBUG - MyPage完成度計算入力データ:', {
-      userType,
-      imageArray_passed: [],  // 現在は空配列を渡している
-      normalized_avatar_url: normalized.avatar_url ? `${normalized.avatar_url.substring(0, 30)}...` : 'none',
-      normalized_avatarUrl: normalized.avatarUrl ? `${normalized.avatarUrl.substring(0, 30)}...` : 'none', 
-      normalized_profile_image: normalized.profile_image ? `${normalized.profile_image.substring(0, 30)}...` : 'none',
-      normalized_profile_images: normalized.profile_images,
-      mypage_display_uses: 'avatar_url + profile_image',
-      completion_will_check: 'profile_images (empty) + fallback to avatar_url'
-    })
-    
     const result = calculateCompletion(normalized, userType, [], false)
-    
-    // 🛡️ CRITICAL: 計算矛盾検出ガード（14項目固定 - cityは除外だが項目数変更禁止）
-    const totalExpected = userType === 'japanese-female' ? 14 : 17
-    const isConsistent = result.totalFields === totalExpected
-    const isValidCalculation = result.completedFields <= result.totalFields
-    
-    console.log('🔧 CALCULATION GUARD CHECK:', {
-      userType,
-      totalExpected,
-      result_totalFields: result.totalFields,
-      result_completedFields: result.completedFields,
-      result_completion: result.completion,
-      isConsistent,
-      isValidCalculation,
-      calculationSource: 'calculateCompletion統一システム'
-    })
-    
-    // 🚨 計算矛盾時は強制エラー表示
-    if (!isConsistent || !isValidCalculation) {
-      console.error('❌ CALCULATION INCONSISTENCY DETECTED:', {
-        expected_total: totalExpected,
-        actual_total: result.totalFields,
-        completed: result.completedFields,
-        userType
-      })
-    }
-    
-    // 🚨 SSOT最終確認ログ（指示書対応）- cityは除外
-    const missingFields = []
-    // ⚠️ city は完成度計算から除外（UI削除済み）
-    if (!Array.isArray(normalized.language_skills) || normalized.language_skills.length === 0) missingFields.push('language_skills')
-    
-    console.log('🚨 SSOT FINAL CHECK - DB基準100%検証 (city除外版):', {
-      'DB_language_skills': profileData?.language_skills,
-      'DB_language_skills_isArray': Array.isArray(profileData?.language_skills),
-      'DB_language_skills_length': profileData?.language_skills?.length || 0,
-      'sessionSkills_used_as_fallback': sessionSkills.length,
-      'normalized_language_skills_source': Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0 ? 'DB' : 'session補完',
-      'city_status': 'EXCLUDED_FROM_COMPLETION',
-      'missing_for_100%': missingFields,
-      'DB基準100%達成': missingFields.length === 0 && Array.isArray(profileData?.language_skills)
-    })
 
-    console.log('✅ MyPage完成度計算完了（統一）:', {
-      completion: result.completion,
-      completedFields: result.completedFields,
-      totalFields: result.totalFields,
-      userType,
-      missing: missingFields,
-      is_100_percent: missingFields.length === 0 && result.completion === 100,
-      singleSourceOnly: true
-    })
+    // 計算矛盾検出
+    const totalExpected = userType === 'japanese-female' ? 14 : 17
+    if (result.totalFields !== totalExpected || result.completedFields > result.totalFields) {
+      logger.error('[MYPAGE] calc inconsistency:', result.completedFields, '/', result.totalFields)
+    }
+
+    logger.debug('[MYPAGE] completion:', result.completion, '%', `(${result.completedFields}/${result.totalFields})`)
     
     // UI更新
     setProfileCompletion(result.completion)
@@ -425,7 +279,7 @@ function MyPageContent() {
       await supabase.auth.signOut()
       router.push('/')
     } catch (error) {
-      console.error('Logout error:', error)
+      logger.error('[MYPAGE] logout error')
     } finally {
       setIsLoggingOut(false)
     }
@@ -480,20 +334,7 @@ function MyPageContent() {
             <div className="flex items-center mb-6">
               <div className="relative">
                 {(() => {
-                  // 🔥 MyPage画像表示恒久修正: 判定ロジックから切り離し
-                  console.log('🔍 MyPage Avatar Debug:', {
-                    profile_avatar_url_preview: profile?.avatar_url?.substring(0, 30) || 'null',
-                    profile_avatar_url_type: typeof profile?.avatar_url,
-                    profile_avatar_url_length: profile?.avatar_url?.length || 0
-                  })
-                  
                   const avatarSrc = resolveAvatarSrc(profile?.avatar_url, supabase)
-                  console.log('🔍 MyPage Avatar Resolve Result:', {
-                    resolved_src_preview: avatarSrc?.substring(0, 60) || 'null',
-                    will_show_image: !!avatarSrc
-                  })
-                  
-                  // 🛡️ 画像表示は完成度判定から完全切り離し - avatar_urlがあれば必ず表示を試みる
                   return avatarSrc ? (
                     <img
                       src={avatarSrc}
@@ -570,17 +411,10 @@ function MyPageContent() {
                         id: `photo_${index}`,
                         url: url,
                         originalUrl: url,
-                        isMain: index === 0, // 先頭をメイン画像
+                        isMain: index === 0,
                         isEdited: false
                       }))
-                      
-                      console.log('🔄 MyPage→Edit: photo_urlsから画像データ構築:', {
-                        photo_urls_count: profile.photo_urls.length,
-                        imageData_length: imageData.length,
-                        main_image: imageData[0]?.url?.substring(0, 30) + '...'
-                      })
                     }
-                    // 🔧 STEP 2: avatar_url後方互換
                     else if (typeof profile?.avatar_url === "string" && profile.avatar_url.trim().length > 0) {
                       imageData = [{
                         id: '1',
@@ -589,35 +423,24 @@ function MyPageContent() {
                         isMain: true,
                         isEdited: false
                       }]
-                      
-                      console.log('🔄 MyPage→Edit: avatar_urlから画像データ構築（後方互換）:', {
-                        avatar_url_preview: profile.avatar_url.substring(0, 30) + '...',
-                        isBase64: profile.avatar_url.startsWith('data:image/')
-                      })
                     }
-                    
+
                     if (imageData.length > 0) {
                       localStorage.setItem('currentProfileImages', JSON.stringify(imageData))
-                      console.log('🎯 MyPage→Edit遷移: 画像データ保存完了', {
-                        saved_count: imageData.length,
-                        source: Array.isArray(profile?.photo_urls) && profile.photo_urls.length > 0 ? 'photo_urls' : 'avatar_url',
-                        purpose: '複数画像データの永続化'
-                      })
                     } else {
                       localStorage.removeItem('currentProfileImages')
-                      console.log('🎯 MyPage→Edit遷移: 画像なし - localStorage クリア完了')
                     }
-                    
+
                     const editParams = new URLSearchParams({
                       fromMyPage: 'true',
                       type: profileType
                     })
-                    
+
                     setTimeout(() => {
                       languageRouter.push('/profile/edit', editParams)
                     }, 100)
                   } catch (error) {
-                    console.error('❌ プロフィール編集遷移エラー:', error)
+                    logger.error('[MYPAGE] edit navigation error')
                   }
                 }}
               >

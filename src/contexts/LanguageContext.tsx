@@ -1,12 +1,13 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 import { SupportedLanguage } from '@/utils/language'
-import { 
+import {
   determineLanguageWithCookie,
   saveLanguageToCookie,
-  getLanguageFromCookie 
+  getLanguageFromCookie
 } from '@/utils/languageCookie'
+import { logger } from '@/utils/logger'
 
 interface LanguageContextType {
   currentLanguage: SupportedLanguage
@@ -24,35 +25,32 @@ interface LanguageProviderProps {
 export function LanguageProvider({ children, initialLanguage }: LanguageProviderProps) {
   const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(initialLanguage || 'ja')
   const [isLoading, setIsLoading] = useState(true)
+  const loggedOnce = useRef(false)
 
   useEffect(() => {
-    // URL parameters에서 lang 확인 (navigation 시 전달된 언어)
     const urlParams = new URLSearchParams(window.location.search)
     const urlLanguage = urlParams.get('lang') as SupportedLanguage
-    
+
     let detectedLanguage: SupportedLanguage
-    
+
     if (urlLanguage && ['ja', 'en', 'ko', 'zh-tw'].includes(urlLanguage)) {
-      // URL에서 전달된 언어가 있으면 우선 사용하고 cookie에 저장
       detectedLanguage = urlLanguage
       saveLanguageToCookie(urlLanguage)
     } else {
-      // Cookie優先システムで言語를 결정
       detectedLanguage = determineLanguageWithCookie()
     }
-    
+
     setCurrentLanguage(detectedLanguage)
     setIsLoading(false)
-    
-    console.log('🌍 Language Provider initialized with cookie system:', {
-      detectedLanguage,
-      urlLanguage,
-      cookieExists: !!getLanguageFromCookie()
-    })
+
+    if (!loggedOnce.current) {
+      loggedOnce.current = true
+      logger.debug('[LANG] init:', detectedLanguage)
+    }
   }, [])
 
   const setLanguage = (language: SupportedLanguage) => {
-    console.log('🌍 Language changed from', currentLanguage, 'to', language)
+    logger.debug('[LANG] change:', currentLanguage, '→', language)
     setCurrentLanguage(language)
     
     // Cookie優先永続化（1年間）

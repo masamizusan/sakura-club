@@ -487,14 +487,7 @@ function calculateCompletion17Fields(profile: ProfileData, imageArray?: any[]): 
     completedCount++
   }
   
-  // 🔍 デバッグログ（指示書対応）
-  console.log('[PROFILE_FOR_SCORE]', {
-    visit_schedule: profile.visit_schedule,
-    travel_companion: profile.travel_companion,
-    visitScheduleFilled,
-    travelCompanionFilled
-  })
-  console.log('[SCORE]', { completedCount, totalCount: 17, percent: Math.round((completedCount / 17) * 100) })
+  // デバッグログ削除（本番ノイズ防止）
   
   // 17. プロフィール画像
   if (hasProfileImages(profile, imageArray)) {
