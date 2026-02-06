@@ -776,3 +776,79 @@ setDidInitialCalc(true)
 - `5b993ef0` — 修繕D/F最終確定ルール文書化
 - `97c719a6` — post-signup-profile API新規作成 + signup連携
 - `a824e753` — signup分岐厳密化（既存ユーザー案内・誤続行防止・スピナー確実解除）
+
+---
+
+## ✅ 第1章 完了（2026-02-07）：ログイン〜MyPage〜Edit〜Preview〜MyPage + ログ整理
+
+### 📋 対象範囲
+
+1. 既存ユーザーのログイン
+2. `profile_initialized` 判定に基づく遷移
+3. `/mypage` 表示
+4. MyPage → `/profile/edit`（fromMyPage=true）
+5. `/profile/edit` → `/profile/preview` → 確定保存 → `/mypage`
+6. MyPage → Edit へ戻る導線
+
+### ✅ 結果
+
+本番URL（Vercel）で上記フローの動作確認を実施し、挙動は期待通り。
+
+---
+
+### 🧹 ログ整理（完了条件と運用ルール）
+
+#### 目標（達成）
+
+- 本番（`NODE_ENV=production`）では `warn/error` のみが出る設計を維持
+- 通常の成功パスで、コンソールが「ほぼ何も出ない」状態まで整理
+- 大量の `: Object` ダンプを排除（要約ログ中心へ）
+- 必要時のみ `NEXT_PUBLIC_DEBUG=true` で詳細ログを出せる
+
+#### 実施内容（要点）
+
+1. **console.* の削減／logger化の方針を徹底**
+2. **`NEXT_PUBLIC_DEBUG` / `NEXT_PUBLIC_LOG_LEVEL` によるログレベル制御**を運用ルールとして固定
+3. **payloadルール**: loggerに渡すのは string/number/boolean/短縮ID/件数中心。配列・オブジェクトは要約関数（summarize）を通す
+
+#### 最終チェック手順
+
+1. Vercel本番でConsoleを開き、`warn/error`以外が出ていないことを確認
+2. もし情報が不足する障害が発生した場合のみ、一時的に `NEXT_PUBLIC_DEBUG=true` で再現→ログ採取
+
+#### 今回の改善で減ったログ例
+
+- `[PROFILE_FOR_SCORE]` / `[SCORE]` などの巨大ダンプを排除
+- 成功パスのログは最小限、異常時だけ `warn/error` が目立つ設計へ
+
+---
+
+### 🛡️ 保護対象（第1章で確認・維持）
+
+以下はロジック維持の前提として保護対象：
+
+| ファイル | 保護内容 |
+|----------|----------|
+| `src/utils/profileCompletion.ts` | 完成度計算本体 |
+| `src/app/mypage/page.tsx` | MyPage主要ロジック |
+| `src/app/profile/preview/page.tsx` | プレビュー主要ロジック |
+| `src/utils/saveProfileToDb.ts` | 保存ロジック |
+
+- **完成度計算の定義**（日本人女性14項目／外国人男性17項目）は維持
+- **fromMyPage分岐**の思想は維持
+
+---
+
+### 📌 関連コミット
+
+- `fb604c24` — Chore: 本番ログ整理 - Test mode混入防止 + console.log→logger化
+- `45d7bade` — Chore: console.log削除（auth.ts, profileCompletion.ts）
+- `fc885695` — Refactor: Objectログ撲滅（PROFILE_FOR_SCORE/SCORE削除・主要ファイル整理）
+- `ef30809b` — Refactor: ログ整理（連打防止・COMPLETION/TASK詳細削除）
+- `a32bac78` — Refactor: ログ量削減＋logger統一＋本番安全弁の明文化
+
+---
+
+## 🚀 次章：多言語拡張・対象国拡大検討
+
+（本文は今後追加予定）
