@@ -86,17 +86,19 @@ export function ImageUpload({
         .from('avatars')
         .getPublicUrl(fileName)
 
-      // プロフィールテーブルを更新
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          profile_image: publicUrl,
-          updated_at: new Date().toISOString()
+      // プロフィールテーブルを更新（API経由 - RLS安全）
+      const updateResponse = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          updates: { profile_image: publicUrl }
         })
-        .eq('user_id', userId)
+      })
 
-      if (updateError) {
-        throw updateError
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Profile update failed')
       }
 
       onImageUpload(publicUrl)
@@ -123,17 +125,19 @@ export function ImageUpload({
           .remove([`${userId}/${fileName}`])
       }
 
-      // プロフィールテーブルを更新
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          profile_image: null,
-          updated_at: new Date().toISOString()
+      // プロフィールテーブルを更新（API経由 - RLS安全）
+      const updateResponse = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          updates: { profile_image: null }
         })
-        .eq('user_id', userId)
+      })
 
-      if (updateError) {
-        throw updateError
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Profile update failed')
       }
 
       onImageRemove()

@@ -137,54 +137,59 @@ export async function ensureProfileForUserSafe(
       }
     }
 
-    // 3. 新規プロフィール作成
-    logger.debug('[ENSURE_PROFILE] creating new')
+    // 3. 新規プロフィール作成（常にAPI経由 - RLS安全）
+    logger.debug('[ENSURE_PROFILE] creating new via API')
 
-    // 4-1. テストモードの場合は先にAPI経由で試行（RLS回避）
-    const testMode = isTestMode()
-    if (testMode) {
-      let apiSignupEmail: string | null = null
-      if (typeof window !== 'undefined') {
-        apiSignupEmail = sessionStorage.getItem('sc_signup_email')
-      }
+    // ブラウザ環境では常にAPI経由（RLS問題を回避）
+    if (typeof window !== 'undefined') {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
         const accessToken = currentSession?.access_token
-        if (accessToken) {
-          const apiResponse = await fetch('/api/ensure-profile', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({})
-          })
 
-          if (apiResponse.ok) {
-            const apiResult = await apiResponse.json()
-            if (apiResult.success && apiResult.profile) {
-              return {
-                success: true,
-                profile: apiResult.profile,
-                reason: 'テストモード - API経由で作成成功',
-                canContinue: true
-              }
+        const apiResponse = await fetch('/api/ensure-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
+          },
+          credentials: 'include', // cookie認証を含める
+          body: JSON.stringify({})
+        })
+
+        if (apiResponse.ok) {
+          const apiResult = await apiResponse.json()
+          if (apiResult.success && apiResult.profile) {
+            logger.debug('[ENSURE_PROFILE] API success:', apiResult.profile.id?.slice(0, 8))
+            return {
+              success: true,
+              profile: apiResult.profile,
+              reason: 'API経由で作成成功',
+              canContinue: true
             }
           }
+        } else {
+          const errorData = await apiResponse.json().catch(() => ({}))
+          logger.error('[ENSURE_PROFILE] API failed:', errorData.error)
+          return {
+            success: false,
+            profile: null,
+            reason: `API failed: ${errorData.error || apiResponse.status}`,
+            canContinue: true // 失敗しても画面は表示可能
+          }
         }
-      } catch {
-        // API fallback
+      } catch (apiError) {
+        logger.error('[ENSURE_PROFILE] API error:', apiError)
+        return {
+          success: false,
+          profile: null,
+          reason: `API error: ${apiError}`,
+          canContinue: true
+        }
       }
     }
 
-    // 4-2. 統一パイプライン経由でのプロフィール作成
+    // サーバーサイドの場合のみ直接操作（API Route内など）
     let signupEmail: string | null = null
-    if (typeof window !== 'undefined') {
-      signupEmail = sessionStorage.getItem('sc_signup_email')
-      if (signupEmail) {
-        sessionStorage.removeItem('sc_signup_email')
-      }
-    }
     const profileEmail = signupEmail || user.email || `test-${user.id.substring(0, 8)}@test.sakura-club.local`
 
     const newProfileData = {
@@ -192,57 +197,39 @@ export async function ensureProfileForUserSafe(
       user_id: user.id,
       email: profileEmail,
       created_at: new Date().toISOString(),
-      // 最小限の初期値（UIバリデーションと整合）
       name: null,
       gender: null,
       birth_date: null,
-      avatar_url: null, // ✅ OK: 画像は未設定が正解（Base64は絶対にセットしない）
-      // 🔧 FIXED: 新規プロフィールでは画像なし状態で初期化（空配列上書きを回避）
+      avatar_url: null,
       language_skills: []
     }
 
-    // 🚨 CRITICAL: upsert一本化（id=authUser.id で確実にINSERT or UPDATE）
     const { upsertProfile } = await import('@/utils/saveProfileToDb')
     const saveResult = await upsertProfile(
       supabase,
       user.id,
       newProfileData,
-      'ensureProfileForUser/clientSide',
+      'ensureProfileForUser/serverSide',
       ['id']
     )
 
-    let insertError: Error | null = null
-    let newProfile: any = null
-
     if (!saveResult.success) {
-      insertError = new Error(saveResult.error || 'Profile creation failed')
-      newProfile = null
-    } else {
-      newProfile = saveResult.data?.[0]
-      insertError = null
-    }
-
-    if (insertError) {
-      const errorAny = insertError as any
-      const is403 = errorAny.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('insufficient_privilege')
-      const is406 = errorAny.code === 'PGRST116' || insertError.message?.includes('No rows')
-
-      logger.error('[ENSURE_PROFILE] insert failed:', insertError.message)
-
+      logger.error('[ENSURE_PROFILE] server insert failed:', saveResult.error)
       return {
         success: false,
         profile: null,
-        reason: is403 ? '403 RLS疑い' : is406 ? '406 No rows' : `Insert failed: ${insertError.message}`,
+        reason: `Server insert failed: ${saveResult.error}`,
         canContinue: true
       }
     }
 
-    logger.debug('[ENSURE_PROFILE] created:', newProfile.id?.slice(0, 8))
+    const newProfile = saveResult.data?.[0]
+    logger.debug('[ENSURE_PROFILE] server created:', newProfile?.id?.slice(0, 8))
 
     return {
       success: true,
       profile: newProfile,
-      reason: 'New profile created',
+      reason: 'Server-side profile created',
       canContinue: true
     }
 

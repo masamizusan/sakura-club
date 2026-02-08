@@ -1,105 +1,37 @@
-import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
+/**
+ * 🔄 Supabaseクライアント統一版
+ *
+ * 重要: クライアント生成は src/lib/supabase/client.ts に一本化
+ * このファイルは後方互換性のためのリダイレクト + 型定義のみ
+ *
+ * 【Multiple GoTrueClient instances 対策】
+ * - createBrowserClient (@supabase/ssr) を唯一のクライアント生成源とする
+ * - cookie同期によりサーバー側と認証状態を共有
+ */
+
+import { createClient as createSSRClient } from '@/lib/supabase/client'
 import { LanguageSkill } from '@/types/profile'
 import { logger } from '@/utils/logger'
 
-// シングルトンクライアント（モード別）
-let supabaseInstance: SupabaseClient | null = null
-let testModeInstance: SupabaseClient | null = null
-// 🔒 修繕C: タブ別テストモードインスタンス管理
-const testModeInstances = new Map<string, SupabaseClient>()
 // 初回ログ用フラグ
 let loggedOnce = false
 
-// テストモード検出（統一）
-const isTestModeActive = (): boolean => {
-  if (typeof window === 'undefined') return false
-  
-  const urlParams = new URLSearchParams(window.location.search)
-  const pathname = window.location.pathname
-  
-  return !!(
-    urlParams.get('dev') === 'skip-verification' ||
-    urlParams.get('devTest') === 'true' ||
-    localStorage.getItem('devTestMode') === 'true' ||
-    pathname.includes('/test') ||
-    (pathname.includes('/profile/edit') && 
-     (urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname')) &&
-     urlParams.get('fromMyPage') !== 'true')
-  )
-}
-
+/**
+ * 🔒 統一クライアント取得（SSR対応版にリダイレクト）
+ *
+ * 以前のテストモード分岐は廃止し、常にSSRクライアントを返す
+ * - cookie同期によりセッション管理が安定
+ * - Multiple GoTrueClient警告を解消
+ */
 export const createClient = () => {
-  const isTestMode = isTestModeActive()
-
-  // 🔒 修繕C: タブ別インスタンス取得（タブIDが未生成なら先に生成）
-  let tabStorageKey: string | null = null
-  if (isTestMode && typeof sessionStorage !== 'undefined') {
-    let tabId = sessionStorage.getItem('sc_test_tab_id')
-    if (!tabId) {
-      tabId = crypto.randomUUID()
-      sessionStorage.setItem('sc_test_tab_id', tabId)
-    }
-    tabStorageKey = `sakura-club-test-session-${tabId}`
-    const cached = testModeInstances.get(tabStorageKey)
-    if (cached) {
-      return cached // 再利用時はログ不要
-    }
+  // 初回のみログ出力
+  if (!loggedOnce) {
+    loggedOnce = true
+    logger.debug('[SUPABASE] unified client (SSR)')
   }
 
-  // PROD mode: シングルトン再利用
-  if (!isTestMode && supabaseInstance) {
-    return supabaseInstance // 再利用時はログ不要
-  }
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
-
-  if (!url || !key) {
-    const error = new Error('Supabase環境変数が設定されていません')
-    logger.error('[SUPABASE] 環境変数エラー')
-    throw error
-  }
-
-  if (!url.startsWith('https://')) {
-    const error = new Error(`無効なSupabase URL: ${url}`)
-    logger.error('[SUPABASE] URL形式エラー')
-    throw error
-  }
-
-  try {
-    const testStorageKey = tabStorageKey || 'sakura-club-test-session'
-    const clientOptions = isTestMode ? {
-      auth: {
-        persistSession: true, // 🛡️ セッション永続化で user_id 固定
-        autoRefreshToken: true, // 🛡️ トークン自動更新で継続性確保
-        storage: window.localStorage, // 🛡️ localStorage でセッション保持
-        storageKey: testStorageKey, // 🛡️ テスト専用キー（タブ別分離）
-      }
-    } : undefined
-    
-    const newInstance = createSupabaseClient(url, key, clientOptions)
-    
-    // モード別インスタンスに保存
-    if (isTestMode) {
-      testModeInstance = newInstance
-      if (tabStorageKey) {
-        testModeInstances.set(tabStorageKey, newInstance)
-      }
-    } else {
-      supabaseInstance = newInstance
-    }
-
-    // 初回のみログ出力
-    if (!loggedOnce) {
-      loggedOnce = true
-      logger.debug('[SUPABASE] client created:', isTestMode ? 'TEST' : 'PROD')
-    }
-
-    return newInstance
-  } catch (error) {
-    logger.error('[SUPABASE] client creation failed')
-    throw error
-  }
+  // SSR対応クライアントに一本化
+  return createSSRClient()
 }
 
 export type Database = {

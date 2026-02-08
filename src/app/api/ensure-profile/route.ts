@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// no-cacheヘッダー
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 /**
  * 🛡️ プロフィール確保API（RLS準拠版）
@@ -14,11 +23,12 @@ export const dynamic = 'force-dynamic'
  * 🔒 SECURITY:
  * - userIdをリクエストから受け取らない（偽装不可能）
  * - authUser.idのみを使用（JWTから取得）
- * - Authorization Bearerで認証（Cookie同期不要）
- * - ユーザーセッションクライアントでRLSが効く
+ * - Cookie方式とBearer方式の両方をサポート
  */
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 [ensure-profile] API started')
+
   try {
     // 🔒 Authorization Bearer からアクセストークンを取得
     const authHeader = request.headers.get('Authorization')
@@ -30,6 +40,7 @@ export async function POST(request: NextRequest) {
 
     if (bearerToken) {
       // Bearer方式: トークンから直接 Supabase client を生成（RLS有効）
+      console.log('🔐 [ensure-profile] Using Bearer token')
       supabase = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -43,22 +54,48 @@ export async function POST(request: NextRequest) {
       authUser = result.data?.user
       authError = result.error
     } else {
-      // フォールバック: Cookie方式（通常のブラウザセッション）
-      supabase = createServerClient(request)
+      // Cookie方式: cookies() from next/headers（debug/sessionと同じ方式）
+      console.log('🍪 [ensure-profile] Using cookies')
+      const cookieStore = cookies()
+      const allCookies = cookieStore.getAll()
+      const hasSbCookies = allCookies.some(c => c.name.startsWith('sb-'))
+
+      console.log('🍪 [ensure-profile] Cookies:', {
+        count: allCookies.length,
+        hasSbCookies
+      })
+
+      supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll()
+            },
+            setAll(cookiesToSet) {
+              // Route Handlerでは設定不要
+            },
+          },
+        }
+      )
       const result = await supabase.auth.getUser()
       authUser = result.data?.user
       authError = result.error
     }
 
+    console.log('🔐 [ensure-profile] Auth result:', {
+      hasUser: !!authUser,
+      userId: authUser?.id?.slice(0, 8),
+      error: authError?.message
+    })
+
     // 未認証チェック
     if (authError || !authUser) {
-      console.warn('🚨 ensureProfile API: 認証失敗', {
-        authError: authError?.message,
-        hasAuthUser: !!authUser
-      })
+      console.warn('🚨 [ensure-profile] Auth failed')
       return NextResponse.json(
         { error: '認証が必要です' },
-        { status: 401 }
+        { status: 401, headers: noCacheHeaders }
       )
     }
 
@@ -82,7 +119,7 @@ export async function POST(request: NextRequest) {
       console.error('🚨 ensureProfile API: Search error', searchError)
       return NextResponse.json(
         { error: `Search failed: ${searchError.message}` },
-        { status: 500 }
+        { status: 500, headers: noCacheHeaders }
       )
     }
 
@@ -111,21 +148,21 @@ export async function POST(request: NextRequest) {
             success: true,
             profile: existingProfile,
             reason: 'Profile exists (email update blocked by RLS)'
-          })
+          }, { headers: noCacheHeaders })
         }
 
         return NextResponse.json({
           success: true,
           profile: updatedProfile,
           reason: 'Profile exists and email updated'
-        })
+        }, { headers: noCacheHeaders })
       }
 
       return NextResponse.json({
         success: true,
         profile: existingProfile,
         reason: 'Profile already exists'
-      })
+      }, { headers: noCacheHeaders })
     }
 
     // 🔒 Legacy id fallback 完全撤廃（混線の温床）
@@ -155,7 +192,7 @@ export async function POST(request: NextRequest) {
       console.error('🚨 ensureProfile API: Insert failed (RLS may block)', insertError)
       return NextResponse.json(
         { error: `Insert failed: ${insertError.message}` },
-        { status: 500 }
+        { status: 500, headers: noCacheHeaders }
       )
     }
 
@@ -168,13 +205,13 @@ export async function POST(request: NextRequest) {
       success: true,
       profile: newProfile,
       reason: 'New profile created'
-    })
+    }, { headers: noCacheHeaders })
 
   } catch (error) {
-    console.error('🚨 ensureProfile API: Unexpected error', error)
+    console.error('🚨 [ensure-profile] Unexpected error:', error)
     return NextResponse.json(
       { error: `Unexpected error: ${error}` },
-      { status: 500 }
+      { status: 500, headers: noCacheHeaders }
     )
   }
 }

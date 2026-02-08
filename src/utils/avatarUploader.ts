@@ -182,54 +182,53 @@ export async function updateProfileAvatar(
     return uploadResult
   }
   
-  // 🔄 段階的移行: avatar_pathカラム優先、fallbackはavatar_url
-  console.log('💾 Updating profiles.avatar_path (safe migration):', uploadResult.storagePath)
-  
-  const updateData: any = {
-    updated_at: new Date().toISOString()
-  }
-  
-  // 🔄 avatar_pathカラムが存在するかチェック（段階的移行対応）
+  // 🔄 段階的移行: avatar_urlカラムに保存（API経由でRLS安全）
+  console.log('💾 Updating profiles.avatar_url via API:', uploadResult.storagePath)
+
   try {
-    // まずavatar_pathに保存を試行
-    updateData.avatar_path = uploadResult.storagePath
-    console.log('🆕 Trying to save to avatar_path column')
-    
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('user_id', userId)
-    
-    if (updateError && updateError.code === '42703') {
-      // カラムが存在しない場合はavatar_urlにfallback（安全版）
-      console.log('🔄 avatar_path column not found, fallback to avatar_url')
-      delete updateData.avatar_path
-      updateData.avatar_url = uploadResult.storagePath
-      
-      const { error: fallbackError } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('user_id', userId)
-      
-      if (fallbackError) {
-        console.error('❌ Profile fallback update failed:', fallbackError)
+    // ブラウザ環境ではAPI経由、サーバー環境では直接更新
+    if (typeof window !== 'undefined') {
+      // クライアント側: API経由で更新（RLS安全）
+      const updateResponse = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          updates: { avatar_url: uploadResult.publicUrl }
+        })
+      })
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json().catch(() => ({}))
+        console.error('❌ Profile API update failed:', errorData)
         return {
           ...uploadResult,
           dbUpdateSuccess: false,
-          error: `Fallback DB update failed: ${fallbackError.message}`
+          error: `API update failed: ${errorData.error || 'Unknown error'}`
         }
       }
-      
-      console.log('✅ Profile avatar_url updated (fallback)')
-    } else if (updateError) {
-      console.error('❌ Profile avatar_path update failed:', updateError)
-      return {
-        ...uploadResult,
-        dbUpdateSuccess: false,
-        error: `DB update failed: ${updateError.message}`
-      }
+
+      console.log('✅ Profile avatar_url updated via API')
     } else {
-      console.log('✅ Profile avatar_path updated successfully')
+      // サーバー側: 直接更新（supabaseClientが適切な権限を持つ前提）
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: uploadResult.publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+
+      if (updateError) {
+        console.error('❌ Profile direct update failed:', updateError)
+        return {
+          ...uploadResult,
+          dbUpdateSuccess: false,
+          error: `DB update failed: ${updateError.message}`
+        }
+      }
+
+      console.log('✅ Profile avatar_url updated directly (server-side)')
     }
   } catch (error) {
     console.error('❌ Profile update error:', error)
