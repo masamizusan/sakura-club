@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
+// 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-/**
- * GET /api/likes/remaining
- *
- * 今日の残りいいね回数を取得する
- * - 1日10回の制限
- * - 日付はAsia/Tokyo基準
- *
- * @returns { remaining: number, used: number, limit: number }
- */
+// no-cacheヘッダー
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 const DAILY_LIMIT = 10
 
@@ -20,85 +18,71 @@ const DAILY_LIMIT = 10
  * Asia/Tokyo基準で今日の開始時刻（UTC）を取得
  */
 function getTodayStartUTC(): Date {
-  // 現在のUTC時刻
   const now = new Date()
-
-  // Asia/Tokyo = UTC+9
-  // 日本時間の00:00:00をUTCに変換
   const jstOffset = 9 * 60 * 60 * 1000 // 9時間 in ms
-
-  // 日本時間での今日の日付を取得
   const jstNow = new Date(now.getTime() + jstOffset)
   const jstYear = jstNow.getUTCFullYear()
   const jstMonth = jstNow.getUTCMonth()
   const jstDate = jstNow.getUTCDate()
-
-  // 日本時間の今日00:00:00をUTCに変換（= UTC 15:00 前日）
   const todayStartJST = new Date(Date.UTC(jstYear, jstMonth, jstDate, 0, 0, 0, 0))
   const todayStartUTC = new Date(todayStartJST.getTime() - jstOffset)
-
   return todayStartUTC
 }
 
+/**
+ * GET /api/likes/remaining
+ *
+ * 今日の残りいいね回数を取得する
+ * - 1日10回の制限
+ * - 日付はAsia/Tokyo基準
+ */
 export async function GET(request: NextRequest) {
   // デバッグ: cookieの確認
-  const cookies = request.cookies.getAll()
-  console.log('🍪 [likes/remaining] Cookies:', cookies.map(c => c.name))
+  const requestCookies = request.cookies.getAll()
+  const cookieNames = requestCookies.map(c => c.name)
+  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+  console.log('🍪 [likes/remaining] Cookies:', { names: cookieNames, hasSbCookies })
 
   try {
-    // 認証（cookie優先、Bearer tokenフォールバック）
-    const supabase = createServerClient(request)
-    let authUser = null
-
-    // まずcookieベースで認証を試行
-    const cookieResult = await supabase.auth.getUser()
-
-    if (cookieResult.data?.user) {
-      authUser = cookieResult.data.user
-      console.log('✅ [likes/remaining] Auth via cookie:', authUser.id.slice(0, 8))
-    } else {
-      // Bearer tokenフォールバック
-      const authHeader = request.headers.get('Authorization')
-      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-
-      if (bearerToken) {
-        const tokenClient = createSupabaseClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          { global: { headers: { Authorization: `Bearer ${bearerToken}` } } }
-        )
-        const tokenResult = await tokenClient.auth.getUser(bearerToken)
-        if (tokenResult.data?.user) {
-          authUser = tokenResult.data.user
-          console.log('✅ [likes/remaining] Auth via Bearer token:', authUser.id.slice(0, 8))
-        }
+    // Supabaseクライアント作成（直接createServerClientを使用）
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // Route Handlerでは設定不要
+          },
+        },
       }
-    }
+    )
 
-    if (!authUser) {
-      console.log('❌ [likes/remaining] Auth failed')
+    // 認証チェック
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    console.log('🔐 [likes/remaining] Auth result:', {
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      error: authError?.message
+    })
+
+    if (authError || !user) {
+      console.log('❌ [likes/remaining] Auth failed:', authError?.message)
+      // 必ず401に統一（403は使わない）
       return NextResponse.json({
-        error: '認証が必要です',
-        debug: { cookieNames: cookies.map(c => c.name) }
-      }, { status: 401 })
+        error: 'Authentication required',
+        debug: {
+          authError: authError?.message,
+          hasSbCookies,
+          cookieNames
+        }
+      }, { status: 401, headers: noCacheHeaders })
     }
 
-    const userId = authUser.id
-
-    // profiles存在チェック（安全ガード：profilesにないユーザーは拾わない）
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .or(`id.eq.${userId},user_id.eq.${userId}`)
-      .maybeSingle()
-
-    if (!profile) {
-      console.log('⚠️ [likes/remaining] Profile not found for user:', userId.slice(0, 8))
-      return NextResponse.json({
-        error: 'プロフィールが見つかりません',
-        debug: { reason: 'profile_not_found' }
-      }, { status: 403 })
-    }
+    const userId = user.id
 
     // 今日の開始時刻（UTC）を取得
     const todayStartUTC = getTodayStartUTC()
@@ -112,20 +96,30 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[likes/remaining] count error:', error)
-      return NextResponse.json({ error: 'いいね数の取得に失敗しました' }, { status: 500 })
+      // 500に統一（403は使わない）
+      return NextResponse.json({
+        error: 'Database error',
+        debug: { message: error.message }
+      }, { status: 500, headers: noCacheHeaders })
     }
 
     const used = count || 0
     const remaining = Math.max(0, DAILY_LIMIT - used)
 
+    console.log('✅ [likes/remaining] Result:', { used, remaining, limit: DAILY_LIMIT })
+
     return NextResponse.json({
       remaining,
       used,
       limit: DAILY_LIMIT
-    })
+    }, { headers: noCacheHeaders })
 
   } catch (error) {
     console.error('[likes/remaining] unexpected error:', error)
-    return NextResponse.json({ error: '予期しないエラーが発生しました' }, { status: 500 })
+    // 500に統一
+    return NextResponse.json({
+      error: 'Unexpected error',
+      debug: { message: error instanceof Error ? error.message : String(error) }
+    }, { status: 500, headers: noCacheHeaders })
   }
 }

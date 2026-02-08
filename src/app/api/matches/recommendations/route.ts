@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
+// 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
+// no-cacheヘッダー
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 /**
  * GET /api/matches/recommendations
@@ -18,12 +26,29 @@ export async function GET(request: NextRequest) {
   console.log('🚀 [recommendations] API started')
 
   // デバッグ: cookieの確認
-  const cookies = request.cookies.getAll()
-  console.log('🍪 [recommendations] Cookies:', cookies.map(c => c.name))
+  const requestCookies = request.cookies.getAll()
+  const cookieNames = requestCookies.map(c => c.name)
+  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+  console.log('🍪 [recommendations] Cookies:', { names: cookieNames, hasSbCookies })
 
   try {
+    // Supabaseクライアント作成（直接createServerClientを使用）
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // Route Handlerでは設定不要
+          },
+        },
+      }
+    )
+
     // 認証チェック
-    const supabase = createClient(request)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     console.log('🔐 [recommendations] Auth result:', {
@@ -35,64 +60,40 @@ export async function GET(request: NextRequest) {
     if (authError || !user) {
       console.log('❌ [recommendations] Auth failed:', authError?.message)
       return NextResponse.json({
-        error: '認証が必要です',
+        error: 'Authentication required',
         debug: {
           authError: authError?.message,
-          cookieNames: cookies.map(c => c.name)
+          hasSbCookies,
+          cookieNames
         }
-      }, { status: 401 })
+      }, { status: 401, headers: noCacheHeaders })
     }
 
     const myUserId = user.id
     console.log('✅ [recommendations] Authenticated user:', myUserId)
 
-    // 自分のプロフィールを取得（user_idで検索、idでも試行）
-    let myProfile = null
-    let profileError = null
-
-    // まずuser_idで検索
-    const result1 = await supabase
+    // 自分のプロフィールを取得（id = user.id で検索）
+    const { data: myProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, user_id, gender, nationality')
-      .eq('user_id', myUserId)
+      .select('id, gender, nationality')
+      .eq('id', myUserId)
       .maybeSingle()
 
-    if (result1.data) {
-      myProfile = result1.data
-      console.log('👤 [recommendations] Profile found by user_id')
-    } else {
-      // user_idで見つからない場合はidで検索
-      const result2 = await supabase
-        .from('profiles')
-        .select('id, user_id, gender, nationality')
-        .eq('id', myUserId)
-        .maybeSingle()
-
-      if (result2.data) {
-        myProfile = result2.data
-        console.log('👤 [recommendations] Profile found by id')
-      } else {
-        profileError = result1.error || result2.error
-      }
-    }
-
     if (profileError || !myProfile) {
-      console.log('⚠️ [recommendations] My profile not found:', profileError?.message)
+      console.log('⚠️ [recommendations] Profile not found:', profileError?.message)
+      // 404で返す（403と401の混乱を避ける）
       return NextResponse.json({
+        error: 'Profile not found',
         candidates: [],
         debug: {
-          reason: 'my_profile_not_found',
           authUserId: myUserId,
           error: profileError?.message
         }
-      }, { status: 403 })
+      }, { status: 404, headers: noCacheHeaders })
     }
 
-    // profilesにレコードがないユーザーは候補取得不可（安全ガード）
-    const myProfileId = myProfile.id
     console.log('👤 [recommendations] My profile:', {
-      profileId: myProfileId,
-      userId: myProfile.user_id,
+      id: myProfile.id,
       gender: myProfile.gender,
       nationality: myProfile.nationality
     })
@@ -156,16 +157,16 @@ export async function GET(request: NextRequest) {
       `)
       .eq('profile_initialized', true)
       .eq('gender', targetGender)
-      .neq('id', myProfileId)  // 自分を除外
+      .neq('id', myProfile.id)
       .order('created_at', { ascending: false })
-      .limit(30)
+      .limit(20)
 
     // 日本人/外国人フィルタ
     if (targetIsJapanese) {
-      // 日本人を探す：nationalityが日本系の値
+      // 日本人を探す
       query = query.or('nationality.is.null,nationality.eq.,nationality.ilike.%日本%,nationality.ilike.jp,nationality.ilike.japan')
     } else {
-      // 外国人を探す：nationalityが日本系でない
+      // 外国人を探す
       query = query.not('nationality', 'is', null)
         .not('nationality', 'eq', '')
         .not('nationality', 'ilike', '%日本%')
@@ -178,47 +179,37 @@ export async function GET(request: NextRequest) {
     if (fetchError) {
       console.error('❌ [recommendations] Fetch error:', fetchError)
       return NextResponse.json({
-        error: 'データ取得に失敗しました',
+        error: 'Database error',
+        candidates: [],
         debug: { error: fetchError.message }
-      }, { status: 500 })
+      }, { status: 500, headers: noCacheHeaders })
     }
 
     console.log('📊 [recommendations] Result:', {
       candidateCount: candidates?.length || 0,
-      myCondition: { gender: myProfile.gender, nationality: myProfile.nationality, isJapanese: meIsJapanese },
+      myCondition: { gender: myProfile.gender, nationality: myProfile.nationality },
       targetCondition: { gender: targetGender, isJapanese: targetIsJapanese }
     })
-
-    // 0件の場合のデバッグ情報
-    if (!candidates || candidates.length === 0) {
-      console.log('⚠️ [recommendations] No candidates found. Debug info:', {
-        meGender: myProfile.gender,
-        meNationality: myProfile.nationality,
-        meIsJapanese,
-        targetGender,
-        targetIsJapanese
-      })
-    }
 
     return NextResponse.json({
       candidates: candidates || [],
       total: candidates?.length || 0,
       debug: {
-        myProfileId,
-        myAuthUserId: myUserId,
+        myId: myProfile.id,
         myGender: myProfile.gender,
         myNationality: myProfile.nationality,
         meIsJapanese,
         targetGender,
         targetIsJapanese
       }
-    })
+    }, { headers: noCacheHeaders })
 
   } catch (error) {
     console.error('💥 [recommendations] Unexpected error:', error)
     return NextResponse.json({
-      error: '予期しないエラーが発生しました',
-      candidates: []
-    }, { status: 500 })
+      error: 'Unexpected error',
+      candidates: [],
+      debug: { message: error instanceof Error ? error.message : String(error) }
+    }, { status: 500, headers: noCacheHeaders })
   }
 }

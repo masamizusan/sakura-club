@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { notificationService } from '@/lib/notifications'
 
+// 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// no-cacheヘッダー
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
 
 /**
  * POST /api/likes
@@ -43,35 +51,45 @@ function getTodayStartUTC(): Date {
 }
 
 export async function POST(request: NextRequest) {
+  // デバッグ: cookieの確認
+  const requestCookies = request.cookies.getAll()
+  const cookieNames = requestCookies.map(c => c.name)
+  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+  console.log('🍪 [likes] Cookies:', { hasSbCookies })
+
   try {
-    // ===== 1. 認証 =====
-    const authHeader = request.headers.get('Authorization')
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-
-    let supabase
-    let authUser
-
-    if (bearerToken) {
-      supabase = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { global: { headers: { Authorization: `Bearer ${bearerToken}` } } }
-      )
-      const result = await supabase.auth.getUser(bearerToken)
-      authUser = result.data?.user
-      if (result.error || !authUser) {
-        return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+    // ===== 1. 認証（直接createServerClientを使用） =====
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // Route Handlerでは設定不要
+          },
+        },
       }
-    } else {
-      supabase = createServerClient(request)
-      const result = await supabase.auth.getUser()
-      authUser = result.data?.user
-      if (result.error || !authUser) {
-        return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-      }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    console.log('🔐 [likes] Auth result:', {
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      error: authError?.message
+    })
+
+    if (authError || !user) {
+      return NextResponse.json({
+        error: 'Authentication required',
+        debug: { hasSbCookies }
+      }, { status: 401, headers: noCacheHeaders })
     }
 
-    const likerId = authUser.id
+    const likerId = user.id
 
     // ===== 2. リクエストボディ取得・バリデーション =====
     const body = await request.json()
@@ -307,10 +325,12 @@ export async function POST(request: NextRequest) {
       matched: isMatched,
       remaining: newRemaining,
       limit: DAILY_LIMIT
-    })
+    }, { headers: noCacheHeaders })
 
   } catch (error) {
     console.error('[likes] unexpected error:', error)
-    return NextResponse.json({ error: '予期しないエラーが発生しました' }, { status: 500 })
+    return NextResponse.json({
+      error: '予期しないエラーが発生しました'
+    }, { status: 500, headers: noCacheHeaders })
   }
 }
