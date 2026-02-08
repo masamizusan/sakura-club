@@ -61,7 +61,7 @@ export default function Header() {
           ) : isAuthenticated && user ? (
             <div className="flex items-center space-x-3">
               <NotificationBell />
-              <Link href="/dashboard">
+              <Link href="/mypage">
                 <Button variant="ghost" size="sm">
                   <User className="w-4 h-4 mr-2" />
                   {user.firstName}さん
@@ -127,10 +127,10 @@ export default function Header() {
               </div>
               {isAuthenticated && user ? (
                 <div className="space-y-3">
-                  <Link href="/dashboard" className="w-full">
+                  <Link href="/mypage" className="w-full">
                     <Button variant="ghost" size="sm" className="w-full justify-start">
                       <User className="w-4 h-4 mr-2" />
-                      {user.firstName}さんの{t('dashboard')}
+                      {user.firstName}さんのマイページ
                     </Button>
                   </Link>
                   <Button variant="outline" size="sm" className="w-full" onClick={signOut}>

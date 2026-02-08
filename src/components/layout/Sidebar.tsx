@@ -67,7 +67,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   }
   
   const sidebarItems = [
-    { id: 'search', icon: Search, labelKey: 'search', href: '/dashboard' },
+    { id: 'search', icon: Search, labelKey: 'search', href: '/matches' },
     { id: 'messages', icon: MessageCircle, labelKey: 'messages', href: '/messages' },
     { id: 'liked', icon: Heart, labelKey: 'matches', href: '/matches' },
     { id: 'footprints', icon: History, labelKey: 'footprints', href: '/footprints' },
@@ -86,8 +86,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
 
         <nav className="space-y-2 sticky top-8">
           {sidebarItems.map((item) => {
-            const isActive = pathname === item.href || 
-              (item.href === '/dashboard' && pathname === '/') ||
+            const isActive = pathname === item.href ||
+              (item.href === '/matches' && pathname === '/') ||
               (pathname?.startsWith('/profile') && item.id === 'profile')
             
             return (

@@ -116,7 +116,7 @@ export class PushNotificationManager {
           title: 'テスト通知',
           message: 'Sakura Clubのプッシュ通知が正常に動作しています！',
           data: {
-            url: '/dashboard'
+            url: '/matches'
           }
         })
       })
