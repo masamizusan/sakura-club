@@ -126,11 +126,11 @@ export async function GET(request: NextRequest) {
       console.log('🎯 [recommendations] Other pattern → showing opposite gender')
     }
 
-    // 候補を取得
+    // 候補を取得（prefecture は存在しないので residence を使用）
     let query = supabase
       .from('profiles')
       .select(`
-        id, name, age, gender, nationality, residence, prefecture, city,
+        id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, self_introduction, interests,
         occupation, height, body_type, is_verified, profile_initialized,
         created_at, updated_at

@@ -103,10 +103,11 @@ export async function GET(request: NextRequest) {
     // マッチング候補取得（フィルタリングあり）
     // 🚀 STEP 1: まず全プロフィールを取得（自分以外、profile_initialized=true のみ）
     // 機微情報（email, birth_date）は除外してselect
+    // prefecture は存在しないので residence を使用
     let profileQuery = supabase
       .from('profiles')
       .select(`
-        id, name, age, gender, nationality, residence, prefecture, city,
+        id, name, age, gender, nationality, residence, city,
         occupation, height, body_type, marital_status,
         interests, bio, self_introduction, avatar_url, updated_at,
         profile_initialized
@@ -290,7 +291,7 @@ export async function GET(request: NextRequest) {
         nationality: profile.nationality || 'Unknown',
         nationalityLabel: profile.nationality || 'Unknown',
         residence: safeGetString(profile.residence),
-        prefecture: safeGetString(profile.prefecture),
+        prefecture: safeGetString(profile.residence), // 実際のカラム名は residence
         city: cityValue,
         occupation: occupationValue,
         height: heightValue,
