@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // マッチしたユーザーの取得（prefecture は存在しないので residence を使用）
+    // マッチしたユーザーの取得（存在するカラムのみ指定）
     const { data: matches, error } = await supabase
       .from('matches')
       .select(`
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           residence,
           city,
           hobbies,
-          self_introduction,
+          bio,
           profile_image,
           updated_at
         ),
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           residence,
           city,
           hobbies,
-          self_introduction,
+          bio,
           profile_image,
           updated_at
         )
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         partnerLocation: `${partnerProfile.residence || ''}${partnerProfile.city || ''}`,
         partnerImage: partnerProfile.profile_image,
         partnerHobbies: partnerProfile.hobbies || [],
-        partnerIntroduction: partnerProfile.self_introduction,
+        partnerIntroduction: partnerProfile.bio || '',
         matchedDate: match.matched_at,
         lastSeen: partnerProfile.updated_at,
         isOnline: false, // TODO: オンライン状態の実装
