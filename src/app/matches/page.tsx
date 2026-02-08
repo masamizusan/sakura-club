@@ -123,6 +123,10 @@ export default function MatchesPage() {
   const [selectedAge, setSelectedAge] = useState('すべて')
   const [isLoading, setIsLoading] = useState(true)
 
+  // いいね残り回数
+  const [likesRemaining, setLikesRemaining] = useState<number>(10)
+  const [likesLimit] = useState<number>(10)
+
   // 🔍 DEBUG: 現在のユーザー情報を表示
   useEffect(() => {
     if (user) {
@@ -134,6 +138,26 @@ export default function MatchesPage() {
       })
     }
   }, [user])
+
+  // 残りいいね数を取得
+  const fetchLikesRemaining = async () => {
+    try {
+      const response = await fetch('/api/likes/remaining')
+      if (response.ok) {
+        const data = await response.json()
+        setLikesRemaining(data.remaining)
+      }
+    } catch (error) {
+      console.error('Failed to fetch likes remaining:', error)
+    }
+  }
+
+  // 初期ロード時に残りいいね数を取得
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchLikesRemaining()
+    }
+  }, [user, authLoading])
 
   // データ取得
   useEffect(() => {
@@ -231,14 +255,15 @@ export default function MatchesPage() {
   }
 
   const handleLike = async (userId: string) => {
+    // 残り回数チェック（フロント側でも事前チェック）
+    if (likesRemaining <= 0) {
+      alert('本日のいいね上限（10回）に達しました。明日またお試しください。')
+      return
+    }
+
     try {
-      // 開発テストモードの確認
-      const urlParams = new URLSearchParams(window.location.search)
-      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
-      
-      const apiUrl = devTestFlag ? '/api/matches/like?devTest=true' : '/api/matches/like'
-      
-      const response = await fetch(apiUrl, {
+      // /api/likes を叩く（方針C: ゲートAPI）
+      const response = await fetch('/api/likes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -256,15 +281,27 @@ export default function MatchesPage() {
         setFilteredMatches(prev => prev.filter(user => user.id !== userId))
         setMatches(prev => prev.filter(user => user.id !== userId))
 
+        // 残り回数を更新
+        if (typeof result.remaining === 'number') {
+          setLikesRemaining(result.remaining)
+        } else {
+          // APIが残り回数を返さない場合はローカルでデクリメント
+          setLikesRemaining(prev => Math.max(0, prev - 1))
+        }
+
         // マッチした場合の通知
         if (result.matched) {
           alert('🎉 マッチしました！メッセージを送ってみましょう。')
         } else {
           console.log('いいねしました')
         }
+      } else if (response.status === 429) {
+        // 429: 1日の上限に達した
+        setLikesRemaining(0)
+        alert('本日のいいね上限（10回）に達しました。明日またお試しください。')
       } else {
         console.error('Failed to like user:', result.error)
-        alert('いいねの送信に失敗しました。もう一度お試しください。')
+        alert(result.error || 'いいねの送信に失敗しました。もう一度お試しください。')
       }
     } catch (error) {
       console.error('Error liking user:', error)
@@ -274,13 +311,8 @@ export default function MatchesPage() {
 
   const handlePass = async (userId: string) => {
     try {
-      // 開発テストモードの確認
-      const urlParams = new URLSearchParams(window.location.search)
-      const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
-      
-      const apiUrl = devTestFlag ? '/api/matches/like?devTest=true' : '/api/matches/like'
-      
-      const response = await fetch(apiUrl, {
+      // /api/likes を叩く（passはカウント対象外）
+      const response = await fetch('/api/likes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -300,7 +332,7 @@ export default function MatchesPage() {
         console.log('パスしました')
       } else {
         console.error('Failed to pass user:', result.error)
-        alert('パス処理に失敗しました。もう一度お試しください。')
+        alert(result.error || 'パス処理に失敗しました。もう一度お試しください。')
       }
     } catch (error) {
       console.error('Error passing user:', error)
@@ -321,6 +353,13 @@ export default function MatchesPage() {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             あなたにぴったりのお相手を見つけて、素敵な文化体験を一緒に楽しみませんか？
           </p>
+          {/* 残りいいね数表示 */}
+          <div className="mt-4 inline-flex items-center bg-white rounded-full px-4 py-2 shadow-md">
+            <Heart className={`w-5 h-5 mr-2 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+            <span className="text-gray-700">
+              本日の残りいいね: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
+            </span>
+          </div>
         </div>
 
         {/* 検索・フィルター */}
@@ -507,9 +546,11 @@ export default function MatchesPage() {
                     size="sm"
                     className="flex-1"
                     onClick={() => handleLike(user.id)}
+                    disabled={likesRemaining <= 0}
+                    title={likesRemaining <= 0 ? '本日のいいね上限に達しました' : ''}
                   >
                     <Heart className="w-4 h-4 mr-1" />
-                    いいね
+                    {likesRemaining <= 0 ? '上限' : 'いいね'}
                   </Button>
                 </div>
               </div>
