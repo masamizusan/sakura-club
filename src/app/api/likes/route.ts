@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { notificationService } from '@/lib/notifications'
 
@@ -51,21 +52,28 @@ function getTodayStartUTC(): Date {
 }
 
 export async function POST(request: NextRequest) {
-  // デバッグ: cookieの確認
-  const requestCookies = request.cookies.getAll()
-  const cookieNames = requestCookies.map(c => c.name)
-  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
-  console.log('🍪 [likes] Cookies:', { hasSbCookies })
+  console.log('🚀 [likes] API started')
 
   try {
-    // ===== 1. 認証（直接createServerClientを使用） =====
+    // cookies() from next/headers を使用（debug/session と同じ方式）
+    const cookieStore = cookies()
+    const allCookies = cookieStore.getAll()
+    const cookieNames = allCookies.map(c => c.name)
+    const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+
+    console.log('🍪 [likes] Cookies:', {
+      count: allCookies.length,
+      hasSbCookies
+    })
+
+    // ===== 1. 認証（debug/session と完全一致） =====
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
             // Route Handlerでは設定不要

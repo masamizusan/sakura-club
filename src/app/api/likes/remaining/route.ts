@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
 // 完全に動的（キャッシュ無効）
@@ -19,7 +20,7 @@ const DAILY_LIMIT = 10
  */
 function getTodayStartUTC(): Date {
   const now = new Date()
-  const jstOffset = 9 * 60 * 60 * 1000 // 9時間 in ms
+  const jstOffset = 9 * 60 * 60 * 1000
   const jstNow = new Date(now.getTime() + jstOffset)
   const jstYear = jstNow.getUTCFullYear()
   const jstMonth = jstNow.getUTCMonth()
@@ -37,21 +38,29 @@ function getTodayStartUTC(): Date {
  * - 日付はAsia/Tokyo基準
  */
 export async function GET(request: NextRequest) {
-  // デバッグ: cookieの確認
-  const requestCookies = request.cookies.getAll()
-  const cookieNames = requestCookies.map(c => c.name)
-  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
-  console.log('🍪 [likes/remaining] Cookies:', { names: cookieNames, hasSbCookies })
+  console.log('🚀 [likes/remaining] API started')
 
   try {
-    // Supabaseクライアント作成（直接createServerClientを使用）
+    // cookies() from next/headers を使用（debug/session と同じ方式）
+    const cookieStore = cookies()
+    const allCookies = cookieStore.getAll()
+    const cookieNames = allCookies.map(c => c.name)
+    const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+
+    console.log('🍪 [likes/remaining] Cookies:', {
+      count: allCookies.length,
+      hasSbCookies,
+      names: cookieNames.filter(n => n.startsWith('sb-'))
+    })
+
+    // Supabaseクライアント作成（debug/session と完全一致）
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
             // Route Handlerでは設定不要
@@ -69,22 +78,18 @@ export async function GET(request: NextRequest) {
       error: authError?.message
     })
 
-    if (authError || !user) {
-      console.log('❌ [likes/remaining] Auth failed:', authError?.message)
-      // 必ず401に統一（403は使わない）
+    if (!user) {
+      console.log('❌ [likes/remaining] Auth failed:', authError?.message || 'user is null')
       return NextResponse.json({
         error: 'Authentication required',
-        debug: {
-          authError: authError?.message,
-          hasSbCookies,
-          cookieNames
-        }
+        reason: authError?.message || 'getUser returned null',
+        debug: { hasSbCookies, cookieCount: allCookies.length }
       }, { status: 401, headers: noCacheHeaders })
     }
 
-    const userId = user.id
+    console.log('✅ [likes/remaining] Authenticated user:', user.id)
 
-    // 今日の開始時刻（UTC）を取得
+    const userId = user.id
     const todayStartUTC = getTodayStartUTC()
 
     // 今日のいいね数をカウント
@@ -96,7 +101,6 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[likes/remaining] count error:', error)
-      // 500に統一（403は使わない）
       return NextResponse.json({
         error: 'Database error',
         debug: { message: error.message }
@@ -116,7 +120,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[likes/remaining] unexpected error:', error)
-    // 500に統一
     return NextResponse.json({
       error: 'Unexpected error',
       debug: { message: error instanceof Error ? error.message : String(error) }

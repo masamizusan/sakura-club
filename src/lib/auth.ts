@@ -452,7 +452,7 @@ export const authService = {
     }
     
     // 認証状態の変更を監視
-    return supabase.auth.onAuthStateChange(async (event, session) => {
+    return supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       const currentUserId = session?.user?.id || null
 
       logger.debug('[AUTH] state:', event, currentUserId ? currentUserId.slice(0, 8) : 'none')

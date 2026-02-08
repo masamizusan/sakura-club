@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
 // 完全に動的（キャッシュ無効）
@@ -25,21 +26,27 @@ const noCacheHeaders = {
 export async function GET(request: NextRequest) {
   console.log('🚀 [recommendations] API started')
 
-  // デバッグ: cookieの確認
-  const requestCookies = request.cookies.getAll()
-  const cookieNames = requestCookies.map(c => c.name)
-  const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
-  console.log('🍪 [recommendations] Cookies:', { names: cookieNames, hasSbCookies })
-
   try {
-    // Supabaseクライアント作成（直接createServerClientを使用）
+    // cookies() from next/headers を使用（debug/session と同じ方式）
+    const cookieStore = cookies()
+    const allCookies = cookieStore.getAll()
+    const cookieNames = allCookies.map(c => c.name)
+    const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+
+    console.log('🍪 [recommendations] Cookies:', {
+      count: allCookies.length,
+      hasSbCookies,
+      names: cookieNames.filter(n => n.startsWith('sb-'))
+    })
+
+    // Supabaseクライアント作成（debug/session と完全一致）
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
             // Route Handlerでは設定不要
@@ -57,38 +64,30 @@ export async function GET(request: NextRequest) {
       error: authError?.message
     })
 
-    if (authError || !user) {
-      console.log('❌ [recommendations] Auth failed:', authError?.message)
+    if (!user) {
+      console.log('❌ [recommendations] Auth failed:', authError?.message || 'user is null')
       return NextResponse.json({
         error: 'Authentication required',
-        debug: {
-          authError: authError?.message,
-          hasSbCookies,
-          cookieNames
-        }
+        reason: authError?.message || 'getUser returned null',
+        debug: { hasSbCookies, cookieCount: allCookies.length }
       }, { status: 401, headers: noCacheHeaders })
     }
 
-    const myUserId = user.id
-    console.log('✅ [recommendations] Authenticated user:', myUserId)
+    console.log('✅ [recommendations] Authenticated user:', user.id)
 
-    // 自分のプロフィールを取得（id = user.id で検索）
+    // 自分のプロフィールを取得
     const { data: myProfile, error: profileError } = await supabase
       .from('profiles')
       .select('id, gender, nationality')
-      .eq('id', myUserId)
+      .eq('id', user.id)
       .maybeSingle()
 
     if (profileError || !myProfile) {
       console.log('⚠️ [recommendations] Profile not found:', profileError?.message)
-      // 404で返す（403と401の混乱を避ける）
       return NextResponse.json({
         error: 'Profile not found',
         candidates: [],
-        debug: {
-          authUserId: myUserId,
-          error: profileError?.message
-        }
+        debug: { authUserId: user.id, error: profileError?.message }
       }, { status: 404, headers: noCacheHeaders })
     }
 
@@ -100,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     // 日本人判定ヘルパー
     const isJapanese = (nationality: string | null | undefined): boolean => {
-      if (!nationality) return true // NULL/空は日本人扱い
+      if (!nationality) return true
       const n = nationality.toLowerCase().trim()
       return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
     }
@@ -114,46 +113,27 @@ export async function GET(request: NextRequest) {
     let targetIsJapanese: boolean
 
     if (meIsFemale && meIsJapanese) {
-      // 日本人女性 → 外国人男性
       targetGender = 'male'
       targetIsJapanese = false
       console.log('🎯 [recommendations] Japanese female → looking for foreign males')
     } else if (meIsMale && !meIsJapanese) {
-      // 外国人男性 → 日本人女性
       targetGender = 'female'
       targetIsJapanese = true
       console.log('🎯 [recommendations] Foreign male → looking for Japanese females')
     } else {
-      // その他のパターン（とりあえず異性を表示）
       targetGender = meIsFemale ? 'male' : 'female'
       targetIsJapanese = !meIsJapanese
       console.log('🎯 [recommendations] Other pattern → showing opposite gender')
     }
 
-    // 候補を取得（必要最小限のカラムのみ、機微情報は除外）
+    // 候補を取得
     let query = supabase
       .from('profiles')
       .select(`
-        id,
-        name,
-        age,
-        gender,
-        nationality,
-        residence,
-        prefecture,
-        city,
-        avatar_url,
-        photo_urls,
-        bio,
-        self_introduction,
-        interests,
-        occupation,
-        height,
-        body_type,
-        is_verified,
-        profile_initialized,
-        created_at,
-        updated_at
+        id, name, age, gender, nationality, residence, prefecture, city,
+        avatar_url, photo_urls, bio, self_introduction, interests,
+        occupation, height, body_type, is_verified, profile_initialized,
+        created_at, updated_at
       `)
       .eq('profile_initialized', true)
       .eq('gender', targetGender)
@@ -161,12 +141,9 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(20)
 
-    // 日本人/外国人フィルタ
     if (targetIsJapanese) {
-      // 日本人を探す
       query = query.or('nationality.is.null,nationality.eq.,nationality.ilike.%日本%,nationality.ilike.jp,nationality.ilike.japan')
     } else {
-      // 外国人を探す
       query = query.not('nationality', 'is', null)
         .not('nationality', 'eq', '')
         .not('nationality', 'ilike', '%日本%')
@@ -187,8 +164,8 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 [recommendations] Result:', {
       candidateCount: candidates?.length || 0,
-      myCondition: { gender: myProfile.gender, nationality: myProfile.nationality },
-      targetCondition: { gender: targetGender, isJapanese: targetIsJapanese }
+      targetGender,
+      targetIsJapanese
     })
 
     return NextResponse.json({
@@ -198,7 +175,6 @@ export async function GET(request: NextRequest) {
         myId: myProfile.id,
         myGender: myProfile.gender,
         myNationality: myProfile.nationality,
-        meIsJapanese,
         targetGender,
         targetIsJapanese
       }
