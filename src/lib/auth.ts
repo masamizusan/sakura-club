@@ -1,6 +1,20 @@
-import { createClient } from './supabase'
+import { createClient as createLegacyClient } from './supabase'
+import { createClient as createSSRClient } from './supabase/client'
 import { SignupFormData, LoginFormData } from './validations/auth'
 import { logger } from '@/utils/logger'
+
+/**
+ * 認証用クライアントを取得
+ * SSRクライアント（cookie同期）を優先使用
+ */
+function getAuthClient() {
+  // ブラウザ環境ではSSRクライアントを使用（cookie同期のため）
+  if (typeof window !== 'undefined') {
+    return createSSRClient()
+  }
+  // サーバー環境ではレガシークライアントを使用
+  return createLegacyClient()
+}
 
 export interface AuthUser {
   id: string
@@ -28,7 +42,7 @@ export class AuthError extends Error {
 
 export const authService = {
   async signUp(data: SignupFormData) {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     
     try {
       // 0. 既存ユーザーのクリーンアップ（「新しい紙」方式）
@@ -133,7 +147,7 @@ export const authService = {
 
   async signIn(data: LoginFormData) {
     try {
-      const supabase = createClient()
+      const supabase = getAuthClient()
 
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
@@ -171,7 +185,7 @@ export const authService = {
   },
 
   async signOut() {
-    const supabase = createClient()
+    const supabase = getAuthClient()
 
     try {
       // 🔒 ログアウト時に実ユーザーフラグをクリア
@@ -210,7 +224,7 @@ export const authService = {
 
   // 🆕 匿名ログイン機能（テストモード用）- user_id固定対応
   async ensureTestAnonSession() {
-    const supabase = createClient()
+    const supabase = getAuthClient()
 
     try {
       // GUARD 1: 実ユーザーがログイン済みなら匿名セッションを作らない
@@ -271,7 +285,7 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<AuthUser | null> {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     
     try {
       // STEP 1: getSession()優先
@@ -367,7 +381,7 @@ export const authService = {
   },
 
   async resetPassword(email: string) {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -386,7 +400,7 @@ export const authService = {
   },
 
   async updatePassword(newPassword: string) {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     
     try {
       const { error } = await supabase.auth.updateUser({
@@ -405,7 +419,7 @@ export const authService = {
   },
 
   async verifyOtp(params: { email: string; token: string; type: 'signup' | 'recovery' }) {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     
     try {
       const { data, error } = await supabase.auth.verifyOtp({
@@ -428,7 +442,7 @@ export const authService = {
   },
 
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
-    const supabase = createClient()
+    const supabase = getAuthClient()
     let lastUserId: string | null = null
     
     // 🆕 テストモード時も認証状態監視は継続（匿名ユーザーの状態変更を監視）
