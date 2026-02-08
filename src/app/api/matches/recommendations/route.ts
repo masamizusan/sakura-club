@@ -17,36 +17,82 @@ export const revalidate = 0
 export async function GET(request: NextRequest) {
   console.log('🚀 [recommendations] API started')
 
+  // デバッグ: cookieの確認
+  const cookies = request.cookies.getAll()
+  console.log('🍪 [recommendations] Cookies:', cookies.map(c => c.name))
+
   try {
     // 認証チェック
     const supabase = createClient(request)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    console.log('🔐 [recommendations] Auth result:', {
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      error: authError?.message
+    })
+
     if (authError || !user) {
       console.log('❌ [recommendations] Auth failed:', authError?.message)
-      return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+      return NextResponse.json({
+        error: '認証が必要です',
+        debug: {
+          authError: authError?.message,
+          cookieNames: cookies.map(c => c.name)
+        }
+      }, { status: 401 })
     }
 
     const myUserId = user.id
     console.log('✅ [recommendations] Authenticated user:', myUserId)
 
-    // 自分のプロフィールを取得
-    const { data: myProfile, error: profileError } = await supabase
+    // 自分のプロフィールを取得（user_idで検索、idでも試行）
+    let myProfile = null
+    let profileError = null
+
+    // まずuser_idで検索
+    const result1 = await supabase
       .from('profiles')
-      .select('id, gender, nationality')
-      .eq('id', myUserId)
-      .single()
+      .select('id, user_id, gender, nationality')
+      .eq('user_id', myUserId)
+      .maybeSingle()
+
+    if (result1.data) {
+      myProfile = result1.data
+      console.log('👤 [recommendations] Profile found by user_id')
+    } else {
+      // user_idで見つからない場合はidで検索
+      const result2 = await supabase
+        .from('profiles')
+        .select('id, user_id, gender, nationality')
+        .eq('id', myUserId)
+        .maybeSingle()
+
+      if (result2.data) {
+        myProfile = result2.data
+        console.log('👤 [recommendations] Profile found by id')
+      } else {
+        profileError = result1.error || result2.error
+      }
+    }
 
     if (profileError || !myProfile) {
       console.log('⚠️ [recommendations] My profile not found:', profileError?.message)
       return NextResponse.json({
         candidates: [],
-        debug: { reason: 'my_profile_not_found' }
-      })
+        debug: {
+          reason: 'my_profile_not_found',
+          authUserId: myUserId,
+          error: profileError?.message
+        }
+      }, { status: 403 })
     }
 
+    // profilesにレコードがないユーザーは候補取得不可（安全ガード）
+    const myProfileId = myProfile.id
     console.log('👤 [recommendations] My profile:', {
-      id: myProfile.id,
+      profileId: myProfileId,
+      userId: myProfile.user_id,
       gender: myProfile.gender,
       nationality: myProfile.nationality
     })
@@ -83,7 +129,7 @@ export async function GET(request: NextRequest) {
       console.log('🎯 [recommendations] Other pattern → showing opposite gender')
     }
 
-    // 候補を取得（必要最小限のカラムのみ）
+    // 候補を取得（必要最小限のカラムのみ、機微情報は除外）
     let query = supabase
       .from('profiles')
       .select(`
@@ -110,7 +156,7 @@ export async function GET(request: NextRequest) {
       `)
       .eq('profile_initialized', true)
       .eq('gender', targetGender)
-      .neq('id', myUserId)
+      .neq('id', myProfileId)  // 自分を除外
       .order('created_at', { ascending: false })
       .limit(30)
 
@@ -158,7 +204,8 @@ export async function GET(request: NextRequest) {
       candidates: candidates || [],
       total: candidates?.length || 0,
       debug: {
-        myUserId,
+        myProfileId,
+        myAuthUserId: myUserId,
         myGender: myProfile.gender,
         myNationality: myProfile.nationality,
         meIsJapanese,

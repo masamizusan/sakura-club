@@ -41,35 +41,64 @@ function getTodayStartUTC(): Date {
 }
 
 export async function GET(request: NextRequest) {
+  // デバッグ: cookieの確認
+  const cookies = request.cookies.getAll()
+  console.log('🍪 [likes/remaining] Cookies:', cookies.map(c => c.name))
+
   try {
-    // 認証
-    const authHeader = request.headers.get('Authorization')
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    // 認証（cookie優先、Bearer tokenフォールバック）
+    const supabase = createServerClient(request)
+    let authUser = null
 
-    let supabase
-    let authUser
+    // まずcookieベースで認証を試行
+    const cookieResult = await supabase.auth.getUser()
 
-    if (bearerToken) {
-      supabase = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { global: { headers: { Authorization: `Bearer ${bearerToken}` } } }
-      )
-      const result = await supabase.auth.getUser(bearerToken)
-      authUser = result.data?.user
-      if (result.error || !authUser) {
-        return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
-      }
+    if (cookieResult.data?.user) {
+      authUser = cookieResult.data.user
+      console.log('✅ [likes/remaining] Auth via cookie:', authUser.id.slice(0, 8))
     } else {
-      supabase = createServerClient(request)
-      const result = await supabase.auth.getUser()
-      authUser = result.data?.user
-      if (result.error || !authUser) {
-        return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+      // Bearer tokenフォールバック
+      const authHeader = request.headers.get('Authorization')
+      const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+      if (bearerToken) {
+        const tokenClient = createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { global: { headers: { Authorization: `Bearer ${bearerToken}` } } }
+        )
+        const tokenResult = await tokenClient.auth.getUser(bearerToken)
+        if (tokenResult.data?.user) {
+          authUser = tokenResult.data.user
+          console.log('✅ [likes/remaining] Auth via Bearer token:', authUser.id.slice(0, 8))
+        }
       }
     }
 
+    if (!authUser) {
+      console.log('❌ [likes/remaining] Auth failed')
+      return NextResponse.json({
+        error: '認証が必要です',
+        debug: { cookieNames: cookies.map(c => c.name) }
+      }, { status: 401 })
+    }
+
     const userId = authUser.id
+
+    // profiles存在チェック（安全ガード：profilesにないユーザーは拾わない）
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .or(`id.eq.${userId},user_id.eq.${userId}`)
+      .maybeSingle()
+
+    if (!profile) {
+      console.log('⚠️ [likes/remaining] Profile not found for user:', userId.slice(0, 8))
+      return NextResponse.json({
+        error: 'プロフィールが見つかりません',
+        debug: { reason: 'profile_not_found' }
+      }, { status: 403 })
+    }
 
     // 今日の開始時刻（UTC）を取得
     const todayStartUTC = getTodayStartUTC()
