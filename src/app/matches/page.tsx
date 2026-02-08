@@ -142,10 +142,16 @@ export default function MatchesPage() {
   // 残りいいね数を取得
   const fetchLikesRemaining = async () => {
     try {
-      const response = await fetch('/api/likes/remaining')
+      const response = await fetch('/api/likes/remaining', {
+        cache: 'no-store',
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setLikesRemaining(data.remaining)
+        console.log('💚 Likes remaining:', data.remaining)
+      } else {
+        console.log('⚠️ Failed to get likes remaining, status:', response.status)
       }
     } catch (error) {
       console.error('Failed to fetch likes remaining:', error)
@@ -159,7 +165,7 @@ export default function MatchesPage() {
     }
   }, [user, authLoading])
 
-  // データ取得
+  // データ取得（新API: /api/matches/recommendations を使用）
   useEffect(() => {
     const fetchMatches = async () => {
       // 認証読み込み中は待機
@@ -168,65 +174,72 @@ export default function MatchesPage() {
         return
       }
 
+      if (!user) {
+        console.log('⚠️ Matches: No user logged in')
+        setIsLoading(false)
+        return
+      }
+
       try {
         setIsLoading(true)
+        console.log('🚀 Matches: Fetching from /api/matches/recommendations')
 
-        // クエリパラメータの作成
-        const params = new URLSearchParams()
-        if (searchTerm) params.append('search', searchTerm)
-        if (selectedNationality !== 'すべて') params.append('nationality', selectedNationality)
-        if (selectedAge !== 'すべて') params.append('age', selectedAge)
-
-        // 🚀 CRITICAL: 現在のユーザーIDをAPIに渡す
-        if (user?.id) {
-          params.append('currentUserId', user.id)
-          console.log('🎯 Matches: Sending currentUserId to API:', user.id)
-        } else {
-          console.log('⚠️ Matches: No user ID available')
-        }
-
-        // 開発テストモードの確認
-        const urlParams = new URLSearchParams(window.location.search)
-        const devTestFlag = urlParams.get('devTest') === 'true' || localStorage.getItem('devTestMode') === 'true'
-
-        if (devTestFlag) {
-          params.append('devTest', 'true')
-          console.log('🧪 Adding devTest parameter to matches API request')
-        }
-
-        const response = await fetch(`/api/matches?${params.toString()}`)
-        const result = await response.json()
-
-        console.log('📊 Matches API response:', {
-          ok: response.ok,
-          matchCount: result.matches?.length || 0,
-          dataSource: result.dataSource,
-          error: result.error
+        // 新API呼び出し（認証はcookieベース、userIdは送らない）
+        const response = await fetch('/api/matches/recommendations', {
+          cache: 'no-store',
+          credentials: 'include'
         })
 
-        if (response.ok && result.matches && result.matches.length > 0) {
-          setMatches(result.matches)
-          console.log('✅ Matches loaded from Supabase:', result.matches.length, 'candidates')
-        } else if (response.ok && (!result.matches || result.matches.length === 0)) {
-          // Supabaseに該当ユーザーがいない場合は空配列を設定
-          console.log('📭 No matching users found in database')
+        const result = await response.json()
+
+        console.log('📊 Recommendations API response:', {
+          status: response.status,
+          candidateCount: result.candidates?.length || 0,
+          debug: result.debug
+        })
+
+        if (response.ok && result.candidates && result.candidates.length > 0) {
+          // APIレスポンスをフロント用の形式に変換
+          const formattedMatches = result.candidates.map((profile: any) => ({
+            id: profile.id,
+            firstName: profile.name || 'Unknown',
+            lastName: '',
+            age: profile.age || 0,
+            gender: profile.gender || '',
+            nationality: profile.nationality || '',
+            nationalityLabel: profile.nationality || '',
+            residence: profile.residence || '',
+            prefecture: profile.prefecture || profile.residence || '',
+            city: typeof profile.city === 'object' ? profile.city?.city : profile.city || '',
+            hobbies: Array.isArray(profile.interests) ? profile.interests : [],
+            selfIntroduction: profile.bio || profile.self_introduction || '',
+            profileImage: profile.avatar_url || (Array.isArray(profile.photo_urls) ? profile.photo_urls[0] : null),
+            lastSeen: profile.updated_at || new Date().toISOString(),
+            isOnline: false,
+            matchPercentage: 0,
+            commonInterests: [],
+            distanceKm: 0
+          }))
+
+          setMatches(formattedMatches)
+          console.log('✅ Matches loaded:', formattedMatches.length, 'candidates')
+        } else if (response.status === 401) {
+          console.log('❌ Authentication required')
           setMatches([])
         } else {
-          console.error('Failed to fetch matches:', result.error)
-          // フォールバックとしてサンプルデータを使用
-          setMatches(SAMPLE_MATCHES)
+          console.log('📭 No matching users found or error:', result.error)
+          setMatches([])
         }
       } catch (error) {
         console.error('Error fetching matches:', error)
-        // エラー時はサンプルデータを使用
-        setMatches(SAMPLE_MATCHES)
+        setMatches([])
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchMatches()
-  }, [searchTerm, selectedNationality, selectedAge, user?.id, authLoading])
+  }, [user, authLoading])
 
   // フィルタリング処理（APIベース）
   useEffect(() => {
@@ -265,6 +278,7 @@ export default function MatchesPage() {
       // /api/likes を叩く（方針C: ゲートAPI）
       const response = await fetch('/api/likes', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -314,6 +328,7 @@ export default function MatchesPage() {
       // /api/likes を叩く（passはカウント対象外）
       const response = await fetch('/api/likes', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

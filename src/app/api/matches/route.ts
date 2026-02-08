@@ -101,10 +101,17 @@ export async function GET(request: NextRequest) {
     })))
 
     // マッチング候補取得（フィルタリングあり）
-    // 🚀 STEP 1: まず全プロフィールを取得（自分以外）
+    // 🚀 STEP 1: まず全プロフィールを取得（自分以外、profile_initialized=true のみ）
+    // 機微情報（email, birth_date）は除外してselect
     let profileQuery = supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        id, name, age, gender, nationality, residence, prefecture, city,
+        occupation, height, body_type, marital_status,
+        interests, bio, self_introduction, avatar_url, updated_at,
+        profile_initialized
+      `)
+      .eq('profile_initialized', true)
 
     // 自分を除外
     if (currentUserId) {
