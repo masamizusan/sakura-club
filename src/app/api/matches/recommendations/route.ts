@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
         id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, interests,
         occupation, height, body_type, is_verified, profile_initialized,
-        created_at, updated_at
+        created_at
       `)
       .eq('profile_initialized', true)
       .eq('gender', targetGender)

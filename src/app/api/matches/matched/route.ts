@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           hobbies,
           bio,
           profile_image,
-          updated_at
+          created_at
         ),
         liker_profile:profiles!matches_liker_user_id_fkey(
           id,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
           hobbies,
           bio,
           profile_image,
-          updated_at
+          created_at
         )
       `)
       .eq('is_matched', true)
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
         partnerHobbies: partnerProfile.hobbies || [],
         partnerIntroduction: partnerProfile.bio || '',
         matchedDate: match.matched_at,
-        lastSeen: partnerProfile.updated_at,
+        lastSeen: partnerProfile.created_at,
         isOnline: false, // TODO: オンライン状態の実装
       }
     }).filter(Boolean) || []

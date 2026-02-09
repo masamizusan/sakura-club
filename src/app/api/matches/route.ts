@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       .select(`
         id, name, age, gender, nationality, residence, city,
         occupation, height, body_type, marital_status,
-        interests, bio, avatar_url, updated_at,
+        interests, bio, avatar_url,
         profile_initialized
       `)
       .eq('profile_initialized', true)
@@ -300,7 +300,7 @@ export async function GET(request: NextRequest) {
         hobbies: Array.isArray(profile.interests) ? profile.interests : [],
         selfIntroduction: profile.bio || '',
         profileImage: profile.avatar_url || null,
-        lastSeen: profile.updated_at || new Date().toISOString(),
+        lastSeen: profile.created_at || new Date().toISOString(),
         isOnline: Math.random() > 0.5,
         matchPercentage: Math.floor(Math.random() * 30) + 70,
         commonInterests: [],
