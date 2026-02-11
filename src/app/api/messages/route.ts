@@ -63,12 +63,16 @@ export async function GET(request: NextRequest) {
       ids: conversations?.map(c => c.id?.slice(0, 8)) || []
     })
 
-    // conversationsが空の場合、空の配列を返す
+    // conversationsが空の場合、デバッグ情報を含めて返す
     if (!conversations || conversations.length === 0) {
       console.log('⚠️ [messages] No conversations found for user:', user.id.slice(0, 8))
       return NextResponse.json({
         conversations: [],
-        total: 0
+        total: 0,
+        debug: {
+          currentUserId: user.id,
+          message: 'No conversations found for this user'
+        }
       })
     }
 
