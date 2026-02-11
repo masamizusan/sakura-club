@@ -78,10 +78,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             // 全ページで強制リロード（別アカウントでのログインを検出）
             if (typeof window !== 'undefined') {
               logger.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload')
-              // 少し遅延を入れてからリロード（状態更新を確実に行うため）
-              setTimeout(() => {
-                window.location.reload()
-              }, 100)
+
+              // ユーザーに警告メッセージを表示
+              window.alert(
+                '別のアカウントでログインが検出されました。\n' +
+                'ページを再読み込みして、新しいアカウントに切り替えます。'
+              )
+
+              // ページリロード
+              window.location.reload()
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移
