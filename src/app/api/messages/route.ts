@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
         // パートナーのプロフィール情報を取得（profiles.id ベースで検索）
         const { data: partner, error: partnerError } = await supabase
           .from('profiles')
-          .select('id, name, last_name, age, nationality, residence, city, avatar_url, updated_at, profile_initialized')
+          .select('id, name, age, nationality, residence, city, avatar_url, profile_initialized')
           .eq('id', partnerId)
           .single()
 
@@ -159,10 +159,11 @@ export async function GET(request: NextRequest) {
         return {
           id: conv.id,
           partnerId,
-          partnerName: `${partner.name || ''} ${partner.last_name || ''}`.trim() || 'テストユーザー',
-          partnerAge: partner.age || 25,
+          partnerName: partner.name || 'ユーザー',
+          partnerAge: partner.age || null,
           partnerNationality: getNationalityLabel(partner.nationality || 'JP'),
-          partnerLocation: `${partner.residence || '東京都'}${partner.city || ''}`,
+          partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
+          partnerImage: partner.avatar_url || null,
           lastMessage: null, // 暫定的にnull
           unreadCount: 0, // 暫定的に0
           isOnline: false, // 暫定的にfalse
