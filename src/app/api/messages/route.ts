@@ -53,38 +53,44 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
-    // ===== 2. conversations を myProfileId で検索（RLSバイパスのためservice_roleは使えないので注意） =====
-    const { data: conversations, error } = await supabase
+    // ===== 2. conversations を取得（デバッグ: まず全件取得してみる） =====
+    const { data: allConversations, error: allError } = await supabase
       .from('conversations')
       .select('*')
-      .or(`user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`)
       .order('created_at', { ascending: false })
+      .limit(20)
 
-    if (error) {
-      console.error('❌ [messages] Conversations fetch error:', error)
+    console.log('📋 [messages] All conversations (debug):', {
+      count: allConversations?.length || 0,
+      error: allError?.message,
+      first: allConversations?.[0] ? {
+        id: allConversations[0].id?.slice(0, 8),
+        user1: allConversations[0].user1_id?.slice(0, 8),
+        user2: allConversations[0].user2_id?.slice(0, 8)
+      } : null
+    })
 
-      // conversationsテーブルが存在しない場合、空の配列を返す
-      if (error.code === '42P01') { // relation does not exist
-        console.log('⚠️ [messages] Conversations table does not exist')
-        return NextResponse.json({
-          conversations: [],
-          total: 0
-        })
-      }
+    // myProfileId でフィルタリング（JavaScript側）
+    const conversations = allConversations?.filter(c =>
+      c.user1_id === myProfileId || c.user2_id === myProfileId
+    ) || []
 
+    console.log('📋 [messages] Filtered conversations:', {
+      total: allConversations?.length || 0,
+      filtered: conversations.length,
+      myProfileId: myProfileId
+    })
+
+    if (allError) {
+      console.error('❌ [messages] Conversations fetch error:', allError)
       return NextResponse.json(
-        { error: '会話の取得に失敗しました', debug: { error: error.message, code: error.code } },
+        { error: '会話の取得に失敗しました', debug: { error: allError.message, code: allError.code } },
         { status: 500 }
       )
     }
 
-    console.log('📋 [messages] Raw conversations from DB:', {
-      count: conversations?.length || 0,
-      ids: conversations?.map(c => c.id?.slice(0, 8)) || []
-    })
-
     // conversationsが空の場合、デバッグ情報を含めて返す
-    if (!conversations || conversations.length === 0) {
+    if (conversations.length === 0) {
       console.log('⚠️ [messages] No conversations found for profile:', myProfileId.slice(0, 8))
       return NextResponse.json({
         conversations: [],
@@ -92,8 +98,12 @@ export async function GET(request: NextRequest) {
         debug: {
           authUserId: user.id,
           myProfileId: myProfileId,
-          queryFilter: `user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`,
-          message: 'No conversations found - RLS may be blocking. Check if auth.uid() matches user1_id or user2_id'
+          allConversationsCount: allConversations?.length || 0,
+          sampleConversation: allConversations?.[0] ? {
+            user1_id: allConversations[0].user1_id,
+            user2_id: allConversations[0].user2_id
+          } : null,
+          message: 'No matching conversations found'
         }
       })
     }
