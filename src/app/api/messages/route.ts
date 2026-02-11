@@ -164,9 +164,15 @@ export async function GET(request: NextRequest) {
           partnerNationality: getNationalityLabel(partner.nationality || 'JP'),
           partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
           partnerImage: partner.avatar_url || null,
-          lastMessage: null, // 暫定的にnull
-          unreadCount: 0, // 暫定的に0
-          isOnline: false, // 暫定的にfalse
+          lastMessage: {
+            id: 'placeholder',
+            senderId: partnerId,
+            content: conv.last_message || 'マッチしました！メッセージを送ってみましょう',
+            timestamp: conv.last_message_at || conv.created_at,
+            isRead: true
+          },
+          unreadCount: 0,
+          isOnline: false,
           matchedDate: conv.created_at,
         }
       })
