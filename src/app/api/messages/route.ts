@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 export const dynamic = 'force-dynamic'
 
 // GET: 会話一覧の取得
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient(request)
-    
+    const cookieStore = cookies()
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll() { /* Route Handlerでは不要 */ },
+        },
+      }
+    )
+
     console.log('=== Messages API called ===')
     
     // 認証ユーザーの取得
