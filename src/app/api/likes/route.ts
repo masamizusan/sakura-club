@@ -19,19 +19,18 @@ const noCacheHeaders = {
  *
  * いいね送信のゲートAPI（方針C: 1日10回制限 + マッチング処理統合）
  *
+ * DBスキーマ（matches テーブル）:
+ *   - user1_id: 小さいIDを常に入れる（順序固定）
+ *   - user2_id: 大きいIDを常に入れる（順序固定）
+ *   - status: 'pending' | 'matched' | 'rejected'
+ *
  * 処理フロー:
- * 1. 認証チェック（auth.uid()を使用、リクエストからuserIdを受け取らない）
+ * 1. 認証チェック（auth.uid()を使用）
  * 2. 1日10回制限チェック（Asia/Tokyo基準）
- * 3. 既存matches相当の処理（matches更新＆マッチ判定）
- * 4. 成功後にlikesテーブルにinsert（カウント記録）
+ * 3. matches テーブルに記録（user1_id/user2_id 順序固定）
+ * 4. 相互いいね判定 → マッチならstatus='matched' + conversations作成
  *
  * Request body: { likedUserId: string, action?: 'like' | 'pass' }
- *
- * @returns
- *   - 200: { success: true, matched: boolean, remaining: number }
- *   - 429: 1日の上限に達した場合
- *   - 400: バリデーションエラー
- *   - 401: 認証エラー
  */
 
 const DAILY_LIMIT = 10
@@ -51,50 +50,45 @@ function getTodayStartUTC(): Date {
   return todayStartUTC
 }
 
+/**
+ * user1_id / user2_id を順序固定で返す（小さい方がuser1_id）
+ */
+function getOrderedUserIds(idA: string, idB: string): { user1_id: string; user2_id: string } {
+  if (idA < idB) {
+    return { user1_id: idA, user2_id: idB }
+  } else {
+    return { user1_id: idB, user2_id: idA }
+  }
+}
+
 export async function POST(request: NextRequest) {
   console.log('🚀 [likes] API started')
 
   try {
-    // cookies() from next/headers を使用（debug/session と同じ方式）
     const cookieStore = cookies()
     const allCookies = cookieStore.getAll()
-    const cookieNames = allCookies.map(c => c.name)
-    const hasSbCookies = cookieNames.some(name => name.startsWith('sb-'))
+    const hasSbCookies = allCookies.some(c => c.name.startsWith('sb-'))
 
-    console.log('🍪 [likes] Cookies:', {
-      count: allCookies.length,
-      hasSbCookies
-    })
+    console.log('🍪 [likes] Cookies:', { count: allCookies.length, hasSbCookies })
 
-    // ===== 1. 認証（debug/session と完全一致） =====
+    // ===== 1. 認証 =====
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            // Route Handlerでは設定不要
-          },
+          getAll() { return cookieStore.getAll() },
+          setAll() { /* Route Handlerでは不要 */ },
         },
       }
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    console.log('🔐 [likes] Auth result:', {
-      hasUser: !!user,
-      userId: user?.id?.slice(0, 8),
-      error: authError?.message
-    })
+    console.log('🔐 [likes] Auth:', { hasUser: !!user, userId: user?.id?.slice(0, 8), error: authError?.message })
 
     if (authError || !user) {
-      return NextResponse.json({
-        error: 'Authentication required',
-        debug: { hasSbCookies }
-      }, { status: 401, headers: noCacheHeaders })
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401, headers: noCacheHeaders })
     }
 
     const likerId = user.id
@@ -111,12 +105,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'actionは"like"または"pass"を指定してください' }, { status: 400 })
     }
 
-    // 自分自身へのいいね防止
     if (likedUserId === likerId) {
       return NextResponse.json({ error: '自分自身にいいねはできません' }, { status: 400 })
     }
 
-    // UUIDフォーマットチェック
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     if (!uuidRegex.test(likedUserId)) {
       return NextResponse.json({ error: '無効なユーザーIDです' }, { status: 400 })
@@ -133,12 +125,9 @@ export async function POST(request: NextRequest) {
         .eq('liker_id', likerId)
         .gte('created_at', todayStartUTC.toISOString())
 
-      if (countError) {
+      if (countError && countError.code !== 'PGRST116' && !countError.message?.includes('does not exist')) {
         console.error('[likes] count error:', countError)
-        // likesテーブルがまだない場合はカウント0として続行
-        if (countError.code !== 'PGRST116' && !countError.message?.includes('does not exist')) {
-          return NextResponse.json({ error: 'いいね数の取得に失敗しました' }, { status: 500 })
-        }
+        return NextResponse.json({ error: 'いいね数の取得に失敗しました' }, { status: 500 })
       }
 
       const used = count || 0
@@ -148,7 +137,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           error: '今日のいいね上限（10回）に達しました',
           remaining: 0,
-          used,
           limit: DAILY_LIMIT
         }, { status: 429 })
       }
@@ -161,121 +149,144 @@ export async function POST(request: NextRequest) {
       .eq('id', likedUserId)
       .single()
 
-    console.log('🎯 [likes] Target user lookup:', {
+    console.log('🎯 [likes] Target user:', {
       likedUserId: likedUserId.slice(0, 8),
       found: !!targetUser,
-      targetError: targetError?.message,
-      targetErrorCode: targetError?.code,
-      profileInitialized: targetUser?.profile_initialized
+      error: targetError?.message
     })
 
     if (targetError || !targetUser) {
       return NextResponse.json({
         error: '対象のユーザーが見つかりません',
-        debug: {
-          likedUserId,
-          errorMessage: targetError?.message,
-          errorCode: targetError?.code,
-          hint: 'RLS policy may be blocking access'
-        }
+        debug: { likedUserId, errorMessage: targetError?.message, errorCode: targetError?.code }
       }, { status: 404 })
     }
 
-    // ===== 5. 既存アクションチェック（matchesテーブル） =====
-    const { data: existingAction, error: existingError } = await supabase
+    // ===== 5. user1_id / user2_id を順序固定で取得 =====
+    const { user1_id, user2_id } = getOrderedUserIds(likerId, likedUserId)
+    const isLikerUser1 = likerId === user1_id
+
+    console.log('🔗 [likes] Ordered IDs:', {
+      user1_id: user1_id.slice(0, 8),
+      user2_id: user2_id.slice(0, 8),
+      isLikerUser1
+    })
+
+    // ===== 6. 既存マッチレコードをチェック =====
+    const { data: existingMatch, error: existingError } = await supabase
       .from('matches')
       .select('*')
-      .eq('liker_user_id', likerId)
-      .eq('liked_user_id', likedUserId)
-      .single()
+      .eq('user1_id', user1_id)
+      .eq('user2_id', user2_id)
+      .maybeSingle()
 
-    if (!existingError && existingAction) {
-      return NextResponse.json(
-        { error: 'このユーザーには既にアクションを実行済みです', remaining },
-        { status: 400 }
-      )
+    if (existingError) {
+      console.error('[likes] existing match check error:', existingError)
+      return NextResponse.json({ error: 'マッチ情報の取得に失敗しました' }, { status: 500 })
     }
 
-    // ===== 6. パスの場合 =====
+    // ===== 7. パスの場合 =====
     if (action === 'pass') {
-      const { error: passError } = await supabase
-        .from('matches')
-        .insert({
-          liker_user_id: likerId,
-          liked_user_id: likedUserId,
-          action: 'pass',
-          created_at: new Date().toISOString()
-        })
+      if (existingMatch) {
+        // 既存レコードがある場合はrejectedに更新
+        const { error: updateError } = await supabase
+          .from('matches')
+          .update({ status: 'rejected', updated_at: new Date().toISOString() })
+          .eq('id', existingMatch.id)
 
-      if (passError) {
-        console.error('[likes] pass action error:', passError)
-        return NextResponse.json({ error: 'パス処理に失敗しました' }, { status: 500 })
+        if (updateError) {
+          console.error('[likes] pass update error:', updateError)
+          return NextResponse.json({ error: 'パス処理に失敗しました' }, { status: 500 })
+        }
+      } else {
+        // 新規レコード作成
+        const { error: insertError } = await supabase
+          .from('matches')
+          .insert({
+            user1_id,
+            user2_id,
+            status: 'rejected',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+
+        if (insertError) {
+          console.error('[likes] pass insert error:', insertError)
+          return NextResponse.json({ error: 'パス処理に失敗しました' }, { status: 500 })
+        }
       }
 
-      return NextResponse.json({
-        message: 'パスしました',
-        matched: false,
-        remaining // passはカウントしないのでremainingは変わらない
-      })
+      return NextResponse.json({ message: 'パスしました', matched: false, remaining })
     }
 
-    // ===== 7. いいねの場合: マッチ判定 =====
-    const { data: mutualLike, error: mutualError } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('liker_user_id', likedUserId)
-      .eq('liked_user_id', likerId)
-      .eq('action', 'like')
-      .single()
+    // ===== 8. いいねの場合 =====
+    let isMatched = false
 
-    const isMatched = !mutualError && mutualLike
+    if (existingMatch) {
+      // 既存レコードがある場合
+      if (existingMatch.status === 'matched') {
+        return NextResponse.json({ error: '既にマッチしています', remaining }, { status: 400 })
+      }
 
-    // ===== 8. matchesテーブルにいいね記録 =====
-    const { error: likeError } = await supabase
-      .from('matches')
-      .insert({
-        liker_user_id: likerId,
-        liked_user_id: likedUserId,
-        action: 'like',
-        is_matched: isMatched,
-        matched_at: isMatched ? new Date().toISOString() : null,
-        created_at: new Date().toISOString()
-      })
+      if (existingMatch.status === 'pending') {
+        // 相手が先にいいねしていた → マッチ成立！
+        isMatched = true
+        const { error: updateError } = await supabase
+          .from('matches')
+          .update({ status: 'matched', updated_at: new Date().toISOString() })
+          .eq('id', existingMatch.id)
 
-    if (likeError) {
-      console.error('[likes] like action error:', likeError)
-      return NextResponse.json({ error: 'いいね処理に失敗しました' }, { status: 500 })
+        if (updateError) {
+          console.error('[likes] match update error:', updateError)
+          return NextResponse.json({ error: 'マッチ処理に失敗しました' }, { status: 500 })
+        }
+      } else {
+        // status が rejected だった場合 → pending に戻す（再いいね）
+        const { error: updateError } = await supabase
+          .from('matches')
+          .update({ status: 'pending', updated_at: new Date().toISOString() })
+          .eq('id', existingMatch.id)
+
+        if (updateError) {
+          console.error('[likes] relike update error:', updateError)
+          return NextResponse.json({ error: 'いいね処理に失敗しました' }, { status: 500 })
+        }
+      }
+    } else {
+      // 新規レコード作成（片思い状態）
+      const { error: insertError } = await supabase
+        .from('matches')
+        .insert({
+          user1_id,
+          user2_id,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (insertError) {
+        console.error('[likes] like insert error:', insertError)
+        return NextResponse.json({ error: 'いいね処理に失敗しました' }, { status: 500 })
+      }
     }
 
     // ===== 9. マッチした場合の追加処理 =====
     if (isMatched) {
-      // 相手のレコードも更新
-      const { error: updateMutualError } = await supabase
-        .from('matches')
-        .update({
-          is_matched: true,
-          matched_at: new Date().toISOString(),
-          matched_user_id: likerId
-        })
-        .eq('liker_user_id', likedUserId)
-        .eq('liked_user_id', likerId)
+      console.log('💕 [likes] Match created!')
 
-      if (updateMutualError) {
-        console.error('[likes] mutual match update error:', updateMutualError)
-      }
-
-      // コンバセーション作成
+      // conversations 作成
       const { error: conversationError } = await supabase
         .from('conversations')
         .insert({
-          user1_id: likerId < likedUserId ? likerId : likedUserId,
-          user2_id: likerId < likedUserId ? likedUserId : likerId,
+          user1_id,
+          user2_id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
 
       if (conversationError) {
         console.error('[likes] conversation creation error:', conversationError)
+        // 会話作成失敗はエラーにしない（マッチは成功している）
       }
 
       // 通知送信
@@ -290,49 +301,24 @@ export async function POST(request: NextRequest) {
           const currentUserName = currentUserProfile.name || 'ユーザー'
           const targetUserName = targetUser.name || 'ユーザー'
 
-          // 相手に通知
-          await notificationService.createMatchNotification(
-            likedUserId,
-            currentUserName,
-            likerId,
-            request
-          )
-
-          // 自分に通知
-          await notificationService.createMatchNotification(
-            likerId,
-            targetUserName,
-            likedUserId,
-            request
-          )
+          await notificationService.createMatchNotification(likedUserId, currentUserName, likerId, request)
+          await notificationService.createMatchNotification(likerId, targetUserName, likedUserId, request)
         }
       } catch (notifyError) {
         console.error('[likes] notification error:', notifyError)
-        // 通知失敗はエラーにしない
       }
     }
 
-    // ===== 10. likesテーブルにカウント記録（成功後） =====
+    // ===== 10. likesテーブルにカウント記録 =====
     try {
-      const { error: likesInsertError } = await supabase
-        .from('likes')
-        .insert({
-          liker_id: likerId,
-          liked_user_id: likedUserId
-        })
-
-      if (likesInsertError) {
-        // likesテーブルへの記録失敗はエラーログのみ（matches処理は成功しているため）
-        console.error('[likes] likes table insert error:', likesInsertError)
-      }
+      await supabase.from('likes').insert({ liker_id: likerId, liked_user_id: likedUserId })
     } catch (likesError) {
       console.error('[likes] likes table error:', likesError)
     }
 
-    // remaining を更新（いいね成功したので-1）
     const newRemaining = Math.max(0, remaining - 1)
 
-    console.log('[likes] success:', {
+    console.log('✅ [likes] Success:', {
       likerId: likerId.slice(0, 8),
       likedUserId: likedUserId.slice(0, 8),
       matched: isMatched,
@@ -349,8 +335,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[likes] unexpected error:', error)
-    return NextResponse.json({
-      error: '予期しないエラーが発生しました'
-    }, { status: 500, headers: noCacheHeaders })
+    return NextResponse.json({ error: '予期しないエラーが発生しました' }, { status: 500, headers: noCacheHeaders })
   }
 }
