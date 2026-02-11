@@ -166,6 +166,13 @@ export async function GET(request: NextRequest) {
 
     // nullを除外
     const validConversations = conversationsWithMessages.filter(conv => conv !== null)
+    const nullCount = conversationsWithMessages.filter(conv => conv === null).length
+
+    console.log('📊 [messages] Final result:', {
+      total: conversationsWithMessages.length,
+      valid: validConversations.length,
+      nullFiltered: nullCount
+    })
 
     // 検索フィルター
     let filteredConversations = validConversations
@@ -178,7 +185,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       conversations: filteredConversations,
       total: filteredConversations.length,
-      _version: 'v2-debug'
+      _version: 'v2-debug',
+      _debug: {
+        rawConversationsCount: conversations.length,
+        validCount: validConversations.length,
+        nullFilteredCount: nullCount,
+        message: nullCount > 0 ? 'Some conversations filtered due to missing partner profiles' : 'OK'
+      }
     })
 
   } catch (error) {
