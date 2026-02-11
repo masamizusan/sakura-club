@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     // ===== 4. 対象ユーザー存在チェック =====
     const { data: targetUser, error: targetError } = await supabase
       .from('profiles')
-      .select('id, name, first_name, last_name, profile_initialized')
+      .select('id, name, profile_initialized')
       .eq('id', likedUserId)
       .single()
 
@@ -282,17 +282,13 @@ export async function POST(request: NextRequest) {
       try {
         const { data: currentUserProfile } = await supabase
           .from('profiles')
-          .select('name, first_name, last_name')
+          .select('name')
           .eq('id', likerId)
           .single()
 
         if (currentUserProfile && targetUser) {
-          const currentUserName = currentUserProfile.name ||
-            `${currentUserProfile.first_name || ''} ${currentUserProfile.last_name || ''}`.trim() ||
-            'ユーザー'
-          const targetUserName = targetUser.name ||
-            `${targetUser.first_name || ''} ${targetUser.last_name || ''}`.trim() ||
-            'ユーザー'
+          const currentUserName = currentUserProfile.name || 'ユーザー'
+          const targetUserName = targetUser.name || 'ユーザー'
 
           // 相手に通知
           await notificationService.createMatchNotification(

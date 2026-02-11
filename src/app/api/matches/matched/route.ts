@@ -25,28 +25,26 @@ export async function GET(request: NextRequest) {
         *,
         liked_profile:profiles!matches_liked_user_id_fkey(
           id,
-          first_name,
-          last_name,
+          name,
           age,
           nationality,
           residence,
           city,
           hobbies,
           bio,
-          profile_image,
+          avatar_url,
           created_at
         ),
         liker_profile:profiles!matches_liker_user_id_fkey(
           id,
-          first_name,
-          last_name,
+          name,
           age,
           nationality,
           residence,
           city,
           hobbies,
           bio,
-          profile_image,
+          avatar_url,
           created_at
         )
       `)
@@ -73,11 +71,11 @@ export async function GET(request: NextRequest) {
       return {
         matchId: match.id,
         partnerId: partnerProfile.id,
-        partnerName: `${partnerProfile.first_name} ${partnerProfile.last_name}`,
+        partnerName: partnerProfile.name || 'ユーザー',
         partnerAge: partnerProfile.age,
         partnerNationality: getNationalityLabel(partnerProfile.nationality),
         partnerLocation: `${partnerProfile.residence || ''}${partnerProfile.city || ''}`,
-        partnerImage: partnerProfile.profile_image,
+        partnerImage: partnerProfile.avatar_url,
         partnerHobbies: partnerProfile.hobbies || [],
         partnerIntroduction: partnerProfile.bio || '',
         matchedDate: match.matched_at,

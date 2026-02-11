@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // 対象ユーザーが存在するかチェック
     const { data: targetUser, error: targetError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name')
+      .select('id, name')
       .eq('id', likedUserId)
       .single()
 
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
         // 現在のユーザー情報を取得
         const { data: currentUserProfile } = await supabase
           .from('profiles')
-          .select('first_name, last_name')
+          .select('name')
           .eq('id', user.id)
           .single()
 
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
           // 相手に通知
           await notificationService.createMatchNotification(
             likedUserId,
-            `${currentUserProfile.first_name} ${currentUserProfile.last_name}`,
+            currentUserProfile.name || 'ユーザー',
             user.id,
             request
           )
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
           // 自分に通知
           await notificationService.createMatchNotification(
             user.id,
-            `${targetUser.first_name} ${targetUser.last_name}`,
+            targetUser.name || 'ユーザー',
             likedUserId,
             request
           )
