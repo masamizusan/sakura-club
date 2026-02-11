@@ -110,6 +110,8 @@ export async function GET(request: NextRequest) {
     }
 
     // ===== 3. 会話リストを返す（パートナーのプロフィールは profiles.id で取得） =====
+    const partnerErrors: Array<{partnerId: string, error: string, code: string}> = []
+
     const conversationsWithMessages = await Promise.all(
       conversations.map(async (conv) => {
         // partnerId は myProfileId と比較して決定
@@ -132,9 +134,14 @@ export async function GET(request: NextRequest) {
 
         if (partnerError) {
           console.error('❌ [messages] Partner profile error:', {
-            partnerId: partnerId?.slice(0, 8),
+            partnerId: partnerId,
             error: partnerError.message,
             code: partnerError.code
+          })
+          partnerErrors.push({
+            partnerId: partnerId,
+            error: partnerError.message,
+            code: partnerError.code || 'unknown'
           })
         }
 
@@ -185,11 +192,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       conversations: filteredConversations,
       total: filteredConversations.length,
-      _version: 'v2-debug',
+      _version: 'v3-debug',
       _debug: {
         rawConversationsCount: conversations.length,
         validCount: validConversations.length,
         nullFilteredCount: nullCount,
+        partnerErrors: partnerErrors.length > 0 ? partnerErrors : null,
         message: nullCount > 0 ? 'Some conversations filtered due to missing partner profiles' : 'OK'
       }
     })
