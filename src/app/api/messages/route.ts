@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    console.log('=== Messages API called ===')
+    console.log('=== Messages API v2 called ===')
     
     // 認証ユーザーの取得
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         conversations: [],
         total: 0,
+        _version: 'v2-debug-empty',
         debug: {
           authUserId: user.id,
           myProfileId: myProfileId,
@@ -176,7 +177,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       conversations: filteredConversations,
-      total: filteredConversations.length
+      total: filteredConversations.length,
+      _version: 'v2-debug'
     })
 
   } catch (error) {
