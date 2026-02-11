@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             newUserId: newUserId?.slice(0, 8),
           })
 
-          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのストレージをクリア＋退避
+          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのストレージをクリア＋ページリロード
           if (currentUserId && newUserId && currentUserId !== newUserId) {
             logger.warn('[AUTH_LISTENER] USER_SWITCH', {
               prevUserId: currentUserId.slice(0, 8),
@@ -74,12 +74,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             })
             clearAllUserStorage(currentUserId)
             set({ user: newUser })
+
+            // 全ページで強制リロード（別アカウントでのログインを検出）
             if (typeof window !== 'undefined') {
-              const path = window.location.pathname
-              if (path.includes('/profile/edit') || path.includes('/profile/preview')) {
-                logger.warn('[AUTH_LISTENER] USER_SWITCH_GUARD: redirect to /mypage')
-                window.location.replace('/mypage?reason=user_switched')
-              }
+              logger.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload')
+              // 少し遅延を入れてからリロード（状態更新を確実に行うため）
+              setTimeout(() => {
+                window.location.reload()
+              }, 100)
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移
