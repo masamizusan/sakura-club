@@ -14,10 +14,10 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     // デバッグ情報
-    console.log('Auth debug:', { 
-      user: user ? { id: user.id, email: user.email } : null, 
-      authError: authError?.message,
-      cookies: request.headers.get('cookie')
+    console.log('🔐 [messages] Auth:', {
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      error: authError?.message
     })
     
     if (authError || !user) {
@@ -41,57 +41,73 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Conversations fetch error:', error)
-      
+      console.error('❌ [messages] Conversations fetch error:', error)
+
       // conversationsテーブルが存在しない場合、空の配列を返す
       if (error.code === '42P01') { // relation does not exist
-        console.log('Conversations table does not exist, returning empty array')
+        console.log('⚠️ [messages] Conversations table does not exist')
         return NextResponse.json({
           conversations: [],
           total: 0
         })
       }
-      
+
       return NextResponse.json(
         { error: '会話の取得に失敗しました', debug: error.message },
         { status: 500 }
       )
     }
 
+    console.log('📋 [messages] Raw conversations from DB:', {
+      count: conversations?.length || 0,
+      ids: conversations?.map(c => c.id?.slice(0, 8)) || []
+    })
+
     // conversationsが空の場合、空の配列を返す
     if (!conversations || conversations.length === 0) {
+      console.log('⚠️ [messages] No conversations found for user:', user.id.slice(0, 8))
       return NextResponse.json({
         conversations: [],
         total: 0
       })
     }
 
-    console.log('Found conversations:', conversations.length)
-
     // 簡略化された会話リストを返す（プロフィール情報は後で取得）
     const conversationsWithMessages = await Promise.all(
       conversations.map(async (conv) => {
         const partnerId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id
         
-        console.log('Processing conversation:', { 
-          convId: conv.id, 
-          user1: conv.user1_id, 
-          user2: conv.user2_id, 
-          currentUser: user.id, 
-          partnerId 
+        console.log('🔗 [messages] Processing conversation:', {
+          convId: conv.id?.slice(0, 8),
+          user1: conv.user1_id?.slice(0, 8),
+          user2: conv.user2_id?.slice(0, 8),
+          currentUser: user.id.slice(0, 8),
+          partnerId: partnerId?.slice(0, 8)
         })
-        
+
         // パートナーのプロフィール情報を取得（自分自身の場合も含む）
-        const { data: partner } = await supabase
+        const { data: partner, error: partnerError } = await supabase
           .from('profiles')
-          .select('id, name, last_name, age, nationality, residence, city, updated_at')
+          .select('id, name, last_name, age, nationality, residence, city, updated_at, profile_initialized')
           .eq('id', partnerId)
           .single()
 
-        console.log('Partner profile:', partner)
+        if (partnerError) {
+          console.error('❌ [messages] Partner profile error:', {
+            partnerId: partnerId?.slice(0, 8),
+            error: partnerError.message,
+            code: partnerError.code
+          })
+        }
+
+        console.log('👤 [messages] Partner profile:', partner ? {
+          id: partner.id?.slice(0, 8),
+          name: partner.name,
+          initialized: partner.profile_initialized
+        } : 'NOT FOUND')
 
         if (!partner) {
-          console.log('No partner found for ID:', partnerId)
+          console.log('⚠️ [messages] Skipping conversation - no partner profile for:', partnerId?.slice(0, 8))
           return null // パートナー情報がない場合はスキップ
         }
 
