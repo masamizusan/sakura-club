@@ -157,12 +157,28 @@ export async function POST(request: NextRequest) {
     // ===== 4. 対象ユーザー存在チェック =====
     const { data: targetUser, error: targetError } = await supabase
       .from('profiles')
-      .select('id, name, first_name, last_name')
+      .select('id, name, first_name, last_name, profile_initialized')
       .eq('id', likedUserId)
       .single()
 
+    console.log('🎯 [likes] Target user lookup:', {
+      likedUserId: likedUserId.slice(0, 8),
+      found: !!targetUser,
+      targetError: targetError?.message,
+      targetErrorCode: targetError?.code,
+      profileInitialized: targetUser?.profile_initialized
+    })
+
     if (targetError || !targetUser) {
-      return NextResponse.json({ error: '対象のユーザーが見つかりません' }, { status: 404 })
+      return NextResponse.json({
+        error: '対象のユーザーが見つかりません',
+        debug: {
+          likedUserId,
+          errorMessage: targetError?.message,
+          errorCode: targetError?.code,
+          hint: 'RLS policy may be blocking access'
+        }
+      }, { status: 404 })
     }
 
     // ===== 5. 既存アクションチェック（matchesテーブル） =====
