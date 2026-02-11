@@ -42,45 +42,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // ===== 1. 自分の profiles.id を取得（user_id = auth.uid() で検索） =====
-    const { data: myProfile, error: myProfileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
+    // ===== 1. 自分の profiles.id を取得 =====
+    // profiles.id = auth.uid() の設計なので、直接 user.id を使用
+    const myProfileId = user.id
 
-    // user_id で見つからない場合は id = user.id でフォールバック（profiles.id = auth.uid() のケース）
-    let myProfileId = myProfile?.id
-    if (!myProfileId) {
-      const { data: fallbackProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single()
-      myProfileId = fallbackProfile?.id
-    }
-
-    console.log('👤 [messages] My profile lookup:', {
-      authUserId: user.id.slice(0, 8),
-      myProfileId: myProfileId?.slice(0, 8) || 'NOT FOUND',
-      error: myProfileError?.message
+    console.log('👤 [messages] Using auth user id as profile id:', {
+      myProfileId: myProfileId.slice(0, 8)
     })
-
-    if (!myProfileId) {
-      return NextResponse.json({
-        conversations: [],
-        total: 0,
-        debug: {
-          authUserId: user.id,
-          message: 'Profile not found for this auth user'
-        }
-      })
-    }
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
-    // ===== 2. conversations を myProfileId で検索 =====
+    // ===== 2. conversations を myProfileId で検索（RLSバイパスのためservice_roleは使えないので注意） =====
     const { data: conversations, error } = await supabase
       .from('conversations')
       .select('*')
@@ -100,7 +73,7 @@ export async function GET(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: '会話の取得に失敗しました', debug: error.message },
+        { error: '会話の取得に失敗しました', debug: { error: error.message, code: error.code } },
         { status: 500 }
       )
     }
@@ -119,7 +92,8 @@ export async function GET(request: NextRequest) {
         debug: {
           authUserId: user.id,
           myProfileId: myProfileId,
-          message: 'No conversations found for this profile'
+          queryFilter: `user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`,
+          message: 'No conversations found - RLS may be blocking. Check if auth.uid() matches user1_id or user2_id'
         }
       })
     }
