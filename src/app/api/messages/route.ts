@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     
     if (authError || !user) {
       return NextResponse.json(
-        { 
+        {
           error: '認証が必要です',
           debug: { authError: authError?.message, hasUser: !!user }
         },
@@ -42,14 +42,49 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // ===== 1. 自分の profiles.id を取得（user_id = auth.uid() で検索） =====
+    const { data: myProfile, error: myProfileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    // user_id で見つからない場合は id = user.id でフォールバック（profiles.id = auth.uid() のケース）
+    let myProfileId = myProfile?.id
+    if (!myProfileId) {
+      const { data: fallbackProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+      myProfileId = fallbackProfile?.id
+    }
+
+    console.log('👤 [messages] My profile lookup:', {
+      authUserId: user.id.slice(0, 8),
+      myProfileId: myProfileId?.slice(0, 8) || 'NOT FOUND',
+      error: myProfileError?.message
+    })
+
+    if (!myProfileId) {
+      return NextResponse.json({
+        conversations: [],
+        total: 0,
+        debug: {
+          authUserId: user.id,
+          message: 'Profile not found for this auth user'
+        }
+      })
+    }
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
-    // まず、conversationsテーブルが存在するかチェック
+    // ===== 2. conversations を myProfileId で検索 =====
     const { data: conversations, error } = await supabase
       .from('conversations')
       .select('*')
-      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .or(`user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -77,34 +112,36 @@ export async function GET(request: NextRequest) {
 
     // conversationsが空の場合、デバッグ情報を含めて返す
     if (!conversations || conversations.length === 0) {
-      console.log('⚠️ [messages] No conversations found for user:', user.id.slice(0, 8))
+      console.log('⚠️ [messages] No conversations found for profile:', myProfileId.slice(0, 8))
       return NextResponse.json({
         conversations: [],
         total: 0,
         debug: {
-          currentUserId: user.id,
-          message: 'No conversations found for this user'
+          authUserId: user.id,
+          myProfileId: myProfileId,
+          message: 'No conversations found for this profile'
         }
       })
     }
 
-    // 簡略化された会話リストを返す（プロフィール情報は後で取得）
+    // ===== 3. 会話リストを返す（パートナーのプロフィールは profiles.id で取得） =====
     const conversationsWithMessages = await Promise.all(
       conversations.map(async (conv) => {
-        const partnerId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id
-        
+        // partnerId は myProfileId と比較して決定
+        const partnerId = conv.user1_id === myProfileId ? conv.user2_id : conv.user1_id
+
         console.log('🔗 [messages] Processing conversation:', {
           convId: conv.id?.slice(0, 8),
           user1: conv.user1_id?.slice(0, 8),
           user2: conv.user2_id?.slice(0, 8),
-          currentUser: user.id.slice(0, 8),
+          myProfileId: myProfileId.slice(0, 8),
           partnerId: partnerId?.slice(0, 8)
         })
 
-        // パートナーのプロフィール情報を取得（自分自身の場合も含む）
+        // パートナーのプロフィール情報を取得（profiles.id ベースで検索）
         const { data: partner, error: partnerError } = await supabase
           .from('profiles')
-          .select('id, name, last_name, age, nationality, residence, city, updated_at, profile_initialized')
+          .select('id, name, last_name, age, nationality, residence, city, avatar_url, updated_at, profile_initialized')
           .eq('id', partnerId)
           .single()
 
