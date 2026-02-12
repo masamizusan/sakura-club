@@ -40,7 +40,10 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     setLoginError('')
-    
+
+    // このタブがログインを開始したことをマーク（ユーザースイッチ警告をスキップするため）
+    sessionStorage.setItem('sc_auth_login_initiated', 'true')
+
     try {
       const result = await authService.signIn(data)
       

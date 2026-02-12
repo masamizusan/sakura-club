@@ -75,34 +75,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAllUserStorage(currentUserId)
             set({ user: newUser })
 
-            // 認証関連ページでは警告・リロードをスキップ（ユーザーが意図的にログイン操作中）
+            // このタブがログインを開始したかどうかをチェック
+            // （ログイン開始時にフラグをセット、auth変更後にクリア）
             if (typeof window !== 'undefined') {
-              const path = window.location.pathname
-              const isAuthPage = path.includes('/login') ||
-                                 path.includes('/signup') ||
-                                 path.includes('/register')
+              const isInitiatedByThisTab = sessionStorage.getItem('sc_auth_login_initiated') === 'true'
 
-              // デバッグ: パス判定の詳細を出力
-              console.warn('[AUTH_LISTENER] USER_SWITCH path check:', {
-                path,
-                isAuthPage,
-                href: window.location.href
+              console.warn('[AUTH_LISTENER] USER_SWITCH check:', {
+                isInitiatedByThisTab,
+                path: window.location.pathname
               })
 
-              if (isAuthPage) {
-                console.warn('[AUTH_LISTENER] USER_SWITCH on auth page - skip alert')
-                // 認証ページでは静かに状態更新のみ（リロードも不要）
+              // フラグをクリア（一度使ったらリセット）
+              sessionStorage.removeItem('sc_auth_login_initiated')
+
+              if (isInitiatedByThisTab) {
+                console.warn('[AUTH_LISTENER] USER_SWITCH initiated by this tab - skip alert')
+                // このタブでログインを開始した場合は警告不要
               } else {
-                // 通常ページでは警告を表示してリロード
-                console.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload NOW')
+                // 別タブでログインされた場合は警告を表示してリロード
+                console.warn('[AUTH_LISTENER] USER_SWITCH from another tab - showing alert')
                 window.alert(
-                  '別のアカウントでログインが検出されました。\n' +
+                  '別のタブで他のアカウントにログインしました。\n' +
                   'ページを再読み込みして、新しいアカウントに切り替えます。'
                 )
                 window.location.reload()
               }
-            } else {
-              console.warn('[AUTH_LISTENER] USER_SWITCH: window is undefined (SSR?)')
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移

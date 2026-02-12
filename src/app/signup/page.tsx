@@ -195,7 +195,10 @@ export default function SignupPage() {
     } catch (error) {
       logger.error('[SIGNUP] sessionStorage cleanup', error)
     }
-    
+
+    // このタブがサインアップを開始したことをマーク（ユーザースイッチ警告をスキップするため）
+    sessionStorage.setItem('sc_auth_login_initiated', 'true')
+
     try {
       // 年齢を計算
       const age = calculateAge(data.birth_date)
