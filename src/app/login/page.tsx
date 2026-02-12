@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
+import { notifyAuthChange } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
@@ -43,6 +44,11 @@ function LoginForm() {
 
     try {
       const result = await authService.signIn(data)
+
+      // 他タブへ通知（タブ間同期）
+      if (result.user?.id) {
+        notifyAuthChange(result.user.id)
+      }
 
       // Wait a moment for session to be established
       await new Promise(resolve => setTimeout(resolve, 500))

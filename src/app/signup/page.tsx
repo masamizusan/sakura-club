@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService } from '@/lib/auth'
+import { notifyAuthChange } from '@/store/authStore'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
@@ -251,6 +252,12 @@ export default function SignupPage() {
 
       // --- パターンC: session有り ---
       logger.debug('[SIGNUP] session acquired → profile init & edit')
+
+      // 他タブへ通知（タブ間同期）
+      if (result.user?.id) {
+        notifyAuthChange(result.user.id)
+      }
+
       sessionStorage.setItem('sc_signup_email', data.email)
 
       // 📝 初期プロフィールデータをDBに保存（null-only update）
