@@ -82,18 +82,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                                  path.includes('/signup') ||
                                  path.includes('/register')
 
+              // デバッグ: パス判定の詳細を出力
+              console.warn('[AUTH_LISTENER] USER_SWITCH path check:', {
+                path,
+                isAuthPage,
+                href: window.location.href
+              })
+
               if (isAuthPage) {
-                logger.debug('[AUTH_LISTENER] USER_SWITCH on auth page - skip alert')
+                console.warn('[AUTH_LISTENER] USER_SWITCH on auth page - skip alert')
                 // 認証ページでは静かに状態更新のみ（リロードも不要）
               } else {
                 // 通常ページでは警告を表示してリロード
-                logger.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload')
+                console.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload NOW')
                 window.alert(
                   '別のアカウントでログインが検出されました。\n' +
                   'ページを再読み込みして、新しいアカウントに切り替えます。'
                 )
                 window.location.reload()
               }
+            } else {
+              console.warn('[AUTH_LISTENER] USER_SWITCH: window is undefined (SSR?)')
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移
