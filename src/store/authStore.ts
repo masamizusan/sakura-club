@@ -7,6 +7,15 @@ import { logger } from '@/utils/logger'
 let globalInitialized = false
 let globalInitializing = false
 
+// このタブでログインを開始したかどうか（メモリ内変数 - タブ間で共有されない）
+let loginInitiatedByThisTab = false
+
+// ログイン開始時に呼び出す関数（外部から使用）
+export const markLoginInitiated = () => {
+  loginInitiatedByThisTab = true
+  console.warn('[AUTH] markLoginInitiated: flag set to true')
+}
+
 interface AuthState {
   user: AuthUser | null
   isLoading: boolean
@@ -75,20 +84,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAllUserStorage(currentUserId)
             set({ user: newUser })
 
-            // このタブがログインを開始したかどうかをチェック
-            // （ログイン開始時にフラグをセット、auth変更後にクリア）
+            // このタブがログインを開始したかどうかをチェック（メモリ内変数を使用）
             if (typeof window !== 'undefined') {
-              const isInitiatedByThisTab = sessionStorage.getItem('sc_auth_login_initiated') === 'true'
-
               console.warn('[AUTH_LISTENER] USER_SWITCH check:', {
-                isInitiatedByThisTab,
+                loginInitiatedByThisTab,
                 path: window.location.pathname
               })
 
-              // フラグをクリア（一度使ったらリセット）
-              sessionStorage.removeItem('sc_auth_login_initiated')
-
-              if (isInitiatedByThisTab) {
+              if (loginInitiatedByThisTab) {
+                // フラグをリセット
+                loginInitiatedByThisTab = false
                 console.warn('[AUTH_LISTENER] USER_SWITCH initiated by this tab - skip alert')
                 // このタブでログインを開始した場合は警告不要
               } else {

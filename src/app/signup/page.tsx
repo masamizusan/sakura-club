@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService } from '@/lib/auth'
+import { markLoginInitiated } from '@/store/authStore'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
@@ -197,7 +198,7 @@ export default function SignupPage() {
     }
 
     // このタブがサインアップを開始したことをマーク（ユーザースイッチ警告をスキップするため）
-    sessionStorage.setItem('sc_auth_login_initiated', 'true')
+    markLoginInitiated()
 
     try {
       // 年齢を計算

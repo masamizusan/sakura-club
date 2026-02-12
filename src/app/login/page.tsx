@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
+import { markLoginInitiated } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
@@ -42,7 +43,7 @@ function LoginForm() {
     setLoginError('')
 
     // このタブがログインを開始したことをマーク（ユーザースイッチ警告をスキップするため）
-    sessionStorage.setItem('sc_auth_login_initiated', 'true')
+    markLoginInitiated()
 
     try {
       const result = await authService.signIn(data)
