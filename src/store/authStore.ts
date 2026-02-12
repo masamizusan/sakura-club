@@ -7,14 +7,13 @@ import { logger } from '@/utils/logger'
 let globalInitialized = false
 let globalInitializing = false
 
-// このタブでログインを開始したかどうか（メモリ内変数 - タブ間で共有されない）
-let loginInitiatedByThisTab = false
-
-// ログイン開始時に呼び出す関数（外部から使用）
-export const markLoginInitiated = () => {
-  loginInitiatedByThisTab = true
-  console.warn('[AUTH] markLoginInitiated: flag set to true')
-}
+// =====================================================
+// 🚨 ループ防止ガード（指示書 3.3）
+// 同一タブ内で警告→リロードが1回だけ実行されるようにする
+// =====================================================
+let hasHandledAuthSwitch = false
+let lastHandledAt = 0
+const AUTH_SWITCH_COOLDOWN_MS = 3000 // 3秒間は再実行を防止
 
 interface AuthState {
   user: AuthUser | null
@@ -38,12 +37,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   listenerSetup: false,
 
   setUser: (user) => set({ user }),
-  
+
   setLoading: (loading) => set({ isLoading: loading }),
 
   initialize: async () => {
     const state = get()
-    
+
     // グローバルフラグとローカル状態の両方をチェック
     if (globalInitialized || globalInitializing || state.isInitialized || state.isInitializing) {
       logger.debug('[AUTH_INIT] skipped', { global: globalInitialized, localInit: state.isInitialized })
@@ -64,51 +63,93 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (!state.listenerSetup) {
         logger.debug('[AUTH_INIT] listener setup')
+
+        // =====================================================
+        // 🚨 ユーザー切替検出（指示書 3.1, 3.2）
+        // onAuthStateChange で prevUserId !== newUserId を検出
+        // =====================================================
         authService.onAuthStateChange((newUser) => {
           const currentState = get()
-          const currentUserId = currentState.user?.id
+          const prevUserId = currentState.user?.id
           const newUserId = newUser?.id
 
-          logger.debug('[AUTH_LISTENER]', {
-            hasNewUser: !!newUser,
-            currentUserId: currentUserId?.slice(0, 8),
-            newUserId: newUserId?.slice(0, 8),
+          // デバッグログ（指示書 4.2）
+          console.warn('[AUTH_SWITCH] onAuthStateChange fired:', {
+            prev: prevUserId?.slice(0, 8) || 'none',
+            next: newUserId?.slice(0, 8) || 'none',
+            path: typeof window !== 'undefined' ? window.location.pathname : 'SSR'
           })
 
-          // 🚨 CRITICAL: ユーザーが変わった場合は前ユーザーのストレージをクリア＋ページリロード
-          if (currentUserId && newUserId && currentUserId !== newUserId) {
-            logger.warn('[AUTH_LISTENER] USER_SWITCH', {
-              prevUserId: currentUserId.slice(0, 8),
-              newUserId: newUserId.slice(0, 8),
+          // ケース1: 同一ユーザー（token refresh等）→ 何もしない
+          if (prevUserId === newUserId) {
+            console.warn('[AUTH_SWITCH] ignored (same user or no change)')
+            return
+          }
+
+          // ケース2: null → user（初回ログイン）→ 状態更新のみ
+          if (!prevUserId && newUserId) {
+            console.warn('[AUTH_SWITCH] initial login detected, updating state')
+            set({ user: newUser })
+            return
+          }
+
+          // ケース3: user → null（ログアウト）→ 状態更新のみ
+          if (prevUserId && !newUserId) {
+            console.warn('[AUTH_SWITCH] logout detected, updating state')
+            set({ user: null })
+            return
+          }
+
+          // ケース4: user → different user（ユーザー切替！）
+          if (prevUserId && newUserId && prevUserId !== newUserId) {
+            console.warn('[AUTH_SWITCH] USER SWITCH DETECTED!', {
+              prev: prevUserId.slice(0, 8),
+              next: newUserId.slice(0, 8)
             })
-            clearAllUserStorage(currentUserId)
+
+            // 前ユーザーのストレージをクリア
+            clearAllUserStorage(prevUserId)
             set({ user: newUser })
 
-            // ユーザースイッチ検出 → 常に警告を表示してリロード
-            if (typeof window !== 'undefined') {
-              const path = window.location.pathname
-
-              // ログインページ自体では警告不要（ログイン成功後にリダイレクトされるため）
-              if (path === '/login' || path === '/signup') {
-                console.warn('[AUTH_LISTENER] USER_SWITCH on login/signup page - skip alert')
-                return
-              }
-
-              console.warn('[AUTH_LISTENER] USER_SWITCH detected - showing alert and reloading')
-
-              // 警告を表示してリロード
-              window.alert(
-                'アカウントが切り替わりました。\n' +
-                'ページを再読み込みします。'
-              )
-              window.location.reload()
+            // ブラウザ環境でのみ実行
+            if (typeof window === 'undefined') {
+              return
             }
-          } else if (currentUserId !== newUserId) {
-            // 初回セットや null→user の通常遷移
-            set({ user: newUser })
+
+            const path = window.location.pathname
+
+            // 例外ページチェック（指示書 3.2）
+            if (path === '/login' || path === '/signup' ||
+                path.startsWith('/login') || path.startsWith('/signup')) {
+              console.warn('[AUTH_SWITCH] on login/signup page - skip alert')
+              return
+            }
+
+            // ループ防止チェック（指示書 3.3）
+            const now = Date.now()
+            if (hasHandledAuthSwitch || (now - lastHandledAt) < AUTH_SWITCH_COOLDOWN_MS) {
+              console.warn('[AUTH_SWITCH] loop prevention - skipping (already handled or cooldown)')
+              return
+            }
+
+            // ガードを設定
+            hasHandledAuthSwitch = true
+            lastHandledAt = now
+
+            console.warn('[AUTH_SWITCH] showing alert and reloading...')
+
+            // 警告を表示（指示書 3.2）
+            window.alert('アカウントが切り替わりました。\nページを再読み込みします。')
+
+            // リロード（B案: キャッシュ回避のためタイムスタンプ付与）
+            const currentUrl = new URL(window.location.href)
+            currentUrl.searchParams.set('_ts', now.toString())
+            window.location.href = currentUrl.toString()
           }
         })
+
         set({ listenerSetup: true })
+        console.warn('[AUTH_INIT] auth switch listener setup complete')
       }
     } catch (error) {
       logger.error('[AUTH_INIT]', error)
