@@ -75,18 +75,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAllUserStorage(currentUserId)
             set({ user: newUser })
 
-            // 全ページで強制リロード（別アカウントでのログインを検出）
+            // 認証関連ページでは警告・リロードをスキップ（ユーザーが意図的にログイン操作中）
             if (typeof window !== 'undefined') {
-              logger.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload')
+              const path = window.location.pathname
+              const isAuthPage = path.includes('/login') ||
+                                 path.includes('/signup') ||
+                                 path.includes('/register')
 
-              // ユーザーに警告メッセージを表示
-              window.alert(
-                '別のアカウントでログインが検出されました。\n' +
-                'ページを再読み込みして、新しいアカウントに切り替えます。'
-              )
-
-              // ページリロード
-              window.location.reload()
+              if (isAuthPage) {
+                logger.debug('[AUTH_LISTENER] USER_SWITCH on auth page - skip alert')
+                // 認証ページでは静かに状態更新のみ（リロードも不要）
+              } else {
+                // 通常ページでは警告を表示してリロード
+                logger.warn('[AUTH_LISTENER] USER_SWITCH: forcing page reload')
+                window.alert(
+                  '別のアカウントでログインが検出されました。\n' +
+                  'ページを再読み込みして、新しいアカウントに切り替えます。'
+                )
+                window.location.reload()
+              }
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移
