@@ -84,27 +84,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             clearAllUserStorage(currentUserId)
             set({ user: newUser })
 
-            // このタブがログインを開始したかどうかをチェック（メモリ内変数を使用）
+            // ユーザースイッチ検出 → 常に警告を表示してリロード
             if (typeof window !== 'undefined') {
-              console.warn('[AUTH_LISTENER] USER_SWITCH check:', {
-                loginInitiatedByThisTab,
-                path: window.location.pathname
-              })
+              const path = window.location.pathname
 
-              if (loginInitiatedByThisTab) {
-                // フラグをリセット
-                loginInitiatedByThisTab = false
-                console.warn('[AUTH_LISTENER] USER_SWITCH initiated by this tab - skip alert')
-                // このタブでログインを開始した場合は警告不要
-              } else {
-                // 別タブでログインされた場合は警告を表示してリロード
-                console.warn('[AUTH_LISTENER] USER_SWITCH from another tab - showing alert')
-                window.alert(
-                  '別のタブで他のアカウントにログインしました。\n' +
-                  'ページを再読み込みして、新しいアカウントに切り替えます。'
-                )
-                window.location.reload()
+              // ログインページ自体では警告不要（ログイン成功後にリダイレクトされるため）
+              if (path === '/login' || path === '/signup') {
+                console.warn('[AUTH_LISTENER] USER_SWITCH on login/signup page - skip alert')
+                return
               }
+
+              console.warn('[AUTH_LISTENER] USER_SWITCH detected - showing alert and reloading')
+
+              // 警告を表示してリロード
+              window.alert(
+                'アカウントが切り替わりました。\n' +
+                'ページを再読み込みします。'
+              )
+              window.location.reload()
             }
           } else if (currentUserId !== newUserId) {
             // 初回セットや null→user の通常遷移
