@@ -64,12 +64,37 @@ const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 
 // =====================================================
 // isAuthPageNow: 現在ログイン/サインアップページか
+// 🚨 CRITICAL: window.location.pathname のみを使用
+// isAuthPageMounted は他タブの状態が混入するため使用禁止
 // =====================================================
 function isAuthPageNow(): boolean {
-  const windowPath = typeof window !== 'undefined' ? window.location.pathname : ''
-  const pathMatches = /^\/(login|signup)(\/|$)/.test(windowPath) ||
-                      /^\/(login|signup)(\/|$)/.test(currentPath)
-  return isAuthPageMounted || pathMatches
+  if (typeof window === 'undefined') return false
+  const windowPath = window.location.pathname
+  return /^\/(login|signup)(\/|$)/.test(windowPath)
+}
+
+// =====================================================
+// このタブでの認証操作フラグ
+// =====================================================
+const AUTH_ACTION_FLAG_KEY = '__auth_action_in_this_tab__'
+
+function setAuthActionInThisTab() {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(AUTH_ACTION_FLAG_KEY, '1')
+    console.warn(`[AUTH_FLAG][${tabId}] set auth action flag`)
+  }
+}
+
+function clearAuthActionInThisTab() {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem(AUTH_ACTION_FLAG_KEY)
+    console.warn(`[AUTH_FLAG][${tabId}] cleared auth action flag`)
+  }
+}
+
+function isAuthActionInThisTab(): boolean {
+  if (typeof window === 'undefined') return false
+  return sessionStorage.getItem(AUTH_ACTION_FLAG_KEY) === '1'
 }
 
 // =====================================================
@@ -95,7 +120,10 @@ function showAlertAndReload() {
 }
 
 // =====================================================
-// handleIncomingAuthSwitch: cross-tab 受信処理
+// handleIncomingAuthSwitch: cross-tab 受信処理（補助機能）
+//
+// 🚨 NOTE: Tab自己判定方式が主な検出手段
+// この関数は onAuthStateChange が発火しないエッジケースのフォールバック
 //
 // 警告条件:
 // 1. fromTab !== tabId（自タブ起点は無視）
@@ -218,6 +246,9 @@ export const notifyAuthChange = (userId: string | null) => {
   broadcastAuthChange(userId, 'explicit')
 }
 
+// Export for login/signup pages
+export { setAuthActionInThisTab, clearAuthActionInThisTab }
+
 // =====================================================
 // Zustand Store
 // =====================================================
@@ -273,17 +304,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.debug(`[AUTH_INIT][${tabId}] ready`, { hasUser: !!user })
 
       // =====================================================
-      // onAuthStateChange
+      // onAuthStateChange - Tab自己判定方式
+      // 🚨 CRITICAL: このタブ自身のonAuthStateChangeでユーザー切替を検出
+      // Cross-tab通知は補助的な役割のみ
       // =====================================================
       authService.onAuthStateChange((newUser) => {
         const prevUserId = lastKnownUserId
         const newUserId = newUser?.id
         const isAuthPage = isAuthPageNow()
+        const isLocalAction = isAuthActionInThisTab()
 
         console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange:`, {
           prev: prevUserId?.slice(0, 8) || 'none',
           next: newUserId?.slice(0, 8) || 'none',
-          isAuthPage
+          isAuthPage,
+          isLocalAction,
+          path: typeof window !== 'undefined' ? window.location.pathname : 'server'
         })
 
         // 同一ユーザー
@@ -300,6 +336,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
           set({ user: newUser })
           broadcastAuthChange(newUserId, 'onAuthStateChange-initial')
+          // 初回ログイン後にフラグをクリア
+          clearAuthActionInThisTab()
           return
         }
 
@@ -314,32 +352,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // user → different user（ユーザー切替）
         if (prevUserId && newUserId && prevUserId !== newUserId) {
-          console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH!`, {
-            prev: prevUserId,
-            next: newUserId,
-            isAuthPage
+          console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH DETECTED!`, {
+            prev: prevUserId.slice(0, 8),
+            next: newUserId.slice(0, 8),
+            isAuthPage,
+            isLocalAction
           })
 
-          // 🚨 ログインページ（操作タブ）の場合:
-          // - lastKnownUserId を新ユーザーに更新（自分で切り替えたので）
-          // - broadcast を送る
+          // 🚨 このタブが認証操作を行った場合（ログインページ + フラグあり）:
+          // - lastKnownUserId を新ユーザーに更新
+          // - broadcast を送る（他タブへ通知）
           // - 警告は出さない
-          if (isAuthPage) {
+          // - フラグをクリア
+          if (isAuthPage && isLocalAction) {
             lastKnownUserId = newUserId
-            console.warn(`[AUTH][${tabId}] lastKnownUserId updated by local login:`, lastKnownUserId.slice(0, 8))
+            console.warn(`[AUTH][${tabId}] LOCAL LOGIN - lastKnownUserId updated:`, lastKnownUserId.slice(0, 8))
             set({ user: newUser })
-            broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
-            console.warn(`[AUTH_SWITCH][${tabId}] on auth page - skip alert`)
+            broadcastAuthChange(newUserId, 'onAuthStateChange-local-login')
+            clearAuthActionInThisTab()
+            console.warn(`[AUTH_SWITCH][${tabId}] local auth action - skip alert`)
             return
           }
 
-          // 🚨 非ログインページ（受け身タブ）の場合:
+          // 🚨 このタブが認証操作を行っていない場合（他タブでのログイン）:
           // - lastKnownUserId は更新しない
           // - broadcast を送る
-          // - 警告を出す
-          broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
+          // - 🎯 非認証ページなら警告を出す
+          console.warn(`[AUTH_SWITCH][${tabId}] CROSS-TAB SWITCH - checking alert condition`, {
+            isAuthPage,
+            shouldAlert: !isAuthPage
+          })
+
+          broadcastAuthChange(newUserId, 'onAuthStateChange-cross-tab-switch')
           set({ user: newUser })
-          showAlertAndReload()
+
+          // 非認証ページでユーザーが切り替わった = 他タブでログインされた
+          if (!isAuthPage) {
+            console.error(`[AUTH_SWITCH][${tabId}] 🚨 ALERT TRIGGERED - cross-tab user switch on non-auth page`)
+            showAlertAndReload()
+          } else {
+            // 認証ページだがフラグがない = 他タブのログインがリフレッシュで反映
+            console.warn(`[AUTH_SWITCH][${tabId}] on auth page without local flag - skip alert`)
+          }
         }
       })
 

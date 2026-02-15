@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService } from '@/lib/auth'
-import { notifyAuthChange } from '@/store/authStore'
+import { notifyAuthChange, setAuthActionInThisTab } from '@/store/authStore'
 import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
@@ -208,6 +208,9 @@ export default function SignupPage() {
         setIsLoading(false)
         return
       }
+
+      // 🚨 CRITICAL: サインアップ操作前にフラグをセット（他タブとの区別用）
+      setAuthActionInThisTab()
 
       // 拡張データを作成
       const signupData = {

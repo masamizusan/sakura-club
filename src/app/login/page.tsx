@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
-import { notifyAuthChange } from '@/store/authStore'
+import { notifyAuthChange, setAuthActionInThisTab } from '@/store/authStore'
 import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
@@ -44,6 +44,9 @@ function LoginForm() {
     setLoginError('')
 
     try {
+      // 🚨 CRITICAL: ログイン操作前にフラグをセット（他タブとの区別用）
+      setAuthActionInThisTab()
+
       const result = await authService.signIn(data)
 
       // 他タブへ通知（タブ間同期）
