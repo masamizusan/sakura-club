@@ -104,15 +104,16 @@ const handleAuthSwitch = (
   }
 
   // =====================================================
-  // 🚨 パス判定：currentPath（usePathname由来）を優先
-  // フォールバックとして window.location.pathname
+  // 🚨 パス判定：window.location.pathname を優先
+  // race condition 対策：AuthSwitchGuard より先に発火するため
+  // window.location.pathname はこの瞬間正しい値を持っている
   // =====================================================
   const windowPath = window.location.pathname
-  const pathNow = currentPath || windowPath
+  const pathNow = windowPath || currentPath
 
-  // currentPath が空の場合はフォールバックを使用したことをログ
-  if (!currentPath) {
-    console.warn('[AUTH_SWITCH] currentPath empty, fallback to window.location.pathname:', windowPath)
+  // デバッグ用
+  if (windowPath !== currentPath) {
+    console.warn('[AUTH_SWITCH] path mismatch:', { windowPath, currentPath, using: pathNow })
   }
 
   const isAuthPageNow = /^\/(login|signup)(\/|$)/.test(pathNow)
