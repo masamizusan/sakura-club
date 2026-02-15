@@ -4,12 +4,26 @@ import { clearAllUserStorage } from '@/utils/userStorage'
 import { logger } from '@/utils/logger'
 
 // =====================================================
-// 🆕 タブ識別ID（デバッグ用）
-// 各タブに一意のIDを付与してログで追跡可能にする
+// 🆕 タブ識別ID（sessionStorage ベース）
+// 各タブで固有のIDを保証する
+// - localStorage ❌（全タブで共有される）
+// - module static ❌（ビルド時に固定される可能性）
+// - sessionStorage ✅（タブごとに独立）
 // =====================================================
-const tabId = typeof window !== 'undefined'
-  ? Math.random().toString(36).substring(2, 8)
-  : 'ssr'
+const TAB_ID_KEY = '__sakura_tab_id__'
+
+function getTabId(): string {
+  if (typeof window === 'undefined') return 'server'
+
+  let id = sessionStorage.getItem(TAB_ID_KEY)
+  if (!id) {
+    id = Math.random().toString(36).substring(2, 8)
+    sessionStorage.setItem(TAB_ID_KEY, id)
+  }
+  return id
+}
+
+const tabId = getTabId()
 
 // =====================================================
 // 🚨 ループ防止ガード
