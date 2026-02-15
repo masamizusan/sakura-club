@@ -77,6 +77,13 @@ const initBroadcastChannel = (onMessage: (userId: string, payload: any) => void)
 const broadcastAuthChange = (userId: string | null, source: string) => {
   if (typeof window === 'undefined') return
 
+  // 🚨 引数の確認ログ
+  console.warn(`[BROADCAST][${tabId}] preparing to send:`, {
+    userId_received: userId,
+    userId_full: userId || 'null',
+    source
+  })
+
   // nonce を追加して必ず値が変化するようにする
   const payload = {
     userId,
@@ -90,7 +97,7 @@ const broadcastAuthChange = (userId: string | null, source: string) => {
   if (authChannel) {
     try {
       authChannel.postMessage(payload)
-      console.warn(`[BROADCAST][${tabId}][send] userId=${userId?.slice(0, 8)} source=${source}`)
+      console.warn(`[BROADCAST][${tabId}][send] userId=${userId} source=${source}`)
     } catch (e) {
       console.warn(`[BROADCAST][${tabId}] send failed:`, e)
     }
@@ -99,7 +106,7 @@ const broadcastAuthChange = (userId: string | null, source: string) => {
   // localStorage フォールバック（常に実行）
   try {
     localStorage.setItem(CROSS_TAB_AUTH_KEY, JSON.stringify(payload))
-    console.warn(`[STORAGE][${tabId}][send] userId=${userId?.slice(0, 8)} source=${source}`)
+    console.warn(`[STORAGE][${tabId}][send] userId=${userId} source=${source}`)
   } catch (e) {
     console.warn(`[STORAGE][${tabId}] send failed:`, e)
   }
@@ -254,11 +261,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const currentState = get()
           const currentUserId = currentState.user?.id
 
+          // 🚨 詳細受信ログ
           console.warn(`[CROSS_TAB][${tabId}] message received:`, {
-            newUserId: newUserId?.slice(0, 8),
-            currentUserId: currentUserId?.slice(0, 8),
+            newUserId_full: newUserId,
+            currentUserId_full: currentUserId,
             fromTab: payload?.fromTab,
-            isAuthPageMounted
+            source: payload?.source,
+            isAuthPageMounted,
+            payload_full: payload
           })
 
           // 自分自身からの通知は無視
@@ -269,10 +279,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // 同一ユーザーまたは変更なし
           if (!currentUserId || !newUserId || newUserId === 'null' || currentUserId === newUserId) {
-            console.warn(`[CROSS_TAB][${tabId}] ignored (same user or no change)`)
+            console.warn(`[CROSS_TAB][${tabId}] ignored (same user or no change):`, {
+              reason: !currentUserId ? 'no currentUserId' :
+                      !newUserId ? 'no newUserId' :
+                      newUserId === 'null' ? 'newUserId is null string' :
+                      'currentUserId === newUserId',
+              currentUserId_full: currentUserId,
+              newUserId_full: newUserId
+            })
             return
           }
 
+          console.warn(`[CROSS_TAB][${tabId}] WILL PROCESS - different users detected`)
           handleAuthSwitch('cross-tab', currentUserId, newUserId, (u) => set({ user: u }))
         }
 
@@ -337,8 +355,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // ケース4: user → different user（ユーザー切替！）
           if (prevUserId && newUserId && prevUserId !== newUserId) {
-            console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH DETECTED!`)
-            // 🚨 必ず broadcast（他タブに通知）
+            // 🚨 詳細ログ: 何をブロードキャストするか明示
+            console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH DETECTED!`, {
+              prevUserId_full: prevUserId,
+              newUserId_full: newUserId,
+              willBroadcast: newUserId,
+              newUserObj: newUser ? { id: newUser.id, email: newUser.email?.slice(0, 10) } : null
+            })
+            // 🚨 必ず broadcast（他タブに通知）- 新しいユーザーIDを送る
             broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
             handleAuthSwitch('onAuthStateChange', prevUserId, newUserId, (u) => set({ user: u }), newUser)
           }
