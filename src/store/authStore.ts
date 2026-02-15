@@ -32,21 +32,33 @@ function getTabId(): string {
 const tabId = getTabId()
 
 // =====================================================
-// 🆕 getPathNow() - DOM基準のパス取得（誤判定防止）
-// 🚨 CRITICAL: window.location.pathname は使用禁止
-// Next.js ルーティング中に一時的に別のパスを返すことがある
+// 🆕 getPathNow() - 安定したパス取得（誤判定防止）
+// 優先順位: sessionStorage > dataset > location.pathname
+// 🚨 CRITICAL: window.location.pathname は最後の保険のみ
 // =====================================================
+const PATH_NOW_KEY = '__path_now__'
+
 function getPathNow(): string {
   if (typeof window === 'undefined') return ''
-  // DOM基準: AuthSwitchGuard が設定した正確なパス
+
+  // 1. sessionStorage（最優先 - AuthSwitchGuard が設定）
+  const sessionPath = sessionStorage.getItem(PATH_NOW_KEY)
+  if (sessionPath) {
+    console.warn(`[PATH_NOW][${tabId}] from=sessionStorage value=${sessionPath}`)
+    return sessionPath
+  }
+
+  // 2. DOM dataset（バックアップ）
   const domPath = document.body?.dataset?.page
   if (domPath) {
+    console.warn(`[PATH_NOW][${tabId}] from=dataset value=${domPath}`)
     return domPath
   }
-  // フォールバック（初期化前）: window.location.pathname
-  // ただしこの値は信頼性が低いため、ログに警告を出す
-  console.warn(`[PATH_WARN][${tabId}] dataset.page not set, falling back to location.pathname`)
-  return window.location.pathname || ''
+
+  // 3. window.location.pathname（最後の保険 - 信頼性低）
+  const locPath = window.location.pathname || ''
+  console.warn(`[PATH_NOW][${tabId}] from=location value=${locPath} ⚠️ FALLBACK`)
+  return locPath
 }
 
 // =====================================================
@@ -359,6 +371,14 @@ export function setCurrentPath(_path: string) {}
 function applyPendingUserOnBoot() {
   if (typeof window === 'undefined') return
 
+  // 🚨 CRITICAL: BOOT時に即座にsessionStorageにパスを設定
+  // AuthSwitchGuardがマウントする前でも正しいパスを取得できるようにする
+  const locationPath = window.location.pathname
+  if (locationPath && !sessionStorage.getItem(PATH_NOW_KEY)) {
+    sessionStorage.setItem(PATH_NOW_KEY, locationPath)
+    console.warn(`[BOOT][${tabId}] PATH_NOW_KEY set from location: ${locationPath}`)
+  }
+
   const pathNow = getPathNow()
   const isAuth = isAuthPageNow()
   const base = getBaseUserId()
@@ -453,7 +473,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const baseUserId = getBaseUserId()
         const pathNow = getPathNow()
         const isAuth = isAuthPageNow()
-        const actionFlag = hasAuthActionFlag()
+        let actionFlag = hasAuthActionFlag()
+
+        // 🚨 CRITICAL: 非authページで actionFlag が残っていたら stale として即クリア
+        // これがないと Tab1(/mypage) が誤って base を更新してしまう
+        if (actionFlag && !isAuth) {
+          console.warn(`[AUTH_SWITCH][${tabId}] clearing stale actionFlag (pathNow=${pathNow})`)
+          clearAuthActionFlag()
+          actionFlag = false
+        }
 
         console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange`, {
           new: newUserId?.slice(0, 8) || 'none',
