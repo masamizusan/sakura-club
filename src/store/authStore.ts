@@ -17,6 +17,22 @@ let lastHandledAt = 0
 const AUTH_SWITCH_COOLDOWN_MS = 3000 // 3秒間は再実行を防止
 
 // =====================================================
+// 🆕 現在パス保持（usePathname() から同期）
+// window.location.pathname は App Router でズレることがあるため
+// usePathname() の値を正として扱う
+// =====================================================
+let currentPath = ''
+
+export function setCurrentPath(path: string) {
+  currentPath = path
+  console.warn('[AUTH_PATH] stored:', path)
+}
+
+export function getCurrentPath(): string {
+  return currentPath
+}
+
+// =====================================================
 // 🆕 タブ間通信用（BroadcastChannel + localStorage フォールバック）
 // 指示書 2.2: BroadcastChannel を第一候補
 // =====================================================
@@ -71,7 +87,7 @@ export const notifyAuthChange = (userId: string | null) => {
 }
 
 // =====================================================
-// 🚨 handleAuthSwitch: 一本化された切替処理（指示書 3.1）
+// 🚨 handleAuthSwitch: 一本化された切替処理
 // onAuthStateChange と タブ間通知 の両方からここを呼ぶ
 // =====================================================
 const handleAuthSwitch = (
@@ -88,17 +104,28 @@ const handleAuthSwitch = (
   }
 
   // =====================================================
-  // 🚨 指示書 2.1: イベント発火時点の pathname で判定
-  // 「固定path」は使わない。必ずこの瞬間の値を使う
+  // 🚨 パス判定：currentPath（usePathname由来）を優先
+  // フォールバックとして window.location.pathname
   // =====================================================
-  const pathNow = window.location.pathname
+  const windowPath = window.location.pathname
+  const pathNow = currentPath || windowPath
+
+  // currentPath が空の場合はフォールバックを使用したことをログ
+  if (!currentPath) {
+    console.warn('[AUTH_SWITCH] currentPath empty, fallback to window.location.pathname:', windowPath)
+  }
+
   const isAuthPageNow = /^\/(login|signup)(\/|$)/.test(pathNow)
 
+  // デバッグログ（必須）
   console.warn(`[AUTH_SWITCH] ${source}:`, {
     prev: prevUserId.slice(0, 8),
     next: newUserId.slice(0, 8),
+    currentPath,
+    windowPath,
     pathNow,
-    isAuthPageNow
+    isAuthPageNow,
+    href: window.location.href
   })
 
   // 例外ページなら何もしない
@@ -112,7 +139,7 @@ const handleAuthSwitch = (
   console.warn(`[AUTH_SWITCH] pathNow="${pathNow}" isAuthPageNow=false`)
 
   // =====================================================
-  // 🚨 指示書 2.5: ループ防止チェック
+  // 🚨 ループ防止チェック
   // onAuthStateChange と cross-tab の両方で共有
   // =====================================================
   const now = Date.now()
@@ -127,7 +154,7 @@ const handleAuthSwitch = (
   lastHandledAt = now
 
   // =====================================================
-  // 🚨 指示書 2.4: 警告 → リロード
+  // 🚨 警告 → リロード
   // =====================================================
   const targetUrl = new URL(window.location.href)
   targetUrl.searchParams.set('_ts', now.toString())
@@ -205,7 +232,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           console.warn('[CROSS_TAB] message received:', {
             newUserId: newUserId?.slice(0, 8) || 'null',
-            currentUserId: currentUserId?.slice(0, 8) || 'null'
+            currentUserId: currentUserId?.slice(0, 8) || 'null',
+            currentPath
           })
 
           // 同一ユーザーまたは変更なし
@@ -219,12 +247,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         // =====================================================
-        // 🚨 BroadcastChannel の初期化（指示書 2.2）
+        // 🚨 BroadcastChannel の初期化
         // =====================================================
         initBroadcastChannel(handleCrossTabMessage)
 
         // =====================================================
-        // 🚨 localStorage フォールバック（指示書 2.2）
+        // 🚨 localStorage フォールバック
         // =====================================================
         if (typeof window !== 'undefined') {
           window.addEventListener('storage', (event) => {
@@ -233,6 +261,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             try {
               const payload = JSON.parse(event.newValue)
               const newUserId = payload.userId
+              console.warn('[STORAGE] event received:', { newUserId: newUserId?.slice(0, 8) })
               if (newUserId) {
                 handleCrossTabMessage(newUserId)
               }
@@ -254,7 +283,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // デバッグログ
           console.warn('[AUTH_SWITCH] onAuthStateChange fired:', {
             prev: prevUserId?.slice(0, 8) || 'none',
-            next: newUserId?.slice(0, 8) || 'none'
+            next: newUserId?.slice(0, 8) || 'none',
+            currentPath
           })
 
           // ケース1: 同一ユーザー（token refresh等）→ 何もしない

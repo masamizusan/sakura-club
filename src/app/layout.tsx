@@ -4,6 +4,7 @@ import './globals.css'
 import SimpleHeader from '@/components/layout/SimpleHeader'
 import AuthProvider from '@/components/auth/AuthProvider'
 import { LanguageProvider } from '@/contexts/LanguageContext'
+import { AuthSwitchGuard } from '@/components/AuthSwitchGuard'
 
 const inter = Inter({ subsets: ['latin'] })
 const notoSansJP = Noto_Sans_JP({ 
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className="antialiased">
         <LanguageProvider>
           <AuthProvider>
+            <AuthSwitchGuard />
             {children}
           </AuthProvider>
         </LanguageProvider>
