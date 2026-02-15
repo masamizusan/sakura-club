@@ -32,16 +32,27 @@ function getTabId(): string {
 const tabId = getTabId()
 
 // =====================================================
-// 🆕 getPathNow() - 現在のパスを取得（誤判定検知用）
+// 🆕 getPathNow() - DOM基準のパス取得（誤判定防止）
+// 🚨 CRITICAL: window.location.pathname は使用禁止
+// Next.js ルーティング中に一時的に別のパスを返すことがある
 // =====================================================
 function getPathNow(): string {
   if (typeof window === 'undefined') return ''
+  // DOM基準: AuthSwitchGuard が設定した正確なパス
+  const domPath = document.body?.dataset?.page
+  if (domPath) {
+    return domPath
+  }
+  // フォールバック（初期化前）: window.location.pathname
+  // ただしこの値は信頼性が低いため、ログに警告を出す
+  console.warn(`[PATH_WARN][${tabId}] dataset.page not set, falling back to location.pathname`)
   return window.location.pathname || ''
 }
 
 // =====================================================
-// 2️⃣ isAuthPageNow() - 絶対に誤判定しない実装
-// pathNow と完全一致のみ（includes禁止）
+// 2️⃣ isAuthPageNow() - DOM基準で絶対に誤判定しない実装
+// 🚨 CRITICAL: document.body.dataset.page を使用
+// window.location.pathname は禁止（Next.js routing issue）
 // =====================================================
 function isAuthPageNow(): boolean {
   const p = getPathNow()
@@ -237,9 +248,10 @@ function handleIncomingAuthSwitch(payload: any) {
     return
   }
 
-  // 2) authページでは警告しない（操作タブ保護）
-  if (isAuth) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: auth page (pathNow=${pathNow})`)
+  // 2) 🚨 CRITICAL: 操作タブ（auth page + auth_action 両方）のみ無視
+  // auth page だけでは無視しない（Tab1が誤って/login扱いされる問題を防ぐ）
+  if (isAuth && actionFlag) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored: auth page (local action) (pathNow=${pathNow})`)
     return
   }
 
