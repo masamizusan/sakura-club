@@ -8,7 +8,7 @@ let globalInitialized = false
 let globalInitializing = false
 
 // =====================================================
-// 🚨 ループ防止ガード（指示書 2.5）
+// 🚨 ループ防止ガード
 // 同一タブ内で警告→リロードが1回だけ実行されるようにする
 // onAuthStateChange と タブ間通知 の両方で共有
 // =====================================================
@@ -17,10 +17,22 @@ let lastHandledAt = 0
 const AUTH_SWITCH_COOLDOWN_MS = 3000 // 3秒間は再実行を防止
 
 // =====================================================
-// 🆕 現在パス保持（usePathname() から同期）
-// window.location.pathname は App Router でズレることがあるため
-// usePathname() の値を正として扱う
+// 🆕 AuthPage マウントフラグ（パス文字列判定の代替）
+// ログイン/サインアップページがマウントされているかどうかで判定
+// これにより race condition を完全に排除
 // =====================================================
+let isAuthPageMounted = false
+
+export function setAuthPageMounted(mounted: boolean) {
+  isAuthPageMounted = mounted
+  console.warn('[AUTH_PAGE] mounted:', mounted)
+}
+
+export function getAuthPageMounted(): boolean {
+  return isAuthPageMounted
+}
+
+// 現在パス保持（デバッグ・ログ用に残す）
 let currentPath = ''
 
 export function setCurrentPath(path: string) {
@@ -33,8 +45,7 @@ export function getCurrentPath(): string {
 }
 
 // =====================================================
-// 🆕 タブ間通信用（BroadcastChannel + localStorage フォールバック）
-// 指示書 2.2: BroadcastChannel を第一候補
+// タブ間通信用（BroadcastChannel + localStorage フォールバック）
 // =====================================================
 const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
@@ -103,41 +114,31 @@ const handleAuthSwitch = (
     return
   }
 
-  // =====================================================
-  // 🚨 パス判定：window.location.pathname を優先
-  // race condition 対策：AuthSwitchGuard より先に発火するため
-  // window.location.pathname はこの瞬間正しい値を持っている
-  // =====================================================
+  // デバッグ用にパス情報も取得（判定には使わない）
   const windowPath = window.location.pathname
-  const pathNow = windowPath || currentPath
-
-  // デバッグ用
-  if (windowPath !== currentPath) {
-    console.warn('[AUTH_SWITCH] path mismatch:', { windowPath, currentPath, using: pathNow })
-  }
-
-  const isAuthPageNow = /^\/(login|signup)(\/|$)/.test(pathNow)
 
   // デバッグログ（必須）
   console.warn(`[AUTH_SWITCH] ${source}:`, {
     prev: prevUserId.slice(0, 8),
     next: newUserId.slice(0, 8),
-    currentPath,
+    isAuthPageMounted,
     windowPath,
-    pathNow,
-    isAuthPageNow,
+    currentPath,
     href: window.location.href
   })
 
-  // 例外ページなら何もしない
-  if (isAuthPageNow) {
-    console.warn(`[AUTH_SWITCH] pathNow="${pathNow}" isAuthPageNow=true`)
+  // =====================================================
+  // 🚨 例外判定：isAuthPageMounted フラグで判定
+  // パス文字列に依存しない = race condition なし
+  // =====================================================
+  if (isAuthPageMounted) {
+    console.warn('[AUTH_SWITCH] isAuthPageMounted=true - skip alert')
     console.warn('[AUTH_SWITCH] on login/signup page - skip alert')
     if (newUser !== undefined) setUser(newUser)
     return
   }
 
-  console.warn(`[AUTH_SWITCH] pathNow="${pathNow}" isAuthPageNow=false`)
+  console.warn('[AUTH_SWITCH] isAuthPageMounted=false - will show alert')
 
   // =====================================================
   // 🚨 ループ防止チェック
@@ -234,7 +235,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           console.warn('[CROSS_TAB] message received:', {
             newUserId: newUserId?.slice(0, 8) || 'null',
             currentUserId: currentUserId?.slice(0, 8) || 'null',
-            currentPath
+            isAuthPageMounted
           })
 
           // 同一ユーザーまたは変更なし
@@ -285,7 +286,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           console.warn('[AUTH_SWITCH] onAuthStateChange fired:', {
             prev: prevUserId?.slice(0, 8) || 'none',
             next: newUserId?.slice(0, 8) || 'none',
-            currentPath
+            isAuthPageMounted
           })
 
           // ケース1: 同一ユーザー（token refresh等）→ 何もしない

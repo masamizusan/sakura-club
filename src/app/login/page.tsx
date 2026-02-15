@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
 import { authService, AuthError } from '@/lib/auth'
 import { notifyAuthChange } from '@/store/authStore'
+import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { createClient } from '@/lib/supabase'
 import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
@@ -136,6 +137,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <AuthPageMarker />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex items-center justify-between mb-4">

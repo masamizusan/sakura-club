@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService } from '@/lib/auth'
 import { notifyAuthChange } from '@/store/authStore'
+import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
@@ -319,6 +320,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      <AuthPageMarker />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           {/* Header */}
