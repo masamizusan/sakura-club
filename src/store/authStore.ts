@@ -11,10 +11,6 @@ const tabId = typeof window !== 'undefined'
   ? Math.random().toString(36).substring(2, 8)
   : 'ssr'
 
-// グローバルな初期化フラグ
-let globalInitialized = false
-let globalInitializing = false
-
 // =====================================================
 // 🚨 ループ防止ガード
 // 同一タブ内で警告→リロードが1回だけ実行されるようにする
@@ -42,32 +38,189 @@ export function setCurrentPath(path: string) {
 }
 
 // =====================================================
-// タブ間通信用（BroadcastChannel + localStorage フォールバック）
+// タブ間通信用定数
 // =====================================================
 const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 
+// =====================================================
+// 🚨 isAuthPageCheck: フェイルセーフな例外判定
+// 「スキップ条件は厳しく、警告条件は緩く」
+// =====================================================
+const isAuthPageCheck = (): { isAuthPage: boolean; reason: string } => {
+  const windowPath = typeof window !== 'undefined' ? window.location.pathname : ''
+  const pathMatchesAuthPage = /^\/(login|signup)(\/|$)/.test(windowPath) ||
+                               /^\/(login|signup)(\/|$)/.test(currentPath)
+
+  // ケース1: マウントフラグON かつ パスも一致 → 確実にログインページ
+  if (isAuthPageMounted && pathMatchesAuthPage) {
+    return { isAuthPage: true, reason: 'mounted=true AND path=/login|signup' }
+  }
+
+  // ケース2: マウントフラグON だが パスが不一致 → 矛盾！フェイルセーフで警告する
+  if (isAuthPageMounted && !pathMatchesAuthPage) {
+    console.warn(`[AUTH_SWITCH][${tabId}] MISMATCH! mounted=true but path=${windowPath}/${currentPath} => FORCE ALERT`)
+    return { isAuthPage: false, reason: 'MISMATCH: mounted=true but path mismatch => force alert' }
+  }
+
+  // ケース3: マウントフラグOFF → 通常ページ、警告する
+  return { isAuthPage: false, reason: 'mounted=false' }
+}
+
+// =====================================================
+// 🚨 handleAuthSwitchCore: 一本化された切替処理（純関数版）
+// authStore.getState() から呼び出し可能
+// =====================================================
+const handleAuthSwitchCore = (
+  source: 'onAuthStateChange' | 'cross-tab',
+  prevUserId: string,
+  newUserId: string,
+  newUser?: AuthUser | null
+) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const windowPath = window.location.pathname
+  const { isAuthPage, reason } = isAuthPageCheck()
+
+  // 詳細ログ
+  console.warn(`[AUTH_SWITCH][${tabId}] ${source}:`, {
+    prev: prevUserId.slice(0, 8),
+    next: newUserId.slice(0, 8),
+    isAuthPageMounted,
+    isAuthPage,
+    reason,
+    windowPath,
+    currentPath,
+    href: window.location.href
+  })
+
+  // 例外判定（厳格）
+  if (isAuthPage) {
+    console.warn(`[AUTH_SWITCH][${tabId}] isAuthPage=true (${reason}) => skip alert`)
+    if (newUser !== undefined) {
+      useAuthStore.getState().setUser(newUser)
+    }
+    return
+  }
+
+  console.warn(`[AUTH_SWITCH][${tabId}] isAuthPage=false (${reason}) => will show alert`)
+
+  // ループ防止
+  const now = Date.now()
+  if (hasHandledAuthSwitch || (now - lastHandledAt) < AUTH_SWITCH_COOLDOWN_MS) {
+    console.warn(`[AUTH_SWITCH][${tabId}] loop prevention - skipping`)
+    if (newUser !== undefined) {
+      useAuthStore.getState().setUser(newUser)
+    }
+    return
+  }
+
+  hasHandledAuthSwitch = true
+  lastHandledAt = now
+
+  // 警告 → リロード
+  const targetUrl = new URL(window.location.href)
+  targetUrl.searchParams.set('_ts', now.toString())
+
+  console.warn(`[AUTH_SWITCH][${tabId}] showing alert and reloading...`, {
+    targetUrl: targetUrl.toString()
+  })
+
+  window.alert('アカウントが切り替わりました。\nページを再読み込みします。')
+
+  clearAllUserStorage(prevUserId)
+  if (newUser !== undefined) {
+    useAuthStore.getState().setUser(newUser)
+  }
+
+  window.location.replace(targetUrl.toString())
+}
+
+// =====================================================
+// 🚨 handleIncomingAuthSwitch: クロスタブメッセージ処理（純関数）
+// module top-level から呼び出し可能
+// =====================================================
+const handleIncomingAuthSwitch = (payload: any) => {
+  if (!payload) return
+
+  const newUserId = payload.userId
+  const fromTab = payload.fromTab
+  const source = payload.source
+
+  // authStore から現在のユーザーIDを取得
+  const currentUserId = useAuthStore.getState().user?.id
+
+  // 🚨 詳細受信ログ
+  console.warn(`[CROSS_TAB][${tabId}] message received:`, {
+    newUserId_full: newUserId,
+    currentUserId_full: currentUserId,
+    fromTab,
+    source,
+    isAuthPageMounted,
+    payload_full: payload
+  })
+
+  // 自分自身からの通知は無視
+  if (fromTab === tabId) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (from self)`)
+    return
+  }
+
+  // 同一ユーザーまたは変更なし
+  if (!currentUserId || !newUserId || newUserId === 'null' || currentUserId === newUserId) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (same user or no change):`, {
+      reason: !currentUserId ? 'no currentUserId' :
+              !newUserId ? 'no newUserId' :
+              newUserId === 'null' ? 'newUserId is null string' :
+              'currentUserId === newUserId',
+      currentUserId_full: currentUserId,
+      newUserId_full: newUserId
+    })
+    return
+  }
+
+  console.warn(`[CROSS_TAB][${tabId}] WILL PROCESS - different users detected`)
+  handleAuthSwitchCore('cross-tab', currentUserId, newUserId)
+}
+
+// =====================================================
+// 🚨 MODULE TOP-LEVEL: BroadcastChannel + storage listener 即時初期化
+// React mount を待たない！Zustand create() の中でやらない！
+// =====================================================
 let authChannel: BroadcastChannel | null = null
 
-// BroadcastChannel の初期化
-const initBroadcastChannel = (onMessage: (userId: string, payload: any) => void) => {
-  if (typeof window === 'undefined') return
-
+if (typeof window !== 'undefined') {
+  // BroadcastChannel 即時初期化
   try {
     authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME)
     authChannel.onmessage = (event) => {
       const payload = event.data || {}
-      const { userId } = payload
-      if (userId) {
+      if (payload.userId !== undefined) {
         console.warn(`[BROADCAST][${tabId}] received:`, payload)
-        onMessage(userId, payload)
+        handleIncomingAuthSwitch(payload)
       }
     }
-    console.warn(`[AUTH_INIT][${tabId}] BroadcastChannel initialized`)
+    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel READY`)
   } catch (e) {
-    console.warn(`[AUTH_INIT][${tabId}] BroadcastChannel not supported`)
+    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel not supported:`, e)
     authChannel = null
   }
+
+  // localStorage storage イベント即時初期化
+  window.addEventListener('storage', (event) => {
+    if (event.key !== CROSS_TAB_AUTH_KEY || !event.newValue) return
+
+    try {
+      const payload = JSON.parse(event.newValue)
+      console.warn(`[STORAGE][${tabId}] event received:`, payload)
+      handleIncomingAuthSwitch(payload)
+    } catch (e) {
+      console.warn(`[STORAGE][${tabId}] parse error:`, e)
+    }
+  })
+  console.warn(`[AUTH_LISTENER][${tabId}] storage READY`)
 }
 
 // =====================================================
@@ -118,107 +271,23 @@ export const notifyAuthChange = (userId: string | null) => {
 }
 
 // =====================================================
-// 🚨 isAuthPageCheck: フェイルセーフな例外判定
-// 「スキップ条件は厳しく、警告条件は緩く」
+// Zustand Store
 // =====================================================
-const isAuthPageCheck = (): { isAuthPage: boolean; reason: string } => {
-  const windowPath = typeof window !== 'undefined' ? window.location.pathname : ''
-  const pathMatchesAuthPage = /^\/(login|signup)(\/|$)/.test(windowPath) ||
-                               /^\/(login|signup)(\/|$)/.test(currentPath)
-
-  // ケース1: マウントフラグON かつ パスも一致 → 確実にログインページ
-  if (isAuthPageMounted && pathMatchesAuthPage) {
-    return { isAuthPage: true, reason: 'mounted=true AND path=/login|signup' }
-  }
-
-  // ケース2: マウントフラグON だが パスが不一致 → 矛盾！フェイルセーフで警告する
-  if (isAuthPageMounted && !pathMatchesAuthPage) {
-    console.warn(`[AUTH_SWITCH][${tabId}] MISMATCH! mounted=true but path=${windowPath}/${currentPath} => FORCE ALERT`)
-    return { isAuthPage: false, reason: 'MISMATCH: mounted=true but path mismatch => force alert' }
-  }
-
-  // ケース3: マウントフラグOFF → 通常ページ、警告する
-  return { isAuthPage: false, reason: 'mounted=false' }
-}
-
-// =====================================================
-// 🚨 handleAuthSwitch: 一本化された切替処理
-// =====================================================
-const handleAuthSwitch = (
-  source: 'onAuthStateChange' | 'cross-tab',
-  prevUserId: string,
-  newUserId: string,
-  setUser: (user: AuthUser | null) => void,
-  newUser?: AuthUser | null
-) => {
-  if (typeof window === 'undefined') {
-    if (newUser !== undefined) setUser(newUser)
-    return
-  }
-
-  const windowPath = window.location.pathname
-  const { isAuthPage, reason } = isAuthPageCheck()
-
-  // 詳細ログ
-  console.warn(`[AUTH_SWITCH][${tabId}] ${source}:`, {
-    prev: prevUserId.slice(0, 8),
-    next: newUserId.slice(0, 8),
-    isAuthPageMounted,
-    isAuthPage,
-    reason,
-    windowPath,
-    currentPath,
-    href: window.location.href
-  })
-
-  // 例外判定（厳格）
-  if (isAuthPage) {
-    console.warn(`[AUTH_SWITCH][${tabId}] isAuthPage=true (${reason}) => skip alert`)
-    if (newUser !== undefined) setUser(newUser)
-    return
-  }
-
-  console.warn(`[AUTH_SWITCH][${tabId}] isAuthPage=false (${reason}) => will show alert`)
-
-  // ループ防止
-  const now = Date.now()
-  if (hasHandledAuthSwitch || (now - lastHandledAt) < AUTH_SWITCH_COOLDOWN_MS) {
-    console.warn(`[AUTH_SWITCH][${tabId}] loop prevention - skipping`)
-    if (newUser !== undefined) setUser(newUser)
-    return
-  }
-
-  hasHandledAuthSwitch = true
-  lastHandledAt = now
-
-  // 警告 → リロード
-  const targetUrl = new URL(window.location.href)
-  targetUrl.searchParams.set('_ts', now.toString())
-
-  console.warn(`[AUTH_SWITCH][${tabId}] showing alert and reloading...`, {
-    targetUrl: targetUrl.toString()
-  })
-
-  window.alert('アカウントが切り替わりました。\nページを再読み込みします。')
-
-  clearAllUserStorage(prevUserId)
-  if (newUser !== undefined) setUser(newUser)
-
-  window.location.replace(targetUrl.toString())
-}
-
 interface AuthState {
   user: AuthUser | null
   isLoading: boolean
   isInitialized: boolean
   isInitializing: boolean
   authReady: boolean
-  listenerSetup: boolean
   setUser: (user: AuthUser | null) => void
   setLoading: (loading: boolean) => void
   initialize: () => Promise<void>
   signOut: () => Promise<void>
 }
+
+// グローバルな初期化フラグ
+let globalInitialized = false
+let globalInitializing = false
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -226,7 +295,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   isInitializing: false,
   authReady: false,
-  listenerSetup: false,
 
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ isLoading: loading }),
@@ -251,126 +319,60 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       logger.debug(`[AUTH_INIT][${tabId}] ready`, { hasUser: !!user })
 
-      if (!state.listenerSetup) {
-        logger.debug(`[AUTH_INIT][${tabId}] listener setup`)
+      // =====================================================
+      // 🚨 onAuthStateChange でのユーザー切替検出
+      // 必ず broadcast する（notifyAuthChange に依存しない）
+      // =====================================================
+      authService.onAuthStateChange((newUser) => {
+        const currentState = get()
+        const prevUserId = currentState.user?.id
+        const newUserId = newUser?.id
 
-        // =====================================================
-        // タブ間通信の受信処理
-        // =====================================================
-        const handleCrossTabMessage = (newUserId: string, payload: any) => {
-          const currentState = get()
-          const currentUserId = currentState.user?.id
-
-          // 🚨 詳細受信ログ
-          console.warn(`[CROSS_TAB][${tabId}] message received:`, {
-            newUserId_full: newUserId,
-            currentUserId_full: currentUserId,
-            fromTab: payload?.fromTab,
-            source: payload?.source,
-            isAuthPageMounted,
-            payload_full: payload
-          })
-
-          // 自分自身からの通知は無視
-          if (payload?.fromTab === tabId) {
-            console.warn(`[CROSS_TAB][${tabId}] ignored (from self)`)
-            return
-          }
-
-          // 同一ユーザーまたは変更なし
-          if (!currentUserId || !newUserId || newUserId === 'null' || currentUserId === newUserId) {
-            console.warn(`[CROSS_TAB][${tabId}] ignored (same user or no change):`, {
-              reason: !currentUserId ? 'no currentUserId' :
-                      !newUserId ? 'no newUserId' :
-                      newUserId === 'null' ? 'newUserId is null string' :
-                      'currentUserId === newUserId',
-              currentUserId_full: currentUserId,
-              newUserId_full: newUserId
-            })
-            return
-          }
-
-          console.warn(`[CROSS_TAB][${tabId}] WILL PROCESS - different users detected`)
-          handleAuthSwitch('cross-tab', currentUserId, newUserId, (u) => set({ user: u }))
-        }
-
-        // BroadcastChannel 初期化
-        initBroadcastChannel(handleCrossTabMessage)
-
-        // localStorage フォールバック
-        if (typeof window !== 'undefined') {
-          window.addEventListener('storage', (event) => {
-            if (event.key !== CROSS_TAB_AUTH_KEY || !event.newValue) return
-
-            try {
-              const payload = JSON.parse(event.newValue)
-              console.warn(`[STORAGE][${tabId}] event received:`, payload)
-              if (payload.userId) {
-                handleCrossTabMessage(payload.userId, payload)
-              }
-            } catch (e) {
-              console.warn(`[STORAGE][${tabId}] parse error:`, e)
-            }
-          })
-          console.warn(`[AUTH_INIT][${tabId}] localStorage listener setup complete`)
-        }
-
-        // =====================================================
-        // 🚨 onAuthStateChange でのユーザー切替検出
-        // 必ず broadcast する（notifyAuthChange に依存しない）
-        // =====================================================
-        authService.onAuthStateChange((newUser) => {
-          const currentState = get()
-          const prevUserId = currentState.user?.id
-          const newUserId = newUser?.id
-
-          console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange fired:`, {
-            prev: prevUserId?.slice(0, 8) || 'none',
-            next: newUserId?.slice(0, 8) || 'none',
-            isAuthPageMounted
-          })
-
-          // ケース1: 同一ユーザー
-          if (prevUserId === newUserId) {
-            console.warn(`[AUTH_SWITCH][${tabId}] ignored (same user)`)
-            return
-          }
-
-          // ケース2: null → user（初回ログイン）
-          if (!prevUserId && newUserId) {
-            console.warn(`[AUTH_SWITCH][${tabId}] initial login detected`)
-            set({ user: newUser })
-            // 🚨 必ず broadcast（他タブに通知）
-            broadcastAuthChange(newUserId, 'onAuthStateChange-initial')
-            return
-          }
-
-          // ケース3: user → null（ログアウト）
-          if (prevUserId && !newUserId) {
-            console.warn(`[AUTH_SWITCH][${tabId}] logout detected`)
-            set({ user: null })
-            broadcastAuthChange(null, 'onAuthStateChange-logout')
-            return
-          }
-
-          // ケース4: user → different user（ユーザー切替！）
-          if (prevUserId && newUserId && prevUserId !== newUserId) {
-            // 🚨 詳細ログ: 何をブロードキャストするか明示
-            console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH DETECTED!`, {
-              prevUserId_full: prevUserId,
-              newUserId_full: newUserId,
-              willBroadcast: newUserId,
-              newUserObj: newUser ? { id: newUser.id, email: newUser.email?.slice(0, 10) } : null
-            })
-            // 🚨 必ず broadcast（他タブに通知）- 新しいユーザーIDを送る
-            broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
-            handleAuthSwitch('onAuthStateChange', prevUserId, newUserId, (u) => set({ user: u }), newUser)
-          }
+        console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange fired:`, {
+          prev: prevUserId?.slice(0, 8) || 'none',
+          next: newUserId?.slice(0, 8) || 'none',
+          isAuthPageMounted
         })
 
-        set({ listenerSetup: true })
-        console.warn(`[AUTH_INIT][${tabId}] auth switch listener setup complete`)
-      }
+        // ケース1: 同一ユーザー
+        if (prevUserId === newUserId) {
+          console.warn(`[AUTH_SWITCH][${tabId}] ignored (same user)`)
+          return
+        }
+
+        // ケース2: null → user（初回ログイン）
+        if (!prevUserId && newUserId) {
+          console.warn(`[AUTH_SWITCH][${tabId}] initial login detected`)
+          set({ user: newUser })
+          // 🚨 必ず broadcast（他タブに通知）
+          broadcastAuthChange(newUserId, 'onAuthStateChange-initial')
+          return
+        }
+
+        // ケース3: user → null（ログアウト）
+        if (prevUserId && !newUserId) {
+          console.warn(`[AUTH_SWITCH][${tabId}] logout detected`)
+          set({ user: null })
+          broadcastAuthChange(null, 'onAuthStateChange-logout')
+          return
+        }
+
+        // ケース4: user → different user（ユーザー切替！）
+        if (prevUserId && newUserId && prevUserId !== newUserId) {
+          // 🚨 詳細ログ: 何をブロードキャストするか明示
+          console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH DETECTED!`, {
+            prevUserId_full: prevUserId,
+            newUserId_full: newUserId,
+            willBroadcast: newUserId,
+            newUserObj: newUser ? { id: newUser.id, email: newUser.email?.slice(0, 10) } : null
+          })
+          // 🚨 必ず broadcast（他タブに通知）- 新しいユーザーIDを送る
+          broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
+          handleAuthSwitchCore('onAuthStateChange', prevUserId, newUserId, newUser)
+        }
+      })
+
+      console.warn(`[AUTH_INIT][${tabId}] onAuthStateChange listener setup complete`)
     } catch (error) {
       logger.error(`[AUTH_INIT][${tabId}]`, error)
       globalInitialized = true
