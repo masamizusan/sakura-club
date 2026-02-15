@@ -32,7 +32,25 @@ function getTabId(): string {
 const tabId = getTabId()
 
 // =====================================================
-// 2️⃣ 基準ユーザーID（__base_user_id__）
+// 🆕 getPathNow() - 現在のパスを取得（誤判定検知用）
+// =====================================================
+function getPathNow(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.pathname || ''
+}
+
+// =====================================================
+// 2️⃣ isAuthPageNow() - 絶対に誤判定しない実装
+// pathNow と完全一致のみ（includes禁止）
+// =====================================================
+function isAuthPageNow(): boolean {
+  const p = getPathNow()
+  // 完全一致のみ（曖昧判定禁止）
+  return p === '/login' || p === '/signup'
+}
+
+// =====================================================
+// 3️⃣ 基準ユーザーID（__base_user_id__）
 // 更新ルール（厳格）:
 // (a) 操作タブ（auth page + auth_action=true）でのログイン成功時のみ
 // (b) boot時の pending → base 反映時のみ
@@ -45,7 +63,6 @@ function getBaseUserId(): string | null {
   return sessionStorage.getItem(BASE_USER_KEY)
 }
 
-// 初回のみセット（上書き禁止）
 function setBaseUserIdOnce(userId: string) {
   if (typeof window === 'undefined') return
   if (getBaseUserId()) {
@@ -70,7 +87,7 @@ function clearBaseUserId() {
 }
 
 // =====================================================
-// 3️⃣ ペンディングユーザーID（__pending_user_id__）
+// 4️⃣ ペンディングユーザーID（__pending_user_id__）
 // =====================================================
 const PENDING_USER_KEY = '__pending_user_id__'
 
@@ -92,7 +109,7 @@ function clearPendingUserId() {
 }
 
 // =====================================================
-// 4️⃣ リロードガード（__reload_guard__）
+// 5️⃣ リロードガード（__reload_guard__）
 // timestamp方式：未設定 or 期限切れなら実行、生きていればスキップ
 // =====================================================
 const RELOAD_GUARD_KEY = '__reload_guard__'
@@ -107,8 +124,9 @@ function getGuardAge(): number | null {
 
 function setReloadGuard() {
   if (typeof window === 'undefined') return
-  sessionStorage.setItem(RELOAD_GUARD_KEY, Date.now().toString())
-  console.warn(`[GUARD][${tabId}] set`)
+  const ts = Date.now()
+  sessionStorage.setItem(RELOAD_GUARD_KEY, ts.toString())
+  console.warn(`[GUARD][${tabId}] set guard ts=${ts}`)
 }
 
 function isReloadGuardActive(): boolean {
@@ -124,8 +142,8 @@ function clearReloadGuard() {
 }
 
 // =====================================================
-// 5️⃣ 認証操作フラグ（__auth_action__）
-// 🚨 authページ（/login, /signup）でのみ有効
+// 6️⃣ 認証操作フラグ（__auth_action__）
+// 🚨 /login, /signup でのみ有効
 // 非authページでは stale 扱いで即クリア
 // =====================================================
 const AUTH_ACTION_KEY = '__auth_action__'
@@ -151,21 +169,28 @@ function hasAuthActionFlag(): boolean {
 export { setAuthActionFlag as setAuthActionInThisTab, clearAuthActionFlag as clearAuthActionInThisTab }
 
 // =====================================================
-// 6️⃣ isAuthPageNow() - pathname のみ（これだけ）
-// =====================================================
-function isAuthPageNow(): boolean {
-  if (typeof window === 'undefined') return false
-  const path = window.location.pathname
-  // 完全一致系のみ（曖昧判定禁止）
-  return path === '/login' || path === '/signup' ||
-         path.startsWith('/login/') || path.startsWith('/signup/')
-}
-
-// =====================================================
 // タブ間通信
 // =====================================================
 const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
+
+// =====================================================
+// 🚨 showAlertAndReload - 順序固定（超重要）
+// guard → pending → alert → reload
+// =====================================================
+function showAlertAndReload(incomingUserId: string) {
+  // 1. guard を先にセット（8秒）
+  setReloadGuard()
+
+  // 2. pending をセット
+  setPendingUserId(incomingUserId)
+
+  // 3. alert（同期）
+  window.alert('別タブでログインが行われました。再読み込みします。')
+
+  // 4. alert が閉じられた後に reload
+  window.location.reload()
+}
 
 // =====================================================
 // 🚨 受信ハンドラ（唯一の判定ロジック）
@@ -177,76 +202,72 @@ function handleIncomingAuthSwitch(payload: any) {
 
   const incomingUserId = payload.userId
   const fromTab = payload.fromTab
-  const path = window.location.pathname
-  const isAuthPage = isAuthPageNow()
-  const baseUserId = getBaseUserId()
-  const pendingUserId = getPendingUserId()
+  const pathNow = getPathNow()
+  const isAuth = isAuthPageNow()
+  const base = getBaseUserId()
+  const pending = getPendingUserId()
   const guardAge = getGuardAge()
   let actionFlag = hasAuthActionFlag()
 
   // 🚨 CRITICAL: 非authページで auth_action が残っていたら stale として即クリア
-  // これを「握りつぶさない」＝クリアして判定を続行
-  if (actionFlag && !isAuthPage) {
-    console.warn(`[CROSS_TAB][${tabId}] stale auth_action flag on non-auth page (${path}) - clearing and continue`)
+  // クリアして判定を続行（握りつぶさない）
+  if (actionFlag && !isAuth) {
+    console.warn(`[CROSS_TAB][${tabId}] stale auth_action on non-auth page - clearing and continue (pathNow=${pathNow})`)
     clearAuthActionFlag()
     actionFlag = false
   }
 
-  // 詳細ログ（原因特定用）
+  // 🚨 必須ログ: received（pathNow + isAuth を必ず含める）
   console.warn(`[CROSS_TAB][${tabId}] received`, {
     fromTab: fromTab?.slice(0, 6),
     incoming: incomingUserId?.slice(0, 8) || 'null',
-    path,
-    authPage: isAuthPage,
-    base: baseUserId?.slice(0, 8) || 'null',
-    pending: pendingUserId?.slice(0, 8) || 'null',
-    guardAge: guardAge !== null ? `${guardAge}ms` : 'null',
-    actionFlag
+    base: base?.slice(0, 8) || 'null',
+    pathNow,
+    isAuth
   })
+
+  // 🆕 追加: ROUTE ログ（誤判定検知用）
+  console.warn(`[ROUTE][${tabId}] pathNow=${pathNow} isAuthPageNow=${isAuth}`)
 
   // === 判定ロジック（唯一これだけ） ===
 
   // 1) 自タブ送信は無視
   if (fromTab === tabId) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: same tab`)
+    console.warn(`[CROSS_TAB][${tabId}] ignored: same tab (pathNow=${pathNow})`)
     return
   }
 
   // 2) authページでは警告しない（操作タブ保護）
-  if (isAuthPage) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: auth page`)
+  if (isAuth) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored: auth page (pathNow=${pathNow})`)
     return
   }
 
   // 3) baseがなければ無視（初期化前）
-  if (!baseUserId) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: no base`)
+  if (!base) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored: no base (pathNow=${pathNow})`)
     return
   }
 
   // 4) guardが生きていればスキップ（初回は潰さない）
   if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: guard active (${guardAge}ms < ${RELOAD_GUARD_MS}ms)`)
+    console.warn(`[GUARD][${tabId}] skip (guard active: ${guardAge}ms elapsed, pathNow=${pathNow})`)
     return
   }
 
   // 5) 🚨 核心判定: incoming !== base なら mismatch
-  if (incomingUserId && incomingUserId !== baseUserId) {
+  if (incomingUserId && incomingUserId !== base) {
     console.error(`[CROSS_TAB][${tabId}] ACTION: mismatch -> pending set -> alert+reload`, {
       incoming: incomingUserId.slice(0, 8),
-      base: baseUserId.slice(0, 8)
+      base: base.slice(0, 8),
+      pathNow
     })
 
-    // 順番固定: pending保存 → guard設定 → alert → reload
-    setPendingUserId(incomingUserId)
-    setReloadGuard()
-
-    window.alert('別タブでログインが行われました。再読み込みします。')
-    window.location.reload()
+    showAlertAndReload(incomingUserId)
     return
   }
 
-  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null`)
+  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null (pathNow=${pathNow})`)
 }
 
 // =====================================================
@@ -326,27 +347,29 @@ export function setCurrentPath(_path: string) {}
 function applyPendingUserOnBoot() {
   if (typeof window === 'undefined') return
 
-  const path = window.location.pathname
-  const isAuthPage = isAuthPageNow()
+  const pathNow = getPathNow()
+  const isAuth = isAuthPageNow()
   const base = getBaseUserId()
   const pending = getPendingUserId()
   const guardAge = getGuardAge()
   const actionFlag = hasAuthActionFlag()
 
   // bootログ（必須）
-  console.warn(`[BOOT][${tabId}] path=${path} authPage=${isAuthPage} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag}`)
+  console.warn(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag}`)
 
   // 🚨 CRITICAL: 非authページで auth_action が残っていたら stale として即クリア
-  if (actionFlag && !isAuthPage) {
-    console.warn(`[BOOT][${tabId}] clearing stale auth_action flag on non-auth page`)
+  if (actionFlag && !isAuth) {
+    console.warn(`[BOOT][${tabId}] clearing stale auth_action on non-auth page: path=${pathNow}`)
     clearAuthActionFlag()
   }
 
   // pending があれば base に反映（ルール(b)）
   if (pending) {
+    // 1. base を更新
     updateBaseUserId(pending, 'boot-pending')
+    // 2. pending を削除
     clearPendingUserId()
-    // guard は一定時間残す（ループ防止）
+    // 3. guard は保持（二重発火防止）
     console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)}`)
   }
 }
@@ -416,15 +439,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authService.onAuthStateChange((newUser) => {
         const newUserId = newUser?.id || null
         const baseUserId = getBaseUserId()
-        const path = typeof window !== 'undefined' ? window.location.pathname : 'server'
-        const isAuthPage = isAuthPageNow()
+        const pathNow = getPathNow()
+        const isAuth = isAuthPageNow()
         const actionFlag = hasAuthActionFlag()
 
         console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange`, {
           new: newUserId?.slice(0, 8) || 'none',
           base: baseUserId?.slice(0, 8) || 'none',
-          path,
-          authPage: isAuthPage,
+          pathNow,
+          isAuth,
           actionFlag
         })
 
@@ -459,12 +482,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           console.warn(`[AUTH_SWITCH][${tabId}] user switch detected`, {
             base: baseUserId.slice(0, 8),
             new: newUserId.slice(0, 8),
-            isAuthPage,
+            pathNow,
+            isAuth,
             actionFlag
           })
 
           // 🚨 (a) 操作タブ（auth page + auth_action=true）のみ base 更新
-          if (isAuthPage && actionFlag) {
+          if (isAuth && actionFlag) {
             console.warn(`[AUTH_SWITCH][${tabId}] LOCAL LOGIN (auth page + action flag) - update base`)
             updateBaseUserId(newUserId, 'auth-action')
             set({ user: newUser })
