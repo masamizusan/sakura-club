@@ -177,7 +177,16 @@ function handleIncomingAuthSwitch(payload: any) {
   const baseUserId = getBaseUserId()
   const path = window.location.pathname
   const isAuthPage = isAuthPageNow()
-  const isLocalAction = isAuthActionInThisTab()
+
+  // 🚨 CRITICAL: auth_action フラグは認証ページでのみ有効
+  // 認証ページでない場合は古いフラグが残っている可能性があるのでクリアして無視
+  let isLocalAction = isAuthActionInThisTab()
+  if (isLocalAction && !isAuthPage) {
+    console.warn(`[CROSS_TAB][${tabId}] stale auth_action flag on non-auth page - clearing`)
+    clearAuthActionFlag()
+    isLocalAction = false
+  }
+
   const guardActive = isReloadGuardActive()
 
   console.warn(`[CROSS_TAB][${tabId}] received`, {
@@ -185,6 +194,7 @@ function handleIncomingAuthSwitch(payload: any) {
     incoming: incomingUserId?.slice(0, 8) || 'null',
     path,
     authPage: isAuthPage,
+    localAction: isLocalAction,
     base: baseUserId?.slice(0, 8) || 'null'
   })
 
@@ -200,7 +210,7 @@ function handleIncomingAuthSwitch(payload: any) {
     return
   }
 
-  // 操作タブは無視
+  // 操作タブは無視（ただし上記で非認証ページの古いフラグはクリア済み）
   if (isLocalAction) {
     console.warn(`[CROSS_TAB][${tabId}] ignored local action`)
     return
@@ -319,8 +329,16 @@ function applyPendingUserOnBoot() {
   const base = getBaseUserId()
   const guardTime = sessionStorage.getItem(RELOAD_GUARD_KEY)
   const guardAge = guardTime ? Date.now() - parseInt(guardTime, 10) : null
+  const isAuthPage = isAuthPageNow()
+  const hasActionFlag = isAuthActionInThisTab()
 
-  console.warn(`[BOOT][${tabId}] base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge}ms`)
+  console.warn(`[BOOT][${tabId}] base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge}ms path=${window.location.pathname} authPage=${isAuthPage} actionFlag=${hasActionFlag}`)
+
+  // 🚨 CRITICAL: 認証ページでない場合、古い auth_action フラグをクリア
+  if (hasActionFlag && !isAuthPage) {
+    console.warn(`[BOOT][${tabId}] clearing stale auth_action flag on non-auth page`)
+    clearAuthActionFlag()
+  }
 
   if (pending) {
     // pending を base に反映（ループを止める）
