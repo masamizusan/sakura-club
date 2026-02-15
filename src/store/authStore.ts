@@ -22,12 +22,13 @@ function getTabId(): string {
 const tabId = getTabId()
 
 // =====================================================
-// 🚨 lastKnownUserId: broadcast 前に保存していた userId
+// lastKnownUserId: タブ基準の期待値
 //
-// ⚠️ 重要ルール:
-// - 初回ログイン時のみ設定（!lastKnownUserId の場合のみ）
-// - switch 時は絶対に触らない（上書き禁止）
-// - logout 時のみ null にリセット
+// ルール:
+// - 初回ログイン時: 未設定なら現在ユーザーでセット
+// - ログアウト時: null にリセット
+// - ログイン操作をしたタブ: ログイン成功確定時に更新OK
+// - 受け身側タブ: cross-tab 通知受信時は更新しない（先に警告→リロード）
 // =====================================================
 let lastKnownUserId: string | null = null
 
@@ -62,7 +63,17 @@ const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 
 // =====================================================
-// 🚨 showAlertAndReload: 単独関数
+// isAuthPageNow: 現在ログイン/サインアップページか
+// =====================================================
+function isAuthPageNow(): boolean {
+  const windowPath = typeof window !== 'undefined' ? window.location.pathname : ''
+  const pathMatches = /^\/(login|signup)(\/|$)/.test(windowPath) ||
+                      /^\/(login|signup)(\/|$)/.test(currentPath)
+  return isAuthPageMounted || pathMatches
+}
+
+// =====================================================
+// showAlertAndReload: 単独関数
 // =====================================================
 function showAlertAndReload() {
   if (typeof window === 'undefined') return
@@ -84,13 +95,13 @@ function showAlertAndReload() {
 }
 
 // =====================================================
-// 🚨 handleIncomingAuthSwitch: lastKnownUserId ベース
+// handleIncomingAuthSwitch: cross-tab 受信処理
 //
-// 現在の比較ロジックはすべて削除。以下だけ残す：
-// - fromTab !== tabId
-// - lastKnownUserId が存在
-// - payload.userId !== lastKnownUserId
-// → 即 alert
+// 警告条件:
+// 1. fromTab !== tabId（自タブ起点は無視）
+// 2. !isAuthPageNow()（/login, /signup は除外）
+// 3. lastKnownUserId が存在
+// 4. incoming !== lastKnown
 // =====================================================
 const handleIncomingAuthSwitch = (payload: any) => {
   if (!payload) return
@@ -98,19 +109,41 @@ const handleIncomingAuthSwitch = (payload: any) => {
 
   const incomingUserId = payload.userId
   const fromTab = payload.fromTab
+  const isAuthPage = isAuthPageNow()
 
+  // 🚨 詳細ログ
   console.warn(`[CROSS_TAB][${tabId}] comparing:`, {
     incoming: incomingUserId?.slice(0, 8) || 'null',
-    lastKnown: lastKnownUserId?.slice(0, 8) || 'null'
+    lastKnown: lastKnownUserId?.slice(0, 8) || 'null',
+    fromTab: fromTab?.slice(0, 6) || 'null',
+    myTabId: tabId,
+    isAuthPage
   })
 
-  // 🚨 判定（これだけ）
-  if (
-    fromTab !== tabId &&
-    lastKnownUserId &&
-    incomingUserId !== lastKnownUserId
-  ) {
-    console.error(`[CROSS_TAB][${tabId}] USER MISMATCH DETECTED!`)
+  // 自タブ起点は常に無視
+  if (fromTab === tabId) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (from self)`)
+    return
+  }
+
+  // /login, /signup ページでは警告しない
+  if (isAuthPage) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (on auth page)`)
+    return
+  }
+
+  // lastKnown がなければ無視（未ログイン状態）
+  if (!lastKnownUserId) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (no lastKnownUserId)`)
+    return
+  }
+
+  // 🚨 判定: incoming !== lastKnown なら即 alert
+  if (incomingUserId && incomingUserId !== lastKnownUserId) {
+    console.error(`[CROSS_TAB][${tabId}] USER MISMATCH DETECTED!`, {
+      incoming: incomingUserId,
+      lastKnown: lastKnownUserId
+    })
     showAlertAndReload()
   }
 }
@@ -186,16 +219,6 @@ export const notifyAuthChange = (userId: string | null) => {
 }
 
 // =====================================================
-// isAuthPageCheck
-// =====================================================
-const isAuthPageCheck = (): boolean => {
-  const windowPath = typeof window !== 'undefined' ? window.location.pathname : ''
-  const pathMatchesAuthPage = /^\/(login|signup)(\/|$)/.test(windowPath) ||
-                               /^\/(login|signup)(\/|$)/.test(currentPath)
-  return isAuthPageMounted && pathMatchesAuthPage
-}
-
-// =====================================================
 // Zustand Store
 // =====================================================
 interface AuthState {
@@ -238,8 +261,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.debug(`[AUTH_INIT][${tabId}] starting`)
       const user = await authService.getCurrentUser()
 
-      // 🚨 初回ログイン時のみ lastKnownUserId を保存
-      // ⚠️ !lastKnownUserId の場合のみ（上書き禁止）
+      // 初回ログイン時のみ lastKnownUserId を保存
       if (user?.id && !lastKnownUserId) {
         lastKnownUserId = user.id
         console.warn(`[AUTH][${tabId}] lastKnownUserId set:`, lastKnownUserId.slice(0, 8))
@@ -256,10 +278,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authService.onAuthStateChange((newUser) => {
         const prevUserId = lastKnownUserId
         const newUserId = newUser?.id
+        const isAuthPage = isAuthPageNow()
 
         console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange:`, {
           prev: prevUserId?.slice(0, 8) || 'none',
-          next: newUserId?.slice(0, 8) || 'none'
+          next: newUserId?.slice(0, 8) || 'none',
+          isAuthPage
         })
 
         // 同一ユーザー
@@ -268,7 +292,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         // null → user（初回ログイン）
-        // 🚨 !lastKnownUserId の場合のみ設定
         if (!prevUserId && newUserId) {
           console.warn(`[AUTH_SWITCH][${tabId}] initial login`)
           if (!lastKnownUserId) {
@@ -290,26 +313,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         // user → different user（ユーザー切替）
-        // 🚨 lastKnownUserId は絶対に更新しない！
         if (prevUserId && newUserId && prevUserId !== newUserId) {
           console.warn(`[AUTH_SWITCH][${tabId}] USER SWITCH!`, {
             prev: prevUserId,
-            next: newUserId
+            next: newUserId,
+            isAuthPage
           })
 
-          // broadcast（他タブに通知）
-          broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
-
-          // 🚨 lastKnownUserId は触らない！（上書き禁止）
-
-          // 自分自身も警告（login/signup ページ以外）
-          if (!isAuthPageCheck()) {
+          // 🚨 ログインページ（操作タブ）の場合:
+          // - lastKnownUserId を新ユーザーに更新（自分で切り替えたので）
+          // - broadcast を送る
+          // - 警告は出さない
+          if (isAuthPage) {
+            lastKnownUserId = newUserId
+            console.warn(`[AUTH][${tabId}] lastKnownUserId updated by local login:`, lastKnownUserId.slice(0, 8))
             set({ user: newUser })
-            showAlertAndReload()
-          } else {
-            set({ user: newUser })
+            broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
             console.warn(`[AUTH_SWITCH][${tabId}] on auth page - skip alert`)
+            return
           }
+
+          // 🚨 非ログインページ（受け身タブ）の場合:
+          // - lastKnownUserId は更新しない
+          // - broadcast を送る
+          // - 警告を出す
+          broadcastAuthChange(newUserId, 'onAuthStateChange-switch')
+          set({ user: newUser })
+          showAlertAndReload()
         }
       })
 
