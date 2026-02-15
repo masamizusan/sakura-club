@@ -444,26 +444,60 @@ export const authService = {
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
     const supabase = getAuthClient()
     let lastUserId: string | null = null
-    
+
     // 🆕 テストモード時も認証状態監視は継続（匿名ユーザーの状態変更を監視）
     const isTestMode = this.isTestModeActive()
     if (isTestMode) {
       // test mode monitoring
     }
-    
+
     // 認証状態の変更を監視
     return supabase.auth.onAuthStateChange(async (event: string, session: any) => {
       const currentUserId = session?.user?.id || null
 
       logger.debug('[AUTH] state:', event, currentUserId ? currentUserId.slice(0, 8) : 'none')
-      
+
       // ユーザーIDが変わった場合のみコールバックを実行
       if (currentUserId !== lastUserId) {
         lastUserId = currentUserId
-        
+
         if (session?.user) {
-          const user = await this.getCurrentUser()
-          callback(user)
+          // 🚨 CRITICAL FIX: session.user.idを直接使用
+          // getCurrentUser()はgetSession()を内部で呼ぶため、セッション切替時に
+          // 旧ユーザーの情報を返す可能性がある（race condition）
+          // まずsession.userから即座にユーザー情報を構築し、コールバックを呼ぶ
+          const immediateUser: AuthUser = {
+            id: session.user.id,
+            email: session.user.email || '',
+            firstName: session.user.user_metadata?.first_name || 'ユーザー',
+            lastName: session.user.user_metadata?.last_name || '',
+            gender: session.user.user_metadata?.gender || 'female',
+            age: 0,
+            nationality: '',
+            prefecture: '',
+            city: '',
+            hobbies: [],
+            selfIntroduction: '',
+            avatarUrl: undefined,
+            isVerified: false,
+            membershipType: 'free' as const,
+          }
+
+          // まずセッションユーザーで即座にコールバック（cross-tab検出用）
+          callback(immediateUser)
+
+          // その後、プロフィール情報を取得して更新（非同期）
+          // 🚨 重要: この時点で正しいユーザーIDでbroadcastは完了している
+          try {
+            const fullUser = await this.getCurrentUser()
+            if (fullUser && fullUser.id === session.user.id) {
+              // IDが一致する場合のみ更新（race condition防止）
+              callback(fullUser)
+            }
+          } catch (e) {
+            // Profile fetch failed, but immediate user is already sent
+            logger.debug('[AUTH] profile fetch failed after state change')
+          }
         } else {
           callback(null)
         }
