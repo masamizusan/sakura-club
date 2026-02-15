@@ -99,8 +99,22 @@ function setBaseUserIdOnce(userId: string) {
 // 🚨 base更新は (a)(b) の2ケースのみ許可
 function updateBaseUserId(userId: string, source: 'auth-action' | 'boot-pending') {
   if (typeof window === 'undefined') return
+  const prevBase = getBaseUserId()
+  const pathNow = getPathNow()
+  const isAuth = isAuthPageNow()
+  const actionFlag = hasAuthActionFlag()
+
   sessionStorage.setItem(BASE_USER_KEY, userId)
-  console.warn(`[BASE_USER][${tabId}] updated: ${userId.slice(0, 8)} source=${source}`)
+
+  // 🚨 CRITICAL: 詳細ログ（いつ・誰が・どの状態で base を更新したか）
+  console.warn(`[BASE_USER][${tabId}] UPDATED`, {
+    prev: prevBase?.slice(0, 8) || 'null',
+    next: userId.slice(0, 8),
+    source,
+    pathNow,
+    isAuth,
+    actionFlag
+  })
 }
 
 function clearBaseUserId() {
@@ -145,11 +159,18 @@ function getGuardAge(): number | null {
   return Date.now() - parseInt(guardTime, 10)
 }
 
-function setReloadGuard() {
+function setReloadGuard(source: string) {
   if (typeof window === 'undefined') return
   const ts = Date.now()
+  const pathNow = getPathNow()
   sessionStorage.setItem(RELOAD_GUARD_KEY, ts.toString())
-  console.warn(`[GUARD][${tabId}] set guard ts=${ts}`)
+  // 🚨 CRITICAL: guardを誰がいつセットしたか追跡
+  console.warn(`[GUARD][${tabId}] SET`, {
+    ts,
+    source,
+    pathNow,
+    expiresIn: `${RELOAD_GUARD_MS}ms`
+  })
 }
 
 function isReloadGuardActive(): boolean {
@@ -203,7 +224,7 @@ const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 // =====================================================
 function showAlertAndReload(incomingUserId: string) {
   // 1. guard を先にセット（8秒）
-  setReloadGuard()
+  setReloadGuard('mismatch-alert')
 
   // 2. pending をセット
   setPendingUserId(incomingUserId)
@@ -274,8 +295,17 @@ function handleIncomingAuthSwitch(payload: any) {
   }
 
   // 4) guardが生きていればスキップ（初回は潰さない）
+  const guardTs = sessionStorage.getItem(RELOAD_GUARD_KEY)
   if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
-    console.warn(`[GUARD][${tabId}] skip (guard active: ${guardAge}ms elapsed, pathNow=${pathNow})`)
+    console.warn(`[GUARD][${tabId}] skip`, {
+      guardActive: true,
+      guardAge: `${guardAge}ms`,
+      guardTs,
+      remaining: `${RELOAD_GUARD_MS - guardAge}ms`,
+      pathNow,
+      incoming: incomingUserId?.slice(0, 8) || 'null',
+      base: base?.slice(0, 8) || 'null'
+    })
     return
   }
 
@@ -291,7 +321,20 @@ function handleIncomingAuthSwitch(payload: any) {
     return
   }
 
-  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null (pathNow=${pathNow})`)
+  // 🚨 CRITICAL: 詳細ログで原因を特定（same user or null の中身を見える化）
+  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null`, {
+    incoming: incomingUserId?.slice(0, 8) || 'NULL/UNDEFINED',
+    incomingRaw: incomingUserId,
+    base: base?.slice(0, 8) || 'NULL/UNDEFINED',
+    baseRaw: base,
+    isSameUser: incomingUserId === base,
+    isIncomingNull: incomingUserId === null || incomingUserId === undefined,
+    pathNow,
+    isAuth,
+    actionFlag,
+    guardAge: guardAge !== null ? `${guardAge}ms` : 'null',
+    fromTab: fromTab?.slice(0, 6) || 'null'
+  })
 }
 
 // =====================================================
