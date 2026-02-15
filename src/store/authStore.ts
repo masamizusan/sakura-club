@@ -4,14 +4,14 @@ import { clearAllUserStorage } from '@/utils/userStorage'
 import { logger } from '@/utils/logger'
 
 // =====================================================
-// 🚨 CRITICAL: Cross-Tab認証検知 - sessionStorageベース
+// 🚨 Cross-Tab認証検知 - sessionStorageベース
 //
-// 原則: Supabase/Zustand/グローバル変数は一切信用しない
-// sessionStorageに保存した「このタブの元ユーザーID」のみを使用
+// 原則: Supabase/Zustand/グローバル変数は判定に使用禁止
+// sessionStorageの base/pending/tabId/auth_action のみを使用
 // =====================================================
 
 // =====================================================
-// 1️⃣ タブ固有ID（sessionStorage）
+// 1️⃣ タブ固有ID
 // =====================================================
 const TAB_ID_KEY = '__sakura_tab_id__'
 
@@ -29,10 +29,7 @@ function getTabId(): string {
 const tabId = getTabId()
 
 // =====================================================
-// 2️⃣ 基準ユーザーID（最重要）
-// - 初回ログイン時のみ設定
-// - switch時は触らない
-// - logout時のみ remove
+// 2️⃣ 基準ユーザーID（__base_user_id__）
 // =====================================================
 const BASE_USER_KEY = '__base_user_id__'
 
@@ -43,7 +40,6 @@ function getBaseUserId(): string | null {
 
 function setBaseUserId(userId: string) {
   if (typeof window === 'undefined') return
-  // 既に設定されている場合は上書きしない（操作タブからの明示的更新以外）
   sessionStorage.setItem(BASE_USER_KEY, userId)
   console.warn(`[BASE_USER][${tabId}] set:`, userId.slice(0, 8))
 }
@@ -55,7 +51,57 @@ function clearBaseUserId() {
 }
 
 // =====================================================
-// 3️⃣ ログイン操作フラグ（操作タブ識別）
+// 3️⃣ ペンディングユーザーID（__pending_user_id__）
+// リロード後にbaseを更新するための橋渡し
+// =====================================================
+const PENDING_USER_KEY = '__pending_user_id__'
+
+function getPendingUserId(): string | null {
+  if (typeof window === 'undefined') return null
+  return sessionStorage.getItem(PENDING_USER_KEY)
+}
+
+function setPendingUserId(userId: string) {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(PENDING_USER_KEY, userId)
+  console.warn(`[PENDING][${tabId}] set:`, userId.slice(0, 8))
+}
+
+function clearPendingUserId() {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(PENDING_USER_KEY)
+  console.warn(`[PENDING][${tabId}] cleared`)
+}
+
+// =====================================================
+// 4️⃣ リロードガード（__reload_guard__）
+// 無限リロード防止：8秒以内は再実行しない
+// =====================================================
+const RELOAD_GUARD_KEY = '__reload_guard__'
+const RELOAD_GUARD_MS = 8000
+
+function setReloadGuard() {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(RELOAD_GUARD_KEY, Date.now().toString())
+  console.warn(`[GUARD][${tabId}] set`)
+}
+
+function isReloadGuardActive(): boolean {
+  if (typeof window === 'undefined') return false
+  const guardTime = sessionStorage.getItem(RELOAD_GUARD_KEY)
+  if (!guardTime) return false
+  const elapsed = Date.now() - parseInt(guardTime, 10)
+  return elapsed < RELOAD_GUARD_MS
+}
+
+function clearReloadGuard() {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(RELOAD_GUARD_KEY)
+  console.warn(`[GUARD][${tabId}] cleared`)
+}
+
+// =====================================================
+// 5️⃣ 認証操作フラグ（__auth_action__）
 // =====================================================
 const AUTH_ACTION_KEY = '__auth_action__'
 
@@ -71,7 +117,7 @@ function clearAuthActionFlag() {
   console.warn(`[AUTH_ACTION][${tabId}] flag cleared`)
 }
 
-function hasAuthActionFlag(): boolean {
+function isAuthActionInThisTab(): boolean {
   if (typeof window === 'undefined') return false
   return sessionStorage.getItem(AUTH_ACTION_KEY) === '1'
 }
@@ -80,13 +126,16 @@ function hasAuthActionFlag(): boolean {
 export { setAuthActionFlag as setAuthActionInThisTab, clearAuthActionFlag as clearAuthActionInThisTab }
 
 // =====================================================
-// 5️⃣ isAuthPageNow() - pathnameのみ（mountedフラグ完全削除）
+// 6️⃣ isAuthPageNow() - pathnameのみ（共有状態は完全禁止）
 // =====================================================
 function isAuthPageNow(): boolean {
   if (typeof window === 'undefined') return false
   const path = window.location.pathname
-  return path === '/login' || path === '/signup' ||
-         path.startsWith('/login/') || path.startsWith('/signup/')
+  const isAuth = path === '/login' || path === '/signup' ||
+                 path.startsWith('/login/') || path.startsWith('/signup/') ||
+                 path.startsWith('/auth/')
+  console.warn(`[ROUTE][${tabId}] isAuthPageNow=${isAuth} path=${path}`)
+  return isAuth
 }
 
 // =====================================================
@@ -95,34 +144,30 @@ function isAuthPageNow(): boolean {
 const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 
-// ループ防止
-let hasShownAlert = false
-let lastAlertAt = 0
-const ALERT_COOLDOWN_MS = 3000
-
 // =====================================================
-// showAlertAndReload
+// showAlertAndReload - 1回だけ実行
 // =====================================================
-function showAlertAndReload() {
+function showAlertAndReload(incomingUserId: string) {
   if (typeof window === 'undefined') return
 
-  const now = Date.now()
-  if (hasShownAlert || (now - lastAlertAt) < ALERT_COOLDOWN_MS) {
-    console.warn(`[CROSS_TAB][${tabId}] alert cooldown - skipping`)
+  // ガードチェック
+  if (isReloadGuardActive()) {
+    console.warn(`[GUARD][${tabId}] active -> skip reload`)
     return
   }
 
-  hasShownAlert = true
-  lastAlertAt = now
+  // pending保存 → ガード設定 → alert → reload
+  setPendingUserId(incomingUserId)
+  setReloadGuard()
 
-  console.error(`[CROSS_TAB][${tabId}] 🚨 ALERT - showing dialog`)
+  console.error(`[CROSS_TAB][${tabId}] USER MISMATCH -> pending=${incomingUserId.slice(0, 8)} alert+reload`)
 
   window.alert('別タブでログインが行われました。再読み込みします。')
   window.location.reload()
 }
 
 // =====================================================
-// 4️⃣ 判定ロジック（唯一これだけ）
+// 受信ハンドラ
 // =====================================================
 function handleIncomingAuthSwitch(payload: any) {
   if (!payload) return
@@ -132,14 +177,18 @@ function handleIncomingAuthSwitch(payload: any) {
   const fromTab = payload.fromTab
   const baseUserId = getBaseUserId()
   const isAuthPage = isAuthPageNow()
+  const isLocalAction = isAuthActionInThisTab()
+  const guardActive = isReloadGuardActive()
 
   console.warn(`[CROSS_TAB][${tabId}] comparing:`, {
     incoming: incomingUserId?.slice(0, 8) || 'null',
     base: baseUserId?.slice(0, 8) || 'null',
     fromTab: fromTab?.slice(0, 6) || 'null',
     myTabId: tabId,
+    path: window.location.pathname,
     isAuthPage,
-    path: window.location.pathname
+    isLocalAction,
+    guardActive
   })
 
   // 自タブからのbroadcastは無視
@@ -150,7 +199,13 @@ function handleIncomingAuthSwitch(payload: any) {
 
   // 認証ページでは警告しない
   if (isAuthPage) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored (on auth page: ${window.location.pathname})`)
+    console.warn(`[CROSS_TAB][${tabId}] ignored (on auth page)`)
+    return
+  }
+
+  // 操作タブは無視
+  if (isLocalAction) {
+    console.warn(`[CROSS_TAB][${tabId}] ignored (local action)`)
     return
   }
 
@@ -160,14 +215,15 @@ function handleIncomingAuthSwitch(payload: any) {
     return
   }
 
-  // 🚨 核心判定: incoming !== base なら即 alert
+  // ガードが有効なら無視
+  if (guardActive) {
+    console.warn(`[GUARD][${tabId}] active -> skip reload`)
+    return
+  }
+
+  // 🚨 核心判定: incoming !== base なら alert + reload
   if (incomingUserId && incomingUserId !== baseUserId) {
-    console.error(`[CROSS_TAB][${tabId}] USER MISMATCH!`, {
-      incoming: incomingUserId.slice(0, 8),
-      base: baseUserId.slice(0, 8)
-    })
-    console.error(`[CROSS_TAB][${tabId}] ALERT`)
-    showAlertAndReload()
+    showAlertAndReload(incomingUserId)
   } else {
     console.warn(`[CROSS_TAB][${tabId}] same user or null - no alert`)
   }
@@ -259,6 +315,33 @@ export function setCurrentPath(_path: string) {
 }
 
 // =====================================================
+// 🚨 BOOT処理: pending反映（最重要）
+// リロード後にbaseを更新してループを止める
+// =====================================================
+function applyPendingUserOnBoot() {
+  if (typeof window === 'undefined') return
+
+  const pending = getPendingUserId()
+  const base = getBaseUserId()
+
+  console.warn(`[BOOT][${tabId}] base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'}`)
+
+  if (pending) {
+    // pending を base に反映
+    setBaseUserId(pending)
+    clearPendingUserId()
+    clearAuthActionFlag()
+    clearReloadGuard()
+    console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)}`)
+  }
+}
+
+// モジュール読み込み時に即実行（リロード直後に実行される）
+if (typeof window !== 'undefined') {
+  applyPendingUserOnBoot()
+}
+
+// =====================================================
 // Zustand Store
 // =====================================================
 interface AuthState {
@@ -301,7 +384,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.debug(`[AUTH_INIT][${tabId}] starting`)
       const user = await authService.getCurrentUser()
 
-      // 初回ログイン時のみ baseUserId を設定
+      // 初回ログイン時のみ baseUserId を設定（pendingがない場合）
       if (user?.id && !getBaseUserId()) {
         setBaseUserId(user.id)
       }
@@ -312,13 +395,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.debug(`[AUTH_INIT][${tabId}] ready`, { hasUser: !!user })
 
       // =====================================================
-      // 7️⃣ onAuthStateChange 処理
+      // onAuthStateChange 処理
       // =====================================================
       authService.onAuthStateChange((newUser) => {
         const newUserId = newUser?.id || null
         const baseUserId = getBaseUserId()
         const isAuthPage = isAuthPageNow()
-        const hasActionFlag = hasAuthActionFlag()
+        const hasActionFlag = isAuthActionInThisTab()
 
         console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange:`, {
           new: newUserId?.slice(0, 8) || 'none',
@@ -349,7 +432,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // 同一ユーザー
         if (baseUserId === newUserId) {
-          // Zustand stateだけ更新
           set({ user: newUser })
           return
         }
@@ -366,7 +448,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // 🚨 操作タブ（login/signup + AUTH_ACTION）
           if (isAuthPage && hasActionFlag) {
             console.warn(`[AUTH_SWITCH][${tabId}] LOCAL LOGIN - updating baseUserId`)
-            setBaseUserId(newUserId)  // 自分で操作したので更新OK
+            setBaseUserId(newUserId)
             set({ user: newUser })
             broadcastAuthChange(newUserId, 'local-switch')
             clearAuthActionFlag()
@@ -374,17 +456,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             return
           }
 
-          // 🚨 非操作タブ
-          // baseUserId は触らない（これが核心）
-          // Zustand stateは更新（表示用）
+          // 🚨 非操作タブ - Zustand stateは更新（表示用）
           set({ user: newUser })
           broadcastAuthChange(newUserId, 'cross-tab-switch')
 
-          // 非認証ページなら警告
-          if (!isAuthPage) {
-            console.error(`[AUTH_SWITCH][${tabId}] 🚨 ALERT - cross-tab switch on non-auth page`)
-            showAlertAndReload()
-          } else {
+          // 非認証ページなら警告（ただしガードが有効でない場合のみ）
+          if (!isAuthPage && !isReloadGuardActive()) {
+            showAlertAndReload(newUserId)
+          } else if (isAuthPage) {
             console.warn(`[AUTH_SWITCH][${tabId}] on auth page - skip alert`)
           }
         }
@@ -407,7 +486,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const currentUser = get().user
       logger.debug(`[AUTH][${tabId}] signOut`)
       clearAllUserStorage(currentUser?.id)
-      clearBaseUserId()  // logout時のみクリア
+      clearBaseUserId()
+      clearPendingUserId()
+      clearReloadGuard()
       await authService.signOut()
       set({ user: null })
     } catch (error) {
