@@ -97,12 +97,28 @@ function setBaseUserIdOnce(userId: string) {
 }
 
 // 🚨 base更新は (a)(b) の2ケースのみ許可
+// (a) auth-action: auth page + actionFlag=true のときのみ
+// (b) boot-pending: alert後のreload時のみ（guardが生きている前提）
 function updateBaseUserId(userId: string, source: 'auth-action' | 'boot-pending') {
   if (typeof window === 'undefined') return
   const prevBase = getBaseUserId()
   const pathNow = getPathNow()
   const isAuth = isAuthPageNow()
   const actionFlag = hasAuthActionFlag()
+
+  // 🚨 CRITICAL: auth-action の場合、追加の安全チェック
+  if (source === 'auth-action') {
+    if (!isAuth || !actionFlag) {
+      // ❌ 異常: auth-action なのに条件を満たしていない → 更新を拒否
+      console.error(`[BASE_USER][${tabId}] BLOCKED: auth-action called but conditions not met`, {
+        isAuth,
+        actionFlag,
+        pathNow,
+        attemptedUserId: userId.slice(0, 8)
+      })
+      return // 更新しない
+    }
+  }
 
   sessionStorage.setItem(BASE_USER_KEY, userId)
 
@@ -438,14 +454,20 @@ function applyPendingUserOnBoot() {
     clearAuthActionFlag()
   }
 
-  // pending があれば base に反映（ルール(b)）
+  // 🚨 CRITICAL: pending があり、かつ guard が生きている場合のみ base を更新
+  // guardが生きている = alertが表示されてreloadが発生した証拠
+  // guardがない状態でpendingだけあるのは異常（alertなしでpendingが設定された）
   if (pending) {
-    // 1. base を更新
-    updateBaseUserId(pending, 'boot-pending')
-    // 2. pending を削除
-    clearPendingUserId()
-    // 3. guard は保持（二重発火防止）
-    console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)}`)
+    if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
+      // ✅ 正常ケース: alert後のreload
+      updateBaseUserId(pending, 'boot-pending')
+      clearPendingUserId()
+      console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)} (guard active: ${guardAge}ms)`)
+    } else {
+      // ❌ 異常ケース: alertなしでpendingがある → pendingをクリアしてbase更新しない
+      console.warn(`[BOOT][${tabId}] pending found but NO guard - clearing stale pending (pending=${pending.slice(0, 8)} guardAge=${guardAge})`)
+      clearPendingUserId()
+    }
   }
 }
 
