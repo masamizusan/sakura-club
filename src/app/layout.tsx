@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Sans_JP } from 'next/font/google'
+import { Suspense } from 'react'
 import './globals.css'
 import SimpleHeader from '@/components/layout/SimpleHeader'
 import AuthProvider from '@/components/auth/AuthProvider'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { AuthSwitchGuard } from '@/components/AuthSwitchGuard'
+import { AuthDebugPanel } from '@/components/auth/AuthDebugPanel'
 
 const inter = Inter({ subsets: ['latin'] })
 const notoSansJP = Noto_Sans_JP({ 
@@ -30,6 +32,9 @@ export default function RootLayout({
           <AuthProvider>
             <AuthSwitchGuard />
             {children}
+            <Suspense fallback={null}>
+              <AuthDebugPanel />
+            </Suspense>
           </AuthProvider>
         </LanguageProvider>
       </body>

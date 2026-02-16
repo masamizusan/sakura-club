@@ -3,6 +3,19 @@ import { AuthUser, authService } from '@/lib/auth'
 import { clearAllUserStorage } from '@/utils/userStorage'
 import { logger } from '@/utils/logger'
 
+// Debug Panel用のログ関数（遅延インポートで循環参照回避）
+let addDebugLogFn: ((type: string, data: Record<string, any>) => void) | null = null
+function addDebugLog(type: string, data: Record<string, any>) {
+  if (!addDebugLogFn && typeof window !== 'undefined') {
+    import('@/components/auth/AuthDebugPanel').then(mod => {
+      addDebugLogFn = mod.addDebugLog
+      addDebugLogFn(type, data)
+    }).catch(() => {})
+  } else if (addDebugLogFn) {
+    addDebugLogFn(type, data)
+  }
+}
+
 // =====================================================
 // 🚨 Cross-Tab認証検知 - sessionStorageベース
 //
@@ -278,13 +291,16 @@ function handleIncomingAuthSwitch(payload: any) {
   }
 
   // 🚨 必須ログ: received（pathNow + isAuth を必ず含める）
-  console.warn(`[CROSS_TAB][${tabId}] received`, {
+  const receivedData = {
     fromTab: fromTab?.slice(0, 6),
     incoming: incomingUserId?.slice(0, 8) || 'null',
     base: base?.slice(0, 8) || 'null',
     pathNow,
-    isAuth
-  })
+    isAuth,
+    actionFlag
+  }
+  console.warn(`[CROSS_TAB][${tabId}] received`, receivedData)
+  addDebugLog('CROSS_TAB received', receivedData)
 
   // 🆕 追加: ROUTE ログ（誤判定検知用）
   console.warn(`[ROUTE][${tabId}] pathNow=${pathNow} isAuthPageNow=${isAuth}`)
@@ -327,30 +343,38 @@ function handleIncomingAuthSwitch(payload: any) {
 
   // 5) 🚨 核心判定: incoming !== base なら mismatch
   if (incomingUserId && incomingUserId !== base) {
-    console.error(`[CROSS_TAB][${tabId}] ACTION: mismatch -> pending set -> alert+reload`, {
+    const mismatchData = {
       incoming: incomingUserId.slice(0, 8),
       base: base.slice(0, 8),
       pathNow
-    })
+    }
+    console.error(`[CROSS_TAB][${tabId}] ACTION: mismatch -> pending set -> alert+reload`, mismatchData)
+    addDebugLog('ACTION mismatch', mismatchData)
+    addDebugLog('ALERT showing', { message: '別タブでログインが行われました' })
 
     showAlertAndReload(incomingUserId)
     return
   }
 
   // 🚨 CRITICAL: 詳細ログで原因を特定（same user or null の中身を見える化）
-  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null`, {
+  const ignoredData = {
     incoming: incomingUserId?.slice(0, 8) || 'NULL/UNDEFINED',
     incomingRaw: incomingUserId,
+    incomingType: typeof incomingUserId,
     base: base?.slice(0, 8) || 'NULL/UNDEFINED',
     baseRaw: base,
+    baseType: typeof base,
     isSameUser: incomingUserId === base,
     isIncomingNull: incomingUserId === null || incomingUserId === undefined,
     pathNow,
     isAuth,
     actionFlag,
     guardAge: guardAge !== null ? `${guardAge}ms` : 'null',
+    pending: pending?.slice(0, 8) || 'null',
     fromTab: fromTab?.slice(0, 6) || 'null'
-  })
+  }
+  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null`, ignoredData)
+  addDebugLog('ignored: same user or null', ignoredData)
 }
 
 // =====================================================
@@ -398,7 +422,9 @@ function broadcastAuthChange(userId: string | null, source: string) {
     at: Date.now()
   }
 
+  const sendData = { userId: userId?.slice(0, 8) || 'null', source, fromTab: tabId }
   console.warn(`[BROADCAST][${tabId}][send] userId=${userId?.slice(0, 8) || 'null'} source=${source}`)
+  addDebugLog('BROADCAST send', sendData)
 
   if (authChannel) {
     try {
@@ -446,7 +472,16 @@ function applyPendingUserOnBoot() {
   const actionFlag = hasAuthActionFlag()
 
   // bootログ（必須）
+  const bootData = {
+    path: pathNow,
+    authPage: isAuth,
+    base: base?.slice(0, 8) || 'null',
+    pending: pending?.slice(0, 8) || 'null',
+    guard: guardAge !== null ? `${guardAge}ms` : 'null',
+    actionFlag
+  }
   console.warn(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag}`)
+  addDebugLog('BOOT', bootData)
 
   // 🚨 CRITICAL: 非authページで auth_action が残っていたら stale として即クリア
   if (actionFlag && !isAuth) {
@@ -463,9 +498,11 @@ function applyPendingUserOnBoot() {
       updateBaseUserId(pending, 'boot-pending')
       clearPendingUserId()
       console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)} (guard active: ${guardAge}ms)`)
+      addDebugLog('BOOT applied pending', { pending: pending.slice(0, 8), guardAge: `${guardAge}ms` })
     } else {
       // ❌ 異常ケース: alertなしでpendingがある → pendingをクリアしてbase更新しない
       console.warn(`[BOOT][${tabId}] pending found but NO guard - clearing stale pending (pending=${pending.slice(0, 8)} guardAge=${guardAge})`)
+      addDebugLog('BOOT stale pending cleared', { pending: pending.slice(0, 8), guardAge })
       clearPendingUserId()
     }
   }
