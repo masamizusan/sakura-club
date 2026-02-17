@@ -12,6 +12,7 @@ interface DebugSnapshot {
   pathSource: 'sessionStorage' | 'dataset' | 'location' | 'unknown'
   isAuthPageNow: boolean
   actionFlag: boolean
+  actionFlagRaw: string | null  // 🆕 sessionStorage生値
   baseUserId: string | null
   pendingUserId: string | null
   reloadGuard: {
@@ -124,6 +125,7 @@ export function getDebugSnapshot(): DebugSnapshot {
       pathSource: 'unknown',
       isAuthPageNow: false,
       actionFlag: false,
+      actionFlagRaw: null,
       baseUserId: null,
       pendingUserId: null,
       reloadGuard: { value: null, ageMs: null, remainingMs: null },
@@ -153,7 +155,8 @@ export function getDebugSnapshot(): DebugSnapshot {
   }
 
   const isAuthPageNow = pathNow === '/login' || pathNow === '/signup'
-  const actionFlag = sessionStorage.getItem(AUTH_ACTION_KEY) === '1'
+  const actionFlagRaw = sessionStorage.getItem(AUTH_ACTION_KEY)
+  const actionFlag = actionFlagRaw === '1'
   const baseUserId = sessionStorage.getItem(BASE_USER_KEY)
   const pendingUserId = sessionStorage.getItem(PENDING_USER_KEY)
 
@@ -173,6 +176,7 @@ export function getDebugSnapshot(): DebugSnapshot {
     pathSource,
     isAuthPageNow,
     actionFlag,
+    actionFlagRaw,
     baseUserId,
     pendingUserId,
     reloadGuard: {
@@ -263,10 +267,23 @@ export function AuthDebugPanel() {
   }, [])
 
   const handleClearAuthState = useCallback(() => {
+    // 🚨 CRITICAL: すべての認証関連キーを確実に削除
     sessionStorage.removeItem(PENDING_USER_KEY)
     sessionStorage.removeItem(RELOAD_GUARD_KEY)
     sessionStorage.removeItem(AUTH_ACTION_KEY)
-    alert('Cleared: pending, guard, actionFlag')
+    sessionStorage.removeItem(BASE_USER_KEY)
+
+    // 削除確認ログ
+    const remaining = {
+      pending: sessionStorage.getItem(PENDING_USER_KEY),
+      guard: sessionStorage.getItem(RELOAD_GUARD_KEY),
+      action: sessionStorage.getItem(AUTH_ACTION_KEY),
+      base: sessionStorage.getItem(BASE_USER_KEY)
+    }
+    console.warn('[DEBUG_PANEL] Clear Auth State:', remaining)
+    addDebugLog('CLEAR AUTH STATE', remaining)
+
+    alert('Cleared: pending, guard, actionFlag, base')
     setSnapshot(getDebugSnapshot())
   }, [])
 
@@ -324,7 +341,15 @@ export function AuthDebugPanel() {
                 <tr><td style={{ color: '#888' }}>tabId</td><td>{snapshot.tabId}</td></tr>
                 <tr><td style={{ color: '#888' }}>pathNow</td><td>{snapshot.pathNow} <span style={{ color: '#666' }}>({snapshot.pathSource})</span></td></tr>
                 <tr><td style={{ color: '#888' }}>isAuthPage</td><td style={{ color: snapshot.isAuthPageNow ? '#ff6666' : '#66ff66' }}>{String(snapshot.isAuthPageNow)}</td></tr>
-                <tr><td style={{ color: '#888' }}>actionFlag</td><td style={{ color: snapshot.actionFlag ? '#ff6666' : '#66ff66' }}>{String(snapshot.actionFlag)}</td></tr>
+                <tr>
+                  <td style={{ color: '#888' }}>actionFlag</td>
+                  <td>
+                    <span style={{ color: snapshot.actionFlag ? '#ff6666' : '#66ff66' }}>{String(snapshot.actionFlag)}</span>
+                    {snapshot.actionFlagRaw && (
+                      <span style={{ color: '#ff9966', marginLeft: 4 }}>(raw: &quot;{snapshot.actionFlagRaw}&quot;)</span>
+                    )}
+                  </td>
+                </tr>
                 <tr><td style={{ color: '#888' }}>baseUserId</td><td style={{ color: '#66ccff' }}>{shortId(snapshot.baseUserId)}</td></tr>
                 <tr><td style={{ color: '#888' }}>pendingUserId</td><td style={{ color: snapshot.pendingUserId ? '#ffcc00' : '#666' }}>{shortId(snapshot.pendingUserId)}</td></tr>
                 <tr>

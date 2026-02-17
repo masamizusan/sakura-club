@@ -520,24 +520,40 @@ function applyPendingUserOnBoot() {
   const base = getBaseUserId()
   const pending = getPendingUserId()
   const guardAge = getGuardAge()
-  const actionFlag = hasAuthActionFlag()
 
-  // bootログ（必須）
+  // 🚨 FIX: sessionStorage を直接読んで二重確認
+  const actionFlagFromFunc = hasAuthActionFlag()
+  const actionFlagRaw = sessionStorage.getItem(AUTH_ACTION_KEY)
+  const actionFlagFromStorage = actionFlagRaw === '1'
+
+  // 不整合検出
+  if (actionFlagFromFunc !== actionFlagFromStorage) {
+    console.error(`[BOOT][${tabId}] 🚨 actionFlag MISMATCH! func=${actionFlagFromFunc} storage=${actionFlagFromStorage} raw="${actionFlagRaw}"`)
+    addDebugLog('BOOT actionFlag MISMATCH', { func: actionFlagFromFunc, storage: actionFlagFromStorage, raw: actionFlagRaw })
+  }
+
+  // 実際の値は sessionStorage から直接取得
+  const actionFlag = actionFlagFromStorage
+
+  // bootログ（必須）- sessionStorage生値も含める
   const bootData = {
     path: pathNow,
     authPage: isAuth,
     base: base?.slice(0, 8) || 'null',
     pending: pending?.slice(0, 8) || 'null',
     guard: guardAge !== null ? `${guardAge}ms` : 'null',
-    actionFlag
+    actionFlag,
+    actionFlagRaw: actionFlagRaw || 'null'
   }
-  console.warn(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag}`)
+  console.warn(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag} actionFlagRaw=${actionFlagRaw || 'null'}`)
   addDebugLog('BOOT', bootData)
 
-  // 🚨 CRITICAL: 非authページで auth_action が残っていたら stale として即クリア
-  if (actionFlag && !isAuth) {
-    console.warn(`[BOOT][${tabId}] clearing stale auth_action on non-auth page: path=${pathNow}`)
-    clearAuthActionFlag()
+  // 🚨 CRITICAL FIX: 非authページで __auth_action__ が sessionStorage に残っていたら強制クリア
+  // 関数の戻り値ではなく、sessionStorage を直接確認して確実にクリア
+  if (!isAuth && actionFlagRaw) {
+    console.warn(`[BOOT][${tabId}] 🧹 FORCE clearing stale __auth_action__ on non-auth page: path=${pathNow} raw="${actionFlagRaw}"`)
+    sessionStorage.removeItem(AUTH_ACTION_KEY)
+    addDebugLog('BOOT force clear actionFlag', { path: pathNow, raw: actionFlagRaw })
   }
 
   // 🚨 CRITICAL: pending があり、かつ guard が生きている場合のみ base を更新
