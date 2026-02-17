@@ -5,13 +5,25 @@ import { logger } from '@/utils/logger'
 
 // Debug Panel用のログ関数（遅延インポートで循環参照回避）
 let addDebugLogFn: ((type: string, data: Record<string, any>) => void) | null = null
+const pendingLogs: Array<{type: string, data: Record<string, any>}> = []
+
 function addDebugLog(type: string, data: Record<string, any>) {
-  if (!addDebugLogFn && typeof window !== 'undefined') {
+  if (typeof window === 'undefined') return
+
+  if (!addDebugLogFn) {
+    // 保留キューに追加
+    pendingLogs.push({ type, data })
+
+    // 動的インポート（1回だけ）
     import('@/components/auth/AuthDebugPanel').then(mod => {
       addDebugLogFn = mod.addDebugLog
-      addDebugLogFn(type, data)
+      // 保留していたログをすべて追加
+      while (pendingLogs.length > 0) {
+        const log = pendingLogs.shift()
+        if (log) addDebugLogFn(log.type, log.data)
+      }
     }).catch(() => {})
-  } else if (addDebugLogFn) {
+  } else {
     addDebugLogFn(type, data)
   }
 }
@@ -383,31 +395,54 @@ function handleIncomingAuthSwitch(payload: any) {
 let authChannel: BroadcastChannel | null = null
 
 if (typeof window !== 'undefined') {
+  // 🆕 BroadcastChannel初期化
   try {
     authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME)
     authChannel.onmessage = (event) => {
+      console.warn(`[BC_RECEIVE][${tabId}] raw event:`, event.data)
+      addDebugLog('BC raw receive', { data: event.data })
+
       const payload = event.data || {}
       if (payload.userId !== undefined) {
+        console.warn(`[BC_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
         handleIncomingAuthSwitch(payload)
+      } else {
+        console.warn(`[BC_RECEIVE][${tabId}] SKIP: payload.userId is undefined`)
       }
     }
-    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel READY`)
+    authChannel.onmessageerror = (event) => {
+      console.error(`[BC_ERROR][${tabId}] message error:`, event)
+      addDebugLog('BC error', { event: 'messageerror' })
+    }
+    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel READY (channel=${AUTH_CHANNEL_NAME})`)
+    addDebugLog('LISTENER ready', { type: 'BroadcastChannel', channel: AUTH_CHANNEL_NAME })
   } catch (e) {
-    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel not supported`)
+    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel not supported:`, e)
+    addDebugLog('LISTENER error', { type: 'BroadcastChannel', error: String(e) })
     authChannel = null
   }
 
+  // 🆕 localStorage storage event listener
   window.addEventListener('storage', (event) => {
+    // 全てのstorage eventをログ（デバッグ用）
+    if (event.key === CROSS_TAB_AUTH_KEY) {
+      console.warn(`[LS_RECEIVE][${tabId}] storage event: key=${event.key} newValue=${event.newValue?.slice(0, 50)}...`)
+      addDebugLog('LS raw receive', { key: event.key, hasNewValue: !!event.newValue })
+    }
+
     if (event.key !== CROSS_TAB_AUTH_KEY || !event.newValue) return
 
     try {
       const payload = JSON.parse(event.newValue)
+      console.warn(`[LS_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
       handleIncomingAuthSwitch(payload)
     } catch (e) {
-      console.warn(`[STORAGE][${tabId}] parse error`)
+      console.warn(`[LS_RECEIVE][${tabId}] parse error:`, e)
+      addDebugLog('LS parse error', { error: String(e) })
     }
   })
   console.warn(`[AUTH_LISTENER][${tabId}] storage READY`)
+  addDebugLog('LISTENER ready', { type: 'localStorage' })
 }
 
 // =====================================================
@@ -419,26 +454,42 @@ function broadcastAuthChange(userId: string | null, source: string) {
   const payload = {
     userId,
     fromTab: tabId,
-    at: Date.now()
+    at: Date.now(),
+    source // 🆕 送信元も含める（デバッグ用）
   }
 
-  const sendData = { userId: userId?.slice(0, 8) || 'null', source, fromTab: tabId }
+  const sendData = { userId: userId?.slice(0, 8) || 'null', source, fromTab: tabId, at: payload.at }
   console.warn(`[BROADCAST][${tabId}][send] userId=${userId?.slice(0, 8) || 'null'} source=${source}`)
   addDebugLog('BROADCAST send', sendData)
 
+  // 🆕 BroadcastChannel送信
+  let bcSent = false
   if (authChannel) {
     try {
       authChannel.postMessage(payload)
+      bcSent = true
+      console.warn(`[BROADCAST][${tabId}] BroadcastChannel postMessage SUCCESS`)
     } catch (e) {
-      console.warn(`[BROADCAST][${tabId}] send failed`)
+      console.warn(`[BROADCAST][${tabId}] BroadcastChannel postMessage FAILED:`, e)
     }
+  } else {
+    console.warn(`[BROADCAST][${tabId}] BroadcastChannel is NULL`)
   }
 
+  // 🆕 localStorage送信（BroadcastChannelのバックアップ）
+  let lsSent = false
   try {
+    // 🚨 CRITICAL: localStorage storage eventは値が変わった時のみ発火
+    // 同じ値を書き込むとイベントが発火しないため、必ず違う値にする
     localStorage.setItem(CROSS_TAB_AUTH_KEY, JSON.stringify(payload))
+    lsSent = true
+    console.warn(`[BROADCAST][${tabId}] localStorage setItem SUCCESS`)
   } catch (e) {
-    console.warn(`[STORAGE][${tabId}] send failed`)
+    console.warn(`[BROADCAST][${tabId}] localStorage setItem FAILED:`, e)
   }
+
+  // 送信結果サマリー
+  addDebugLog('BROADCAST result', { bcSent, lsSent, source })
 }
 
 export const notifyAuthChange = (userId: string | null) => {
@@ -577,6 +628,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const isAuth = isAuthPageNow()
         let actionFlag = hasAuthActionFlag()
 
+        // 🆕 onAuthStateChange発火を即座にログ
+        console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange FIRED`, {
+          newUserId: newUserId?.slice(0, 8) || 'null',
+          baseUserId: baseUserId?.slice(0, 8) || 'null',
+          pathNow,
+          isAuth,
+          actionFlag
+        })
+        addDebugLog('AUTH_SWITCH fired', {
+          new: newUserId?.slice(0, 8) || 'null',
+          base: baseUserId?.slice(0, 8) || 'null',
+          pathNow,
+          isAuth,
+          actionFlag
+        })
+
         // 🚨 CRITICAL: 非authページで actionFlag が残っていたら stale として即クリア
         // これがないと Tab1(/mypage) が誤って base を更新してしまう
         if (actionFlag && !isAuth) {
@@ -621,7 +688,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // user → different user（ユーザー切替）
         if (baseUserId && newUserId && baseUserId !== newUserId) {
-          console.warn(`[AUTH_SWITCH][${tabId}] user switch detected`, {
+          console.warn(`[AUTH_SWITCH][${tabId}] 🚨 USER SWITCH DETECTED`, {
+            base: baseUserId.slice(0, 8),
+            new: newUserId.slice(0, 8),
+            pathNow,
+            isAuth,
+            actionFlag
+          })
+          addDebugLog('USER_SWITCH detected', {
             base: baseUserId.slice(0, 8),
             new: newUserId.slice(0, 8),
             pathNow,
@@ -631,7 +705,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // 🚨 (a) 操作タブ（auth page + auth_action=true）のみ base 更新
           if (isAuth && actionFlag) {
-            console.warn(`[AUTH_SWITCH][${tabId}] LOCAL LOGIN (auth page + action flag) - update base`)
+            console.warn(`[AUTH_SWITCH][${tabId}] 🎯 LOCAL LOGIN (auth page + action flag) - calling broadcastAuthChange`)
+            addDebugLog('LOCAL_LOGIN', { action: 'updating base and broadcasting' })
             updateBaseUserId(newUserId, 'auth-action')
             set({ user: newUser })
             broadcastAuthChange(newUserId, 'local-switch')
@@ -643,9 +718,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // base は絶対に触らない（これが核心）
           // Zustand state のみ更新（表示用）
           // broadcast 送信のみ（alert/reload は受信ハンドラに任せる）
+          console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - calling broadcastAuthChange`)
+          addDebugLog('PASSIVE_SWITCH', { action: 'broadcasting only, no base update' })
           set({ user: newUser })
           broadcastAuthChange(newUserId, 'passive-switch')
-          console.warn(`[AUTH_SWITCH][${tabId}] passive tab - broadcast only (no base update, no alert here)`)
+          console.warn(`[AUTH_SWITCH][${tabId}] passive tab - broadcast completed`)
         }
       })
 

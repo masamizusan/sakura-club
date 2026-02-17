@@ -49,12 +49,17 @@ function LoginForm() {
 
       const result = await authService.signIn(data)
 
-      // 他タブへ通知（タブ間同期）
+      // 🚨 CRITICAL: 他タブへ通知（タブ間同期）
+      // broadcastが確実に送信されるように明示的にログ
       if (result.user?.id) {
+        console.warn('[LOGIN] calling notifyAuthChange:', result.user.id.slice(0, 8))
         notifyAuthChange(result.user.id)
+        console.warn('[LOGIN] notifyAuthChange completed')
+      } else {
+        console.warn('[LOGIN] SKIP notifyAuthChange: no user.id')
       }
 
-      // Wait a moment for session to be established
+      // Wait a moment for session to be established and broadcast to be sent
       await new Promise(resolve => setTimeout(resolve, 500))
 
       // Check for redirect parameter

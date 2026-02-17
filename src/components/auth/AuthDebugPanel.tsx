@@ -41,6 +41,55 @@ const PATH_NOW_KEY = '__path_now__'
 const RELOAD_GUARD_MS = 8000
 
 // =====================================================
+// テスト用 Ping/Pong（BroadcastChannel動作確認）
+// =====================================================
+const PING_CHANNEL_NAME = 'auth-debug-ping'
+let pingChannel: BroadcastChannel | null = null
+let pingListenerActive = false
+
+function initPingChannel() {
+  if (typeof window === 'undefined') return
+  if (pingChannel) return
+
+  try {
+    pingChannel = new BroadcastChannel(PING_CHANNEL_NAME)
+    pingChannel.onmessage = (event) => {
+      const data = event.data
+      if (data.type === 'PING') {
+        // PING受信 → PONG返信
+        addDebugLog('🏓 PING received', { from: data.tabId, at: data.at })
+        pingChannel?.postMessage({
+          type: 'PONG',
+          tabId: sessionStorage.getItem(TAB_ID_KEY) || 'unknown',
+          originalPing: data.at,
+          at: Date.now()
+        })
+      } else if (data.type === 'PONG') {
+        // PONG受信
+        const rtt = Date.now() - data.originalPing
+        addDebugLog('🏓 PONG received', { from: data.tabId, rtt: `${rtt}ms` })
+      }
+    }
+    pingListenerActive = true
+    console.warn('[DEBUG_PING] channel ready')
+  } catch (e) {
+    console.warn('[DEBUG_PING] failed:', e)
+  }
+}
+
+export function sendTestPing() {
+  initPingChannel()
+  if (!pingChannel) {
+    addDebugLog('🏓 PING failed', { error: 'no channel' })
+    return
+  }
+  const tabId = sessionStorage.getItem(TAB_ID_KEY) || 'unknown'
+  const payload = { type: 'PING', tabId, at: Date.now() }
+  pingChannel.postMessage(payload)
+  addDebugLog('🏓 PING sent', { tabId })
+}
+
+// =====================================================
 // グローバルログキュー（authStore.ts からも追加できるように）
 // =====================================================
 const MAX_LOG_ENTRIES = 50
@@ -158,6 +207,12 @@ export function AuthDebugPanel() {
     updateSnapshot()
     const interval = setInterval(updateSnapshot, 500)
     return () => clearInterval(interval)
+  }, [isEnabled])
+
+  // Pingチャンネル初期化
+  useEffect(() => {
+    if (!isEnabled) return
+    initPingChannel()
   }, [isEnabled])
 
   // ログキューを監視
@@ -312,6 +367,7 @@ export function AuthDebugPanel() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             <button onClick={handleCopySnapshot} style={btnStyle}>📋 Copy JSON</button>
             <button onClick={handleClearAuthState} style={btnStyle}>🧹 Clear Auth State</button>
+            <button onClick={() => sendTestPing()} style={{ ...btnStyle, backgroundColor: '#006633' }}>🏓 Test Ping</button>
             <button onClick={handleClearSession} style={{ ...btnStyle, backgroundColor: '#663300' }}>⚠️ Clear Session</button>
             <button onClick={handleClearLocal} style={{ ...btnStyle, backgroundColor: '#663300' }}>⚠️ Clear Local</button>
             <button onClick={() => setShowGuide(!showGuide)} style={btnStyle}>📖 Test Guide</button>
@@ -331,6 +387,13 @@ export function AuthDebugPanel() {
               <div style={{ marginTop: 8, color: '#ff9966' }}>
                 ✓ Tab1: base=Mio, pathNow=/mypage<br/>
                 ✓ Tab2: ACTION mismatch → alert
+              </div>
+
+              <div style={{ marginTop: 12, color: '#66ccff', marginBottom: 4 }}>🏓 Ping Test</div>
+              <div style={{ color: '#ccc', fontSize: 10 }}>
+                1. 両タブで「Test Ping」をクリック<br/>
+                2. 他タブで「PONG received」が出れば通信OK<br/>
+                3. 出なければBroadcastChannelに問題あり
               </div>
             </div>
           )}
