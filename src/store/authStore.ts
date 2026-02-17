@@ -189,6 +189,7 @@ function clearPendingUserId() {
 // =====================================================
 // 5️⃣ リロードガード（__reload_guard__）
 // timestamp方式：未設定 or 期限切れなら実行、生きていればスキップ
+// 🚨 FIX: 期限切れ時は自動クリア
 // =====================================================
 const RELOAD_GUARD_KEY = '__reload_guard__'
 const RELOAD_GUARD_MS = 8000
@@ -197,7 +198,18 @@ function getGuardAge(): number | null {
   if (typeof window === 'undefined') return null
   const guardTime = sessionStorage.getItem(RELOAD_GUARD_KEY)
   if (!guardTime) return null
-  return Date.now() - parseInt(guardTime, 10)
+
+  const age = Date.now() - parseInt(guardTime, 10)
+
+  // 🚨 FIX: 期限切れの場合は自動クリアして null 扱い
+  if (age >= RELOAD_GUARD_MS) {
+    sessionStorage.removeItem(RELOAD_GUARD_KEY)
+    console.warn(`[GUARD][${tabId}] auto-cleared (expired: ${age}ms >= ${RELOAD_GUARD_MS}ms)`)
+    addDebugLog('GUARD expired -> cleared', { age: `${age}ms`, raw: guardTime })
+    return null
+  }
+
+  return age
 }
 
 function setReloadGuard(source: string) {
@@ -215,7 +227,7 @@ function setReloadGuard(source: string) {
 }
 
 function isReloadGuardActive(): boolean {
-  const age = getGuardAge()
+  const age = getGuardAge()  // 期限切れなら null が返る（自動クリア済み）
   if (age === null) return false
   return age < RELOAD_GUARD_MS
 }
@@ -564,13 +576,15 @@ function applyPendingUserOnBoot() {
       // ✅ 正常ケース: alert後のreload
       updateBaseUserId(pending, 'boot-pending')
       clearPendingUserId()
-      console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)} (guard active: ${guardAge}ms)`)
-      addDebugLog('BOOT applied pending', { pending: pending.slice(0, 8), guardAge: `${guardAge}ms` })
+      clearReloadGuard()  // 🚨 FIX: guard も必ずクリア
+      console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)} (guard active: ${guardAge}ms) -> pending+guard cleared`)
+      addDebugLog('BOOT applied pending', { pending: pending.slice(0, 8), guardAge: `${guardAge}ms`, action: 'cleared pending+guard' })
     } else {
       // ❌ 異常ケース: alertなしでpendingがある → pendingをクリアしてbase更新しない
       console.warn(`[BOOT][${tabId}] pending found but NO guard - clearing stale pending (pending=${pending.slice(0, 8)} guardAge=${guardAge})`)
       addDebugLog('BOOT stale pending cleared', { pending: pending.slice(0, 8), guardAge })
       clearPendingUserId()
+      clearReloadGuard()  // 🚨 FIX: 念のため guard もクリア
     }
   }
 }

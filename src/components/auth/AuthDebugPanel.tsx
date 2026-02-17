@@ -12,13 +12,15 @@ interface DebugSnapshot {
   pathSource: 'sessionStorage' | 'dataset' | 'location' | 'unknown'
   isAuthPageNow: boolean
   actionFlag: boolean
-  actionFlagRaw: string | null  // 🆕 sessionStorage生値
+  actionFlagRaw: string | null  // sessionStorage生値
   baseUserId: string | null
   pendingUserId: string | null
   reloadGuard: {
     value: string | null
     ageMs: number | null
     remainingMs: number | null
+    raw: string | null  // 🆕 sessionStorage生値
+    isExpiredButPresent: boolean  // 🆕 期限切れなのに残っている
   }
   timestamp: number
 }
@@ -128,7 +130,7 @@ export function getDebugSnapshot(): DebugSnapshot {
       actionFlagRaw: null,
       baseUserId: null,
       pendingUserId: null,
-      reloadGuard: { value: null, ageMs: null, remainingMs: null },
+      reloadGuard: { value: null, ageMs: null, remainingMs: null, raw: null, isExpiredButPresent: false },
       timestamp: Date.now()
     }
   }
@@ -161,13 +163,17 @@ export function getDebugSnapshot(): DebugSnapshot {
   const pendingUserId = sessionStorage.getItem(PENDING_USER_KEY)
 
   // guard の計算
-  const guardValue = sessionStorage.getItem(RELOAD_GUARD_KEY)
+  const guardRaw = sessionStorage.getItem(RELOAD_GUARD_KEY)
   let guardAgeMs: number | null = null
   let guardRemainingMs: number | null = null
-  if (guardValue) {
-    const guardTime = parseInt(guardValue, 10)
+  let isExpiredButPresent = false
+
+  if (guardRaw) {
+    const guardTime = parseInt(guardRaw, 10)
     guardAgeMs = Date.now() - guardTime
     guardRemainingMs = Math.max(0, RELOAD_GUARD_MS - guardAgeMs)
+    // 🚨 期限切れなのに残っている場合を検出
+    isExpiredButPresent = guardRemainingMs === 0
   }
 
   return {
@@ -180,9 +186,11 @@ export function getDebugSnapshot(): DebugSnapshot {
     baseUserId,
     pendingUserId,
     reloadGuard: {
-      value: guardValue,
+      value: guardRaw,
       ageMs: guardAgeMs,
-      remainingMs: guardRemainingMs
+      remainingMs: guardRemainingMs,
+      raw: guardRaw,
+      isExpiredButPresent
     },
     timestamp: Date.now()
   }
@@ -356,9 +364,14 @@ export function AuthDebugPanel() {
                   <td style={{ color: '#888' }}>guard</td>
                   <td>
                     {snapshot.reloadGuard.value ? (
-                      <span style={{ color: '#ff9966' }}>
-                        {snapshot.reloadGuard.ageMs}ms / {snapshot.reloadGuard.remainingMs}ms left
-                      </span>
+                      <>
+                        <span style={{ color: snapshot.reloadGuard.isExpiredButPresent ? '#ff6666' : '#ff9966' }}>
+                          {snapshot.reloadGuard.ageMs}ms / {snapshot.reloadGuard.remainingMs}ms left
+                        </span>
+                        {snapshot.reloadGuard.isExpiredButPresent && (
+                          <span style={{ color: '#ff0000', marginLeft: 4 }}>🚨 STALE</span>
+                        )}
+                      </>
                     ) : (
                       <span style={{ color: '#666' }}>null</span>
                     )}
