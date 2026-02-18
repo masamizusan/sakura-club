@@ -568,23 +568,62 @@ function applyPendingUserOnBoot() {
     addDebugLog('BOOT force clear actionFlag', { path: pathNow, raw: actionFlagRaw })
   }
 
-  // 🚨 CRITICAL: pending があり、かつ guard が生きている場合のみ base を更新
-  // guardが生きている = alertが表示されてreloadが発生した証拠
-  // guardがない状態でpendingだけあるのは異常（alertなしでpendingが設定された）
+  // =====================================================
+  // 🚨 CRITICAL FIX: BOOT pending 適用の厳格なガード
+  // PASSIVEタブでは pending を base に昇格させてはいけない
+  // =====================================================
+
+  // 操作タブ判定（sessionStorage 生値を使用）
+  const isLocalActor = isAuth && (actionFlagRaw === '1')
+
+  // pending 処理の判定ログ
+  const pendingDecision = {
+    base: base?.slice(0, 8) || 'null',
+    pending: pending?.slice(0, 8) || 'null',
+    guardAge: guardAge !== null ? `${guardAge}ms` : 'null',
+    isAuthPageNow: isAuth,
+    actionFlagRaw: actionFlagRaw || 'null',
+    isLocalActor
+  }
+
   if (pending) {
-    if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
-      // ✅ 正常ケース: alert後のreload
+    // 判定: ALLOW or DENY
+    const baseIsNull = !base
+    const guardIsActive = guardAge !== null && guardAge < RELOAD_GUARD_MS
+
+    if (baseIsNull) {
+      // ✅ ALLOW: base が未設定（初回状態）→ pending を適用
+      console.warn(`[BOOT][${tabId}] pending decision: ALLOW (base is null)`, pendingDecision)
+      addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'ALLOW', reason: 'base is null' })
+      if (guardIsActive) {
+        updateBaseUserId(pending, 'boot-pending')
+      } else {
+        setBaseUserIdOnce(pending)
+      }
+      clearPendingUserId()
+      clearReloadGuard()
+    } else if (isLocalActor && guardIsActive) {
+      // ✅ ALLOW: 操作タブ（LOCAL ACTOR）かつ guard がアクティブ → pending を適用
+      console.warn(`[BOOT][${tabId}] pending decision: ALLOW (LOCAL ACTOR + guard active)`, pendingDecision)
+      addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'ALLOW', reason: 'LOCAL ACTOR + guard active' })
       updateBaseUserId(pending, 'boot-pending')
       clearPendingUserId()
-      clearReloadGuard()  // 🚨 FIX: guard も必ずクリア
-      console.warn(`[BOOT][${tabId}] applied pending -> base updated: ${pending.slice(0, 8)} (guard active: ${guardAge}ms) -> pending+guard cleared`)
-      addDebugLog('BOOT applied pending', { pending: pending.slice(0, 8), guardAge: `${guardAge}ms`, action: 'cleared pending+guard' })
+      clearReloadGuard()
     } else {
-      // ❌ 異常ケース: alertなしでpendingがある → pendingをクリアしてbase更新しない
-      console.warn(`[BOOT][${tabId}] pending found but NO guard - clearing stale pending (pending=${pending.slice(0, 8)} guardAge=${guardAge})`)
-      addDebugLog('BOOT stale pending cleared', { pending: pending.slice(0, 8), guardAge })
+      // ❌ DENY: PASSIVE タブ → pending を適用しない、mismatch 検出を邪魔しない
+      console.warn(`[BOOT][${tabId}] pending decision: DENY (PASSIVE tab) - clearing stale pending/guard`, pendingDecision)
+      addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'DENY', reason: 'PASSIVE tab' })
+      // 残骸をクリア（次回テスト汚染防止）
       clearPendingUserId()
-      clearReloadGuard()  // 🚨 FIX: 念のため guard もクリア
+      clearReloadGuard()
+    }
+  } else {
+    // pending がない場合もログ出力（デバッグ用）
+    if (guardAge !== null) {
+      // guard だけ残っている場合はクリア
+      console.warn(`[BOOT][${tabId}] no pending but guard exists - clearing stale guard`, pendingDecision)
+      addDebugLog('BOOT clearing stale guard', pendingDecision)
+      clearReloadGuard()
     }
   }
 }
