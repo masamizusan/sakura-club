@@ -692,11 +692,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // null → user（初回ログイン）
         if (!baseUserId && newUserId) {
-          console.warn(`[AUTH_SWITCH][${tabId}] initial login`)
-          setBaseUserIdOnce(newUserId)
-          set({ user: newUser })
-          broadcastAuthChange(newUserId, 'initial')
-          clearAuthActionFlag()
+          // 🚨 CRITICAL FIX: 操作タブ（auth page + actionFlag）のみ base を設定
+          // passive tab では base 設定禁止（他タブのログインで誤って base が上書きされる問題を防止）
+          if (isAuth && actionFlag) {
+            console.warn(`[AUTH_SWITCH][${tabId}] initial login (LOCAL - setting base)`)
+            setBaseUserIdOnce(newUserId)
+            set({ user: newUser })
+            broadcastAuthChange(newUserId, 'initial')
+            clearAuthActionFlag()
+          } else {
+            // 🚨 passive tab: base は設定しない、Zustand state のみ更新
+            console.warn(`[AUTH_SWITCH][${tabId}] initial login (PASSIVE - NOT setting base)`, {
+              pathNow,
+              isAuth,
+              actionFlag,
+              newUserId: newUserId.slice(0, 8)
+            })
+            addDebugLog('AUTH_SWITCH initial PASSIVE', { newUserId: newUserId.slice(0, 8), pathNow, isAuth, actionFlag })
+            set({ user: newUser })
+            // broadcast しない（無限ループ防止）
+          }
           return
         }
 
