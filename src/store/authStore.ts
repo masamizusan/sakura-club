@@ -798,15 +798,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             return
           }
 
-          // 🚨 非操作タブ（受け身）
+          // 🚨 非操作タブ（受け身）で USER SWITCH を検出
           // base は絶対に触らない（これが核心）
-          // Zustand state のみ更新（表示用）
-          // broadcast 送信のみ（alert/reload は受信ハンドラに任せる）
-          console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - calling broadcastAuthChange`)
-          addDebugLog('PASSIVE_SWITCH', { action: 'broadcasting only, no base update' })
-          set({ user: newUser })
-          broadcastAuthChange(newUserId, 'passive-switch')
-          console.warn(`[AUTH_SWITCH][${tabId}] passive tab - broadcast completed`)
+          // 🚨 CRITICAL FIX: PASSIVE タブでも mismatch alert を表示する
+          // CROSS_TAB handler に任せると、自タブの broadcast を自タブが受信しないため alert が出ない
+          console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - USER SWITCH detected, showing alert`)
+          addDebugLog('PASSIVE_SWITCH mismatch', {
+            base: baseUserId.slice(0, 8),
+            new: newUserId.slice(0, 8),
+            pathNow,
+            action: 'showing alert'
+          })
+
+          // alert + reload（showAlertAndReload を使用）
+          showAlertAndReload(newUserId)
+          // ここで return しないと下の broadcast も実行されるが、reload で中断されるはず
         }
       })
 
