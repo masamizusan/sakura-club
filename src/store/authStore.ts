@@ -449,15 +449,34 @@ function handleIncomingAuthSwitch(payload: any) {
     return
   }
 
-  // 7) ✅ ここに到達 = mismatch → アラート発火！
-  console.warn(`[ALERT][${tabId}] 🚨 MISMATCH DETECTED -> showing alert`)
-  addDebugLog('ALERT_MISMATCH', {
-    incoming: incomingUserId.slice(0, 8),
-    base: base.slice(0, 8),
-    pathNow
-  })
+  // 7) ✅ ここに到達 = mismatch → ACTIVE/PASSIVE で分岐
+  const isPassive = isPassiveTab()
 
-  showAlertAndReload(incomingUserId)
+  if (isPassive) {
+    // 🚨 PASSIVE タブ: alert + reload（従来通り）
+    console.warn(`[ALERT][${tabId}] 🚨 MISMATCH (PASSIVE) -> showing alert`)
+    addDebugLog('ALERT_MISMATCH_PASSIVE', {
+      incoming: incomingUserId.slice(0, 8),
+      base: base.slice(0, 8),
+      pathNow,
+      isPassive: true
+    })
+    showAlertAndReload(incomingUserId)
+  } else {
+    // 🆕 ACTIVE タブ: バナー表示のみ（alert なし）
+    console.warn(`[BANNER][${tabId}] 🔔 MISMATCH (ACTIVE) -> showing banner`)
+    addDebugLog('BANNER_MISMATCH_ACTIVE', {
+      incoming: incomingUserId.slice(0, 8),
+      base: base.slice(0, 8),
+      pathNow,
+      isPassive: false
+    })
+    // Zustand store のバナー表示を呼び出し
+    useAuthStore.getState().showAuthBanner(
+      incomingUserId,
+      `別タブでログインがありました。更新しますか？`
+    )
+  }
 }
 
 // =====================================================
@@ -726,16 +745,35 @@ if (typeof window !== 'undefined') {
 }
 
 // =====================================================
+// 🚨 PASSIVE タブ判定（document.visibilityState ベース）
+// =====================================================
+function isPassiveTab(): boolean {
+  if (typeof document === 'undefined') return false
+  // hidden = 裏タブ（PASSIVE）, visible = 前面タブ（ACTIVE）
+  return document.visibilityState === 'hidden'
+}
+
+// =====================================================
 // Zustand Store
 // =====================================================
+interface AuthBanner {
+  message: string
+  newUserId: string
+  at: number
+}
+
 interface AuthState {
   user: AuthUser | null
   isLoading: boolean
   isInitialized: boolean
   isInitializing: boolean
   authReady: boolean
+  // 🆕 ACTIVE タブ用バナー
+  banner: AuthBanner | null
   setUser: (user: AuthUser | null) => void
   setLoading: (loading: boolean) => void
+  showAuthBanner: (newUserId: string, message: string) => void
+  clearAuthBanner: () => void
   initialize: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -749,9 +787,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
   isInitializing: false,
   authReady: false,
+  banner: null,
 
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ isLoading: loading }),
+
+  // 🆕 ACTIVE タブ用バナー表示
+  showAuthBanner: (newUserId, message) => {
+    console.warn(`[BANNER][${tabId}] BANNER_SHOWN`, { newUserId: newUserId.slice(0, 8), message })
+    addDebugLog('BANNER_SHOWN', { newUserId: newUserId.slice(0, 8), message, isPassive: false })
+    set({ banner: { newUserId, message, at: Date.now() } })
+  },
+
+  clearAuthBanner: () => {
+    console.warn(`[BANNER][${tabId}] BANNER_CLEARED`)
+    addDebugLog('BANNER_CLEARED', {})
+    set({ banner: null })
+  },
 
   initialize: async () => {
     const state = get()
@@ -899,19 +951,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // 🚨 非操作タブ（受け身）で USER SWITCH を検出
           // base は絶対に触らない（これが核心）
-          // 🚨 CRITICAL FIX: PASSIVE タブでも mismatch alert を表示する
-          // CROSS_TAB handler に任せると、自タブの broadcast を自タブが受信しないため alert が出ない
-          console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - USER SWITCH detected, showing alert`)
-          addDebugLog('PASSIVE_SWITCH mismatch', {
-            base: baseUserId.slice(0, 8),
-            new: newUserId.slice(0, 8),
-            pathNow,
-            action: 'showing alert'
-          })
+          const isPassive = isPassiveTab()
 
-          // alert + reload（showAlertAndReload を使用）
-          showAlertAndReload(newUserId)
-          // ここで return しないと下の broadcast も実行されるが、reload で中断されるはず
+          if (isPassive) {
+            // 🚨 PASSIVE タブ: alert + reload
+            console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - USER SWITCH detected, showing alert`)
+            addDebugLog('PASSIVE_SWITCH mismatch', {
+              base: baseUserId.slice(0, 8),
+              new: newUserId.slice(0, 8),
+              pathNow,
+              isPassive: true,
+              action: 'showing alert'
+            })
+            showAlertAndReload(newUserId)
+          } else {
+            // 🆕 ACTIVE タブ: バナー表示のみ
+            console.warn(`[AUTH_SWITCH][${tabId}] 🔔 ACTIVE TAB - USER SWITCH detected, showing banner`)
+            addDebugLog('ACTIVE_SWITCH mismatch', {
+              base: baseUserId.slice(0, 8),
+              new: newUserId.slice(0, 8),
+              pathNow,
+              isPassive: false,
+              action: 'showing banner'
+            })
+            get().showAuthBanner(newUserId, `別タブでログインがありました。更新しますか？`)
+          }
         }
       })
 

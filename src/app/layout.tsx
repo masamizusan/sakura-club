@@ -7,6 +7,7 @@ import AuthProvider from '@/components/auth/AuthProvider'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { AuthSwitchGuard } from '@/components/AuthSwitchGuard'
 import { AuthDebugPanel } from '@/components/auth/AuthDebugPanel'
+import { AuthSwitchBanner } from '@/components/auth/AuthSwitchBanner'
 
 const inter = Inter({ subsets: ['latin'] })
 const notoSansJP = Noto_Sans_JP({ 
@@ -35,6 +36,7 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <AuthDebugPanel />
             </Suspense>
+            <AuthSwitchBanner />
           </AuthProvider>
         </LanguageProvider>
       </body>
