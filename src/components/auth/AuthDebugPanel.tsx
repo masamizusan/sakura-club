@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 
 // =====================================================
@@ -198,6 +199,7 @@ export function getDebugSnapshot(): DebugSnapshot {
 
 // =====================================================
 // AuthDebugPanel コンポーネント
+// 🚨 CRITICAL: createPortal で body 直下に描画（CSS に負けない）
 // =====================================================
 export function AuthDebugPanel() {
   const searchParams = useSearchParams()
@@ -205,6 +207,12 @@ export function AuthDebugPanel() {
   const [snapshot, setSnapshot] = useState<DebugSnapshot | null>(null)
   const [logs, setLogs] = useState<DebugLogEntry[]>([])
   const [showGuide, setShowGuide] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // クライアントサイドでのみマウント
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // ?debugAuth=1 がない場合は表示しない
   const debugAuth = searchParams?.get('debugAuth')
@@ -303,9 +311,10 @@ export function AuthDebugPanel() {
   const shortId = (id: string | null) => id ? id.slice(0, 8) : 'null'
 
   // 表示しない条件
-  if (!isEnabled || !snapshot) return null
+  if (!isEnabled || !snapshot || !mounted) return null
 
-  return (
+  // 🚨 CRITICAL: createPortal で body 直下に描画（/login でも確実に表示）
+  const panelContent = (
     <div
       style={{
         position: 'fixed',
@@ -313,14 +322,15 @@ export function AuthDebugPanel() {
         right: 10,
         width: isOpen ? 420 : 120,
         maxHeight: isOpen ? '80vh' : 40,
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
         color: '#00ff00',
         fontFamily: 'monospace',
         fontSize: 11,
         borderRadius: 8,
         overflow: 'hidden',
-        zIndex: 99999,
-        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+        zIndex: 2147483647, // 最大値
+        boxShadow: '0 4px 20px rgba(0,0,0,0.8)',
+        border: '2px solid #00ff00'
       }}
     >
       {/* Header */}
@@ -439,6 +449,10 @@ export function AuthDebugPanel() {
       )}
     </div>
   )
+
+  // 🚨 CRITICAL: createPortal で document.body に直接レンダリング
+  // これにより /login ページでも確実に表示される
+  return createPortal(panelContent, document.body)
 }
 
 const btnStyle: React.CSSProperties = {

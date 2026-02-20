@@ -194,6 +194,36 @@ function clearPendingUserId() {
 const RELOAD_GUARD_KEY = '__reload_guard__'
 const RELOAD_GUARD_MS = 8000
 
+// =====================================================
+// 5.5️⃣ Alertロック（__auth_alert_lock__）- 無限ループ防止
+// =====================================================
+const ALERT_LOCK_KEY = '__auth_alert_lock__'
+const ALERT_LOCK_MS = 10000 // 10秒
+
+function isAlertLockActive(): boolean {
+  if (typeof window === 'undefined') return false
+  const lockTime = sessionStorage.getItem(ALERT_LOCK_KEY)
+  if (!lockTime) return false
+  const age = Date.now() - parseInt(lockTime, 10)
+  if (age >= ALERT_LOCK_MS) {
+    sessionStorage.removeItem(ALERT_LOCK_KEY)
+    console.warn(`[ALERT_LOCK][${tabId}] auto-cleared (expired: ${age}ms)`)
+    return false
+  }
+  return true
+}
+
+function setAlertLock() {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(ALERT_LOCK_KEY, Date.now().toString())
+  console.warn(`[ALERT_LOCK][${tabId}] SET (expires in ${ALERT_LOCK_MS}ms)`)
+}
+
+// =====================================================
+// 5.6️⃣ POST_RELOAD_SYNC（reload後の1回だけbase同期）
+// =====================================================
+const POST_RELOAD_SYNC_KEY = '__post_reload_sync_user__'
+
 function getGuardAge(): number | null {
   if (typeof window === 'undefined') return null
   const guardTime = sessionStorage.getItem(RELOAD_GUARD_KEY)
@@ -272,20 +302,55 @@ const AUTH_CHANNEL_NAME = 'auth-switch'
 const CROSS_TAB_AUTH_KEY = '__auth_switch__'
 
 // =====================================================
-// 🚨 showAlertAndReload - 順序固定（超重要）
-// guard → pending → alert → reload
+// 🚨 showAlertAndReload - 無限ループ防止版
+// ALERT_LOCK → 火種クリア → POST_RELOAD_SYNC → alert → reload
 // =====================================================
 function showAlertAndReload(incomingUserId: string) {
-  // 1. guard を先にセット（8秒）
-  setReloadGuard('mismatch-alert')
+  // 🚨 CRITICAL: ループ防止 - lockが生きていたらスキップ
+  if (isAlertLockActive()) {
+    const lockRaw = sessionStorage.getItem(ALERT_LOCK_KEY)
+    const lockAge = lockRaw ? Date.now() - parseInt(lockRaw, 10) : null
+    console.warn(`[ALERT_LOCK][${tabId}] SKIP reload because lock active`, {
+      lockAge: lockAge !== null ? `${lockAge}ms` : 'null',
+      remaining: lockAge !== null ? `${ALERT_LOCK_MS - lockAge}ms` : 'null'
+    })
+    addDebugLog('ALERT_LOCK skip', { reason: 'lock active', lockAge })
+    return
+  }
 
-  // 2. pending をセット
-  setPendingUserId(incomingUserId)
+  // 🚨 詳細ログ（デバッグ精度向上）
+  const debugData = {
+    baseUserId: getBaseUserId() || 'null',
+    baseShort: getBaseUserId()?.slice(0, 8) || 'null',
+    incomingUserId: incomingUserId,
+    incomingShort: incomingUserId.slice(0, 8),
+    pathNow: getPathNow(),
+    actionFlagRaw: sessionStorage.getItem(AUTH_ACTION_KEY) || 'null',
+    pendingUserId: getPendingUserId()?.slice(0, 8) || 'null',
+    reloadGuardRaw: sessionStorage.getItem(RELOAD_GUARD_KEY) || 'null',
+    reloadGuardAge: getGuardAge(),
+    alertLockActive: false,
+    postReloadSyncUser: sessionStorage.getItem(POST_RELOAD_SYNC_KEY)?.slice(0, 8) || 'null'
+  }
+  console.warn(`[ALERT_SHOW][${tabId}] 🚨 showing alert (pre-reload)`, debugData)
+  addDebugLog('ALERT showing', debugData)
 
-  // 3. alert（同期）
+  // 1. ALERT_LOCK を先にセット（10秒）- ループ防止
+  setAlertLock()
+
+  // 2. reload後の収束用にincomingUserIdを保存（1回だけbase同期）
+  sessionStorage.setItem(POST_RELOAD_SYNC_KEY, incomingUserId)
+  console.warn(`[POST_RELOAD_SYNC][${tabId}] set: ${incomingUserId.slice(0, 8)}`)
+
+  // 3. ループの火種を確実に消す
+  clearPendingUserId()
+  clearReloadGuard()
+  clearAuthActionFlag()
+
+  // 4. alert（同期）
   window.alert('別タブでログインが行われました。再読み込みします。')
 
-  // 4. alert が閉じられた後に reload
+  // 5. alert が閉じられた後に reload
   window.location.reload()
 }
 
@@ -525,6 +590,39 @@ function applyPendingUserOnBoot() {
   if (locationPath && !sessionStorage.getItem(PATH_NOW_KEY)) {
     sessionStorage.setItem(PATH_NOW_KEY, locationPath)
     console.warn(`[BOOT][${tabId}] PATH_NOW_KEY set from location: ${locationPath}`)
+  }
+
+  // =====================================================
+  // 🚨 CRITICAL: POST_RELOAD_SYNC 処理（最優先）
+  // alert→reload後の1回だけbaseを強制同期して収束させる
+  // =====================================================
+  const postReloadSyncUser = sessionStorage.getItem(POST_RELOAD_SYNC_KEY)
+  if (postReloadSyncUser) {
+    console.warn(`[BOOT][${tabId}] 🎯 POST_RELOAD_SYNC found: ${postReloadSyncUser.slice(0, 8)}`)
+    addDebugLog('BOOT POST_RELOAD_SYNC', {
+      user: postReloadSyncUser.slice(0, 8),
+      prevBase: getBaseUserId()?.slice(0, 8) || 'null'
+    })
+
+    // baseを強制的に同期（これでループを断ち切る）
+    sessionStorage.setItem(BASE_USER_KEY, postReloadSyncUser)
+    console.warn(`[BOOT][${tabId}] ✅ BASE forced to: ${postReloadSyncUser.slice(0, 8)}`)
+
+    // 使い終わったら削除
+    sessionStorage.removeItem(POST_RELOAD_SYNC_KEY)
+
+    // 他の残骸も掃除
+    clearPendingUserId()
+    clearReloadGuard()
+    clearAuthActionFlag()
+
+    addDebugLog('BOOT POST_RELOAD_SYNC applied', {
+      newBase: postReloadSyncUser.slice(0, 8),
+      action: 'early return'
+    })
+
+    // 早期リターン（通常のBOOT処理は不要 - 収束完了）
+    return
   }
 
   const pathNow = getPathNow()
