@@ -310,11 +310,12 @@ function showAlertAndReload(incomingUserId: string) {
   if (isAlertLockActive()) {
     const lockRaw = sessionStorage.getItem(ALERT_LOCK_KEY)
     const lockAge = lockRaw ? Date.now() - parseInt(lockRaw, 10) : null
-    console.warn(`[ALERT_LOCK][${tabId}] SKIP reload because lock active`, {
+    console.warn(`[SKIP][${tabId}] SKIP_ALERT_LOCK (TTL active)`)
+    addDebugLog('SKIP_ALERT_LOCK', {
       lockAge: lockAge !== null ? `${lockAge}ms` : 'null',
-      remaining: lockAge !== null ? `${ALERT_LOCK_MS - lockAge}ms` : 'null'
+      remaining: lockAge !== null ? `${ALERT_LOCK_MS - lockAge}ms` : 'null',
+      incoming: incomingUserId.slice(0, 8)
     })
-    addDebugLog('ALERT_LOCK skip', { reason: 'lock active', lockAge })
     return
   }
 
@@ -394,76 +395,69 @@ function handleIncomingAuthSwitch(payload: any) {
   // 🆕 追加: ROUTE ログ（誤判定検知用）
   console.warn(`[ROUTE][${tabId}] pathNow=${pathNow} isAuthPageNow=${isAuth}`)
 
-  // === 判定ロジック（唯一これだけ） ===
+  // === 判定ロジック（スキップ理由を必ずログ出力） ===
 
   // 1) 自タブ送信は無視
   if (fromTab === tabId) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: same tab (pathNow=${pathNow})`)
+    console.warn(`[SKIP][${tabId}] SKIP_SAME_TAB`)
+    addDebugLog('SKIP_SAME_TAB', { fromTab, pathNow })
     return
   }
 
   // 2) 🚨 CRITICAL: 操作タブ（auth page + auth_action 両方）のみ無視
-  // auth page だけでは無視しない（Tab1が誤って/login扱いされる問題を防ぐ）
   if (isAuth && actionFlag) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: auth page (local action) (pathNow=${pathNow})`)
+    console.warn(`[SKIP][${tabId}] SKIP_ACTION_FLAG (auth page + action flag)`)
+    addDebugLog('SKIP_ACTION_FLAG', { isAuth, actionFlag, pathNow })
     return
   }
 
   // 3) baseがなければ無視（初期化前）
   if (!base) {
-    console.warn(`[CROSS_TAB][${tabId}] ignored: no base (pathNow=${pathNow})`)
+    console.warn(`[SKIP][${tabId}] SKIP_NO_BASE (not initialized)`)
+    addDebugLog('SKIP_NO_BASE', { pathNow })
     return
   }
 
   // 4) guardが生きていればスキップ（初回は潰さない）
   const guardTs = sessionStorage.getItem(RELOAD_GUARD_KEY)
   if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
-    console.warn(`[GUARD][${tabId}] skip`, {
-      guardActive: true,
+    console.warn(`[SKIP][${tabId}] SKIP_GUARD_ACTIVE (recently reloaded)`)
+    addDebugLog('SKIP_GUARD_ACTIVE', {
       guardAge: `${guardAge}ms`,
-      guardTs,
       remaining: `${RELOAD_GUARD_MS - guardAge}ms`,
-      pathNow,
       incoming: incomingUserId?.slice(0, 8) || 'null',
       base: base?.slice(0, 8) || 'null'
     })
     return
   }
 
-  // 5) 🚨 核心判定: incoming !== base なら mismatch
-  if (incomingUserId && incomingUserId !== base) {
-    const mismatchData = {
-      incoming: incomingUserId.slice(0, 8),
-      base: base.slice(0, 8),
-      pathNow
-    }
-    console.error(`[CROSS_TAB][${tabId}] ACTION: mismatch -> pending set -> alert+reload`, mismatchData)
-    addDebugLog('ACTION mismatch', mismatchData)
-    addDebugLog('ALERT showing', { message: '別タブでログインが行われました' })
-
-    showAlertAndReload(incomingUserId)
+  // 5) incoming が null/undefined なら無視
+  if (!incomingUserId) {
+    console.warn(`[SKIP][${tabId}] SKIP_INCOMING_NULL`)
+    addDebugLog('SKIP_INCOMING_NULL', { pathNow, base: base?.slice(0, 8) })
     return
   }
 
-  // 🚨 CRITICAL: 詳細ログで原因を特定（same user or null の中身を見える化）
-  const ignoredData = {
-    incoming: incomingUserId?.slice(0, 8) || 'NULL/UNDEFINED',
-    incomingRaw: incomingUserId,
-    incomingType: typeof incomingUserId,
-    base: base?.slice(0, 8) || 'NULL/UNDEFINED',
-    baseRaw: base,
-    baseType: typeof base,
-    isSameUser: incomingUserId === base,
-    isIncomingNull: incomingUserId === null || incomingUserId === undefined,
-    pathNow,
-    isAuth,
-    actionFlag,
-    guardAge: guardAge !== null ? `${guardAge}ms` : 'null',
-    pending: pending?.slice(0, 8) || 'null',
-    fromTab: fromTab?.slice(0, 6) || 'null'
+  // 6) 🚨 核心判定: incoming === base なら同一ユーザー → スキップ
+  if (incomingUserId === base) {
+    console.warn(`[SKIP][${tabId}] SKIP_SAME_USER (incoming === base)`)
+    addDebugLog('SKIP_SAME_USER', {
+      incoming: incomingUserId.slice(0, 8),
+      base: base.slice(0, 8),
+      pathNow
+    })
+    return
   }
-  console.warn(`[CROSS_TAB][${tabId}] ignored: same user or null`, ignoredData)
-  addDebugLog('ignored: same user or null', ignoredData)
+
+  // 7) ✅ ここに到達 = mismatch → アラート発火！
+  console.warn(`[ALERT][${tabId}] 🚨 MISMATCH DETECTED -> showing alert`)
+  addDebugLog('ALERT_MISMATCH', {
+    incoming: incomingUserId.slice(0, 8),
+    base: base.slice(0, 8),
+    pathNow
+  })
+
+  showAlertAndReload(incomingUserId)
 }
 
 // =====================================================
@@ -864,6 +858,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // 同一ユーザー
         if (baseUserId === newUserId) {
+          console.warn(`[SKIP][${tabId}] SKIP_SAME_USER (onAuthStateChange: base === new)`)
+          addDebugLog('SKIP_SAME_USER', {
+            base: baseUserId?.slice(0, 8) || 'null',
+            new: newUserId?.slice(0, 8) || 'null',
+            pathNow,
+            source: 'onAuthStateChange'
+          })
           set({ user: newUser })
           return
         }
