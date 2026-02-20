@@ -23,6 +23,9 @@ interface DebugSnapshot {
     raw: string | null  // 🆕 sessionStorage生値
     isExpiredButPresent: boolean  // 🆕 期限切れなのに残っている
   }
+  // 🚨 追加: ループ防止用キーの状態
+  alertLock: string | null
+  postReloadSync: string | null
   timestamp: number
 }
 
@@ -43,6 +46,9 @@ const RELOAD_GUARD_KEY = '__reload_guard__'
 const AUTH_ACTION_KEY = '__auth_action__'
 const PATH_NOW_KEY = '__path_now__'
 const RELOAD_GUARD_MS = 8000
+// 🚨 追加: ループ防止用キー
+const ALERT_LOCK_KEY = '__auth_alert_lock__'
+const POST_RELOAD_SYNC_KEY = '__post_reload_sync_user__'
 
 // =====================================================
 // テスト用 Ping/Pong（BroadcastChannel動作確認）
@@ -132,6 +138,8 @@ export function getDebugSnapshot(): DebugSnapshot {
       baseUserId: null,
       pendingUserId: null,
       reloadGuard: { value: null, ageMs: null, remainingMs: null, raw: null, isExpiredButPresent: false },
+      alertLock: null,
+      postReloadSync: null,
       timestamp: Date.now()
     }
   }
@@ -177,6 +185,10 @@ export function getDebugSnapshot(): DebugSnapshot {
     isExpiredButPresent = guardRemainingMs === 0
   }
 
+  // 🚨 追加: ループ防止用キーの取得
+  const alertLock = sessionStorage.getItem(ALERT_LOCK_KEY)
+  const postReloadSync = sessionStorage.getItem(POST_RELOAD_SYNC_KEY)
+
   return {
     tabId,
     pathNow,
@@ -193,6 +205,8 @@ export function getDebugSnapshot(): DebugSnapshot {
       raw: guardRaw,
       isExpiredButPresent
     },
+    alertLock,
+    postReloadSync,
     timestamp: Date.now()
   }
 }
@@ -288,13 +302,18 @@ export function AuthDebugPanel() {
     sessionStorage.removeItem(RELOAD_GUARD_KEY)
     sessionStorage.removeItem(AUTH_ACTION_KEY)
     sessionStorage.removeItem(BASE_USER_KEY)
+    // 🚨 追加: ループ防止用キーも確実に削除
+    sessionStorage.removeItem(ALERT_LOCK_KEY)
+    sessionStorage.removeItem(POST_RELOAD_SYNC_KEY)
 
     // 削除確認ログ
     const remaining = {
       pending: sessionStorage.getItem(PENDING_USER_KEY),
       guard: sessionStorage.getItem(RELOAD_GUARD_KEY),
       action: sessionStorage.getItem(AUTH_ACTION_KEY),
-      base: sessionStorage.getItem(BASE_USER_KEY)
+      base: sessionStorage.getItem(BASE_USER_KEY),
+      alertLock: sessionStorage.getItem(ALERT_LOCK_KEY),
+      postReloadSync: sessionStorage.getItem(POST_RELOAD_SYNC_KEY)
     }
     console.warn('[DEBUG_PANEL] Clear Auth State:', remaining)
     addDebugLog('CLEAR AUTH STATE', remaining)
@@ -385,6 +404,18 @@ export function AuthDebugPanel() {
                     ) : (
                       <span style={{ color: '#666' }}>null</span>
                     )}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ color: '#888' }}>alertLock</td>
+                  <td style={{ color: snapshot.alertLock ? '#ff6666' : '#666' }}>
+                    {snapshot.alertLock ? `🔒 ${snapshot.alertLock}` : 'null'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ color: '#888' }}>postReloadSync</td>
+                  <td style={{ color: snapshot.postReloadSync ? '#ff9966' : '#666' }}>
+                    {snapshot.postReloadSync ? shortId(snapshot.postReloadSync) : 'null'}
                   </td>
                 </tr>
               </tbody>
