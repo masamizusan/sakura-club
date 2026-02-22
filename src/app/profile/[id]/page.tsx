@@ -3,193 +3,254 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import AuthGuard from '@/components/auth/AuthGuard'
-import { 
-  Heart, 
-  Users, 
-  MessageCircle, 
+import {
+  Heart,
   ArrowLeft,
+  User,
+  Loader2,
   MapPin,
-  Calendar,
-  Camera,
-  Gift,
-  Star,
-  X,
-  Sparkles
+  Globe
 } from 'lucide-react'
 import Link from 'next/link'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
+import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
+
+// 任意項目が表示すべき値かチェックするヘルパー関数
+const shouldDisplayValue = (value: string | null | undefined): boolean => {
+  return value !== null && value !== undefined && value !== '' && value !== 'none'
+}
+
+// 体型のラベル変換
+const getBodyTypeLabel = (value: string): string => {
+  const labels: Record<string, string> = {
+    'slim': 'スリム',
+    'average': '普通',
+    'muscular': '筋肉質',
+    'plump': 'ぽっちゃり'
+  }
+  return labels[value] || value
+}
+
+// 婚姻状況のラベル変換
+const getMaritalStatusLabel = (value: string): string => {
+  const labels: Record<string, string> = {
+    'single': '未婚',
+    'married': '既婚'
+  }
+  return labels[value] || value
+}
+
+// 言語レベルのラベル変換
+const getLanguageLevelLabel = (value: string): string => {
+  const labels: Record<string, string> = {
+    'none': 'なし',
+    'beginner': '初級',
+    'elementary': '初中級',
+    'intermediate': '中級',
+    'upperIntermediate': '中上級',
+    'advanced': '上級',
+    'native': 'ネイティブ'
+  }
+  return labels[value] || value
+}
+
+// 同行者のラベル変換
+const getTravelCompanionLabel = (value: string): string => {
+  const labels: Record<string, string> = {
+    'noEntry': '記入しない',
+    'alone': '一人',
+    'solo': '一人',
+    'friend': '友人',
+    'friends': '友人',
+    'family': '家族',
+    'partner': 'パートナー',
+    'couple': 'パートナー',
+    'no-entry': '記入しない'
+  }
+  return labels[value] || value
+}
+
+// 訪問予定のラベル変換
+const getVisitScheduleLabel = (value: string): string => {
+  if (value === 'undecided') return '未定'
+  if (value === 'no-entry') return '記入しない'
+  if (value === 'currently-in-japan') return '現在日本にいる'
+
+  if (value.startsWith('beyond-')) {
+    const year = value.split('-')[1]
+    return `${year}年以降`
+  }
+
+  const match = value.match(/^(\d{4})-(spring|summer|autumn|winter)$/)
+  if (match) {
+    const [, year, season] = match
+    const seasonLabels: Record<string, string> = {
+      'spring': '春',
+      'summer': '夏',
+      'autumn': '秋',
+      'winter': '冬'
+    }
+    return `${year}年 ${seasonLabels[season]}`
+  }
+
+  return value
+}
+
+// 職業のラベル変換
+const getOccupationLabel = (value: string): string => {
+  const labels: Record<string, string> = {
+    'noEntry': '記入しない',
+    '経営者・役員': '経営者・役員',
+    '会社員': '会社員',
+    '公務員': '公務員',
+    '自営業': '自営業',
+    'フリーランス': 'フリーランス',
+    '学生': '学生',
+    '主婦': '主婦',
+    '主夫': '主夫',
+    'その他': 'その他'
+  }
+  return labels[value] || value
+}
 
 function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
   const profileId = params?.id as string
   const [profile, setProfile] = useState<any>(null)
+  const [viewerId, setViewerId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [likesRemaining, setLikesRemaining] = useState<number>(10)
+  const [isLiking, setIsLiking] = useState(false)
+  const [hasLiked, setHasLiked] = useState(false)
   const supabase = createClient()
 
-  // APIからプロフィールデータを取得
+  // プロフィール取得
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/matches?devTest=true')
+        setIsLoading(true)
+        setError(null)
+
+        const response = await fetch(`/api/profile/${profileId}`, {
+          cache: 'no-store',
+          credentials: 'include'
+        })
+
         const data = await response.json()
-        
-        if (data.matches) {
-          // プロフィールIDに一致するデータを検索
-          const foundProfile = data.matches.find((match: any) => match.id === profileId)
-          
-          if (foundProfile) {
-            // APIデータをプロフィール詳細用の形式に変換
-            const profileData = {
-              id: foundProfile.id,
-              name: `${foundProfile.firstName} ${foundProfile.lastName}`.trim(),
-              age: foundProfile.age,
-              location: foundProfile.prefecture + (foundProfile.city ? ` ${foundProfile.city}` : ''),
-              occupation: foundProfile.occupation || 'ソフトウェアエンジニア',
-              height: foundProfile.height || '180cm',
-              bodyType: foundProfile.bodyType || '普通',
-              images: foundProfile.profileImage ? [foundProfile.profileImage] : [],
-              bio: foundProfile.selfIntroduction,
-              interests: foundProfile.hobbies || [],
-              languages: foundProfile.nationality === 'アメリカ' ? ['英語（ネイティブ）', '日本語（初級）'] : ['日本語（ネイティブ）', '英語（初級）'],
-              maritalStatus: foundProfile.maritalStatus || '未婚',
-              visitPurpose: foundProfile.nationality === 'アメリカ' ? '文化体験・言語交流' : '文化交流・国際理解',
-              stayDuration: foundProfile.nationality === 'アメリカ' ? '3ヶ月' : '東京在住',
-              previousExperiences: [
-                { title: '文化交流イベント', date: '2024年11月', rating: 5, comment: '素晴らしい体験でした！' }
-              ]
-            }
-            setProfile(profileData)
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('プロフィールが見つかりません')
+          } else if (response.status === 401) {
+            setError('ログインが必要です')
+          } else {
+            setError(data.error || 'エラーが発生しました')
           }
+          return
         }
-      } catch (error) {
-        console.error('Error fetching profile:', error)
+
+        setProfile(data.profile)
+        setViewerId(data.viewerId)
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+        setError('プロフィールの読み込みに失敗しました')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchProfile()
+    if (profileId) {
+      fetchProfile()
+    }
   }, [profileId])
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [specialMessage, setSpecialMessage] = useState('')
-  const [isSpecialApproachOpen, setIsSpecialApproachOpen] = useState(false)
+  // 残りいいね数を取得
+  useEffect(() => {
+    const fetchLikesRemaining = async () => {
+      try {
+        const response = await fetch('/api/likes/remaining', {
+          cache: 'no-store',
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setLikesRemaining(data.remaining)
+        }
+      } catch (error) {
+        console.error('Failed to fetch likes remaining:', error)
+      }
+    }
+    fetchLikesRemaining()
+  }, [])
 
-  const handleSpecialApproach = () => {
-    // スペシャルアプローチ送信処理
-    console.log('スペシャルアプローチ送信:', specialMessage)
-    setIsSpecialApproachOpen(false)
-    setSpecialMessage('')
-    // 成功メッセージ表示など
+  // いいね送信
+  const handleLike = async () => {
+    if (isLiking || hasLiked || likesRemaining <= 0) return
+
+    setIsLiking(true)
+    try {
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          likedUserId: profileId,
+          action: 'like'
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setHasLiked(true)
+        if (typeof result.remaining === 'number') {
+          setLikesRemaining(result.remaining)
+        } else {
+          setLikesRemaining(prev => Math.max(0, prev - 1))
+        }
+
+        if (result.matched) {
+          alert('マッチしました！メッセージを送ってみましょう。')
+        }
+      } else if (response.status === 429) {
+        setLikesRemaining(0)
+        alert('本日のいいね上限（10回）に達しました。明日またお試しください。')
+      } else {
+        alert(result.error || 'いいねの送信に失敗しました。')
+      }
+    } catch (error) {
+      console.error('Error liking user:', error)
+      alert('エラーが発生しました。')
+    } finally {
+      setIsLiking(false)
+    }
   }
 
-  const SpecialApproachModal = () => (
-    <Dialog open={isSpecialApproachOpen} onOpenChange={setIsSpecialApproachOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-center text-center">
-            <Sparkles className="w-5 h-5 mr-2 text-sakura-600" />
-            スペシャルアプローチ
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-full flex items-center justify-center mx-auto">
-              <Users className="w-8 h-8 text-sakura-600" />
-            </div>
-            <h3 className="font-semibold text-gray-900">気になるお相手に、</h3>
-            <p className="text-sm text-gray-600">
-              「いいね」と合わせて、<br />
-              お誘いのメッセージを添えて<br />
-              アピールしましょう！
-            </p>
-          </div>
-
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">簡単</span>
-              <span className="text-sm text-gray-500">一緒にやりたいことを伝える</span>
-            </div>
-            <Button 
-              variant="outline" 
-              className="w-full bg-blue-100 border-blue-200 text-blue-700 hover:bg-blue-200"
-              onClick={() => setSpecialMessage('一緒に文化体験を楽しみませんか？お互いの文化を学び合いながら、素敵な時間を過ごしましょう！')}
-            >
-              アクティビティへのお誘い
-            </Button>
-          </div>
-
-          <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">簡単</span>
-              <span className="text-sm text-gray-500">一緒に話したい内容を伝える</span>
-            </div>
-            <Button 
-              variant="outline" 
-              className="w-full bg-green-100 border-green-200 text-green-700 hover:bg-green-200"
-              onClick={() => setSpecialMessage('あなたのプロフィールを拝見して、とても興味深く感じました。ぜひお話しさせていただけませんか？')}
-            >
-              相談・雑談へのお誘い
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">ゼロからメッセージを考える</label>
-            <Textarea
-              placeholder="メッセージを入力してください（最大200文字）"
-              value={specialMessage}
-              onChange={(e) => setSpecialMessage(e.target.value)}
-              maxLength={200}
-              rows={4}
-              className="resize-none"
-            />
-            <div className="text-xs text-gray-500 text-right">
-              {specialMessage.length}/200文字
-            </div>
-          </div>
-
-          <div className="bg-orange-50 rounded-lg p-4">
-            <Button 
-              onClick={handleSpecialApproach}
-              disabled={!specialMessage.trim()}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              メッセージ付きいいね
-            </Button>
-          </div>
-
-          <div className="flex items-center justify-center text-xs text-gray-500">
-            <span className="flex items-center">
-              ⚠️ スペシャルアプローチ送信時にSCポイントを4pt消費します。
-            </span>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-
+  // ローディング
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">プロフィールを読み込み中...</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <p className="text-gray-600">プロフィールを読み込んでいます...</p>
         </div>
       </div>
     )
   }
 
-  if (!profile) {
+  // エラー
+  if (error || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">プロフィールが見つかりません</h2>
+      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {error || 'プロフィールが見つかりません'}
+          </h2>
           <Link href="/matches">
             <Button variant="sakura">さがすに戻る</Button>
           </Link>
@@ -198,195 +259,292 @@ function ProfileDetailContent() {
     )
   }
 
+  // データ展開
+  const {
+    name = '名前未設定',
+    age,
+    gender,
+    nationality,
+    residence,
+    city,
+    bio,
+    interests = [],
+    personality_tags = [],
+    language_skills = [],
+    occupation,
+    height,
+    body_type,
+    marital_status,
+    visit_schedule,
+    travel_companion,
+    planned_prefectures = [],
+    avatar_url,
+    photo_urls = []
+  } = profile
+
+  // 日本人判定
+  const isJapanese = !nationality ||
+    nationality === '' ||
+    nationality.toLowerCase() === 'jp' ||
+    nationality.toLowerCase() === 'japan' ||
+    nationality === '日本' ||
+    nationality.toLowerCase() === 'japanese'
+
+  const isForeignMale = gender === 'male' && !isJapanese
+
+  // 画像表示
+  const displayImages = Array.isArray(photo_urls) && photo_urls.length > 0
+    ? photo_urls
+    : avatar_url ? [avatar_url] : []
+  const mainImage = displayImages[0] || null
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <button onClick={() => router.back()} className="mr-4">
-              <ArrowLeft className="w-6 h-6 text-gray-600" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">{profile.name}さんのプロフィール</h1>
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      {/* ヘッダー */}
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            戻る
+          </button>
+          <div className="flex items-center gap-2">
+            <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+            <span className="text-sm text-gray-600">
+              残り <span className="font-bold">{likesRemaining}</span>/10
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Images */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-6">
-              {/* Main Image */}
-              <div className="relative h-96 bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center">
-                {(() => {
-                  const imageToShow = profile.images && profile.images[currentImageIndex] 
-                    ? profile.images[currentImageIndex] 
-                    : profile.avatar_url
-                  const resolvedSrc = resolveAvatarSrc(imageToShow, supabase)
-                  
-                  return resolvedSrc ? (
-                    <img 
-                      src={resolvedSrc} 
-                      alt={`${profile.name}のプロフィール写真`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Users className="w-24 h-24 text-sakura-400" />
-                  )
-                })()}
+      {/* プロフィールコンテンツ */}
+      <div className="py-8 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* メイン画像 */}
+            <div className="relative aspect-square bg-gray-100">
+              {mainImage ? (
+                <img
+                  src={resolveAvatarSrc(mainImage, supabase) || ''}
+                  alt={`${name}のプロフィール`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
+                  <User className="w-24 h-24 text-sakura-300" />
+                </div>
+              )}
+
+              {/* サブ画像 */}
+              {displayImages.length > 1 && (
+                <div className="absolute bottom-2 right-2 flex gap-1">
+                  {displayImages.slice(1, 3).map((url, index) => {
+                    const src = resolveAvatarSrc(url, supabase)
+                    return src ? (
+                      <img
+                        key={index}
+                        src={src}
+                        alt={`サブ画像${index + 1}`}
+                        className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : null
+                  })}
+                  {displayImages.length > 3 && (
+                    <div className="w-12 h-12 rounded-lg bg-black/50 flex items-center justify-center border-2 border-white">
+                      <span className="text-white text-xs">+{displayImages.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* プロフィール情報 */}
+            <div className="p-6 space-y-4">
+              {/* 基本情報 */}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
+                <div className="flex items-center gap-2 mt-1 text-gray-600">
+                  <span className="text-lg">{age}歳</span>
+                  {isForeignMale && nationality && (
+                    <span className="flex items-center text-sm bg-gray-100 px-2 py-0.5 rounded-full">
+                      <Globe className="w-3 h-3 mr-1" />
+                      {nationality}
+                    </span>
+                  )}
+                  {!isForeignMale && residence && (
+                    <span className="flex items-center text-sm bg-gray-100 px-2 py-0.5 rounded-full">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {residence}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Image Thumbnails */}
-              {profile.images.length > 1 && (
-                <div className="p-4">
-                  <div className="grid grid-cols-3 gap-2">
-                    {profile.images.map((image: string, index: number) => (
-                      <button
+              {/* 詳細プロフィール */}
+              <div className="space-y-3 text-sm">
+                {/* 職業 */}
+                {shouldDisplayValue(occupation) && (
+                  <div className="flex">
+                    <span className="font-medium text-gray-700 w-24">職業:</span>
+                    <span className="text-gray-600">{getOccupationLabel(occupation)}</span>
+                  </div>
+                )}
+
+                {/* 身長 */}
+                {shouldDisplayValue(height) && (
+                  <div className="flex">
+                    <span className="font-medium text-gray-700 w-24">身長:</span>
+                    <span className="text-gray-600">{height}cm</span>
+                  </div>
+                )}
+
+                {/* 体型 */}
+                {shouldDisplayValue(body_type) && (
+                  <div className="flex">
+                    <span className="font-medium text-gray-700 w-24">体型:</span>
+                    <span className="text-gray-600">{getBodyTypeLabel(body_type)}</span>
+                  </div>
+                )}
+
+                {/* 婚姻状況 */}
+                {shouldDisplayValue(marital_status) && (
+                  <div className="flex">
+                    <span className="font-medium text-gray-700 w-24">婚姻状況:</span>
+                    <span className="text-gray-600">{getMaritalStatusLabel(marital_status)}</span>
+                  </div>
+                )}
+
+                {/* 言語スキル */}
+                {Array.isArray(language_skills) && language_skills.length > 0 && (
+                  <div>
+                    <span className="font-medium text-gray-700">言語:</span>
+                    <div className="mt-1 space-y-1">
+                      {language_skills.map((skill: LanguageSkill, index: number) => (
+                        skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
+                          <div key={index} className="flex ml-4">
+                            <span className="text-gray-600">
+                              {LANGUAGE_LABELS[skill.language as keyof typeof LANGUAGE_LABELS] || skill.language}: {getLanguageLevelLabel(skill.level)}
+                            </span>
+                          </div>
+                        ) : null
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 外国人男性専用項目 */}
+                {isForeignMale && (
+                  <>
+                    {shouldDisplayValue(visit_schedule) && (
+                      <div className="flex">
+                        <span className="font-medium text-gray-700 w-24">訪問予定:</span>
+                        <span className="text-gray-600">{getVisitScheduleLabel(visit_schedule)}</span>
+                      </div>
+                    )}
+
+                    {shouldDisplayValue(travel_companion) && (
+                      <div className="flex">
+                        <span className="font-medium text-gray-700 w-24">同行者:</span>
+                        <span className="text-gray-600">{getTravelCompanionLabel(travel_companion)}</span>
+                      </div>
+                    )}
+
+                    {Array.isArray(planned_prefectures) && planned_prefectures.length > 0 && (
+                      <div className="flex">
+                        <span className="font-medium text-gray-700 w-24">行く予定:</span>
+                        <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* 自己紹介 */}
+              {shouldDisplayValue(bio) && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
+                  <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+                </div>
+              )}
+
+              {/* 性格 */}
+              {Array.isArray(personality_tags) && personality_tags.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">性格</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {personality_tags.map((tag: string, index: number) => (
+                      <span
                         key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`aspect-square rounded-lg bg-gradient-to-br from-sakura-100 to-sakura-200 flex items-center justify-center overflow-hidden ${
-                          currentImageIndex === index ? 'ring-2 ring-sakura-500' : ''
-                        }`}
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
                       >
-                        {(() => {
-                          const resolvedSrc = resolveAvatarSrc(image, supabase)
-                          return resolvedSrc ? (
-                            <img 
-                              src={resolvedSrc} 
-                              alt={`${profile.name}の写真 ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Camera className="w-6 h-6 text-sakura-400" />
-                          )
-                        })()}
-                      </button>
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="p-4 space-y-3">
-                <Button variant="sakura" className="w-full" size="lg">
-                  <Heart className="w-4 h-4 mr-2" />
-                  いいね
-                </Button>
-                <Button variant="outline" className="w-full" size="lg">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  メッセージ
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  size="lg"
-                  onClick={() => setIsSpecialApproachOpen(true)}
-                >
-                  <Gift className="w-4 h-4 mr-2" />
-                  スペシャルアプローチ
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Profile Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Info */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="mb-4">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">{profile.name}</h2>
-                <div className="text-gray-600 space-y-1">
-                  <p className="text-lg">{profile.age}歳, {profile.location}</p>
-                  <p className="text-base">{profile.occupation}, {profile.height}, {profile.bodyType}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
+              {/* 興味・関心 */}
+              {Array.isArray(interests) && interests.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">自己紹介</h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {profile.bio}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">興味・関心</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">学びたい日本文化</h3>
                   <div className="flex flex-wrap gap-2">
-                    {profile.interests.map((interest: string, index: number) => (
-                      <span key={index} className="px-3 py-1 bg-sakura-100 text-sakura-700 text-sm rounded-full">
+                    {interests.map((interest: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
+                      >
                         {interest}
                       </span>
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Detailed Info */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">詳細情報</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">結婚状況</h4>
-                  <p className="text-gray-700">{profile.maritalStatus}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">訪日目的</h4>
-                  <p className="text-gray-700">{profile.visitPurpose}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <h4 className="font-semibold text-gray-900 mb-1">滞在予定</h4>
-                  <p className="text-gray-700">{profile.stayDuration}</p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <h4 className="font-semibold text-gray-900 mb-2">話せる言語</h4>
-                <div className="flex flex-wrap gap-2">
-                  {profile.languages.map((language: string, index: number) => (
-                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
-                      {language}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Experience History */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">文化体験履歴</h3>
-              <div className="space-y-4">
-                {profile.previousExperiences.map((exp: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900">{exp.title}</h4>
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < exp.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {exp.date}
-                    </div>
-                    <p className="text-gray-700 text-sm">{exp.comment}</p>
-                  </div>
-                ))}
+              {/* いいねボタン */}
+              <div className="pt-4">
+                <Button
+                  variant="sakura"
+                  className="w-full"
+                  size="lg"
+                  onClick={handleLike}
+                  disabled={isLiking || hasLiked || likesRemaining <= 0 || viewerId === profileId}
+                >
+                  {isLiking ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      送信中...
+                    </>
+                  ) : hasLiked ? (
+                    <>
+                      <Heart className="w-4 h-4 mr-2 fill-current" />
+                      いいね済み
+                    </>
+                  ) : likesRemaining <= 0 ? (
+                    '本日の上限に達しました'
+                  ) : viewerId === profileId ? (
+                    '自分のプロフィールです'
+                  ) : (
+                    <>
+                      <Heart className="w-4 h-4 mr-2" />
+                      いいね
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </div>
+
+          {/* さがすに戻るリンク */}
+          <div className="mt-6 text-center">
+            <Link href="/matches" className="text-sakura-600 hover:text-sakura-700 text-sm">
+              ← さがすに戻る
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* スペシャルアプローチモーダル */}
-      <SpecialApproachModal />
     </div>
   )
 }
