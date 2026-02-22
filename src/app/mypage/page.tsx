@@ -470,7 +470,11 @@ function MyPageContent() {
           <div className="bg-white mt-4 mx-4 rounded-xl shadow-sm overflow-hidden">
 
             {/* 残りいいね数（情報表示のみ） */}
-            <LikeRemainingRow remaining={likesRemaining} limit={likesLimit} />
+            <LikeRemainingRow
+              remaining={likesRemaining}
+              limit={likesLimit}
+              label={getMypageTranslation('likesRemaining')}
+            />
 
             {/* 通知・設定 */}
             <MenuRow

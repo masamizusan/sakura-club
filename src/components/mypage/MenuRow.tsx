@@ -85,9 +85,11 @@ export function MenuRow({
 interface LikeRemainingRowProps {
   remaining: number
   limit: number
+  /** ラベル（多言語対応用） */
+  label?: string
 }
 
-export function LikeRemainingRow({ remaining, limit }: LikeRemainingRowProps) {
+export function LikeRemainingRow({ remaining, limit, label }: LikeRemainingRowProps) {
   return (
     <div className="w-full flex items-center px-4 py-4 border-b border-gray-100">
       {/* 左側アイコン */}
@@ -98,7 +100,7 @@ export function LikeRemainingRow({ remaining, limit }: LikeRemainingRowProps) {
       {/* 中央テキスト */}
       <div className="flex-1 text-left">
         <div className="font-medium text-gray-800">
-          残りいいね数（今日）
+          {label || '残りいいね数（今日）'}
         </div>
       </div>
 
