@@ -435,15 +435,54 @@ export default function MatchesPage() {
           </div>
         </div>
 
-        {/* 結果カウント */}
+        {/* 結果カウント（ロード中は表示しない） */}
         <div className="mb-6">
-          <p className="text-gray-600">
-            {filteredMatches.length} 人のお相手が見つかりました
-          </p>
+          {isLoading ? (
+            <p className="text-gray-500">読み込み中…</p>
+          ) : (
+            <p className="text-gray-600">
+              {filteredMatches.length} 人のお相手が見つかりました
+            </p>
+          )}
         </div>
 
-        {/* マッチ一覧 */}
+        {/* スケルトン UI（ロード中のみ表示） */}
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse">
+                {/* 画像エリア スケルトン */}
+                <div className="h-56 bg-gray-200"></div>
+                {/* コンテンツエリア スケルトン */}
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-6 w-20 bg-gray-200 rounded"></div>
+                    <div className="h-5 w-12 bg-gray-200 rounded"></div>
+                    <div className="h-5 w-16 bg-gray-200 rounded-full"></div>
+                  </div>
+                  <div className="h-3 w-24 bg-gray-200 rounded mb-3"></div>
+                  <div className="space-y-2 mb-3">
+                    <div className="h-4 w-full bg-gray-200 rounded"></div>
+                    <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                  </div>
+                  <div className="flex gap-1 mb-4">
+                    <div className="h-5 w-12 bg-gray-200 rounded-full"></div>
+                    <div className="h-5 w-14 bg-gray-200 rounded-full"></div>
+                    <div className="h-5 w-10 bg-gray-200 rounded-full"></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-9 flex-1 bg-gray-200 rounded"></div>
+                    <div className="h-9 flex-1 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* マッチ一覧（ロード完了後のみ表示） */}
         {/* ✅ SEARCH CARD COMPONENT ACTIVE */}
+        {!isLoading && filteredMatches.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredMatches.map((user) => {
             // 日本人判定（外国人男性の場合は国名、日本人女性の場合は都道府県を表示）
@@ -573,9 +612,10 @@ export default function MatchesPage() {
             )
           })}
         </div>
+        )}
 
-        {/* 結果が0件の場合 */}
-        {filteredMatches.length === 0 && (
+        {/* 結果が0件の場合（ロード完了後のみ表示） */}
+        {!isLoading && filteredMatches.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Coffee className="w-16 h-16 mx-auto" />
