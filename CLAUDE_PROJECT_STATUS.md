@@ -413,7 +413,46 @@ const isJapaneseFemale = profileType === 'japanese-female'
 
 ---
 
+## 🔐 マルチタブ認証制御（2026-02-22 完了）
+
+### 設計方針
+- 同一ブラウザ内では「最後にログインしたユーザーに統一」を正とする
+- ユーザー不一致（incoming !== base）が発生した場合のみ通知
+
+### 挙動
+
+| 状態 | 動作 |
+|------|------|
+| PASSIVE（裏タブ） | alert → reload（1回のみ） |
+| ACTIVE（前面） | 非ブロッキングバナー表示 |
+| incoming === base | 何もしない（SKIP_SAME_USER） |
+
+### 安全機構
+- **alertLock（TTL）**: 10秒間の連続 alert 防止
+- **reloadGuard**: 8秒間の連続 reload 防止
+- **postReloadSync**: reload 後の base 収束トランザクション
+- **SKIP理由ログ完備**: SKIP_SAME_USER, SKIP_ALERT_LOCK, SKIP_GUARD_ACTIVE 等
+
+### デバッグ
+- `?debugAuth=1` で Auth Debug Panel 表示
+- SKIP理由ログで原因特定可能
+- Copy JSON でスナップショット+ログ一括取得
+
+### 変更ファイル
+- `src/store/authStore.ts` — ACTIVE/PASSIVE 分岐、Banner State、SKIP ログ
+- `src/components/auth/AuthSwitchBanner.tsx` — バナー UI（新規作成）
+- `src/components/auth/AuthDebugPanel.tsx` — Debug Panel 拡張
+- `src/app/layout.tsx` — AuthSwitchBanner 追加
+
+### 現状評価
+- ✅ 無限ループ解消済み
+- ✅ クロスタブ通知安定
+- ✅ 収束処理正常
+- ✅ **実運用可能状態**
+
+---
+
 **作成者**: Claude Code Assistant
 **作成日時**: 2025-09-24T21:30:00
-**最終更新**: 2026-02-02
-**プロジェクト状況**: 安定稼働中（課題あり） ⚠️
+**最終更新**: 2026-02-22
+**プロジェクト状況**: 安定稼働中 ✅
