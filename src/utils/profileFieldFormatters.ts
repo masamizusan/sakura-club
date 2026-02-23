@@ -1,6 +1,11 @@
 /**
  * プロフィールフィールドのフォーマット共通関数
  * /mypage, /matches, /profile/[id], /profile/preview で共通利用
+ *
+ * NOTE:
+ * このファイルはプロフィール編集画面と表示画面の
+ * 翻訳表現を完全に一致させるための唯一の変換レイヤー。
+ * 新しい項目を追加する場合は必ずここに formatter を追加すること。
  */
 
 import { SupportedLanguage } from '@/utils/language'
