@@ -10,12 +10,50 @@ import {
   User,
   Loader2,
   MapPin,
-  Globe
+  Globe,
+  Languages
 } from 'lucide-react'
 import Link from 'next/link'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
+import { useLanguage } from '@/contexts/LanguageContext'
+
+// 翻訳UI用の多言語テキスト
+const translationUITexts: Record<string, Record<string, string>> = {
+  ja: {
+    translateButton: '翻訳して読む',
+    translating: '翻訳中...',
+    showOriginal: '原文を表示',
+    aiTranslationNote: 'AI翻訳（参考）',
+    translationFailed: '翻訳できませんでした',
+    selfIntroduction: '自己紹介'
+  },
+  en: {
+    translateButton: 'Translate',
+    translating: 'Translating...',
+    showOriginal: 'Show original',
+    aiTranslationNote: 'AI Translation (reference)',
+    translationFailed: 'Translation failed',
+    selfIntroduction: 'Self Introduction'
+  },
+  ko: {
+    translateButton: '번역하기',
+    translating: '번역 중...',
+    showOriginal: '원문 보기',
+    aiTranslationNote: 'AI 번역 (참고용)',
+    translationFailed: '번역할 수 없습니다',
+    selfIntroduction: '자기소개'
+  },
+  'zh-tw': {
+    translateButton: '翻譯',
+    translating: '翻譯中...',
+    showOriginal: '顯示原文',
+    aiTranslationNote: 'AI翻譯（僅供參考）',
+    translationFailed: '翻譯失敗',
+    selfIntroduction: '自我介紹'
+  }
+}
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -127,6 +165,62 @@ function ProfileDetailContent() {
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
   const supabase = createClient()
+
+  // 言語コンテキスト
+  const { currentLanguage } = useLanguage()
+
+  // 翻訳用state
+  const [translatedBio, setTranslatedBio] = useState<string | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [showTranslation, setShowTranslation] = useState(false)
+  const [translationError, setTranslationError] = useState(false)
+
+  // 翻訳UIテキスト取得
+  const getTranslationText = (key: string): string => {
+    const texts = translationUITexts[currentLanguage] || translationUITexts['ja']
+    return texts[key] || translationUITexts['ja'][key] || key
+  }
+
+  // API言語コード変換（zh-tw -> zh）
+  const getApiLanguageCode = (): string => {
+    if (currentLanguage === 'zh-tw') return 'zh'
+    return currentLanguage
+  }
+
+  // 翻訳実行
+  const handleTranslate = async (bioText: string) => {
+    if (isTranslating || !bioText) return
+
+    setIsTranslating(true)
+    setTranslationError(false)
+
+    try {
+      const response = await fetch('/api/translate/profile-bio', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profileId,
+          targetLang: getApiLanguageCode(),
+          text: bioText
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.translatedText) {
+        setTranslatedBio(data.translatedText)
+        setShowTranslation(true)
+      } else {
+        setTranslationError(true)
+      }
+    } catch (err) {
+      console.error('Translation error:', err)
+      setTranslationError(true)
+    } finally {
+      setIsTranslating(false)
+    }
+  }
 
   // プロフィール取得
   useEffect(() => {
@@ -464,8 +558,62 @@ function ProfileDetailContent() {
               {/* 自己紹介 */}
               {shouldDisplayValue(bio) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">自己紹介</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+                  <h3 className="font-medium text-gray-900 mb-2">{getTranslationText('selfIntroduction')}</h3>
+
+                  {/* 翻訳表示 or 原文表示 */}
+                  {showTranslation && translatedBio ? (
+                    <div>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{translatedBio}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-xs text-gray-400 italic">
+                          {getTranslationText('aiTranslationNote')}
+                        </span>
+                        <button
+                          onClick={() => setShowTranslation(false)}
+                          className="text-xs text-sakura-600 hover:text-sakura-700 underline"
+                        >
+                          {getTranslationText('showOriginal')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+
+                      {/* 翻訳ボタン（原文と異なる言語の場合のみ表示） */}
+                      <div className="mt-2">
+                        {translationError ? (
+                          <span className="text-xs text-red-500">{getTranslationText('translationFailed')}</span>
+                        ) : translatedBio ? (
+                          <button
+                            onClick={() => setShowTranslation(true)}
+                            className="text-xs text-sakura-600 hover:text-sakura-700 flex items-center gap-1"
+                          >
+                            <Languages className="w-3 h-3" />
+                            {getTranslationText('translateButton')}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleTranslate(bio)}
+                            disabled={isTranslating}
+                            className="text-xs text-sakura-600 hover:text-sakura-700 flex items-center gap-1 disabled:opacity-50"
+                          >
+                            {isTranslating ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                {getTranslationText('translating')}
+                              </>
+                            ) : (
+                              <>
+                                <Languages className="w-3 h-3" />
+                                {getTranslationText('translateButton')}
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
