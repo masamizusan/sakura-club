@@ -18,6 +18,14 @@ import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { useLanguage } from '@/contexts/LanguageContext'
+import {
+  formatOccupation,
+  formatBodyType,
+  formatMaritalStatus,
+  formatLanguageLevel,
+  formatTravelCompanion,
+  formatVisitSchedule
+} from '@/utils/profileFieldFormatters'
 
 // 翻訳UI用の多言語テキスト
 const translationUITexts: Record<string, Record<string, string>> = {
@@ -60,99 +68,6 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
 }
 
-// 体型のラベル変換
-const getBodyTypeLabel = (value: string): string => {
-  const labels: Record<string, string> = {
-    'slim': 'スリム',
-    'average': '普通',
-    'muscular': '筋肉質',
-    'plump': 'ぽっちゃり'
-  }
-  return labels[value] || value
-}
-
-// 婚姻状況のラベル変換
-const getMaritalStatusLabel = (value: string): string => {
-  const labels: Record<string, string> = {
-    'single': '未婚',
-    'married': '既婚'
-  }
-  return labels[value] || value
-}
-
-// 言語レベルのラベル変換
-const getLanguageLevelLabel = (value: string): string => {
-  const labels: Record<string, string> = {
-    'none': 'なし',
-    'beginner': '初級',
-    'elementary': '初中級',
-    'intermediate': '中級',
-    'upperIntermediate': '中上級',
-    'advanced': '上級',
-    'native': 'ネイティブ'
-  }
-  return labels[value] || value
-}
-
-// 同行者のラベル変換
-const getTravelCompanionLabel = (value: string): string => {
-  const labels: Record<string, string> = {
-    'noEntry': '記入しない',
-    'alone': '一人',
-    'solo': '一人',
-    'friend': '友人',
-    'friends': '友人',
-    'family': '家族',
-    'partner': 'パートナー',
-    'couple': 'パートナー',
-    'no-entry': '記入しない'
-  }
-  return labels[value] || value
-}
-
-// 訪問予定のラベル変換
-const getVisitScheduleLabel = (value: string): string => {
-  if (value === 'undecided') return '未定'
-  if (value === 'no-entry') return '記入しない'
-  if (value === 'currently-in-japan') return '現在日本にいる'
-
-  if (value.startsWith('beyond-')) {
-    const year = value.split('-')[1]
-    return `${year}年以降`
-  }
-
-  const match = value.match(/^(\d{4})-(spring|summer|autumn|winter)$/)
-  if (match) {
-    const [, year, season] = match
-    const seasonLabels: Record<string, string> = {
-      'spring': '春',
-      'summer': '夏',
-      'autumn': '秋',
-      'winter': '冬'
-    }
-    return `${year}年 ${seasonLabels[season]}`
-  }
-
-  return value
-}
-
-// 職業のラベル変換
-const getOccupationLabel = (value: string): string => {
-  const labels: Record<string, string> = {
-    'noEntry': '記入しない',
-    '経営者・役員': '経営者・役員',
-    '会社員': '会社員',
-    '公務員': '公務員',
-    '自営業': '自営業',
-    'フリーランス': 'フリーランス',
-    '学生': '学生',
-    '主婦': '主婦',
-    '主夫': '主夫',
-    'その他': 'その他'
-  }
-  return labels[value] || value
-}
-
 function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
@@ -173,7 +88,7 @@ function ProfileDetailContent() {
   const [translatedBio, setTranslatedBio] = useState<string | null>(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const [showTranslation, setShowTranslation] = useState(false)
-  const [translationError, setTranslationError] = useState(false)
+  const [translationError, setTranslationError] = useState<string | null>(null)
 
   // 翻訳UIテキスト取得
   const getTranslationText = (key: string): string => {
@@ -192,7 +107,7 @@ function ProfileDetailContent() {
     if (isTranslating || !bioText) return
 
     setIsTranslating(true)
-    setTranslationError(false)
+    setTranslationError(null)
 
     try {
       const response = await fetch('/api/translate/profile-bio', {
@@ -212,11 +127,14 @@ function ProfileDetailContent() {
         setTranslatedBio(data.translatedText)
         setShowTranslation(true)
       } else {
-        setTranslationError(true)
+        // エラー詳細を設定
+        const errorMsg = data.error || getTranslationText('translationFailed')
+        setTranslationError(errorMsg)
+        console.error('Translation API error:', data)
       }
     } catch (err) {
       console.error('Translation error:', err)
-      setTranslationError(true)
+      setTranslationError(getTranslationText('translationFailed'))
     } finally {
       setIsTranslating(false)
     }
@@ -482,7 +400,7 @@ function ProfileDetailContent() {
                 {shouldDisplayValue(occupation) && (
                   <div className="flex">
                     <span className="font-medium text-gray-700 w-24">職業:</span>
-                    <span className="text-gray-600">{getOccupationLabel(occupation)}</span>
+                    <span className="text-gray-600">{formatOccupation(occupation, currentLanguage)}</span>
                   </div>
                 )}
 
@@ -498,7 +416,7 @@ function ProfileDetailContent() {
                 {shouldDisplayValue(body_type) && (
                   <div className="flex">
                     <span className="font-medium text-gray-700 w-24">体型:</span>
-                    <span className="text-gray-600">{getBodyTypeLabel(body_type)}</span>
+                    <span className="text-gray-600">{formatBodyType(body_type, currentLanguage)}</span>
                   </div>
                 )}
 
@@ -506,7 +424,7 @@ function ProfileDetailContent() {
                 {shouldDisplayValue(marital_status) && (
                   <div className="flex">
                     <span className="font-medium text-gray-700 w-24">婚姻状況:</span>
-                    <span className="text-gray-600">{getMaritalStatusLabel(marital_status)}</span>
+                    <span className="text-gray-600">{formatMaritalStatus(marital_status, currentLanguage)}</span>
                   </div>
                 )}
 
@@ -519,7 +437,7 @@ function ProfileDetailContent() {
                         skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
                           <div key={index} className="flex ml-4">
                             <span className="text-gray-600">
-                              {LANGUAGE_LABELS[skill.language as keyof typeof LANGUAGE_LABELS] || skill.language}: {getLanguageLevelLabel(skill.level)}
+                              {LANGUAGE_LABELS[skill.language as keyof typeof LANGUAGE_LABELS] || skill.language}: {formatLanguageLevel(skill.level, currentLanguage)}
                             </span>
                           </div>
                         ) : null
@@ -534,14 +452,14 @@ function ProfileDetailContent() {
                     {shouldDisplayValue(visit_schedule) && (
                       <div className="flex">
                         <span className="font-medium text-gray-700 w-24">訪問予定:</span>
-                        <span className="text-gray-600">{getVisitScheduleLabel(visit_schedule)}</span>
+                        <span className="text-gray-600">{formatVisitSchedule(visit_schedule, currentLanguage)}</span>
                       </div>
                     )}
 
                     {shouldDisplayValue(travel_companion) && (
                       <div className="flex">
                         <span className="font-medium text-gray-700 w-24">同行者:</span>
-                        <span className="text-gray-600">{getTravelCompanionLabel(travel_companion)}</span>
+                        <span className="text-gray-600">{formatTravelCompanion(travel_companion, currentLanguage)}</span>
                       </div>
                     )}
 
@@ -583,7 +501,18 @@ function ProfileDetailContent() {
                       {/* 翻訳ボタン（原文と異なる言語の場合のみ表示） */}
                       <div className="mt-2">
                         {translationError ? (
-                          <span className="text-xs text-red-500">{getTranslationText('translationFailed')}</span>
+                          <div className="text-xs text-red-500">
+                            <span>{getTranslationText('translationFailed')}</span>
+                            {process.env.NODE_ENV === 'development' && (
+                              <span className="block text-gray-400 mt-1">{translationError}</span>
+                            )}
+                            <button
+                              onClick={() => { setTranslationError(null); handleTranslate(bio); }}
+                              className="ml-2 text-sakura-600 underline"
+                            >
+                              Retry
+                            </button>
+                          </div>
                         ) : translatedBio ? (
                           <button
                             onClick={() => setShowTranslation(true)}
