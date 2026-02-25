@@ -16,7 +16,7 @@ import {
 import Link from 'next/link'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
-import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
+import { LanguageSkill } from '@/types/profile'
 import { useLanguage } from '@/contexts/LanguageContext'
 import {
   formatOccupation,
@@ -25,7 +25,8 @@ import {
   formatLanguageLevel,
   formatTravelCompanion,
   formatVisitSchedule,
-  formatPrefecture
+  formatPrefecture,
+  formatLanguageName
 } from '@/utils/profileFieldFormatters'
 import {
   formatPersonalityTag,
@@ -550,7 +551,7 @@ function ProfileDetailContent() {
                         skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
                           <div key={index} className="flex ml-4">
                             <span className="text-gray-600">
-                              {LANGUAGE_LABELS[skill.language as keyof typeof LANGUAGE_LABELS] || skill.language}: {formatLanguageLevel(skill.level, currentLanguage)}
+                              {formatLanguageName(skill.language, currentLanguage)}: {formatLanguageLevel(skill.level, currentLanguage)}
                             </span>
                           </div>
                         ) : null

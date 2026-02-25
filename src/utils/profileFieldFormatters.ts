@@ -418,3 +418,60 @@ export function formatNationality(value: string | null | undefined, language: Su
   if (!value) return ''
   return nationalityTranslations[language]?.[value] || value
 }
+
+/**
+ * 言語名のフォーマット（多言語対応）
+ * 言語コード（ja, en, ko, zh-TW）をUI言語に応じて表示
+ */
+const languageNameTranslations: Record<string, Record<string, string>> = {
+  ja: {
+    'ja': '日本語',
+    'en': '英語',
+    'ko': '韓国語',
+    'zh-TW': '中国語（繁体字）',
+    'zh-tw': '中国語（繁体字）',
+    'chinese': '中国語',
+    'japanese': '日本語',
+    'english': '英語',
+    'korean': '韓国語'
+  },
+  en: {
+    'ja': 'Japanese',
+    'en': 'English',
+    'ko': 'Korean',
+    'zh-TW': 'Chinese (Traditional)',
+    'zh-tw': 'Chinese (Traditional)',
+    'chinese': 'Chinese',
+    'japanese': 'Japanese',
+    'english': 'English',
+    'korean': 'Korean'
+  },
+  ko: {
+    'ja': '일본어',
+    'en': '영어',
+    'ko': '한국어',
+    'zh-TW': '중국어(번체)',
+    'zh-tw': '중국어(번체)',
+    'chinese': '중국어',
+    'japanese': '일본어',
+    'english': '영어',
+    'korean': '한국어'
+  },
+  'zh-tw': {
+    'ja': '日語',
+    'en': '英語',
+    'ko': '韓語',
+    'zh-TW': '中文（繁體）',
+    'zh-tw': '中文（繁體）',
+    'chinese': '中文',
+    'japanese': '日語',
+    'english': '英語',
+    'korean': '韓語'
+  }
+}
+
+export function formatLanguageName(langCode: string | null | undefined, language: SupportedLanguage = 'ja'): string {
+  if (!langCode || langCode === '' || langCode === 'none') return ''
+  const langDict = languageNameTranslations[language] || languageNameTranslations['ja']
+  return langDict[langCode] || langDict[langCode.toLowerCase()] || langCode
+}
