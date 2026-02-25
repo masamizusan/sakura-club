@@ -24,42 +24,155 @@ import {
   formatMaritalStatus,
   formatLanguageLevel,
   formatTravelCompanion,
-  formatVisitSchedule
+  formatVisitSchedule,
+  formatPrefecture
 } from '@/utils/profileFieldFormatters'
+import {
+  formatPersonalityTag,
+  formatCultureTag
+} from '@/utils/profileTagFormatters'
 
-// 翻訳UI用の多言語テキスト
-const translationUITexts: Record<string, Record<string, string>> = {
+// プロフィール詳細画面の多言語テキスト（ラベル + UI）
+const profileDetailTexts: Record<string, Record<string, string>> = {
   ja: {
+    // UI
+    back: '戻る',
+    remaining: '残り',
     translateButton: '翻訳して読む',
     translating: '翻訳中...',
     showOriginal: '原文を表示',
     aiTranslationNote: 'AI翻訳（参考）',
-    translationFailed: '翻訳できませんでした',
-    selfIntroduction: '自己紹介'
+    translationFailed: '翻訳に失敗しました。時間をおいて再試行してください。',
+    retry: '再試行',
+    backToSearch: 'さがすに戻る',
+    loading: 'プロフィールを読み込んでいます...',
+    notFound: 'プロフィールが見つかりません',
+    loginRequired: 'ログインが必要です',
+    errorOccurred: 'エラーが発生しました',
+    // ボタン
+    sending: '送信中...',
+    liked: 'いいね済み',
+    dailyLimitReached: '本日の上限に達しました',
+    ownProfile: '自分のプロフィールです',
+    like: 'いいね',
+    // ラベル
+    occupation: '職業',
+    height: '身長',
+    bodyType: '体型',
+    maritalStatus: '婚姻状況',
+    languages: '言語',
+    visitSchedule: '訪問予定',
+    travelCompanion: '同行者',
+    plannedPrefectures: '行く予定',
+    selfIntroduction: '自己紹介',
+    personality: '性格',
+    japaneseCulture: '学びたい日本文化',
+    yearsOld: '歳'
   },
   en: {
+    // UI
+    back: 'Back',
+    remaining: 'Remaining',
     translateButton: 'Translate',
     translating: 'Translating...',
     showOriginal: 'Show original',
     aiTranslationNote: 'AI Translation (reference)',
-    translationFailed: 'Translation failed',
-    selfIntroduction: 'Self Introduction'
+    translationFailed: 'Translation failed. Please try again later.',
+    retry: 'Retry',
+    backToSearch: 'Back to Search',
+    loading: 'Loading profile...',
+    notFound: 'Profile not found',
+    loginRequired: 'Login required',
+    errorOccurred: 'An error occurred',
+    // ボタン
+    sending: 'Sending...',
+    liked: 'Liked',
+    dailyLimitReached: 'Daily limit reached',
+    ownProfile: 'This is your profile',
+    like: 'Like',
+    // ラベル
+    occupation: 'Occupation',
+    height: 'Height',
+    bodyType: 'Body Type',
+    maritalStatus: 'Marital Status',
+    languages: 'Languages',
+    visitSchedule: 'Visit Schedule',
+    travelCompanion: 'Travel Companion',
+    plannedPrefectures: 'Planned Prefectures',
+    selfIntroduction: 'Self Introduction',
+    personality: 'Personality',
+    japaneseCulture: 'Japanese Culture Interests',
+    yearsOld: ' y/o'
   },
   ko: {
+    // UI
+    back: '뒤로',
+    remaining: '남은',
     translateButton: '번역하기',
     translating: '번역 중...',
     showOriginal: '원문 보기',
     aiTranslationNote: 'AI 번역 (참고용)',
-    translationFailed: '번역할 수 없습니다',
-    selfIntroduction: '자기소개'
+    translationFailed: '번역에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    retry: '재시도',
+    backToSearch: '검색으로 돌아가기',
+    loading: '프로필을 불러오는 중...',
+    notFound: '프로필을 찾을 수 없습니다',
+    loginRequired: '로그인이 필요합니다',
+    errorOccurred: '오류가 발생했습니다',
+    // ボタン
+    sending: '전송 중...',
+    liked: '좋아요 완료',
+    dailyLimitReached: '오늘의 한도에 도달했습니다',
+    ownProfile: '본인의 프로필입니다',
+    like: '좋아요',
+    // ラベル
+    occupation: '직업',
+    height: '키',
+    bodyType: '체형',
+    maritalStatus: '결혼 여부',
+    languages: '언어',
+    visitSchedule: '방문 예정',
+    travelCompanion: '동행자',
+    plannedPrefectures: '방문 예정 지역',
+    selfIntroduction: '자기소개',
+    personality: '성격',
+    japaneseCulture: '배우고 싶은 일본 문화',
+    yearsOld: '세'
   },
   'zh-tw': {
+    // UI
+    back: '返回',
+    remaining: '剩餘',
     translateButton: '翻譯',
     translating: '翻譯中...',
     showOriginal: '顯示原文',
     aiTranslationNote: 'AI翻譯（僅供參考）',
-    translationFailed: '翻譯失敗',
-    selfIntroduction: '自我介紹'
+    translationFailed: '翻譯失敗，請稍後再試。',
+    retry: '重試',
+    backToSearch: '返回搜尋',
+    loading: '正在載入個人資料...',
+    notFound: '找不到個人資料',
+    loginRequired: '需要登入',
+    errorOccurred: '發生錯誤',
+    // ボタン
+    sending: '發送中...',
+    liked: '已按讚',
+    dailyLimitReached: '已達到今日上限',
+    ownProfile: '這是您的個人資料',
+    like: '按讚',
+    // ラベル
+    occupation: '職業',
+    height: '身高',
+    bodyType: '體型',
+    maritalStatus: '婚姻狀況',
+    languages: '語言',
+    visitSchedule: '訪問計畫',
+    travelCompanion: '同行者',
+    plannedPrefectures: '預計前往地區',
+    selfIntroduction: '自我介紹',
+    personality: '性格',
+    japaneseCulture: '想學習的日本文化',
+    yearsOld: '歲'
   }
 }
 
@@ -90,10 +203,10 @@ function ProfileDetailContent() {
   const [showTranslation, setShowTranslation] = useState(false)
   const [translationError, setTranslationError] = useState<string | null>(null)
 
-  // 翻訳UIテキスト取得
-  const getTranslationText = (key: string): string => {
-    const texts = translationUITexts[currentLanguage] || translationUITexts['ja']
-    return texts[key] || translationUITexts['ja'][key] || key
+  // 翻訳テキスト取得
+  const t = (key: string): string => {
+    const texts = profileDetailTexts[currentLanguage] || profileDetailTexts['ja']
+    return texts[key] || profileDetailTexts['ja'][key] || key
   }
 
   // API言語コード変換（zh-tw -> zh）
@@ -128,13 +241,13 @@ function ProfileDetailContent() {
         setShowTranslation(true)
       } else {
         // エラー詳細を設定
-        const errorMsg = data.error || getTranslationText('translationFailed')
+        const errorMsg = data.error || t('translationFailed')
         setTranslationError(errorMsg)
         console.error('Translation API error:', data)
       }
     } catch (err) {
       console.error('Translation error:', err)
-      setTranslationError(getTranslationText('translationFailed'))
+      setTranslationError(t('translationFailed'))
     } finally {
       setIsTranslating(false)
     }
@@ -248,7 +361,7 @@ function ProfileDetailContent() {
       <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
-          <p className="text-gray-600">プロフィールを読み込んでいます...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     )
@@ -261,10 +374,10 @@ function ProfileDetailContent() {
         <div className="text-center max-w-md mx-auto p-8">
           <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {error || 'プロフィールが見つかりません'}
+            {error || t('notFound')}
           </h2>
           <Link href="/matches">
-            <Button variant="sakura">さがすに戻る</Button>
+            <Button variant="sakura">{t('backToSearch')}</Button>
           </Link>
         </div>
       </div>
@@ -320,12 +433,12 @@ function ProfileDetailContent() {
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            戻る
+            {t('back')}
           </button>
           <div className="flex items-center gap-2">
             <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
             <span className="text-sm text-gray-600">
-              残り <span className="font-bold">{likesRemaining}</span>/10
+              {t('remaining')} <span className="font-bold">{likesRemaining}</span>/10
             </span>
           </div>
         </div>
@@ -378,7 +491,7 @@ function ProfileDetailContent() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
                 <div className="flex items-center gap-2 mt-1 text-gray-600">
-                  <span className="text-lg">{age}歳</span>
+                  <span className="text-lg">{age}{t('yearsOld')}</span>
                   {isForeignMale && nationality && (
                     <span className="flex items-center text-sm bg-gray-100 px-2 py-0.5 rounded-full">
                       <Globe className="w-3 h-3 mr-1" />
@@ -388,7 +501,7 @@ function ProfileDetailContent() {
                   {!isForeignMale && residence && (
                     <span className="flex items-center text-sm bg-gray-100 px-2 py-0.5 rounded-full">
                       <MapPin className="w-3 h-3 mr-1" />
-                      {residence}
+                      {formatPrefecture(residence, currentLanguage) || residence}
                     </span>
                   )}
                 </div>
@@ -399,7 +512,7 @@ function ProfileDetailContent() {
                 {/* 職業 */}
                 {shouldDisplayValue(occupation) && (
                   <div className="flex">
-                    <span className="font-medium text-gray-700 w-24">職業:</span>
+                    <span className="font-medium text-gray-700 w-28">{t('occupation')}:</span>
                     <span className="text-gray-600">{formatOccupation(occupation, currentLanguage)}</span>
                   </div>
                 )}
@@ -407,7 +520,7 @@ function ProfileDetailContent() {
                 {/* 身長 */}
                 {shouldDisplayValue(height) && (
                   <div className="flex">
-                    <span className="font-medium text-gray-700 w-24">身長:</span>
+                    <span className="font-medium text-gray-700 w-28">{t('height')}:</span>
                     <span className="text-gray-600">{height}cm</span>
                   </div>
                 )}
@@ -415,7 +528,7 @@ function ProfileDetailContent() {
                 {/* 体型 */}
                 {shouldDisplayValue(body_type) && (
                   <div className="flex">
-                    <span className="font-medium text-gray-700 w-24">体型:</span>
+                    <span className="font-medium text-gray-700 w-28">{t('bodyType')}:</span>
                     <span className="text-gray-600">{formatBodyType(body_type, currentLanguage)}</span>
                   </div>
                 )}
@@ -423,7 +536,7 @@ function ProfileDetailContent() {
                 {/* 婚姻状況 */}
                 {shouldDisplayValue(marital_status) && (
                   <div className="flex">
-                    <span className="font-medium text-gray-700 w-24">婚姻状況:</span>
+                    <span className="font-medium text-gray-700 w-28">{t('maritalStatus')}:</span>
                     <span className="text-gray-600">{formatMaritalStatus(marital_status, currentLanguage)}</span>
                   </div>
                 )}
@@ -431,7 +544,7 @@ function ProfileDetailContent() {
                 {/* 言語スキル */}
                 {Array.isArray(language_skills) && language_skills.length > 0 && (
                   <div>
-                    <span className="font-medium text-gray-700">言語:</span>
+                    <span className="font-medium text-gray-700">{t('languages')}:</span>
                     <div className="mt-1 space-y-1">
                       {language_skills.map((skill: LanguageSkill, index: number) => (
                         skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
@@ -451,22 +564,24 @@ function ProfileDetailContent() {
                   <>
                     {shouldDisplayValue(visit_schedule) && (
                       <div className="flex">
-                        <span className="font-medium text-gray-700 w-24">訪問予定:</span>
+                        <span className="font-medium text-gray-700 w-28">{t('visitSchedule')}:</span>
                         <span className="text-gray-600">{formatVisitSchedule(visit_schedule, currentLanguage)}</span>
                       </div>
                     )}
 
                     {shouldDisplayValue(travel_companion) && (
                       <div className="flex">
-                        <span className="font-medium text-gray-700 w-24">同行者:</span>
+                        <span className="font-medium text-gray-700 w-28">{t('travelCompanion')}:</span>
                         <span className="text-gray-600">{formatTravelCompanion(travel_companion, currentLanguage)}</span>
                       </div>
                     )}
 
                     {Array.isArray(planned_prefectures) && planned_prefectures.length > 0 && (
                       <div className="flex">
-                        <span className="font-medium text-gray-700 w-24">行く予定:</span>
-                        <span className="text-gray-600">{planned_prefectures.join(', ')}</span>
+                        <span className="font-medium text-gray-700 w-28">{t('plannedPrefectures')}:</span>
+                        <span className="text-gray-600">
+                          {planned_prefectures.map(p => formatPrefecture(p, currentLanguage) || p).join(', ')}
+                        </span>
                       </div>
                     )}
                   </>
@@ -476,7 +591,7 @@ function ProfileDetailContent() {
               {/* 自己紹介 */}
               {shouldDisplayValue(bio) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{getTranslationText('selfIntroduction')}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('selfIntroduction')}</h3>
 
                   {/* 翻訳表示 or 原文表示 */}
                   {showTranslation && translatedBio ? (
@@ -484,13 +599,13 @@ function ProfileDetailContent() {
                       <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{translatedBio}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-gray-400 italic">
-                          {getTranslationText('aiTranslationNote')}
+                          {t('aiTranslationNote')}
                         </span>
                         <button
                           onClick={() => setShowTranslation(false)}
                           className="text-xs text-sakura-600 hover:text-sakura-700 underline"
                         >
-                          {getTranslationText('showOriginal')}
+                          {t('showOriginal')}
                         </button>
                       </div>
                     </div>
@@ -502,15 +617,15 @@ function ProfileDetailContent() {
                       <div className="mt-2">
                         {translationError ? (
                           <div className="text-xs text-red-500">
-                            <span>{getTranslationText('translationFailed')}</span>
-                            {process.env.NODE_ENV === 'development' && (
+                            <span>{t('translationFailed')}</span>
+                            {(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugAuth') === '1') && (
                               <span className="block text-gray-400 mt-1">{translationError}</span>
                             )}
                             <button
                               onClick={() => { setTranslationError(null); handleTranslate(bio); }}
                               className="ml-2 text-sakura-600 underline"
                             >
-                              Retry
+                              {t('retry')}
                             </button>
                           </div>
                         ) : translatedBio ? (
@@ -519,7 +634,7 @@ function ProfileDetailContent() {
                             className="text-xs text-sakura-600 hover:text-sakura-700 flex items-center gap-1"
                           >
                             <Languages className="w-3 h-3" />
-                            {getTranslationText('translateButton')}
+                            {t('translateButton')}
                           </button>
                         ) : (
                           <button
@@ -530,12 +645,12 @@ function ProfileDetailContent() {
                             {isTranslating ? (
                               <>
                                 <Loader2 className="w-3 h-3 animate-spin" />
-                                {getTranslationText('translating')}
+                                {t('translating')}
                               </>
                             ) : (
                               <>
                                 <Languages className="w-3 h-3" />
-                                {getTranslationText('translateButton')}
+                                {t('translateButton')}
                               </>
                             )}
                           </button>
@@ -549,14 +664,14 @@ function ProfileDetailContent() {
               {/* 性格 */}
               {Array.isArray(personality_tags) && personality_tags.length > 0 && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">性格</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('personality')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {personality_tags.map((tag: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
                       >
-                        {tag}
+                        {formatPersonalityTag(tag, currentLanguage)}
                       </span>
                     ))}
                   </div>
@@ -566,14 +681,14 @@ function ProfileDetailContent() {
               {/* 興味・関心 */}
               {Array.isArray(interests) && interests.length > 0 && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">学びたい日本文化</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('japaneseCulture')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {interests.map((interest: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
                       >
-                        {interest}
+                        {formatCultureTag(interest, currentLanguage)}
                       </span>
                     ))}
                   </div>
@@ -592,21 +707,21 @@ function ProfileDetailContent() {
                   {isLiking ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      送信中...
+                      {t('sending')}
                     </>
                   ) : hasLiked ? (
                     <>
                       <Heart className="w-4 h-4 mr-2 fill-current" />
-                      いいね済み
+                      {t('liked')}
                     </>
                   ) : likesRemaining <= 0 ? (
-                    '本日の上限に達しました'
+                    t('dailyLimitReached')
                   ) : viewerId === profileId ? (
-                    '自分のプロフィールです'
+                    t('ownProfile')
                   ) : (
                     <>
                       <Heart className="w-4 h-4 mr-2" />
-                      いいね
+                      {t('like')}
                     </>
                   )}
                 </Button>
@@ -617,7 +732,7 @@ function ProfileDetailContent() {
           {/* さがすに戻るリンク */}
           <div className="mt-6 text-center">
             <Link href="/matches" className="text-sakura-600 hover:text-sakura-700 text-sm">
-              ← さがすに戻る
+              ← {t('backToSearch')}
             </Link>
           </div>
         </div>

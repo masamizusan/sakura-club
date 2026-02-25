@@ -18,6 +18,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { formatCultureTag } from '@/utils/profileTagFormatters'
 
 // 4言語翻訳辞書
 const matchesTranslations: Record<string, Record<string, string>> = {
@@ -554,7 +555,7 @@ export default function MatchesPage() {
                                 key={index}
                                 className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
                               >
-                                {hobby}
+                                {formatCultureTag(hobby, currentLanguage)}
                               </span>
                             ))}
                             {user.hobbies.length > 3 && (
