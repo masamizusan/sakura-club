@@ -19,6 +19,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTag } from '@/utils/profileTagFormatters'
+import { formatPrefecture } from '@/utils/profileFieldFormatters'
 
 // 4言語翻訳辞書
 const matchesTranslations: Record<string, Record<string, string>> = {
@@ -480,7 +481,7 @@ export default function MatchesPage() {
                   user.nationality.toLowerCase() === 'japanese'
 
                 const locationLabel = isJapanese
-                  ? user.prefecture
+                  ? formatPrefecture(user.prefecture, currentLanguage) || user.prefecture
                   : (user.nationalityLabel || user.nationality)
 
                 return (
