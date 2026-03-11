@@ -26,7 +26,8 @@ import {
   formatTravelCompanion,
   formatVisitSchedule,
   formatPrefecture,
-  formatLanguageName
+  formatLanguageName,
+  formatNationality
 } from '@/utils/profileFieldFormatters'
 import {
   formatPersonalityTag,
@@ -496,7 +497,7 @@ function ProfileDetailContent() {
                   {isForeignMale && nationality && (
                     <span className="flex items-center text-sm bg-gray-100 px-2 py-0.5 rounded-full">
                       <Globe className="w-3 h-3 mr-1" />
-                      {nationality}
+                      {formatNationality(nationality, currentLanguage) || nationality}
                     </span>
                   )}
                   {!isForeignMale && residence && (
