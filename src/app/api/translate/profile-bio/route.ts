@@ -51,8 +51,12 @@ function checkRateLimit(userId: string): boolean {
   return true
 }
 
+// プロンプトバージョン: プロンプト改善時にインクリメントしてキャッシュを無効化
+const PROMPT_VERSION = 'v2'
+
 function hashText(text: string): string {
-  return crypto.createHash('sha256').update(text).digest('hex').substring(0, 32)
+  // プロンプトバージョンを含めることで、プロンプト改善時に自動的に再翻訳される
+  return crypto.createHash('sha256').update(`${PROMPT_VERSION}:${text}`).digest('hex').substring(0, 32)
 }
 
 async function translateWithOpenAI(text: string, targetLang: SupportedLanguage): Promise<string> {
@@ -75,12 +79,16 @@ async function translateWithOpenAI(text: string, targetLang: SupportedLanguage):
       messages: [
         {
           role: 'system',
-          content: `You are a professional translator. Translate the following text to ${targetLanguageName}.
-Rules:
+          content: `You are a professional translator. Translate the following text completely into ${targetLanguageName}.
+
+CRITICAL RULES:
+- Translate EVERY word into ${targetLanguageName}. Do NOT leave any words in the source language (Japanese, Korean, Chinese, etc.)
+- The output must contain ONLY ${targetLanguageName} text with no foreign language words mixed in
 - Output ONLY the translated text, nothing else
-- Preserve the original tone and politeness level
-- Keep proper nouns and place names as appropriate for the target language
-- Do not add explanations or notes`
+- Preserve the original tone, politeness level, and meaning
+- Translate proper nouns and place names appropriately for the target language
+- Do not add explanations, notes, or commentary
+- Ensure the translation reads naturally in ${targetLanguageName}`
         },
         {
           role: 'user',
