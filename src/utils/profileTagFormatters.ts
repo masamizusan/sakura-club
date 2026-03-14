@@ -73,6 +73,37 @@ const personalityKoToKey: Record<string, string> = {
   '마이페이스': 'ownPace'
 }
 
+// 繁体字タグ → 翻訳キーのマッピング（性格タグ）
+const personalityZhToKey: Record<string, string> = {
+  '溫柔': 'gentle',
+  '溫和': 'calm',
+  '內向': 'lonely',
+  '沉穩': 'composed',
+  '體貼': 'caring',
+  '謙虛': 'humble',
+  '冷靜': 'cool',
+  '坦率': 'honest',
+  '開朗': 'bright',
+  '親切': 'friendly',
+  '愛照顧人': 'helpful',
+  '細心': 'considerate',
+  '有責任感': 'responsible',
+  '有決斷力': 'decisive',
+  '善於交際': 'sociable',
+  '好勝': 'competitive',
+  '熱情': 'passionate',
+  '室內派': 'indoor',
+  '活躍': 'active',
+  '知性': 'intellectual',
+  '一絲不苟': 'meticulous',
+  '樂觀': 'optimistic',
+  '害羞': 'shy',
+  '細心周到': 'attentive',
+  '爽朗': 'refreshing',
+  '自然派': 'natural',
+  '我行我素': 'ownPace'
+}
+
 // 日本語タグ → 翻訳キーのマッピング（文化タグ）
 const cultureJaToKey: Record<string, string> = {
   '茶道': 'teaCeremony',
@@ -161,6 +192,49 @@ const cultureJaToKey: Record<string, string> = {
   '刀鍛冶': 'swordSmithing',
   '木工': 'woodworking',
   '飴細工': 'sugarCrafts'
+}
+
+// 韓国語タグ → 翻訳キーのマッピング（文化タグ）- 主要なもののみ
+const cultureKoToKey: Record<string, string> = {
+  '다도': 'teaCeremony',
+  '꽃꽂이': 'flowerArrangement',
+  '서예': 'calligraphy',
+  '기모노': 'kimono',
+  '스시': 'sushi',
+  '텐푸라': 'tempura',
+  '라멘': 'ramen',
+  '온천': 'hotSprings',
+  '벚꽃놀이': 'cherryBlossom',
+  '단풍구경': 'autumnLeaves',
+  '축제': 'festivals',
+  '검도': 'kendo',
+  '유도': 'judo',
+  '가라테': 'karate',
+  '애니메이션': 'anime',
+  '만화': 'manga',
+  '코스프레': 'cosplay',
+  '노래방': 'karaoke'
+}
+
+// 繁体字タグ → 翻訳キーのマッピング（文化タグ）- 主要なもののみ
+const cultureZhToKey: Record<string, string> = {
+  '茶道': 'teaCeremony',
+  '花道': 'flowerArrangement',
+  '書道': 'calligraphy',
+  '和服': 'kimono',
+  '壽司': 'sushi',
+  '天婦羅': 'tempura',
+  '拉麵': 'ramen',
+  '溫泉': 'hotSprings',
+  '賞櫻': 'cherryBlossom',
+  '賞楓': 'autumnLeaves',
+  '祭典': 'festivals',
+  '劍道': 'kendo',
+  '柔道': 'judo',
+  '空手道': 'karate',
+  '動畫': 'anime',
+  '漫畫': 'manga',
+  '卡拉OK': 'karaoke'
 }
 
 // 4言語翻訳辞書（性格タグ）
@@ -642,7 +716,7 @@ const cultureTranslations: Record<string, Record<string, string>> = {
 /**
  * タグを翻訳キーに正規化する
  * すでにキー（例: sushi, gentle）ならそのまま返す
- * 日本語・韓国語文字列なら対応するキーに変換
+ * 日本語・韓国語・繁体字文字列なら対応するキーに変換
  */
 export function normalizeTagToKey(tag: string, type: 'personality' | 'culture'): string | null {
   if (!tag) return null
@@ -661,9 +735,16 @@ export function normalizeTagToKey(tag: string, type: 'personality' | 'culture'):
     return jaToKey[trimmed]
   }
 
-  // 韓国語からキーへ変換（性格タグのみ対応）
-  if (type === 'personality' && personalityKoToKey[trimmed]) {
-    return personalityKoToKey[trimmed]
+  // 韓国語からキーへ変換
+  const koToKey = type === 'personality' ? personalityKoToKey : cultureKoToKey
+  if (koToKey[trimmed]) {
+    return koToKey[trimmed]
+  }
+
+  // 繁体字からキーへ変換
+  const zhToKey = type === 'personality' ? personalityZhToKey : cultureZhToKey
+  if (zhToKey[trimmed]) {
+    return zhToKey[trimmed]
   }
 
   return null
