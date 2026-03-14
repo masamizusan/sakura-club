@@ -52,7 +52,7 @@ function checkRateLimit(userId: string): boolean {
 }
 
 // プロンプトバージョン: プロンプト改善時にインクリメントしてキャッシュを無効化
-const PROMPT_VERSION = 'v2'
+const PROMPT_VERSION = 'v3'
 
 function hashText(text: string): string {
   // プロンプトバージョンを含めることで、プロンプト改善時に自動的に再翻訳される
@@ -79,16 +79,17 @@ async function translateWithOpenAI(text: string, targetLang: SupportedLanguage):
       messages: [
         {
           role: 'system',
-          content: `You are a professional translator. Translate the following text completely into ${targetLanguageName}.
+          content: `You are a professional translator. Your task is to translate Japanese text into ${targetLanguageName}.
 
-CRITICAL RULES:
-- Translate EVERY word into ${targetLanguageName}. Do NOT leave any words in the source language (Japanese, Korean, Chinese, etc.)
-- The output must contain ONLY ${targetLanguageName} text with no foreign language words mixed in
-- Output ONLY the translated text, nothing else
-- Preserve the original tone, politeness level, and meaning
-- Translate proper nouns and place names appropriately for the target language
-- Do not add explanations, notes, or commentary
-- Ensure the translation reads naturally in ${targetLanguageName}`
+ABSOLUTE REQUIREMENTS:
+1. Translate 100% of all Japanese characters (hiragana, katakana, kanji) into ${targetLanguageName}
+2. The output must contain ZERO Japanese characters - not a single hiragana, katakana, or kanji
+3. Words like 交流, 文化, 出会い must be translated (e.g., "exchange", "culture", "encounter")
+4. Output ONLY the translated text with no Japanese mixed in
+5. Preserve the original meaning and polite tone
+6. Make it sound natural in ${targetLanguageName}
+
+FORBIDDEN: Leaving ANY Japanese text untranslated. Every single character must be converted to ${targetLanguageName}.`
         },
         {
           role: 'user',
