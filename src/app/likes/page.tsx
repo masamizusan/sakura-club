@@ -1,0 +1,414 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  Heart,
+  MapPin,
+  User,
+  Globe,
+  Coffee,
+  HeartHandshake
+} from 'lucide-react'
+import Link from 'next/link'
+import Sidebar from '@/components/layout/Sidebar'
+import AuthGuard from '@/components/auth/AuthGuard'
+import { useAuth } from '@/store/authStore'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { formatCultureTag } from '@/utils/profileTagFormatters'
+import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
+
+// 4言語翻訳辞書
+const likesTranslations: Record<string, Record<string, string>> = {
+  ja: {
+    pageTitle: 'お相手から',
+    pageSubtitle: 'あなたにいいねを送ってくれた方々です',
+    likesRemaining: '本日の残りいいね',
+    loading: '読み込み中…',
+    likersFound: '{count} 人からいいねが届いています',
+    noLikersTitle: 'まだいいねが届いていません',
+    noLikersSubtitle: 'プロフィールを充実させて、素敵な出会いを待ちましょう',
+    goToSearch: 'お相手を探す',
+    yearsOld: '歳',
+    likeBack: 'いいねを返す',
+    likeLimitReached: '本日のいいね上限（10回）に達しました。明日またお試しください。',
+    matched: 'マッチしました！メッセージを送ってみましょう。',
+    likeFailed: 'いいねの送信に失敗しました。もう一度お試しください。',
+    errorOccurred: 'エラーが発生しました。もう一度お試しください。'
+  },
+  en: {
+    pageTitle: 'Likes Received',
+    pageSubtitle: 'People who liked your profile',
+    likesRemaining: 'Likes remaining today',
+    loading: 'Loading...',
+    likersFound: '{count} people liked you',
+    noLikersTitle: 'No likes yet',
+    noLikersSubtitle: 'Complete your profile to attract more people',
+    goToSearch: 'Find matches',
+    yearsOld: ' y/o',
+    likeBack: 'Like back',
+    likeLimitReached: 'You have reached your daily like limit (10). Please try again tomorrow.',
+    matched: 'It\'s a match! Send them a message.',
+    likeFailed: 'Failed to send like. Please try again.',
+    errorOccurred: 'An error occurred. Please try again.'
+  },
+  ko: {
+    pageTitle: '관심',
+    pageSubtitle: '나에게 좋아요를 보내준 분들입니다',
+    likesRemaining: '오늘 남은 좋아요',
+    loading: '로딩 중...',
+    likersFound: '{count}명이 좋아요를 보냈습니다',
+    noLikersTitle: '아직 좋아요가 없습니다',
+    noLikersSubtitle: '프로필을 완성하고 멋진 만남을 기다려보세요',
+    goToSearch: '상대 찾기',
+    yearsOld: '세',
+    likeBack: '좋아요 보내기',
+    likeLimitReached: '오늘의 좋아요 한도(10회)에 도달했습니다. 내일 다시 시도해주세요.',
+    matched: '매칭되었습니다! 메시지를 보내보세요.',
+    likeFailed: '좋아요 전송에 실패했습니다. 다시 시도해주세요.',
+    errorOccurred: '오류가 발생했습니다. 다시 시도해주세요.'
+  },
+  'zh-tw': {
+    pageTitle: '喜歡我的人',
+    pageSubtitle: '這些人對您表示了興趣',
+    likesRemaining: '今日剩餘按讚數',
+    loading: '載入中...',
+    likersFound: '{count} 人對您表示了興趣',
+    noLikersTitle: '還沒有人按讚',
+    noLikersSubtitle: '完善您的個人資料以吸引更多人',
+    goToSearch: '尋找對象',
+    yearsOld: '歲',
+    likeBack: '回應喜歡',
+    likeLimitReached: '您已達到今日按讚上限（10次）。請明天再試。',
+    matched: '配對成功！發送訊息吧。',
+    likeFailed: '按讚失敗，請重試。',
+    errorOccurred: '發生錯誤，請重試。'
+  }
+}
+
+// ユーザープロフィールの型定義
+interface LikerProfile {
+  id: string
+  name: string
+  gender: string
+  age: number | null
+  nationality: string
+  residence: string
+  prefecture: string
+  city: string
+  bio: string
+  interests: string[]
+  avatar_url: string | null
+  personality_tags: string[]
+  culture_tags: string[]
+}
+
+export default function LikesPage() {
+  const { user, isLoading: authLoading } = useAuth()
+  const { currentLanguage } = useLanguage()
+  const [likers, setLikers] = useState<LikerProfile[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // いいね残り回数
+  const [likesRemaining, setLikesRemaining] = useState<number>(10)
+  const [likesLimit] = useState<number>(10)
+
+  // 翻訳取得関数
+  const t = (key: string, replacements: Record<string, string | number> = {}): string => {
+    const texts = likesTranslations[currentLanguage] || likesTranslations['ja']
+    let text = texts[key] || likesTranslations['ja'][key] || key
+    Object.entries(replacements).forEach(([k, v]) => {
+      text = text.replace(`{${k}}`, String(v))
+    })
+    return text
+  }
+
+  // 残りいいね数を取得
+  const fetchLikesRemaining = async () => {
+    try {
+      const response = await fetch('/api/likes/remaining', {
+        cache: 'no-store',
+        credentials: 'include'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setLikesRemaining(data.remaining)
+      }
+    } catch (error) {
+      console.error('Failed to fetch likes remaining:', error)
+    }
+  }
+
+  // 初期ロード時に残りいいね数を取得
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchLikesRemaining()
+    }
+  }, [user, authLoading])
+
+  // データ取得
+  useEffect(() => {
+    const fetchLikers = async () => {
+      if (authLoading) return
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        const response = await fetch('/api/likes/received', {
+          cache: 'no-store',
+          credentials: 'include'
+        })
+
+        const result = await response.json()
+
+        if (response.ok && result.likers && result.likers.length > 0) {
+          setLikers(result.likers)
+        } else {
+          setLikers([])
+        }
+      } catch (error) {
+        console.error('Error fetching likers:', error)
+        setLikers([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchLikers()
+  }, [user, authLoading])
+
+  // いいねを返す処理
+  const handleLikeBack = async (userId: string, event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+
+    if (likesRemaining <= 0) {
+      alert(t('likeLimitReached'))
+      return
+    }
+
+    try {
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ likedUserId: userId, action: 'like' }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        // いいねを返したユーザーをリストから削除
+        setLikers(prev => prev.filter(liker => liker.id !== userId))
+        if (typeof result.remaining === 'number') {
+          setLikesRemaining(result.remaining)
+        } else {
+          setLikesRemaining(prev => Math.max(0, prev - 1))
+        }
+        if (result.matched) {
+          alert(t('matched'))
+        }
+      } else if (response.status === 429) {
+        setLikesRemaining(0)
+        alert(t('likeLimitReached'))
+      } else {
+        alert(result.error || t('likeFailed'))
+      }
+    } catch (error) {
+      console.error('Error liking user:', error)
+      alert(t('errorOccurred'))
+    }
+  }
+
+  const content = (
+    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      <Sidebar className="w-64 hidden md:block" />
+
+      <div className="md:ml-64 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* ヘッダー */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('pageTitle')}</h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              {t('pageSubtitle')}
+            </p>
+            {/* 残りいいね数表示 */}
+            <div className="mt-4 inline-flex items-center bg-white rounded-full px-4 py-2 shadow-md">
+              <Heart className={`w-5 h-5 mr-2 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+              <span className="text-gray-700">
+                {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
+              </span>
+            </div>
+          </div>
+
+          {/* 結果カウント */}
+          <div className="mb-6">
+            {isLoading ? (
+              <p className="text-gray-500">{t('loading')}</p>
+            ) : (
+              <p className="text-gray-600">
+                {t('likersFound', { count: likers.length })}
+              </p>
+            )}
+          </div>
+
+          {/* スケルトン UI */}
+          {isLoading && (
+            <div className="flex flex-col gap-6 mb-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse max-w-xl mx-auto w-full">
+                  <div className="h-56 bg-gray-200"></div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-6 w-20 bg-gray-200 rounded"></div>
+                      <div className="h-5 w-12 bg-gray-200 rounded"></div>
+                      <div className="h-5 w-16 bg-gray-200 rounded-full"></div>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <div className="h-4 w-full bg-gray-200 rounded"></div>
+                      <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex gap-1">
+                      <div className="h-5 w-12 bg-gray-200 rounded-full"></div>
+                      <div className="h-5 w-14 bg-gray-200 rounded-full"></div>
+                      <div className="h-5 w-10 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* いいねをくれたユーザー一覧 */}
+          {!isLoading && likers.length > 0 && (
+            <div className="flex flex-col gap-6">
+              {likers.map((liker) => {
+                const isJapanese = !liker.nationality ||
+                  liker.nationality === '' ||
+                  liker.nationality.toLowerCase() === 'jp' ||
+                  liker.nationality.toLowerCase() === 'japan' ||
+                  liker.nationality === '日本' ||
+                  liker.nationality.toLowerCase() === 'japanese'
+
+                const locationLabel = isJapanese
+                  ? formatPrefecture(liker.prefecture || liker.residence, currentLanguage) || liker.prefecture || liker.residence
+                  : formatNationality(liker.nationality, currentLanguage) || liker.nationality
+
+                return (
+                  <div key={liker.id} className="max-w-xl mx-auto w-full">
+                    <Link
+                      href={`/profile/${liker.id}`}
+                      className="block"
+                    >
+                      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+                        {/* プロフィール画像エリア */}
+                        <div className="relative h-56 bg-gray-50">
+                          {liker.avatar_url ? (
+                            <img
+                              src={liker.avatar_url}
+                              alt={liker.name}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
+                              <User className="w-20 h-20 text-sakura-300" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* プロフィール情報 */}
+                        <div className="p-5">
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
+                            <h3 className="text-xl font-bold text-gray-900">
+                              {liker.name}
+                            </h3>
+                            {liker.age && (
+                              <span className="text-lg text-gray-700">{liker.age}{t('yearsOld')}</span>
+                            )}
+                            {locationLabel && (
+                              <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {isJapanese ? (
+                                  <MapPin className="w-3 h-3 mr-1" />
+                                ) : (
+                                  <Globe className="w-3 h-3 mr-1" />
+                                )}
+                                {locationLabel}
+                              </span>
+                            )}
+                          </div>
+
+                          {liker.bio && (
+                            <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                              {liker.bio}
+                            </p>
+                          )}
+
+                          {liker.interests && liker.interests.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-4">
+                              {liker.interests.slice(0, 3).map((interest, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
+                                >
+                                  {formatCultureTag(interest, currentLanguage)}
+                                </span>
+                              ))}
+                              {liker.interests.length > 3 && (
+                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                                  +{liker.interests.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+
+                    {/* いいねを返すボタン（カードの外） */}
+                    <div className="mt-3 flex justify-center">
+                      <Button
+                        variant="sakura"
+                        size="lg"
+                        onClick={(e) => handleLikeBack(liker.id, e)}
+                        disabled={likesRemaining <= 0}
+                        className="flex items-center gap-2"
+                      >
+                        <HeartHandshake className="w-5 h-5" />
+                        {t('likeBack')}
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* 結果が0件の場合 */}
+          {!isLoading && likers.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <Coffee className="w-16 h-16 mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {t('noLikersTitle')}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {t('noLikersSubtitle')}
+              </p>
+              <Link href="/matches">
+                <Button variant="sakura">
+                  {t('goToSearch')}
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  return <AuthGuard>{content}</AuthGuard>
+}

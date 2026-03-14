@@ -69,7 +69,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   const sidebarItems = [
     { id: 'search', icon: Search, labelKey: 'search', href: '/matches' },
     { id: 'messages', icon: MessageCircle, labelKey: 'messages', href: '/messages' },
-    { id: 'liked', icon: Heart, labelKey: 'matches', href: '/matches' },
+    { id: 'liked', icon: Heart, labelKey: 'matches', href: '/likes' },
     { id: 'footprints', icon: History, labelKey: 'footprints', href: '/footprints' },
     { id: 'profile', icon: User, labelKey: 'mypage', href: '/mypage' },
   ]
@@ -88,7 +88,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href === '/matches' && pathname === '/') ||
-              (pathname?.startsWith('/profile') && item.id === 'profile')
+              (pathname?.startsWith('/profile') && item.id === 'profile') ||
+              (item.href === '/likes' && pathname === '/likes')
             
             return (
               <Link
