@@ -41,6 +41,38 @@ const personalityJaToKey: Record<string, string> = {
   'マイペース': 'ownPace'
 }
 
+// 韓国語タグ → 翻訳キーのマッピング（性格タグ）
+const personalityKoToKey: Record<string, string> = {
+  '다정한': 'gentle',
+  '상냥한': 'gentle',
+  '차분한': 'calm',
+  '내향적인': 'lonely',
+  '침착한': 'composed',
+  '배려심 있는': 'caring',
+  '겸손한': 'humble',
+  '냉정한': 'cool',
+  '솔직한': 'honest',
+  '밝은': 'bright',
+  '친근한': 'friendly',
+  '잘 돌봐주는': 'helpful',
+  '세심한': 'considerate',
+  '책임감 있는': 'responsible',
+  '결단력 있는': 'decisive',
+  '사교적인': 'sociable',
+  '승부욕 강한': 'competitive',
+  '열정적인': 'passionate',
+  '실내형': 'indoor',
+  '활동적인': 'active',
+  '지적인': 'intellectual',
+  '꼼꼼한': 'meticulous',
+  '낙관적인': 'optimistic',
+  '수줍은': 'shy',
+  '자상한': 'attentive',
+  '상쾌한': 'refreshing',
+  '자연스러운': 'natural',
+  '마이페이스': 'ownPace'
+}
+
 // 日本語タグ → 翻訳キーのマッピング（文化タグ）
 const cultureJaToKey: Record<string, string> = {
   '茶道': 'teaCeremony',
@@ -608,9 +640,9 @@ const cultureTranslations: Record<string, Record<string, string>> = {
 }
 
 /**
- * 日本語タグを翻訳キーに正規化する
+ * タグを翻訳キーに正規化する
  * すでにキー（例: sushi, gentle）ならそのまま返す
- * 日本語文字列（例: 寿司, 優しい）なら対応するキーに変換
+ * 日本語・韓国語文字列なら対応するキーに変換
  */
 export function normalizeTagToKey(tag: string, type: 'personality' | 'culture'): string | null {
   if (!tag) return null
@@ -625,7 +657,16 @@ export function normalizeTagToKey(tag: string, type: 'personality' | 'culture'):
 
   // 日本語からキーへ変換
   const jaToKey = type === 'personality' ? personalityJaToKey : cultureJaToKey
-  return jaToKey[trimmed] || null
+  if (jaToKey[trimmed]) {
+    return jaToKey[trimmed]
+  }
+
+  // 韓国語からキーへ変換（性格タグのみ対応）
+  if (type === 'personality' && personalityKoToKey[trimmed]) {
+    return personalityKoToKey[trimmed]
+  }
+
+  return null
 }
 
 /**
