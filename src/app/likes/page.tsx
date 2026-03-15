@@ -157,9 +157,16 @@ export default function LikesPage() {
 
       try {
         setIsLoading(true)
-        const response = await fetch('/api/likes/received', {
+        // キャッシュ回避のためタイムスタンプを付加
+        const timestamp = Date.now()
+        const response = await fetch(`/api/likes/received?_t=${timestamp}`, {
+          method: 'GET',
           cache: 'no-store',
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
         })
 
         const result = await response.json()
