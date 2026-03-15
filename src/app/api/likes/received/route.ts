@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies()
 
-    // 認証用クライアント（ユーザー確認のみ）
-    const supabaseAuth = createServerClient(
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -38,9 +37,10 @@ export async function GET(request: NextRequest) {
     )
 
     // 認証チェック
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.log('[likes/received] Auth failed:', authError?.message)
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401, headers: noCacheHeaders }
@@ -50,60 +50,22 @@ export async function GET(request: NextRequest) {
     const currentUserId = user.id
     console.log('🔍 [likes/received] currentUserId:', currentUserId)
 
-    // データ取得用クライアント（service_roleでRLSバイパス）
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    console.log('🔑 [likes/received] serviceRoleKey exists:', !!serviceRoleKey, 'length:', serviceRoleKey?.length || 0)
-
-    if (!serviceRoleKey) {
-      console.error('[likes/received] SUPABASE_SERVICE_ROLE_KEY is not configured')
-      return NextResponse.json(
-        { error: 'Server configuration error', debug: 'SERVICE_ROLE_KEY_MISSING' },
-        { status: 500, headers: noCacheHeaders }
-      )
-    }
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey,
-      {
-        cookies: {
-          getAll() { return [] },
-          setAll() {},
-        },
-      }
-    )
-
-    // デバッグ: likesテーブルの全件数を確認
-    const { count: totalLikesCount, error: countError } = await supabase
-      .from('likes')
-      .select('*', { count: 'exact', head: true })
-    console.log('📊 [likes/received] Total likes in table:', totalLikesCount, 'error:', countError?.message || null)
-
-    // デバッグ: 現在のユーザー宛のいいね件数を確認
-    const { data: debugLikes, error: debugError } = await supabase
-      .from('likes')
-      .select('liker_id, liked_user_id, created_at')
-      .eq('liked_user_id', currentUserId)
-    console.log('🎯 [likes/received] DEBUG - Likes for current user:', {
-      count: debugLikes?.length || 0,
-      error: debugError?.message || null,
-      likes: debugLikes || []
-    })
-
     // 1. 自分がいいねしたユーザーのIDを取得（除外用）
+    console.log('📤 [likes/received] Step 1: Getting sent likes...')
     const { data: sentLikes, error: sentError } = await supabase
       .from('likes')
       .select('liked_user_id')
       .eq('liker_id', currentUserId)
 
     if (sentError) {
-      console.error('[likes/received] sent likes error:', sentError)
+      console.error('[likes/received] sent likes error:', JSON.stringify(sentError))
     }
 
     const sentLikeUserIds = sentLikes?.map(l => l.liked_user_id) || []
     console.log('📤 [likes/received] sentLikeUserIds count:', sentLikeUserIds.length)
 
     // 2. マッチング済みのユーザーIDを取得（除外用）
+    console.log('💕 [likes/received] Step 2: Getting matched users...')
     const { data: matchedRecords, error: matchedError } = await supabase
       .from('matches')
       .select('user1_id, user2_id')
@@ -111,7 +73,7 @@ export async function GET(request: NextRequest) {
       .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
 
     if (matchedError) {
-      console.error('[likes/received] matched error:', matchedError)
+      console.error('[likes/received] matched error:', JSON.stringify(matchedError))
     }
 
     const matchedUserIds = matchedRecords?.map(m =>
@@ -124,22 +86,23 @@ export async function GET(request: NextRequest) {
     console.log('🚫 [likes/received] excludeUserIds count:', excludeUserIds.size)
 
     // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
+    console.log('📥 [likes/received] Step 3: Getting received likes...')
     const { data: receivedLikes, error: receivedError } = await supabase
       .from('likes')
       .select('liker_id, created_at')
       .eq('liked_user_id', currentUserId)
       .order('created_at', { ascending: false })
 
-    console.log('📥 [likes/received] receivedLikes:', {
+    console.log('📥 [likes/received] receivedLikes result:', {
       count: receivedLikes?.length || 0,
-      error: receivedError?.message || null,
-      data: receivedLikes?.slice(0, 3) || []
+      error: receivedError ? JSON.stringify(receivedError) : null,
+      firstThree: receivedLikes?.slice(0, 3) || []
     })
 
     if (receivedError) {
-      console.error('[likes/received] received likes error:', receivedError)
+      console.error('[likes/received] received likes error:', JSON.stringify(receivedError))
       return NextResponse.json(
-        { error: 'いいね情報の取得に失敗しました' },
+        { error: 'いいね情報の取得に失敗しました', detail: receivedError.message },
         { status: 500, headers: noCacheHeaders }
       )
     }
@@ -149,9 +112,10 @@ export async function GET(request: NextRequest) {
       ?.filter(l => !excludeUserIds.has(l.liker_id))
       .map(l => l.liker_id) || []
     const likerIds = Array.from(new Set(filteredLikerIds))
-    console.log('🎯 [likes/received] final likerIds count:', likerIds.length)
+    console.log('🎯 [likes/received] final likerIds count:', likerIds.length, 'ids:', likerIds.slice(0, 3))
 
     if (likerIds.length === 0) {
+      console.log('📭 [likes/received] No likers found, returning empty')
       return NextResponse.json({
         likers: [],
         count: 0
@@ -159,6 +123,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. ユーザープロフィール情報を取得
+    console.log('👤 [likes/received] Step 4: Getting profiles...')
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select(`
@@ -181,12 +146,14 @@ export async function GET(request: NextRequest) {
       .eq('profile_initialized', true)
 
     if (profilesError) {
-      console.error('[likes/received] profiles error:', profilesError)
+      console.error('[likes/received] profiles error:', JSON.stringify(profilesError))
       return NextResponse.json(
-        { error: 'プロフィール情報の取得に失敗しました' },
+        { error: 'プロフィール情報の取得に失敗しました', detail: profilesError.message },
         { status: 500, headers: noCacheHeaders }
       )
     }
+
+    console.log('👤 [likes/received] profiles found:', profiles?.length || 0)
 
     // いいねの順番を維持するためのマップ
     const likerIdOrder = new Map(likerIds.map((id, index) => [id, index]))
@@ -233,9 +200,12 @@ export async function GET(request: NextRequest) {
     }, { headers: noCacheHeaders })
 
   } catch (error) {
-    console.error('[likes/received] unexpected error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : ''
+    console.error('[likes/received] unexpected error:', errorMessage)
+    console.error('[likes/received] stack:', errorStack)
     return NextResponse.json(
-      { error: '予期しないエラーが発生しました' },
+      { error: '予期しないエラーが発生しました', detail: errorMessage },
       { status: 500, headers: noCacheHeaders }
     )
   }
