@@ -7,8 +7,7 @@ import {
   MapPin,
   User,
   Globe,
-  Coffee,
-  HeartHandshake
+  Coffee
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
@@ -187,49 +186,6 @@ export default function LikesPage() {
     fetchLikers()
   }, [user, authLoading])
 
-  // いいねを返す処理
-  const handleLikeBack = async (userId: string, event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-
-    if (likesRemaining <= 0) {
-      alert(t('likeLimitReached'))
-      return
-    }
-
-    try {
-      const response = await fetch('/api/likes', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ likedUserId: userId, action: 'like' }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        // いいねを返したユーザーをリストから削除
-        setLikers(prev => prev.filter(liker => liker.id !== userId))
-        if (typeof result.remaining === 'number') {
-          setLikesRemaining(result.remaining)
-        } else {
-          setLikesRemaining(prev => Math.max(0, prev - 1))
-        }
-        if (result.matched) {
-          alert(t('matched'))
-        }
-      } else if (response.status === 429) {
-        setLikesRemaining(0)
-        alert(t('likeLimitReached'))
-      } else {
-        alert(result.error || t('likeFailed'))
-      }
-    } catch (error) {
-      console.error('Error liking user:', error)
-      alert(t('errorOccurred'))
-    }
-  }
-
   const content = (
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       <Sidebar className="w-64 hidden md:block" />
@@ -373,20 +329,6 @@ export default function LikesPage() {
                         </div>
                       </div>
                     </Link>
-
-                    {/* いいねを返すボタン（カードの外） */}
-                    <div className="mt-3 flex justify-center">
-                      <Button
-                        variant="sakura"
-                        size="lg"
-                        onClick={(e) => handleLikeBack(liker.id, e)}
-                        disabled={likesRemaining <= 0}
-                        className="flex items-center gap-2"
-                      >
-                        <HeartHandshake className="w-5 h-5" />
-                        {t('likeBack')}
-                      </Button>
-                    </div>
                   </div>
                 )
               })}
