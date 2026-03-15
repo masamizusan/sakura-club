@@ -52,10 +52,12 @@ export async function GET(request: NextRequest) {
 
     // データ取得用クライアント（service_roleでRLSバイパス）
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    console.log('🔑 [likes/received] serviceRoleKey exists:', !!serviceRoleKey, 'length:', serviceRoleKey?.length || 0)
+
     if (!serviceRoleKey) {
       console.error('[likes/received] SUPABASE_SERVICE_ROLE_KEY is not configured')
       return NextResponse.json(
-        { error: 'Server configuration error' },
+        { error: 'Server configuration error', debug: 'SERVICE_ROLE_KEY_MISSING' },
         { status: 500, headers: noCacheHeaders }
       )
     }
@@ -70,6 +72,23 @@ export async function GET(request: NextRequest) {
         },
       }
     )
+
+    // デバッグ: likesテーブルの全件数を確認
+    const { count: totalLikesCount, error: countError } = await supabase
+      .from('likes')
+      .select('*', { count: 'exact', head: true })
+    console.log('📊 [likes/received] Total likes in table:', totalLikesCount, 'error:', countError?.message || null)
+
+    // デバッグ: 現在のユーザー宛のいいね件数を確認
+    const { data: debugLikes, error: debugError } = await supabase
+      .from('likes')
+      .select('liker_id, liked_user_id, created_at')
+      .eq('liked_user_id', currentUserId)
+    console.log('🎯 [likes/received] DEBUG - Likes for current user:', {
+      count: debugLikes?.length || 0,
+      error: debugError?.message || null,
+      likes: debugLikes || []
+    })
 
     // 1. 自分がいいねしたユーザーのIDを取得（除外用）
     const { data: sentLikes, error: sentError } = await supabase
