@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = cookies()
 
-    const supabase = createServerClient(
+    // 認証用クライアント（ユーザー確認のみ）
+    const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     )
 
     // 認証チェック
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -48,6 +49,27 @@ export async function GET(request: NextRequest) {
 
     const currentUserId = user.id
     console.log('🔍 [likes/received] currentUserId:', currentUserId)
+
+    // データ取得用クライアント（service_roleでRLSバイパス）
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+      console.error('[likes/received] SUPABASE_SERVICE_ROLE_KEY is not configured')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500, headers: noCacheHeaders }
+      )
+    }
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey,
+      {
+        cookies: {
+          getAll() { return [] },
+          setAll() {},
+        },
+      }
+    )
 
     // 1. 自分がいいねしたユーザーのIDを取得（除外用）
     const { data: sentLikes, error: sentError } = await supabase
