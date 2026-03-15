@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     const currentUserId = user.id
+    console.log('🔍 [likes/received] currentUserId:', currentUserId)
 
     // 1. 自分がいいねしたユーザーのIDを取得（除外用）
     const { data: sentLikes, error: sentError } = await supabase
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
     }
 
     const sentLikeUserIds = sentLikes?.map(l => l.liked_user_id) || []
+    console.log('📤 [likes/received] sentLikeUserIds count:', sentLikeUserIds.length)
 
     // 2. マッチング済みのユーザーIDを取得（除外用）
     const { data: matchedRecords, error: matchedError } = await supabase
@@ -74,9 +76,11 @@ export async function GET(request: NextRequest) {
     const matchedUserIds = matchedRecords?.map(m =>
       m.user1_id === currentUserId ? m.user2_id : m.user1_id
     ) || []
+    console.log('💕 [likes/received] matchedUserIds count:', matchedUserIds.length)
 
     // 除外するユーザーIDのセット
-    const excludeUserIds = new Set([...sentLikeUserIds, ...matchedUserIds])
+    const excludeUserIds = new Set(sentLikeUserIds.concat(matchedUserIds))
+    console.log('🚫 [likes/received] excludeUserIds count:', excludeUserIds.size)
 
     // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
     const { data: receivedLikes, error: receivedError } = await supabase
@@ -84,6 +88,12 @@ export async function GET(request: NextRequest) {
       .select('liker_id, created_at')
       .eq('liked_user_id', currentUserId)
       .order('created_at', { ascending: false })
+
+    console.log('📥 [likes/received] receivedLikes:', {
+      count: receivedLikes?.length || 0,
+      error: receivedError?.message || null,
+      data: receivedLikes?.slice(0, 3) || []
+    })
 
     if (receivedError) {
       console.error('[likes/received] received likes error:', receivedError)
@@ -98,6 +108,7 @@ export async function GET(request: NextRequest) {
       ?.filter(l => !excludeUserIds.has(l.liker_id))
       .map(l => l.liker_id) || []
     const likerIds = Array.from(new Set(filteredLikerIds))
+    console.log('🎯 [likes/received] final likerIds count:', likerIds.length)
 
     if (likerIds.length === 0) {
       return NextResponse.json({
