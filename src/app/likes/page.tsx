@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Heart,
@@ -24,64 +24,48 @@ const likesTranslations: Record<string, Record<string, string>> = {
     pageSubtitle: 'あなたにいいねを送ってくれた方々です',
     likesRemaining: '本日の残りいいね',
     loading: '読み込み中…',
-    likersFound: '{count} 人からいいねが届いています',
     noLikersTitle: 'まだいいねが届いていません',
     noLikersSubtitle: 'プロフィールを充実させて、素敵な出会いを待ちましょう',
     goToSearch: 'お相手を探す',
     yearsOld: '歳',
-    likeBack: 'いいねを返す',
-    likeLimitReached: '本日のいいね上限（10回）に達しました。明日またお試しください。',
-    matched: 'マッチしました！メッセージを送ってみましょう。',
-    likeFailed: 'いいねの送信に失敗しました。もう一度お試しください。',
-    errorOccurred: 'エラーが発生しました。もう一度お試しください。'
+    today: '今日',
+    yesterday: '昨日'
   },
   en: {
     pageTitle: 'Likes Received',
     pageSubtitle: 'People who liked your profile',
     likesRemaining: 'Likes remaining today',
     loading: 'Loading...',
-    likersFound: '{count} people liked you',
     noLikersTitle: 'No likes yet',
     noLikersSubtitle: 'Complete your profile to attract more people',
     goToSearch: 'Find matches',
     yearsOld: ' y/o',
-    likeBack: 'Like back',
-    likeLimitReached: 'You have reached your daily like limit (10). Please try again tomorrow.',
-    matched: 'It\'s a match! Send them a message.',
-    likeFailed: 'Failed to send like. Please try again.',
-    errorOccurred: 'An error occurred. Please try again.'
+    today: 'Today',
+    yesterday: 'Yesterday'
   },
   ko: {
     pageTitle: '관심',
     pageSubtitle: '나에게 좋아요를 보내준 분들입니다',
     likesRemaining: '오늘 남은 좋아요',
     loading: '로딩 중...',
-    likersFound: '{count}명이 좋아요를 보냈습니다',
     noLikersTitle: '아직 좋아요가 없습니다',
     noLikersSubtitle: '프로필을 완성하고 멋진 만남을 기다려보세요',
     goToSearch: '상대 찾기',
     yearsOld: '세',
-    likeBack: '좋아요 보내기',
-    likeLimitReached: '오늘의 좋아요 한도(10회)에 도달했습니다. 내일 다시 시도해주세요.',
-    matched: '매칭되었습니다! 메시지를 보내보세요.',
-    likeFailed: '좋아요 전송에 실패했습니다. 다시 시도해주세요.',
-    errorOccurred: '오류가 발생했습니다. 다시 시도해주세요.'
+    today: '오늘',
+    yesterday: '어제'
   },
   'zh-tw': {
     pageTitle: '喜歡我的人',
     pageSubtitle: '這些人對您表示了興趣',
     likesRemaining: '今日剩餘按讚數',
     loading: '載入中...',
-    likersFound: '{count} 人對您表示了興趣',
     noLikersTitle: '還沒有人按讚',
     noLikersSubtitle: '完善您的個人資料以吸引更多人',
     goToSearch: '尋找對象',
     yearsOld: '歲',
-    likeBack: '回應喜歡',
-    likeLimitReached: '您已達到今日按讚上限（10次）。請明天再試。',
-    matched: '配對成功！發送訊息吧。',
-    likeFailed: '按讚失敗，請重試。',
-    errorOccurred: '發生錯誤，請重試。'
+    today: '今天',
+    yesterday: '昨天'
   }
 }
 
@@ -100,6 +84,14 @@ interface LikerProfile {
   avatar_url: string | null
   personality_tags: string[]
   culture_tags: string[]
+  liked_at: string | null
+}
+
+// 日付グループの型定義
+interface DateGroup {
+  dateKey: string
+  dateLabel: string
+  likers: LikerProfile[]
 }
 
 export default function LikesPage() {
@@ -121,6 +113,102 @@ export default function LikesPage() {
     })
     return text
   }
+
+  // ブラウザのロケールを取得
+  const getBrowserLocale = (): string => {
+    if (typeof window === 'undefined') return 'ja-JP'
+    const lang = navigator.language
+    // 言語コードからロケールを推定
+    if (lang.startsWith('ja')) return 'ja-JP'
+    if (lang.startsWith('ko')) return 'ko-KR'
+    if (lang.startsWith('zh')) return 'zh-TW'
+    return lang
+  }
+
+  // 日付見出しをフォーマット（今日・昨日 or 日付）
+  const formatDateHeading = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    // 日付部分のみを比較
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return t('today')
+    }
+    if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return t('yesterday')
+    }
+
+    // それ以外は日付を表示
+    const locale = getBrowserLocale()
+    const formatter = new Intl.DateTimeFormat(locale, {
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short'
+    })
+    return formatter.format(date)
+  }
+
+  // 時刻をフォーマット
+  const formatTime = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const locale = getBrowserLocale()
+    const formatter = new Intl.DateTimeFormat(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: !locale.startsWith('ja') && !locale.startsWith('ko') ? true : locale.startsWith('ko') ? true : false
+    })
+    // 日本語の場合は24時間表示、韓国語・英語は12時間表示
+    if (locale.startsWith('ja')) {
+      return new Intl.DateTimeFormat('ja-JP', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(date)
+    }
+    return formatter.format(date)
+  }
+
+  // 日付キーを取得（グループ化用）
+  const getDateKey = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+
+  // いいねを日付でグループ化
+  const groupedLikers = useMemo((): DateGroup[] => {
+    if (likers.length === 0) return []
+
+    const groups = new Map<string, LikerProfile[]>()
+    const dateOrder: string[] = []
+
+    likers.forEach(liker => {
+      const dateKey = liker.liked_at ? getDateKey(liker.liked_at) : 'unknown'
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, [])
+        dateOrder.push(dateKey)
+      }
+      groups.get(dateKey)!.push(liker)
+    })
+
+    return dateOrder.map(dateKey => {
+      const likersInGroup = groups.get(dateKey) || []
+      const firstLiker = likersInGroup[0]
+      const dateLabel = firstLiker?.liked_at
+        ? formatDateHeading(firstLiker.liked_at)
+        : ''
+      return {
+        dateKey,
+        dateLabel,
+        likers: likersInGroup
+      }
+    })
+  }, [likers, currentLanguage])
 
   // 残りいいね数を取得
   const fetchLikesRemaining = async () => {
@@ -207,16 +295,10 @@ export default function LikesPage() {
             </div>
           </div>
 
-          {/* 結果カウント */}
-          <div className="mb-6">
-            {isLoading ? (
-              <p className="text-gray-500">{t('loading')}</p>
-            ) : (
-              <p className="text-gray-600">
-                {t('likersFound', { count: likers.length })}
-              </p>
-            )}
-          </div>
+          {/* ローディング表示 */}
+          {isLoading && (
+            <p className="text-gray-500 mb-6">{t('loading')}</p>
+          )}
 
           {/* スケルトン UI */}
           {isLoading && (
@@ -245,93 +327,113 @@ export default function LikesPage() {
             </div>
           )}
 
-          {/* いいねをくれたユーザー一覧 */}
-          {!isLoading && likers.length > 0 && (
-            <div className="flex flex-col gap-6">
-              {likers.map((liker) => {
-                const isJapanese = !liker.nationality ||
-                  liker.nationality === '' ||
-                  liker.nationality.toLowerCase() === 'jp' ||
-                  liker.nationality.toLowerCase() === 'japan' ||
-                  liker.nationality === '日本' ||
-                  liker.nationality.toLowerCase() === 'japanese'
+          {/* いいねをくれたユーザー一覧（日付グループ） */}
+          {!isLoading && groupedLikers.length > 0 && (
+            <div className="flex flex-col gap-8">
+              {groupedLikers.map((group) => (
+                <div key={group.dateKey}>
+                  {/* 日付見出し */}
+                  <h2 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                    {group.dateLabel}
+                  </h2>
 
-                const locationLabel = isJapanese
-                  ? formatPrefecture(liker.prefecture || liker.residence, currentLanguage) || liker.prefecture || liker.residence
-                  : formatNationality(liker.nationality, currentLanguage) || liker.nationality
+                  {/* その日のいいね一覧 */}
+                  <div className="flex flex-col gap-6">
+                    {group.likers.map((liker) => {
+                      const isJapanese = !liker.nationality ||
+                        liker.nationality === '' ||
+                        liker.nationality.toLowerCase() === 'jp' ||
+                        liker.nationality.toLowerCase() === 'japan' ||
+                        liker.nationality === '日本' ||
+                        liker.nationality.toLowerCase() === 'japanese'
 
-                return (
-                  <div key={liker.id} className="max-w-xl mx-auto w-full">
-                    <Link
-                      href={`/profile/${liker.id}`}
-                      className="block"
-                    >
-                      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-                        {/* プロフィール画像エリア */}
-                        <div className="relative h-56 bg-gray-50">
-                          {liker.avatar_url ? (
-                            <img
-                              src={liker.avatar_url}
-                              alt={liker.name}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
-                              <User className="w-20 h-20 text-sakura-300" />
-                            </div>
-                          )}
-                        </div>
+                      const locationLabel = isJapanese
+                        ? formatPrefecture(liker.prefecture || liker.residence, currentLanguage) || liker.prefecture || liker.residence
+                        : formatNationality(liker.nationality, currentLanguage) || liker.nationality
 
-                        {/* プロフィール情報 */}
-                        <div className="p-5">
-                          <div className="flex items-center flex-wrap gap-2 mb-2">
-                            <h3 className="text-xl font-bold text-gray-900">
-                              {liker.name}
-                            </h3>
-                            {liker.age && (
-                              <span className="text-lg text-gray-700">{liker.age}{t('yearsOld')}</span>
-                            )}
-                            {locationLabel && (
-                              <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                                {isJapanese ? (
-                                  <MapPin className="w-3 h-3 mr-1" />
+                      return (
+                        <div key={liker.id} className="max-w-xl mx-auto w-full">
+                          <Link
+                            href={`/profile/${liker.id}`}
+                            className="block"
+                          >
+                            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+                              {/* プロフィール画像エリア */}
+                              <div className="relative h-56 bg-gray-50">
+                                {liker.avatar_url ? (
+                                  <img
+                                    src={liker.avatar_url}
+                                    alt={liker.name}
+                                    className="w-full h-full object-contain"
+                                  />
                                 ) : (
-                                  <Globe className="w-3 h-3 mr-1" />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
+                                    <User className="w-20 h-20 text-sakura-300" />
+                                  </div>
                                 )}
-                                {locationLabel}
-                              </span>
-                            )}
-                          </div>
+                                {/* いいねをもらった時刻 */}
+                                {liker.liked_at && (
+                                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-sm">
+                                    <span className="text-xs text-gray-600 font-medium">
+                                      {formatTime(liker.liked_at)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
 
-                          {liker.bio && (
-                            <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
-                              {liker.bio}
-                            </p>
-                          )}
+                              {/* プロフィール情報 */}
+                              <div className="p-5">
+                                <div className="flex items-center flex-wrap gap-2 mb-2">
+                                  <h3 className="text-xl font-bold text-gray-900">
+                                    {liker.name}
+                                  </h3>
+                                  {liker.age && (
+                                    <span className="text-lg text-gray-700">{liker.age}{t('yearsOld')}</span>
+                                  )}
+                                  {locationLabel && (
+                                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+                                      {isJapanese ? (
+                                        <MapPin className="w-3 h-3 mr-1" />
+                                      ) : (
+                                        <Globe className="w-3 h-3 mr-1" />
+                                      )}
+                                      {locationLabel}
+                                    </span>
+                                  )}
+                                </div>
 
-                          {liker.interests && liker.interests.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-4">
-                              {liker.interests.slice(0, 3).map((interest, index) => (
-                                <span
-                                  key={index}
-                                  className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
-                                >
-                                  {formatCultureTag(interest, currentLanguage)}
-                                </span>
-                              ))}
-                              {liker.interests.length > 3 && (
-                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                                  +{liker.interests.length - 3}
-                                </span>
-                              )}
+                                {liker.bio && (
+                                  <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                                    {liker.bio}
+                                  </p>
+                                )}
+
+                                {liker.interests && liker.interests.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mb-4">
+                                    {liker.interests.slice(0, 3).map((interest, index) => (
+                                      <span
+                                        key={index}
+                                        className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
+                                      >
+                                        {formatCultureTag(interest, currentLanguage)}
+                                      </span>
+                                    ))}
+                                    {liker.interests.length > 3 && (
+                                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                                        +{liker.interests.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
+                          </Link>
                         </div>
-                      </div>
-                    </Link>
+                      )
+                    })}
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           )}
 

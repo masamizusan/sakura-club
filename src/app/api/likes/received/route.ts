@@ -182,8 +182,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // いいねの順番を維持するためのマップ
+    // いいねの順番を維持するためのマップ（created_atも保持）
     const likerIdOrder = new Map(likerIds.map((id, index) => [id, index]))
+
+    // liker_id → created_at のマップを作成
+    const likerCreatedAtMap = new Map<string, string>()
+    receivedLikes?.forEach(like => {
+      if (!likerCreatedAtMap.has(like.liker_id)) {
+        likerCreatedAtMap.set(like.liker_id, like.created_at)
+      }
+    })
 
     // 年齢計算関数
     const calculateAge = (birthDate: string | null): number | null => {
@@ -214,6 +222,7 @@ export async function GET(request: NextRequest) {
         avatar_url: profile.avatar_url || (Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 ? profile.photo_urls[0] : null),
         personality_tags: Array.isArray(profile.personality_tags) ? profile.personality_tags : [],
         culture_tags: Array.isArray(profile.culture_tags) ? profile.culture_tags : [],
+        liked_at: likerCreatedAtMap.get(profile.id) || null,
       }))
       .sort((a, b) => (likerIdOrder.get(a.id) ?? 999) - (likerIdOrder.get(b.id) ?? 999)) || []
 
