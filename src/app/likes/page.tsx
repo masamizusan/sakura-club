@@ -278,17 +278,17 @@ export default function LikesPage() {
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       <Sidebar className="w-64 hidden md:block" />
 
-      <div className="md:ml-64 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
+      <div className="md:ml-64 py-6 px-4">
+        <div className="max-w-[480px] mx-auto">
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('pageTitle')}</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-600">
               {t('pageSubtitle')}
             </p>
             {/* 残りいいね数表示 */}
-            <div className="mt-4 inline-flex items-center bg-white rounded-full px-4 py-2 shadow-md">
-              <Heart className={`w-5 h-5 mr-2 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+            <div className="mt-3 inline-flex items-center bg-white rounded-full px-3 py-1.5 shadow-sm text-sm">
+              <Heart className={`w-4 h-4 mr-1.5 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
               <span className="text-gray-700">
                 {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
               </span>
@@ -297,29 +297,21 @@ export default function LikesPage() {
 
           {/* ローディング表示 */}
           {isLoading && (
-            <p className="text-gray-500 mb-6">{t('loading')}</p>
+            <p className="text-gray-500 text-sm mb-4">{t('loading')}</p>
           )}
 
-          {/* スケルトン UI */}
+          {/* スケルトン UI（コンパクト版） */}
           {isLoading && (
-            <div className="flex flex-col gap-6 mb-6">
+            <div className="flex flex-col gap-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg shadow-lg overflow-hidden animate-pulse max-w-xl mx-auto w-full">
-                  <div className="h-56 bg-gray-200"></div>
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="h-6 w-20 bg-gray-200 rounded"></div>
-                      <div className="h-5 w-12 bg-gray-200 rounded"></div>
-                      <div className="h-5 w-16 bg-gray-200 rounded-full"></div>
-                    </div>
-                    <div className="space-y-2 mb-3">
-                      <div className="h-4 w-full bg-gray-200 rounded"></div>
-                      <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
-                    </div>
-                    <div className="flex gap-1">
-                      <div className="h-5 w-12 bg-gray-200 rounded-full"></div>
-                      <div className="h-5 w-14 bg-gray-200 rounded-full"></div>
-                      <div className="h-5 w-10 bg-gray-200 rounded-full"></div>
+                <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                  <div className="flex p-3">
+                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                    <div className="ml-3 flex-1">
+                      <div className="h-4 w-16 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 w-12 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 w-20 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 w-14 bg-gray-200 rounded"></div>
                     </div>
                   </div>
                 </div>
@@ -329,16 +321,16 @@ export default function LikesPage() {
 
           {/* いいねをくれたユーザー一覧（日付グループ） */}
           {!isLoading && groupedLikers.length > 0 && (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5">
               {groupedLikers.map((group) => (
                 <div key={group.dateKey}>
                   {/* 日付見出し */}
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                  <h2 className="text-sm font-semibold text-gray-600 mb-2">
                     {group.dateLabel}
                   </h2>
 
                   {/* その日のいいね一覧 */}
-                  <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2">
                     {group.likers.map((liker) => {
                       const isJapanese = !liker.nationality ||
                         liker.nationality === '' ||
@@ -352,83 +344,75 @@ export default function LikesPage() {
                         : formatNationality(liker.nationality, currentLanguage) || liker.nationality
 
                       return (
-                        <div key={liker.id} className="max-w-xl mx-auto w-full">
-                          <Link
-                            href={`/profile/${liker.id}`}
-                            className="block"
-                          >
-                            <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-                              {/* プロフィール画像エリア */}
-                              <div className="relative h-56 bg-gray-50">
+                        <Link
+                          key={liker.id}
+                          href={`/profile/${liker.id}`}
+                          className="block"
+                        >
+                          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                            <div className="flex p-3">
+                              {/* 写真エリア（左側） */}
+                              <div className="relative w-24 h-24 flex-shrink-0">
                                 {liker.avatar_url ? (
                                   <img
                                     src={liker.avatar_url}
                                     alt={liker.name}
-                                    className="w-full h-full object-contain"
+                                    className="w-full h-full object-cover rounded-lg"
                                   />
                                 ) : (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
-                                    <User className="w-20 h-20 text-sakura-300" />
-                                  </div>
-                                )}
-                                {/* いいねをもらった時刻 */}
-                                {liker.liked_at && (
-                                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-sm">
-                                    <span className="text-xs text-gray-600 font-medium">
-                                      {formatTime(liker.liked_at)}
-                                    </span>
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-lg">
+                                    <User className="w-10 h-10 text-sakura-300" />
                                   </div>
                                 )}
                               </div>
 
-                              {/* プロフィール情報 */}
-                              <div className="p-5">
-                                <div className="flex items-center flex-wrap gap-2 mb-2">
-                                  <h3 className="text-xl font-bold text-gray-900">
-                                    {liker.name}
-                                  </h3>
-                                  {liker.age && (
-                                    <span className="text-lg text-gray-700">{liker.age}{t('yearsOld')}</span>
-                                  )}
-                                  {locationLabel && (
-                                    <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
-                                      {isJapanese ? (
-                                        <MapPin className="w-3 h-3 mr-1" />
-                                      ) : (
-                                        <Globe className="w-3 h-3 mr-1" />
-                                      )}
-                                      {locationLabel}
-                                    </span>
-                                  )}
-                                </div>
-
+                              {/* プロフィール情報（右側） */}
+                              <div className="ml-3 flex-1 min-w-0">
+                                {/* 時刻 */}
+                                {liker.liked_at && (
+                                  <p className="text-xs text-gray-400 mb-0.5">
+                                    {formatTime(liker.liked_at)}
+                                  </p>
+                                )}
+                                {/* 年齢 */}
+                                {liker.age && (
+                                  <p className="text-sm text-gray-700">
+                                    {liker.age}{t('yearsOld')}
+                                  </p>
+                                )}
+                                {/* 居住地/国籍 */}
+                                {locationLabel && (
+                                  <p className="text-sm text-gray-600">
+                                    {locationLabel}
+                                  </p>
+                                )}
+                                {/* 名前 */}
+                                <p className="text-base font-semibold text-gray-900 truncate">
+                                  {liker.name}
+                                </p>
+                                {/* 自己紹介（1行） */}
                                 {liker.bio && (
-                                  <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
+                                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">
                                     {liker.bio}
                                   </p>
                                 )}
-
+                                {/* 興味タグ（小さく） */}
                                 {liker.interests && liker.interests.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mb-4">
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
                                     {liker.interests.slice(0, 3).map((interest, index) => (
                                       <span
                                         key={index}
-                                        className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
+                                        className="bg-sakura-50 text-sakura-600 px-1.5 py-0.5 rounded text-[10px]"
                                       >
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>
                                     ))}
-                                    {liker.interests.length > 3 && (
-                                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                                        +{liker.interests.length - 3}
-                                      </span>
-                                    )}
                                   </div>
                                 )}
                               </div>
                             </div>
-                          </Link>
-                        </div>
+                          </div>
+                        </Link>
                       )
                     })}
                   </div>
@@ -441,16 +425,16 @@ export default function LikesPage() {
           {!isLoading && likers.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
-                <Coffee className="w-16 h-16 mx-auto" />
+                <Coffee className="w-12 h-12 mx-auto" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {t('noLikersTitle')}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 mb-4">
                 {t('noLikersSubtitle')}
               </p>
               <Link href="/matches">
-                <Button variant="sakura">
+                <Button variant="sakura" size="sm">
                   {t('goToSearch')}
                 </Button>
               </Link>
