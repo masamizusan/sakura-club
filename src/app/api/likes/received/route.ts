@@ -1,12 +1,224 @@
-export const dynamic = 'force-dynamic'
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
-export async function GET(request: Request) {
-  console.log('Step 1: start')
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const noCacheHeaders = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+}
+
+/**
+ * GET /api/likes/received
+ *
+ * 自分にいいねを送ってきたユーザー一覧を取得
+ */
+export async function GET(request: NextRequest) {
+  console.log('🚀 [likes/received] API started')
+
   try {
-    console.log('Step 2: in try')
-    return Response.json({ data: [], count: 0 })
+    // cookies() from next/headers を使用（likes/remaining と同じ方式）
+    const cookieStore = cookies()
+    const allCookies = cookieStore.getAll()
+    const hasSbCookies = allCookies.some(c => c.name.startsWith('sb-'))
+
+    console.log('🍪 [likes/received] Cookies:', {
+      count: allCookies.length,
+      hasSbCookies
+    })
+
+    // Supabaseクライアント作成
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll() {},
+        },
+      }
+    )
+
+    // 認証チェック
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    console.log('🔐 [likes/received] Auth result:', {
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      error: authError?.message
+    })
+
+    if (!user) {
+      console.log('❌ [likes/received] Auth failed:', authError?.message || 'user is null')
+      return NextResponse.json({
+        error: 'Authentication required',
+        likers: [],
+        count: 0
+      }, { status: 401, headers: noCacheHeaders })
+    }
+
+    const currentUserId = user.id
+    console.log('✅ [likes/received] Authenticated user:', currentUserId)
+
+    // 1. 自分がいいねしたユーザーのIDを取得（除外用）
+    console.log('📤 [likes/received] Step 1: Getting sent likes...')
+    const { data: sentLikes, error: sentError } = await supabase
+      .from('likes')
+      .select('liked_user_id')
+      .eq('liker_id', currentUserId)
+
+    if (sentError) {
+      console.error('[likes/received] sent likes error:', sentError.message)
+    }
+    const sentLikeUserIds = sentLikes?.map(l => l.liked_user_id) || []
+    console.log('📤 [likes/received] Sent likes count:', sentLikeUserIds.length)
+
+    // 2. マッチング済みのユーザーIDを取得（除外用）
+    console.log('💕 [likes/received] Step 2: Getting matched users...')
+    const { data: matchedRecords, error: matchedError } = await supabase
+      .from('matches')
+      .select('user1_id, user2_id')
+      .eq('status', 'matched')
+      .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
+
+    if (matchedError) {
+      console.error('[likes/received] matched error:', matchedError.message)
+    }
+    const matchedUserIds = matchedRecords?.map(m =>
+      m.user1_id === currentUserId ? m.user2_id : m.user1_id
+    ) || []
+    console.log('💕 [likes/received] Matched users count:', matchedUserIds.length)
+
+    // 除外するユーザーIDのセット
+    const excludeUserIds = new Set(sentLikeUserIds.concat(matchedUserIds))
+
+    // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
+    console.log('📥 [likes/received] Step 3: Getting received likes...')
+    const { data: receivedLikes, error: receivedError } = await supabase
+      .from('likes')
+      .select('liker_id, created_at')
+      .eq('liked_user_id', currentUserId)
+      .order('created_at', { ascending: false })
+
+    if (receivedError) {
+      console.error('[likes/received] received likes error:', receivedError.message)
+      return NextResponse.json({
+        error: 'いいね情報の取得に失敗しました',
+        detail: receivedError.message,
+        likers: [],
+        count: 0
+      }, { status: 500, headers: noCacheHeaders })
+    }
+
+    console.log('📥 [likes/received] Received likes count:', receivedLikes?.length || 0)
+
+    // 除外済みユーザーを除く、ユニークなliker_id一覧
+    const filteredLikerIds = receivedLikes
+      ?.filter(l => !excludeUserIds.has(l.liker_id))
+      .map(l => l.liker_id) || []
+    const likerIds = Array.from(new Set(filteredLikerIds))
+    console.log('🎯 [likes/received] Filtered liker IDs count:', likerIds.length)
+
+    if (likerIds.length === 0) {
+      console.log('📭 [likes/received] No likers found')
+      return NextResponse.json({
+        likers: [],
+        count: 0
+      }, { headers: noCacheHeaders })
+    }
+
+    // 4. ユーザープロフィール情報を取得
+    console.log('👤 [likes/received] Step 4: Getting profiles...')
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        name,
+        gender,
+        birth_date,
+        nationality,
+        residence,
+        bio,
+        interests,
+        avatar_url,
+        photo_urls,
+        city,
+        personality_tags,
+        culture_tags
+      `)
+      .in('id', likerIds)
+      .eq('profile_initialized', true)
+
+    if (profilesError) {
+      console.error('[likes/received] profiles error:', profilesError.message)
+      return NextResponse.json({
+        error: 'プロフィール情報の取得に失敗しました',
+        detail: profilesError.message,
+        likers: [],
+        count: 0
+      }, { status: 500, headers: noCacheHeaders })
+    }
+
+    console.log('👤 [likes/received] Profiles found:', profiles?.length || 0)
+
+    // いいねの順番を維持するためのマップ
+    const likerIdOrder = new Map(likerIds.map((id, index) => [id, index]))
+
+    // 年齢計算関数
+    const calculateAge = (birthDate: string | null): number | null => {
+      if (!birthDate) return null
+      const birth = new Date(birthDate)
+      const today = new Date()
+      let age = today.getFullYear() - birth.getFullYear()
+      const monthDiff = today.getMonth() - birth.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--
+      }
+      return age
+    }
+
+    // プロフィールを整形（いいねの順番で並べ替え）
+    const formattedLikers = profiles
+      ?.map(profile => ({
+        id: profile.id,
+        name: profile.name || '',
+        gender: profile.gender || '',
+        age: calculateAge(profile.birth_date),
+        nationality: profile.nationality || '',
+        residence: profile.residence || '',
+        prefecture: profile.residence || '',
+        city: typeof profile.city === 'object' ? (profile.city as any)?.city : profile.city || '',
+        bio: profile.bio || '',
+        interests: Array.isArray(profile.interests) ? profile.interests : [],
+        avatar_url: profile.avatar_url || (Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 ? profile.photo_urls[0] : null),
+        personality_tags: Array.isArray(profile.personality_tags) ? profile.personality_tags : [],
+        culture_tags: Array.isArray(profile.culture_tags) ? profile.culture_tags : [],
+      }))
+      .sort((a, b) => (likerIdOrder.get(a.id) ?? 999) - (likerIdOrder.get(b.id) ?? 999)) || []
+
+    console.log(`✅ [likes/received] Success: Found ${formattedLikers.length} likers`)
+
+    return NextResponse.json({
+      likers: formattedLikers,
+      count: formattedLikers.length
+    }, { headers: noCacheHeaders })
+
   } catch (error) {
-    console.error('Step 3: error', error)
-    return Response.json({ error: 'test' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('[likes/received] Unexpected error:', errorMessage)
+    if (error instanceof Error && error.stack) {
+      console.error('[likes/received] Stack:', error.stack)
+    }
+    return NextResponse.json({
+      error: '予期しないエラーが発生しました',
+      detail: errorMessage,
+      likers: [],
+      count: 0
+    }, { status: 500, headers: noCacheHeaders })
   }
 }
