@@ -76,7 +76,10 @@ export async function GET(request: NextRequest) {
       console.error('[likes/received] sent likes error:', sentError.message)
     }
     const sentLikeUserIds = sentLikes?.map(l => l.liked_user_id) || []
-    console.log('📤 [likes/received] Sent likes count:', sentLikeUserIds.length)
+    console.log('📤 [likes/received] Sent likes:', {
+      count: sentLikeUserIds.length,
+      ids: sentLikeUserIds.map(id => id.slice(0, 8))
+    })
 
     // 2. マッチング済みのユーザーIDを取得（除外用）
     console.log('💕 [likes/received] Step 2: Getting matched users...')
@@ -92,10 +95,14 @@ export async function GET(request: NextRequest) {
     const matchedUserIds = matchedRecords?.map(m =>
       m.user1_id === currentUserId ? m.user2_id : m.user1_id
     ) || []
-    console.log('💕 [likes/received] Matched users count:', matchedUserIds.length)
+    console.log('💕 [likes/received] Matched users:', {
+      count: matchedUserIds.length,
+      ids: matchedUserIds.map(id => id.slice(0, 8))
+    })
 
     // 除外するユーザーIDのセット
     const excludeUserIds = new Set(sentLikeUserIds.concat(matchedUserIds))
+    console.log('🚫 [likes/received] Total exclude count:', excludeUserIds.size)
 
     // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
     console.log('📥 [likes/received] Step 3: Getting received likes...')
@@ -115,14 +122,29 @@ export async function GET(request: NextRequest) {
       }, { status: 500, headers: noCacheHeaders })
     }
 
-    console.log('📥 [likes/received] Received likes count:', receivedLikes?.length || 0)
+    // 受け取ったいいねの詳細をログ
+    const allReceivedLikerIds = receivedLikes?.map(l => l.liker_id) || []
+    console.log('📥 [likes/received] Received likes:', {
+      count: allReceivedLikerIds.length,
+      ids: allReceivedLikerIds.map(id => id.slice(0, 8))
+    })
+
+    // 除外されるユーザーを詳細にログ
+    const excludedUsers = receivedLikes?.filter(l => excludeUserIds.has(l.liker_id)) || []
+    excludedUsers.forEach(l => {
+      const reason = sentLikeUserIds.includes(l.liker_id) ? 'いいね返し済み' : 'マッチング済み'
+      console.log(`🚫 [likes/received] 除外: ${l.liker_id.slice(0, 8)} - 理由: ${reason}`)
+    })
 
     // 除外済みユーザーを除く、ユニークなliker_id一覧
     const filteredLikerIds = receivedLikes
       ?.filter(l => !excludeUserIds.has(l.liker_id))
       .map(l => l.liker_id) || []
     const likerIds = Array.from(new Set(filteredLikerIds))
-    console.log('🎯 [likes/received] Filtered liker IDs count:', likerIds.length)
+    console.log('🎯 [likes/received] After filtering:', {
+      count: likerIds.length,
+      ids: likerIds.map(id => id.slice(0, 8))
+    })
 
     if (likerIds.length === 0) {
       console.log('📭 [likes/received] No likers found')
@@ -165,6 +187,16 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('👤 [likes/received] Profiles found:', profiles?.length || 0)
+
+    // プロフィールが取得できなかったユーザーをログ
+    const foundProfileIds = profiles?.map(p => p.id) || []
+    const missingProfileIds = likerIds.filter(id => !foundProfileIds.includes(id))
+    if (missingProfileIds.length > 0) {
+      console.log('⚠️ [likes/received] Missing profiles (profile_initialized=false?):', {
+        count: missingProfileIds.length,
+        ids: missingProfileIds.map(id => id.slice(0, 8))
+      })
+    }
 
     // いいねの順番を維持するためのマップ
     const likerIdOrder = new Map(likerIds.map((id, index) => [id, index]))
