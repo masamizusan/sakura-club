@@ -65,24 +65,9 @@ export async function GET(request: NextRequest) {
     const currentUserId = user.id
     console.log('✅ [likes/received] Authenticated user:', currentUserId)
 
-    // 1. 自分がいいねしたユーザーのIDを取得（除外用）
-    console.log('📤 [likes/received] Step 1: Getting sent likes...')
-    const { data: sentLikes, error: sentError } = await supabase
-      .from('likes')
-      .select('liked_user_id')
-      .eq('liker_id', currentUserId)
-
-    if (sentError) {
-      console.error('[likes/received] sent likes error:', sentError.message)
-    }
-    const sentLikeUserIds = sentLikes?.map(l => l.liked_user_id) || []
-    console.log('📤 [likes/received] Sent likes:', {
-      count: sentLikeUserIds.length,
-      ids: sentLikeUserIds.map(id => id.slice(0, 8))
-    })
-
-    // 2. マッチング済みのユーザーIDを取得（除外用）
-    console.log('💕 [likes/received] Step 2: Getting matched users...')
+    // マッチング済みのユーザーIDを取得（除外用）
+    // ※「いいね返し済み」は除外しない（マッチング成立の候補として表示）
+    console.log('💕 [likes/received] Step 1: Getting matched users...')
     const { data: matchedRecords, error: matchedError } = await supabase
       .from('matches')
       .select('user1_id, user2_id')
@@ -95,13 +80,13 @@ export async function GET(request: NextRequest) {
     const matchedUserIds = matchedRecords?.map(m =>
       m.user1_id === currentUserId ? m.user2_id : m.user1_id
     ) || []
-    console.log('💕 [likes/received] Matched users:', {
+    console.log('💕 [likes/received] Matched users (will be excluded):', {
       count: matchedUserIds.length,
       ids: matchedUserIds.map(id => id.slice(0, 8))
     })
 
-    // 除外するユーザーIDのセット
-    const excludeUserIds = new Set(sentLikeUserIds.concat(matchedUserIds))
+    // 除外するユーザーIDのセット（マッチング済みのみ）
+    const excludeUserIds = new Set(matchedUserIds)
     console.log('🚫 [likes/received] Total exclude count:', excludeUserIds.size)
 
     // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
@@ -129,11 +114,10 @@ export async function GET(request: NextRequest) {
       ids: allReceivedLikerIds.map(id => id.slice(0, 8))
     })
 
-    // 除外されるユーザーを詳細にログ
+    // 除外されるユーザーを詳細にログ（マッチング済みのみ）
     const excludedUsers = receivedLikes?.filter(l => excludeUserIds.has(l.liker_id)) || []
     excludedUsers.forEach(l => {
-      const reason = sentLikeUserIds.includes(l.liker_id) ? 'いいね返し済み' : 'マッチング済み'
-      console.log(`🚫 [likes/received] 除外: ${l.liker_id.slice(0, 8)} - 理由: ${reason}`)
+      console.log(`🚫 [likes/received] 除外: ${l.liker_id.slice(0, 8)} - 理由: マッチング済み`)
     })
 
     // 除外済みユーザーを除く、ユニークなliker_id一覧
