@@ -217,7 +217,14 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => (likerIdOrder.get(a.id) ?? 999) - (likerIdOrder.get(b.id) ?? 999)) || []
 
-    console.log(`✅ [likes/received] Success: Found ${formattedLikers.length} likers`)
+    // 最終レスポンスの詳細ログ
+    console.log('✅ [likes/received] FINAL RESPONSE:', {
+      count: formattedLikers.length,
+      likers: formattedLikers.map(l => ({
+        id: l.id.slice(0, 8),
+        name: l.name
+      }))
+    })
 
     return NextResponse.json({
       likers: formattedLikers,
