@@ -300,18 +300,19 @@ export default function LikesPage() {
             <p className="text-gray-500 text-sm mb-4">{t('loading')}</p>
           )}
 
-          {/* スケルトン UI（コンパクト版） */}
+          {/* スケルトン UI */}
           {isLoading && (
             <div className="flex flex-col gap-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
-                  <div className="flex p-3">
-                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                    <div className="ml-3 flex-1">
-                      <div className="h-4 w-16 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 w-12 bg-gray-200 rounded mb-1"></div>
-                      <div className="h-4 w-20 bg-gray-200 rounded mb-1"></div>
-                      <div className="h-4 w-14 bg-gray-200 rounded"></div>
+                <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                  <div className="flex p-4">
+                    <div className="w-[120px] h-[120px] bg-gray-200 rounded-lg flex-shrink-0"></div>
+                    <div className="ml-4 flex-1">
+                      <div className="h-4 w-14 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-6 w-16 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-5 w-20 bg-gray-200 rounded mb-1"></div>
+                      <div className="h-4 w-14 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 w-full bg-gray-200 rounded"></div>
                     </div>
                   </div>
                 </div>
@@ -321,16 +322,16 @@ export default function LikesPage() {
 
           {/* いいねをくれたユーザー一覧（日付グループ） */}
           {!isLoading && groupedLikers.length > 0 && (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-6">
               {groupedLikers.map((group) => (
                 <div key={group.dateKey}>
                   {/* 日付見出し */}
-                  <h2 className="text-sm font-semibold text-gray-600 mb-2">
+                  <h2 className="text-lg font-bold text-gray-800 mb-3">
                     {group.dateLabel}
                   </h2>
 
                   {/* その日のいいね一覧 */}
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     {group.likers.map((liker) => {
                       const isJapanese = !liker.nationality ||
                         liker.nationality === '' ||
@@ -349,10 +350,10 @@ export default function LikesPage() {
                           href={`/profile/${liker.id}`}
                           className="block"
                         >
-                          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
-                            <div className="flex p-3">
-                              {/* 写真エリア（左側） */}
-                              <div className="relative w-24 h-24 flex-shrink-0">
+                          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                            <div className="flex p-4">
+                              {/* 写真エリア（左側）- 120px */}
+                              <div className="relative w-[120px] h-[120px] flex-shrink-0">
                                 {liker.avatar_url ? (
                                   <img
                                     src={liker.avatar_url}
@@ -361,48 +362,48 @@ export default function LikesPage() {
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-lg">
-                                    <User className="w-10 h-10 text-sakura-300" />
+                                    <User className="w-12 h-12 text-sakura-300" />
                                   </div>
                                 )}
                               </div>
 
                               {/* プロフィール情報（右側） */}
-                              <div className="ml-3 flex-1 min-w-0">
-                                {/* 時刻 */}
+                              <div className="ml-4 flex-1 min-w-0 flex flex-col">
+                                {/* 時刻（右上に小さく） */}
                                 {liker.liked_at && (
-                                  <p className="text-xs text-gray-400 mb-0.5">
+                                  <p className="text-sm text-gray-400">
                                     {formatTime(liker.liked_at)}
                                   </p>
                                 )}
-                                {/* 年齢 */}
+                                {/* 年齢（大きく太字） */}
                                 {liker.age && (
-                                  <p className="text-sm text-gray-700">
+                                  <p className="text-xl font-bold text-gray-800">
                                     {liker.age}{t('yearsOld')}
                                   </p>
                                 )}
-                                {/* 居住地/国籍 */}
+                                {/* 居住地/国籍（大きく太字・アクセントカラー） */}
                                 {locationLabel && (
-                                  <p className="text-sm text-gray-600">
+                                  <p className="text-lg font-bold text-amber-700">
                                     {locationLabel}
                                   </p>
                                 )}
-                                {/* 名前 */}
-                                <p className="text-base font-semibold text-gray-900 truncate">
+                                {/* 名前（中程度） */}
+                                <p className="text-base font-medium text-gray-700 truncate">
                                   {liker.name}
                                 </p>
-                                {/* 自己紹介（1行） */}
+                                {/* 自己紹介（2行） */}
                                 {liker.bio && (
-                                  <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                                  <p className="text-sm text-gray-500 mt-1 line-clamp-2 leading-snug">
                                     {liker.bio}
                                   </p>
                                 )}
-                                {/* 興味タグ（小さく） */}
+                                {/* 興味タグ */}
                                 {liker.interests && liker.interests.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                  <div className="flex flex-wrap gap-1.5 mt-2">
                                     {liker.interests.slice(0, 3).map((interest, index) => (
                                       <span
                                         key={index}
-                                        className="bg-sakura-50 text-sakura-600 px-1.5 py-0.5 rounded text-[10px]"
+                                        className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs font-medium"
                                       >
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>
