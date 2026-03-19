@@ -126,6 +126,16 @@ export async function GET(request: NextRequest) {
       console.log('🎯 [recommendations] Other pattern → showing opposite gender')
     }
 
+    // いいね済みのユーザーIDを取得
+    const { data: likedData } = await supabase
+      .from('likes')
+      .select('liked_user_id')
+      .eq('liker_id', myProfile.id)
+
+    const likedUserIds = likedData?.map(l => l.liked_user_id) || []
+
+    console.log('💝 [recommendations] Already liked:', likedUserIds.length, 'users')
+
     // 候補を取得（存在するカラムのみ指定）
     let query = supabase
       .from('profiles')
@@ -140,6 +150,11 @@ export async function GET(request: NextRequest) {
       .neq('id', myProfile.id)
       .order('created_at', { ascending: false })
       .limit(20)
+
+    // いいね済みユーザーを除外（空配列の場合はスキップ）
+    if (likedUserIds.length > 0) {
+      query = query.not('id', 'in', `(${likedUserIds.join(',')})`)
+    }
 
     if (targetIsJapanese) {
       query = query.or('nationality.is.null,nationality.eq.,nationality.ilike.%日本%,nationality.ilike.jp,nationality.ilike.japan')
