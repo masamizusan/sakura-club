@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { 
-  MessageCircle, 
-  Send, 
-  Search, 
+import {
+  MessageCircle,
+  Send,
+  Search,
   User,
   Phone,
   Video,
@@ -14,7 +14,8 @@ import {
   Heart,
   Calendar,
   Globe,
-  Circle
+  Circle,
+  ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
@@ -36,6 +37,7 @@ interface Conversation {
   partnerAge: number
   partnerNationality: string
   partnerLocation: string
+  partnerAvatar?: string
   lastMessage: Message
   unreadCount: number
   isOnline: boolean
@@ -333,12 +335,12 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
-      
+
       <div className="md:ml-64">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 h-screen">
+        <div className={`mx-auto ${selectedConversation ? 'max-w-7xl' : 'max-w-xl'}`}>
+          <div className={`grid h-screen ${selectedConversation ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
           {/* 会話リスト */}
-          <div className="bg-white border-r border-gray-200 flex flex-col">
+          <div className={`bg-white flex flex-col ${selectedConversation ? 'border-r border-gray-200 hidden lg:flex' : ''}`}>
             {/* ヘッダー */}
             <div className="p-6 border-b border-gray-200">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">メッセージ</h1>
@@ -374,9 +376,17 @@ export default function MessagesPage() {
                     <div className="flex items-start space-x-3">
                       {/* アバター */}
                       <div className="relative">
-                        <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-sakura-600" />
-                        </div>
+                        {conversation.partnerAvatar ? (
+                          <img
+                            src={conversation.partnerAvatar}
+                            alt={conversation.partnerName}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-sakura-600" />
+                          </div>
+                        )}
                         {conversation.isOnline && (
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         )}
@@ -393,13 +403,23 @@ export default function MessagesPage() {
                           </p>
                         </div>
 
-                        {/* 場所と国籍 */}
-                        <div className="flex items-center text-xs text-gray-500 mb-2">
-                          <Globe className="w-3 h-3 mr-1" />
-                          <span>{conversation.partnerNationality}</span>
-                          <span className="mx-1">•</span>
-                          <span>{conversation.partnerLocation}</span>
-                        </div>
+                        {/* 場所と国籍（未設定でない場合のみ表示） */}
+                        {(conversation.partnerNationality && conversation.partnerNationality !== '未設定') ||
+                         (conversation.partnerLocation && conversation.partnerLocation !== '未設定') ? (
+                          <div className="flex items-center text-xs text-gray-500 mb-2">
+                            <Globe className="w-3 h-3 mr-1" />
+                            {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
+                              <span>{conversation.partnerNationality}</span>
+                            )}
+                            {conversation.partnerNationality && conversation.partnerNationality !== '未設定' &&
+                             conversation.partnerLocation && conversation.partnerLocation !== '未設定' && (
+                              <span className="mx-1">•</span>
+                            )}
+                            {conversation.partnerLocation && conversation.partnerLocation !== '未設定' && (
+                              <span>{conversation.partnerLocation}</span>
+                            )}
+                          </div>
+                        ) : null}
 
                         {/* 最新メッセージ */}
                         <div className="flex items-center justify-between">
@@ -421,18 +441,34 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          {/* メッセージ表示エリア */}
+          {/* メッセージ表示エリア（会話選択時のみ表示） */}
+          {selectedConversation && (
           <div className="lg:col-span-2 flex flex-col bg-white">
-            {selectedConversation ? (
+            {selectedConversation && (
               <>
                 {/* チャットヘッダー */}
                 <div className="p-4 border-b border-gray-200 bg-white">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
+                      {/* モバイル用戻るボタン */}
+                      <button
+                        onClick={() => setSelectedConversation(null)}
+                        className="lg:hidden p-2 -ml-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                      </button>
                       <div className="relative">
-                        <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-sakura-600" />
-                        </div>
+                        {selectedConversation.partnerAvatar ? (
+                          <img
+                            src={selectedConversation.partnerAvatar}
+                            alt={selectedConversation.partnerName}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-sakura-600" />
+                          </div>
+                        )}
                         {selectedConversation.isOnline && (
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                         )}
@@ -526,17 +562,9 @@ export default function MessagesPage() {
                   </div>
                 </div>
               </>
-            ) : (
-              /* 会話未選択時 */
-              <div className="flex-1 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">会話を選択してください</h3>
-                  <p>左側から会話を選んでメッセージを開始しましょう</p>
-                </div>
-              </div>
             )}
           </div>
+          )}
           </div>
         </div>
       </div>

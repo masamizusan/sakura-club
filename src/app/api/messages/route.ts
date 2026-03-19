@@ -164,6 +164,7 @@ export async function GET(request: NextRequest) {
           partnerNationality: getNationalityLabel(partner.nationality || 'JP'),
           partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
           partnerImage: partner.avatar_url || null,
+          partnerAvatar: partner.avatar_url || null,
           lastMessage: {
             id: 'placeholder',
             senderId: partnerId,
