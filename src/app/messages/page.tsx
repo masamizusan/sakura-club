@@ -359,7 +359,23 @@ export default function MessagesPage() {
 
             {/* 会話一覧 */}
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
+              {isLoading ? (
+                // スケルトンローディング
+                <div className="space-y-0">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-5 border-b border-gray-100">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" />
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/4" />
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredConversations.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>メッセージがありません</p>
