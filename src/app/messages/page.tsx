@@ -369,60 +369,62 @@ export default function MessagesPage() {
                   <div
                     key={conversation.id}
                     onClick={() => setSelectedConversation(conversation)}
-                    className={`flex items-center space-x-4 p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                       selectedConversation?.id === conversation.id ? 'bg-sakura-50 border-sakura-200' : ''
                     }`}
                   >
-                    {/* アバター（大きく） */}
-                    <div className="relative flex-shrink-0">
-                      {conversation.partnerAvatar ? (
-                        <img
-                          src={conversation.partnerAvatar}
-                          alt={conversation.partnerName}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
-                          <User className="w-8 h-8 text-sakura-600" />
-                        </div>
-                      )}
-                      {conversation.isOnline && (
-                        <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                      )}
-                    </div>
-
-                    {/* テキスト情報 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-base font-semibold text-gray-900">
-                          {conversation.partnerName}
-                          {conversation.partnerAge && (
-                            <span className="ml-2 text-sm font-normal text-gray-500">
-                              {conversation.partnerAge}歳
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                          {formatLastMessageTime(conversation.lastMessage.timestamp)}
-                        </p>
+                    <div className="flex items-center space-x-4">
+                      {/* アバター */}
+                      <div className="relative flex-shrink-0">
+                        {conversation.partnerAvatar ? (
+                          <img
+                            src={conversation.partnerAvatar}
+                            alt={conversation.partnerName}
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
+                            <User className="w-8 h-8 text-sakura-600" />
+                          </div>
+                        )}
+                        {conversation.isOnline && (
+                          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                        )}
                       </div>
 
-                      {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <Globe className="w-3.5 h-3.5 mr-1" />
-                          <span>{conversation.partnerNationality}</span>
+                      <div className="flex-1 min-w-0">
+                        {/* 名前・年齢・時間 */}
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-base font-semibold text-gray-900 truncate">
+                            {conversation.partnerName}
+                            {conversation.partnerAge && (
+                              <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}歳</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-400 ml-2 flex-shrink-0">
+                            {formatLastMessageTime(conversation.lastMessage.timestamp)}
+                          </p>
                         </div>
-                      )}
 
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-500 truncate flex-1">
-                          {conversation.lastMessage.content}
-                        </p>
-                        {conversation.unreadCount > 0 && (
-                          <span className="ml-2 bg-sakura-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
-                            {conversation.unreadCount}
-                          </span>
+                        {/* 国籍 */}
+                        {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
+                          <div className="flex items-center text-sm text-gray-500 mb-2">
+                            <Globe className="w-3 h-3 mr-1" />
+                            <span>{conversation.partnerNationality}</span>
+                          </div>
                         )}
+
+                        {/* 最新メッセージ */}
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-gray-500 truncate flex-1">
+                            {conversation.lastMessage.content}
+                          </p>
+                          {conversation.unreadCount > 0 && (
+                            <span className="ml-2 bg-sakura-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+                              {conversation.unreadCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
