@@ -55,6 +55,20 @@ export async function GET(request: NextRequest, { params }: Params) {
       )
     }
 
+    // パートナーのIDを特定
+    const partnerId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id
+
+    // パートナーのプロフィール情報を取得
+    const { data: partner, error: partnerError } = await supabase
+      .from('profiles')
+      .select('id, name, age, nationality, residence, city, avatar_url')
+      .eq('id', partnerId)
+      .single()
+
+    if (partnerError) {
+      console.error('Partner profile fetch error:', partnerError)
+    }
+
     // メッセージ一覧を取得
     const { data: messages, error: messagesError } = await supabase
       .from('messages')
@@ -93,8 +107,40 @@ export async function GET(request: NextRequest, { params }: Params) {
       readAt: message.read_at,
     })) || []
 
+    // 国籍ラベルの取得
+    const getNationalityLabel = (nationality: string): string => {
+      const nationalityMap: Record<string, string> = {
+        'JP': '日本',
+        'US': 'アメリカ',
+        'GB': 'イギリス',
+        'CA': 'カナダ',
+        'AU': 'オーストラリア',
+        'DE': 'ドイツ',
+        'FR': 'フランス',
+        'IT': 'イタリア',
+        'ES': 'スペイン',
+        'KR': '韓国',
+        'CN': '中国',
+        'TW': '台湾',
+        'TH': 'タイ',
+        'VN': 'ベトナム',
+        'IN': 'インド',
+      }
+      return nationalityMap[nationality] || nationality
+    }
+
+    // 会話情報を構築
+    const conversationInfo = partner ? {
+      partnerName: partner.name || 'ユーザー',
+      partnerAge: partner.age || null,
+      partnerNationality: getNationalityLabel(partner.nationality || ''),
+      partnerAvatar: partner.avatar_url || null,
+      matchedDate: conversation.created_at,
+    } : null
+
     return NextResponse.json({
       messages: formattedMessages,
+      conversation: conversationInfo,
       total: formattedMessages.length,
       hasMore: formattedMessages.length === limit
     })

@@ -1,23 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import {
   MessageCircle,
-  Send,
   Search,
   User,
-  Phone,
-  Video,
-  MoreVertical,
-  Heart,
-  Calendar,
-  Globe,
-  Circle,
-  ArrowLeft
+  Globe
 } from 'lucide-react'
-import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 
 // メッセージの型定義
@@ -120,73 +111,21 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
   }
 ]
 
-// 個別メッセージのサンプルデータ
-const SAMPLE_MESSAGES: Record<string, Message[]> = {
-  'conv1': [
-    {
-      id: 'msg1_1',
-      senderId: 'user1',
-      content: 'こんにちは！マッチしてくださり、ありがとうございます。',
-      timestamp: '2025-07-25T10:30:00Z',
-      isRead: true
-    },
-    {
-      id: 'msg1_2',
-      senderId: 'current_user',
-      content: 'こちらこそ、よろしくお願いします！プロフィールを拝見して、茶道に興味がおありなんですね。',
-      timestamp: '2025-07-25T11:00:00Z',
-      isRead: true
-    },
-    {
-      id: 'msg1_3',
-      senderId: 'user1',
-      content: 'はい、日本の伝統文化にとても興味があります。一緒に体験できる機会があれば嬉しいです。',
-      timestamp: '2025-07-25T11:30:00Z',
-      isRead: true
-    },
-    {
-      id: 'msg1_4',
-      senderId: 'current_user',
-      content: '素晴らしいですね！明日、表参道で茶道体験があるのですが、ご一緒しませんか？',
-      timestamp: '2025-07-29T19:00:00Z',
-      isRead: true
-    },
-    {
-      id: 'msg1_5',
-      senderId: 'user1',
-      content: 'ぜひ参加させてください！とても楽しみです。',
-      timestamp: '2025-07-30T14:00:00Z',
-      isRead: false
-    },
-    {
-      id: 'msg1_6',
-      senderId: 'user1',
-      content: '明日の茶道体験、とても楽しみにしています！何か持参するものはありますか？',
-      timestamp: '2025-07-30T14:30:00Z',
-      isRead: false
-    }
-  ]
-}
-
 export default function MessagesPage() {
+  const router = useRouter()
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [newMessage, setNewMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
-  const [isSending, setIsSending] = useState(false)
 
   // 会話一覧の取得
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         setIsLoading(true)
-        
+
         const params = new URLSearchParams()
         if (searchTerm) params.append('search', searchTerm)
-        
+
         const response = await fetch(`/api/messages?${params.toString()}`)
         const result = await response.json()
 
@@ -214,66 +153,11 @@ export default function MessagesPage() {
     conv.partnerName.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // 会話選択時にメッセージを読み込む
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedConversation) return
-      
-      try {
-        setIsLoadingMessages(true)
-        
-        const response = await fetch(`/api/messages/${selectedConversation.id}`)
-        const result = await response.json()
-
-        if (response.ok) {
-          setMessages(result.messages || [])
-          
-          // 未読メッセージを既読にする（API側で処理済み）
-          if (selectedConversation.unreadCount > 0) {
-            setConversations(prev => prev.map(conv => 
-              conv.id === selectedConversation.id 
-                ? { ...conv, unreadCount: 0 }
-                : conv
-            ))
-          }
-        } else {
-          console.error('Failed to fetch messages:', result.error)
-          // フォールバックとしてサンプルデータを使用
-          const conversationMessages = SAMPLE_MESSAGES[selectedConversation.id] || []
-          setMessages(conversationMessages)
-        }
-      } catch (error) {
-        console.error('Error fetching messages:', error)
-        // エラー時はサンプルデータを使用
-        const conversationMessages = SAMPLE_MESSAGES[selectedConversation.id] || []
-        setMessages(conversationMessages)
-      } finally {
-        setIsLoadingMessages(false)
-      }
-    }
-
-    fetchMessages()
-  }, [selectedConversation])
-
-  const formatMessageTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) {
-      return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays === 1) {
-      return '昨日'
-    } else {
-      return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
-    }
-  }
-
   const formatLastMessageTime = (timestamp: string) => {
     const date = new Date(timestamp)
     const now = new Date()
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
+
     if (diffMinutes < 60) {
       return `${diffMinutes}分前`
     } else if (diffMinutes < 24 * 60) {
@@ -283,68 +167,20 @@ export default function MessagesPage() {
     }
   }
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || isSending) return
-
-    try {
-      setIsSending(true)
-      
-      const response = await fetch(`/api/messages/${selectedConversation.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: newMessage.trim()
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        // 送信成功時にメッセージを追加
-        setMessages(prev => [...prev, result.data])
-        setNewMessage('')
-
-        // 会話リストの最新メッセージを更新
-        setConversations(prev => prev.map(conv => 
-          conv.id === selectedConversation.id 
-            ? { ...conv, lastMessage: result.data }
-            : conv
-        ))
-      } else {
-        console.error('Failed to send message:', result.error)
-        alert('メッセージの送信に失敗しました。もう一度お試しください。')
-      }
-    } catch (error) {
-      console.error('Error sending message:', error)
-      alert('エラーが発生しました。もう一度お試しください。')
-    } finally {
-      setIsSending(false)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64">
-        <div className={`mx-auto ${selectedConversation ? 'max-w-7xl' : 'max-w-xl'}`}>
-          <div className={`grid h-screen ${selectedConversation ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
+        <div className="mx-auto max-w-xl">
+          <div className="grid h-screen grid-cols-1">
           {/* 会話リスト */}
-          <div className={`bg-white flex flex-col ${selectedConversation ? 'border-r border-gray-200 hidden lg:flex' : ''}`}>
+          <div className="bg-white flex flex-col">
             {/* ヘッダー */}
             <div className="p-6 border-b border-gray-200">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">メッセージ</h1>
-              
+
               {/* 検索 */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -384,10 +220,8 @@ export default function MessagesPage() {
                 filteredConversations.map((conversation) => (
                   <div
                     key={conversation.id}
-                    onClick={() => setSelectedConversation(conversation)}
-                    className={`p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation?.id === conversation.id ? 'bg-sakura-50 border-sakura-200' : ''
-                    }`}
+                    onClick={() => router.push(`/messages/${conversation.id}`)}
+                    className="p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
                       {/* アバター */}
@@ -448,131 +282,6 @@ export default function MessagesPage() {
               )}
             </div>
           </div>
-
-          {/* メッセージ表示エリア（会話選択時のみ表示） */}
-          {selectedConversation && (
-          <div className="lg:col-span-2 flex flex-col bg-white">
-            {selectedConversation && (
-              <>
-                {/* チャットヘッダー */}
-                <div className="p-4 border-b border-gray-200 bg-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {/* モバイル用戻るボタン */}
-                      <button
-                        onClick={() => setSelectedConversation(null)}
-                        className="lg:hidden p-2 -ml-2 hover:bg-gray-100 rounded-full"
-                      >
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                      </button>
-                      <div className="relative">
-                        {selectedConversation.partnerAvatar ? (
-                          <img
-                            src={selectedConversation.partnerAvatar}
-                            alt={selectedConversation.partnerName}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-sakura-600" />
-                          </div>
-                        )}
-                        {selectedConversation.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {selectedConversation.partnerName}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {selectedConversation.isOnline ? 'オンライン' : formatLastMessageTime(selectedConversation.lastMessage.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Video className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* メッセージ一覧 */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {isLoadingMessages ? (
-                    <div className="flex justify-center py-4">
-                      <div className="w-6 h-6 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  ) : (
-                    <>
-                      {/* マッチ通知 */}
-                      <div className="text-center py-4">
-                        <div className="inline-flex items-center bg-sakura-50 text-sakura-700 px-4 py-2 rounded-full text-sm">
-                          <Heart className="w-4 h-4 mr-2 fill-current" />
-                          {new Date(selectedConversation.matchedDate).toLocaleDateString('ja-JP')} にマッチしました
-                        </div>
-                      </div>
-
-                      {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.senderId === 'current_user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.senderId === 'current_user'
-                          ? 'bg-sakura-600 text-white'
-                          : 'bg-gray-100 text-gray-900'
-                      }`}>
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.senderId === 'current_user' ? 'text-sakura-100' : 'text-gray-500'
-                        }`}>
-                          {formatMessageTime(message.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-
-                {/* メッセージ入力 */}
-                <div className="p-4 border-t border-gray-200 bg-white">
-                  <div className="flex items-end space-x-2">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="メッセージを入力..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="resize-none"
-                      />
-                    </div>
-                    <Button 
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim() || isSending}
-                      variant="sakura"
-                    >
-                      {isSending ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <Send className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          )}
           </div>
         </div>
       </div>
