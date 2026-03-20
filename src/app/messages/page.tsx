@@ -369,70 +369,60 @@ export default function MessagesPage() {
                   <div
                     key={conversation.id}
                     onClick={() => setSelectedConversation(conversation)}
-                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`flex items-center space-x-4 p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                       selectedConversation?.id === conversation.id ? 'bg-sakura-50 border-sakura-200' : ''
                     }`}
                   >
-                    <div className="flex items-start space-x-3">
-                      {/* アバター */}
-                      <div className="relative">
-                        {conversation.partnerAvatar ? (
-                          <img
-                            src={conversation.partnerAvatar}
-                            alt={conversation.partnerName}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center">
-                            <User className="w-6 h-6 text-sakura-600" />
-                          </div>
-                        )}
-                        {conversation.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        {/* 名前と時間 */}
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {conversation.partnerName}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatLastMessageTime(conversation.lastMessage.timestamp)}
-                          </p>
+                    {/* アバター（大きく） */}
+                    <div className="relative flex-shrink-0">
+                      {conversation.partnerAvatar ? (
+                        <img
+                          src={conversation.partnerAvatar}
+                          alt={conversation.partnerName}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
+                          <User className="w-8 h-8 text-sakura-600" />
                         </div>
+                      )}
+                      {conversation.isOnline && (
+                        <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                      )}
+                    </div>
 
-                        {/* 場所と国籍（未設定でない場合のみ表示） */}
-                        {(conversation.partnerNationality && conversation.partnerNationality !== '未設定') ||
-                         (conversation.partnerLocation && conversation.partnerLocation !== '未設定') ? (
-                          <div className="flex items-center text-xs text-gray-500 mb-2">
-                            <Globe className="w-3 h-3 mr-1" />
-                            {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
-                              <span>{conversation.partnerNationality}</span>
-                            )}
-                            {conversation.partnerNationality && conversation.partnerNationality !== '未設定' &&
-                             conversation.partnerLocation && conversation.partnerLocation !== '未設定' && (
-                              <span className="mx-1">•</span>
-                            )}
-                            {conversation.partnerLocation && conversation.partnerLocation !== '未設定' && (
-                              <span>{conversation.partnerLocation}</span>
-                            )}
-                          </div>
-                        ) : null}
-
-                        {/* 最新メッセージ */}
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-600 truncate flex-1">
-                            {conversation.lastMessage.senderId === 'current_user' && 'あなた: '}
-                            {conversation.lastMessage.content}
-                          </p>
-                          {conversation.unreadCount > 0 && (
-                            <span className="ml-2 bg-sakura-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                              {conversation.unreadCount}
+                    {/* テキスト情報 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-base font-semibold text-gray-900">
+                          {conversation.partnerName}
+                          {conversation.partnerAge && (
+                            <span className="ml-2 text-sm font-normal text-gray-500">
+                              {conversation.partnerAge}歳
                             </span>
                           )}
+                        </p>
+                        <p className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                          {formatLastMessageTime(conversation.lastMessage.timestamp)}
+                        </p>
+                      </div>
+
+                      {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <Globe className="w-3.5 h-3.5 mr-1" />
+                          <span>{conversation.partnerNationality}</span>
                         </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500 truncate flex-1">
+                          {conversation.lastMessage.content}
+                        </p>
+                        {conversation.unreadCount > 0 && (
+                          <span className="ml-2 bg-sakura-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+                            {conversation.unreadCount}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
