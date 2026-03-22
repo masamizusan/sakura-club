@@ -206,11 +206,11 @@ export default function ChatPage() {
                   <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-sm px-4 py-2 rounded-2xl ${
                       isMyMessage
-                        ? 'bg-pink-200 text-gray-700'
+                        ? 'bg-sakura-100 text-sakura-900'
                         : 'bg-white text-gray-900 shadow-sm'
                     }`}>
                       <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 text-gray-400`}>
+                      <p className={`text-xs mt-1 ${isMyMessage ? 'text-sakura-400' : 'text-gray-400'}`}>
                         {formatTime(message.timestamp)}
                       </p>
                     </div>
