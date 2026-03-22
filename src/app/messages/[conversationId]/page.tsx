@@ -21,6 +21,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     online: 'オンライン',
     sendError: 'メッセージの送信に失敗しました。もう一度お試しください。',
     loading: '読み込み中...',
+    translating: '翻訳中...',
+    translateError: '翻訳に失敗しました',
+    tapToTranslate: 'タップで翻訳',
   },
   en: {
     pageTitle: 'Messages',
@@ -32,6 +35,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     online: 'Online',
     sendError: 'Failed to send message. Please try again.',
     loading: 'Loading...',
+    translating: 'Translating...',
+    translateError: 'Translation failed',
+    tapToTranslate: 'Tap to translate',
   },
   ko: {
     pageTitle: '메시지',
@@ -43,6 +49,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     online: '온라인',
     sendError: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
     loading: '로딩 중...',
+    translating: '번역 중...',
+    translateError: '번역 실패',
+    tapToTranslate: '탭하여 번역',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -54,6 +63,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     online: '線上',
     sendError: '訊息發送失敗，請再試一次。',
     loading: '載入中...',
+    translating: '翻譯中...',
+    translateError: '翻譯失敗',
+    tapToTranslate: '點擊翻譯',
   },
 }
 
@@ -69,6 +81,11 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // 翻訳関連のstate
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set())
+  const [showTranslation, setShowTranslation] = useState<Set<string>>(new Set())
 
   // 翻訳関数
   const t = (key: string, params?: Record<string, string | number>) => {
@@ -155,6 +172,62 @@ export default function ChatPage() {
     return date.toLocaleDateString(getLocale())
   }
 
+  // メッセージ翻訳ハンドラー
+  const handleTranslate = async (messageId: string, text: string) => {
+    // 既に翻訳表示中なら非表示にする（トグル）
+    if (showTranslation.has(messageId)) {
+      setShowTranslation(prev => {
+        const next = new Set(prev)
+        next.delete(messageId)
+        return next
+      })
+      return
+    }
+
+    // 既にキャッシュされている翻訳があれば表示
+    if (translatedMessages[messageId]) {
+      setShowTranslation(prev => new Set(prev).add(messageId))
+      return
+    }
+
+    // 翻訳中フラグをセット
+    setTranslatingIds(prev => new Set(prev).add(messageId))
+
+    try {
+      const response = await fetch('/api/translate/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId,
+          text,
+          targetLanguage: currentLanguage
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.translatedText) {
+        setTranslatedMessages(prev => ({
+          ...prev,
+          [messageId]: result.translatedText
+        }))
+        setShowTranslation(prev => new Set(prev).add(messageId))
+      } else {
+        console.error('Translation failed:', result.error)
+        alert(t('translateError'))
+      }
+    } catch (error) {
+      console.error('Translation error:', error)
+      alert(t('translateError'))
+    } finally {
+      setTranslatingIds(prev => {
+        const next = new Set(prev)
+        next.delete(messageId)
+        return next
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar className="w-64 hidden md:block" />
@@ -202,14 +275,36 @@ export default function ChatPage() {
               )}
               {messages.map((message) => {
                 const isMyMessage = currentUserId && message.senderId === currentUserId
+                const isTranslating = translatingIds.has(message.id)
+                const hasTranslation = showTranslation.has(message.id) && translatedMessages[message.id]
+
                 return (
                   <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-sm px-4 py-2 rounded-2xl ${
-                      isMyMessage
-                        ? 'bg-sakura-100 text-sakura-900'
-                        : 'bg-white text-gray-900 shadow-sm'
-                    }`}>
+                    <div
+                      onClick={() => handleTranslate(message.id, message.content)}
+                      className={`max-w-sm px-4 py-2 rounded-2xl cursor-pointer transition-all ${
+                        isMyMessage
+                          ? 'bg-sakura-100 text-sakura-900 hover:bg-sakura-200'
+                          : 'bg-white text-gray-900 shadow-sm hover:bg-gray-50'
+                      }`}
+                    >
                       <p className="text-sm">{message.content}</p>
+
+                      {/* 翻訳中表示 */}
+                      {isTranslating && (
+                        <p className="text-xs mt-2 text-gray-500 italic flex items-center">
+                          <span className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></span>
+                          {t('translating')}
+                        </p>
+                      )}
+
+                      {/* 翻訳結果表示 */}
+                      {hasTranslation && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <p className="text-sm text-gray-600">{translatedMessages[message.id]}</p>
+                        </div>
+                      )}
+
                       <p className={`text-xs mt-1 ${isMyMessage ? 'text-sakura-400' : 'text-gray-400'}`}>
                         {formatTime(message.timestamp)}
                       </p>
