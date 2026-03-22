@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -91,6 +91,13 @@ export default function ChatPage() {
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set())
   const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({})
 
+  // 自動スクロール用のref
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   // 原文↔翻訳トグル
   const toggleTranslation = (messageId: string) => {
     setShowOriginal(prev => ({
@@ -156,13 +163,22 @@ export default function ChatPage() {
             [msg.id]: result.translatedText
           }))
         }
+        // キャッシュヒットでなければ300ms待機（レート制限対策）
+        if (!result.cached) {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        }
       } catch (error) {
         console.error('Auto translation error:', error)
       }
-      // 各メッセージの間に300ms待機（レート制限対策）
-      await new Promise(resolve => setTimeout(resolve, 300))
     }
   }
+
+  // メッセージ読み込み完了時にスクロール
+  useEffect(() => {
+    if (!isLoading && messages.length > 0) {
+      scrollToBottom()
+    }
+  }, [messages, isLoading])
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -187,6 +203,46 @@ export default function ChatPage() {
     }
     fetchMessages()
   }, [conversationId, currentUserId])
+
+  // リアルタイムメッセージ受信
+  useEffect(() => {
+    if (!conversationId || !currentUserId) return
+
+    const supabase = createClient()
+
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload: any) => {
+          const newMessage = {
+            id: payload.new.id,
+            senderId: payload.new.sender_id,
+            content: payload.new.content,
+            timestamp: payload.new.created_at,
+            isRead: false,
+          }
+          // 自分が送ったメッセージは既に追加済みなのでスキップ
+          if (newMessage.senderId === currentUserId) return
+
+          setMessages(prev => [...prev, newMessage])
+
+          // 相手のメッセージは自動翻訳
+          autoTranslateMessages([newMessage], currentUserId)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [conversationId, currentUserId, currentLanguage])
 
   const handleSend = async () => {
     if (!newMessage.trim() || isSending) return
@@ -319,6 +375,8 @@ export default function ChatPage() {
                   </div>
                 )
               })}
+              {/* 自動スクロール用のアンカー */}
+              <div ref={messagesEndRef} />
             </>
           )}
         </div>
