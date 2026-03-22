@@ -25,8 +25,18 @@ export const nationalityLabels: Record<string, Record<string, string>> = {
   },
 }
 
+// 日本語 → ISOコードの逆引きマップ
+const japaneseToISO: Record<string, string> = {
+  '日本': 'JP', 'アメリカ': 'US', 'イギリス': 'GB', 'カナダ': 'CA',
+  'オーストラリア': 'AU', 'ドイツ': 'DE', 'フランス': 'FR', 'イタリア': 'IT',
+  'スペイン': 'ES', '韓国': 'KR', '中国': 'CN', '台湾': 'TW',
+  'タイ': 'TH', 'ベトナム': 'VN', 'インド': 'IN',
+}
+
 export const getNationalityLabel = (code: string, lang: string): string => {
-  const normalizedCode = code?.toUpperCase()
+  if (!code) return ''
+  // 日本語テキストが来た場合はISOコードに変換
+  const isoCode = japaneseToISO[code] || code.toUpperCase()
   const langLabels = nationalityLabels[lang] || nationalityLabels['ja']
-  return langLabels[normalizedCode] || code
+  return langLabels[isoCode] || code
 }
