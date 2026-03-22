@@ -159,6 +159,8 @@ export default function ChatPage() {
       } catch (error) {
         console.error('Auto translation error:', error)
       }
+      // 各メッセージの間に300ms待機（レート制限対策）
+      await new Promise(resolve => setTimeout(resolve, 300))
     }
   }
 

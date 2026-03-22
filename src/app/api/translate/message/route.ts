@@ -29,7 +29,7 @@ const ERROR_CODES = {
 
 // Simple rate limiting (in-memory, resets on server restart)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT_MAX = 10 // requests per window
+const RATE_LIMIT_MAX = 30 // requests per window
 const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
 
 function checkRateLimit(userId: string): boolean {
