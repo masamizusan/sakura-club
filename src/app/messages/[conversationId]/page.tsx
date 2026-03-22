@@ -138,14 +138,34 @@ export default function ChatPage() {
     fetchCurrentUser()
   }, [])
 
-  // 相手のメッセージを自動翻訳
-  const autoTranslateMessages = async (msgs: any[], myId: string) => {
-    const partnerMessages = msgs.filter(m => m.senderId !== myId)
+  // キャッシュから翻訳をまとめて取得
+  const fetchCachedTranslations = async (msgs: any[]) => {
+    if (!msgs || msgs.length === 0) return
+
+    const messageIds = msgs.map(m => m.id)
+    const supabase = createClient()
+
+    const { data } = await supabase
+      .from('message_translations')
+      .select('message_id, translated_text')
+      .in('message_id', messageIds)
+      .eq('language', currentLanguage)
+
+    if (data && data.length > 0) {
+      const cached: Record<string, string> = {}
+      data.forEach(t => {
+        cached[t.message_id] = t.translated_text
+      })
+      setTranslatedMessages(prev => ({ ...prev, ...cached }))
+    }
+  }
+
+  // 相手のメッセージを自動翻訳（未翻訳のみ）
+  const autoTranslateMessages = async (msgs: any[], myId: string, existingTranslations?: Record<string, string>) => {
+    const translations = existingTranslations || translatedMessages
+    const partnerMessages = msgs.filter(m => m.senderId !== myId && !translations[m.id])
 
     for (const msg of partnerMessages) {
-      // 既に翻訳済みならスキップ
-      if (translatedMessages[msg.id]) continue
-
       try {
         const response = await fetch('/api/translate/message', {
           method: 'POST',
@@ -186,13 +206,30 @@ export default function ChatPage() {
         setIsLoading(true)
         const response = await fetch(`/api/messages/${conversationId}`)
         const result = await response.json()
-        if (response.ok) {
-          setMessages(result.messages || [])
+        if (response.ok && result.messages) {
+          setMessages(result.messages)
           setConversation(result.conversation || null)
 
-          // メッセージ取得後に自動翻訳を実行
-          if (result.messages && currentUserId) {
-            autoTranslateMessages(result.messages, currentUserId)
+          // キャッシュから翻訳を即座に取得
+          const supabase = createClient()
+          const messageIds = result.messages.map((m: any) => m.id)
+          const { data: cachedData } = await supabase
+            .from('message_translations')
+            .select('message_id, translated_text')
+            .in('message_id', messageIds)
+            .eq('language', currentLanguage)
+
+          const cachedTranslations: Record<string, string> = {}
+          if (cachedData && cachedData.length > 0) {
+            cachedData.forEach(t => {
+              cachedTranslations[t.message_id] = t.translated_text
+            })
+            setTranslatedMessages(prev => ({ ...prev, ...cachedTranslations }))
+          }
+
+          // 未翻訳のメッセージだけ新たに翻訳
+          if (currentUserId) {
+            autoTranslateMessages(result.messages, currentUserId, cachedTranslations)
           }
         }
       } catch (error) {
