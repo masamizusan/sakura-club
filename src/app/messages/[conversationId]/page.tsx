@@ -8,6 +8,7 @@ import { Send, ArrowLeft, Heart, User } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
+import { createClient } from '@/lib/supabase/client'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -67,6 +68,7 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   // 翻訳関数
   const t = (key: string, params?: Record<string, string | number>) => {
@@ -89,6 +91,16 @@ export default function ChatPage() {
       default: return 'ja-JP'
     }
   }
+
+  // 現在のログインユーザーIDを取得
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setCurrentUserId(user?.id || null)
+    }
+    fetchCurrentUser()
+  }, [])
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -188,20 +200,23 @@ export default function ChatPage() {
                   </div>
                 </div>
               )}
-              {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.senderId === 'current_user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-sm px-4 py-2 rounded-2xl ${
-                    message.senderId === 'current_user'
-                      ? 'bg-sakura-600 text-white'
-                      : 'bg-white text-gray-900 shadow-sm'
-                  }`}>
-                    <p className="text-sm">{message.content}</p>
-                    <p className={`text-xs mt-1 ${message.senderId === 'current_user' ? 'text-sakura-100' : 'text-gray-400'}`}>
-                      {formatTime(message.timestamp)}
-                    </p>
+              {messages.map((message) => {
+                const isMyMessage = currentUserId && message.senderId === currentUserId
+                return (
+                  <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-sm px-4 py-2 rounded-2xl ${
+                      isMyMessage
+                        ? 'bg-sakura-600 text-white'
+                        : 'bg-white text-gray-900 shadow-sm'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                      <p className={`text-xs mt-1 ${isMyMessage ? 'text-sakura-100' : 'text-gray-400'}`}>
+                        {formatTime(message.timestamp)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </>
           )}
         </div>
