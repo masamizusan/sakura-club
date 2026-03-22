@@ -107,33 +107,11 @@ export async function GET(request: NextRequest, { params }: Params) {
       readAt: message.read_at,
     })) || []
 
-    // 国籍ラベルの取得
-    const getNationalityLabel = (nationality: string): string => {
-      const nationalityMap: Record<string, string> = {
-        'JP': '日本',
-        'US': 'アメリカ',
-        'GB': 'イギリス',
-        'CA': 'カナダ',
-        'AU': 'オーストラリア',
-        'DE': 'ドイツ',
-        'FR': 'フランス',
-        'IT': 'イタリア',
-        'ES': 'スペイン',
-        'KR': '韓国',
-        'CN': '中国',
-        'TW': '台湾',
-        'TH': 'タイ',
-        'VN': 'ベトナム',
-        'IN': 'インド',
-      }
-      return nationalityMap[nationality] || nationality
-    }
-
     // 会話情報を構築
     const conversationInfo = partner ? {
       partnerName: partner.name || 'ユーザー',
       partnerAge: partner.age || null,
-      partnerNationality: getNationalityLabel(partner.nationality || ''),
+      partnerNationality: partner.nationality || '',
       partnerAvatar: partner.avatar_url || null,
       matchedDate: conversation.created_at,
     } : null

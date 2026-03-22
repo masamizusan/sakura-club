@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Send, ArrowLeft, Heart, User } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getNationalityLabel } from '@/utils/nationalityTranslations'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -163,7 +164,7 @@ export default function ChatPage() {
             {conversation && (
               <p className="text-sm text-gray-500">
                 {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
-                  <>{conversation.partnerNationality} · </>
+                  <>{getNationalityLabel(conversation.partnerNationality, currentLanguage)} · </>
                 )}
                 {conversation.partnerAge && <>{conversation.partnerAge}{t('yearsOld')}</>}
               </p>

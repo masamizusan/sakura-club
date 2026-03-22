@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getNationalityLabel } from '@/utils/nationalityTranslations'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -325,7 +326,7 @@ export default function MessagesPage() {
                         {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
                           <div className="flex items-center text-sm text-gray-500 mb-2">
                             <Globe className="w-3 h-3 mr-1" />
-                            <span>{conversation.partnerNationality}</span>
+                            <span>{getNationalityLabel(conversation.partnerNationality, currentLanguage)}</span>
                           </div>
                         )}
 
