@@ -10,6 +10,58 @@ import {
   Globe
 } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
+import { useLanguage } from '@/contexts/LanguageContext'
+
+const messagesTranslations: Record<string, Record<string, string>> = {
+  ja: {
+    pageTitle: 'メッセージ',
+    searchPlaceholder: '会話を検索...',
+    noMessages: 'メッセージがありません',
+    matchedOn: '{date} にマッチしました',
+    messagePlaceholder: 'メッセージを入力...',
+    yearsOld: '歳',
+    online: 'オンライン',
+    sendError: 'メッセージの送信に失敗しました。もう一度お試しください。',
+    minutesAgo: '{min}分前',
+    hoursAgo: '{hours}時間前',
+  },
+  en: {
+    pageTitle: 'Messages',
+    searchPlaceholder: 'Search conversations...',
+    noMessages: 'No messages yet',
+    matchedOn: 'Matched on {date}',
+    messagePlaceholder: 'Type a message...',
+    yearsOld: 'y/o',
+    online: 'Online',
+    sendError: 'Failed to send message. Please try again.',
+    minutesAgo: '{min} min ago',
+    hoursAgo: '{hours}h ago',
+  },
+  ko: {
+    pageTitle: '메시지',
+    searchPlaceholder: '대화 검색...',
+    noMessages: '메시지가 없습니다',
+    matchedOn: '{date}에 매칭되었습니다',
+    messagePlaceholder: '메시지를 입력...',
+    yearsOld: '세',
+    online: '온라인',
+    sendError: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
+    minutesAgo: '{min}분 전',
+    hoursAgo: '{hours}시간 전',
+  },
+  'zh-tw': {
+    pageTitle: '訊息',
+    searchPlaceholder: '搜尋對話...',
+    noMessages: '沒有訊息',
+    matchedOn: '於 {date} 配對成功',
+    messagePlaceholder: '輸入訊息...',
+    yearsOld: '歲',
+    online: '線上',
+    sendError: '訊息發送失敗，請再試一次。',
+    minutesAgo: '{min}分鐘前',
+    hoursAgo: '{hours}小時前',
+  },
+}
 
 // メッセージの型定義
 interface Message {
@@ -113,9 +165,22 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
 
 export default function MessagesPage() {
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+
+  // 翻訳関数
+  const t = (key: string, params?: Record<string, string | number>) => {
+    const lang = messagesTranslations[currentLanguage] ? currentLanguage : 'ja'
+    let text = messagesTranslations[lang][key] || messagesTranslations['ja'][key] || key
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v))
+      })
+    }
+    return text
+  }
 
   // 会話一覧の取得
   useEffect(() => {
@@ -159,11 +224,11 @@ export default function MessagesPage() {
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
 
     if (diffMinutes < 60) {
-      return `${diffMinutes}分前`
+      return t('minutesAgo', { min: diffMinutes })
     } else if (diffMinutes < 24 * 60) {
-      return `${Math.floor(diffMinutes / 60)}時間前`
+      return t('hoursAgo', { hours: Math.floor(diffMinutes / 60) })
     } else {
-      return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
+      return date.toLocaleDateString(currentLanguage === 'ja' ? 'ja-JP' : currentLanguage === 'ko' ? 'ko-KR' : currentLanguage === 'zh-tw' ? 'zh-TW' : 'en-US', { month: 'short', day: 'numeric' })
     }
   }
 
@@ -179,13 +244,13 @@ export default function MessagesPage() {
           <div className="bg-white flex flex-col">
             {/* ヘッダー */}
             <div className="p-6 border-b border-gray-200">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">メッセージ</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pageTitle')}</h1>
 
               {/* 検索 */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="会話を検索..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -214,7 +279,7 @@ export default function MessagesPage() {
               ) : filteredConversations.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
                   <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>メッセージがありません</p>
+                  <p>{t('noMessages')}</p>
                 </div>
               ) : (
                 filteredConversations.map((conversation) => (
@@ -248,7 +313,7 @@ export default function MessagesPage() {
                           <p className="text-base font-semibold text-gray-900 truncate">
                             {conversation.partnerName}
                             {conversation.partnerAge && (
-                              <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}歳</span>
+                              <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}{t('yearsOld')}</span>
                             )}
                           </p>
                           <p className="text-xs text-gray-400 ml-2 flex-shrink-0">

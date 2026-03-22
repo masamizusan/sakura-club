@@ -6,10 +6,59 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Send, ArrowLeft, Heart, User } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
+import { useLanguage } from '@/contexts/LanguageContext'
+
+const messagesTranslations: Record<string, Record<string, string>> = {
+  ja: {
+    pageTitle: 'メッセージ',
+    searchPlaceholder: '会話を検索...',
+    noMessages: 'メッセージがありません',
+    matchedOn: '{date} にマッチしました',
+    messagePlaceholder: 'メッセージを入力...',
+    yearsOld: '歳',
+    online: 'オンライン',
+    sendError: 'メッセージの送信に失敗しました。もう一度お試しください。',
+    loading: '読み込み中...',
+  },
+  en: {
+    pageTitle: 'Messages',
+    searchPlaceholder: 'Search conversations...',
+    noMessages: 'No messages yet',
+    matchedOn: 'Matched on {date}',
+    messagePlaceholder: 'Type a message...',
+    yearsOld: 'y/o',
+    online: 'Online',
+    sendError: 'Failed to send message. Please try again.',
+    loading: 'Loading...',
+  },
+  ko: {
+    pageTitle: '메시지',
+    searchPlaceholder: '대화 검색...',
+    noMessages: '메시지가 없습니다',
+    matchedOn: '{date}에 매칭되었습니다',
+    messagePlaceholder: '메시지를 입력...',
+    yearsOld: '세',
+    online: '온라인',
+    sendError: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
+    loading: '로딩 중...',
+  },
+  'zh-tw': {
+    pageTitle: '訊息',
+    searchPlaceholder: '搜尋對話...',
+    noMessages: '沒有訊息',
+    matchedOn: '於 {date} 配對成功',
+    messagePlaceholder: '輸入訊息...',
+    yearsOld: '歲',
+    online: '線上',
+    sendError: '訊息發送失敗，請再試一次。',
+    loading: '載入中...',
+  },
+}
 
 export default function ChatPage() {
   const params = useParams()
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
   const conversationId = params?.conversationId as string
 
   const [messages, setMessages] = useState<any[]>([])
@@ -17,6 +66,28 @@ export default function ChatPage() {
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
+
+  // 翻訳関数
+  const t = (key: string, params?: Record<string, string | number>) => {
+    const lang = messagesTranslations[currentLanguage] ? currentLanguage : 'ja'
+    let text = messagesTranslations[lang][key] || messagesTranslations['ja'][key] || key
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v))
+      })
+    }
+    return text
+  }
+
+  // ロケール取得
+  const getLocale = () => {
+    switch (currentLanguage) {
+      case 'en': return 'en-US'
+      case 'ko': return 'ko-KR'
+      case 'zh-tw': return 'zh-TW'
+      default: return 'ja-JP'
+    }
+  }
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -50,9 +121,12 @@ export default function ChatPage() {
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
         setNewMessage('')
+      } else {
+        alert(t('sendError'))
       }
     } catch (error) {
       console.error(error)
+      alert(t('sendError'))
     } finally {
       setIsSending(false)
     }
@@ -60,7 +134,12 @@ export default function ChatPage() {
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
-    return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const formatMatchDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString(getLocale())
   }
 
   return (
@@ -80,13 +159,13 @@ export default function ChatPage() {
             </div>
           )}
           <div>
-            <p className="font-semibold text-gray-900">{conversation?.partnerName || 'Loading...'}</p>
+            <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
             {conversation && (
               <p className="text-sm text-gray-500">
                 {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
                   <>{conversation.partnerNationality} · </>
                 )}
-                {conversation.partnerAge && <>{conversation.partnerAge}歳</>}
+                {conversation.partnerAge && <>{conversation.partnerAge}{t('yearsOld')}</>}
               </p>
             )}
           </div>
@@ -104,7 +183,7 @@ export default function ChatPage() {
                 <div className="text-center py-4">
                   <div className="inline-flex items-center bg-sakura-50 text-sakura-700 px-4 py-2 rounded-full text-sm">
                     <Heart className="w-4 h-4 mr-2 fill-current" />
-                    {new Date(conversation.matchedDate).toLocaleDateString('ja-JP')} にマッチしました
+                    {t('matchedOn', { date: formatMatchDate(conversation.matchedDate) })}
                   </div>
                 </div>
               )}
@@ -130,7 +209,7 @@ export default function ChatPage() {
         <div className="bg-white border-t border-gray-200 p-4">
           <div className="max-w-2xl mx-auto flex items-center space-x-2">
             <Input
-              placeholder="メッセージを入力..."
+              placeholder={t('messagePlaceholder')}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
