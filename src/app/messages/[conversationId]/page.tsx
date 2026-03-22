@@ -91,6 +91,10 @@ export default function ChatPage() {
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set())
   const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({})
 
+  // 送信前翻訳プレビュー
+  const [previewTranslation, setPreviewTranslation] = useState<string | null>(null)
+  const [isTranslatingPreview, setIsTranslatingPreview] = useState(false)
+
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -315,6 +319,32 @@ export default function ChatPage() {
     return date.toLocaleDateString(getLocale())
   }
 
+  // 送信前の翻訳プレビュー
+  const handlePreviewTranslation = async () => {
+    if (!newMessage.trim()) return
+
+    setIsTranslatingPreview(true)
+    setPreviewTranslation(null)
+
+    try {
+      const response = await fetch('/api/translate/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId: `preview-${Date.now()}`,
+          text: newMessage.trim(),
+          targetLanguage: currentLanguage === 'ja' ? 'en' : 'ja',
+        }),
+      })
+      const result = await response.json()
+      setPreviewTranslation(result.translatedText || null)
+    } catch (error) {
+      console.error('Preview translation error:', error)
+    } finally {
+      setIsTranslatingPreview(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar className="w-64 hidden md:block" />
@@ -420,21 +450,63 @@ export default function ChatPage() {
 
         {/* 入力欄 */}
         <div className="bg-white border-t border-gray-200 p-4">
-          <div className="max-w-2xl mx-auto flex items-center space-x-2">
-            <Input
-              placeholder={t('messagePlaceholder')}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              className="flex-1"
-            />
-            <Button onClick={handleSend} disabled={!newMessage.trim() || isSending} variant="sakura">
-              {isSending ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </Button>
+          <div className="max-w-2xl mx-auto">
+
+            {/* 翻訳プレビュー表示 */}
+            {(previewTranslation || isTranslatingPreview) && (
+              <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-400 mb-1">
+                  {currentLanguage === 'ja' ? '英語での表示：' : '日本語での表示：'}
+                </p>
+                {isTranslatingPreview ? (
+                  <p className="text-sm text-gray-400 italic">{t('translating')}</p>
+                ) : (
+                  <p className="text-sm text-gray-700">{previewTranslation}</p>
+                )}
+              </div>
+            )}
+
+            {/* 入力エリア */}
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder={t('messagePlaceholder')}
+                value={newMessage}
+                onChange={(e) => {
+                  setNewMessage(e.target.value)
+                  setPreviewTranslation(null)
+                }}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                className="flex-1"
+              />
+
+              {/* 翻訳確認ボタン */}
+              <Button
+                onClick={handlePreviewTranslation}
+                disabled={!newMessage.trim() || isTranslatingPreview}
+                variant="outline"
+                size="sm"
+                className="text-sakura-600 border-sakura-300 hover:bg-sakura-50"
+              >
+                {isTranslatingPreview ? (
+                  <div className="w-4 h-4 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  '翻訳確認'
+                )}
+              </Button>
+
+              {/* 送信ボタン */}
+              <Button
+                onClick={handleSend}
+                disabled={!newMessage.trim() || isSending}
+                variant="sakura"
+              >
+                {isSending ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
