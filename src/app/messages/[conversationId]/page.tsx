@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Send, ArrowLeft, Heart, User } from 'lucide-react'
+import { Send, ArrowLeft, Heart, User, Mic } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
@@ -25,6 +25,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '翻訳に失敗しました',
     showOriginal: '原文を表示',
     showTranslation: '翻訳を表示',
+    voiceNotSupported: 'お使いのブラウザは音声入力に対応していません。',
   },
   en: {
     pageTitle: 'Messages',
@@ -40,6 +41,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: 'Translation failed',
     showOriginal: 'Show original',
     showTranslation: 'Show translation',
+    voiceNotSupported: 'Your browser does not support voice input.',
   },
   ko: {
     pageTitle: '메시지',
@@ -55,6 +57,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '번역 실패',
     showOriginal: '원문 보기',
     showTranslation: '번역 보기',
+    voiceNotSupported: '브라우저가 음성 입력을 지원하지 않습니다.',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -70,6 +73,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '翻譯失敗',
     showOriginal: '顯示原文',
     showTranslation: '顯示翻譯',
+    voiceNotSupported: '您的瀏覽器不支援語音輸入。',
   },
 }
 
@@ -94,6 +98,10 @@ export default function ChatPage() {
   // 送信前翻訳プレビュー
   const [previewTranslation, setPreviewTranslation] = useState<string | null>(null)
   const [isTranslatingPreview, setIsTranslatingPreview] = useState(false)
+
+  // 音声入力
+  const [isRecording, setIsRecording] = useState(false)
+  const recognitionRef = useRef<any>(null)
 
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -345,6 +353,48 @@ export default function ChatPage() {
     }
   }
 
+  // 音声入力
+  const handleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert(t('voiceNotSupported'))
+      return
+    }
+
+    if (isRecording) {
+      recognitionRef.current?.stop()
+      setIsRecording(false)
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = currentLanguage === 'ja' ? 'ja-JP'
+      : currentLanguage === 'ko' ? 'ko-KR'
+      : currentLanguage === 'zh-tw' ? 'zh-TW'
+      : 'en-US'
+    recognition.continuous = false
+    recognition.interimResults = false
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setNewMessage(prev => prev + transcript)
+      setPreviewTranslation(null)
+    }
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error)
+      setIsRecording(false)
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+    }
+
+    recognitionRef.current = recognition
+    recognition.start()
+    setIsRecording(true)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar className="w-64 hidden md:block" />
@@ -478,6 +528,24 @@ export default function ChatPage() {
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                 className="flex-1"
               />
+
+              {/* マイクボタン */}
+              <Button
+                onClick={handleVoiceInput}
+                variant="outline"
+                size="sm"
+                className={`${
+                  isRecording
+                    ? 'text-red-500 border-red-300 bg-red-50 animate-pulse'
+                    : 'text-gray-500 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {isRecording ? (
+                  <span className="text-xs">停止</span>
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
+              </Button>
 
               {/* 翻訳確認ボタン */}
               <Button
