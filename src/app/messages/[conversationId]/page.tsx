@@ -102,6 +102,7 @@ export default function ChatPage() {
   // 音声入力
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const finalTranscriptRef = useRef<string>('')
 
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -362,9 +363,11 @@ export default function ChatPage() {
     }
 
     if (isRecording) {
+      // 録音停止
       recognitionRef.current?.stop()
+      recognitionRef.current = null
       setIsRecording(false)
-      // 停止時に途中経過の [...] を除去
+      // 途中経過の[...]を除去
       setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
       return
     }
@@ -377,42 +380,39 @@ export default function ChatPage() {
     recognition.continuous = true
     recognition.interimResults = true
 
-    let finalTranscript = ''
+    finalTranscriptRef.current = ''
 
     recognition.onresult = (event: any) => {
       let interimTranscript = ''
+
+      // resultIndexから処理（重複防止）
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript
+          finalTranscriptRef.current += event.results[i][0].transcript
         } else {
           interimTranscript += event.results[i][0].transcript
         }
       }
-      setNewMessage(prev => {
-        const base = prev.replace(/\[.*?\]$/, '')
-        return base + finalTranscript + (interimTranscript ? `[${interimTranscript}]` : '')
-      })
+
+      setNewMessage(
+        finalTranscriptRef.current +
+        (interimTranscript ? `[${interimTranscript}]` : '')
+      )
       setPreviewTranslation(null)
     }
 
     recognition.onerror = (event: any) => {
-      if (event.error !== 'no-speech') {
-        console.error('Speech recognition error:', event.error)
+      if (event.error === 'not-allowed') {
+        alert('マイクへのアクセスが拒否されました。')
+        setIsRecording(false)
       }
     }
 
     recognition.onend = () => {
-      if (isRecording && recognitionRef.current) {
-        try {
-          recognition.start()
-        } catch (e) {
-          setIsRecording(false)
-        }
-      }
+      // 自動再起動しない（重複防止）
     }
 
     recognitionRef.current = recognition
-    finalTranscript = ''
     recognition.start()
     setIsRecording(true)
   }
