@@ -364,6 +364,8 @@ export default function ChatPage() {
     if (isRecording) {
       recognitionRef.current?.stop()
       setIsRecording(false)
+      // 停止時に途中経過の [...] を除去
+      setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
       return
     }
 
@@ -372,25 +374,45 @@ export default function ChatPage() {
       : currentLanguage === 'ko' ? 'ko-KR'
       : currentLanguage === 'zh-tw' ? 'zh-TW'
       : 'en-US'
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = true
+    recognition.interimResults = true
+
+    let finalTranscript = ''
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript
-      setNewMessage(prev => prev + transcript)
+      let interimTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript
+        } else {
+          interimTranscript += event.results[i][0].transcript
+        }
+      }
+      setNewMessage(prev => {
+        const base = prev.replace(/\[.*?\]$/, '')
+        return base + finalTranscript + (interimTranscript ? `[${interimTranscript}]` : '')
+      })
       setPreviewTranslation(null)
     }
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error)
-      setIsRecording(false)
+      if (event.error !== 'no-speech') {
+        console.error('Speech recognition error:', event.error)
+      }
     }
 
     recognition.onend = () => {
-      setIsRecording(false)
+      if (isRecording && recognitionRef.current) {
+        try {
+          recognition.start()
+        } catch (e) {
+          setIsRecording(false)
+        }
+      }
     }
 
     recognitionRef.current = recognition
+    finalTranscript = ''
     recognition.start()
     setIsRecording(true)
   }
