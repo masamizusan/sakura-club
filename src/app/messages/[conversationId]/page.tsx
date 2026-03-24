@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Send, ArrowLeft, Heart, User, Mic } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -540,15 +539,24 @@ export default function ChatPage() {
 
             {/* 入力エリア */}
             <div className="flex items-center space-x-2">
-              <Input
+              <textarea
                 placeholder={t('messagePlaceholder')}
                 value={newMessage}
                 onChange={(e) => {
                   setNewMessage(e.target.value)
                   setPreviewTranslation(null)
+                  // 高さを自動調整
+                  e.target.style.height = 'auto'
+                  e.target.style.height = `${e.target.scrollHeight}px`
                 }}
-                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                className="flex-1"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+                rows={1}
+                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[40px] max-h-[120px] overflow-y-auto"
               />
 
               {/* マイクボタン */}
