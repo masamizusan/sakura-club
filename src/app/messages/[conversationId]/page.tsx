@@ -25,6 +25,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showOriginal: '原文を表示',
     showTranslation: '翻訳を表示',
     voiceNotSupported: 'お使いのブラウザは音声入力に対応していません。',
+    stop: '停止',
+    previewTranslation: '翻訳確認',
   },
   en: {
     pageTitle: 'Messages',
@@ -41,6 +43,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showOriginal: 'Show original',
     showTranslation: 'Show translation',
     voiceNotSupported: 'Your browser does not support voice input.',
+    stop: 'Stop',
+    previewTranslation: 'Preview',
   },
   ko: {
     pageTitle: '메시지',
@@ -57,6 +61,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showOriginal: '원문 보기',
     showTranslation: '번역 보기',
     voiceNotSupported: '브라우저가 음성 입력을 지원하지 않습니다.',
+    stop: '정지',
+    previewTranslation: '번역 확인',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -73,6 +79,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showOriginal: '顯示原文',
     showTranslation: '顯示翻譯',
     voiceNotSupported: '您的瀏覽器不支援語音輸入。',
+    stop: '停止',
+    previewTranslation: '翻譯預覽',
   },
 }
 
@@ -592,7 +600,7 @@ export default function ChatPage() {
                 }`}
               >
                 {isRecording ? (
-                  <span className="text-xs">停止</span>
+                  <span className="text-xs">{t('stop')}</span>
                 ) : (
                   <Mic className="w-4 h-4" />
                 )}
@@ -609,7 +617,7 @@ export default function ChatPage() {
                 {isTranslatingPreview ? (
                   <div className="w-4 h-4 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  '翻訳確認'
+                  t('previewTranslation')
                 )}
               </Button>
 
