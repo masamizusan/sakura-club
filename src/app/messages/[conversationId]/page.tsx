@@ -311,6 +311,9 @@ export default function ChatPage() {
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
         setNewMessage('')
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '40px'
+        }
       } else {
         alert(t('sendError'))
       }
@@ -403,6 +406,13 @@ export default function ChatPage() {
         (interimTranscript ? `[${interimTranscript}]` : '')
       )
       setPreviewTranslation(null)
+      // 高さを調整
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'
+          textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+        }
+      }, 0)
     }
 
     recognition.onerror = (event: any) => {
@@ -551,6 +561,9 @@ export default function ChatPage() {
                 onChange={(e) => {
                   setNewMessage(e.target.value)
                   setPreviewTranslation(null)
+                  // 高さを内容に合わせて自動調整
+                  e.target.style.height = 'auto'
+                  e.target.style.height = `${e.target.scrollHeight}px`
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -558,9 +571,13 @@ export default function ChatPage() {
                     handleSend()
                   }
                 }}
-                rows={3}
+                rows={1}
                 className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                style={{ resize: 'none' }}
+                style={{
+                  resize: 'none',
+                  overflow: 'hidden',
+                  minHeight: '40px',
+                }}
               />
 
               {/* マイクボタン */}
