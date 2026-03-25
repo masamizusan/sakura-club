@@ -113,14 +113,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // 高さ調整関数
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
-    }
-  }
+
 
   // 原文↔翻訳トグル
   const toggleTranslation = (messageId: string) => {
@@ -561,21 +554,31 @@ export default function ChatPage() {
                 onChange={(e) => {
                   setNewMessage(e.target.value)
                   setPreviewTranslation(null)
-                  adjustTextareaHeight()
+                  // 高さリセットしてから再計算
+                  e.target.style.height = '40px'
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`
                 }}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
                     handleSend()
                   }
                 }}
                 rows={1}
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-hidden"
                 style={{
                   height: '40px',
                   minHeight: '40px',
                   maxHeight: '120px',
-                  resize: 'none'
+                  resize: 'none',
+                  overflowY: 'auto',
+                  lineHeight: '1.5',
+                  padding: '8px 12px',
+                  width: '100%',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  fontSize: '14px',
+                  outline: 'none',
+                  backgroundColor: 'white',
                 }}
               />
 
