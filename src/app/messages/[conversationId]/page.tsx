@@ -305,6 +305,11 @@ export default function ChatPage() {
       const result = await response.json()
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
+        // 送信後に入力欄の高さをリセット
+        const textarea = document.querySelector('textarea')
+        if (textarea) {
+          textarea.style.height = 'auto'
+        }
         setNewMessage('')
       } else {
         alert(t('sendError'))
@@ -556,7 +561,8 @@ export default function ChatPage() {
                   }
                 }}
                 rows={1}
-                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[40px] max-h-[120px] overflow-y-auto"
+                style={{ height: 'auto', minHeight: '40px', maxHeight: '120px' }}
+                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-y-auto"
               />
 
               {/* マイクボタン */}
