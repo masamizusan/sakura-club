@@ -103,11 +103,23 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef<string>('')
 
+  // textarea ref
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // 高さ調整関数
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
+    }
   }
 
   // 原文↔翻訳トグル
@@ -305,12 +317,10 @@ export default function ChatPage() {
       const result = await response.json()
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
-        // 送信後に入力欄の高さをリセット
-        const textarea = document.querySelector('textarea')
-        if (textarea) {
-          textarea.style.height = 'auto'
-        }
         setNewMessage('')
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '40px'
+        }
       } else {
         alert(t('sendError'))
       }
@@ -545,14 +555,13 @@ export default function ChatPage() {
             {/* 入力エリア */}
             <div className="flex items-center space-x-2">
               <textarea
+                ref={textareaRef}
                 placeholder={t('messagePlaceholder')}
                 value={newMessage}
                 onChange={(e) => {
                   setNewMessage(e.target.value)
                   setPreviewTranslation(null)
-                  // 高さを自動調整
-                  e.target.style.height = 'auto'
-                  e.target.style.height = `${e.target.scrollHeight}px`
+                  adjustTextareaHeight()
                 }}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -561,8 +570,13 @@ export default function ChatPage() {
                   }
                 }}
                 rows={1}
-                style={{ height: 'auto', minHeight: '40px', maxHeight: '120px' }}
-                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-y-auto"
+                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-hidden"
+                style={{
+                  height: '40px',
+                  minHeight: '40px',
+                  maxHeight: '120px',
+                  resize: 'none'
+                }}
               />
 
               {/* マイクボタン */}
