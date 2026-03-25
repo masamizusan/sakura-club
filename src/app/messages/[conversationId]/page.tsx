@@ -103,9 +103,6 @@ export default function ChatPage() {
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef<string>('')
 
-  // textarea ref
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -311,9 +308,8 @@ export default function ChatPage() {
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
         setNewMessage('')
-        if (textareaRef.current) {
-          textareaRef.current.style.height = '40px'
-        }
+        const div = document.querySelector('[contenteditable]') as HTMLDivElement
+        if (div) div.innerText = ''
       } else {
         alert(t('sendError'))
       }
@@ -547,39 +543,25 @@ export default function ChatPage() {
 
             {/* 入力エリア */}
             <div className="flex items-center space-x-2">
-              <textarea
-                ref={textareaRef}
-                placeholder={t('messagePlaceholder')}
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value)
+              <div
+                contentEditable
+                suppressContentEditableWarning
+                onInput={(e) => {
+                  const text = (e.currentTarget as HTMLDivElement).innerText
+                  setNewMessage(text)
                   setPreviewTranslation(null)
-                  // 高さリセットしてから再計算
-                  e.target.style.height = '40px'
-                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
                     handleSend()
+                    // 送信後に入力欄をクリア
+                    ;(e.currentTarget as HTMLDivElement).innerText = ''
                   }
                 }}
-                rows={1}
-                style={{
-                  height: '40px',
-                  minHeight: '40px',
-                  maxHeight: '120px',
-                  resize: 'none',
-                  overflowY: 'auto',
-                  lineHeight: '1.5',
-                  padding: '8px 12px',
-                  width: '100%',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '14px',
-                  outline: 'none',
-                  backgroundColor: 'white',
-                }}
+                data-placeholder={t('messagePlaceholder')}
+                className="flex-1 min-h-[40px] max-h-[120px] overflow-y-auto px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
+                style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
               />
 
               {/* マイクボタン */}
