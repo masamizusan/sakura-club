@@ -11,6 +11,7 @@ import {
   User
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useNotifications } from '@/hooks/useNotifications'
 import { logger } from '@/utils/logger'
 
 interface SidebarProps {
@@ -20,8 +21,9 @@ interface SidebarProps {
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
   const { currentLanguage } = useLanguage()
+  const { unreadMessages, unseenLikes } = useNotifications()
   const logged = useRef(false)
-  
+
   // 🌍 Sidebar専用翻訳辞書
   const sidebarTranslations: Record<string, Record<string, string>> = {
     ja: {
@@ -53,19 +55,26 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       mypage: '我的頁面'
     }
   }
-  
+
   // 初回のみログ出力
   if (!logged.current) {
     logged.current = true
     logger.debug('[SIDEBAR] lang:', currentLanguage)
   }
-  
+
   // フォールバック機能付きの翻訳関数
   const getSafeTranslation = (key: string) => {
     const translations = sidebarTranslations[currentLanguage] || sidebarTranslations['ja']
     return translations[key] || sidebarTranslations['ja'][key] || key
   }
-  
+
+  // バッジに表示するカウントを取得
+  const getBadgeCount = (id: string): number => {
+    if (id === 'messages') return unreadMessages
+    if (id === 'liked') return unseenLikes
+    return 0
+  }
+
   const sidebarItems = [
     { id: 'search', icon: Search, labelKey: 'search', href: '/matches' },
     { id: 'messages', icon: MessageCircle, labelKey: 'messages', href: '/messages' },
@@ -90,7 +99,9 @@ export default function Sidebar({ className = '' }: SidebarProps) {
               (item.href === '/matches' && pathname === '/') ||
               (pathname?.startsWith('/profile') && item.id === 'profile') ||
               (item.href === '/likes' && pathname === '/likes')
-            
+
+            const badgeCount = getBadgeCount(item.id)
+
             return (
               <Link
                 key={item.id}
@@ -101,7 +112,18 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <div className="relative">
+                  <item.icon className="w-5 h-5" />
+                  {badgeCount > 0 && (
+                    badgeCount >= 10 ? (
+                      <span className="absolute -top-2 -right-3 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    ) : (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    )
+                  )}
+                </div>
                 <span className="font-medium">{getSafeTranslation(item.labelKey)}</span>
               </Link>
             )
