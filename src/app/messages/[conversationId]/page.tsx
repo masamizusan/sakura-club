@@ -44,7 +44,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showTranslation: 'Show translation',
     voiceNotSupported: 'Your browser does not support voice input.',
     stop: 'Stop',
-    previewTranslation: 'Preview',
+    previewTranslation: 'Translate',
   },
   ko: {
     pageTitle: '메시지',
@@ -80,7 +80,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     showTranslation: '顯示翻譯',
     voiceNotSupported: '您的瀏覽器不支援語音輸入。',
     stop: '停止',
-    previewTranslation: '翻譯預覽',
+    previewTranslation: '翻譯確認',
   },
 }
 
