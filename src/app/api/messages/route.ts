@@ -156,6 +156,14 @@ export async function GET(request: NextRequest) {
           return null // パートナー情報がない場合はスキップ
         }
 
+        // 未読メッセージ数を取得（相手からのメッセージでis_read=false）
+        const { count: unreadCount } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .neq('sender_id', myProfileId)
+          .eq('is_read', false)
+
         return {
           id: conv.id,
           partnerId,
@@ -172,7 +180,7 @@ export async function GET(request: NextRequest) {
             timestamp: conv.last_message_at || conv.created_at,
             isRead: true
           },
-          unreadCount: 0,
+          unreadCount: unreadCount || 0,
           isOnline: false,
           matchedDate: conv.created_at,
         }

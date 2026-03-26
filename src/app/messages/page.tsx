@@ -287,57 +287,72 @@ export default function MessagesPage() {
                   <div
                     key={conversation.id}
                     onClick={() => router.push(`/messages/${conversation.id}`)}
-                    className="p-5 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="relative flex items-stretch border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-center space-x-4">
-                      {/* アバター */}
-                      <div className="relative flex-shrink-0">
-                        {conversation.partnerAvatar ? (
-                          <img
-                            src={conversation.partnerAvatar}
-                            alt={conversation.partnerName}
-                            className="w-16 h-16 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
-                            <User className="w-8 h-8 text-sakura-600" />
-                          </div>
-                        )}
-                        {conversation.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                        )}
-                      </div>
+                    {/* 左の赤い縦線（未読あり） */}
+                    {conversation.unreadCount > 0 && (
+                      <div className="w-1 bg-red-500 flex-shrink-0 rounded-l-md" />
+                    )}
 
-                      <div className="flex-1 min-w-0">
-                        {/* 名前・年齢・時間 */}
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-base font-semibold text-gray-900 truncate">
+                    <div className="flex-1 p-5">
+                      <div className="flex items-center space-x-4">
+                        {/* アバター */}
+                        <div className="relative flex-shrink-0">
+                          {conversation.partnerAvatar ? (
+                            <img
+                              src={conversation.partnerAvatar}
+                              alt={conversation.partnerName}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
+                              <User className="w-8 h-8 text-sakura-600" />
+                            </div>
+                          )}
+                          {conversation.isOnline && (
+                            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          {/* 名前・年齢 */}
+                          <p className={`text-base truncate ${
+                            conversation.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-normal text-gray-700'
+                          }`}>
                             {conversation.partnerName}
                             {conversation.partnerAge && (
                               <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}{t('yearsOld')}</span>
                             )}
                           </p>
-                          <p className="text-xs text-gray-400 ml-2 flex-shrink-0">
-                            {formatLastMessageTime(conversation.lastMessage.timestamp)}
+
+                          {/* 国籍 */}
+                          {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
+                            <div className="flex items-center text-sm text-gray-500 mb-1">
+                              <Globe className="w-3 h-3 mr-1" />
+                              <span>{getNationalityLabel(conversation.partnerNationality, currentLanguage)}</span>
+                            </div>
+                          )}
+
+                          {/* 最新メッセージ */}
+                          <p className={`text-sm truncate ${
+                            conversation.unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-500'
+                          }`}>
+                            {conversation.lastMessage.content}
                           </p>
                         </div>
 
-                        {/* 国籍 */}
-                        {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
-                          <div className="flex items-center text-sm text-gray-500 mb-2">
-                            <Globe className="w-3 h-3 mr-1" />
-                            <span>{getNationalityLabel(conversation.partnerNationality, currentLanguage)}</span>
-                          </div>
-                        )}
-
-                        {/* 最新メッセージ */}
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-500 truncate flex-1">
-                            {conversation.lastMessage.content}
+                        {/* 右側：時間＋バッジ */}
+                        <div className="flex flex-col items-end space-y-1 flex-shrink-0">
+                          <p className="text-xs text-gray-400">
+                            {formatLastMessageTime(conversation.lastMessage.timestamp)}
                           </p>
                           {conversation.unreadCount > 0 && (
-                            <span className="ml-2 bg-sakura-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
-                              {conversation.unreadCount}
+                            <span className={`flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold ${
+                              conversation.unreadCount < 10
+                                ? 'w-2 h-2'
+                                : 'min-w-[18px] h-[18px] px-1'
+                            }`}>
+                              {conversation.unreadCount < 10 ? '' : conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
                             </span>
                           )}
                         </div>
