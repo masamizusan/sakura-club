@@ -4,7 +4,10 @@ import { z } from 'zod'
 
 // メッセージ送信のスキーマ
 const sendMessageSchema = z.object({
-  content: z.string().min(1, 'メッセージを入力してください').max(1000, 'メッセージは1000文字以内で入力してください'),
+  content: z.string().max(1000, 'メッセージは1000文字以内で入力してください').default(''),
+  image_url: z.string().url().optional(),
+}).refine(data => data.content.trim().length > 0 || !!data.image_url, {
+  message: 'メッセージまたは画像を入力してください',
 })
 
 interface Params {
@@ -102,6 +105,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       id: message.id,
       senderId: message.sender_id,
       content: message.content,
+      image_url: message.image_url || null,
       timestamp: message.created_at,
       isRead: message.is_read,
       readAt: message.read_at,
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { content } = validationResult.data
+    const { content, image_url } = validationResult.data
 
     // 会話の存在確認とアクセス権限チェック
     const { data: conversation, error: convError } = await supabase
@@ -194,6 +198,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         conversation_id: conversationId,
         sender_id: user.id,
         content,
+        image_url: image_url || null,
         is_read: false,
         created_at: new Date().toISOString(),
       })
@@ -223,6 +228,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       id: newMessage.id,
       senderId: newMessage.sender_id,
       content: newMessage.content,
+      image_url: newMessage.image_url || null,
       timestamp: newMessage.created_at,
       isRead: newMessage.is_read,
       readAt: newMessage.read_at,

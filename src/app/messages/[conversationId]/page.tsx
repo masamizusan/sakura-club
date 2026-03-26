@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Send, ArrowLeft, Heart, User, Mic } from 'lucide-react'
+import { Send, ArrowLeft, Heart, User, Mic, Camera } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
@@ -106,6 +106,12 @@ export default function ChatPage() {
   const [previewTranslation, setPreviewTranslation] = useState<string | null>(null)
   const [isTranslatingPreview, setIsTranslatingPreview] = useState(false)
 
+  // 画像送信
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // 音声入力
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -121,7 +127,50 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  // 画像選択処理
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setSelectedImage(file)
+    const reader = new FileReader()
+    reader.onload = () => setImagePreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
 
+  // 画像送信処理
+  const handleImageSend = async () => {
+    if (!selectedImage || isUploadingImage) return
+    setIsUploadingImage(true)
+    try {
+      const supabase = createClient()
+      const fileName = `${Date.now()}_${selectedImage.name}`
+      const { data, error } = await supabase.storage
+        .from('chat-images')
+        .upload(`${conversationId}/${fileName}`, selectedImage)
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(data.path)
+
+      // 画像URLをメッセージとして送信
+      const response = await fetch(`/api/messages/${conversationId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: '', image_url: publicUrl }),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setMessages(prev => [...prev, result.data])
+        setSelectedImage(null)
+        setImagePreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Image upload error:', error)
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
 
   // 原文↔翻訳トグル
   const toggleTranslation = (messageId: string) => {
@@ -287,6 +336,7 @@ export default function ChatPage() {
             id: payload.new.id,
             senderId: payload.new.sender_id,
             content: payload.new.content,
+            image_url: payload.new.image_url || null,
             timestamp: payload.new.created_at,
             isRead: false,
           }
@@ -494,7 +544,16 @@ export default function ChatPage() {
                     {isMyMessage ? (
                       // 自分のメッセージ（翻訳機能なし）
                       <div className="max-w-sm px-4 py-2 rounded-2xl bg-sakura-100 text-sakura-900">
-                        <p className="text-sm">{message.content}</p>
+                        {message.image_url ? (
+                          <img
+                            src={message.image_url}
+                            className="max-w-xs rounded-lg cursor-pointer"
+                            onClick={() => window.open(message.image_url, '_blank')}
+                            alt=""
+                          />
+                        ) : (
+                          <p className="text-sm">{message.content}</p>
+                        )}
                         <p className="text-xs mt-1 text-sakura-400">
                           {formatTime(message.timestamp)}
                         </p>
@@ -502,28 +561,39 @@ export default function ChatPage() {
                     ) : (
                       // 相手のメッセージ（翻訳トグル付き）
                       <div
-                        onClick={() => toggleTranslation(message.id)}
+                        onClick={() => !message.image_url && toggleTranslation(message.id)}
                         className="max-w-sm px-4 py-2 rounded-2xl bg-white text-gray-900 shadow-sm cursor-pointer hover:bg-gray-50 transition-all"
                       >
-                        {/* 翻訳中表示 */}
-                        {isTranslating && (
-                          <p className="text-xs text-gray-500 italic flex items-center mb-1">
-                            <span className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></span>
-                            {t('translating')}
-                          </p>
-                        )}
-
-                        {/* 翻訳がある場合：デフォルトで翻訳表示、タップで原文表示 */}
-                        {hasTranslation && !showOriginal[message.id] ? (
-                          <>
-                            <p className="text-sm">{translatedMessages[message.id]}</p>
-                            <p className="text-xs text-blue-500 mt-1">{t('showOriginal')}</p>
-                          </>
+                        {message.image_url ? (
+                          <img
+                            src={message.image_url}
+                            className="max-w-xs rounded-lg cursor-pointer"
+                            onClick={(e) => { e.stopPropagation(); window.open(message.image_url, '_blank') }}
+                            alt=""
+                          />
                         ) : (
                           <>
-                            <p className="text-sm">{message.content}</p>
-                            {hasTranslation && (
-                              <p className="text-xs text-blue-500 mt-1">{t('showTranslation')}</p>
+                            {/* 翻訳中表示 */}
+                            {isTranslating && (
+                              <p className="text-xs text-gray-500 italic flex items-center mb-1">
+                                <span className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></span>
+                                {t('translating')}
+                              </p>
+                            )}
+
+                            {/* 翻訳がある場合：デフォルトで翻訳表示、タップで原文表示 */}
+                            {hasTranslation && !showOriginal[message.id] ? (
+                              <>
+                                <p className="text-sm">{translatedMessages[message.id]}</p>
+                                <p className="text-xs text-blue-500 mt-1">{t('showOriginal')}</p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm">{message.content}</p>
+                                {hasTranslation && (
+                                  <p className="text-xs text-blue-500 mt-1">{t('showTranslation')}</p>
+                                )}
+                              </>
                             )}
                           </>
                         )}
@@ -560,79 +630,120 @@ export default function ChatPage() {
               </div>
             )}
 
+            {/* 画像プレビュー */}
+            {imagePreview && (
+              <div className="mb-3 relative inline-block">
+                <img src={imagePreview} className="h-20 w-20 object-cover rounded-lg border border-gray-200" alt="" />
+                <button
+                  onClick={() => { setSelectedImage(null); setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                  className="absolute -top-2 -right-2 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                >×</button>
+              </div>
+            )}
+
             {/* 入力エリア */}
-            <div className="flex items-center space-x-2">
-              <textarea
-                ref={textareaRef}
-                placeholder={t('messagePlaceholder')}
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value)
-                  setPreviewTranslation(null)
-                  // 高さを内容に合わせて自動調整
-                  e.target.style.height = 'auto'
-                  e.target.style.height = `${e.target.scrollHeight}px`
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
-                  }
-                }}
-                rows={1}
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                style={{
-                  resize: 'none',
-                  overflow: 'hidden',
-                  minHeight: '40px',
-                }}
+            <div className="flex items-end space-x-2">
+              {/* カメラボタン */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-gray-400 hover:text-sakura-600 p-2 flex-shrink-0"
+              >
+                <Camera className="w-5 h-5" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
               />
 
-              {/* マイクボタン */}
-              <Button
-                onClick={handleVoiceInput}
-                variant="outline"
-                size="sm"
-                className={`${
-                  isRecording
-                    ? 'text-red-500 border-red-300 bg-red-50 animate-pulse'
-                    : 'text-gray-500 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {isRecording ? (
-                  <span className="text-xs">{t('stop')}</span>
-                ) : (
-                  <Mic className="w-4 h-4" />
-                )}
-              </Button>
+              {imagePreview ? (
+                // 画像選択時は送信ボタンのみ表示
+                <Button onClick={handleImageSend} disabled={isUploadingImage} variant="sakura" className="flex-shrink-0">
+                  {isUploadingImage ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              ) : (
+                // 通常の入力欄・マイク・翻訳確認・送信ボタン
+                <>
+                  <textarea
+                    ref={textareaRef}
+                    placeholder={t('messagePlaceholder')}
+                    value={newMessage}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value)
+                      setPreviewTranslation(null)
+                      // 高さを内容に合わせて自動調整
+                      e.target.style.height = 'auto'
+                      e.target.style.height = `${e.target.scrollHeight}px`
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSend()
+                      }
+                    }}
+                    rows={1}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    style={{
+                      resize: 'none',
+                      overflow: 'hidden',
+                      minHeight: '40px',
+                    }}
+                  />
 
-              {/* 翻訳確認ボタン */}
-              <Button
-                onClick={handlePreviewTranslation}
-                disabled={!newMessage.trim() || isTranslatingPreview}
-                variant="outline"
-                size="sm"
-                className="text-sakura-600 border-sakura-300 hover:bg-sakura-50"
-              >
-                {isTranslatingPreview ? (
-                  <div className="w-4 h-4 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  t('previewTranslation')
-                )}
-              </Button>
+                  {/* マイクボタン */}
+                  <Button
+                    onClick={handleVoiceInput}
+                    variant="outline"
+                    size="sm"
+                    className={`flex-shrink-0 ${
+                      isRecording
+                        ? 'text-red-500 border-red-300 bg-red-50 animate-pulse'
+                        : 'text-gray-500 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {isRecording ? (
+                      <span className="text-xs">{t('stop')}</span>
+                    ) : (
+                      <Mic className="w-4 h-4" />
+                    )}
+                  </Button>
 
-              {/* 送信ボタン */}
-              <Button
-                onClick={handleSend}
-                disabled={!newMessage.trim() || isSending}
-                variant="sakura"
-              >
-                {isSending ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
+                  {/* 翻訳確認ボタン */}
+                  <Button
+                    onClick={handlePreviewTranslation}
+                    disabled={!newMessage.trim() || isTranslatingPreview}
+                    variant="outline"
+                    size="sm"
+                    className="text-sakura-600 border-sakura-300 hover:bg-sakura-50 flex-shrink-0"
+                  >
+                    {isTranslatingPreview ? (
+                      <div className="w-4 h-4 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      t('previewTranslation')
+                    )}
+                  </Button>
+
+                  {/* 送信ボタン */}
+                  <Button
+                    onClick={handleSend}
+                    disabled={!newMessage.trim() || isSending}
+                    variant="sakura"
+                    className="flex-shrink-0"
+                  >
+                    {isSending ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
