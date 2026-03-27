@@ -315,15 +315,31 @@ export default function MessagesPage() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          {/* 名前・年齢 */}
-                          <p className={`text-base truncate ${
-                            conversation.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-normal text-gray-700'
-                          }`}>
-                            {conversation.partnerName}
-                            {conversation.partnerAge && (
-                              <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}{t('yearsOld')}</span>
-                            )}
-                          </p>
+                          {/* 名前・年齢・バッジ */}
+                          <div className="flex items-center justify-between mb-1">
+                            <p className={`text-base truncate ${
+                              conversation.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-normal text-gray-700'
+                            }`}>
+                              {conversation.partnerName}
+                              {conversation.partnerAge && (
+                                <span className="ml-2 text-sm font-normal text-gray-500">{conversation.partnerAge}{t('yearsOld')}</span>
+                              )}
+                            </p>
+                            <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+                              {conversation.unreadCount > 0 && (
+                                <span className={`flex items-center justify-center rounded-full bg-red-500 text-white font-bold ${
+                                  conversation.unreadCount < 10
+                                    ? 'w-5 h-5 text-xs'
+                                    : 'min-w-[20px] h-5 px-1 text-xs'
+                                }`}>
+                                  {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                                </span>
+                              )}
+                              <p className="text-xs text-gray-400">
+                                {formatLastMessageTime(conversation.lastMessage.timestamp)}
+                              </p>
+                            </div>
+                          </div>
 
                           {/* 国籍 */}
                           {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
@@ -339,22 +355,6 @@ export default function MessagesPage() {
                           }`}>
                             {conversation.lastMessage.content}
                           </p>
-                        </div>
-
-                        {/* 右側：時間＋バッジ */}
-                        <div className="flex flex-col items-end space-y-1 flex-shrink-0">
-                          <p className="text-xs text-gray-400">
-                            {formatLastMessageTime(conversation.lastMessage.timestamp)}
-                          </p>
-                          {conversation.unreadCount > 0 && (
-                            <span className={`flex items-center justify-center rounded-full bg-red-500 text-white font-bold ${
-                              conversation.unreadCount < 10
-                                ? 'w-5 h-5 text-xs'
-                                : 'min-w-[20px] h-5 px-1 text-xs'
-                            }`}>
-                              {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
