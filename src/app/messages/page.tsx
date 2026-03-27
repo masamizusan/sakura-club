@@ -347,12 +347,12 @@ export default function MessagesPage() {
                             {formatLastMessageTime(conversation.lastMessage.timestamp)}
                           </p>
                           {conversation.unreadCount > 0 && (
-                            <span className={`flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold ${
+                            <span className={`flex items-center justify-center rounded-full bg-red-500 text-white font-bold ${
                               conversation.unreadCount < 10
-                                ? 'w-2 h-2'
-                                : 'min-w-[18px] h-[18px] px-1'
+                                ? 'w-5 h-5 text-xs'
+                                : 'min-w-[20px] h-5 px-1 text-xs'
                             }`}>
-                              {conversation.unreadCount < 10 ? '' : conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
+                              {conversation.unreadCount > 99 ? '99+' : conversation.unreadCount}
                             </span>
                           )}
                         </div>
