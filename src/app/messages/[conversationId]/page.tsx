@@ -116,6 +116,7 @@ export default function ChatPage() {
   const [isRecording, setIsRecording] = useState(false)
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef<string>('')
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -429,6 +430,7 @@ export default function ChatPage() {
 
     if (isRecording) {
       // 録音停止
+      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null }
       recognitionRef.current?.stop()
       recognitionRef.current = null
       setIsRecording(false)
@@ -471,6 +473,15 @@ export default function ChatPage() {
           textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
         }
       }, 0)
+
+      // 無音タイマーリセット（発話があるたびに8秒延長）
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = setTimeout(() => {
+        recognitionRef.current?.stop()
+        recognitionRef.current = null
+        setIsRecording(false)
+        setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
+      }, 8000)
     }
 
     recognition.onerror = (event: any) => {
@@ -487,6 +498,14 @@ export default function ChatPage() {
     recognitionRef.current = recognition
     recognition.start()
     setIsRecording(true)
+
+    // 初回の無音タイマー開始（8秒間発話がなければ自動停止）
+    silenceTimerRef.current = setTimeout(() => {
+      recognitionRef.current?.stop()
+      recognitionRef.current = null
+      setIsRecording(false)
+      setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
+    }, 8000)
   }
 
   return (
