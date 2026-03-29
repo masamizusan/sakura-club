@@ -112,11 +112,12 @@ export default function ChatPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 音声入力（Whisper API）
+  // 音声入力（Whisper API + 無音検知）
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const animationIdRef = useRef<number | null>(null)
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -422,9 +423,13 @@ export default function ChatPage() {
 
   // 録音停止処理
   const stopRecording = () => {
-    if (recordingTimerRef.current) {
-      clearTimeout(recordingTimerRef.current)
-      recordingTimerRef.current = null
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current)
+      animationIdRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop()
@@ -435,7 +440,7 @@ export default function ChatPage() {
     }
   }
 
-  // 音声入力（Whisper API）
+  // 音声入力（Whisper API + 無音検知）
   const handleVoiceInput = async () => {
     if (isRecording) {
       stopRecording()
@@ -449,6 +454,37 @@ export default function ChatPage() {
       mediaRecorderRef.current = mediaRecorder
       const chunks: BlobPart[] = []
 
+      // 無音検知の設定
+      const audioContext = new AudioContext()
+      audioContextRef.current = audioContext
+      const source = audioContext.createMediaStreamSource(stream)
+      const analyser = audioContext.createAnalyser()
+      analyser.fftSize = 256
+      source.connect(analyser)
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
+      let silenceStart: number | null = Date.now() // 初回から計測開始
+
+      const checkSilence = () => {
+        analyser.getByteFrequencyData(dataArray)
+        const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
+
+        if (volume < 10) {
+          // 無音と判定
+          if (silenceStart === null) silenceStart = Date.now()
+          if (Date.now() - silenceStart >= 8000) {
+            // 無音が8秒続いたら停止
+            stopRecording()
+            return
+          }
+        } else {
+          // 音声があればリセット
+          silenceStart = null
+        }
+
+        animationIdRef.current = requestAnimationFrame(checkSilence)
+      }
+
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunks.push(e.data)
       }
@@ -458,10 +494,8 @@ export default function ChatPage() {
         if (chunks.length === 0) return
 
         const blob = new Blob(chunks, { type: 'audio/webm' })
-        // Whisper APIに送信
         const formData = new FormData()
         formData.append('audio', blob, 'recording.webm')
-        // 言語判定：日本語ユーザーは'ja'、それ以外は'en'
         const whisperLang = currentLanguage === 'ja' ? 'ja'
           : currentLanguage === 'ko' ? 'ko'
           : currentLanguage === 'zh-tw' ? 'zh'
@@ -477,7 +511,6 @@ export default function ChatPage() {
           if (data.text) {
             setNewMessage(prev => prev ? prev + ' ' + data.text : data.text)
             setPreviewTranslation(null)
-            // 高さを調整
             setTimeout(() => {
               if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto'
@@ -490,13 +523,9 @@ export default function ChatPage() {
         }
       }
 
-      mediaRecorder.start()
+      mediaRecorder.start(1000) // 1秒ごとにデータ取得
       setIsRecording(true)
-
-      // 8秒後に自動停止
-      recordingTimerRef.current = setTimeout(() => {
-        stopRecording()
-      }, 8000)
+      animationIdRef.current = requestAnimationFrame(checkSilence) // 無音監視開始
     } catch (err) {
       console.error('Microphone access error:', err)
       alert(t('voiceNotSupported'))
