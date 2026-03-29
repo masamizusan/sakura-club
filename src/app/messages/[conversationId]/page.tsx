@@ -542,12 +542,15 @@ export default function ChatPage() {
           if (data.text) {
             setNewMessage(prev => prev ? prev + ' ' + data.text : data.text)
             setPreviewTranslation(null)
-            setTimeout(() => {
-              if (textareaRef.current) {
-                textareaRef.current.style.height = 'auto'
-                textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-              }
-            }, 0)
+            // React再レンダリング後にtextarea高さを調整
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                if (textareaRef.current) {
+                  textareaRef.current.style.height = 'auto'
+                  textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+                }
+              }, 50)
+            })
           }
         } catch (err) {
           console.error('Whisper transcription error:', err)
@@ -568,7 +571,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar className="w-64 hidden md:block" />
-      <div className="md:ml-64 h-[100dvh] flex flex-col">
+      <div className="md:ml-64 fixed inset-0 md:left-64 flex flex-col">
         {/* ヘッダー */}
         <div className="bg-white border-b border-gray-200 p-4 flex items-center space-x-3">
           <button onClick={() => router.push('/messages')} className="text-gray-500 hover:text-gray-700">
