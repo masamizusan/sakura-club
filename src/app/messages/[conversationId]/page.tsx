@@ -568,7 +568,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar className="w-64 hidden md:block" />
-      <div className="md:ml-64 h-screen flex flex-col">
+      <div className="md:ml-64 h-[100dvh] flex flex-col">
         {/* ヘッダー */}
         <div className="bg-white border-b border-gray-200 p-4 flex items-center space-x-3">
           <button onClick={() => router.push('/messages')} className="text-gray-500 hover:text-gray-700">
