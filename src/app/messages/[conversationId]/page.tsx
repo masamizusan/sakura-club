@@ -689,7 +689,7 @@ export default function ChatPage() {
         </div>
 
         {/* 入力欄 */}
-        <div className="bg-white border-t border-gray-200 p-4">
+        <div className="bg-white border-t border-gray-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
             {/* 翻訳プレビュー表示 */}
