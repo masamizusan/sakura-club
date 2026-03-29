@@ -52,7 +52,7 @@ function checkRateLimit(userId: string): boolean {
 }
 
 // プロンプトバージョン: プロンプト改善時にインクリメントしてキャッシュを無効化
-const PROMPT_VERSION = 'v3'
+const PROMPT_VERSION = 'v4'
 
 function hashText(text: string): string {
   // プロンプトバージョンを含めることで、プロンプト改善時に自動的に再翻訳される
@@ -88,9 +88,10 @@ ABSOLUTE REQUIREMENTS:
 4. Output ONLY the translated text with no Japanese mixed in
 5. Preserve the original meaning and polite tone
 6. Make it sound natural in ${targetLanguageName}
-7. Place names, food names, and cultural proper nouns should keep their romanized form (romaji) with a brief explanation in parentheses if needed
-   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki (doll-shaped cakes)" / 仲見世通り → "Nakamise-dori (shopping street)"
+7. Japanese place names, food names, and cultural proper nouns should keep their romanized form (romaji) only
+   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki" / 仲見世通り → "Nakamise-dori"
 8. Do NOT force-translate Japanese proper nouns into literal meanings
+9. Do NOT add parenthetical explanations after proper nouns
 
 FORBIDDEN: Leaving ANY Japanese text untranslated. Every single character must be converted to ${targetLanguageName}.`
         },

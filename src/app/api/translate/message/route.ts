@@ -77,9 +77,13 @@ REQUIREMENTS:
 3. Keep the tone friendly and casual
 4. Output ONLY the translated text, nothing else
 5. If the text is already in ${targetLanguageName}, return it as-is
-6. Place names, food names, and cultural proper nouns should keep their romanized form (romaji) with a brief explanation in parentheses if needed
-   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki (doll-shaped cakes)" / 仲見世通り → "Nakamise-dori (shopping street)" / もんじゃ焼き → "Monjayaki (pan-fried batter dish)"
-7. Do NOT force-translate Japanese proper nouns into literal meanings`
+${targetLang === 'ja' ? `6. Romanized Japanese proper nouns (e.g. Asakusa, Kaminarimon, Senso-ji) must be converted to proper Japanese (kanji/hiragana)
+   Examples: "Asakusa" → 浅草 / "Kaminarimon" → 雷門 / "Senso-ji" → 浅草寺 / "Monjayaki" → もんじゃ焼き
+7. Unknown proper nouns that cannot be converted should be written in katakana
+8. Do NOT over-translate English proper nouns into Japanese` : `6. Japanese place names, food names, and cultural proper nouns should keep their romanized form (romaji) only
+   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki" / 仲見世通り → "Nakamise-dori" / もんじゃ焼き → "Monjayaki"
+7. Do NOT force-translate Japanese proper nouns into literal meanings
+8. Do NOT add parenthetical explanations after proper nouns`}`
         },
         {
           role: 'user',
