@@ -115,7 +115,7 @@ export default function ChatPage() {
   // 音声入力（Whisper API + 無音検知）
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
-  const [volumeData, setVolumeData] = useState<number[]>(new Array(40).fill(0))
+  const [volumeData, setVolumeData] = useState<number[]>([])
   const [isCancelled, setIsCancelled] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
@@ -439,7 +439,7 @@ export default function ChatPage() {
       mediaStreamRef.current.getTracks().forEach(track => track.stop())
       mediaStreamRef.current = null
     }
-    setVolumeData(new Array(40).fill(0))
+    setVolumeData([])
   }
 
   // 録音停止（確定→Whisper送信）
@@ -491,12 +491,13 @@ export default function ChatPage() {
         analyser.getByteFrequencyData(dataArray)
         const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
 
-        // 波形データを更新
-        const bars = Array.from({ length: 40 }, (_, i) => {
-          const index = Math.floor(i * dataArray.length / 40)
-          return dataArray[index] / 255
+        // 波形データを蓄積（左→右に積み上げ）
+        const currentVolume = volume / 255
+        const newBar = Math.max(0.05, currentVolume)
+        setVolumeData(prev => {
+          const updated = [...prev, newBar]
+          return updated.length > 40 ? updated.slice(-40) : updated
         })
-        setVolumeData(bars)
 
         if (volume < 10) {
           if (silenceStart === null) silenceStart = Date.now()
@@ -517,7 +518,7 @@ export default function ChatPage() {
 
       mediaRecorder.onstop = async () => {
         setIsRecording(false)
-        setVolumeData(new Array(40).fill(0))
+        setVolumeData([])
 
         // キャンセル時はWhisper送信しない
         if (isCancelledRef.current || chunks.length === 0) return
@@ -729,12 +730,15 @@ export default function ChatPage() {
                     <span className="text-lg">✕</span>
                   </button>
 
-                  {/* 波形 */}
-                  <div className="flex-1 flex items-center justify-center gap-[2px] h-10">
+                  {/* 波形（左→右に蓄積） */}
+                  <div className="flex-1 flex items-end justify-start gap-[2px] h-10 overflow-hidden">
+                    {Array.from({ length: 40 - volumeData.length }).map((_, i) => (
+                      <div key={`empty-${i}`} className="w-[3px] rounded-full bg-pink-200" style={{ height: '4px' }} />
+                    ))}
                     {volumeData.map((v, i) => (
                       <div
                         key={i}
-                        className="w-[3px] rounded-full bg-pink-400 transition-all duration-75"
+                        className="w-[3px] rounded-full bg-pink-400"
                         style={{ height: `${Math.max(4, v * 40)}px` }}
                       />
                     ))}
