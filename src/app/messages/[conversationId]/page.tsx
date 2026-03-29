@@ -725,15 +725,7 @@ export default function ChatPage() {
               {/* 録音中の波形オーバーレイ */}
               {isRecording && (
                 <div className="flex items-center gap-3 px-4 py-3 bg-pink-50 border border-pink-200 rounded-lg">
-                  {/* キャンセルボタン */}
-                  <button
-                    onClick={cancelRecording}
-                    className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex-shrink-0"
-                  >
-                    <span className="text-lg">✕</span>
-                  </button>
-
-                  {/* 波形（左→右に蓄積） */}
+                  {/* 波形（左〜中央） */}
                   <div className="flex-1 flex items-end justify-start gap-[2px] h-10 overflow-hidden">
                     {Array.from({ length: 40 - volumeData.length }).map((_, i) => (
                       <div key={`empty-${i}`} className="w-[3px] rounded-full bg-pink-200" style={{ height: '4px' }} />
@@ -747,13 +739,21 @@ export default function ChatPage() {
                     ))}
                   </div>
 
-                  {/* 確定ボタン */}
-                  <button
-                    onClick={stopRecording}
-                    className="p-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 flex-shrink-0"
-                  >
-                    <span className="text-lg">✓</span>
-                  </button>
+                  {/* キャンセル・確定ボタンを右側に並べる */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={cancelRecording}
+                      className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                    >
+                      <span className="text-lg">✕</span>
+                    </button>
+                    <button
+                      onClick={stopRecording}
+                      className="p-2 rounded-full bg-pink-500 text-white hover:bg-pink-600"
+                    >
+                      <span className="text-lg">✓</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
