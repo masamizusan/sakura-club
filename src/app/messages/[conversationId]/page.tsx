@@ -114,6 +114,7 @@ export default function ChatPage() {
 
   // 音声入力（Whisper API + 無音検知）
   const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const [volumeData, setVolumeData] = useState<number[]>(new Array(40).fill(0))
   const [isCancelled, setIsCancelled] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -521,6 +522,7 @@ export default function ChatPage() {
         // キャンセル時はWhisper送信しない
         if (isCancelledRef.current || chunks.length === 0) return
 
+        setIsTranscribing(true)
         const blob = new Blob(chunks, { type: 'audio/webm' })
         const formData = new FormData()
         formData.append('audio', blob, 'recording.webm')
@@ -548,10 +550,12 @@ export default function ChatPage() {
           }
         } catch (err) {
           console.error('Whisper transcription error:', err)
+        } finally {
+          setIsTranscribing(false)
         }
       }
 
-      mediaRecorder.start(1000)
+      mediaRecorder.start(250)
       setIsRecording(true)
       animationIdRef.current = requestAnimationFrame(checkSilence)
     } catch (err) {
@@ -746,8 +750,16 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* 通常の入力エリア（録音中は非表示） */}
-              {!isRecording && (
+              {/* 文字起こし中の表示 */}
+              {isTranscribing && (
+                <div className="flex items-center justify-center gap-2 py-3 text-sm text-pink-500">
+                  <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
+                  {currentLanguage === 'ja' ? '文字起こし中...' : 'Transcribing...'}
+                </div>
+              )}
+
+              {/* 通常の入力エリア（録音中・文字起こし中は非表示） */}
+              {!isRecording && !isTranscribing && (
               <div className="flex items-end space-x-2">
               {/* カメラボタン */}
               <button
@@ -796,9 +808,7 @@ export default function ChatPage() {
                     className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{
                       resize: 'none',
-                      overflowY: 'auto',
                       minHeight: '40px',
-                      maxHeight: '120px',
                     }}
                   />
 
