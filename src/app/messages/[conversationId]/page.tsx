@@ -112,11 +112,11 @@ export default function ChatPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 音声入力
+  // 音声入力（Whisper API）
   const [isRecording, setIsRecording] = useState(false)
-  const recognitionRef = useRef<any>(null)
-  const finalTranscriptRef = useRef<string>('')
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -420,92 +420,87 @@ export default function ChatPage() {
     }
   }
 
-  // 音声入力
-  const handleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      alert(t('voiceNotSupported'))
-      return
+  // 録音停止処理
+  const stopRecording = () => {
+    if (recordingTimerRef.current) {
+      clearTimeout(recordingTimerRef.current)
+      recordingTimerRef.current = null
     }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop())
+      mediaStreamRef.current = null
+    }
+  }
 
+  // 音声入力（Whisper API）
+  const handleVoiceInput = async () => {
     if (isRecording) {
-      // 録音停止
-      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null }
-      recognitionRef.current?.stop()
-      recognitionRef.current = null
-      setIsRecording(false)
-      // 途中経過の[...]を除去
-      setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
+      stopRecording()
       return
     }
 
-    const recognition = new SpeechRecognition()
-    recognition.lang = currentLanguage === 'ja' ? 'ja-JP'
-      : currentLanguage === 'ko' ? 'ko-KR'
-      : currentLanguage === 'zh-tw' ? 'zh-TW'
-      : 'en-US'
-    recognition.continuous = true
-    recognition.interimResults = true
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      const chunks: BlobPart[] = []
 
-    finalTranscriptRef.current = ''
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data)
+      }
 
-    recognition.onresult = (event: any) => {
-      let interimTranscript = ''
+      mediaRecorder.onstop = async () => {
+        setIsRecording(false)
+        if (chunks.length === 0) return
 
-      // resultIndexから処理（重複防止）
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscriptRef.current += event.results[i][0].transcript
-        } else {
-          interimTranscript += event.results[i][0].transcript
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        // Whisper APIに送信
+        const formData = new FormData()
+        formData.append('audio', blob, 'recording.webm')
+        // 言語判定：日本語ユーザーは'ja'、それ以外は'en'
+        const whisperLang = currentLanguage === 'ja' ? 'ja'
+          : currentLanguage === 'ko' ? 'ko'
+          : currentLanguage === 'zh-tw' ? 'zh'
+          : 'en'
+        formData.append('language', whisperLang)
+
+        try {
+          const res = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData,
+          })
+          const data = await res.json()
+          if (data.text) {
+            setNewMessage(prev => prev ? prev + ' ' + data.text : data.text)
+            setPreviewTranslation(null)
+            // 高さを調整
+            setTimeout(() => {
+              if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto'
+                textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+              }
+            }, 0)
+          }
+        } catch (err) {
+          console.error('Whisper transcription error:', err)
         }
       }
 
-      setNewMessage(
-        finalTranscriptRef.current +
-        (interimTranscript ? `[${interimTranscript}]` : '')
-      )
-      setPreviewTranslation(null)
-      // 高さを調整
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto'
-          textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-        }
-      }, 0)
+      mediaRecorder.start()
+      setIsRecording(true)
 
-      // 無音タイマーリセット（発話があるたびに8秒延長）
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-      silenceTimerRef.current = setTimeout(() => {
-        recognitionRef.current?.stop()
-        recognitionRef.current = null
-        setIsRecording(false)
-        setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
+      // 8秒後に自動停止
+      recordingTimerRef.current = setTimeout(() => {
+        stopRecording()
       }, 8000)
+    } catch (err) {
+      console.error('Microphone access error:', err)
+      alert(t('voiceNotSupported'))
     }
-
-    recognition.onerror = (event: any) => {
-      if (event.error === 'not-allowed') {
-        alert('マイクへのアクセスが拒否されました。')
-        setIsRecording(false)
-      }
-    }
-
-    recognition.onend = () => {
-      // 自動再起動しない（重複防止）
-    }
-
-    recognitionRef.current = recognition
-    recognition.start()
-    setIsRecording(true)
-
-    // 初回の無音タイマー開始（8秒間発話がなければ自動停止）
-    silenceTimerRef.current = setTimeout(() => {
-      recognitionRef.current?.stop()
-      recognitionRef.current = null
-      setIsRecording(false)
-      setNewMessage(prev => prev.replace(/\[.*?\]$/, ''))
-    }, 8000)
   }
 
   return (
