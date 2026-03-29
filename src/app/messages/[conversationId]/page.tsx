@@ -614,7 +614,7 @@ export default function ChatPage() {
                   <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                     {isMyMessage ? (
                       // 自分のメッセージ（翻訳機能なし）
-                      <div className="max-w-sm px-4 py-2 rounded-2xl bg-sakura-100 text-sakura-900">
+                      <div className="max-w-[75%] px-4 py-2 rounded-2xl bg-sakura-100 text-sakura-900 break-words">
                         {message.image_url ? (
                           <img
                             src={message.image_url}
@@ -633,7 +633,7 @@ export default function ChatPage() {
                       // 相手のメッセージ（翻訳トグル付き）
                       <div
                         onClick={() => !message.image_url && toggleTranslation(message.id)}
-                        className="max-w-sm px-4 py-2 rounded-2xl bg-white text-gray-900 shadow-sm cursor-pointer hover:bg-gray-50 transition-all"
+                        className="max-w-[75%] px-4 py-2 rounded-2xl bg-white text-gray-900 shadow-sm cursor-pointer hover:bg-gray-50 transition-all break-words"
                       >
                         {message.image_url ? (
                           <img
