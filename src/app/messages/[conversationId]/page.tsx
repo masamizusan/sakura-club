@@ -114,10 +114,13 @@ export default function ChatPage() {
 
   // 音声入力（Whisper API + 無音検知）
   const [isRecording, setIsRecording] = useState(false)
+  const [volumeData, setVolumeData] = useState<number[]>(new Array(40).fill(0))
+  const [isCancelled, setIsCancelled] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const animationIdRef = useRef<number | null>(null)
+  const isCancelledRef = useRef(false)
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -421,8 +424,8 @@ export default function ChatPage() {
     }
   }
 
-  // 録音停止処理
-  const stopRecording = () => {
+  // 録音リソース解放（共通）
+  const cleanupRecording = () => {
     if (animationIdRef.current) {
       cancelAnimationFrame(animationIdRef.current)
       animationIdRef.current = null
@@ -431,16 +434,33 @@ export default function ChatPage() {
       audioContextRef.current.close()
       audioContextRef.current = null
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-    }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => track.stop())
       mediaStreamRef.current = null
     }
+    setVolumeData(new Array(40).fill(0))
   }
 
-  // 音声入力（Whisper API + 無音検知）
+  // 録音停止（確定→Whisper送信）
+  const stopRecording = () => {
+    isCancelledRef.current = false
+    cleanupRecording()
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+  }
+
+  // 録音キャンセル（テキスト反映なし）
+  const cancelRecording = () => {
+    isCancelledRef.current = true
+    cleanupRecording()
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    setIsRecording(false)
+  }
+
+  // 音声入力（Whisper API + 無音検知 + 波形表示）
   const handleVoiceInput = async () => {
     if (isRecording) {
       stopRecording()
@@ -453,8 +473,9 @@ export default function ChatPage() {
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
       const chunks: BlobPart[] = []
+      isCancelledRef.current = false
 
-      // 無音検知の設定
+      // 無音検知 + 波形の設定
       const audioContext = new AudioContext()
       audioContextRef.current = audioContext
       const source = audioContext.createMediaStreamSource(stream)
@@ -463,22 +484,26 @@ export default function ChatPage() {
       source.connect(analyser)
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount)
-      let silenceStart: number | null = Date.now() // 初回から計測開始
+      let silenceStart: number | null = Date.now()
 
       const checkSilence = () => {
         analyser.getByteFrequencyData(dataArray)
         const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
 
+        // 波形データを更新
+        const bars = Array.from({ length: 40 }, (_, i) => {
+          const index = Math.floor(i * dataArray.length / 40)
+          return dataArray[index] / 255
+        })
+        setVolumeData(bars)
+
         if (volume < 10) {
-          // 無音と判定
           if (silenceStart === null) silenceStart = Date.now()
           if (Date.now() - silenceStart >= 8000) {
-            // 無音が8秒続いたら停止
             stopRecording()
             return
           }
         } else {
-          // 音声があればリセット
           silenceStart = null
         }
 
@@ -491,7 +516,10 @@ export default function ChatPage() {
 
       mediaRecorder.onstop = async () => {
         setIsRecording(false)
-        if (chunks.length === 0) return
+        setVolumeData(new Array(40).fill(0))
+
+        // キャンセル時はWhisper送信しない
+        if (isCancelledRef.current || chunks.length === 0) return
 
         const blob = new Blob(chunks, { type: 'audio/webm' })
         const formData = new FormData()
@@ -523,9 +551,9 @@ export default function ChatPage() {
         }
       }
 
-      mediaRecorder.start(1000) // 1秒ごとにデータ取得
+      mediaRecorder.start(1000)
       setIsRecording(true)
-      animationIdRef.current = requestAnimationFrame(checkSilence) // 無音監視開始
+      animationIdRef.current = requestAnimationFrame(checkSilence)
     } catch (err) {
       console.error('Microphone access error:', err)
       alert(t('voiceNotSupported'))
@@ -685,7 +713,42 @@ export default function ChatPage() {
             )}
 
             {/* 入力エリア */}
-            <div className="flex items-end space-x-2">
+            <div className="relative">
+              {/* 録音中の波形オーバーレイ */}
+              {isRecording && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-pink-50 border border-pink-200 rounded-lg">
+                  {/* キャンセルボタン */}
+                  <button
+                    onClick={cancelRecording}
+                    className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex-shrink-0"
+                  >
+                    <span className="text-lg">✕</span>
+                  </button>
+
+                  {/* 波形 */}
+                  <div className="flex-1 flex items-center justify-center gap-[2px] h-10">
+                    {volumeData.map((v, i) => (
+                      <div
+                        key={i}
+                        className="w-[3px] rounded-full bg-pink-400 transition-all duration-75"
+                        style={{ height: `${Math.max(4, v * 40)}px` }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 確定ボタン */}
+                  <button
+                    onClick={stopRecording}
+                    className="p-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 flex-shrink-0"
+                  >
+                    <span className="text-lg">✓</span>
+                  </button>
+                </div>
+              )}
+
+              {/* 通常の入力エリア（録音中は非表示） */}
+              {!isRecording && (
+              <div className="flex items-end space-x-2">
               {/* カメラボタン */}
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -720,7 +783,6 @@ export default function ChatPage() {
                     onChange={(e) => {
                       setNewMessage(e.target.value)
                       setPreviewTranslation(null)
-                      // 高さを内容に合わせて自動調整
                       e.target.style.height = 'auto'
                       e.target.style.height = `${e.target.scrollHeight}px`
                     }}
@@ -744,17 +806,9 @@ export default function ChatPage() {
                     onClick={handleVoiceInput}
                     variant="outline"
                     size="sm"
-                    className={`flex-shrink-0 ${
-                      isRecording
-                        ? 'text-red-500 border-red-300 bg-red-50 animate-pulse'
-                        : 'text-gray-500 border-gray-300 hover:bg-gray-50'
-                    }`}
+                    className="flex-shrink-0 text-gray-500 border-gray-300 hover:bg-gray-50"
                   >
-                    {isRecording ? (
-                      <span className="text-xs">{t('stop')}</span>
-                    ) : (
-                      <Mic className="w-4 h-4" />
-                    )}
+                    <Mic className="w-4 h-4" />
                   </Button>
 
                   {/* 翻訳確認ボタン */}
@@ -786,6 +840,8 @@ export default function ChatPage() {
                     )}
                   </Button>
                 </>
+              )}
+              </div>
               )}
             </div>
           </div>
