@@ -88,6 +88,9 @@ ABSOLUTE REQUIREMENTS:
 4. Output ONLY the translated text with no Japanese mixed in
 5. Preserve the original meaning and polite tone
 6. Make it sound natural in ${targetLanguageName}
+7. Place names, food names, and cultural proper nouns should keep their romanized form (romaji) with a brief explanation in parentheses if needed
+   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki (doll-shaped cakes)" / 仲見世通り → "Nakamise-dori (shopping street)"
+8. Do NOT force-translate Japanese proper nouns into literal meanings
 
 FORBIDDEN: Leaving ANY Japanese text untranslated. Every single character must be converted to ${targetLanguageName}.`
         },

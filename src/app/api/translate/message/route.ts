@@ -76,7 +76,10 @@ REQUIREMENTS:
 2. Preserve emojis and emoticons as-is
 3. Keep the tone friendly and casual
 4. Output ONLY the translated text, nothing else
-5. If the text is already in ${targetLanguageName}, return it as-is`
+5. If the text is already in ${targetLanguageName}, return it as-is
+6. Place names, food names, and cultural proper nouns should keep their romanized form (romaji) with a brief explanation in parentheses if needed
+   Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki (doll-shaped cakes)" / 仲見世通り → "Nakamise-dori (shopping street)" / もんじゃ焼き → "Monjayaki (pan-fried batter dish)"
+7. Do NOT force-translate Japanese proper nouns into literal meanings`
         },
         {
           role: 'user',
