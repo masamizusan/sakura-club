@@ -19,6 +19,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     searchPlaceholder: '会話を検索...',
     noMessages: 'メッセージがありません',
     matchedOn: '{date} にマッチしました',
+    matchedMessage: 'マッチしました！メッセージを送ってみましょう',
     messagePlaceholder: 'メッセージを入力...',
     yearsOld: '歳',
     online: 'オンライン',
@@ -31,6 +32,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     searchPlaceholder: 'Search conversations...',
     noMessages: 'No messages yet',
     matchedOn: 'Matched on {date}',
+    matchedMessage: "It's a match! Send them a message!",
     messagePlaceholder: 'Type a message...',
     yearsOld: 'y/o',
     online: 'Online',
@@ -43,6 +45,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     searchPlaceholder: '대화 검색...',
     noMessages: '메시지가 없습니다',
     matchedOn: '{date}에 매칭되었습니다',
+    matchedMessage: '매칭되었습니다! 메시지를 보내보세요.',
     messagePlaceholder: '메시지를 입력...',
     yearsOld: '세',
     online: '온라인',
@@ -55,6 +58,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     searchPlaceholder: '搜尋對話...',
     noMessages: '沒有訊息',
     matchedOn: '於 {date} 配對成功',
+    matchedMessage: '配對成功！來發送訊息吧。',
     messagePlaceholder: '輸入訊息...',
     yearsOld: '歲',
     online: '線上',
@@ -353,7 +357,9 @@ export default function MessagesPage() {
                           <p className={`text-sm truncate ${
                             conversation.unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-500'
                           }`}>
-                            {conversation.lastMessage.content}
+                            {conversation.lastMessage.content === 'マッチしました！メッセージを送ってみましょう'
+                              ? t('matchedMessage')
+                              : conversation.lastMessage.content}
                           </p>
                         </div>
                       </div>
