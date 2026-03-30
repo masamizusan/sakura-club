@@ -178,6 +178,26 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
   }
 }
 
+// alert用多言語テキスト
+const matchedTexts: Record<string, string> = {
+  ja: 'マッチしました！メッセージを送ってみましょう。',
+  en: "It's a match! Send them a message.",
+  ko: '매칭되었습니다! 메시지를 보내보세요.',
+  'zh-tw': '配對成功！來發送訊息吧。',
+}
+const dailyLimitTexts: Record<string, string> = {
+  ja: '本日のいいね上限（10回）に達しました。明日またお試しください。',
+  en: "You've reached your daily like limit (10). Please try again tomorrow.",
+  ko: '오늘의 좋아요 한도(10회)에 도달했습니다. 내일 다시 시도해주세요.',
+  'zh-tw': '已達到今日按讚上限（10次）。請明天再試。',
+}
+const likeFailedTexts: Record<string, string> = {
+  ja: 'いいねの送信に失敗しました。',
+  en: 'Failed to send like.',
+  ko: '좋아요 전송에 실패했습니다.',
+  'zh-tw': '按讚發送失敗。',
+}
+
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
@@ -271,11 +291,11 @@ function ProfileDetailContent() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            setError('プロフィールが見つかりません')
+            setError(t('notFound'))
           } else if (response.status === 401) {
-            setError('ログインが必要です')
+            setError(t('loginRequired'))
           } else {
-            setError(data.error || 'エラーが発生しました')
+            setError(data.error || t('errorOccurred'))
           }
           return
         }
@@ -284,7 +304,7 @@ function ProfileDetailContent() {
         setViewerId(data.viewerId)
       } catch (err) {
         console.error('Error fetching profile:', err)
-        setError('プロフィールの読み込みに失敗しました')
+        setError(t('errorOccurred'))
       } finally {
         setIsLoading(false)
       }
@@ -341,17 +361,17 @@ function ProfileDetailContent() {
         }
 
         if (result.matched) {
-          alert('マッチしました！メッセージを送ってみましょう。')
+          alert(matchedTexts[currentLanguage] || matchedTexts.ja)
         }
       } else if (response.status === 429) {
         setLikesRemaining(0)
-        alert('本日のいいね上限（10回）に達しました。明日またお試しください。')
+        alert(dailyLimitTexts[currentLanguage] || dailyLimitTexts.ja)
       } else {
-        alert(result.error || 'いいねの送信に失敗しました。')
+        alert(result.error || likeFailedTexts[currentLanguage] || likeFailedTexts.ja)
       }
     } catch (error) {
       console.error('Error liking user:', error)
-      alert('エラーが発生しました。')
+      alert(t('errorOccurred'))
     } finally {
       setIsLiking(false)
     }
