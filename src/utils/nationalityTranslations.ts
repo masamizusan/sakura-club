@@ -33,10 +33,31 @@ const japaneseToISO: Record<string, string> = {
   'タイ': 'TH', 'ベトナム': 'VN', 'インド': 'IN',
 }
 
+// 英語テキスト → ISOコードの逆引きマップ
+const englishToISO: Record<string, string> = {
+  'japan': 'JP', 'usa': 'US', 'uk': 'GB', 'canada': 'CA',
+  'australia': 'AU', 'germany': 'DE', 'france': 'FR', 'italy': 'IT',
+  'spain': 'ES', 'korea': 'KR', 'china': 'CN', 'taiwan': 'TW',
+  'thailand': 'TH', 'vietnam': 'VN', 'india': 'IN',
+  'america': 'US', 'united states': 'US', 'united kingdom': 'GB',
+}
+
 export const getNationalityLabel = (code: string, lang: string): string => {
   if (!code) return ''
   // 日本語テキストが来た場合はISOコードに変換
-  const isoCode = japaneseToISO[code] || code.toUpperCase()
+  const isoFromJapanese = japaneseToISO[code]
+  if (isoFromJapanese) {
+    const langLabels = nationalityLabels[lang] || nationalityLabels['ja']
+    return langLabels[isoFromJapanese] || code
+  }
+  // 英語テキストが来た場合はISOコードに変換（小文字で照合）
+  const isoFromEnglish = englishToISO[code.toLowerCase()]
+  if (isoFromEnglish) {
+    const langLabels = nationalityLabels[lang] || nationalityLabels['ja']
+    return langLabels[isoFromEnglish] || code
+  }
+  // ISOコード（2文字大文字）として試みる
+  const isoCode = code.toUpperCase()
   const langLabels = nationalityLabels[lang] || nationalityLabels['ja']
   return langLabels[isoCode] || code
 }
