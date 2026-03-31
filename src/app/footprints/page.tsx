@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { 
-  History, 
+import {
+  History,
   User,
   MapPin,
   Clock,
@@ -12,6 +12,63 @@ import {
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import AuthGuard from '@/components/auth/AuthGuard'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { getNationalityLabel } from '@/utils/nationalityTranslations'
+
+const footprintsTranslations: Record<string, Record<string, string>> = {
+  ja: {
+    pageTitle: '足跡',
+    pageSubtitle: 'あなたのプロフィールを見てくれた方々です',
+    visitedAgo: '{time}に訪問',
+    minutesAgo: '{n}分前',
+    hoursAgo: '{n}時間前',
+    daysAgo: '{n}日前',
+    online: 'オンライン中',
+    viewProfile: 'プロフィール',
+    noFootprints: 'まだ足跡がありません',
+    noFootprintsDesc: 'プロフィールを充実させて、より多くの方に見つけてもらいましょう',
+    editProfile: 'プロフィールを編集',
+  },
+  en: {
+    pageTitle: 'Footprints',
+    pageSubtitle: 'People who viewed your profile',
+    visitedAgo: 'Visited {time}',
+    minutesAgo: '{n} min ago',
+    hoursAgo: '{n}h ago',
+    daysAgo: '{n} days ago',
+    online: 'Online',
+    viewProfile: 'Profile',
+    noFootprints: 'No footprints yet',
+    noFootprintsDesc: 'Enhance your profile to get discovered by more people',
+    editProfile: 'Edit Profile',
+  },
+  ko: {
+    pageTitle: '발자국',
+    pageSubtitle: '내 프로필을 본 사람들',
+    visitedAgo: '{time} 방문',
+    minutesAgo: '{n}분 전',
+    hoursAgo: '{n}시간 전',
+    daysAgo: '{n}일 전',
+    online: '온라인',
+    viewProfile: '프로필',
+    noFootprints: '아직 발자국이 없습니다',
+    noFootprintsDesc: '프로필을 충실히 채워 더 많은 분들에게 발견되어 보세요',
+    editProfile: '프로필 편집',
+  },
+  'zh-tw': {
+    pageTitle: '足跡',
+    pageSubtitle: '查看過您個人資料的人',
+    visitedAgo: '{time}造訪',
+    minutesAgo: '{n}分鐘前',
+    hoursAgo: '{n}小時前',
+    daysAgo: '{n}天前',
+    online: '線上',
+    viewProfile: '個人資料',
+    noFootprints: '還沒有足跡',
+    noFootprintsDesc: '充實您的個人資料，讓更多人發現您',
+    editProfile: '編輯個人資料',
+  },
+}
 
 // 足跡データの型定義
 interface FootprintUser {
@@ -58,18 +115,21 @@ const SAMPLE_FOOTPRINTS: FootprintUser[] = [
 
 function FootprintsContent() {
   const [footprints] = useState<FootprintUser[]>(SAMPLE_FOOTPRINTS)
+  const { currentLanguage } = useLanguage()
+  const currentLang = ['ja', 'en', 'ko', 'zh-tw'].includes(currentLanguage) ? currentLanguage : 'en'
+  const T = footprintsTranslations[currentLang]
 
   const formatVisitTime = (visitedAtString: string) => {
     const visitedAt = new Date(visitedAtString)
     const now = new Date()
     const diffMinutes = Math.floor((now.getTime() - visitedAt.getTime()) / (1000 * 60))
-    
+
     if (diffMinutes < 60) {
-      return `${diffMinutes}分前`
+      return T.minutesAgo.replace('{n}', String(diffMinutes))
     } else if (diffMinutes < 24 * 60) {
-      return `${Math.floor(diffMinutes / 60)}時間前`
+      return T.hoursAgo.replace('{n}', String(Math.floor(diffMinutes / 60)))
     } else {
-      return `${Math.floor(diffMinutes / (24 * 60))}日前`
+      return T.daysAgo.replace('{n}', String(Math.floor(diffMinutes / (24 * 60))))
     }
   }
 
@@ -77,14 +137,14 @@ function FootprintsContent() {
     <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
-      
+
       <div className="md:ml-64 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           {/* ヘッダー */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">足跡</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">{T.pageTitle}</h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              あなたのプロフィールを見てくれた方々です
+              {T.pageSubtitle}
             </p>
           </div>
 
@@ -99,7 +159,7 @@ function FootprintsContent() {
                       <div className="w-16 h-16 bg-gradient-to-br from-sakura-200 to-sakura-300 rounded-full flex items-center justify-center">
                         <User className="w-8 h-8 text-white" />
                       </div>
-                      
+
                       {/* ユーザー情報 */}
                       <div>
                         <h3 className="text-xl font-bold text-gray-900">
@@ -109,28 +169,30 @@ function FootprintsContent() {
                           <MapPin className="w-4 h-4 mr-1" />
                           <span>{user.prefecture} {user.city}</span>
                           <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                            {user.nationalityLabel}
+                            {getNationalityLabel(user.nationality, currentLang)}
                           </span>
                         </div>
                         <div className="flex items-center text-gray-500 mt-2">
                           <Clock className="w-4 h-4 mr-1" />
-                          <span className="text-sm">{formatVisitTime(user.visitedAt)}に訪問</span>
+                          <span className="text-sm">
+                            {T.visitedAgo.replace('{time}', formatVisitTime(user.visitedAt))}
+                          </span>
                           {user.isOnline && (
                             <span className="ml-3 flex items-center text-green-600 text-sm">
                               <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                              オンライン中
+                              {T.online}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* アクションボタン */}
                     <div className="flex space-x-3">
                       <Link href={`/profile/${user.id}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4 mr-2" />
-                          プロフィール
+                          {T.viewProfile}
                         </Button>
                       </Link>
                     </div>
@@ -144,14 +206,14 @@ function FootprintsContent() {
                 <History className="w-16 h-16 mx-auto" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                まだ足跡がありません
+                {T.noFootprints}
               </h3>
               <p className="text-gray-600 mb-4">
-                プロフィールを充実させて、より多くの方に見つけてもらいましょう
+                {T.noFootprintsDesc}
               </p>
               <Link href="/mypage">
                 <Button variant="sakura">
-                  プロフィールを編集
+                  {T.editProfile}
                 </Button>
               </Link>
             </div>
