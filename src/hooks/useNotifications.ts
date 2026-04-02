@@ -117,7 +117,8 @@ export function useNotifications() {
     init()
 
     // 既読イベントで即時再フェッチ（refで最新のuserIdを参照し、クロージャー問題を回避）
-    const handleRefetch = () => {
+    const handleRefetch = (e: Event) => {
+      console.log('[useNotifications] event received:', e.type, 'userId:', userIdRef.current?.slice(0,8))
       if (userIdRef.current) fetchCounts(userIdRef.current)
     }
     window.addEventListener('footprints-read', handleRefetch)
