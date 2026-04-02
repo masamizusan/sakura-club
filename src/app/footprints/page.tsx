@@ -13,7 +13,6 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTag } from '@/utils/profileTagFormatters'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
-import { createClient } from '@/lib/supabase'
 
 const footprintsTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -99,7 +98,6 @@ function FootprintsContent() {
   const { currentLanguage } = useLanguage()
   const [visitors, setVisitors] = useState<VisitorProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   const t = (key: string, params?: Record<string, string | number>): string => {
     const texts = footprintsTranslations[currentLanguage] || footprintsTranslations['ja']
@@ -112,16 +110,20 @@ function FootprintsContent() {
     return text
   }
 
-  // ページを開いたら未読足跡を既読にする
+  // ページを開いたら未読足跡を既読にし、サイドバーバッジを更新
   useEffect(() => {
     const markAsRead = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      await supabase
-        .from('footprints')
-        .update({ is_read: true })
-        .eq('profile_owner_id', user.id)
-        .eq('is_read', false)
+      try {
+        const res = await fetch('/api/footprints/read', {
+          method: 'POST',
+          credentials: 'include',
+        })
+        if (res.ok) {
+          window.dispatchEvent(new CustomEvent('footprints-read'))
+        }
+      } catch {
+        // 既読化失敗はサイレントに無視
+      }
     }
     markAsRead()
   }, [])
