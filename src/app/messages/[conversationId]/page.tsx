@@ -321,6 +321,17 @@ export default function ChatPage() {
     fetchMessages()
   }, [conversationId, currentUserId])
 
+  // 会話を開いたら新規マッチフラグを既読に更新
+  useEffect(() => {
+    if (!conversationId) return
+    fetch('/api/conversations/seen', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversationId }),
+    }).catch(() => {})
+  }, [conversationId])
+
   // リアルタイムメッセージ受信
   useEffect(() => {
     if (!conversationId || !currentUserId) return

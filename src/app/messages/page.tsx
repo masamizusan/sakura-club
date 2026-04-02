@@ -90,6 +90,7 @@ interface Conversation {
   unreadCount: number
   isOnline: boolean
   matchedDate: string
+  isNewMatch: boolean  // 新規マッチ未確認フラグ
 }
 
 // サンプル会話データ
@@ -174,7 +175,6 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [lastSeenTime, setLastSeenTime] = useState<number>(0)
 
   // 翻訳関数
   const t = (key: string, params?: Record<string, string | number>) => {
@@ -188,25 +188,6 @@ export default function MessagesPage() {
     return text
   }
 
-  // ページ読み込み時: 前回の既読時刻を取得してからlocalStorageを更新
-  useEffect(() => {
-    const initLastSeen = async () => {
-      try {
-        const { createClient } = await import('@/lib/supabase/client')
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-        const key = `messages_last_seen_${user.id}`
-        const prev = localStorage.getItem(key)
-        setLastSeenTime(prev ? new Date(prev).getTime() : 0)
-        // 既読時刻を現在時刻に更新（次回以降は今より前が既読扱い）
-        localStorage.setItem(key, new Date().toISOString())
-      } catch {
-        // ignore
-      }
-    }
-    initLastSeen()
-  }, [])
 
   // 会話一覧の取得
   useEffect(() => {
@@ -309,11 +290,7 @@ export default function MessagesPage() {
                 </div>
               ) : (
                 filteredConversations.map((conversation) => {
-                  // 新規マッチ判定（前回ページを開いた時刻より後にマッチ成立）
-                  const isNewMatch = lastSeenTime > 0
-                    ? new Date(conversation.matchedDate).getTime() > lastSeenTime
-                    : false
-                  const isUnread = conversation.unreadCount > 0 || isNewMatch
+                  const isUnread = conversation.unreadCount > 0 || conversation.isNewMatch
 
                   return (
                     <div
@@ -369,7 +346,7 @@ export default function MessagesPage() {
                                   </span>
                                 )}
                                 {/* 新規マッチバッジ（メッセージ未送信） */}
-                                {isNewMatch && conversation.unreadCount === 0 && (
+                                {conversation.isNewMatch && conversation.unreadCount === 0 && (
                                   <span className="ml-2 inline-flex items-center justify-center w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />
                                 )}
                               </div>

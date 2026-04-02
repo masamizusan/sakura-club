@@ -25,25 +25,21 @@ export async function GET(request: NextRequest) {
 
     const uid = user.id
 
-    // since パラメータ（最後にメッセージページを開いた時刻）
-    const { searchParams } = new URL(request.url)
-    const since = searchParams.get('since')
-    const sinceTime = since ? new Date(since).getTime() : 0
-
-    // 全会話を取得してJSでフィルタ
+    // 全会話を取得してJSでフィルタ（is_seen フィールド含む）
     const { data: allConversations } = await supabase
       .from('conversations')
-      .select('id, user1_id, user2_id, created_at')
+      .select('id, user1_id, user2_id, is_seen_user1, is_seen_user2')
 
     const myConvs = (allConversations || [])
       .filter(c => c.user1_id === uid || c.user2_id === uid)
 
     const myConvIds = myConvs.map(c => c.id)
 
-    // 新規マッチ数（since以降に作成された会話）
-    const newMatches = sinceTime > 0
-      ? myConvs.filter(c => new Date(c.created_at).getTime() > sinceTime).length
-      : 0
+    // 未確認マッチ数（自分側の is_seen が false の会話）
+    const newMatches = myConvs.filter(c => {
+      if (c.user1_id === uid) return c.is_seen_user1 === false
+      return c.is_seen_user2 === false
+    }).length
 
     if (myConvIds.length === 0) {
       return NextResponse.json({ count: 0, newMatches })

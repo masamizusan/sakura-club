@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     // ===== 2. conversations を取得（デバッグ: まず全件取得してみる） =====
     const { data: allConversations, error: allError } = await supabase
       .from('conversations')
-      .select('*')
+      .select('*, is_seen_user1, is_seen_user2')
       .order('created_at', { ascending: false })
       .limit(20)
 
@@ -164,6 +164,11 @@ export async function GET(request: NextRequest) {
           .neq('sender_id', myProfileId)
           .eq('is_read', false)
 
+        // 自分側の is_seen フラグを確認
+        const isNewMatch = conv.user1_id === myProfileId
+          ? conv.is_seen_user1 === false
+          : conv.is_seen_user2 === false
+
         return {
           id: conv.id,
           partnerId,
@@ -183,6 +188,7 @@ export async function GET(request: NextRequest) {
           unreadCount: unreadCount || 0,
           isOnline: false,
           matchedDate: conv.created_at,
+          isNewMatch,
         }
       })
     )
