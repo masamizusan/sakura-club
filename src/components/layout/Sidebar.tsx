@@ -21,7 +21,7 @@ interface SidebarProps {
 export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname()
   const { currentLanguage } = useLanguage()
-  const { unreadMessages, unseenLikes } = useNotifications()
+  const { unreadMessages, unseenLikes, unreadFootprints } = useNotifications()
   const logged = useRef(false)
 
   // 🌍 Sidebar専用翻訳辞書
@@ -72,6 +72,7 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   const getBadgeCount = (id: string): number => {
     if (id === 'messages') return unreadMessages
     if (id === 'liked') return unseenLikes
+    if (id === 'footprints') return unreadFootprints
     return 0
   }
 

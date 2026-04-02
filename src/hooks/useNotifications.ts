@@ -6,12 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 interface NotificationCounts {
   unreadMessages: number
   unseenLikes: number
+  unreadFootprints: number
 }
 
 export function useNotifications() {
   const [counts, setCounts] = useState<NotificationCounts>({
     unreadMessages: 0,
     unseenLikes: 0,
+    unreadFootprints: 0,
   })
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -47,9 +49,17 @@ export function useNotifications() {
         .eq('liked_user_id', uid)
         .eq('is_seen', false)
 
+      // 4. 未読足跡数（is_read = false）
+      const { count: footprintsCount } = await supabase
+        .from('footprints')
+        .select('*', { count: 'exact', head: true })
+        .eq('profile_owner_id', uid)
+        .eq('is_read', false)
+
       setCounts({
         unreadMessages,
         unseenLikes: likesCount || 0,
+        unreadFootprints: footprintsCount || 0,
       })
     } catch (err) {
       console.error('Notification count fetch error:', err)
@@ -87,6 +97,16 @@ export function useNotifications() {
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'likes' },
+          () => fetchCounts(user.id)
+        )
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'footprints' },
+          () => fetchCounts(user.id)
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'footprints' },
           () => fetchCounts(user.id)
         )
         .subscribe()
