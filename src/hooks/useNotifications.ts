@@ -48,17 +48,19 @@ export function useNotifications() {
         .eq('liked_user_id', uid)
         .eq('is_seen', false)
 
-      // 3. 未読足跡数
-      const { count: footprintsCount } = await supabase
+      // 3. 未読足跡数（ユニーク訪問者数）
+      const { data: footprintsData } = await supabase
         .from('footprints')
-        .select('*', { count: 'exact', head: true })
+        .select('visitor_id')
         .eq('profile_owner_id', uid)
         .eq('is_read', false)
+
+      const uniqueFootprintsCount = new Set(footprintsData?.map(f => f.visitor_id)).size
 
       setCounts({
         unreadMessages,
         unseenLikes: likesCount || 0,
-        unreadFootprints: footprintsCount || 0,
+        unreadFootprints: uniqueFootprintsCount,
       })
     } catch (err) {
       console.error('Notification count fetch error:', err)
