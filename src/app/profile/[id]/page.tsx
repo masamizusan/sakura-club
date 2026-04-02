@@ -340,10 +340,9 @@ function ProfileDetailContent() {
 
     const markAsRead = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      console.log('[markAsRead] user:', user?.id?.slice(0,8), 'profileId:', profileId?.slice(0,8))
       if (!user || user.id === profileId) return
 
-      const [fpRes, likesRes] = await Promise.all([
+      await Promise.all([
         fetch('/api/footprints/read', {
           method: 'POST',
           credentials: 'include',
@@ -357,14 +356,9 @@ function ProfileDetailContent() {
           body: JSON.stringify({ liker_id: profileId }),
         }),
       ])
-      console.log('[markAsRead] footprints API:', fpRes.status, 'likes API:', likesRes.status)
-      const fpData = await fpRes.json().catch(() => ({}))
-      const likesData = await likesRes.json().catch(() => ({}))
-      console.log('[markAsRead] footprints result:', fpData, 'likes result:', likesData)
 
       window.dispatchEvent(new Event('footprints-read'))
       window.dispatchEvent(new Event('likes-seen'))
-      console.log('[markAsRead] events dispatched')
     }
 
     markAsRead()

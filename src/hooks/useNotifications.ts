@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface NotificationCounts {
@@ -18,7 +18,8 @@ export function useNotifications() {
   const [userId, setUserId] = useState<string | null>(null)
   const userIdRef = useRef<string | null>(null)
 
-  const supabase = createClient()
+  // supabaseを毎レンダーで再生成しないようにメモ化（fetchCountsの安定性確保）
+  const supabase = useMemo(() => createClient(), [])
 
   // カウント取得
   const fetchCounts = useCallback(async (uid: string) => {
@@ -117,8 +118,7 @@ export function useNotifications() {
     init()
 
     // 既読イベントで即時再フェッチ（refで最新のuserIdを参照し、クロージャー問題を回避）
-    const handleRefetch = (e: Event) => {
-      console.log('[useNotifications] event received:', e.type, 'userId:', userIdRef.current?.slice(0,8))
+    const handleRefetch = () => {
       if (userIdRef.current) fetchCounts(userIdRef.current)
     }
     window.addEventListener('footprints-read', handleRefetch)
