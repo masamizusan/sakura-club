@@ -542,20 +542,21 @@ export default function ChatPage() {
           if (data.text) {
             setNewMessage(prev => prev ? prev + ' ' + data.text : data.text)
             setPreviewTranslation(null)
-            // React再レンダリング後にtextarea高さを調整
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                if (textareaRef.current) {
-                  textareaRef.current.style.height = 'auto'
-                  textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-                }
-              }, 50)
-            })
           }
         } catch (err) {
           console.error('Whisper transcription error:', err)
         } finally {
           setIsTranscribing(false)
+          // textareaが再表示された後に高さ調整（複数回リトライで確実に反映）
+          const adjustHeight = () => {
+            if (textareaRef.current) {
+              textareaRef.current.style.height = 'auto'
+              textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+            }
+          }
+          setTimeout(adjustHeight, 100)
+          setTimeout(adjustHeight, 300)
+          setTimeout(adjustHeight, 500)
         }
       }
 

@@ -23,13 +23,17 @@ export function useNotifications() {
 
   const fetchCounts = useCallback(async (uid: string) => {
     try {
-      // 1. 未読メッセージ数（サーバーAPIで取得：クライアント側RLS回避）
+      // 1. 未読メッセージ数 + 新規マッチ数（サーバーAPIで取得：クライアント側RLS回避）
       let unreadMessages = 0
       try {
-        const res = await fetch('/api/messages/unread-count', { credentials: 'include' })
+        const lastSeen = typeof window !== 'undefined'
+          ? (localStorage.getItem(`messages_last_seen_${uid}`) || '')
+          : ''
+        const params = lastSeen ? `?since=${encodeURIComponent(lastSeen)}` : ''
+        const res = await fetch(`/api/messages/unread-count${params}`, { credentials: 'include' })
         if (res.ok) {
           const data = await res.json()
-          unreadMessages = data.count || 0
+          unreadMessages = (data.count || 0) + (data.newMatches || 0)
         }
       } catch {
         // フォールバック：直接クエリ
