@@ -274,19 +274,26 @@ export async function POST(request: NextRequest) {
     if (isMatched) {
       console.log('💕 [likes] Match created!')
 
-      // conversations 作成
+      // conversations 作成（is_seen を明示的に false に設定）
+      const now = new Date().toISOString()
       const { error: conversationError } = await supabase
         .from('conversations')
         .insert({
           user1_id,
           user2_id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          is_seen_user1: false,
+          is_seen_user2: false,
+          created_at: now,
+          updated_at: now
         })
 
       if (conversationError) {
-        console.error('[likes] conversation creation error:', conversationError)
-        // 会話作成失敗はエラーにしない（マッチは成功している）
+        // 既存会話がある場合（重複エラー）→ is_seen を false にリセット
+        await supabase
+          .from('conversations')
+          .update({ is_seen_user1: false, is_seen_user2: false, updated_at: now })
+          .eq('user1_id', user1_id)
+          .eq('user2_id', user2_id)
       }
 
       // 通知送信

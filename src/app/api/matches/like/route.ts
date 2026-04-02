@@ -172,18 +172,28 @@ export async function POST(request: NextRequest) {
           console.error('Mutual match update error:', updateMutualError)
         }
 
-        // マッチ通知用のコンバセーション作成
+        // マッチ通知用のコンバセーション作成（is_seen を明示的に false に設定）
+        const matchNow = new Date().toISOString()
+        const convUser1 = user.id < likedUserId ? user.id : likedUserId
+        const convUser2 = user.id < likedUserId ? likedUserId : user.id
         const { error: conversationError } = await supabase
           .from('conversations')
           .insert({
-            user1_id: user.id < likedUserId ? user.id : likedUserId,
-            user2_id: user.id < likedUserId ? likedUserId : user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            user1_id: convUser1,
+            user2_id: convUser2,
+            is_seen_user1: false,
+            is_seen_user2: false,
+            created_at: matchNow,
+            updated_at: matchNow
           })
 
         if (conversationError) {
-          console.error('Conversation creation error:', conversationError)
+          // 既存会話がある場合（重複エラー）→ is_seen を false にリセット
+          await supabase
+            .from('conversations')
+            .update({ is_seen_user1: false, is_seen_user2: false, updated_at: matchNow })
+            .eq('user1_id', convUser1)
+            .eq('user2_id', convUser2)
         }
 
         // 現在のユーザー情報を取得
