@@ -55,11 +55,13 @@ export function useNotifications() {
         .eq('profile_owner_id', uid)
         .eq('is_read', false)
 
-      setCounts({
+      const result = {
         unreadMessages,
         unseenLikes: likesCount || 0,
         unreadFootprints: footprintsCount || 0,
-      })
+      }
+      console.log('[useNotifications] fetchCounts result:', result, 'uid:', uid.slice(0,8))
+      setCounts(result)
     } catch (err) {
       console.error('Notification count fetch error:', err)
     }
