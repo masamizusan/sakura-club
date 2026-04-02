@@ -48,9 +48,9 @@ export async function GET(request: NextRequest) {
     // footprints テーブルから閲覧者一覧を取得（新しい順）
     const { data: footprints, error: footprintsError } = await supabase
       .from('footprints')
-      .select('visitor_id, visited_at')
+      .select('visitor_id, created_at')
       .eq('profile_owner_id', currentUserId)
-      .order('visited_at', { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (footprintsError) {
       console.error('[footprints] fetch error:', footprintsError.message)
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const visitorMap = new Map<string, string>()
     footprints.forEach(f => {
       if (!visitorMap.has(f.visitor_id)) {
-        visitorMap.set(f.visitor_id, f.visited_at)
+        visitorMap.set(f.visitor_id, f.created_at)
       }
     })
     const visitorIds = Array.from(visitorMap.keys())
