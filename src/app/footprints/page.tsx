@@ -110,24 +110,6 @@ function FootprintsContent() {
     return text
   }
 
-  // ページを開いたら未読足跡を既読にし、サイドバーバッジを更新
-  useEffect(() => {
-    const markAsRead = async () => {
-      try {
-        const res = await fetch('/api/footprints/read', {
-          method: 'POST',
-          credentials: 'include',
-        })
-        if (res.ok) {
-          window.dispatchEvent(new CustomEvent('footprints-read'))
-        }
-      } catch {
-        // 既読化失敗はサイレントに無視
-      }
-    }
-    markAsRead()
-  }, [])
-
   useEffect(() => {
     const fetchVisitors = async () => {
       try {

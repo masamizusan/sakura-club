@@ -334,6 +334,37 @@ function ProfileDetailContent() {
     }
   }, [profileId])
 
+  // 足跡・いいねを個別既読（プロフィール詳細を開いた時点でバッジを消す）
+  useEffect(() => {
+    const markAsRead = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || user.id === profileId) return
+
+      // 足跡の既読（自分が見られた記録 = profile_owner_id が自分、visitor_id がこのプロフィールの人）
+      await supabase
+        .from('footprints')
+        .update({ is_read: true })
+        .eq('profile_owner_id', user.id)
+        .eq('visitor_id', profileId)
+        .eq('is_read', false)
+
+      // いいねの既読（自分がいいねされた記録 = liked_user_id が自分、liker_id がこのプロフィールの人）
+      await supabase
+        .from('likes')
+        .update({ is_seen: true })
+        .eq('liked_user_id', user.id)
+        .eq('liker_id', profileId)
+        .eq('is_seen', false)
+
+      window.dispatchEvent(new Event('footprints-read'))
+      window.dispatchEvent(new Event('likes-seen'))
+    }
+
+    if (profileId) {
+      markAsRead()
+    }
+  }, [profileId])
+
   // 残りいいね数を取得
   useEffect(() => {
     const fetchLikesRemaining = async () => {
