@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface NotificationCounts {
@@ -9,6 +9,8 @@ interface NotificationCounts {
   unreadFootprints: number
 }
 
+const POLL_INTERVAL_MS = 5000
+
 export function useNotifications() {
   const [counts, setCounts] = useState<NotificationCounts>({
     unreadMessages: 0,
@@ -16,23 +18,18 @@ export function useNotifications() {
     unreadFootprints: 0,
   })
   const [userId, setUserId] = useState<string | null>(null)
-  const userIdRef = useRef<string | null>(null)
 
-  // supabaseを毎レンダーで再生成しないようにメモ化（fetchCountsの安定性確保）
   const supabase = useMemo(() => createClient(), [])
 
-  // カウント取得
   const fetchCounts = useCallback(async (uid: string) => {
     try {
-      // 1. ユーザーが参加している会話のIDを取得
+      // 1. 未読メッセージ数
       const { data: convs } = await supabase
         .from('conversations')
         .select('id')
         .or(`user1_id.eq.${uid},user2_id.eq.${uid}`)
 
       const convIds = convs?.map(c => c.id) || []
-
-      // 2. 未読メッセージ数
       let unreadMessages = 0
       if (convIds.length > 0) {
         const { count } = await supabase
@@ -44,14 +41,14 @@ export function useNotifications() {
         unreadMessages = count || 0
       }
 
-      // 3. 未確認いいね数（is_seen = false）
+      // 2. 未確認いいね数
       const { count: likesCount } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('liked_user_id', uid)
         .eq('is_seen', false)
 
-      // 4. 未読足跡数（is_read = false）
+      // 3. 未読足跡数
       const { count: footprintsCount } = await supabase
         .from('footprints')
         .select('*', { count: 'exact', head: true })
@@ -68,68 +65,29 @@ export function useNotifications() {
     }
   }, [supabase])
 
-  // 初期化 & リアルタイム購読
   useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null
+    let uid: string | null = null
+    let intervalId: ReturnType<typeof setInterval> | null = null
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+      uid = user.id
       setUserId(user.id)
-      userIdRef.current = user.id
-      await fetchCounts(user.id)
 
-      // リアルタイム購読：メッセージ & いいねの変更で再取得
-      channel = supabase
-        .channel('notifications')
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'messages' },
-          () => fetchCounts(user.id)
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'messages' },
-          () => fetchCounts(user.id)
-        )
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'likes' },
-          () => fetchCounts(user.id)
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'likes' },
-          () => fetchCounts(user.id)
-        )
-        .on(
-          'postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'footprints' },
-          () => fetchCounts(user.id)
-        )
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'footprints' },
-          () => fetchCounts(user.id)
-        )
-        .subscribe()
+      // 初回フェッチ
+      await fetchCounts(uid)
+
+      // 5秒ごとにポーリング
+      intervalId = setInterval(() => {
+        if (uid) fetchCounts(uid)
+      }, POLL_INTERVAL_MS)
     }
 
     init()
 
-    // 既読イベントで即時再フェッチ（refで最新のuserIdを参照し、クロージャー問題を回避）
-    const handleRefetch = () => {
-      if (userIdRef.current) fetchCounts(userIdRef.current)
-    }
-    window.addEventListener('footprints-read', handleRefetch)
-    window.addEventListener('likes-seen', handleRefetch)
-
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
-      window.removeEventListener('footprints-read', handleRefetch)
-      window.removeEventListener('likes-seen', handleRefetch)
+      if (intervalId) clearInterval(intervalId)
     }
   }, [supabase, fetchCounts])
 
