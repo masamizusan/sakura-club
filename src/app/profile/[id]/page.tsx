@@ -315,6 +315,25 @@ function ProfileDetailContent() {
     }
   }, [profileId])
 
+  // 足跡を記録（自分以外のプロフィール閲覧時）
+  useEffect(() => {
+    const recordFootprint = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || user.id === profileId) return
+
+      await supabase
+        .from('footprints')
+        .insert({
+          profile_owner_id: profileId,
+          visitor_id: user.id,
+        })
+    }
+
+    if (profileId) {
+      recordFootprint()
+    }
+  }, [profileId])
+
   // 残りいいね数を取得
   useEffect(() => {
     const fetchLikesRemaining = async () => {
