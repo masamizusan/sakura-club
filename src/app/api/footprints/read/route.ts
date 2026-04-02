@@ -13,11 +13,13 @@ const noCacheHeaders = {
 /**
  * POST /api/footprints/read
  *
- * 自分の足跡を全て既読にする（service_role でRLSをバイパス）
+ * 自分の足跡を既読にする（service_role でRLSをバイパス）
+ * Body: { visitor_id?: string }
+ *   visitor_id 指定時 → その1人分だけ既読
+ *   未指定      → 全件既読
  */
 export async function POST(request: NextRequest) {
   try {
-    // ユーザー認証（anon key + cookie）
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,16 +36,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: noCacheHeaders })
     }
 
-    // service_role で既読更新（RLS回避）
+    const body = await request.json().catch(() => ({}))
+    const visitorId: string | undefined = body?.visitor_id
+
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    await supabaseAdmin
+
+    let query = supabaseAdmin
       .from('footprints')
       .update({ is_read: true })
       .eq('profile_owner_id', user.id)
       .eq('is_read', false)
+
+    if (visitorId) {
+      query = query.eq('visitor_id', visitorId)
+    }
+
+    await query
 
     return NextResponse.json({ ok: true }, { headers: noCacheHeaders })
   } catch (error) {

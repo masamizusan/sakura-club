@@ -13,7 +13,10 @@ const noCacheHeaders = {
 /**
  * POST /api/likes/seen
  *
- * 自分へのいいねを全て既読にする（service_role でRLSをバイパス）
+ * 自分へのいいねを既読にする（service_role でRLSをバイパス）
+ * Body: { liker_id?: string }
+ *   liker_id 指定時 → その1人分だけ既読
+ *   未指定     → 全件既読
  */
 export async function POST(request: NextRequest) {
   try {
@@ -33,15 +36,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: noCacheHeaders })
     }
 
+    const body = await request.json().catch(() => ({}))
+    const likerId: string | undefined = body?.liker_id
+
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    await supabaseAdmin
+
+    let query = supabaseAdmin
       .from('likes')
       .update({ is_seen: true })
       .eq('liked_user_id', user.id)
       .eq('is_seen', false)
+
+    if (likerId) {
+      query = query.eq('liker_id', likerId)
+    }
+
+    await query
 
     return NextResponse.json({ ok: true }, { headers: noCacheHeaders })
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface NotificationCounts {
@@ -16,6 +16,7 @@ export function useNotifications() {
     unreadFootprints: 0,
   })
   const [userId, setUserId] = useState<string | null>(null)
+  const userIdRef = useRef<string | null>(null)
 
   const supabase = createClient()
 
@@ -74,6 +75,7 @@ export function useNotifications() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
+      userIdRef.current = user.id
       await fetchCounts(user.id)
 
       // リアルタイム購読：メッセージ & いいねの変更で再取得
@@ -114,9 +116,9 @@ export function useNotifications() {
 
     init()
 
-    // 既読イベントで即時再フェッチ
+    // 既読イベントで即時再フェッチ（refで最新のuserIdを参照し、クロージャー問題を回避）
     const handleRefetch = () => {
-      if (userId) fetchCounts(userId)
+      if (userIdRef.current) fetchCounts(userIdRef.current)
     }
     window.addEventListener('footprints-read', handleRefetch)
     window.addEventListener('likes-seen', handleRefetch)
@@ -128,7 +130,7 @@ export function useNotifications() {
       window.removeEventListener('footprints-read', handleRefetch)
       window.removeEventListener('likes-seen', handleRefetch)
     }
-  }, [supabase, fetchCounts, userId])
+  }, [supabase, fetchCounts])
 
   return { ...counts, userId, refetch: () => userId && fetchCounts(userId) }
 }

@@ -334,35 +334,35 @@ function ProfileDetailContent() {
     }
   }, [profileId])
 
-  // 足跡・いいねを個別既読（プロフィール詳細を開いた時点でバッジを消す）
+  // 足跡・いいねを個別既読（service_role API経由でRLS回避）
   useEffect(() => {
+    if (!profileId) return
+
     const markAsRead = async () => {
+      // 自分自身のプロフィールは除外
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || user.id === profileId) return
 
-      // 足跡の既読（自分が見られた記録 = profile_owner_id が自分、visitor_id がこのプロフィールの人）
-      await supabase
-        .from('footprints')
-        .update({ is_read: true })
-        .eq('profile_owner_id', user.id)
-        .eq('visitor_id', profileId)
-        .eq('is_read', false)
-
-      // いいねの既読（自分がいいねされた記録 = liked_user_id が自分、liker_id がこのプロフィールの人）
-      await supabase
-        .from('likes')
-        .update({ is_seen: true })
-        .eq('liked_user_id', user.id)
-        .eq('liker_id', profileId)
-        .eq('is_seen', false)
+      await Promise.all([
+        fetch('/api/footprints/read', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitor_id: profileId }),
+        }),
+        fetch('/api/likes/seen', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ liker_id: profileId }),
+        }),
+      ])
 
       window.dispatchEvent(new Event('footprints-read'))
       window.dispatchEvent(new Event('likes-seen'))
     }
 
-    if (profileId) {
-      markAsRead()
-    }
+    markAsRead()
   }, [profileId])
 
   // 残りいいね数を取得
