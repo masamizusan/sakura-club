@@ -29,7 +29,8 @@ const likesTranslations: Record<string, Record<string, string>> = {
     goToSearch: 'お相手を探す',
     yearsOld: '歳',
     today: '今日',
-    yesterday: '昨日'
+    yesterday: '昨日',
+    markAllSeen: '全て既読にする',
   },
   en: {
     pageTitle: 'Likes Received',
@@ -41,7 +42,8 @@ const likesTranslations: Record<string, Record<string, string>> = {
     goToSearch: 'Find matches',
     yearsOld: ' y/o',
     today: 'Today',
-    yesterday: 'Yesterday'
+    yesterday: 'Yesterday',
+    markAllSeen: 'Mark all as read',
   },
   ko: {
     pageTitle: '관심',
@@ -53,7 +55,8 @@ const likesTranslations: Record<string, Record<string, string>> = {
     goToSearch: '상대 찾기',
     yearsOld: '세',
     today: '오늘',
-    yesterday: '어제'
+    yesterday: '어제',
+    markAllSeen: '모두 읽음 표시',
   },
   'zh-tw': {
     pageTitle: '喜歡我的人',
@@ -65,7 +68,8 @@ const likesTranslations: Record<string, Record<string, string>> = {
     goToSearch: '尋找對象',
     yearsOld: '歲',
     today: '今天',
-    yesterday: '昨天'
+    yesterday: '昨天',
+    markAllSeen: '全部標為已讀',
   }
 }
 
@@ -99,6 +103,7 @@ export default function LikesPage() {
   const { currentLanguage } = useLanguage()
   const [likers, setLikers] = useState<LikerProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isMarkingSeen, setIsMarkingSeen] = useState(false)
 
   // いいね残り回数
   const [likesRemaining, setLikesRemaining] = useState<number>(10)
@@ -210,6 +215,22 @@ export default function LikesPage() {
     })
   }, [likers, currentLanguage])
 
+  const markAllSeen = async () => {
+    setIsMarkingSeen(true)
+    try {
+      await fetch('/api/likes/seen', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+    } catch (error) {
+      console.error('Error marking likes as seen:', error)
+    } finally {
+      setIsMarkingSeen(false)
+    }
+  }
+
   // 残りいいね数を取得
   const fetchLikesRemaining = async () => {
     try {
@@ -294,6 +315,17 @@ export default function LikesPage() {
                 {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
               </span>
             </div>
+            {!isLoading && likers.length > 0 && (
+              <div className="mt-2">
+                <button
+                  onClick={markAllSeen}
+                  disabled={isMarkingSeen}
+                  className="text-xs text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
+                >
+                  {t('markAllSeen')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ローディング表示 */}

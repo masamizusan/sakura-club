@@ -29,6 +29,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     hoursAgo: '{n}時間前',
     daysAgo: '{n}日前',
     online: 'オンライン中',
+    markAllRead: '全て既読にする',
   },
   en: {
     pageTitle: 'Footprints',
@@ -44,6 +45,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     hoursAgo: '{n}h ago',
     daysAgo: '{n} days ago',
     online: 'Online',
+    markAllRead: 'Mark all as read',
   },
   ko: {
     pageTitle: '발자국',
@@ -59,6 +61,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     hoursAgo: '{n}시간 전',
     daysAgo: '{n}일 전',
     online: '온라인',
+    markAllRead: '모두 읽음 표시',
   },
   'zh-tw': {
     pageTitle: '足跡',
@@ -74,6 +77,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     hoursAgo: '{n}小時前',
     daysAgo: '{n}天前',
     online: '線上',
+    markAllRead: '全部標為已讀',
   },
 }
 
@@ -98,6 +102,7 @@ function FootprintsContent() {
   const { currentLanguage } = useLanguage()
   const [visitors, setVisitors] = useState<VisitorProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isMarkingRead, setIsMarkingRead] = useState(false)
 
   const t = (key: string, params?: Record<string, string | number>): string => {
     const texts = footprintsTranslations[currentLanguage] || footprintsTranslations['ja']
@@ -134,6 +139,22 @@ function FootprintsContent() {
 
     fetchVisitors()
   }, [])
+
+  const markAllRead = async () => {
+    setIsMarkingRead(true)
+    try {
+      await fetch('/api/footprints/read', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+    } catch (error) {
+      console.error('Error marking footprints as read:', error)
+    } finally {
+      setIsMarkingRead(false)
+    }
+  }
 
   const getBrowserLocale = (): string => {
     if (typeof window === 'undefined') return 'ja-JP'
@@ -220,6 +241,15 @@ function FootprintsContent() {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('pageTitle')}</h1>
             <p className="text-sm text-gray-600">{t('pageSubtitle')}</p>
+            {!isLoading && visitors.length > 0 && (
+              <button
+                onClick={markAllRead}
+                disabled={isMarkingRead}
+                className="mt-3 text-xs text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
+              >
+                {t('markAllRead')}
+              </button>
+            )}
           </div>
 
           {/* スケルトンローディング */}
