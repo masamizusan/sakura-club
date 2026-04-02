@@ -233,6 +233,25 @@ export default function LikesPage() {
     }
   }, [user, authLoading])
 
+  // ページを開いたら未確認いいねを既読にし、サイドバーバッジを更新
+  useEffect(() => {
+    if (authLoading || !user) return
+    const markAsSeen = async () => {
+      try {
+        const res = await fetch('/api/likes/seen', {
+          method: 'POST',
+          credentials: 'include',
+        })
+        if (res.ok) {
+          window.dispatchEvent(new CustomEvent('likes-seen'))
+        }
+      } catch {
+        // サイレントに無視
+      }
+    }
+    markAsSeen()
+  }, [user, authLoading])
+
   // データ取得
   useEffect(() => {
     const fetchLikers = async () => {

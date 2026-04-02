@@ -11,13 +11,12 @@ const noCacheHeaders = {
 }
 
 /**
- * POST /api/footprints/read
+ * POST /api/likes/seen
  *
- * 自分の足跡を全て既読にする（service_role でRLSをバイパス）
+ * 自分へのいいねを全て既読にする（service_role でRLSをバイパス）
  */
 export async function POST(request: NextRequest) {
   try {
-    // ユーザー認証（anon key + cookie）
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,20 +33,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: noCacheHeaders })
     }
 
-    // service_role で既読更新（RLS回避）
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
     await supabaseAdmin
-      .from('footprints')
-      .update({ is_read: true })
-      .eq('profile_owner_id', user.id)
-      .eq('is_read', false)
+      .from('likes')
+      .update({ is_seen: true })
+      .eq('liked_user_id', user.id)
+      .eq('is_seen', false)
 
     return NextResponse.json({ ok: true }, { headers: noCacheHeaders })
   } catch (error) {
-    console.error('[footprints/read] error:', error)
+    console.error('[likes/seen] error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500, headers: noCacheHeaders })
   }
 }

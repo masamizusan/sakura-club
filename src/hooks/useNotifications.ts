@@ -114,17 +114,19 @@ export function useNotifications() {
 
     init()
 
-    // 足跡既読イベントで即時再フェッチ
-    const handleFootprintsRead = () => {
+    // 既読イベントで即時再フェッチ
+    const handleRefetch = () => {
       if (userId) fetchCounts(userId)
     }
-    window.addEventListener('footprints-read', handleFootprintsRead)
+    window.addEventListener('footprints-read', handleRefetch)
+    window.addEventListener('likes-seen', handleRefetch)
 
     return () => {
       if (channel) {
         supabase.removeChannel(channel)
       }
-      window.removeEventListener('footprints-read', handleFootprintsRead)
+      window.removeEventListener('footprints-read', handleRefetch)
+      window.removeEventListener('likes-seen', handleRefetch)
     }
   }, [supabase, fetchCounts, userId])
 
