@@ -111,7 +111,8 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
     },
     unreadCount: 2,
     isOnline: true,
-    matchedDate: '2025-07-25T10:00:00Z'
+    matchedDate: '2025-07-25T10:00:00Z',
+    isNewMatch: false,
   },
   {
     id: 'conv2',
@@ -129,7 +130,8 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
     },
     unreadCount: 0,
     isOnline: false,
-    matchedDate: '2025-07-20T15:30:00Z'
+    matchedDate: '2025-07-20T15:30:00Z',
+    isNewMatch: false,
   },
   {
     id: 'conv3',
@@ -147,7 +149,8 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
     },
     unreadCount: 0,
     isOnline: false,
-    matchedDate: '2025-07-28T09:20:00Z'
+    matchedDate: '2025-07-28T09:20:00Z',
+    isNewMatch: false,
   },
   {
     id: 'conv4',
@@ -165,7 +168,8 @@ const SAMPLE_CONVERSATIONS: Conversation[] = [
     },
     unreadCount: 0,
     isOnline: false,
-    matchedDate: '2025-07-15T12:00:00Z'
+    matchedDate: '2025-07-15T12:00:00Z',
+    isNewMatch: false,
   }
 ]
 
