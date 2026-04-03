@@ -30,6 +30,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}日前',
     online: 'オンライン中',
     markAllRead: '全て既読にする',
+    plannedPrefectures: '訪問予定',
   },
   en: {
     pageTitle: 'Footprints',
@@ -46,6 +47,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n} days ago',
     online: 'Online',
     markAllRead: 'Mark all as read',
+    plannedPrefectures: 'Visiting',
   },
   ko: {
     pageTitle: '발자국',
@@ -62,6 +64,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}일 전',
     online: '온라인',
     markAllRead: '모두 읽음 표시',
+    plannedPrefectures: '방문 예정',
   },
   'zh-tw': {
     pageTitle: '足跡',
@@ -78,6 +81,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}天前',
     online: '線上',
     markAllRead: '全部標為已讀',
+    plannedPrefectures: '預定訪問',
   },
 }
 
@@ -95,6 +99,7 @@ interface VisitorProfile {
   avatar_url: string | null
   personality_tags: string[]
   culture_tags: string[]
+  planned_prefectures?: string[]
   visited_at: string | null
 }
 
@@ -368,6 +373,29 @@ function FootprintsContent() {
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>
                                     ))}
+                                  </div>
+                                )}
+                                {/* 訪問予定の都道府県 */}
+                                {visitor.planned_prefectures && visitor.planned_prefectures.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs text-gray-400 mb-1">
+                                      📍 {t('plannedPrefectures')}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {visitor.planned_prefectures.slice(0, 4).map((pref, index) => (
+                                        <span
+                                          key={index}
+                                          className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-sm font-medium"
+                                        >
+                                          {formatPrefecture(pref, currentLanguage) || pref}
+                                        </span>
+                                      ))}
+                                      {visitor.planned_prefectures.length > 4 && (
+                                        <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-sm">
+                                          +{visitor.planned_prefectures.length - 4}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                               </div>

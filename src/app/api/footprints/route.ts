@@ -92,7 +92,8 @@ export async function GET(request: NextRequest) {
         photo_urls,
         city,
         personality_tags,
-        culture_tags
+        culture_tags,
+        planned_prefectures
       `)
       .in('id', visitorIds)
       .eq('profile_initialized', true)
@@ -133,6 +134,7 @@ export async function GET(request: NextRequest) {
         avatar_url: profile.avatar_url || (Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 ? profile.photo_urls[0] : null),
         personality_tags: Array.isArray(profile.personality_tags) ? profile.personality_tags : [],
         culture_tags: Array.isArray(profile.culture_tags) ? profile.culture_tags : [],
+        planned_prefectures: Array.isArray(profile.planned_prefectures) ? profile.planned_prefectures : [],
         visited_at: visitorMap.get(profile.id) || null,
       }))
       .sort((a, b) => {

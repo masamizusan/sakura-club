@@ -31,6 +31,7 @@ const likesTranslations: Record<string, Record<string, string>> = {
     today: '今日',
     yesterday: '昨日',
     markAllSeen: '全て既読にする',
+    plannedPrefectures: '訪問予定',
   },
   en: {
     pageTitle: 'Likes Received',
@@ -44,6 +45,7 @@ const likesTranslations: Record<string, Record<string, string>> = {
     today: 'Today',
     yesterday: 'Yesterday',
     markAllSeen: 'Mark all as read',
+    plannedPrefectures: 'Visiting',
   },
   ko: {
     pageTitle: '관심',
@@ -57,6 +59,7 @@ const likesTranslations: Record<string, Record<string, string>> = {
     today: '오늘',
     yesterday: '어제',
     markAllSeen: '모두 읽음 표시',
+    plannedPrefectures: '방문 예정',
   },
   'zh-tw': {
     pageTitle: '喜歡我的人',
@@ -70,6 +73,7 @@ const likesTranslations: Record<string, Record<string, string>> = {
     today: '今天',
     yesterday: '昨天',
     markAllSeen: '全部標為已讀',
+    plannedPrefectures: '預定訪問',
   }
 }
 
@@ -88,6 +92,7 @@ interface LikerProfile {
   avatar_url: string | null
   personality_tags: string[]
   culture_tags: string[]
+  planned_prefectures?: string[]
   liked_at: string | null
 }
 
@@ -457,6 +462,29 @@ export default function LikesPage() {
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>
                                     ))}
+                                  </div>
+                                )}
+                                {/* 訪問予定の都道府県 */}
+                                {liker.planned_prefectures && liker.planned_prefectures.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs text-gray-400 mb-1">
+                                      📍 {t('plannedPrefectures')}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {liker.planned_prefectures.slice(0, 4).map((pref, index) => (
+                                        <span
+                                          key={index}
+                                          className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-sm font-medium"
+                                        >
+                                          {formatPrefecture(pref, currentLanguage) || pref}
+                                        </span>
+                                      ))}
+                                      {liker.planned_prefectures.length > 4 && (
+                                        <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-sm">
+                                          +{liker.planned_prefectures.length - 4}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                               </div>
