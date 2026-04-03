@@ -245,7 +245,7 @@ function FootprintsContent() {
               <button
                 onClick={markAllRead}
                 disabled={isMarkingRead}
-                className="mt-3 text-xs text-gray-400 hover:text-gray-600 underline disabled:opacity-50"
+                className="mt-3 px-4 py-2 text-sm font-medium text-gray-500 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 {t('markAllRead')}
               </button>
