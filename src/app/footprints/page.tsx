@@ -302,7 +302,7 @@ function FootprintsContent() {
                       return (
                         <Link
                           key={visitor.id}
-                          href={`/profile/${visitor.id}`}
+                          href={`/profile/${visitor.id}?from=footprints`}
                           className="block"
                         >
                           <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer p-4">
