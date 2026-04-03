@@ -59,7 +59,8 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     age18to25: '18-25歳',
     age26to30: '26-30歳',
     age31to35: '31-35歳',
-    age36plus: '36歳以上'
+    age36plus: '36歳以上',
+    plannedPrefectures: '訪問予定の都道府県',
   },
   en: {
     pageTitle: 'Recommended Matches',
@@ -95,7 +96,8 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     age18to25: '18-25',
     age26to30: '26-30',
     age31to35: '31-35',
-    age36plus: '36+'
+    age36plus: '36+',
+    plannedPrefectures: 'Planned Prefectures',
   },
   ko: {
     pageTitle: '추천 상대',
@@ -131,7 +133,8 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     age18to25: '18-25세',
     age26to30: '26-30세',
     age31to35: '31-35세',
-    age36plus: '36세 이상'
+    age36plus: '36세 이상',
+    plannedPrefectures: '방문 예정 지역',
   },
   'zh-tw': {
     pageTitle: '推薦對象',
@@ -167,7 +170,8 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     age18to25: '18-25歲',
     age26to30: '26-30歲',
     age31to35: '31-35歲',
-    age36plus: '36歲以上'
+    age36plus: '36歲以上',
+    plannedPrefectures: '預計前往的地區',
   }
 }
 
@@ -189,6 +193,7 @@ interface UserProfile {
   matchPercentage: number
   commonInterests: string[]
   distanceKm?: number
+  plannedPrefectures?: string[]
 }
 
 export default function MatchesPage() {
@@ -290,7 +295,8 @@ export default function MatchesPage() {
             isOnline: false,
             matchPercentage: 0,
             commonInterests: [],
-            distanceKm: 0
+            distanceKm: 0,
+            plannedPrefectures: Array.isArray(profile.planned_prefectures) ? profile.planned_prefectures : []
           }))
           setMatches(formattedMatches)
         } else {
@@ -564,6 +570,30 @@ export default function MatchesPage() {
                                 +{user.hobbies.length - 3}
                               </span>
                             )}
+                          </div>
+                        )}
+
+                        {user.plannedPrefectures && user.plannedPrefectures.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {t('plannedPrefectures')}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {user.plannedPrefectures.slice(0, 4).map((pref, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs"
+                                >
+                                  {formatPrefecture(pref, currentLanguage) || pref}
+                                </span>
+                              ))}
+                              {user.plannedPrefectures.length > 4 && (
+                                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                                  +{user.plannedPrefectures.length - 4}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
