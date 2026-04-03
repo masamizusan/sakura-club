@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import AuthGuard from '@/components/auth/AuthGuard'
 import {
@@ -206,9 +206,7 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
 function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const profileId = params?.id as string
-  const fromFootprints = searchParams.get('from') === 'footprints'
   const [profile, setProfile] = useState<any>(null)
   const [viewerId, setViewerId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -317,10 +315,8 @@ function ProfileDetailContent() {
     }
   }, [profileId])
 
-  // 足跡を記録（自分以外のプロフィール閲覧時・足跡ページからの遷移は除く）
+  // 足跡を記録（自分以外のプロフィール閲覧時）
   useEffect(() => {
-    if (fromFootprints) return // 足跡ページからの訪問は記録しない
-
     const recordFootprint = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || user.id === profileId) return
@@ -336,7 +332,7 @@ function ProfileDetailContent() {
     if (profileId) {
       recordFootprint()
     }
-  }, [profileId, fromFootprints])
+  }, [profileId])
 
   // 足跡・いいねを個別既読（service_role API経由でRLS回避）
   useEffect(() => {
