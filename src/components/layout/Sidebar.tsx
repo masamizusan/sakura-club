@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -8,10 +8,12 @@ import {
   MessageCircle,
   Heart,
   History,
-  User
+  User,
+  ShieldAlert
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNotifications } from '@/hooks/useNotifications'
+import { createClient } from '@/lib/supabase/client'
 import { logger } from '@/utils/logger'
 
 interface SidebarProps {
@@ -23,6 +25,31 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   const { currentLanguage } = useLanguage()
   const { unreadMessages, unseenLikes, unreadFootprints } = useNotifications()
   const logged = useRef(false)
+  const [isVerified, setIsVerified] = useState<boolean>(true) // trueで初期化
+  const [verificationStatus, setVerificationStatus] = useState<string>('')
+
+  // 身分証認証状態を取得
+  useEffect(() => {
+    const fetchVerification = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_verified, verification_status')
+          .eq('id', user.id)
+          .single()
+        if (profile) {
+          setIsVerified(profile.is_verified === true)
+          setVerificationStatus(profile.verification_status || 'unverified')
+        }
+      } catch {
+        // 認証エラーはサイレントに無視
+      }
+    }
+    fetchVerification()
+  }, [])
 
   // 🌍 Sidebar専用翻訳辞書
   const sidebarTranslations: Record<string, Record<string, string>> = {
@@ -31,28 +58,36 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       messages: 'メッセージ',
       matches: 'お相手から',
       footprints: '足跡',
-      mypage: 'マイページ'
+      mypage: 'マイページ',
+      verificationBanner: '⚠️ 身分証を登録してメッセージを送ろう',
+      verificationPendingBanner: '⏳ 身分証を審査中です',
     },
     en: {
       search: 'Search',
       messages: 'Messages',
       matches: 'Likes',
       footprints: 'Footprints',
-      mypage: 'My Page'
+      mypage: 'My Page',
+      verificationBanner: '⚠️ Register your ID to send messages',
+      verificationPendingBanner: '⏳ ID verification in progress',
     },
     ko: {
       search: '검색',
       messages: '메시지',
       matches: '관심',
       footprints: '발자국',
-      mypage: '마이페이지'
+      mypage: '마이페이지',
+      verificationBanner: '⚠️ 신분증을 등록하고 메시지를 보내세요',
+      verificationPendingBanner: '⏳ 신분증 심사 중입니다',
     },
     'zh-tw': {
       search: '搜尋',
       messages: '訊息',
       matches: '喜歡我的人',
       footprints: '足跡',
-      mypage: '我的頁面'
+      mypage: '我的頁面',
+      verificationBanner: '⚠️ 登錄身份證以發送訊息',
+      verificationPendingBanner: '⏳ 身份證審查中',
     }
   }
 
@@ -93,6 +128,24 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           </div>
           <h1 className="text-xl font-bold sakura-text-gradient">Sakura Club</h1>
         </div>
+
+        {/* 身分証未登録バナー */}
+        {!isVerified && (
+          verificationStatus === 'pending' || verificationStatus === 'requires_review' ? (
+            <div className="mx-0 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+              <span>{getSafeTranslation('verificationPendingBanner')}</span>
+            </div>
+          ) : (
+            <Link
+              href="/verification"
+              className="block mx-0 mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800 hover:bg-yellow-100 transition-colors flex items-start gap-2"
+            >
+              <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-yellow-600" />
+              <span>{getSafeTranslation('verificationBanner')}</span>
+            </Link>
+          )
+        )}
 
         <nav className="space-y-2 sticky top-8">
           {sidebarItems.map((item) => {

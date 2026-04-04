@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Send, ArrowLeft, Heart, User, Mic, Camera } from 'lucide-react'
+import { Send, ArrowLeft, Heart, User, Mic, Camera, ShieldAlert } from 'lucide-react'
+import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
@@ -27,6 +28,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     voiceNotSupported: 'お使いのブラウザは音声入力に対応していません。',
     stop: '停止',
     previewTranslation: '翻訳確認',
+    verificationRequired: 'メッセージを送るには身分証登録が必要です',
+    verificationPending: '身分証を審査中です。審査完了後にメッセージを送れます',
+    registerId: '身分証を登録する',
   },
   en: {
     pageTitle: 'Messages',
@@ -45,6 +49,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     voiceNotSupported: 'Your browser does not support voice input.',
     stop: 'Stop',
     previewTranslation: 'Translate',
+    verificationRequired: 'ID verification is required to send messages',
+    verificationPending: 'Your ID is under review. You can send messages once approved.',
+    registerId: 'Register ID',
   },
   ko: {
     pageTitle: '메시지',
@@ -63,6 +70,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     voiceNotSupported: '브라우저가 음성 입력을 지원하지 않습니다.',
     stop: '정지',
     previewTranslation: '번역 확인',
+    verificationRequired: '메시지를 보내려면 신분증 등록이 필요합니다',
+    verificationPending: '신분증 심사 중입니다. 심사 완료 후 메시지를 보낼 수 있습니다.',
+    registerId: '신분증 등록하기',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -81,6 +91,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     voiceNotSupported: '您的瀏覽器不支援語音輸入。',
     stop: '停止',
     previewTranslation: '翻譯確認',
+    verificationRequired: '發送訊息需要登錄身份證',
+    verificationPending: '您的身份證正在審查中。審查完成後即可發送訊息。',
+    registerId: '登錄身份證',
   },
 }
 
@@ -96,6 +109,8 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isVerified, setIsVerified] = useState<boolean>(true) // trueで初期化してフラッシュを防ぐ
+  const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
 
   // 翻訳関連のstate
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
@@ -208,12 +223,25 @@ export default function ChatPage() {
     }
   }
 
-  // 現在のログインユーザーIDを取得
+  // 現在のログインユーザーIDと認証状態を取得
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      setCurrentUserId(user?.id || null)
+      if (!user) return
+      setCurrentUserId(user.id)
+
+      // 身分証認証状態を取得
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_verified, verification_status')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        setIsVerified(profile.is_verified === true)
+        setVerificationStatus(profile.verification_status || 'unverified')
+      }
     }
     fetchCurrentUser()
   }, [])
@@ -704,6 +732,27 @@ export default function ChatPage() {
         </div>
 
         {/* 入力欄 */}
+        {!isVerified ? (
+          /* 未認証バナー */
+          <div className="bg-yellow-50 border-t border-yellow-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+            <div className="max-w-2xl mx-auto flex items-center gap-3">
+              <ShieldAlert className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+              <p className="text-sm text-yellow-800 flex-1">
+                {verificationStatus === 'pending' || verificationStatus === 'requires_review'
+                  ? t('verificationPending')
+                  : t('verificationRequired')}
+              </p>
+              {verificationStatus !== 'pending' && verificationStatus !== 'requires_review' && (
+                <Link
+                  href="/verification"
+                  className="text-xs bg-sakura-500 text-white px-4 py-2 rounded-full font-medium hover:bg-sakura-600 transition-colors flex-shrink-0"
+                >
+                  {t('registerId')}
+                </Link>
+              )}
+            </div>
+          </div>
+        ) : (
         <div className="bg-white border-t border-gray-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
@@ -876,6 +925,7 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   )
