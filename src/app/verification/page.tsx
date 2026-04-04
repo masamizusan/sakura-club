@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, Upload, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -18,6 +18,8 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     license: '運転免許証',
     mynumber: 'マイナンバーカード',
     other: 'その他の身分証',
+    residenceCard: '在留カード',
+    nationalId: '国民IDカード',
     upload: '身分証の画像をアップロード',
     uploadHint: 'JPG・PNG・HEIC対応 / 5MB以内',
     submit: '登録する',
@@ -36,6 +38,8 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     license: "Driver's License",
     mynumber: 'My Number Card',
     other: 'Other ID Document',
+    residenceCard: 'Residence Card',
+    nationalId: 'National ID Card',
     upload: 'Upload ID Document',
     uploadHint: 'JPG / PNG / HEIC, max 5MB',
     submit: 'Submit',
@@ -54,6 +58,8 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     license: '운전면허증',
     mynumber: '마이넘버카드',
     other: '기타 신분증',
+    residenceCard: '재류카드',
+    nationalId: '국민 신분증',
     upload: '신분증 사진 업로드',
     uploadHint: 'JPG / PNG / HEIC, 5MB 이내',
     submit: '등록하기',
@@ -72,6 +78,8 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     license: '駕照',
     mynumber: 'My Number卡',
     other: '其他身份證件',
+    residenceCard: '居留卡',
+    nationalId: '國民身份證',
     upload: '上傳身份證照片',
     uploadHint: '支援 JPG / PNG / HEIC，最大 5MB',
     submit: '提交',
@@ -92,6 +100,30 @@ function VerificationContent() {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<{ gender: string; nationality: string } | null>(null)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('profiles')
+        .select('gender, nationality')
+        .eq('id', user.id)
+        .single()
+      if (data) setProfile(data)
+    }
+    fetchProfile()
+  }, [])
+
+  // 外国人男性かどうかを判定
+  const isJapanese = (nationality: string | null | undefined): boolean => {
+    if (!nationality) return true
+    const n = nationality.toLowerCase().trim()
+    return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
+  }
+  const isForeignMale = profile?.gender === 'male' && !isJapanese(profile?.nationality)
 
   const t = (key: string): string => {
     const texts = verificationTranslations[currentLanguage] || verificationTranslations['ja']
@@ -199,9 +231,18 @@ function VerificationContent() {
               >
                 <option value="">---</option>
                 <option value="passport">{t('passport')}</option>
-                <option value="license">{t('license')}</option>
-                <option value="mynumber">{t('mynumber')}</option>
-                <option value="other">{t('other')}</option>
+                {isForeignMale ? (
+                  <>
+                    <option value="residence_card">{t('residenceCard')}</option>
+                    <option value="national_id">{t('nationalId')}</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="license">{t('license')}</option>
+                    <option value="mynumber">{t('mynumber')}</option>
+                    <option value="other">{t('other')}</option>
+                  </>
+                )}
               </select>
             </div>
 
