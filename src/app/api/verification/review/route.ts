@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   try {
     const { userId, filePath, idType } = await req.json()
+    console.log('[verification/review] called:', { userId: userId?.slice(0, 8), filePath, idType })
 
     if (!userId || !filePath || !idType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -18,10 +19,12 @@ export async function POST(req: NextRequest) {
     )
 
     // 署名付きURLを取得（非公開バケット）
+    console.log('[verification/review] creating signed URL for:', filePath)
     const { data: signedData, error: signedError } = await serviceSupabase.storage
       .from('identity-documents')
       .createSignedUrl(filePath, 120)
 
+    console.log('[verification/review] signed URL result:', { hasUrl: !!signedData?.signedUrl, signedError })
     if (signedError || !signedData?.signedUrl) {
       console.error('[verification/review] Signed URL error:', signedError)
       return NextResponse.json({ error: 'Failed to get signed URL' }, { status: 500 })

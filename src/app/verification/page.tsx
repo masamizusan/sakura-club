@@ -121,12 +121,14 @@ function VerificationContent() {
       // Storage にアップロード
       const ext = file.name.split('.').pop() || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
+      console.log('[verification] uploading to identity-documents:', { path, userId: user.id })
       const { error: uploadError } = await supabase.storage
         .from('identity-documents')
         .upload(path, file)
 
+      console.log('[verification] upload result:', { uploadError })
       if (uploadError) {
-        console.error('Upload error:', uploadError)
+        console.error('[verification] Upload error detail:', uploadError)
         setError(t('uploadError'))
         setUploading(false)
         return
