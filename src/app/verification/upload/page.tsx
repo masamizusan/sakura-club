@@ -238,7 +238,8 @@ function VerificationContent() {
                 <img
                   src={preview}
                   alt="preview"
-                  className="mt-3 rounded-lg w-full object-cover max-h-48 border border-gray-200"
+                  className="mt-3 rounded-lg w-full object-contain bg-gray-50 border border-gray-200"
+                  style={{ maxHeight: '300px' }}
                 />
               )}
             </div>
