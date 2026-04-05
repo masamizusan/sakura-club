@@ -36,12 +36,15 @@ export async function POST(req: NextRequest) {
     const openaiKey = process.env.OPENAI_API_KEY
     if (openaiKey) {
       try {
-        const prompt = `この身分証画像を審査してください。以下の項目をJSONで返してください：
+        const today = new Date().toISOString().split('T')[0] // 例: "2026-04-05"
+
+        const prompt = `この身分証画像を審査してください。今日の日付は${today}です。
+以下の項目をJSONで返してください：
 {
-  "id_type_detected": "検出された身分証の種類（passport/license/mynumber/other/unknown）",
+  "id_type_detected": "検出された身分証の種類（passport/license/mynumber/residence_card/special_permanent_resident/license_history/unknown）",
   "has_face_photo": true/false,
   "birth_date": "YYYY-MM-DD または null",
-  "age": 数値 または null,
+  "age": 今日の日付（${today}）時点での正確な年齢（整数）または null,
   "is_age_valid": true/false （18歳以上かどうか）,
   "image_quality": "good/poor/unreadable",
   "suspected_tampering": true/false,
@@ -49,6 +52,7 @@ export async function POST(req: NextRequest) {
   "requires_manual_review": true/false,
   "auto_approve": true/false
 }
+年齢は生年月日と今日の日付（${today}）から正確に計算してください。
 auto_approveはis_age_validがtrue、suspected_tamperingがfalse、image_qualityがgood、has_face_photoがtrueの場合のみtrueにしてください。
 JSONのみ返してください。`
 
