@@ -20,9 +20,11 @@ import {
   Mail,
   HelpCircle,
   LogOut,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck
 } from 'lucide-react'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import Link from 'next/link'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { MenuRow, LikeRemainingRow } from '@/components/mypage/MenuRow'
@@ -48,7 +50,15 @@ function MyPageContent() {
       contactDesc: 'ご質問・ご要望はこちらから',
       faq: 'よくある質問',
       faqDesc: 'ヘルプ・サポート情報',
-      likesRemaining: '残りいいね数（今日）'
+      likesRemaining: '残りいいね数（今日）',
+      verificationRequired: '身分証を登録してください',
+      verificationRequiredDesc: 'メッセージ機能を使うには身分証の登録が必要です',
+      verificationPending: '審査中です',
+      verificationPendingDesc: '審査が完了次第、メッセージ機能が利用可能になります',
+      verificationApproved: '本人確認済み',
+      verificationApprovedDesc: 'すべての機能をご利用いただけます',
+      verificationRejected: '審査が却下されました',
+      verificationRejectedDesc: '再度身分証を登録してください',
     },
     en: {
       title: 'My Page',
@@ -63,7 +73,15 @@ function MyPageContent() {
       contactDesc: 'Questions or requests',
       faq: 'FAQ',
       faqDesc: 'Help and support',
-      likesRemaining: 'Remaining Likes (Today)'
+      likesRemaining: 'Remaining Likes (Today)',
+      verificationRequired: 'Please register your ID',
+      verificationRequiredDesc: 'ID verification is required to use the messaging feature',
+      verificationPending: 'Under Review',
+      verificationPendingDesc: 'You will be able to message once approved',
+      verificationApproved: 'Identity Verified',
+      verificationApprovedDesc: 'You have access to all features',
+      verificationRejected: 'Verification Rejected',
+      verificationRejectedDesc: 'Please resubmit your ID document',
     },
     ko: {
       title: '마이페이지',
@@ -78,7 +96,15 @@ function MyPageContent() {
       contactDesc: '질문이나 요청사항',
       faq: '자주 묻는 질문',
       faqDesc: '도움말 및 지원',
-      likesRemaining: '남은 좋아요 수 (오늘)'
+      likesRemaining: '남은 좋아요 수 (오늘)',
+      verificationRequired: '신분증을 등록해 주세요',
+      verificationRequiredDesc: '메시지 기능을 사용하려면 신분증 등록이 필요합니다',
+      verificationPending: '심사 중',
+      verificationPendingDesc: '심사가 완료되면 메시지 기능을 사용할 수 있습니다',
+      verificationApproved: '본인 확인 완료',
+      verificationApprovedDesc: '모든 기능을 이용하실 수 있습니다',
+      verificationRejected: '심사가 거절되었습니다',
+      verificationRejectedDesc: '신분증을 다시 등록해 주세요',
     },
     'zh-tw': {
       title: '我的頁面',
@@ -93,7 +119,15 @@ function MyPageContent() {
       contactDesc: '有問題或建議請聯繫',
       faq: '常見問題',
       faqDesc: '幫助與支援',
-      likesRemaining: '剩餘按讚數（今日）'
+      likesRemaining: '剩餘按讚數（今日）',
+      verificationRequired: '請登錄身份證',
+      verificationRequiredDesc: '使用訊息功能需要登錄身份證',
+      verificationPending: '審查中',
+      verificationPendingDesc: '審查完成後即可使用訊息功能',
+      verificationApproved: '身份已驗證',
+      verificationApprovedDesc: '您可以使用所有功能',
+      verificationRejected: '審查被拒絕',
+      verificationRejectedDesc: '請重新提交身份證',
     }
   }
 
@@ -353,6 +387,47 @@ function MyPageContent() {
     }
   }
 
+  // 身分証ステータスバナーコンポーネント
+  const VerificationBanner = () => {
+    const status = profile?.verification_status || 'unverified'
+    switch (status) {
+      case 'unverified':
+        return (
+          <Link href="/verification" className="block p-4 bg-yellow-50 border border-yellow-300 rounded-xl mb-4 mx-4 hover:bg-yellow-100 transition-colors">
+            <p className="font-medium text-yellow-800">⚠️ {getMypageTranslation('verificationRequired')}</p>
+            <p className="text-sm text-yellow-600 mt-1">{getMypageTranslation('verificationRequiredDesc')}</p>
+          </Link>
+        )
+      case 'pending':
+      case 'requires_review':
+        return (
+          <div className="block p-4 bg-blue-50 border border-blue-200 rounded-xl mb-4 mx-4">
+            <p className="font-medium text-blue-800">⏳ {getMypageTranslation('verificationPending')}</p>
+            <p className="text-sm text-blue-600 mt-1">{getMypageTranslation('verificationPendingDesc')}</p>
+          </div>
+        )
+      case 'approved':
+        return (
+          <div className="block p-4 bg-green-50 border border-green-200 rounded-xl mb-4 mx-4">
+            <p className="font-medium text-green-800 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4" />
+              {getMypageTranslation('verificationApproved')}
+            </p>
+            <p className="text-sm text-green-600 mt-1">{getMypageTranslation('verificationApprovedDesc')}</p>
+          </div>
+        )
+      case 'rejected':
+        return (
+          <Link href="/verification" className="block p-4 bg-red-50 border border-red-200 rounded-xl mb-4 mx-4 hover:bg-red-100 transition-colors">
+            <p className="font-medium text-red-800">❌ {getMypageTranslation('verificationRejected')}</p>
+            <p className="text-sm text-red-600 mt-1">{getMypageTranslation('verificationRejectedDesc')}</p>
+          </Link>
+        )
+      default:
+        return null
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -465,6 +540,9 @@ function MyPageContent() {
               </button>
             </div>
           </div>
+
+          {/* === 身分証ステータスバナー === */}
+          <VerificationBanner />
 
           {/* === 下部リスト: メニューセクション === */}
           <div className="bg-white mt-4 mx-4 rounded-xl shadow-sm overflow-hidden">
