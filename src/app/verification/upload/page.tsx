@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, Upload, ArrowLeft } from 'lucide-react'
+import { ShieldCheck, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -20,8 +20,11 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     mynumber: 'マイナンバーカード',
     residenceCard: '在留カード',
     specialPermanentResident: '特別永住者証明書',
-    upload: '身分証の画像をアップロード',
+    upload: '身分証の画像を選択',
     uploadHint: 'JPG・PNG・HEIC対応 / 5MB以内',
+    takePhoto: 'カメラで撮影',
+    chooseFromAlbum: 'アルバムから選ぶ',
+    retake: '撮り直す・選び直す',
     submit: '提出する',
     submitting: '送信中...',
     note: '身分証は暗号化されて安全に保管され、年齢確認のみに使用されます。第三者に共有されることはありません。',
@@ -40,8 +43,11 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     mynumber: 'My Number Card',
     residenceCard: 'Residence Card',
     specialPermanentResident: 'Special Permanent Resident Certificate',
-    upload: 'Upload ID Document',
+    upload: 'Select ID Image',
     uploadHint: 'JPG / PNG / HEIC, max 5MB',
+    takePhoto: 'Take Photo',
+    chooseFromAlbum: 'Choose from Album',
+    retake: 'Retake / Reselect',
     submit: 'Submit',
     submitting: 'Submitting...',
     note: 'Your ID is encrypted and securely stored. It is used only for age verification and will never be shared with third parties.',
@@ -60,8 +66,11 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     mynumber: '마이넘버카드',
     residenceCard: '재류카드',
     specialPermanentResident: '특별영주자증명서',
-    upload: '신분증 사진 업로드',
+    upload: '신분증 사진 선택',
     uploadHint: 'JPG / PNG / HEIC, 5MB 이내',
+    takePhoto: '카메라로 촬영',
+    chooseFromAlbum: '앨범에서 선택',
+    retake: '다시 찍기 / 다시 선택',
     submit: '제출하기',
     submitting: '전송 중...',
     note: '신분증은 암호화되어 안전하게 보관되며, 나이 확인에만 사용됩니다. 제3자와 공유되지 않습니다.',
@@ -80,8 +89,11 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     mynumber: 'My Number卡',
     residenceCard: '居留卡',
     specialPermanentResident: '特別永住者證明書',
-    upload: '上傳身份證照片',
+    upload: '選擇身份證照片',
     uploadHint: '支援 JPG / PNG / HEIC，最大 5MB',
+    takePhoto: '拍攝照片',
+    chooseFromAlbum: '從相冊選擇',
+    retake: '重新拍攝／重新選擇',
     submit: '提交',
     submitting: '提交中...',
     note: '您的身份證將加密安全保存，僅用於年齡驗證，不會與第三方共享。',
@@ -100,6 +112,9 @@ function VerificationContent() {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const albumInputRef = useRef<HTMLInputElement>(null)
 
   const t = (key: string): string => {
     const texts = verificationTranslations[currentLanguage] || verificationTranslations['ja']
@@ -221,26 +236,69 @@ function VerificationContent() {
                 {t('upload')}
               </label>
 
-              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-sakura-400 hover:bg-sakura-50 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <p className="text-xs text-gray-400">{t('uploadHint')}</p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
+              {/* 隠しinput：カメラ撮影用 */}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                ref={cameraInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+              />
 
-              {preview && (
-                <img
-                  src={preview}
-                  alt="preview"
-                  className="mt-3 rounded-lg w-full object-contain bg-gray-50 border border-gray-200"
-                  style={{ maxHeight: '300px' }}
-                />
+              {/* 隠しinput：アルバム選択用 */}
+              <input
+                type="file"
+                accept="image/*"
+                ref={albumInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {!preview ? (
+                /* カメラ・アルバム選択ボタン */
+                <div className="grid grid-cols-2 gap-3 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                  >
+                    <span className="text-3xl">📷</span>
+                    <span className="text-sm font-medium text-gray-600">{t('takePhoto')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => albumInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                  >
+                    <span className="text-3xl">🖼️</span>
+                    <span className="text-sm font-medium text-gray-600">{t('chooseFromAlbum')}</span>
+                  </button>
+                </div>
+              ) : (
+                /* プレビュー表示 + 撮り直しボタン */
+                <div className="mb-2">
+                  <img
+                    src={preview}
+                    alt="preview"
+                    className="w-full rounded-xl object-contain bg-gray-50 border border-gray-200"
+                    style={{ maxHeight: '300px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreview(null)
+                      setFile(null)
+                      // inputをリセット
+                      if (cameraInputRef.current) cameraInputRef.current.value = ''
+                      if (albumInputRef.current) albumInputRef.current.value = ''
+                    }}
+                    className="mt-2 w-full text-sm text-gray-500 underline hover:text-gray-700 transition-colors"
+                  >
+                    {t('retake')}
+                  </button>
+                </div>
               )}
             </div>
 
