@@ -31,6 +31,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     verificationRequired: 'メッセージを送るには本人年齢確認が必要です',
     verificationPending: '年齢確認の審査中です。審査完了後にメッセージを送れます',
     registerId: '年齢確認を行う',
+    modalTitle: 'メッセージを送るには年齢確認が必要です',
+    modalDesc: '年齢確認が完了するとメッセージ機能が利用できます。通常数分以内に審査が完了します。',
+    modalButton: '年齢確認を行う',
+    modalCancel: 'キャンセル',
   },
   en: {
     pageTitle: 'Messages',
@@ -52,6 +56,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     verificationRequired: 'Age verification is required to send messages',
     verificationPending: 'Age verification is under review. You can send messages once approved.',
     registerId: 'Verify Age',
+    modalTitle: 'Age Verification Required',
+    modalDesc: 'Complete age verification to send messages. Review is usually completed within a few minutes.',
+    modalButton: 'Verify Age',
+    modalCancel: 'Cancel',
   },
   ko: {
     pageTitle: '메시지',
@@ -73,6 +81,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     verificationRequired: '메시지를 보내려면 나이 확인이 필요합니다',
     verificationPending: '나이 확인 심사 중입니다. 심사 완료 후 메시지를 보낼 수 있습니다.',
     registerId: '나이 확인하기',
+    modalTitle: '메시지를 보내려면 나이 확인이 필요합니다',
+    modalDesc: '나이 확인이 완료되면 메시지 기능을 사용할 수 있습니다.',
+    modalButton: '나이 확인하기',
+    modalCancel: '취소',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -94,6 +106,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     verificationRequired: '發送訊息需要進行年齡確認',
     verificationPending: '年齡確認審查中。審查完成後即可發送訊息。',
     registerId: '進行年齡確認',
+    modalTitle: '發送訊息需要年齡確認',
+    modalDesc: '完成年齡確認後即可發送訊息。審查通常在幾分鐘內完成。',
+    modalButton: '進行年齡確認',
+    modalCancel: '取消',
   },
 }
 
@@ -111,6 +127,7 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isVerified, setIsVerified] = useState<boolean>(true) // trueで初期化してフラッシュを防ぐ
   const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
 
   // 翻訳関連のstate
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
@@ -402,6 +419,11 @@ export default function ChatPage() {
   }, [conversationId, currentUserId, currentLanguage])
 
   const handleSend = async () => {
+    // 未認証の場合はポップアップを表示
+    if (!isVerified) {
+      setShowVerificationModal(true)
+      return
+    }
     if (!newMessage.trim() || isSending) return
     try {
       setIsSending(true)
@@ -731,28 +753,7 @@ export default function ChatPage() {
           )}
         </div>
 
-        {/* 入力欄 */}
-        {!isVerified ? (
-          /* 未認証バナー */
-          <div className="bg-yellow-50 border-t border-yellow-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
-            <div className="max-w-2xl mx-auto flex items-center gap-3">
-              <ShieldAlert className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-              <p className="text-sm text-yellow-800 flex-1">
-                {verificationStatus === 'pending' || verificationStatus === 'requires_review'
-                  ? t('verificationPending')
-                  : t('verificationRequired')}
-              </p>
-              {verificationStatus !== 'pending' && verificationStatus !== 'requires_review' && (
-                <Link
-                  href="/verification"
-                  className="text-xs bg-sakura-500 text-white px-4 py-2 rounded-full font-medium hover:bg-sakura-600 transition-colors flex-shrink-0"
-                >
-                  {t('registerId')}
-                </Link>
-              )}
-            </div>
-          </div>
-        ) : (
+        {/* 入力欄（常に表示） */}
         <div className="bg-white border-t border-gray-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
@@ -925,8 +926,38 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-        )}
       </div>
+
+      {/* 年齢確認モーダル */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <div className="text-center mb-4">
+              <span className="text-5xl">🔒</span>
+            </div>
+            <h2 className="text-lg font-bold text-center mb-2">
+              {t('modalTitle')}
+            </h2>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              {t('modalDesc')}
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/verification"
+                className="w-full bg-sakura-500 text-white text-center py-3 rounded-full font-medium hover:bg-sakura-600 transition-colors"
+              >
+                {t('modalButton')}
+              </Link>
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="w-full text-gray-400 py-2 text-sm hover:text-gray-600 transition-colors"
+              >
+                {t('modalCancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
