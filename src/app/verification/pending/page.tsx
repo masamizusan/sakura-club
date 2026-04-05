@@ -8,7 +8,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 const pendingTranslations: Record<string, Record<string, string>> = {
   ja: {
     title: '審査中',
-    message: '身分証を受け付けました。AIによる審査が完了次第（通常数分以内）、メッセージ機能が利用可能になります。',
+    message: '年齢確認書類を受け付けました。AIによる審査が完了次第（通常数分以内）、メッセージ機能が利用可能になります。',
     note: '審査に時間がかかる場合は、運営が手動で確認します。',
     backToHome: 'トップに戻る',
     backToMessages: 'メッセージ一覧へ',
