@@ -59,8 +59,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       matches: 'お相手から',
       footprints: '足跡',
       mypage: 'マイページ',
-      verificationBanner: '⚠️ 身分証を登録してメッセージを送ろう',
-      verificationPendingBanner: '⏳ 身分証を審査中です',
+      verificationBanner: '⚠️ 本人年齢確認が未完了です',
+      verificationPendingBanner: '⏳ 年齢確認を審査中です',
     },
     en: {
       search: 'Search',
@@ -68,8 +68,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       matches: 'Likes',
       footprints: 'Footprints',
       mypage: 'My Page',
-      verificationBanner: '⚠️ Register your ID to send messages',
-      verificationPendingBanner: '⏳ ID verification in progress',
+      verificationBanner: '⚠️ Age Verification Required',
+      verificationPendingBanner: '⏳ Age Verification Under Review',
     },
     ko: {
       search: '검색',
@@ -77,8 +77,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       matches: '관심',
       footprints: '발자국',
       mypage: '마이페이지',
-      verificationBanner: '⚠️ 신분증을 등록하고 메시지를 보내세요',
-      verificationPendingBanner: '⏳ 신분증 심사 중입니다',
+      verificationBanner: '⚠️ 나이 확인이 필요합니다',
+      verificationPendingBanner: '⏳ 나이 확인 심사 중',
     },
     'zh-tw': {
       search: '搜尋',
@@ -86,8 +86,8 @@ export default function Sidebar({ className = '' }: SidebarProps) {
       matches: '喜歡我的人',
       footprints: '足跡',
       mypage: '我的頁面',
-      verificationBanner: '⚠️ 登錄身份證以發送訊息',
-      verificationPendingBanner: '⏳ 身份證審查中',
+      verificationBanner: '⚠️ 需要進行年齡確認',
+      verificationPendingBanner: '⏳ 年齡確認審查中',
     }
   }
 
