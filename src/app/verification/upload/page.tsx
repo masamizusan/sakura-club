@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ShieldCheck, Upload, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -11,18 +11,18 @@ import AuthGuard from '@/components/auth/AuthGuard'
 
 const verificationTranslations: Record<string, Record<string, string>> = {
   ja: {
-    title: '身分証登録',
-    description: 'メッセージ機能を利用するには身分証の登録が必要です',
+    title: '年齢確認書類の提出',
+    description: 'メッセージ機能を利用するには年齢確認が必要です',
     selectType: '身分証の種類を選択してください',
     passport: 'パスポート',
     license: '運転免許証',
+    licenseHistory: '運転経歴証明書',
     mynumber: 'マイナンバーカード',
-    other: 'その他の身分証',
     residenceCard: '在留カード',
-    nationalId: '国民IDカード',
+    specialPermanentResident: '特別永住者証明書',
     upload: '身分証の画像をアップロード',
     uploadHint: 'JPG・PNG・HEIC対応 / 5MB以内',
-    submit: '登録する',
+    submit: '提出する',
     submitting: '送信中...',
     note: '身分証は暗号化されて安全に保管され、年齢確認のみに使用されます。第三者に共有されることはありません。',
     selectRequired: '身分証の種類を選択してください',
@@ -31,15 +31,15 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     back: '戻る',
   },
   en: {
-    title: 'Identity Verification',
-    description: 'ID verification is required to use the messaging feature',
+    title: 'Submit Age Verification Document',
+    description: 'Age verification is required to use the messaging feature',
     selectType: 'Select ID type',
     passport: 'Passport',
     license: "Driver's License",
+    licenseHistory: 'Driving Record Certificate',
     mynumber: 'My Number Card',
-    other: 'Other ID Document',
     residenceCard: 'Residence Card',
-    nationalId: 'National ID Card',
+    specialPermanentResident: 'Special Permanent Resident Certificate',
     upload: 'Upload ID Document',
     uploadHint: 'JPG / PNG / HEIC, max 5MB',
     submit: 'Submit',
@@ -51,18 +51,18 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     back: 'Back',
   },
   ko: {
-    title: '신분증 등록',
-    description: '메시지 기능을 사용하려면 신분증 등록이 필요합니다',
+    title: '나이 확인 서류 제출',
+    description: '메시지 기능을 사용하려면 나이 확인이 필요합니다',
     selectType: '신분증 종류를 선택하세요',
     passport: '여권',
     license: '운전면허증',
+    licenseHistory: '운전경력증명서',
     mynumber: '마이넘버카드',
-    other: '기타 신분증',
     residenceCard: '재류카드',
-    nationalId: '국민 신분증',
+    specialPermanentResident: '특별영주자증명서',
     upload: '신분증 사진 업로드',
     uploadHint: 'JPG / PNG / HEIC, 5MB 이내',
-    submit: '등록하기',
+    submit: '제출하기',
     submitting: '전송 중...',
     note: '신분증은 암호화되어 안전하게 보관되며, 나이 확인에만 사용됩니다. 제3자와 공유되지 않습니다.',
     selectRequired: '신분증 종류를 선택해 주세요',
@@ -71,15 +71,15 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     back: '뒤로',
   },
   'zh-tw': {
-    title: '身份證登錄',
-    description: '使用訊息功能需要登錄身份證',
+    title: '提交年齡確認文件',
+    description: '使用訊息功能需要進行年齡確認',
     selectType: '選擇證件類型',
     passport: '護照',
     license: '駕照',
+    licenseHistory: '駕駛經歷證明書',
     mynumber: 'My Number卡',
-    other: '其他身份證件',
     residenceCard: '居留卡',
-    nationalId: '國民身份證',
+    specialPermanentResident: '特別永住者證明書',
     upload: '上傳身份證照片',
     uploadHint: '支援 JPG / PNG / HEIC，最大 5MB',
     submit: '提交',
@@ -100,30 +100,6 @@ function VerificationContent() {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<{ gender: string; nationality: string } | null>(null)
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('profiles')
-        .select('gender, nationality')
-        .eq('id', user.id)
-        .single()
-      if (data) setProfile(data)
-    }
-    fetchProfile()
-  }, [])
-
-  // 外国人男性かどうかを判定
-  const isJapanese = (nationality: string | null | undefined): boolean => {
-    if (!nationality) return true
-    const n = nationality.toLowerCase().trim()
-    return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
-  }
-  const isForeignMale = profile?.gender === 'male' && !isJapanese(profile?.nationality)
 
   const t = (key: string): string => {
     const texts = verificationTranslations[currentLanguage] || verificationTranslations['ja']
@@ -231,18 +207,11 @@ function VerificationContent() {
               >
                 <option value="">---</option>
                 <option value="passport">{t('passport')}</option>
-                {isForeignMale ? (
-                  <>
-                    <option value="residence_card">{t('residenceCard')}</option>
-                    <option value="national_id">{t('nationalId')}</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="license">{t('license')}</option>
-                    <option value="mynumber">{t('mynumber')}</option>
-                    <option value="other">{t('other')}</option>
-                  </>
-                )}
+                <option value="license">{t('license')}</option>
+                <option value="license_history">{t('licenseHistory')}</option>
+                <option value="mynumber">{t('mynumber')}</option>
+                <option value="residence_card">{t('residenceCard')}</option>
+                <option value="special_permanent_resident">{t('specialPermanentResident')}</option>
               </select>
             </div>
 
