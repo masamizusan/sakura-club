@@ -9,6 +9,8 @@ import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { createClient } from '@/lib/supabase/client'
+import { useSubscription } from '@/hooks/useSubscription'
+import SubscriptionModal from '@/components/SubscriptionModal'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -128,6 +130,10 @@ export default function ChatPage() {
   const [isVerified, setIsVerified] = useState<boolean>(true) // trueで初期化してフラッシュを防ぐ
   const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
   const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [userProfile, setUserProfile] = useState<{ gender: string; nationality: string } | null>(null)
+
+  const { isSubscribed } = useSubscription()
 
   // 翻訳関連のstate
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({})
@@ -248,16 +254,17 @@ export default function ChatPage() {
       if (!user) return
       setCurrentUserId(user.id)
 
-      // 身分証認証状態を取得
+      // 認証状態とプロフィール取得
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_verified, verification_status')
+        .select('is_verified, verification_status, gender, nationality')
         .eq('id', user.id)
         .single()
 
       if (profile) {
         setIsVerified(profile.is_verified === true)
         setVerificationStatus(profile.verification_status || 'unverified')
+        setUserProfile({ gender: profile.gender, nationality: profile.nationality })
       }
     }
     fetchCurrentUser()
@@ -418,10 +425,23 @@ export default function ChatPage() {
     }
   }, [conversationId, currentUserId, currentLanguage])
 
+  // 外国人男性かどうかを判定
+  const isJapanesePerson = (nationality: string | null | undefined): boolean => {
+    if (!nationality) return true
+    const n = nationality.toLowerCase().trim()
+    return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
+  }
+  const isForeignMale = userProfile?.gender === 'male' && !isJapanesePerson(userProfile?.nationality)
+
   const handleSend = async () => {
-    // 未認証の場合はポップアップを表示
+    // 未認証の場合はポップアップを表示（身分確認が先）
     if (!isVerified) {
       setShowVerificationModal(true)
+      return
+    }
+    // 外国人男性かつ未課金の場合はサブスクリプションモーダルを表示
+    if (isForeignMale && isSubscribed === false) {
+      setShowSubscriptionModal(true)
       return
     }
     if (!newMessage.trim() || isSending) return
@@ -927,6 +947,12 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* サブスクリプションモーダル */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
 
       {/* 年齢確認モーダル */}
       {showVerificationModal && (
