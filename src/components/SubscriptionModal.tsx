@@ -12,11 +12,12 @@ const translations = {
   ja: {
     title: 'プレミアムプランに登録',
     subtitle: '日本人女性とメッセージを楽しもう',
+    recommendedLabel: 'おすすめ',
     plans: [
-      { id: 'monthly', label: '月額', price: '$29.99', period: '/月', savings: '' },
-      { id: '3month', label: '3ヶ月', price: '$74.99', period: '/3ヶ月', savings: '17% お得' },
-      { id: '6month', label: '6ヶ月', price: '$134.99', period: '/6ヶ月', savings: '25% お得' },
-      { id: 'yearly', label: '年額', price: '$215.99', period: '/年', savings: '40% お得 🌸' },
+      { id: 'monthly', label: '月額', price: '$29.99', period: '/月', savings: '', recommended: false },
+      { id: '3month', label: '3ヶ月', price: '$74.99', period: '/3ヶ月', savings: '17% お得', recommended: true },
+      { id: '6month', label: '6ヶ月', price: '$134.99', period: '/6ヶ月', savings: '25% お得', recommended: false },
+      { id: 'yearly', label: '年額', price: '$215.99', period: '/年', savings: '40% お得 🌸', recommended: false },
     ],
     subscribe: '登録する',
     loading: '処理中...',
@@ -27,11 +28,12 @@ const translations = {
   en: {
     title: 'Get Premium Access',
     subtitle: 'Start messaging with Japanese women',
+    recommendedLabel: 'Popular',
     plans: [
-      { id: 'monthly', label: 'Monthly', price: '$29.99', period: '/mo', savings: '' },
-      { id: '3month', label: '3 Months', price: '$74.99', period: '/3mo', savings: 'Save 17%' },
-      { id: '6month', label: '6 Months', price: '$134.99', period: '/6mo', savings: 'Save 25%' },
-      { id: 'yearly', label: 'Annual', price: '$215.99', period: '/yr', savings: 'Save 40% 🌸' },
+      { id: 'monthly', label: 'Monthly', price: '$29.99', period: '/mo', savings: '', recommended: false },
+      { id: '3month', label: '3 Months', price: '$74.99', period: '/3mo', savings: 'Save 17%', recommended: true },
+      { id: '6month', label: '6 Months', price: '$134.99', period: '/6mo', savings: 'Save 25%', recommended: false },
+      { id: 'yearly', label: 'Annual', price: '$215.99', period: '/yr', savings: 'Save 40% 🌸', recommended: false },
     ],
     subscribe: 'Subscribe',
     loading: 'Processing...',
@@ -42,11 +44,12 @@ const translations = {
   ko: {
     title: '프리미엄 플랜 가입',
     subtitle: '일본 여성과 메시지를 나눠보세요',
+    recommendedLabel: '추천',
     plans: [
-      { id: 'monthly', label: '월간', price: '$29.99', period: '/월', savings: '' },
-      { id: '3month', label: '3개월', price: '$74.99', period: '/3개월', savings: '17% 절약' },
-      { id: '6month', label: '6개월', price: '$134.99', period: '/6개월', savings: '25% 절약' },
-      { id: 'yearly', label: '연간', price: '$215.99', period: '/년', savings: '40% 절약 🌸' },
+      { id: 'monthly', label: '월간', price: '$29.99', period: '/월', savings: '', recommended: false },
+      { id: '3month', label: '3개월', price: '$74.99', period: '/3개월', savings: '17% 절약', recommended: true },
+      { id: '6month', label: '6개월', price: '$134.99', period: '/6개월', savings: '25% 절약', recommended: false },
+      { id: 'yearly', label: '연간', price: '$215.99', period: '/년', savings: '40% 절약 🌸', recommended: false },
     ],
     subscribe: '가입하기',
     loading: '처리 중...',
@@ -57,11 +60,12 @@ const translations = {
   'zh-tw': {
     title: '加入高級方案',
     subtitle: '開始與日本女性傳送訊息',
+    recommendedLabel: '推薦',
     plans: [
-      { id: 'monthly', label: '月繳', price: '$29.99', period: '/月', savings: '' },
-      { id: '3month', label: '3個月', price: '$74.99', period: '/3個月', savings: '省17%' },
-      { id: '6month', label: '6個月', price: '$134.99', period: '/6個月', savings: '省25%' },
-      { id: 'yearly', label: '年繳', price: '$215.99', period: '/年', savings: '省40% 🌸' },
+      { id: 'monthly', label: '月繳', price: '$29.99', period: '/月', savings: '', recommended: false },
+      { id: '3month', label: '3個月', price: '$74.99', period: '/3個月', savings: '省17%', recommended: true },
+      { id: '6month', label: '6個月', price: '$134.99', period: '/6個月', savings: '省25%', recommended: false },
+      { id: 'yearly', label: '年繳', price: '$215.99', period: '/年', savings: '省40% 🌸', recommended: false },
     ],
     subscribe: '立即訂閱',
     loading: '處理中...',
@@ -74,7 +78,7 @@ const translations = {
 export default function SubscriptionModal({ isOpen, onClose }: Props) {
   const { currentLanguage } = useLanguage()
   const t = translations[currentLanguage as keyof typeof translations] || translations.en
-  const [selectedPlan, setSelectedPlan] = useState('yearly')
+  const [selectedPlan, setSelectedPlan] = useState('3month')
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null
@@ -121,6 +125,11 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
               <div className="text-left">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-900">{plan.label}</span>
+                  {plan.recommended && (
+                    <span className="text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 rounded-full font-medium">
+                      {t.recommendedLabel}
+                    </span>
+                  )}
                   {plan.savings && (
                     <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">
                       {plan.savings}

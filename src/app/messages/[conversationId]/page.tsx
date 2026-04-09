@@ -11,6 +11,7 @@ import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscription } from '@/hooks/useSubscription'
 import SubscriptionModal from '@/components/SubscriptionModal'
+import RequirementsModal from '@/components/RequirementsModal'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -129,7 +130,7 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isVerified, setIsVerified] = useState<boolean>(true) // trueで初期化してフラッシュを防ぐ
   const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
-  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [showRequirementsModal, setShowRequirementsModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [userProfile, setUserProfile] = useState<{ gender: string; nationality: string } | null>(null)
 
@@ -434,14 +435,9 @@ export default function ChatPage() {
   const isForeignMale = userProfile?.gender === 'male' && !isJapanesePerson(userProfile?.nationality)
 
   const handleSend = async () => {
-    // 未認証の場合はポップアップを表示（身分確認が先）
-    if (!isVerified) {
-      setShowVerificationModal(true)
-      return
-    }
-    // 外国人男性かつ未課金の場合はサブスクリプションモーダルを表示
-    if (isForeignMale && isSubscribed === false) {
-      setShowSubscriptionModal(true)
+    // 外国人男性の場合は身分確認・課金の両方をチェックして統合モーダルを表示
+    if (isForeignMale && (!isVerified || isSubscribed === false)) {
+      setShowRequirementsModal(true)
       return
     }
     if (!newMessage.trim() || isSending) return
@@ -948,42 +944,23 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* 統合要件モーダル（身分確認 + サブスクリプション） */}
+      <RequirementsModal
+        isOpen={showRequirementsModal}
+        onClose={() => setShowRequirementsModal(false)}
+        isVerified={isVerified}
+        isSubscribed={isSubscribed ?? false}
+        onSelectPlan={() => {
+          setShowRequirementsModal(false)
+          setShowSubscriptionModal(true)
+        }}
+      />
+
       {/* サブスクリプションモーダル */}
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
       />
-
-      {/* 年齢確認モーダル */}
-      {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <div className="text-center mb-4">
-              <span className="text-5xl">🔒</span>
-            </div>
-            <h2 className="text-lg font-bold text-center mb-2">
-              {t('modalTitle')}
-            </h2>
-            <p className="text-sm text-gray-500 text-center mb-6">
-              {t('modalDesc')}
-            </p>
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/verification"
-                className="w-full bg-sakura-500 text-white text-center py-3 rounded-full font-medium hover:bg-sakura-600 transition-colors"
-              >
-                {t('modalButton')}
-              </Link>
-              <button
-                onClick={() => setShowVerificationModal(false)}
-                className="w-full text-gray-400 py-2 text-sm hover:text-gray-600 transition-colors"
-              >
-                {t('modalCancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
