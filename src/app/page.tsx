@@ -1,190 +1,170 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 
-// ─── 翻訳 ────────────────────────────────────────────────────────────────────
+// ─── 翻訳（全面改訂版） ──────────────────────────────────────────────────────
 const T = {
   ja: {
-    nav: { howItWorks: '使い方', safety: '安全への取り組み', login: 'ログイン', signup: '新規登録' },
-    heroEn: 'Where Japan meets love.',
-    heroJa: '日本と恋が出会う場所。',
-    subEn: 'Fall for Japan. Fall for her.',
-    subJa: '日本に恋をする。そして、彼女に恋をする。',
+    nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'ログイン', signup: 'Join Free' },
+    heroMain: '本物の日本は、本物の出会いから始まる。',
+    heroSub: '彼女がドアを開けてくれる。あとは日本が語りかけてくる。',
     ctaWomen: '女性として無料登録',
     ctaMen: '外国人男性として登録',
-    forMenTag: '外国人男性の方へ',
-    forMenTitle: '日本に恋をする。\nそして、彼女に恋をする。',
-    forMenBody: 'プロのガイドではなく、一人の日本人女性があなただけの日本へ連れて行ってくれる。SNSでは見つけられない場所で、予期せぬ恋が始まるかもしれない。',
-    forMenBtn: 'Get Started',
-    forWomenTag: '日本人女性の方へ',
-    forWomenTitle: 'あなたの日本が、\n彼にとって特別な場所になる。',
-    forWomenBody: 'プロのガイドじゃなくていい。あなたの好きな場所、あなたの日常が、一人の外国人の心を動かす。そして、それがあなた自身のときめきになる。',
-    forWomenBtn: '無料で始める',
-    howTitle: '出会いまでの3ステップ',
-    step1: 'プロフィール作成',
-    step1Sub: 'Create your profile',
-    step2: 'マッチング＆発見',
-    step2Sub: 'Discover your match',
-    step3: 'メッセージ＆出会い',
-    step3Sub: 'Start your Japan story',
-    whyTitle: 'ガイドブックには\n載っていない日本が、ここにある。',
-    whyEn: 'The Japan no guidebook can show you.',
-    feat1Title: '本人確認済み',
-    feat1Desc: 'AI審査で安全・安心\nVerified & Safe',
-    feat2Title: '多言語対応',
-    feat2Desc: '日英韓繁体字に対応\n4 Languages',
-    feat3Title: '翻訳機能内蔵',
-    feat3Desc: '言語の壁を超えて\nBuilt-in Translation',
-    feat4Title: '文化交流',
-    feat4Desc: '本物の日本体験\nAuthentic Japan',
-    planTitle: 'あなたの日本物語を始めよう',
-    planEn: 'Start Your Japan Story',
-    planMonthly: '月額',
-    plan3month: '3ヶ月',
-    plan6month: '6ヶ月',
-    planYearly: '年額',
-    planPopular: 'おすすめ',
-    planFreeNote: '日本人女性は完全無料でご利用いただけます',
-    ctaFinalEn: 'Your Japan story starts here.',
-    ctaFinalJa: 'あなたの日本物語は、ここから始まる。',
+    menTag: '外国人男性の方へ',
+    menTitle: '日本を通り過ぎるだけじゃもったいない。\n彼女に、日本の中へ連れて行ってもらおう。',
+    menSub: '一つの出会いから。たくさんの日本が、見えてくる。',
+    menBody: '観光地では出会えない日本がある。地元の食事、静かな神社、何気ない日常の風景。彼女と一緒だから、初めて見えてくるものがある。',
+    menCta: '登録する',
+    womenTag: '日本人女性の方へ',
+    womenTitle: '日本に興味を持ってくれた彼を、\nあなたの手で迎え入れよう。',
+    womenSub: 'おもてなしの心で、彼と繋がろう。',
+    womenBody: 'プロのガイドじゃなくていい。あなたの日本を、彼と分かち合って。彼はあなたの日常に興味を持っている。それだけで十分特別。',
+    womenCta: '無料で始める',
+    howTitle: '出会いから、日本体験へ。',
+    step1Title: 'プロフィールを作成',
+    step1Body: 'あなたのことを教えてください。好きな場所、興味のある文化、大切にしていること。',
+    step2Title: '出会いを見つける',
+    step2Body: '日本に興味を持つ外国人男性と、迎え入れたい日本人女性が出会う場所。',
+    step3Title: '本物の日本を体験する',
+    step3Body: '彼女を通して、日本はただの旅先以上のものになる。',
+    whyTitle: '本物の日本は、本物の出会いから始まる。',
+    feature1Title: '安心・安全',
+    feature1Body: 'AI審査で身元確認。安心して出会える環境を整えています。',
+    feature2Title: '4言語対応',
+    feature2Body: '日本語・英語・韓国語・繁体字中国語対応。言語が違っても、気持ちは伝わる。',
+    feature3Title: '翻訳機能内蔵',
+    feature3Body: 'メッセージを送る前に翻訳確認。あなたの言葉で、彼・彼女に届けよう。',
+    feature4Title: '文化交流',
+    feature4Body: '観光地じゃない。地元の人が愛する日本を、一緒に。',
+    planTitle: 'あなたの日本物語を、始めよう。',
+    planFree: '日本人女性は、完全無料。',
+    planSub: '一つの出会いから。たくさんの日本が、見えてくる。',
+    planMonthly: '月額', plan3month: '3ヶ月', plan6month: '6ヶ月', planYearly: '年額', planPopular: 'おすすめ',
+    ctaTitle: '本物の日本は、本物の出会いから始まる。',
+    ctaSub: '日本を愛してくれた彼を、あなたの日本へ。',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   en: {
-    nav: { howItWorks: 'How It Works', safety: 'Safety', login: 'Login', signup: 'Sign Up' },
-    heroEn: 'Where Japan meets love.',
-    heroJa: 'The place where Japan and love come together.',
-    subEn: 'Fall for Japan. Fall for her.',
-    subJa: 'Fall in love with Japan. Fall in love with her.',
+    nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'Login', signup: 'Join Free' },
+    heroMain: 'The real Japan begins with a real connection.',
+    heroSub: 'She opens the door. Japan does the rest.',
     ctaWomen: 'Join Free as a Woman',
     ctaMen: 'Join as a Man',
-    forMenTag: 'For Foreign Men',
-    forMenTitle: 'Fall for Japan.\nFall for her.',
-    forMenBody: "Not a professional guide — a real Japanese woman who'll take you to her Japan. In places no tourist finds. Where unexpected love begins.",
-    forMenBtn: 'Get Started',
-    forWomenTag: 'For Japanese Women',
-    forWomenTitle: 'Your Japan becomes\nhis favorite place.',
-    forWomenBody: "You don't need to be a guide. Your favorite places, your everyday life — they move a foreigner's heart. And that becomes your own excitement.",
-    forWomenBtn: 'Join Free',
-    howTitle: '3 Simple Steps',
-    step1: 'Create Profile',
-    step1Sub: 'プロフィール作成',
-    step2: 'Discover & Match',
-    step2Sub: 'マッチング＆発見',
-    step3: 'Message & Meet',
-    step3Sub: 'メッセージ＆出会い',
-    whyTitle: 'The Japan no guidebook\ncan show you.',
-    whyEn: 'ガイドブックには載っていない日本が、ここにある。',
-    feat1Title: 'Verified Members',
-    feat1Desc: 'AI-powered ID verification\n本人確認済み',
-    feat2Title: '4 Languages',
-    feat2Desc: 'JA · EN · KO · ZH-TW\n多言語対応',
-    feat3Title: 'Built-in Translation',
-    feat3Desc: 'No language barrier\n翻訳機能内蔵',
-    feat4Title: 'Authentic Japan',
-    feat4Desc: 'Real cultural experiences\n文化交流',
-    planTitle: 'Start Your Japan Story',
-    planEn: 'あなたの日本物語を始めよう',
-    planMonthly: 'Monthly',
-    plan3month: '3 Months',
-    plan6month: '6 Months',
-    planYearly: 'Annual',
-    planPopular: 'Popular',
-    planFreeNote: 'Japanese women join completely free',
-    ctaFinalEn: 'Your Japan story starts here.',
-    ctaFinalJa: 'あなたの日本物語は、ここから始まる。',
+    menTag: 'For Foreign Men',
+    menTitle: "Don't just pass through Japan.\nLet her bring you into it.",
+    menSub: 'One encounter. A world of Japan to discover.',
+    menBody: "There's a Japan you can't find on tourist maps. Local food, quiet shrines, everyday moments. With her beside you, Japan reveals itself.",
+    menCta: 'Get Started',
+    womenTag: 'For Japanese Women',
+    womenTitle: 'Welcome him — someone who cherishes Japan\n— with your own hands.',
+    womenSub: 'Connect with him through the spirit of omotenashi.',
+    womenBody: "You don't need to be a guide. Just share your Japan with him. He's curious about your everyday life. That's already something special.",
+    womenCta: 'Join Free',
+    howTitle: 'From connection to experience.',
+    step1Title: 'Create Your Profile',
+    step1Body: 'Tell us about yourself. Your favorite places, your culture, what matters to you.',
+    step2Title: 'Find Your Connection',
+    step2Body: 'Where foreign men who love Japan meet Japanese women who want to welcome them.',
+    step3Title: 'Experience Real Japan',
+    step3Body: 'Through her, Japan becomes more than a destination.',
+    whyTitle: 'The real Japan begins with a real connection.',
+    feature1Title: 'Verified & Safe',
+    feature1Body: 'AI-powered identity verification for a safe and trusted experience.',
+    feature2Title: '4 Languages',
+    feature2Body: 'Japanese, English, Korean, Traditional Chinese. Feelings translate themselves.',
+    feature3Title: 'Built-in Translation',
+    feature3Body: 'Preview your message before sending. Your words, delivered naturally.',
+    feature4Title: 'Authentic Japan',
+    feature4Body: "Not tourist spots. The Japan locals love — shared between two people.",
+    planTitle: 'Start Your Japan Story.',
+    planFree: "For women, it's always free.",
+    planSub: 'One encounter. A world of Japan to discover.',
+    planMonthly: 'Monthly', plan3month: '3 Months', plan6month: '6 Months', planYearly: 'Annual', planPopular: 'Popular',
+    ctaTitle: 'The real Japan begins with a real connection.',
+    ctaSub: 'Welcome him — the one who fell in love with Japan — into your Japan.',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   ko: {
-    nav: { howItWorks: '이용 방법', safety: '안전', login: '로그인', signup: '회원가입' },
-    heroEn: 'Where Japan meets love.',
-    heroJa: '일본과 사랑이 만나는 곳.',
-    subEn: 'Fall for Japan. Fall for her.',
-    subJa: '일본에 반하다. 그녀에게 반하다.',
+    nav: { howItWorks: '이용 방법', safety: 'Safety & Trust', login: '로그인', signup: '무료 가입' },
+    heroMain: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    heroSub: '그녀가 문을 열어줍니다. 나머지는 일본이 말해줍니다.',
     ctaWomen: '여성으로 무료 가입',
-    ctaMen: '외국인 남성으로 가입',
-    forMenTag: '외국인 남성 분들께',
-    forMenTitle: '일본에 반하다.\n그녀에게 반하다.',
-    forMenBody: '전문 가이드가 아닌, 한 명의 일본 여성이 당신만의 일본으로 데려가 줍니다. SNS에서는 찾을 수 없는 장소에서, 예상치 못한 사랑이 시작될지도 모릅니다.',
-    forMenBtn: 'Get Started',
-    forWomenTag: '일본인 여성 분들께',
-    forWomenTitle: '당신의 일본이\n그에게 특별한 장소가 됩니다.',
-    forWomenBody: '전문 가이드가 아니어도 됩니다. 당신이 좋아하는 장소, 당신의 일상이 한 외국인의 마음을 움직입니다. 그리고 그것이 당신 자신의 설렘이 됩니다.',
-    forWomenBtn: '무료로 시작',
-    howTitle: '3단계로 시작',
-    step1: '프로필 만들기',
-    step1Sub: 'Create Profile',
-    step2: '매칭 & 발견',
-    step2Sub: 'Discover & Match',
-    step3: '메시지 & 만남',
-    step3Sub: 'Message & Meet',
-    whyTitle: '가이드북에는 없는\n일본이 여기에 있습니다.',
-    whyEn: 'The Japan no guidebook can show you.',
-    feat1Title: '본인 확인 완료',
-    feat1Desc: 'AI 심사로 안심·안전\nVerified & Safe',
-    feat2Title: '다국어 지원',
-    feat2Desc: '일영한중(번체)에 대응\n4 Languages',
-    feat3Title: '번역 기능 내장',
-    feat3Desc: '언어 장벽 없이 소통\nBuilt-in Translation',
-    feat4Title: '문화 교류',
-    feat4Desc: '진짜 일본 체험\nAuthentic Japan',
-    planTitle: '당신의 일본 이야기를 시작하세요',
-    planEn: 'Start Your Japan Story',
-    planMonthly: '월간',
-    plan3month: '3개월',
-    plan6month: '6개월',
-    planYearly: '연간',
-    planPopular: '추천',
-    planFreeNote: '일본인 여성은 완전 무료로 이용 가능합니다',
-    ctaFinalEn: 'Your Japan story starts here.',
-    ctaFinalJa: '당신의 일본 이야기는 여기서 시작됩니다.',
+    ctaMen: '남성으로 가입',
+    menTag: '외국인 남성 분들께',
+    menTitle: '일본을 그냥 지나치지 마세요.\n그녀가 일본 안으로 데려가 줄 거예요.',
+    menSub: '하나의 만남에서. 수많은 일본이 보이기 시작합니다.',
+    menBody: '관광지에서는 만날 수 없는 일본이 있습니다. 현지 음식, 조용한 신사, 일상의 풍경. 그녀와 함께이기에 처음으로 보이는 것들이 있습니다.',
+    menCta: '시작하기',
+    womenTag: '일본인 여성 분들께',
+    womenTitle: '일본을 사랑해준 그를\n당신의 손으로 맞이해보세요.',
+    womenSub: '오모테나시의 마음으로 그와 연결되세요.',
+    womenBody: '전문 가이드가 아니어도 됩니다. 당신의 일본을 그와 나눠보세요. 그는 당신의 일상에 관심을 갖고 있습니다. 그것만으로도 충분히 특별합니다.',
+    womenCta: '무료로 시작하기',
+    howTitle: '만남에서 일본 체험으로.',
+    step1Title: '프로필 만들기',
+    step1Body: '당신에 대해 알려주세요. 좋아하는 장소, 관심 있는 문화, 소중히 여기는 것들.',
+    step2Title: '만남 찾기',
+    step2Body: '일본을 사랑하는 외국인 남성과 그를 맞이하고 싶은 일본 여성이 만나는 곳.',
+    step3Title: '진짜 일본 체험하기',
+    step3Body: '그녀를 통해 일본은 단순한 여행지 그 이상이 됩니다.',
+    whyTitle: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    feature1Title: '안심 · 안전',
+    feature1Body: 'AI 심사로 신원 확인. 안심하고 만날 수 있는 환경.',
+    feature2Title: '4개 언어 지원',
+    feature2Body: '일본어·영어·한국어·번체 중국어 지원. 언어가 달라도 마음은 전해집니다.',
+    feature3Title: '번역 기능 내장',
+    feature3Body: '메시지 전송 전 번역 확인. 당신의 말을 자연스럽게 전달.',
+    feature4Title: '문화 교류',
+    feature4Body: '관광지가 아닌, 현지인이 사랑하는 일본을 함께.',
+    planTitle: '당신의 일본 이야기를 시작하세요.',
+    planFree: '여성은 완전 무료입니다.',
+    planSub: '하나의 만남에서. 수많은 일본이 보이기 시작합니다.',
+    planMonthly: '월간', plan3month: '3개월', plan6month: '6개월', planYearly: '연간', planPopular: '추천',
+    ctaTitle: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    ctaSub: '일본을 사랑해준 그를, 당신의 일본으로.',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   'zh-tw': {
-    nav: { howItWorks: '使用方式', safety: '安全保障', login: '登入', signup: '註冊' },
-    heroEn: 'Where Japan meets love.',
-    heroJa: '日本與愛相遇的地方。',
-    subEn: 'Fall for Japan. Fall for her.',
-    subJa: '愛上日本。愛上她。',
-    ctaWomen: '以女性身份免費註冊',
-    ctaMen: '以外國男性身份註冊',
-    forMenTag: '外國男性',
-    forMenTitle: '愛上日本。\n愛上她。',
-    forMenBody: '不是專業導遊，而是一位日本女性帶你去她的日本。在社群媒體找不到的地方，意想不到的愛情或許就此開始。',
-    forMenBtn: 'Get Started',
-    forWomenTag: '日本女性',
-    forWomenTitle: '你的日本，因為有你，\n成為他最特別的地方。',
-    forWomenBody: '不需要是專業導遊。你喜愛的地方、你的日常，都能打動一位外國人的心。這也將成為你自己的怦然心動。',
-    forWomenBtn: '免費開始',
-    howTitle: '三個簡單步驟',
-    step1: '建立個人檔案',
-    step1Sub: 'Create Profile',
-    step2: '探索與配對',
-    step2Sub: 'Discover & Match',
-    step3: '訊息與相遇',
-    step3Sub: 'Message & Meet',
-    whyTitle: '這裡有\n導覽書找不到的日本。',
-    whyEn: 'The Japan no guidebook can show you.',
-    feat1Title: '身份驗證完成',
-    feat1Desc: 'AI審查安心安全\nVerified & Safe',
-    feat2Title: '多語言支援',
-    feat2Desc: '日英韓繁四語對應\n4 Languages',
-    feat3Title: '內建翻譯功能',
-    feat3Desc: '跨越語言障礙\nBuilt-in Translation',
-    feat4Title: '文化交流',
-    feat4Desc: '體驗真正的日本\nAuthentic Japan',
-    planTitle: '開始你的日本故事',
-    planEn: 'Start Your Japan Story',
-    planMonthly: '月繳',
-    plan3month: '3個月',
-    plan6month: '6個月',
-    planYearly: '年繳',
-    planPopular: '推薦',
-    planFreeNote: '日本女性完全免費使用',
-    ctaFinalEn: 'Your Japan story starts here.',
-    ctaFinalJa: '你的日本故事從這裡開始。',
+    nav: { howItWorks: '使用方式', safety: 'Safety & Trust', login: '登入', signup: '免費加入' },
+    heroMain: '真實的日本，從真實的相遇開始。',
+    heroSub: '她為你開啟了門。日本會為你說完剩下的故事。',
+    ctaWomen: '以女性身份免費加入',
+    ctaMen: '以男性身份加入',
+    menTag: '外國男性',
+    menTitle: '別只是路過日本。\n讓她帶你走進真正的日本。',
+    menSub: '一次相遇。無數個日本等你發現。',
+    menBody: '有一個日本，是旅遊景點找不到的。當地美食、寧靜神社、日常風景。因為有她在身邊，日本才真正展現自己。',
+    menCta: '立即開始',
+    womenTag: '日本女性',
+    womenTitle: '用你的雙手，\n迎接那個愛上日本的他。',
+    womenSub: '以款待之心與他連結。',
+    womenBody: '不需要是專業導遊。只需將你的日本與他分享。他對你的日常生活感到好奇，這本身就已經很特別了。',
+    womenCta: '免費加入',
+    howTitle: '從相遇到體驗日本。',
+    step1Title: '建立個人檔案',
+    step1Body: '告訴我們關於你的事。喜愛的地方、感興趣的文化、珍視的事物。',
+    step2Title: '尋找緣分',
+    step2Body: '熱愛日本的外國男性，與想要迎接他們的日本女性相遇的地方。',
+    step3Title: '體驗真實的日本',
+    step3Body: '透過她，日本不再只是一個目的地。',
+    whyTitle: '真實的日本，從真實的相遇開始。',
+    feature1Title: '安心・安全',
+    feature1Body: 'AI審核身份驗證。為您打造安心的相遇環境。',
+    feature2Title: '4種語言支援',
+    feature2Body: '日語・英語・韓語・繁體中文。語言不同，心意自然傳達。',
+    feature3Title: '內建翻譯功能',
+    feature3Body: '傳送前確認翻譯。讓你的話自然地傳遞給對方。',
+    feature4Title: '文化交流',
+    feature4Body: '不是觀光景點。而是當地人所愛的日本，兩人一同分享。',
+    planTitle: '開始你的日本故事。',
+    planFree: '女性永久免費。',
+    planSub: '一次相遇。無數個日本等你發現。',
+    planMonthly: '月繳', plan3month: '3個月', plan6month: '6個月', planYearly: '年繳', planPopular: '推薦',
+    ctaTitle: '真實的日本，從真實的相遇開始。',
+    ctaSub: '將那個愛上日本的他，迎入你的日本。',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
 }
@@ -193,18 +173,15 @@ const T = {
 function BambooSVG({ className = '' }: { className?: string }) {
   return (
     <svg viewBox="0 0 80 320" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* 竹1本目 */}
       <rect x="12" y="0" width="8" height="320" rx="4" fill="#1A1A2E" fillOpacity="0.15" />
       <rect x="11" y="60" width="10" height="4" rx="2" fill="#1A1A2E" fillOpacity="0.2" />
       <rect x="11" y="130" width="10" height="4" rx="2" fill="#1A1A2E" fillOpacity="0.2" />
       <rect x="11" y="200" width="10" height="4" rx="2" fill="#1A1A2E" fillOpacity="0.2" />
       <rect x="11" y="270" width="10" height="4" rx="2" fill="#1A1A2E" fillOpacity="0.2" />
-      {/* 竹2本目 */}
       <rect x="36" y="40" width="7" height="280" rx="3" fill="#1A1A2E" fillOpacity="0.1" />
       <rect x="35" y="100" width="9" height="3" rx="1.5" fill="#1A1A2E" fillOpacity="0.15" />
       <rect x="35" y="180" width="9" height="3" rx="1.5" fill="#1A1A2E" fillOpacity="0.15" />
       <rect x="35" y="260" width="9" height="3" rx="1.5" fill="#1A1A2E" fillOpacity="0.15" />
-      {/* 葉 */}
       <ellipse cx="20" cy="55" rx="14" ry="5" transform="rotate(-35 20 55)" fill="#1A1A2E" fillOpacity="0.12" />
       <ellipse cx="24" cy="125" rx="14" ry="5" transform="rotate(30 24 125)" fill="#1A1A2E" fillOpacity="0.12" />
       <ellipse cx="40" cy="95" rx="12" ry="4" transform="rotate(-25 40 95)" fill="#1A1A2E" fillOpacity="0.1" />
@@ -226,11 +203,8 @@ function SakuraSVG({ className = '', color = '#8B2040' }: { className?: string; 
   return (
     <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       {[0, 72, 144, 216, 288].map((deg, i) => (
-        <ellipse key={i}
-          cx="50" cy="30" rx="10" ry="18"
-          fill={color} fillOpacity="0.85"
-          transform={`rotate(${deg} 50 50)`}
-        />
+        <ellipse key={i} cx="50" cy="30" rx="10" ry="18"
+          fill={color} fillOpacity="0.85" transform={`rotate(${deg} 50 50)`} />
       ))}
       <circle cx="50" cy="50" r="7" fill={color} fillOpacity="0.5" />
     </svg>
@@ -248,6 +222,8 @@ function useScrollFade() {
     return () => io.disconnect()
   }, [])
 }
+
+type Translations = typeof T.ja
 
 // ─── メインコンポーネント ─────────────────────────────────────────────────────
 export default function LandingPage() {
@@ -270,7 +246,6 @@ export default function LandingPage() {
 }
 
 // ─── ナビゲーション ───────────────────────────────────────────────────────────
-type Translations = typeof T.ja
 function Nav({ t }: { t: Translations }) {
   const [open, setOpen] = useState(false)
 
@@ -278,13 +253,10 @@ function Nav({ t }: { t: Translations }) {
     <header style={{ backgroundColor: 'var(--color-washi)', borderBottom: '1px solid var(--color-gold)' }}
       className="sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* ロゴ */}
         <Link href="/" className="font-cormorant text-2xl font-light tracking-widest"
           style={{ color: 'var(--color-sumi)' }}>
           SAKURA CLUB
         </Link>
-
-        {/* デスクトップナビ */}
         <nav className="hidden md:flex items-center gap-8">
           <a href="#how" className="text-sm tracking-wide transition-opacity hover:opacity-60"
             style={{ color: 'var(--color-usuzumi)' }}>{t.nav.howItWorks}</a>
@@ -296,22 +268,18 @@ function Nav({ t }: { t: Translations }) {
           <Link href="/signup" className="text-sm px-5 py-2 rounded-full text-white transition-opacity hover:opacity-80"
             style={{ backgroundColor: 'var(--color-beni)' }}>{t.nav.signup}</Link>
         </nav>
-
-        {/* モバイルハンバーガー */}
         <button className="md:hidden p-2" onClick={() => setOpen(!open)}
           style={{ color: 'var(--color-sumi)' }}>
           <span className="text-xl">{open ? '✕' : '☰'}</span>
         </button>
       </div>
-
       {open && (
         <div className="md:hidden px-6 pb-6 space-y-4" style={{ backgroundColor: 'var(--color-washi)' }}>
           <a href="#how" className="block text-sm" style={{ color: 'var(--color-usuzumi)' }}>{t.nav.howItWorks}</a>
           <a href="#why" className="block text-sm" style={{ color: 'var(--color-usuzumi)' }}>{t.nav.safety}</a>
           <div className="pt-2"><LanguageSelector variant="light" size="sm" showIcon={false} /></div>
           <Link href="/login" className="block text-sm" style={{ color: 'var(--color-sumi)' }}>{t.nav.login}</Link>
-          <Link href="/signup"
-            className="block text-sm text-center py-2 rounded-full text-white"
+          <Link href="/signup" className="block text-sm text-center py-2 rounded-full text-white"
             style={{ backgroundColor: 'var(--color-beni)' }}>{t.nav.signup}</Link>
         </div>
       )}
@@ -324,28 +292,25 @@ function HeroSection({ t }: { t: Translations }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: 'var(--color-washi)' }}>
-
       {/* 竹装飾・左 */}
       <div className="absolute left-0 top-0 h-full w-24 opacity-40 pointer-events-none animate-bamboo">
         <BambooSVG className="h-full w-full" />
       </div>
       {/* 竹装飾・右（反転） */}
-      <div className="absolute right-0 top-0 h-full w-24 opacity-30 pointer-events-none animate-bamboo" style={{ animationDelay: '0.5s', transform: 'scaleX(-1)' }}>
+      <div className="absolute right-0 top-0 h-full w-24 opacity-30 pointer-events-none animate-bamboo"
+        style={{ animationDelay: '0.5s', transform: 'scaleX(-1)' }}>
         <BambooSVG className="h-full w-full" />
       </div>
-
       {/* 円相・右下 */}
       <div className="absolute bottom-8 right-8 w-48 h-48 opacity-10 pointer-events-none">
         <EnsoSVG className="w-full h-full" />
       </div>
-
-      {/* 「桜」装飾文字・左上 */}
+      {/* 「桜」装飾文字 */}
       <div className="absolute top-8 left-16 font-serif-jp text-8xl md:text-9xl pointer-events-none select-none"
         style={{ color: 'var(--color-beni)', opacity: 0.07, lineHeight: 1 }}>
         桜
       </div>
-
-      {/* 金ライン・右下 */}
+      {/* 金ライン */}
       <div className="absolute bottom-16 right-12 w-24 h-px pointer-events-none"
         style={{ backgroundColor: 'var(--color-gold)' }} />
       <div className="absolute bottom-12 right-8 w-12 h-px pointer-events-none"
@@ -353,32 +318,20 @@ function HeroSection({ t }: { t: Translations }) {
 
       {/* コンテンツ */}
       <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-        {/* 英語キャッチ */}
+        {/* メインキャッチ */}
         <p className="font-cormorant italic text-4xl md:text-6xl animate-fade-in"
           style={{ color: 'var(--color-sumi)', letterSpacing: '0.02em' }}>
-          {t.heroEn}
-        </p>
-
-        {/* 日本語サブ */}
-        <p className="font-serif-jp text-base md:text-lg mt-3 animate-fade-up animate-delay-200"
-          style={{ color: 'var(--color-usuzumi)' }}>
-          {t.heroJa}
+          {t.heroMain}
         </p>
 
         {/* 区切り線 */}
-        <div className="w-20 h-px mx-auto my-8 animate-fade-up animate-delay-400"
+        <div className="w-20 h-px mx-auto my-8 animate-fade-up animate-delay-200"
           style={{ backgroundColor: 'var(--color-gold)' }} />
 
-        {/* サブコピー英語 */}
-        <p className="font-cormorant text-2xl md:text-3xl animate-fade-up animate-delay-400"
+        {/* サブコピー */}
+        <p className="font-serif-jp text-base md:text-lg animate-fade-up animate-delay-400"
           style={{ color: 'var(--color-beni)' }}>
-          {t.subEn}
-        </p>
-
-        {/* サブコピー日本語 */}
-        <p className="font-serif-jp text-sm mt-2 animate-fade-up animate-delay-600"
-          style={{ color: 'var(--color-usuzumi)' }}>
-          {t.subJa}
+          {t.heroSub}
         </p>
 
         {/* CTAボタン */}
@@ -403,7 +356,7 @@ function HeroSection({ t }: { t: Translations }) {
 function SplitSection({ t }: { t: Translations }) {
   return (
     <section className="scroll-fade">
-      <div className="flex flex-col md:flex-row min-h-[480px]">
+      <div className="flex flex-col md:flex-row min-h-[520px]">
         {/* 左：外国人男性 */}
         <div className="flex-1 relative flex flex-col justify-center px-10 py-16"
           style={{ backgroundColor: 'rgba(74,103,65,0.07)' }}>
@@ -411,24 +364,29 @@ function SplitSection({ t }: { t: Translations }) {
             <BambooSVG className="w-12 h-32" />
           </div>
           <span className="font-serif-jp text-xs tracking-widest mb-4"
-            style={{ color: 'var(--color-take)' }}>{t.forMenTag}</span>
-          <h2 className="font-cormorant text-3xl md:text-4xl leading-tight whitespace-pre-line mb-6"
+            style={{ color: 'var(--color-take)' }}>{t.menTag}</span>
+          <h2 className="font-cormorant text-3xl md:text-4xl leading-tight whitespace-pre-line mb-3"
             style={{ color: 'var(--color-sumi)' }}>
-            {t.forMenTitle}
+            {t.menTitle}
           </h2>
+          <p className="font-cormorant italic text-base mb-5"
+            style={{ color: 'var(--color-beni)' }}>
+            {t.menSub}
+          </p>
           <p className="text-sm leading-relaxed mb-8 max-w-sm"
             style={{ color: 'var(--color-usuzumi)' }}>
-            {t.forMenBody}
+            {t.menBody}
           </p>
           <Link href="/signup?gender=male"
             className="inline-block w-fit px-7 py-3 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-80"
             style={{ backgroundColor: 'var(--color-beni)' }}>
-            {t.forMenBtn}
+            {t.menCta}
           </Link>
         </div>
 
         {/* 区切り線 */}
-        <div className="hidden md:block w-px self-stretch my-8" style={{ backgroundColor: 'var(--color-gold)', opacity: 0.4 }} />
+        <div className="hidden md:block w-px self-stretch my-8"
+          style={{ backgroundColor: 'var(--color-gold)', opacity: 0.4 }} />
 
         {/* 右：日本人女性 */}
         <div className="flex-1 relative flex flex-col justify-center px-10 py-16"
@@ -437,19 +395,23 @@ function SplitSection({ t }: { t: Translations }) {
             <SakuraSVG className="w-14 h-14" color="var(--color-beni)" />
           </div>
           <span className="font-serif-jp text-xs tracking-widest mb-4"
-            style={{ color: 'var(--color-beni)' }}>{t.forWomenTag}</span>
-          <h2 className="font-serif-jp text-2xl md:text-3xl leading-relaxed whitespace-pre-line mb-6"
+            style={{ color: 'var(--color-beni)' }}>{t.womenTag}</span>
+          <h2 className="font-serif-jp text-2xl md:text-3xl leading-relaxed whitespace-pre-line mb-3"
             style={{ color: 'var(--color-sumi)' }}>
-            {t.forWomenTitle}
+            {t.womenTitle}
           </h2>
+          <p className="font-cormorant italic text-base mb-5"
+            style={{ color: 'var(--color-beni)' }}>
+            {t.womenSub}
+          </p>
           <p className="text-sm leading-relaxed mb-8 max-w-sm"
             style={{ color: 'var(--color-usuzumi)' }}>
-            {t.forWomenBody}
+            {t.womenBody}
           </p>
           <Link href="/signup?gender=female"
             className="inline-block w-fit px-7 py-3 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-80"
             style={{ backgroundColor: 'var(--color-beni)' }}>
-            {t.forWomenBtn}
+            {t.womenCta}
           </Link>
         </div>
       </div>
@@ -460,9 +422,9 @@ function SplitSection({ t }: { t: Translations }) {
 // ─── SECTION 3：How It Works ──────────────────────────────────────────────────
 function HowItWorksSection({ t }: { t: Translations }) {
   const steps = [
-    { num: '01', main: t.step1, sub: t.step1Sub, icon: '✦' },
-    { num: '02', main: t.step2, sub: t.step2Sub, icon: '✦' },
-    { num: '03', main: t.step3, sub: t.step3Sub, icon: '✦' },
+    { num: '01', eng: 'Create Your Profile', title: t.step1Title, body: t.step1Body },
+    { num: '02', eng: 'Find Your Connection',  title: t.step2Title, body: t.step2Body },
+    { num: '03', eng: 'Experience Real Japan', title: t.step3Title, body: t.step3Body },
   ]
   return (
     <section id="how" className="py-24 scroll-fade" style={{ backgroundColor: 'var(--color-sumi)' }}>
@@ -475,10 +437,11 @@ function HowItWorksSection({ t }: { t: Translations }) {
           {steps.map(s => (
             <div key={s.num} className="text-center">
               <div className="font-cormorant text-5xl mb-4" style={{ color: 'var(--color-gold)' }}>{s.num}</div>
-              {/* 水墨画風細線アイコン */}
-              <div className="w-px h-12 mx-auto mb-4" style={{ backgroundColor: 'var(--color-gold)', opacity: 0.4 }} />
-              <p className="font-serif-jp text-lg font-medium mb-1" style={{ color: '#fff' }}>{s.main}</p>
-              <p className="font-cormorant italic text-sm" style={{ color: 'var(--color-gold)', opacity: 0.8 }}>{s.sub}</p>
+              <div className="w-px h-10 mx-auto mb-4" style={{ backgroundColor: 'var(--color-gold)', opacity: 0.4 }} />
+              <p className="font-cormorant italic text-sm mb-2"
+                style={{ color: 'var(--color-gold)', opacity: 0.8 }}>{s.eng}</p>
+              <p className="font-serif-jp text-base font-medium mb-3" style={{ color: '#fff' }}>{s.title}</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.body}</p>
             </div>
           ))}
         </div>
@@ -490,17 +453,20 @@ function HowItWorksSection({ t }: { t: Translations }) {
 // ─── SECTION 4：Why SAKURA CLUB ───────────────────────────────────────────────
 function WhySection({ t }: { t: Translations }) {
   const features = [
-    { icon: '🪪', title: t.feat1Title, desc: t.feat1Desc },
-    { icon: '🌏', title: t.feat2Title, desc: t.feat2Desc },
-    { icon: '💬', title: t.feat3Title, desc: t.feat3Desc },
-    { icon: '🎋', title: t.feat4Title, desc: t.feat4Desc },
+    { icon: '🪪', title: t.feature1Title, body: t.feature1Body },
+    { icon: '🌏', title: t.feature2Title, body: t.feature2Body },
+    { icon: '💬', title: t.feature3Title, body: t.feature3Body },
+    { icon: '🎋', title: t.feature4Title, body: t.feature4Body },
   ]
   return (
     <section id="why" className="py-24 scroll-fade" style={{ backgroundColor: 'var(--color-washi)' }}>
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="font-cormorant italic text-base mb-2" style={{ color: 'var(--color-usuzumi)' }}>{t.whyEn}</p>
-          <h2 className="font-serif-jp text-2xl md:text-3xl whitespace-pre-line leading-relaxed"
+          <p className="font-cormorant italic text-base mb-2"
+            style={{ color: 'var(--color-usuzumi)' }}>
+            The real Japan begins with a real connection.
+          </p>
+          <h2 className="font-serif-jp text-2xl md:text-3xl"
             style={{ color: 'var(--color-sumi)' }}>{t.whyTitle}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -512,8 +478,8 @@ function WhySection({ t }: { t: Translations }) {
               <h3 className="font-serif-jp text-base font-semibold mb-2" style={{ color: 'var(--color-sumi)' }}>
                 {f.title}
               </h3>
-              <p className="text-xs leading-relaxed whitespace-pre-line" style={{ color: 'var(--color-usuzumi)' }}>
-                {f.desc}
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-usuzumi)' }}>
+                {f.body}
               </p>
             </div>
           ))}
@@ -534,11 +500,13 @@ function PricingSection({ t }: { t: Translations }) {
   return (
     <section className="py-24 scroll-fade" style={{ backgroundColor: 'rgba(74,103,65,0.05)' }}>
       <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-14">
-          <p className="font-cormorant italic text-base mb-2" style={{ color: 'var(--color-usuzumi)' }}>{t.planEn}</p>
-          <h2 className="font-serif-jp text-2xl md:text-3xl" style={{ color: 'var(--color-sumi)' }}>{t.planTitle}</h2>
+        <div className="text-center mb-4">
+          <h2 className="font-serif-jp text-2xl md:text-3xl mb-3" style={{ color: 'var(--color-sumi)' }}>
+            {t.planTitle}
+          </h2>
+          <p className="font-serif-jp text-sm" style={{ color: 'var(--color-beni)' }}>{t.planFree}</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 my-10">
           {plans.map(p => (
             <div key={p.key} className="relative rounded-xl p-5"
               style={{
@@ -552,7 +520,8 @@ function PricingSection({ t }: { t: Translations }) {
                 </div>
               )}
               <p className="font-serif-jp text-sm font-medium mb-1" style={{ color: 'var(--color-sumi)' }}>{p.label}</p>
-              <p className="font-cormorant text-3xl font-light" style={{ color: p.popular ? 'var(--color-beni)' : 'var(--color-sumi)' }}>
+              <p className="font-cormorant text-3xl font-light"
+                style={{ color: p.popular ? 'var(--color-beni)' : 'var(--color-sumi)' }}>
                 {p.price}
               </p>
               <p className="text-xs" style={{ color: 'var(--color-usuzumi)' }}>{p.period}</p>
@@ -560,7 +529,10 @@ function PricingSection({ t }: { t: Translations }) {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs" style={{ color: 'var(--color-usuzumi)' }}>✦ {t.planFreeNote}</p>
+        <p className="text-center font-cormorant italic text-base"
+          style={{ color: 'var(--color-usuzumi)' }}>
+          "{t.planSub}"
+        </p>
       </div>
     </section>
   )
@@ -570,7 +542,6 @@ function PricingSection({ t }: { t: Translations }) {
 function CtaSection({ t }: { t: Translations }) {
   return (
     <section className="relative py-28 overflow-hidden scroll-fade" style={{ backgroundColor: 'var(--color-sumi)' }}>
-      {/* 竹装飾 */}
       <div className="absolute left-0 top-0 h-full w-16 opacity-10 pointer-events-none animate-bamboo">
         <BambooSVG className="h-full w-full" />
       </div>
@@ -578,14 +549,13 @@ function CtaSection({ t }: { t: Translations }) {
         style={{ animationDelay: '1s', transform: 'scaleX(-1)' }}>
         <BambooSVG className="h-full w-full" />
       </div>
-
       <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-        <p className="font-cormorant italic text-4xl md:text-5xl leading-tight mb-4" style={{ color: '#fff' }}>
-          {t.ctaFinalEn}
+        <p className="font-cormorant italic text-3xl md:text-5xl leading-tight mb-4" style={{ color: '#fff' }}>
+          {t.ctaTitle}
         </p>
         <div className="w-16 h-px mx-auto my-6" style={{ backgroundColor: 'var(--color-gold)' }} />
         <p className="font-serif-jp text-sm mb-12" style={{ color: 'var(--color-gold)' }}>
-          {t.ctaFinalJa}
+          {t.ctaSub}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/signup?gender=female"
