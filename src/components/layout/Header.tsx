@@ -19,34 +19,34 @@ export default function Header() {
   const tAuth = useTranslations('auth')
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-sakura-100 sticky top-0 z-50">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-[#ede0d4] sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-[#8b1a2e] to-[#6e1525] rounded-full flex items-center justify-center">
             <Heart className="w-4 h-4 text-white" />
           </div>
           <span className="text-xl font-bold sakura-text-gradient">Sakura Club</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link href="/about" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <Link href="/about" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('about')}
           </Link>
-          <Link href="/how-it-works" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <Link href="/how-it-works" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('howItWorks')}
           </Link>
-          <Link href="/safety" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <Link href="/safety" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('safety')}
           </Link>
-          <Link href="/experiences" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <Link href="/experiences" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('experiences')}
           </Link>
           {isAuthenticated && user && (
             <>
-              <Link href="/matches" className="text-gray-700 hover:text-sakura-600 transition-colors">
+              <Link href="/matches" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
                 {t('matches')}
               </Link>
-              <Link href="/messages" className="text-gray-700 hover:text-sakura-600 transition-colors">
+              <Link href="/messages" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
                 {t('messages')}
               </Link>
             </>
@@ -97,31 +97,31 @@ export default function Header() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t border-sakura-100">
+        <div className="md:hidden bg-white border-t border-[#ede0d4]">
           <nav className="container mx-auto px-4 py-4 space-y-4">
-            <Link href="/about" className="block text-gray-700 hover:text-sakura-600">
+            <Link href="/about" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('about')}
             </Link>
-            <Link href="/how-it-works" className="block text-gray-700 hover:text-sakura-600">
+            <Link href="/how-it-works" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('howItWorks')}
             </Link>
-            <Link href="/safety" className="block text-gray-700 hover:text-sakura-600">
+            <Link href="/safety" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('safety')}
             </Link>
-            <Link href="/experiences" className="block text-gray-700 hover:text-sakura-600">
+            <Link href="/experiences" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('experiences')}
             </Link>
             {isAuthenticated && user && (
               <>
-                <Link href="/matches" className="block text-gray-700 hover:text-sakura-600">
+                <Link href="/matches" className="block text-gray-700 hover:text-[#8b1a2e]">
                   {t('matches')}
                 </Link>
-                <Link href="/messages" className="block text-gray-700 hover:text-sakura-600">
+                <Link href="/messages" className="block text-gray-700 hover:text-[#8b1a2e]">
                   {t('messages')}
                 </Link>
               </>
             )}
-            <div className="pt-4 border-t border-sakura-100">
+            <div className="pt-4 border-t border-[#ede0d4]">
               <div className="mb-3">
                 <LanguageSwitcherCompact />
               </div>

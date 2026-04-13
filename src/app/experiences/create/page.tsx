@@ -104,7 +104,7 @@ export default function ExperienceCreatePage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -122,7 +122,7 @@ export default function ExperienceCreatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 py-12 px-4">
+    <div className="min-h-screen bg-[#f5ebe0] py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center mb-8">
           <Button
@@ -150,8 +150,8 @@ export default function ExperienceCreatePage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* 基本情報 */}
             <div className="space-y-6">
-              <div className="flex items-center border-b border-sakura-200 pb-2">
-                <FileText className="w-5 h-5 text-sakura-600 mr-2" />
+              <div className="flex items-center border-b border-[#d4a89a] pb-2">
+                <FileText className="w-5 h-5 text-[#8b1a2e] mr-2" />
                 <h3 className="text-xl font-semibold text-gray-900">基本情報</h3>
               </div>
               
@@ -223,8 +223,8 @@ export default function ExperienceCreatePage() {
 
             {/* 開催情報 */}
             <div className="space-y-6">
-              <div className="flex items-center border-b border-sakura-200 pb-2">
-                <Calendar className="w-5 h-5 text-sakura-600 mr-2" />
+              <div className="flex items-center border-b border-[#d4a89a] pb-2">
+                <Calendar className="w-5 h-5 text-[#8b1a2e] mr-2" />
                 <h3 className="text-xl font-semibold text-gray-900">開催情報</h3>
               </div>
 
@@ -275,8 +275,8 @@ export default function ExperienceCreatePage() {
 
             {/* 場所情報 */}
             <div className="space-y-6">
-              <div className="flex items-center border-b border-sakura-200 pb-2">
-                <MapPin className="w-5 h-5 text-sakura-600 mr-2" />
+              <div className="flex items-center border-b border-[#d4a89a] pb-2">
+                <MapPin className="w-5 h-5 text-[#8b1a2e] mr-2" />
                 <h3 className="text-xl font-semibold text-gray-900">開催場所</h3>
               </div>
 
@@ -348,8 +348,8 @@ export default function ExperienceCreatePage() {
 
             {/* 参加者・料金情報 */}
             <div className="space-y-6">
-              <div className="flex items-center border-b border-sakura-200 pb-2">
-                <Users className="w-5 h-5 text-sakura-600 mr-2" />
+              <div className="flex items-center border-b border-[#d4a89a] pb-2">
+                <Users className="w-5 h-5 text-[#8b1a2e] mr-2" />
                 <h3 className="text-xl font-semibold text-gray-900">参加者・料金</h3>
               </div>
 
@@ -395,8 +395,8 @@ export default function ExperienceCreatePage() {
 
             {/* 追加情報 */}
             <div className="space-y-6">
-              <div className="flex items-center border-b border-sakura-200 pb-2">
-                <CheckCircle className="w-5 h-5 text-sakura-600 mr-2" />
+              <div className="flex items-center border-b border-[#d4a89a] pb-2">
+                <CheckCircle className="w-5 h-5 text-[#8b1a2e] mr-2" />
                 <h3 className="text-xl font-semibold text-gray-900">詳細情報</h3>
               </div>
 

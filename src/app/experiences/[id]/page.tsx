@@ -212,9 +212,9 @@ export default function ExperienceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-sakura-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-[#8b1a2e] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">体験情報を読み込んでいます...</p>
         </div>
       </div>
@@ -223,7 +223,7 @@ export default function ExperienceDetailPage() {
 
   if (!experience) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">体験が見つかりません</h2>
@@ -239,7 +239,7 @@ export default function ExperienceDetailPage() {
   const availability = getAvailabilityStatus(experience.currentParticipants, experience.maxParticipants)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 py-8 px-4">
+    <div className="min-h-screen bg-[#f5ebe0] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-6">
@@ -277,7 +277,7 @@ export default function ExperienceDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* 体験画像とタイトル */}
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="relative h-64 bg-gradient-to-br from-sakura-200 to-sakura-300">
+              <div className="relative h-64 bg-gradient-to-br from-[#ede0d4] to-[#d4a89a]">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-white text-8xl opacity-30">🍵</span>
                 </div>
@@ -291,7 +291,7 @@ export default function ExperienceDetailPage() {
 
                 {/* カテゴリバッジ */}
                 <div className="absolute bottom-4 left-4">
-                  <span className="px-3 py-1 bg-sakura-600 text-white rounded-full text-sm font-medium">
+                  <span className="px-3 py-1 bg-[#8b1a2e] text-white rounded-full text-sm font-medium">
                     {experience.category}
                   </span>
                 </div>
@@ -336,7 +336,7 @@ export default function ExperienceDetailPage() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <p className="text-2xl font-bold text-sakura-600">
+                  <p className="text-2xl font-bold text-[#8b1a2e]">
                     {formatPrice(experience.price, experience.currency)}
                   </p>
                 </div>
@@ -422,8 +422,8 @@ export default function ExperienceDetailPage() {
                   <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 bg-sakura-100 rounded-full flex items-center justify-center mr-3">
-                          <User className="w-4 h-4 text-sakura-600" />
+                        <div className="w-8 h-8 bg-[#fdf6ef] rounded-full flex items-center justify-center mr-3">
+                          <User className="w-4 h-4 text-[#8b1a2e]" />
                         </div>
                         <span className="font-medium text-gray-900">{review.userName}</span>
                       </div>
@@ -455,7 +455,7 @@ export default function ExperienceDetailPage() {
             {/* 予約カード */}
             <div className="bg-white rounded-lg shadow-lg p-6 sticky top-6">
               <div className="text-center mb-6">
-                <p className="text-3xl font-bold text-sakura-600 mb-2">
+                <p className="text-3xl font-bold text-[#8b1a2e] mb-2">
                   {formatPrice(experience.price, experience.currency)}
                 </p>
                 <p className="text-gray-600">1名あたり</p>
@@ -494,8 +494,8 @@ export default function ExperienceDetailPage() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h4 className="font-bold text-gray-900 mb-4">主催者</h4>
               <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mr-3">
-                  <User className="w-6 h-6 text-sakura-600" />
+                <div className="w-12 h-12 bg-[#fdf6ef] rounded-full flex items-center justify-center mr-3">
+                  <User className="w-6 h-6 text-[#8b1a2e]" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{experience.organizerName}</p>

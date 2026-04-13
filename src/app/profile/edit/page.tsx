@@ -5204,7 +5204,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sakura-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#8b1a2e] mx-auto"></div>
           <p className="mt-4 text-lg text-gray-600">プロフィールを読み込んでいます...</p>
         </div>
       </div>
@@ -5229,7 +5229,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                 setError('')
                 window.location.reload()
               }}
-              className="w-full bg-sakura-600 hover:bg-sakura-700 text-white font-medium py-2 px-4 rounded"
+              className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white font-medium py-2 px-4 rounded"
             >
               再試行
             </button>
@@ -5243,7 +5243,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
   // 🌸 TASK3: typeクエリが無い場合の安全エラー表示（真っさら防止）
   if (!hasValidType && !userBasedType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+      <div className="min-h-screen bg-[#f5ebe0]">
         <div className="flex items-center justify-center min-h-screen">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-4">
             <h2 className="text-xl font-bold text-red-600 mb-4">
@@ -5263,7 +5263,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       {/* 修繕A: タイプ不一致時は router.replace で自動矯正（オーバーレイ廃止） */}
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
@@ -5321,14 +5321,14 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
             )}
 
             {/* プロフィール完成度表示 */}
-            <div className="mb-6 p-4 bg-gradient-to-r from-sakura-50 to-pink-50 rounded-lg border border-sakura-200">
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#fdf6ef] to-[#fdf6ef] rounded-lg border border-[#d4a89a]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">{t('profile.profileCompletion')}</span>
-                <span className="text-lg font-bold text-sakura-600">{profileCompletion}%</span>
+                <span className="text-lg font-bold text-[#8b1a2e]">{profileCompletion}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div 
-                  className="bg-gradient-to-r from-sakura-500 to-pink-500 h-3 rounded-full transition-all duration-500 ease-out"
+                  className="bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] h-3 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${profileCompletion}%` }}
                 ></div>
               </div>
@@ -5356,7 +5356,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
               {/* 必須情報 */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2 flex items-center">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-[#d4a89a] pb-2 flex items-center">
                   <span className="text-red-500 mr-2">*</span>
                   {t('profile.requiredSection')}
                   <span className="text-sm font-normal text-gray-500 ml-2">{t('profile.requiredForPublication')}</span>
@@ -6111,8 +6111,8 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                               className={`
                                 px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
                                 ${selectedPlannedPrefectures.includes(prefecture.value)
-                                  ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                  ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
                                 }
                                 ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
                                   ? 'opacity-50 cursor-not-allowed'
@@ -6180,8 +6180,8 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                           className={`
                             px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
                             ${isSelected
-                              ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                              ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
                             }
                             ${isDisabled
                               ? 'opacity-50 cursor-not-allowed'
@@ -6221,8 +6221,8 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                 className={`
                                   px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
                                   ${selectedHobbies.includes(hobby.value)
-                                    ? 'bg-gradient-to-r from-red-800 to-red-900 text-white border-red-800 shadow-lg transform scale-105'
-                                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:bg-red-50 hover:text-red-700'
+                                    ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
                                   }
                                   ${(!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8)
                                     ? 'opacity-50 cursor-not-allowed'
@@ -6263,7 +6263,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                 <div className="pt-4">
                   <Button
                     type="button"
-                    className="w-full bg-red-800 hover:bg-red-900 text-white font-medium py-3 mb-4"
+                    className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white font-medium py-3 mb-4"
                     onClick={handlePreview}
                   >
                     <User className="w-4 h-4 mr-2" />
@@ -6445,7 +6445,7 @@ export default function ProfileEditPage() {
                 setErrorMessage('')
                 window.location.reload()
               }}
-              className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
+              className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white"
             >
               ページを再読み込み
             </Button>

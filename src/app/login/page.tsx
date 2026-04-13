@@ -13,7 +13,7 @@ import { authService, AuthError } from '@/lib/auth'
 import { notifyAuthChange, setAuthActionInThisTab } from '@/store/authStore'
 import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { createClient } from '@/lib/supabase'
-import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle, Globe } from 'lucide-react'
+import { Eye, EyeOff, Loader2, LogIn, AlertCircle } from 'lucide-react'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { logger } from '@/utils/logger'
@@ -144,26 +144,21 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ backgroundColor: 'var(--color-bg)' }}>
       <AuthPageMarker />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold sakura-text-gradient">Sakura Club</h1>
-            </div>
-            
-            {/* Language Switcher */}
+          <div className="flex items-center justify-between mb-6">
+            <span className="font-cormorant text-2xl" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
+              SAKURA CLUB
+            </span>
             <LanguageSelector variant="light" size="sm" showIcon={true} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('login.title')}</h2>
-          <p className="text-gray-600">{t('login.subtitle')}</p>
+          <h2 className="font-shippori text-3xl mb-2" style={{ color: 'var(--color-text)', letterSpacing: '0.1em' }}>{t('login.title')}</h2>
+          <p style={{ color: 'var(--color-text-sub)', fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>{t('login.subtitle')}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="app-card p-8">
           {loginError && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
               <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
@@ -173,7 +168,7 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm mb-1 font-zen-kaku" style={{ color: 'var(--color-text-sub)' }}>
                 {t('login.emailAddress')}
               </label>
               <Input
@@ -181,7 +176,7 @@ function LoginForm() {
                 placeholder={t('login.emailPlaceholder')}
                 autoComplete="email"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                className={`input-app ${errors.email ? 'border-red-500' : ''}`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
@@ -189,7 +184,7 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm mb-1 font-zen-kaku" style={{ color: 'var(--color-text-sub)' }}>
                 {t('login.password')}
               </label>
               <div className="relative">
@@ -198,7 +193,7 @@ function LoginForm() {
                   placeholder={t('login.passwordPlaceholder')}
                   autoComplete="current-password"
                   {...register('password')}
-                  className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                  className={`input-app pr-10 ${errors.password ? 'border-red-500' : ''}`}
                 />
                 <button
                   type="button"
@@ -219,16 +214,17 @@ function LoginForm() {
                   id="rememberMe"
                   type="checkbox"
                   {...register('rememberMe')}
-                  className="h-4 w-4 text-sakura-600 focus:ring-sakura-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#8b1a2e] focus:ring-[#8b1a2e] border-gray-300 rounded"
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
                   {t('login.rememberMe')}
                 </label>
               </div>
 
-              <Link 
-                href="/reset-password" 
-                className="text-sm text-sakura-600 hover:underline"
+              <Link
+                href="/reset-password"
+                className="text-sm hover:underline"
+                style={{ color: 'var(--color-primary)' }}
               >
                 {t('login.forgotPassword')}
               </Link>
@@ -236,9 +232,8 @@ function LoginForm() {
 
             <Button
               type="submit"
-              variant="sakura"
               size="lg"
-              className="w-full"
+              className="w-full btn-primary"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -261,7 +256,7 @@ function LoginForm() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <Button variant="outline" className="w-full" type="button">
+              <Button variant="outline" className="w-full btn-outline-p" type="button">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -271,7 +266,7 @@ function LoginForm() {
                 {t('login.googleLogin')}
               </Button>
 
-              <Button variant="outline" className="w-full" type="button">
+              <Button variant="outline" className="w-full btn-outline-p" type="button">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
@@ -281,9 +276,9 @@ function LoginForm() {
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-600">
+            <p style={{ color: 'var(--color-text-sub)', fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>
               {t('login.signupPrompt')}{' '}
-              <Link href="/signup" className="text-sakura-600 hover:underline font-medium">
+              <Link href="/signup" className="hover:underline font-medium" style={{ color: 'var(--color-primary)' }}>
                 {t('login.signupLink')}
               </Link>
             </p>
@@ -291,7 +286,7 @@ function LoginForm() {
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500 whitespace-pre-line">
+          <p className="text-xs whitespace-pre-line" style={{ color: 'var(--color-text-sub)' }}>
             {t('login.securityNote')}
           </p>
         </div>

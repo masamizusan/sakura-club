@@ -237,7 +237,7 @@ function FootprintsContent() {
   })()
 
   const content = (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 py-6 px-4">
@@ -322,8 +322,8 @@ function FootprintsContent() {
                                     className="w-full h-full object-cover rounded-lg"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-lg">
-                                    <User className="w-14 h-14 text-sakura-300" />
+                                  <div className="w-full h-full flex items-center justify-center bg-[#ede0d4] rounded-lg">
+                                    <User className="w-14 h-14 text-[#d4a89a]" />
                                   </div>
                                 )}
                               </div>
@@ -368,7 +368,7 @@ function FootprintsContent() {
                                     {visitor.interests.slice(0, 4).map((interest, index) => (
                                       <span
                                         key={index}
-                                        className="bg-sakura-50 text-sakura-700 px-2.5 py-1 rounded-full text-sm font-medium"
+                                        className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
                                       >
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>

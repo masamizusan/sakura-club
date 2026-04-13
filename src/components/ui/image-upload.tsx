@@ -164,8 +164,8 @@ export function ImageUpload({
               height={128}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
-              <User className="w-12 h-12 text-sakura-400" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#fdf6ef] to-[#ede0d4]">
+              <User className="w-12 h-12 text-[#d4a89a]" />
             </div>
           )}
         </div>
@@ -174,7 +174,7 @@ export function ImageUpload({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="absolute bottom-2 right-2 w-10 h-10 bg-sakura-600 hover:bg-sakura-700 disabled:bg-gray-400 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
+          className="absolute bottom-2 right-2 w-10 h-10 bg-[#8b1a2e] hover:bg-[#6e1525] disabled:bg-gray-400 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
         >
           {isUploading ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -187,7 +187,7 @@ export function ImageUpload({
         {currentImageUrl && !isUploading && (
           <button
             onClick={handleRemoveImage}
-            className="absolute top-0 right-0 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
+            className="absolute top-0 right-0 w-8 h-8 bg-[#8b1a2e] hover:bg-[#6e1525] text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

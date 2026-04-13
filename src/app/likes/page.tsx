@@ -302,7 +302,7 @@ export default function LikesPage() {
   }, [user, authLoading])
 
   const content = (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 py-6 px-4">
@@ -315,9 +315,9 @@ export default function LikesPage() {
             </p>
             {/* 残りいいね数表示 */}
             <div className="mt-3 inline-flex items-center bg-white rounded-full px-3 py-1.5 shadow-sm text-sm">
-              <Heart className={`w-4 h-4 mr-1.5 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+              <Heart className={`w-4 h-4 mr-1.5 ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-400'}`} />
               <span className="text-gray-700">
-                {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
+                {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
               </span>
             </div>
             {!isLoading && likers.length > 0 && (
@@ -409,8 +409,8 @@ export default function LikesPage() {
                                     className="w-full h-full object-cover rounded-lg"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200 rounded-lg">
-                                    <User className="w-14 h-14 text-sakura-300" />
+                                  <div className="w-full h-full flex items-center justify-center bg-[#ede0d4] rounded-lg">
+                                    <User className="w-14 h-14" style={{ color: '#d4a89a' }} />
                                   </div>
                                 )}
                               </div>
@@ -457,7 +457,7 @@ export default function LikesPage() {
                                     {liker.interests.slice(0, 4).map((interest, index) => (
                                       <span
                                         key={index}
-                                        className="bg-sakura-50 text-sakura-700 px-2.5 py-1 rounded-full text-sm font-medium"
+                                        className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
                                       >
                                         {formatCultureTag(interest, currentLanguage)}
                                       </span>

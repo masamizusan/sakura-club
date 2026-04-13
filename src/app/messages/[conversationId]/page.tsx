@@ -700,7 +700,7 @@ export default function ChatPage() {
                   <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                     {isMyMessage ? (
                       // 自分のメッセージ（翻訳機能なし）
-                      <div className="max-w-[75%] px-4 py-2 rounded-2xl bg-sakura-100 text-sakura-900 break-words">
+                      <div className="max-w-[75%] px-4 py-2 rounded-2xl bg-[#fdf6ef] text-[#2c1810] break-words">
                         {message.image_url ? (
                           <img
                             src={message.image_url}
@@ -711,7 +711,7 @@ export default function ChatPage() {
                         ) : (
                           <p className="text-sm">{message.content}</p>
                         )}
-                        <p className="text-xs mt-1 text-sakura-400">
+                        <p className="text-xs mt-1 text-[#d4a89a]">
                           {formatTime(message.timestamp)}
                         </p>
                       </div>

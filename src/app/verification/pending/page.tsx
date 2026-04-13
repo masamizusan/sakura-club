@@ -44,7 +44,7 @@ function PendingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 flex items-center justify-center min-h-screen px-4">
@@ -57,7 +57,7 @@ function PendingContent() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/messages"
-              className="bg-sakura-500 text-white px-8 py-3 rounded-full font-medium hover:bg-sakura-600 transition-colors"
+              className="bg-[#8b1a2e] text-white px-8 py-3 rounded-full font-medium hover:bg-[#6e1525] transition-colors"
             >
               {t('backToMessages')}
             </Link>

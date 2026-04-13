@@ -78,7 +78,7 @@ function VerifyEmailContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg p-8">
             {/* Header with Language Switcher */}
@@ -121,7 +121,7 @@ function VerifyEmailContent() {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg p-8">
             {/* Header with Language Switcher */}
@@ -155,10 +155,10 @@ function VerifyEmailContent() {
               <p className="text-gray-600 mb-6 whitespace-pre-line">
                 {t('verifyEmail.success.subtitle')}
               </p>
-              <div className="bg-sakura-50 border border-sakura-200 rounded-lg p-4 mb-6">
-                <p className="text-sakura-800 text-sm">
+              <div className="bg-[#fdf6ef] border border-[#d4a89a] rounded-lg p-4 mb-6">
+                <p className="text-[#8b1a2e] text-sm">
                   {t('verifyEmail.success.autoRedirectNotice')}<br />
-                  <span className="text-xs text-sakura-600">{t('verifyEmail.success.autoRedirectTime')}</span>
+                  <span className="text-xs text-[#8b1a2e]">{t('verifyEmail.success.autoRedirectTime')}</span>
                 </p>
               </div>
               <Button 
@@ -174,7 +174,7 @@ function VerifyEmailContent() {
                     router.push('/profile/edit')
                   }
                 }}
-                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white"
+                className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white"
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 {t('verifyEmail.success.proceedButton')}
@@ -187,7 +187,7 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-lg p-8">
           {/* Header with Language Switcher */}
@@ -228,7 +228,7 @@ function VerifyEmailContent() {
             </p>
             <div className="space-y-3">
               <Link href="/signup">
-                <Button className="w-full bg-sakura-600 hover:bg-sakura-700 text-white">
+                <Button className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white">
                   {t('verifyEmail.error.signupButton')}
                 </Button>
               </Link>
@@ -255,7 +255,7 @@ function LoadingFallback() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">

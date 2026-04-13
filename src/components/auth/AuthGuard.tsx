@@ -127,7 +127,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-sakura-600 text-white rounded hover:bg-sakura-700"
+            className="px-4 py-2 bg-[#8b1a2e] text-white rounded hover:bg-[#6e1525]"
           >
             再読み込み
           </button>
@@ -142,7 +142,7 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
       fallback || (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
             <p className="text-gray-600">読み込み中...</p>
             <p className="text-xs text-gray-400 mt-2">
               認証初期化中... ({authReady ? '完了' : '処理中'})

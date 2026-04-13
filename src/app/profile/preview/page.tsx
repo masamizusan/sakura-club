@@ -771,9 +771,9 @@ function ProfilePreviewContent() {
   // データが読み込まれていない場合
   if (!previewData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
           <p className="text-gray-600">プレビューを読み込んでいます...</p>
         </div>
       </div>
@@ -809,7 +809,7 @@ function ProfilePreviewContent() {
   // エラー画面
   if (hasError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-8">
           <h1 className="text-2xl font-bold text-red-600 mb-4">プレビューエラー</h1>
           <p className="text-gray-600 mb-6">プレビューの読み込みに失敗しました。</p>
@@ -820,7 +820,7 @@ function ProfilePreviewContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       {/* 🔒 修繕A: オーナー不一致オーバーレイ */}
       {ownerMismatchDetected && (
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
@@ -831,7 +831,7 @@ function ProfilePreviewContent() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+                className="bg-[#8b1a2e] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#6e1525] transition-colors"
               >
                 再読み込み
               </button>
@@ -1160,7 +1160,7 @@ function ProfilePreviewContent() {
                         {hobbies.map((hobby: string, index: number) => (
                           <span
                             key={index}
-                            className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
+                            className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
                           >
                             {getCultureLabel(hobby, t)}
                           </span>
@@ -1469,9 +1469,9 @@ function ProfilePreviewContent() {
 export default function ProfilePreviewPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
           <p className="text-gray-600">プレビューを読み込んでいます...</p>
         </div>
       </div>

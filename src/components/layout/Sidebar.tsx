@@ -120,26 +120,24 @@ export default function Sidebar({ className = '' }: SidebarProps) {
   ]
 
   return (
-    <div className={`bg-white shadow-lg fixed left-0 top-0 h-full z-50 ${className}`}>
+    <div className={`nav-app shadow-lg fixed left-0 top-0 h-full z-50 ${className}`}>
       <div className="p-6">
         <div className="flex items-center mb-8">
-          <div className="w-8 h-8 bg-gradient-to-r from-sakura-500 to-sakura-600 rounded-lg flex items-center justify-center mr-3">
-            <span className="text-white font-bold text-sm">桜</span>
-          </div>
-          <h1 className="text-xl font-bold sakura-text-gradient">Sakura Club</h1>
+          <h1 className="font-cormorant text-xl" style={{ color: 'var(--color-primary)', letterSpacing: '0.18em', fontWeight: 300 }}>SAKURA CLUB</h1>
         </div>
 
         {/* 身分証未登録バナー */}
         {!isVerified && (
           verificationStatus === 'pending' || verificationStatus === 'requires_review' ? (
-            <div className="mx-0 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 flex items-center gap-2">
+            <div className="mx-0 mb-4 p-3 rounded-lg text-sm flex items-center gap-2" style={{ backgroundColor: 'rgba(201,169,110,0.12)', border: '1px solid var(--color-accent)', color: 'var(--color-text-sub)' }}>
               <ShieldAlert className="w-4 h-4 flex-shrink-0" />
               <span>{getSafeTranslation('verificationPendingBanner')}</span>
             </div>
           ) : (
             <Link
               href="/verification"
-              className="block mx-0 mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-sm text-yellow-800 hover:bg-yellow-100 transition-colors flex items-start gap-2"
+              className="block mx-0 mb-4 p-3 rounded-lg text-sm transition-colors flex items-start gap-2"
+              style={{ backgroundColor: 'rgba(139,26,46,0.06)', border: '1px solid var(--color-border)', color: 'var(--color-primary)' }}
             >
               <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-yellow-600" />
               <span>{getSafeTranslation('verificationBanner')}</span>
@@ -161,10 +159,9 @@ export default function Sidebar({ className = '' }: SidebarProps) {
                 key={item.id}
                 href={item.href}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive
-                    ? 'bg-sakura-100 text-sakura-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  isActive ? 'nav-item-active' : 'nav-item-hover'
                 }`}
+                style={isActive ? {} : { color: 'var(--color-text-sub)' }}
               >
                 <div className="relative">
                   <item.icon className="w-5 h-5" />

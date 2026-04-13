@@ -358,7 +358,7 @@ export default function MatchesPage() {
   }
 
   const content = (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 py-8 px-4">
@@ -371,9 +371,9 @@ export default function MatchesPage() {
             </p>
             {/* 残りいいね数表示 */}
             <div className="mt-4 inline-flex items-center bg-white rounded-full px-4 py-2 shadow-md">
-              <Heart className={`w-5 h-5 mr-2 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+              <Heart className={`w-5 h-5 mr-2 ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-400'}`} />
               <span className="text-gray-700">
-                {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-sakura-600' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
+                {t('likesRemaining')}: <span className={`font-bold ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-500'}`}>{likesRemaining}</span> / {likesLimit}
               </span>
             </div>
           </div>
@@ -506,8 +506,8 @@ export default function MatchesPage() {
                             className="w-full h-full object-contain"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
-                            <User className="w-20 h-20 text-sakura-300" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-[#ede0d4]">
+                            <User className="w-20 h-20" style={{ color: '#d4a89a' }} />
                           </div>
                         )}
 
@@ -560,7 +560,7 @@ export default function MatchesPage() {
                             {user.hobbies.slice(0, 3).map((hobby, index) => (
                               <span
                                 key={index}
-                                className="bg-sakura-50 text-sakura-700 px-2 py-0.5 rounded-full text-xs"
+                                className="bg-[#fdf6ef] text-[#8b1a2e] px-2 py-0.5 rounded-full text-xs"
                               >
                                 {formatCultureTag(hobby, currentLanguage)}
                               </span>

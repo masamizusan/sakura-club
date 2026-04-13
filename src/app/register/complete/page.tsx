@@ -26,7 +26,7 @@ function RegisterCompleteContent() {
 
   if (!email) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -37,7 +37,7 @@ function RegisterCompleteContent() {
               {t('registerComplete.errorDescription')}
             </p>
             <Link href="/signup">
-              <Button className="w-full bg-sakura-600 hover:bg-sakura-700 text-white">
+              <Button className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white">
                 {t('registerComplete.backToSignup')}
               </Button>
             </Link>
@@ -48,7 +48,7 @@ function RegisterCompleteContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           {/* Header */}
@@ -203,7 +203,7 @@ function RegisterCompleteContent() {
 export default function RegisterCompletePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">

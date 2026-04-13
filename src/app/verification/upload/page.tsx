@@ -184,7 +184,7 @@ function VerificationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 py-8 px-4">
@@ -200,8 +200,8 @@ function VerificationContent() {
 
           {/* ヘッダー */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-sakura-600" />
+            <div className="w-12 h-12 bg-[#fdf6ef] rounded-full flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-[#8b1a2e]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
@@ -218,7 +218,7 @@ function VerificationContent() {
               <select
                 value={idType}
                 onChange={(e) => { setIdType(e.target.value); setError(null) }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sakura-300 bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4a89a] bg-white"
               >
                 <option value="">---</option>
                 <option value="passport">{t('passport')}</option>
@@ -261,7 +261,7 @@ function VerificationContent() {
                   <button
                     type="button"
                     onClick={() => cameraInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-[#d4a89a] hover:bg-[#fdf6ef] transition-colors"
                   >
                     <span className="text-3xl">📷</span>
                     <span className="text-sm font-medium text-gray-600">{t('takePhoto')}</span>
@@ -270,7 +270,7 @@ function VerificationContent() {
                   <button
                     type="button"
                     onClick={() => albumInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                    className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-[#d4a89a] hover:bg-[#fdf6ef] transition-colors"
                   >
                     <span className="text-3xl">🖼️</span>
                     <span className="text-sm font-medium text-gray-600">{t('chooseFromAlbum')}</span>
@@ -318,7 +318,7 @@ function VerificationContent() {
             <button
               onClick={handleSubmit}
               disabled={uploading}
-              className="w-full bg-sakura-500 text-white py-3 rounded-full font-medium hover:bg-sakura-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-[#8b1a2e] text-white py-3 rounded-full font-medium hover:bg-[#6e1525] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {uploading ? (
                 <>

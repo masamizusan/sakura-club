@@ -172,7 +172,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                     variant="ghost"
                     size="sm"
                     onClick={markAllAsRead}
-                    className="text-sm text-sakura-600 hover:text-sakura-700"
+                    className="text-sm text-[#8b1a2e] hover:text-[#8b1a2e]"
                   >
                     <CheckCheck className="w-4 h-4 mr-1" />
                     全て既読
@@ -252,7 +252,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-sm text-sakura-600 hover:text-sakura-700"
+                  className="text-sm text-[#8b1a2e] hover:text-[#8b1a2e]"
                   onClick={() => {
                     setIsOpen(false)
                     // 通知ページに遷移（今後実装）

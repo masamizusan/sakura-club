@@ -82,7 +82,7 @@ export default function VerificationIntroPage() {
       <p className="text-center text-gray-500 mb-8 whitespace-pre-line">{t.subtitle}</p>
 
       {/* メインカード */}
-      <div className="bg-pink-50 border border-pink-100 rounded-2xl p-6 mb-6 text-center">
+      <div className="bg-[#fdf6ef] border border-[#d4a89a] rounded-2xl p-6 mb-6 text-center">
         <div className="text-5xl mb-3">🪪</div>
         <p className="text-lg font-bold text-pink-600">{t.idOnly}</p>
         <p className="text-sm text-gray-500 mt-1">{t.idOnlyDesc}</p>
@@ -101,7 +101,7 @@ export default function VerificationIntroPage() {
       {/* 登録ボタン */}
       <Link
         href="/verification/upload"
-        className="block w-full bg-pink-500 text-white text-center py-4 rounded-full font-bold text-lg hover:bg-pink-600 transition-colors"
+        className="block w-full bg-[#fdf6ef]0 text-white text-center py-4 rounded-full font-bold text-lg hover:bg-[#6e1525] transition-colors"
       >
         {t.startButton}
       </Link>

@@ -6,26 +6,26 @@ import { ArrowRight, Shield, Heart, Globe, Star } from 'lucide-react'
 
 function SimpleNavHeader() {
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-sakura-100 sticky top-0 z-50">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-[#ede0d4] sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <a href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-sakura-400 to-sakura-600 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-br from-[#8b1a2e] to-[#6e1525] rounded-full flex items-center justify-center">
             <Heart className="w-4 h-4 text-white" />
           </div>
           <span className="text-xl font-bold sakura-text-gradient">Sakura Club</span>
         </a>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="/about" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <a href="/about" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             サービスについて
           </a>
-          <a href="/how-it-works" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <a href="/how-it-works" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             仕組み
           </a>
-          <a href="/safety" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <a href="/safety" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             安心・安全
           </a>
-          <a href="/experiences" className="text-gray-700 hover:text-sakura-600 transition-colors">
+          <a href="/experiences" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             文化体験
           </a>
         </nav>
@@ -100,10 +100,10 @@ export default function HeroSection() {
                 
                 {/* Floating elements */}
                 <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-sakura-600" />
+                  <Heart className="w-6 h-6 text-[#8b1a2e]" />
                 </div>
-                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-sakura-100 rounded-full shadow-lg flex items-center justify-center">
-                  <Globe className="w-8 h-8 text-sakura-600" />
+                <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-[#fdf6ef] rounded-full shadow-lg flex items-center justify-center">
+                  <Globe className="w-8 h-8 text-[#8b1a2e]" />
                 </div>
               </div>
             </div>
@@ -114,8 +114,8 @@ export default function HeroSection() {
         <div className="max-w-4xl mx-auto mt-24">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in">
             <div className="text-center space-y-3">
-              <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-                <Shield className="w-6 h-6 text-sakura-600" />
+              <div className="w-12 h-12 bg-[#fdf6ef] rounded-full flex items-center justify-center mx-auto">
+                <Shield className="w-6 h-6 text-[#8b1a2e]" />
               </div>
               <h3 className="font-semibold text-gray-900">安心・安全</h3>
               <p className="text-gray-600 text-sm">
@@ -125,8 +125,8 @@ export default function HeroSection() {
             </div>
 
             <div className="text-center space-y-3">
-              <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-                <Heart className="w-6 h-6 text-sakura-600" />
+              <div className="w-12 h-12 bg-[#fdf6ef] rounded-full flex items-center justify-center mx-auto">
+                <Heart className="w-6 h-6 text-[#8b1a2e]" />
               </div>
               <h3 className="font-semibold text-gray-900">文化交流</h3>
               <p className="text-gray-600 text-sm">
@@ -136,8 +136,8 @@ export default function HeroSection() {
             </div>
 
             <div className="text-center space-y-3">
-              <div className="w-12 h-12 bg-sakura-100 rounded-full flex items-center justify-center mx-auto">
-                <Globe className="w-6 h-6 text-sakura-600" />
+              <div className="w-12 h-12 bg-[#fdf6ef] rounded-full flex items-center justify-center mx-auto">
+                <Globe className="w-6 h-6 text-[#8b1a2e]" />
               </div>
               <h3 className="font-semibold text-gray-900">国際交流</h3>
               <p className="text-gray-600 text-sm">
@@ -163,9 +163,9 @@ export default function HeroSection() {
           </div>
         </div>
 
-      <div className="absolute top-20 left-10 w-4 h-4 bg-sakura-300 rounded-full opacity-60 animate-pulse" />
-      <div className="absolute top-40 right-20 w-3 h-3 bg-sakura-400 rounded-full opacity-40 animate-pulse delay-1000" />
-      <div className="absolute bottom-32 left-20 w-2 h-2 bg-sakura-500 rounded-full opacity-50 animate-pulse delay-2000" />
+      <div className="absolute top-20 left-10 w-4 h-4 bg-[#d4a89a] rounded-full opacity-60 animate-pulse" />
+      <div className="absolute top-40 right-20 w-3 h-3 bg-[#d4a89a] rounded-full opacity-40 animate-pulse delay-1000" />
+      <div className="absolute bottom-32 left-20 w-2 h-2 bg-[#8b1a2e] rounded-full opacity-50 animate-pulse delay-2000" />
       </div>
     </section>
     </>

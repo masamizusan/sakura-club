@@ -70,7 +70,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sakura-50 to-sakura-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#f5ebe0] py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">

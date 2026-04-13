@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SAKURA CLUB — 和モダンカラーパレット */
+/* SAKURA CLUB — 和モダンカラーパレット（ランディングページ用） */
 :root {
   --color-washi:   #F5F0E8;
   --color-sumi:    #1A1A2E;
@@ -11,11 +11,27 @@
   --color-take:    #4A6741;
   --color-usuzumi: #6B6B7B;
   --color-sakura:  #E8C4CC;
+
+  /* アプリ内統一デザイントークン */
+  --color-bg:           #f5ebe0;
+  --color-bg-card:      #fdf6ef;
+  --color-primary:      #8b1a2e;
+  --color-primary-hover:#6e1525;
+  --color-text:         #2c1810;
+  --color-text-sub:     #6b4c3b;
+  --color-border:       #d4a89a;
+  --color-accent:       #c9a96e;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ja:      'Shippori Mincho B1', serif;
+  --font-body:    'Zen Kaku Gothic New', sans-serif;
 }
 
 /* フォントユーティリティ */
 .font-serif-jp   { font-family: var(--font-noto-serif-jp), serif; }
-.font-cormorant  { font-family: var(--font-cormorant), Georgia, serif; }
+.font-cormorant  { font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif; }
+.font-shippori   { font-family: 'Shippori Mincho B1', var(--font-noto-serif-jp), serif; }
+.font-zen-kaku   { font-family: 'Zen Kaku Gothic New', var(--font-noto-sans-jp), sans-serif; }
 
 /* アニメーション */
 @keyframes bamboo-sway {
@@ -98,13 +114,29 @@
   }
 }
 
+/* ─── アプリ内共通コンポーネント ────────────────────────────────────────────── */
+.app-bg        { background-color: var(--color-bg); color: var(--color-text); }
+.app-card      { background-color: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 0.75rem; box-shadow: 0 2px 20px rgba(44,24,16,0.06); }
+.btn-primary   { background-color: var(--color-primary) !important; color: #fff !important; font-family: var(--font-ja); font-weight: 400; letter-spacing: 0.08em; border-radius: 9999px !important; border: none; transition: background-color 0.2s ease; }
+.btn-primary:hover { background-color: var(--color-primary-hover) !important; }
+.btn-outline-p { background: transparent !important; border: 1px solid var(--color-primary) !important; color: var(--color-primary) !important; font-family: var(--font-ja); letter-spacing: 0.1em; border-radius: 2rem !important; transition: background 0.2s; }
+.btn-outline-p:hover { background-color: rgba(139,26,46,0.06) !important; }
+.input-app     { background-color: #fff !important; border: 1px solid var(--color-border) !important; border-radius: 0.5rem !important; color: var(--color-text) !important; font-family: var(--font-body); }
+.input-app:focus { border-color: var(--color-primary) !important; outline: none; box-shadow: 0 0 0 2px rgba(139,26,46,0.12) !important; }
+
+/* サイドバー・ナビ */
+.nav-app       { background-color: var(--color-bg-card); border-right: 1px solid var(--color-border); }
+.nav-item-active { background-color: rgba(139,26,46,0.08) !important; color: var(--color-primary) !important; }
+.nav-item-hover:hover { background-color: rgba(139,26,46,0.04) !important; }
+
+/* ─── カスタムスタイル ──────────────────────────────────────────────────────── */
 /* カスタムスタイル */
 .sakura-gradient {
   background: linear-gradient(135deg, #fef7f7 0%, #fee2e2 100%);
 }
 
 .sakura-text-gradient {
-  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #8b1a2e 0%, #6e1525 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

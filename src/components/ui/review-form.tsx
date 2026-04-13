@@ -153,7 +153,7 @@ export function ReviewForm({
             id="anonymous"
             checked={isAnonymous}
             onChange={(e) => setIsAnonymous(e.target.checked)}
-            className="mt-1 rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+            className="mt-1 rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
           />
           <div>
             <label htmlFor="anonymous" className="text-sm font-medium text-gray-700">

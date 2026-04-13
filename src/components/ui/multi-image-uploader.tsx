@@ -155,7 +155,7 @@ export default function MultiImageUploader({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900 border-b border-sakura-200 pb-2">
+      <h3 className="text-lg font-semibold text-gray-900 border-b border-[#d4a89a] pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
         {t('photos.profilePhotos')} ({t('photos.maxPhotos')} {maxImages}{currentLanguage === 'ja' ? '枚' : ''})
       </h3>
@@ -168,8 +168,8 @@ export default function MultiImageUploader({
             {/* 画像コンテナ - メイン画像は特別なスタイリング */}
             <div className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-colors ${
               image.isMain 
-                ? 'border-sakura-500 shadow-lg ring-2 ring-sakura-200' 
-                : 'border-gray-200 hover:border-sakura-300'
+                ? 'border-[#8b1a2e] shadow-lg ring-2 ring-[#d4a89a]' 
+                : 'border-gray-200 hover:border-[#d4a89a]'
             }`}>
               <img
                 src={image.url}
@@ -180,7 +180,7 @@ export default function MultiImageUploader({
             
             {/* メインバッジ - より目立つデザイン */}
             {image.isMain && (
-              <div className="absolute top-2 left-2 bg-gradient-to-r from-sakura-600 to-sakura-700 text-white text-xs px-3 py-1 rounded-full shadow-md border border-white">
+              <div className="absolute top-2 left-2 bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white text-xs px-3 py-1 rounded-full shadow-md border border-white">
                 <span className="font-semibold">{t('photos.main')}</span>
               </div>
             )}
@@ -247,7 +247,7 @@ export default function MultiImageUploader({
         {images.length < maxImages && (
           <div
             onClick={triggerFileInput}
-            className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+            className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a89a] hover:bg-[#fdf6ef] transition-colors"
           >
             <Upload className="w-8 h-8 text-gray-400 mb-2" />
             <span className="text-sm text-gray-500 text-center">

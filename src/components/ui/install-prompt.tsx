@@ -98,10 +98,10 @@ export function InstallPrompt() {
 
   if (isIOS && isSafari && !deferredPrompt) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 bg-white border border-sakura-200 rounded-lg shadow-lg p-4 z-50">
+      <div className="fixed bottom-4 left-4 right-4 bg-white border border-[#d4a89a] rounded-lg shadow-lg p-4 z-50">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center">
-            <Smartphone className="w-5 h-5 text-sakura-600 mr-2" />
+            <Smartphone className="w-5 h-5 text-[#8b1a2e] mr-2" />
             <h3 className="font-semibold text-gray-900">アプリとして追加</h3>
           </div>
           <Button
@@ -137,10 +137,10 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 bg-white border border-sakura-200 rounded-lg shadow-lg p-4 z-50">
+    <div className="fixed bottom-4 left-4 right-4 bg-white border border-[#d4a89a] rounded-lg shadow-lg p-4 z-50">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center">
-          <Download className="w-5 h-5 text-sakura-600 mr-2" />
+          <Download className="w-5 h-5 text-[#8b1a2e] mr-2" />
           <h3 className="font-semibold text-gray-900">アプリをインストール</h3>
         </div>
         <Button

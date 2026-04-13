@@ -239,7 +239,7 @@ export default function AdminVerificationPage() {
       <div className="max-w-4xl mx-auto p-6">
         {/* ヘッダー */}
         <div className="flex items-center gap-3 mb-6">
-          <ShieldCheck className="w-7 h-7 text-sakura-600" />
+          <ShieldCheck className="w-7 h-7 text-[#8b1a2e]" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900">身分証レビュー</h1>
             <p className="text-sm text-gray-500">
@@ -262,7 +262,7 @@ export default function AdminVerificationPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-sakura-500 text-white shadow-sm'
+                    ? 'bg-[#8b1a2e] text-white shadow-sm'
                     : 'text-gray-500 hover:bg-gray-100'
                 }`}
               >
@@ -280,7 +280,7 @@ export default function AdminVerificationPage() {
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="text-center text-gray-500">
-              <div className="w-8 h-8 border-2 border-gray-300 border-t-sakura-500 rounded-full animate-spin mx-auto mb-3" />
+              <div className="w-8 h-8 border-2 border-gray-300 border-t-[#8b1a2e] rounded-full animate-spin mx-auto mb-3" />
               読み込み中...
             </div>
           </div>
@@ -405,7 +405,7 @@ export default function AdminVerificationPage() {
                         <button
                           onClick={() => handleApprove(req.id)}
                           disabled={isProcessing}
-                          className="flex-1 py-2.5 bg-sakura-500 text-white rounded-full hover:bg-sakura-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                          className="flex-1 py-2.5 bg-[#8b1a2e] text-white rounded-full hover:bg-[#8b1a2e] font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                         >
                           {isProcessing ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -441,7 +441,7 @@ export default function AdminVerificationPage() {
                         <button
                           onClick={() => handleApprove(req.id)}
                           disabled={isProcessing}
-                          className="py-2.5 px-6 bg-sakura-500 text-white rounded-full hover:bg-sakura-600 font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                          className="py-2.5 px-6 bg-[#8b1a2e] text-white rounded-full hover:bg-[#8b1a2e] font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                         >
                           {isProcessing ? (
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

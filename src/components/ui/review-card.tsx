@@ -150,7 +150,7 @@ export function ReviewCard({
       <div className="flex items-start justify-between mb-3">
         {/* ユーザー情報 */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-[#fdf6ef] rounded-full flex items-center justify-center">
             {review.reviewerImage ? (
               <Image
                 src={review.reviewerImage}
@@ -160,7 +160,7 @@ export function ReviewCard({
                 height={40}
               />
             ) : (
-              <User className="w-5 h-5 text-sakura-600" />
+              <User className="w-5 h-5 text-[#8b1a2e]" />
             )}
           </div>
           <div>
@@ -185,10 +185,10 @@ export function ReviewCard({
               size="sm"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-red-500 hover:text-red-700"
+              className="text-[#8b1a2e] hover:text-[#6e1525]"
             >
               {isDeleting ? (
-                <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}
@@ -240,7 +240,7 @@ export function ReviewCard({
               id="anonymous"
               checked={editAnonymous}
               onChange={(e) => setEditAnonymous(e.target.checked)}
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <label htmlFor="anonymous" className="text-sm text-gray-700">
               匿名で投稿

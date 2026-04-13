@@ -429,9 +429,9 @@ function ProfileDetailContent() {
   // ローディング
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-sakura-600" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
           <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
@@ -441,7 +441,7 @@ function ProfileDetailContent() {
   // エラー
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">
           <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -495,7 +495,7 @@ function ProfileDetailContent() {
   const mainImage = displayImages[0] || null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       {/* ヘッダー */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -507,7 +507,7 @@ function ProfileDetailContent() {
             {t('back')}
           </button>
           <div className="flex items-center gap-2">
-            <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-sakura-500' : 'text-gray-400'}`} />
+            <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-400'}`} />
             <span className="text-sm text-gray-600">
               {t('remaining')} <span className="font-bold">{likesRemaining}</span>/10
             </span>
@@ -528,8 +528,8 @@ function ProfileDetailContent() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-sakura-100 to-sakura-200">
-                  <User className="w-24 h-24 text-sakura-300" />
+                <div className="w-full h-full flex items-center justify-center bg-[#ede0d4]">
+                  <User className="w-24 h-24 text-[#d4a89a]" />
                 </div>
               )}
 
@@ -674,7 +674,7 @@ function ProfileDetailContent() {
                         </span>
                         <button
                           onClick={() => setShowTranslation(false)}
-                          className="text-xs text-sakura-600 hover:text-sakura-700 underline"
+                          className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] underline"
                         >
                           {t('showOriginal')}
                         </button>
@@ -694,7 +694,7 @@ function ProfileDetailContent() {
                             )}
                             <button
                               onClick={() => { setTranslationError(null); handleTranslate(bio); }}
-                              className="ml-2 text-sakura-600 underline"
+                              className="ml-2 text-[#8b1a2e] underline"
                             >
                               {t('retry')}
                             </button>
@@ -702,7 +702,7 @@ function ProfileDetailContent() {
                         ) : translatedBio ? (
                           <button
                             onClick={() => setShowTranslation(true)}
-                            className="text-xs text-sakura-600 hover:text-sakura-700 flex items-center gap-1"
+                            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1"
                           >
                             <Languages className="w-3 h-3" />
                             {t('translateButton')}
@@ -711,7 +711,7 @@ function ProfileDetailContent() {
                           <button
                             onClick={() => handleTranslate(bio)}
                             disabled={isTranslating}
-                            className="text-xs text-sakura-600 hover:text-sakura-700 flex items-center gap-1 disabled:opacity-50"
+                            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1 disabled:opacity-50"
                           >
                             {isTranslating ? (
                               <>
@@ -757,7 +757,7 @@ function ProfileDetailContent() {
                     {interests.map((interest: string, index: number) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-sakura-100 text-sakura-800 rounded-full text-xs"
+                        className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
                       >
                         {formatCultureTag(interest, currentLanguage)}
                       </span>
@@ -802,7 +802,7 @@ function ProfileDetailContent() {
 
           {/* さがすに戻るリンク */}
           <div className="mt-6 text-center">
-            <Link href="/matches" className="text-sakura-600 hover:text-sakura-700 text-sm">
+            <Link href="/matches" className="text-[#8b1a2e] hover:text-[#8b1a2e] text-sm">
               ← {t('backToSearch')}
             </Link>
           </div>

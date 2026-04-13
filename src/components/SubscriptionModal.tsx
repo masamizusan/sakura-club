@@ -118,7 +118,7 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
               onClick={() => setSelectedPlan(plan.id)}
               className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
                 selectedPlan === plan.id
-                  ? 'border-pink-400 bg-pink-50'
+                  ? 'border-[#8b1a2e] bg-[#fdf6ef]'
                   : 'border-gray-200 bg-white'
               }`}
             >
@@ -126,12 +126,12 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-gray-900">{plan.label}</span>
                   {plan.recommended && (
-                    <span className="text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs text-white px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'var(--color-primary)' }}>
                       {t.recommendedLabel}
                     </span>
                   )}
                   {plan.savings && (
-                    <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-primary)' }}>
                       {plan.savings}
                     </span>
                   )}
@@ -152,7 +152,7 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-3 rounded-xl font-semibold text-base hover:opacity-90 transition disabled:opacity-60"
+          className="w-full btn-primary py-3 rounded-xl font-semibold text-base transition disabled:opacity-60"
         >
           {loading ? t.loading : t.subscribe}
         </button>

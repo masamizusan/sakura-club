@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { authService } from '@/lib/auth'
 import { notifyAuthChange, setAuthActionInThisTab } from '@/store/authStore'
 import { AuthPageMarker } from '@/components/AuthPageMarker'
-import { Heart, Eye, EyeOff, Loader2, ArrowLeft, Globe } from 'lucide-react'
+import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react'
 import { z } from 'zod'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
@@ -322,31 +322,32 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <AuthPageMarker />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-between items-center mb-6">
-              <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-800">
+              <Link href="/" className="inline-flex items-center hover:opacity-70 font-zen-kaku text-sm" style={{ color: 'var(--color-text-sub)' }}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t('signup.backButton')}
               </Link>
-              
-              {/* Language Switcher */}
               <LanguageSelector variant="light" size="sm" showIcon={true} />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('signup.title')}</h1>
+            <span className="font-cormorant text-2xl block mb-3" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
+              SAKURA CLUB
+            </span>
+            <h1 className="font-shippori text-3xl mb-2" style={{ color: 'var(--color-text)', letterSpacing: '0.1em' }}>{t('signup.title')}</h1>
           </div>
 
           {/* Registration Form */}
-          <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="app-card p-8">
             {signupError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-700 text-sm">{signupError}</p>
                 {signupError.includes('既に登録') && (
-                  <Link href="/login" className="mt-2 inline-block text-sm text-sakura-600 underline hover:text-sakura-800">
+                  <Link href="/login" className="mt-2 inline-block text-sm underline" style={{ color: 'var(--color-primary)' }}>
                     ログイン画面へ →
                   </Link>
                 )}
@@ -508,7 +509,7 @@ export default function SignupPage() {
                     <input
                       type="checkbox"
                       {...register('japaneseNationalityConfirm')}
-                      className="mt-1 h-4 w-4 text-sakura-600 border-gray-300 rounded focus:ring-sakura-500"
+                      className="mt-1 h-4 w-4 text-[#8b1a2e] border-gray-300 rounded focus:ring-[#8b1a2e]"
                     />
                     <label className="text-sm font-medium text-gray-700">
                       {t('signup.japaneseNationalityConfirm')} <span className="text-red-500">{t('signup.required')}</span>
@@ -536,7 +537,7 @@ export default function SignupPage() {
               {/* 登録ボタン */}
               <Button
                 type="submit"
-                className="w-full bg-sakura-600 hover:bg-sakura-700 text-white py-3"
+                className="w-full btn-primary py-3"
                 disabled={isLoading || !selectedGender}
               >
                 {isLoading ? (
@@ -560,7 +561,7 @@ export default function SignupPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   {t('signup.loginPrompt')}{' '}
-                  <Link href="/login" className="text-sakura-600 hover:text-sakura-700 font-medium">
+                  <Link href="/login" className="font-medium hover:underline" style={{ color: 'var(--color-primary)' }}>
                     {t('signup.loginLink')}
                   </Link>
                 </p>

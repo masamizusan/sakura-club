@@ -9,12 +9,12 @@ import { LanguageSelector } from '@/components/LanguageSelector'
 const T = {
   ja: {
     nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'ログイン', signup: 'Join Free' },
-    heroMain: '本物の日本は、本物の出会いから始まる。',
+    heroMain: '本物の日本は、\n一つの出会いから始まる。',
     heroSub: '彼女がドアを開けてくれる。あとは日本が語りかけてくる。',
-    ctaWomen: '女性として無料登録',
-    ctaMen: '外国人男性として登録',
+    ctaWomen: '日本人女性（無料）',
+    ctaMen: '外国籍男性として登録',
     menTag: '外国人男性の方へ',
-    menTitle: '日本を通り過ぎるだけじゃもったいない。\n彼女に、日本の中へ連れて行ってもらおう。',
+    menTitle: '彼女に、日本の中へ連れて行ってもらおう。',
     menSub: '一つの出会いから。たくさんの日本が、見えてくる。',
     menBody: '観光地では出会えない日本がある。地元の食事、静かな神社、何気ない日常の風景。彼女と一緒だから、初めて見えてくるものがある。',
     menCta: '登録する',
@@ -30,7 +30,7 @@ const T = {
     step2Body: '日本に興味を持つ外国人男性と、迎え入れたい日本人女性が出会う場所。',
     step3Title: '本物の日本を体験する',
     step3Body: '彼女を通して、日本はただの旅先以上のものになる。',
-    whyTitle: '本物の日本は、本物の出会いから始まる。',
+    whyTitle: '本物の日本は、一つの出会いから始まる。',
     feature1Title: '安心・安全',
     feature1Body: 'AI審査で身元確認。安心して出会える環境を整えています。',
     feature2Title: '4言語対応',
@@ -43,18 +43,18 @@ const T = {
     planFree: '日本人女性は、完全無料。',
     planSub: '一つの出会いから。たくさんの日本が、見えてくる。',
     planMonthly: '月額', plan3month: '3ヶ月', plan6month: '6ヶ月', planYearly: '年額', planPopular: 'おすすめ',
-    ctaTitle: '本物の日本は、本物の出会いから始まる。',
+    ctaTitle: 'ここから始まる、\nあなただけの日本。',
     ctaSub: '日本を愛してくれた彼を、あなたの日本へ。',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   en: {
     nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'Login', signup: 'Join Free' },
-    heroMain: 'The real Japan begins with a real connection.',
+    heroMain: 'The real Japan begins with\none real connection.',
     heroSub: 'She opens the door. Japan does the rest.',
-    ctaWomen: 'Join Free as a Woman',
-    ctaMen: 'Join as a Man',
+    ctaWomen: 'Japanese Women (Free)',
+    ctaMen: 'Foreign Men (Join)',
     menTag: 'For Foreign Men',
-    menTitle: "Don't just pass through Japan.\nLet her bring you into it.",
+    menTitle: "Let her bring you into it.",
     menSub: 'One encounter. A world of Japan to discover.',
     menBody: "There's a Japan you can't find on tourist maps. Local food, quiet shrines, everyday moments. With her beside you, Japan reveals itself.",
     menCta: 'Get Started',
@@ -83,18 +83,18 @@ const T = {
     planFree: "For women, it's always free.",
     planSub: 'One encounter. A world of Japan to discover.',
     planMonthly: 'Monthly', plan3month: '3 Months', plan6month: '6 Months', planYearly: 'Annual', planPopular: 'Popular',
-    ctaTitle: 'The real Japan begins with a real connection.',
+    ctaTitle: 'Your Japan starts here.',
     ctaSub: 'Welcome him — the one who fell in love with Japan — into your Japan.',
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   ko: {
     nav: { howItWorks: '이용 방법', safety: 'Safety & Trust', login: '로그인', signup: '무료 가입' },
-    heroMain: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    heroMain: '진짜 일본은\n진짜 만남에서 시작됩니다.',
     heroSub: '그녀가 문을 열어줍니다. 나머지는 일본이 말해줍니다.',
-    ctaWomen: '여성으로 무료 가입',
-    ctaMen: '남성으로 가입',
+    ctaWomen: '일본 여성（무료）',
+    ctaMen: '외국인 남성으로 가입',
     menTag: '외국인 남성 분들께',
-    menTitle: '일본을 그냥 지나치지 마세요.\n그녀가 일본 안으로 데려가 줄 거예요.',
+    menTitle: '그녀가 일본 안으로 데려가 줄 거예요.',
     menSub: '하나의 만남에서. 수많은 일본이 보이기 시작합니다.',
     menBody: '관광지에서는 만날 수 없는 일본이 있습니다. 현지 음식, 조용한 신사, 일상의 풍경. 그녀와 함께이기에 처음으로 보이는 것들이 있습니다.',
     menCta: '시작하기',
@@ -129,12 +129,12 @@ const T = {
   },
   'zh-tw': {
     nav: { howItWorks: '使用方式', safety: 'Safety & Trust', login: '登入', signup: '免費加入' },
-    heroMain: '真實的日本，從真實的相遇開始。',
+    heroMain: '真實的日本，\n從真實的相遇開始。',
     heroSub: '她為你開啟了門。日本會為你說完剩下的故事。',
-    ctaWomen: '以女性身份免費加入',
-    ctaMen: '以男性身份加入',
+    ctaWomen: '日本女性（免費）',
+    ctaMen: '外籍男性加入',
     menTag: '外國男性',
-    menTitle: '別只是路過日本。\n讓她帶你走進真正的日本。',
+    menTitle: '讓她帶你走進真正的日本。',
     menSub: '一次相遇。無數個日本等你發現。',
     menBody: '有一個日本，是旅遊景點找不到的。當地美食、寧靜神社、日常風景。因為有她在身邊，日本才真正展現自己。',
     menCta: '立即開始',
@@ -238,7 +238,6 @@ export default function LandingPage() {
       <SplitSection t={t} />
       <HowItWorksSection t={t} />
       <WhySection t={t} />
-      <PricingSection t={t} />
       <CtaSection t={t} />
       <Footer t={t} />
     </div>
@@ -253,20 +252,20 @@ function Nav({ t }: { t: Translations }) {
     <header style={{ backgroundColor: 'var(--color-washi)', borderBottom: '1px solid var(--color-gold)' }}
       className="sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="font-cormorant text-2xl font-light tracking-widest"
-          style={{ color: 'var(--color-sumi)' }}>
+        <Link href="/" className="font-cormorant font-light text-2xl"
+          style={{ color: 'var(--color-sumi)', letterSpacing: '0.25em' }}>
           SAKURA CLUB
         </Link>
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#how" className="text-sm tracking-wide transition-opacity hover:opacity-60"
-            style={{ color: 'var(--color-usuzumi)' }}>{t.nav.howItWorks}</a>
-          <a href="#why" className="text-sm tracking-wide transition-opacity hover:opacity-60"
-            style={{ color: 'var(--color-usuzumi)' }}>{t.nav.safety}</a>
+          <a href="#how" className="font-zen-kaku text-sm transition-opacity hover:opacity-60"
+            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.howItWorks}</a>
+          <a href="#why" className="font-zen-kaku text-sm transition-opacity hover:opacity-60"
+            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.safety}</a>
           <LanguageSelector variant="light" size="sm" showIcon={false} />
-          <Link href="/login" className="text-sm tracking-wide transition-opacity hover:opacity-60"
-            style={{ color: 'var(--color-sumi)' }}>{t.nav.login}</Link>
-          <Link href="/signup" className="text-sm px-5 py-2 rounded-full text-white transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)' }}>{t.nav.signup}</Link>
+          <Link href="/login" className="font-zen-kaku text-sm transition-opacity hover:opacity-60"
+            style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.login}</Link>
+          <Link href="/signup" className="font-zen-kaku text-sm px-5 py-2 rounded-full text-white transition-opacity hover:opacity-80"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.signup}</Link>
         </nav>
         <button className="md:hidden p-2" onClick={() => setOpen(!open)}
           style={{ color: 'var(--color-sumi)' }}>
@@ -275,12 +274,12 @@ function Nav({ t }: { t: Translations }) {
       </div>
       {open && (
         <div className="md:hidden px-6 pb-6 space-y-4" style={{ backgroundColor: 'var(--color-washi)' }}>
-          <a href="#how" className="block text-sm" style={{ color: 'var(--color-usuzumi)' }}>{t.nav.howItWorks}</a>
-          <a href="#why" className="block text-sm" style={{ color: 'var(--color-usuzumi)' }}>{t.nav.safety}</a>
+          <a href="#how" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.howItWorks}</a>
+          <a href="#why" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.safety}</a>
           <div className="pt-2"><LanguageSelector variant="light" size="sm" showIcon={false} /></div>
-          <Link href="/login" className="block text-sm" style={{ color: 'var(--color-sumi)' }}>{t.nav.login}</Link>
-          <Link href="/signup" className="block text-sm text-center py-2 rounded-full text-white"
-            style={{ backgroundColor: 'var(--color-beni)' }}>{t.nav.signup}</Link>
+          <Link href="/login" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.login}</Link>
+          <Link href="/signup" className="block font-zen-kaku text-sm text-center py-2 rounded-full text-white"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.signup}</Link>
         </div>
       )}
     </header>
@@ -319,8 +318,15 @@ function HeroSection({ t }: { t: Translations }) {
       {/* コンテンツ */}
       <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
         {/* メインキャッチ */}
-        <p className="font-cormorant italic text-4xl md:text-6xl animate-fade-in"
-          style={{ color: 'var(--color-sumi)', letterSpacing: '0.02em' }}>
+        <p className="text-3xl md:text-5xl animate-fade-in whitespace-pre-line"
+          style={{
+            fontFamily: "'Cormorant Garamond', 'Shippori Mincho B1', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 300,
+            color: 'var(--color-sumi)',
+            letterSpacing: '0.05em',
+            lineHeight: 1.7,
+          }}>
           {t.heroMain}
         </p>
 
@@ -329,21 +335,27 @@ function HeroSection({ t }: { t: Translations }) {
           style={{ backgroundColor: 'var(--color-gold)' }} />
 
         {/* サブコピー */}
-        <p className="font-serif-jp text-base md:text-lg animate-fade-up animate-delay-400"
-          style={{ color: 'var(--color-beni)' }}>
+        <p className="text-base md:text-lg animate-fade-up animate-delay-400"
+          style={{
+            fontFamily: "'Shippori Mincho B1', var(--font-noto-serif-jp), serif",
+            fontWeight: 400,
+            color: 'var(--color-beni)',
+            letterSpacing: '0.1em',
+            lineHeight: 2.0,
+          }}>
           {t.heroSub}
         </p>
 
         {/* CTAボタン */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up animate-delay-600">
           <Link href="/signup?gender=female"
-            className="px-8 py-3 rounded-full text-white text-sm font-medium tracking-wider transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)' }}>
+            className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.ctaWomen}
           </Link>
           <Link href="/signup?gender=male"
-            className="px-8 py-3 rounded-full text-sm font-medium tracking-wider transition-opacity hover:opacity-70"
-            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-sumi)', backgroundColor: 'transparent' }}>
+            className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
+            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-sumi)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.ctaMen}
           </Link>
         </div>
@@ -363,23 +375,23 @@ function SplitSection({ t }: { t: Translations }) {
           <div className="absolute top-6 right-6 opacity-20">
             <BambooSVG className="w-12 h-32" />
           </div>
-          <span className="font-serif-jp text-xs tracking-widest mb-4"
-            style={{ color: 'var(--color-take)' }}>{t.menTag}</span>
-          <h2 className="font-cormorant text-3xl md:text-4xl leading-tight whitespace-pre-line mb-3"
-            style={{ color: 'var(--color-sumi)' }}>
+          <span className="font-shippori text-xs tracking-widest mb-4"
+            style={{ color: 'var(--color-take)', letterSpacing: '0.12em' }}>{t.menTag}</span>
+          <h2 className="font-shippori text-xl md:text-2xl mb-3 whitespace-nowrap"
+            style={{ color: 'var(--color-sumi)', letterSpacing: '0.05em', lineHeight: 1.7 }}>
             {t.menTitle}
           </h2>
           <p className="font-cormorant italic text-base mb-5"
-            style={{ color: 'var(--color-beni)' }}>
+            style={{ color: 'var(--color-beni)', letterSpacing: '0.05em' }}>
             {t.menSub}
           </p>
-          <p className="text-sm leading-relaxed mb-8 max-w-sm"
-            style={{ color: 'var(--color-usuzumi)' }}>
+          <p className="font-zen-kaku text-sm leading-relaxed mb-8 max-w-sm"
+            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.05em' }}>
             {t.menBody}
           </p>
           <Link href="/signup?gender=male"
-            className="inline-block w-fit px-7 py-3 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)' }}>
+            className="font-zen-kaku inline-block w-fit px-7 py-3 rounded-full text-sm text-white transition-opacity hover:opacity-80"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.menCta}
           </Link>
         </div>
@@ -394,23 +406,23 @@ function SplitSection({ t }: { t: Translations }) {
           <div className="absolute top-6 left-6 opacity-25">
             <SakuraSVG className="w-14 h-14" color="var(--color-beni)" />
           </div>
-          <span className="font-serif-jp text-xs tracking-widest mb-4"
-            style={{ color: 'var(--color-beni)' }}>{t.womenTag}</span>
-          <h2 className="font-serif-jp text-2xl md:text-3xl leading-relaxed whitespace-pre-line mb-3"
-            style={{ color: 'var(--color-sumi)' }}>
+          <span className="font-shippori text-xs mb-4"
+            style={{ color: 'var(--color-beni)', letterSpacing: '0.12em' }}>{t.womenTag}</span>
+          <h2 className="font-shippori text-2xl md:text-3xl whitespace-pre-line mb-3"
+            style={{ color: 'var(--color-sumi)', letterSpacing: '0.08em', lineHeight: 1.7 }}>
             {t.womenTitle}
           </h2>
           <p className="font-cormorant italic text-base mb-5"
-            style={{ color: 'var(--color-beni)' }}>
+            style={{ color: 'var(--color-beni)', letterSpacing: '0.05em' }}>
             {t.womenSub}
           </p>
-          <p className="text-sm leading-relaxed mb-8 max-w-sm"
-            style={{ color: 'var(--color-usuzumi)' }}>
+          <p className="font-zen-kaku text-sm leading-relaxed mb-8 max-w-sm"
+            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.05em' }}>
             {t.womenBody}
           </p>
           <Link href="/signup?gender=female"
-            className="inline-block w-fit px-7 py-3 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)' }}>
+            className="font-zen-kaku inline-block w-fit px-7 py-3 rounded-full text-sm text-white transition-opacity hover:opacity-80"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.womenCta}
           </Link>
         </div>
@@ -430,18 +442,22 @@ function HowItWorksSection({ t }: { t: Translations }) {
     <section id="how" className="py-24 scroll-fade" style={{ backgroundColor: 'var(--color-sumi)' }}>
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="font-cormorant italic text-base mb-2" style={{ color: 'var(--color-gold)' }}>How It Works</p>
-          <h2 className="font-serif-jp text-2xl md:text-3xl" style={{ color: '#fff' }}>{t.howTitle}</h2>
+          <p className="font-cormorant italic text-base mb-2"
+            style={{ color: 'var(--color-gold)', fontWeight: 300, letterSpacing: '0.08em' }}>How It Works</p>
+          <h2 className="font-shippori text-2xl md:text-3xl"
+            style={{ color: '#fff', letterSpacing: '0.1em', lineHeight: 1.7 }}>{t.howTitle}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {steps.map(s => (
             <div key={s.num} className="text-center">
-              <div className="font-cormorant text-5xl mb-4" style={{ color: 'var(--color-gold)' }}>{s.num}</div>
+              <div className="font-cormorant text-5xl mb-4" style={{ color: 'var(--color-gold)', fontWeight: 300 }}>{s.num}</div>
               <div className="w-px h-10 mx-auto mb-4" style={{ backgroundColor: 'var(--color-gold)', opacity: 0.4 }} />
               <p className="font-cormorant italic text-sm mb-2"
-                style={{ color: 'var(--color-gold)', opacity: 0.8 }}>{s.eng}</p>
-              <p className="font-serif-jp text-base font-medium mb-3" style={{ color: '#fff' }}>{s.title}</p>
-              <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.body}</p>
+                style={{ color: 'var(--color-gold)', opacity: 0.8, fontWeight: 300, letterSpacing: '0.08em' }}>{s.eng}</p>
+              <p className="font-shippori text-base mb-3"
+                style={{ color: '#fff', letterSpacing: '0.08em', lineHeight: 1.8 }}>{s.title}</p>
+              <p className="font-zen-kaku text-xs leading-relaxed"
+                style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 300, letterSpacing: '0.05em' }}>{s.body}</p>
             </div>
           ))}
         </div>
@@ -463,11 +479,11 @@ function WhySection({ t }: { t: Translations }) {
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16">
           <p className="font-cormorant italic text-base mb-2"
-            style={{ color: 'var(--color-usuzumi)' }}>
+            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>
             The real Japan begins with a real connection.
           </p>
-          <h2 className="font-serif-jp text-2xl md:text-3xl"
-            style={{ color: 'var(--color-sumi)' }}>{t.whyTitle}</h2>
+          <h2 className="font-cormorant italic text-2xl md:text-3xl"
+            style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {features.map(f => (
@@ -475,64 +491,17 @@ function WhySection({ t }: { t: Translations }) {
               className="p-6 rounded-lg transition-shadow hover:shadow-md"
               style={{ border: '1px solid var(--color-gold)', backgroundColor: '#fff' }}>
               <div className="text-3xl mb-3">{f.icon}</div>
-              <h3 className="font-serif-jp text-base font-semibold mb-2" style={{ color: 'var(--color-sumi)' }}>
+              <h3 className="font-shippori text-base mb-2"
+                style={{ color: 'var(--color-sumi)', letterSpacing: '0.08em' }}>
                 {f.title}
               </h3>
-              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-usuzumi)' }}>
+              <p className="font-zen-kaku text-xs leading-relaxed"
+                style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.05em' }}>
                 {f.body}
               </p>
             </div>
           ))}
         </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── SECTION 5：料金プラン ────────────────────────────────────────────────────
-function PricingSection({ t }: { t: Translations }) {
-  const plans = [
-    { key: 'monthly', label: t.planMonthly, price: '$29.99', period: '/mo', perMonth: '$29.99', popular: false },
-    { key: '3month',  label: t.plan3month,  price: '$74.99', period: '/3mo', perMonth: '$25.00', popular: true },
-    { key: '6month',  label: t.plan6month,  price: '$134.99', period: '/6mo', perMonth: '$22.50', popular: false },
-    { key: 'yearly',  label: t.planYearly,  price: '$215.99', period: '/yr', perMonth: '$18.00', popular: false },
-  ]
-  return (
-    <section className="py-24 scroll-fade" style={{ backgroundColor: 'rgba(74,103,65,0.05)' }}>
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-4">
-          <h2 className="font-serif-jp text-2xl md:text-3xl mb-3" style={{ color: 'var(--color-sumi)' }}>
-            {t.planTitle}
-          </h2>
-          <p className="font-serif-jp text-sm" style={{ color: 'var(--color-beni)' }}>{t.planFree}</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 my-10">
-          {plans.map(p => (
-            <div key={p.key} className="relative rounded-xl p-5"
-              style={{
-                backgroundColor: 'var(--color-washi)',
-                border: p.popular ? '2px solid var(--color-beni)' : '1px solid var(--color-gold)',
-              }}>
-              {p.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full font-medium"
-                  style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-sumi)' }}>
-                  {t.planPopular}
-                </div>
-              )}
-              <p className="font-serif-jp text-sm font-medium mb-1" style={{ color: 'var(--color-sumi)' }}>{p.label}</p>
-              <p className="font-cormorant text-3xl font-light"
-                style={{ color: p.popular ? 'var(--color-beni)' : 'var(--color-sumi)' }}>
-                {p.price}
-              </p>
-              <p className="text-xs" style={{ color: 'var(--color-usuzumi)' }}>{p.period}</p>
-              <p className="text-xs mt-2" style={{ color: 'var(--color-usuzumi)' }}>{p.perMonth}/mo</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-center font-cormorant italic text-base"
-          style={{ color: 'var(--color-usuzumi)' }}>
-          "{t.planSub}"
-        </p>
       </div>
     </section>
   )
@@ -550,22 +519,24 @@ function CtaSection({ t }: { t: Translations }) {
         <BambooSVG className="h-full w-full" />
       </div>
       <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
-        <p className="font-cormorant italic text-3xl md:text-5xl leading-tight mb-4" style={{ color: '#fff' }}>
+        <p className="font-cormorant italic text-3xl md:text-5xl leading-tight mb-4 whitespace-pre-line"
+          style={{ color: '#fff', fontWeight: 300, letterSpacing: '0.05em', lineHeight: 1.7 }}>
           {t.ctaTitle}
         </p>
         <div className="w-16 h-px mx-auto my-6" style={{ backgroundColor: 'var(--color-gold)' }} />
-        <p className="font-serif-jp text-sm mb-12" style={{ color: 'var(--color-gold)' }}>
+        <p className="font-shippori text-sm mb-12"
+          style={{ color: 'var(--color-gold)', letterSpacing: '0.1em', lineHeight: 2.0 }}>
           {t.ctaSub}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/signup?gender=female"
-            className="px-8 py-3 rounded-full text-white text-sm font-medium tracking-wider transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)' }}>
+            className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
+            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.ctaWomen}
           </Link>
           <Link href="/signup?gender=male"
-            className="px-8 py-3 rounded-full text-sm font-medium tracking-wider transition-opacity hover:opacity-70"
-            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-gold)', backgroundColor: 'transparent' }}>
+            className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
+            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-gold)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.ctaMen}
           </Link>
         </div>
@@ -579,14 +550,14 @@ function Footer({ t }: { t: Translations }) {
   return (
     <footer className="py-10 px-6" style={{ backgroundColor: '#2A2A3E' }}>
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <span className="font-cormorant text-xl tracking-widest" style={{ color: '#fff' }}>SAKURA CLUB</span>
+        <span className="font-cormorant" style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 300, letterSpacing: '0.25em' }}>SAKURA CLUB</span>
         <nav className="flex gap-6">
           {t.footerNav.map(item => (
-            <a key={item} href="#" className="text-xs transition-opacity hover:opacity-60"
-              style={{ color: 'rgba(255,255,255,0.5)' }}>{item}</a>
+            <a key={item} href="#" className="font-zen-kaku text-xs transition-opacity hover:opacity-60"
+              style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 300, letterSpacing: '0.08em' }}>{item}</a>
           ))}
         </nav>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2026 SAKURA CLUB</p>
+        <p className="font-zen-kaku text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 300 }}>© 2026 SAKURA CLUB</p>
       </div>
     </footer>
   )

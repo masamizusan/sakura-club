@@ -17,7 +17,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        sakura: "bg-sakura-600 text-white hover:bg-sakura-700 shadow-lg hover:shadow-xl transition-all duration-300",
+        sakura: "bg-[#8b1a2e] text-white hover:bg-[#6e1525] rounded-full tracking-wide transition-colors duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

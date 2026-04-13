@@ -42,7 +42,7 @@ export default function Error({ error, reset }: ErrorPageProps) {
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <div className="flex items-center justify-center min-h-screen">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-4">
           <h2 className="text-xl font-bold text-red-600 mb-4">

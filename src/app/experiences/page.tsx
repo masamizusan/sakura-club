@@ -290,7 +290,7 @@ export default function ExperiencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sakura-50 to-sakura-100">
+    <div className="min-h-screen bg-[#f5ebe0]">
       <Sidebar className="w-64 hidden md:block" />
 
       <div className="md:ml-64 py-8 px-4">
@@ -370,7 +370,7 @@ export default function ExperiencesPage() {
 
               return (
                 <div key={experience.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  <div className="relative h-48 bg-gradient-to-br from-sakura-200 to-sakura-300">
+                  <div className="relative h-48 bg-gradient-to-br from-[#ede0d4] to-[#d4a89a]">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-white text-6xl opacity-30">
                         {experience.category === '茶道' && '🍵'}
@@ -393,7 +393,7 @@ export default function ExperiencesPage() {
 
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2 py-1 bg-sakura-100 text-sakura-700 rounded-full text-xs font-medium">
+                      <span className="px-2 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs font-medium">
                         {catT[experience.category] || experience.category}
                       </span>
                       {experience.rating && (
@@ -436,7 +436,7 @@ export default function ExperiencesPage() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <div className="text-lg font-bold text-sakura-600">
+                      <div className="text-lg font-bold text-[#8b1a2e]">
                         {formatPrice(experience.price, experience.currency)}
                       </div>
                       <Link href={`/experiences/${experience.id}`}>

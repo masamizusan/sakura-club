@@ -126,7 +126,7 @@ export function NotificationSettings() {
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
-            <Smartphone className="w-5 h-5 text-sakura-600 mr-2" />
+            <Smartphone className="w-5 h-5 text-[#8b1a2e] mr-2" />
             <h3 className="font-semibold text-gray-900">プッシュ通知</h3>
           </div>
           <div className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -226,7 +226,7 @@ export function NotificationSettings() {
             <input
               type="checkbox"
               defaultChecked
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <span className="ml-2 text-sm text-gray-700">新しいマッチ</span>
           </label>
@@ -235,7 +235,7 @@ export function NotificationSettings() {
             <input
               type="checkbox"
               defaultChecked
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <span className="ml-2 text-sm text-gray-700">新しいメッセージ</span>
           </label>
@@ -244,7 +244,7 @@ export function NotificationSettings() {
             <input
               type="checkbox"
               defaultChecked
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <span className="ml-2 text-sm text-gray-700">体験の招待</span>
           </label>
@@ -253,7 +253,7 @@ export function NotificationSettings() {
             <input
               type="checkbox"
               defaultChecked
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <span className="ml-2 text-sm text-gray-700">体験のリマインダー</span>
           </label>
@@ -262,7 +262,7 @@ export function NotificationSettings() {
             <input
               type="checkbox"
               defaultChecked
-              className="rounded border-gray-300 text-sakura-600 focus:ring-sakura-500"
+              className="rounded border-gray-300 text-[#8b1a2e] focus:ring-[#8b1a2e]"
             />
             <span className="ml-2 text-sm text-gray-700">レビューの依頼</span>
           </label>

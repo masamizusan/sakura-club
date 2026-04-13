@@ -39,6 +39,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja" className={`${inter.className} ${notoSansJP.variable} ${notoSerifJP.variable} ${cormorant.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Zen+Kaku+Gothic+New:wght@300;400&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased">
         <LanguageProvider>
           <AuthProvider>

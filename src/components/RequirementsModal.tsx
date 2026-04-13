@@ -128,7 +128,7 @@ export default function RequirementsModal({ isOpen, onClose, isVerified, isSubsc
             {!isSubscribed && (
               <button
                 onClick={onSelectPlan}
-                className="mt-3 w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white text-sm py-2 rounded-lg font-medium hover:opacity-90 transition"
+                className="mt-3 w-full btn-primary text-sm py-2 rounded-lg font-medium transition"
               >
                 {t.goPlan}
               </button>
