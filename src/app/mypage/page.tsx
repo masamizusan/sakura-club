@@ -515,12 +515,12 @@ function MyPageContent() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm text-gray-600">{getMypageTranslation('profileCompletionTitle')}</span>
-                      <span className="text-lg font-bold text-orange-500">{profileCompletion}%</span>
+                      <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>{profileCompletion}%</span>
                     </div>
                     <div className="w-full rounded-full h-2.5" style={{ backgroundColor: '#ede0d4' }}>
                       <div
-                        className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
-                        style={{ width: `${profileCompletion}%` }}
+                        className="h-2.5 rounded-full transition-all duration-300"
+                        style={{ width: `${profileCompletion}%`, backgroundColor: '#8b1a2e' }}
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
@@ -560,7 +560,6 @@ function MyPageContent() {
               label={getMypageTranslation('notificationSettings')}
               subText={getMypageTranslation('notificationSettingsDesc')}
               onClick={() => router.push('/settings')}
-              iconColor="text-amber-600"
             />
 
             {/* お問い合わせ */}
@@ -569,7 +568,6 @@ function MyPageContent() {
               label={getMypageTranslation('contact')}
               subText={getMypageTranslation('contactDesc')}
               onClick={() => window.location.href = 'mailto:support@sakura-club.jp'}
-              iconColor="text-blue-600"
             />
 
             {/* よくある質問 */}
@@ -578,7 +576,6 @@ function MyPageContent() {
               label={getMypageTranslation('faq')}
               subText={getMypageTranslation('faqDesc')}
               onClick={() => router.push('/faq')}
-              iconColor="text-purple-600"
             />
 
             {/* ログアウト */}
@@ -586,8 +583,6 @@ function MyPageContent() {
               icon={LogOut}
               label={isLoggingOut ? getMypageTranslation('loggingOut') : getMypageTranslation('logout')}
               onClick={handleLogout}
-              iconColor="text-red-500"
-              labelColor="text-red-600"
               showDivider={false}
             />
           </div>

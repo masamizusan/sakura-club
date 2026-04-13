@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronRight, LucideIcon } from 'lucide-react'
+import { ChevronRight, LucideIcon, Heart } from 'lucide-react'
 import { ReactNode } from 'react'
 
 interface MenuRowProps {
@@ -16,9 +16,9 @@ interface MenuRowProps {
   clickable?: boolean
   /** クリック時のハンドラ */
   onClick?: () => void
-  /** アイコンの色（デフォルト: text-gray-500） */
+  /** アイコンの色（デフォルト: #8b1a2e） */
   iconColor?: string
-  /** ラベルの色（デフォルト: text-gray-800） */
+  /** ラベルの色（デフォルト: var(--color-text)） */
   labelColor?: string
   /** 区切り線を表示するか（デフォルト: true） */
   showDivider?: boolean
@@ -31,8 +31,8 @@ export function MenuRow({
   rightContent,
   clickable = true,
   onClick,
-  iconColor = 'text-gray-500',
-  labelColor = 'text-gray-800',
+  iconColor,
+  labelColor,
   showDivider = true
 }: MenuRowProps) {
   const Component = clickable && onClick ? 'button' : 'div'
@@ -52,17 +52,23 @@ export function MenuRow({
       onMouseLeave={clickable && onClick ? (e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '' } : undefined}
     >
       {/* 左側アイコン */}
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${iconColor}`} style={{ backgroundColor: '#ede0d4' }}>
+      <div
+        className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${iconColor || ''}`}
+        style={{ backgroundColor: '#ede0d4', color: iconColor ? undefined : '#8b1a2e' }}
+      >
         <Icon className="w-5 h-5" />
       </div>
 
       {/* 中央テキスト */}
       <div className="flex-1 text-left">
-        <div className={`font-medium ${labelColor}`}>
+        <div
+          className={`font-medium ${labelColor || ''}`}
+          style={{ color: labelColor ? undefined : 'var(--color-text)' }}
+        >
           {label}
         </div>
         {subText && (
-          <div className="text-sm text-gray-500 mt-0.5">
+          <div className="text-sm mt-0.5" style={{ color: 'var(--color-text-sub)' }}>
             {subText}
           </div>
         )}
@@ -77,7 +83,7 @@ export function MenuRow({
 
       {/* 右矢印 */}
       {clickable && onClick && (
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+        <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-text-sub)' }} />
       )}
     </Component>
   )
@@ -97,22 +103,22 @@ export function LikeRemainingRow({ remaining, limit, label }: LikeRemainingRowPr
   return (
     <div className="w-full flex items-center px-4 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
       {/* 左側アイコン */}
-      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
-        <span className="text-lg">👍</span>
+      <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#ede0d4' }}>
+        <Heart className="w-5 h-5" style={{ color: '#8b1a2e' }} />
       </div>
 
       {/* 中央テキスト */}
       <div className="flex-1 text-left">
-        <div className="font-medium text-gray-800">
+        <div className="font-medium" style={{ color: 'var(--color-text)' }}>
           {label || '残りいいね数（今日）'}
         </div>
       </div>
 
       {/* 右側コンテンツ：残り数表示 */}
-      <div className="flex items-center text-orange-600 font-bold">
-        <span className="text-lg mr-1">👍</span>
-        <span className="text-lg">{remaining}</span>
-        <span className="text-gray-400 font-normal ml-1">/ {limit}</span>
+      <div className="flex items-center font-bold gap-1">
+        <Heart className="w-4 h-4 fill-current" style={{ color: '#8b1a2e' }} />
+        <span className="text-lg" style={{ color: '#8b1a2e' }}>{remaining}</span>
+        <span className="font-normal" style={{ color: 'var(--color-text-sub)' }}>/ {limit}</span>
       </div>
     </div>
   )
