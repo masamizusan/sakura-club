@@ -244,7 +244,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
 
@@ -252,19 +252,20 @@ export default function MessagesPage() {
         <div className="mx-auto max-w-xl">
           <div className="grid h-screen grid-cols-1">
           {/* 会話リスト */}
-          <div className="bg-white flex flex-col">
+          <div className="flex flex-col" style={{ backgroundColor: 'var(--color-bg-card)' }}>
             {/* ヘッダー */}
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6" style={{ borderBottom: '1px solid var(--color-border)' }}>
               <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pageTitle')}</h1>
 
               {/* 検索 */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{ color: 'var(--color-text-sub)' }} />
                 <Input
                   placeholder={t('searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 input-app"
+                  style={{ backgroundColor: '#fdf6ef' }}
                 />
               </div>
             </div>
@@ -275,13 +276,13 @@ export default function MessagesPage() {
                 // スケルトンローディング
                 <div className="space-y-0">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="p-5 border-b border-gray-100">
+                    <div key={i} className="p-5" style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse flex-shrink-0" />
+                        <div className="w-16 h-16 rounded-full animate-pulse flex-shrink-0" style={{ backgroundColor: '#ede0d4' }} />
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" />
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/4" />
-                          <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
+                          <div className="h-4 rounded animate-pulse w-1/3" style={{ backgroundColor: '#ede0d4' }} />
+                          <div className="h-3 rounded animate-pulse w-1/4" style={{ backgroundColor: '#ede0d4' }} />
+                          <div className="h-3 rounded animate-pulse w-2/3" style={{ backgroundColor: '#ede0d4' }} />
                         </div>
                       </div>
                     </div>
@@ -300,7 +301,10 @@ export default function MessagesPage() {
                     <div
                       key={conversation.id}
                       onClick={() => router.push(`/messages/${conversation.id}`)}
-                      className="relative flex items-stretch border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="relative flex items-stretch cursor-pointer transition-colors"
+                      style={{ borderBottom: '1px solid var(--color-border)' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#ede0d4')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                     >
                       {/* 左の赤い縦線（未読あり or 新規マッチ） */}
                       {isUnread && (
@@ -318,8 +322,8 @@ export default function MessagesPage() {
                                 className="w-16 h-16 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-16 h-16 bg-sakura-100 rounded-full flex items-center justify-center">
-                                <User className="w-8 h-8 text-sakura-600" />
+                              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
+                                <User className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
                               </div>
                             )}
                             {conversation.isOnline && (

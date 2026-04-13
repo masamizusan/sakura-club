@@ -430,17 +430,17 @@ function MyPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-sakura-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--color-primary)' }}></div>
+          <p style={{ color: 'var(--color-text-sub)' }}>読み込み中...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* ユーザーID不一致オーバーレイ */}
       {userMismatchDetected && (
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
@@ -451,7 +451,7 @@ function MyPageContent() {
             <div className="space-y-3">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full bg-sakura-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-sakura-600 transition-colors"
+                className="w-full btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 再読み込み
               </button>
@@ -469,7 +469,7 @@ function MyPageContent() {
       <Sidebar className="w-64 hidden md:block" />
 
       {/* ヘッダー */}
-      <div className="bg-white shadow-sm md:ml-64">
+      <div className="md:ml-64 shadow-sm" style={{ backgroundColor: "var(--color-bg-card)", borderBottom: "1px solid var(--color-border)" }}>
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-900">{getMypageTranslation('title')}</h1>
@@ -482,7 +482,7 @@ function MyPageContent() {
         <div className="max-w-2xl mx-auto">
 
           {/* === 上部カード: プロフィールセクション === */}
-          <div className="bg-white mt-4 mx-4 rounded-xl shadow-sm overflow-hidden">
+          <div className="app-card mt-4 mx-4 overflow-hidden">
             <div className="p-6">
               {/* アバター + 名前 + 完成度 */}
               <div className="flex items-start">
@@ -517,7 +517,7 @@ function MyPageContent() {
                       <span className="text-sm text-gray-600">{getMypageTranslation('profileCompletionTitle')}</span>
                       <span className="text-lg font-bold text-orange-500">{profileCompletion}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="w-full rounded-full h-2.5" style={{ backgroundColor: '#ede0d4' }}>
                       <div
                         className="bg-orange-500 h-2.5 rounded-full transition-all duration-300"
                         style={{ width: `${profileCompletion}%` }}
@@ -545,7 +545,7 @@ function MyPageContent() {
           <VerificationBanner />
 
           {/* === 下部リスト: メニューセクション === */}
-          <div className="bg-white mt-4 mx-4 rounded-xl shadow-sm overflow-hidden">
+          <div className="app-card mt-4 mx-4 overflow-hidden">
 
             {/* 残りいいね数（情報表示のみ） */}
             <LikeRemainingRow

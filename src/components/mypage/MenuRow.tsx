@@ -42,13 +42,17 @@ export function MenuRow({
       onClick={clickable && onClick ? onClick : undefined}
       className={`
         w-full flex items-center px-4 py-4
-        ${clickable && onClick ? 'hover:bg-gray-50 active:bg-gray-100 cursor-pointer' : ''}
-        ${showDivider ? 'border-b border-gray-100' : ''}
+        ${clickable && onClick ? 'cursor-pointer' : ''}
         transition-colors
       `}
+      style={{
+        borderBottom: showDivider ? '1px solid var(--color-border)' : undefined,
+      }}
+      onMouseEnter={clickable && onClick ? (e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '#ede0d4' } : undefined}
+      onMouseLeave={clickable && onClick ? (e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '' } : undefined}
     >
       {/* 左側アイコン */}
-      <div className={`w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-3 ${iconColor}`}>
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${iconColor}`} style={{ backgroundColor: '#ede0d4' }}>
         <Icon className="w-5 h-5" />
       </div>
 
@@ -91,7 +95,7 @@ interface LikeRemainingRowProps {
 
 export function LikeRemainingRow({ remaining, limit, label }: LikeRemainingRowProps) {
   return (
-    <div className="w-full flex items-center px-4 py-4 border-b border-gray-100">
+    <div className="w-full flex items-center px-4 py-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
       {/* 左側アイコン */}
       <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
         <span className="text-lg">👍</span>
