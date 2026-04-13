@@ -647,19 +647,19 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <Sidebar className="w-64 hidden md:block" />
       <div className="md:ml-64 fixed inset-0 md:left-64 flex flex-col">
         {/* ヘッダー */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center space-x-3">
-          <button onClick={() => router.push('/messages')} className="text-gray-500 hover:text-gray-700">
+        <div className="p-4 flex items-center space-x-3" style={{ backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)' }}>
+          <button onClick={() => router.push('/messages')} style={{ color: 'var(--color-text-sub)' }}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           {conversation?.partnerAvatar ? (
             <img src={conversation.partnerAvatar} alt={conversation.partnerName} className="w-10 h-10 rounded-full object-cover" />
           ) : (
-            <div className="w-10 h-10 bg-sakura-100 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-sakura-600" />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
+              <User className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             </div>
           )}
           <div>
@@ -679,13 +679,13 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl w-full mx-auto">
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="w-6 h-6 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }}></div>
             </div>
           ) : (
             <>
               {conversation?.matchedDate && (
                 <div className="text-center py-4">
-                  <div className="inline-flex items-center bg-sakura-50 text-sakura-700 px-4 py-2 rounded-full text-sm">
+                  <div className="inline-flex items-center bg-[#fdf6ef] text-[#8b1a2e] px-4 py-2 rounded-full text-sm">
                     <Heart className="w-4 h-4 mr-2 fill-current" />
                     {t('matchedOn', { date: formatMatchDate(conversation.matchedDate) })}
                   </div>
@@ -719,7 +719,10 @@ export default function ChatPage() {
                       // 相手のメッセージ（翻訳トグル付き）
                       <div
                         onClick={() => !message.image_url && toggleTranslation(message.id)}
-                        className="max-w-[75%] px-4 py-2 rounded-2xl bg-white text-gray-900 shadow-sm cursor-pointer hover:bg-gray-50 transition-all break-words"
+                        className="max-w-[75%] px-4 py-2 rounded-2xl shadow-sm cursor-pointer transition-all break-words"
+                        style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#ede0d4')}
+                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--color-bg-card)')}
                       >
                         {message.image_url ? (
                           <img
@@ -733,7 +736,7 @@ export default function ChatPage() {
                             {/* 翻訳中表示 */}
                             {isTranslating && (
                               <p className="text-xs text-gray-500 italic flex items-center mb-1">
-                                <span className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></span>
+                                <span className="w-3 h-3 border border-t-transparent rounded-full animate-spin mr-1" style={{ borderColor: 'var(--color-text-sub)', borderTopColor: 'transparent' }}></span>
                                 {t('translating')}
                               </p>
                             )}
@@ -770,12 +773,12 @@ export default function ChatPage() {
         </div>
 
         {/* 入力欄（常に表示） */}
-        <div className="bg-white border-t border-gray-200 p-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        <div className="p-4" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
             {/* 翻訳プレビュー表示 */}
             {(previewTranslation || isTranslatingPreview) && (
-              <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#ede0d4', border: '1px solid var(--color-border)' }}>
                 <p className="text-xs text-gray-400 mb-1">
                   {currentLanguage === 'ja' ? '英語での表示：' : '日本語での表示：'}
                 </p>
@@ -790,10 +793,11 @@ export default function ChatPage() {
             {/* 画像プレビュー */}
             {imagePreview && (
               <div className="mb-3 relative inline-block">
-                <img src={imagePreview} className="h-20 w-20 object-cover rounded-lg border border-gray-200" alt="" />
+                <img src={imagePreview} className="h-20 w-20 object-cover rounded-lg" style={{ border: '1px solid var(--color-border)' }} alt="" />
                 <button
                   onClick={() => { setSelectedImage(null); setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                  className="absolute -top-2 -right-2 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  className="absolute -top-2 -right-2 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  style={{ backgroundColor: 'var(--color-text-sub)' }}
                 >×</button>
               </div>
             )}
@@ -802,16 +806,16 @@ export default function ChatPage() {
             <div className="relative">
               {/* 録音中の波形オーバーレイ */}
               {isRecording && (
-                <div className="flex items-center gap-3 px-4 py-3 bg-pink-50 border border-pink-200 rounded-lg">
+                <div className="flex items-center gap-3 px-4 py-3 bg-[#fdf6ef] border border-[#d4a89a] rounded-lg">
                   {/* 波形（左〜中央） */}
                   <div className="flex-1 flex items-end justify-start gap-[2px] h-10 overflow-hidden">
                     {Array.from({ length: 40 - volumeData.length }).map((_, i) => (
-                      <div key={`empty-${i}`} className="w-[3px] rounded-full bg-pink-200" style={{ height: '4px' }} />
+                      <div key={`empty-${i}`} className="w-[3px] rounded-full bg-[#d4a89a]" style={{ height: '4px' }} />
                     ))}
                     {volumeData.map((v, i) => (
                       <div
                         key={i}
-                        className="w-[3px] rounded-full bg-pink-400"
+                        className="w-[3px] rounded-full bg-[#8b1a2e]"
                         style={{ height: `${Math.max(4, v * 40)}px` }}
                       />
                     ))}
@@ -821,13 +825,16 @@ export default function ChatPage() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={cancelRecording}
-                      className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      className="p-2 rounded-full transition-colors"
+                      style={{ color: 'var(--color-text-sub)' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#ede0d4')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                     >
                       <span className="text-lg">✕</span>
                     </button>
                     <button
                       onClick={stopRecording}
-                      className="p-2 rounded-full bg-pink-500 text-white hover:bg-pink-600"
+                      className="p-2 rounded-full bg-[#8b1a2e] text-white hover:bg-[#6e1525]"
                     >
                       <span className="text-lg">✓</span>
                     </button>
@@ -837,8 +844,8 @@ export default function ChatPage() {
 
               {/* 文字起こし中の表示 */}
               {isTranscribing && (
-                <div className="flex items-center justify-center gap-2 py-3 text-sm text-pink-500">
-                  <div className="w-4 h-4 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center justify-center gap-2 py-3 text-sm" style={{ color: 'var(--color-primary)' }}>
+                  <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
                   {currentLanguage === 'ja' ? '文字起こし中...' : 'Transcribing...'}
                 </div>
               )}
@@ -849,7 +856,9 @@ export default function ChatPage() {
               {/* カメラボタン */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="text-gray-400 hover:text-sakura-600 p-2 flex-shrink-0"
+                className="p-2 flex-shrink-0 transition-colors" style={{ color: 'var(--color-text-sub)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-primary)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-sub)')}
               >
                 <Camera className="w-5 h-5" />
               </button>
@@ -890,10 +899,13 @@ export default function ChatPage() {
                       }
                     }}
                     rows={1}
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex-1 rounded-md px-3 py-2 text-sm focus-visible:outline-none"
                     style={{
                       resize: 'none',
                       minHeight: '40px',
+                      border: '1px solid var(--color-border)',
+                      backgroundColor: '#fdf6ef',
+                      color: 'var(--color-text)',
                     }}
                   />
 
@@ -902,7 +914,7 @@ export default function ChatPage() {
                     onClick={handleVoiceInput}
                     variant="outline"
                     size="sm"
-                    className="flex-shrink-0 text-gray-500 border-gray-300 hover:bg-gray-50"
+                    className="flex-shrink-0" style={{ color: 'var(--color-text-sub)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}
                   >
                     <Mic className="w-4 h-4" />
                   </Button>
@@ -913,10 +925,10 @@ export default function ChatPage() {
                     disabled={!newMessage.trim() || isTranslatingPreview}
                     variant="outline"
                     size="sm"
-                    className="text-sakura-600 border-sakura-300 hover:bg-sakura-50 flex-shrink-0"
+                    className="text-[#8b1a2e] border-[#d4a89a] hover:bg-[#fdf6ef] flex-shrink-0"
                   >
                     {isTranslatingPreview ? (
-                      <div className="w-4 h-4 border-2 border-sakura-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
                     ) : (
                       t('previewTranslation')
                     )}
