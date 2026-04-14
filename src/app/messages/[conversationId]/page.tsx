@@ -132,7 +132,10 @@ export default function ChatPage() {
   const [verificationStatus, setVerificationStatus] = useState<string>('unverified')
   const [showRequirementsModal, setShowRequirementsModal] = useState(false)
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [userProfile, setUserProfile] = useState<{ gender: string; nationality: string } | null>(null)
+  const [isForeignMaleUser, setIsForeignMaleUser] = useState(false)
+  const [hasSubscription, setHasSubscription] = useState(false)
 
   const { isSubscribed } = useSubscription()
 
@@ -266,6 +269,19 @@ export default function ChatPage() {
         setIsVerified(profile.is_verified === true)
         setVerificationStatus(profile.verification_status || 'unverified')
         setUserProfile({ gender: profile.gender, nationality: profile.nationality })
+
+        const isFM = profile.gender === 'male' && profile.nationality && profile.nationality !== '日本' && profile.nationality.toLowerCase() !== 'jp' && profile.nationality.toLowerCase() !== 'japan' && profile.nationality.toLowerCase() !== 'japanese'
+        setIsForeignMaleUser(!!isFM)
+
+        if (isFM) {
+          const { data: subData } = await supabase
+            .from('subscriptions')
+            .select('status')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .maybeSingle()
+          setHasSubscription(!!subData)
+        }
       }
     }
     fetchCurrentUser()
@@ -973,6 +989,36 @@ export default function ChatPage() {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
       />
+
+      {/* アップグレード誘導モーダル */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="app-card max-w-sm w-full p-6 text-center">
+            <div className="text-4xl mb-4">🌸</div>
+            <h3 className="font-shippori text-xl mb-2" style={{ color: 'var(--color-text)' }}>
+              メッセージを送るには
+            </h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--color-text-sub)' }}>
+              有料プランへの登録が必要です。<br />
+              日本人女性とのメッセージを楽しみましょう。
+            </p>
+            <button
+              onClick={() => router.push('/mypage/plans')}
+              className="w-full btn-primary py-3 rounded-full font-medium mb-3"
+              style={{ letterSpacing: '0.08em' }}
+            >
+              プランを見る
+            </button>
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full py-2 text-sm"
+              style={{ color: 'var(--color-text-sub)' }}
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -21,7 +21,8 @@ import {
   HelpCircle,
   LogOut,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  Crown
 } from 'lucide-react'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import Link from 'next/link'
@@ -147,6 +148,7 @@ function MyPageContent() {
   const [totalItems, setTotalItems] = useState(8)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [hasSubscription, setHasSubscription] = useState(false)
 
   // いいね残り回数
   const [likesRemaining, setLikesRemaining] = useState(10)
@@ -260,6 +262,15 @@ function MyPageContent() {
 
         // いいね残り回数を取得
         fetchLikesRemaining()
+
+        // サブスクリプション状態を確認（外国人男性のみ使用）
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle()
+        setHasSubscription(!!subData)
 
       } catch (error) {
         logger.error('[MYPAGE] load error:', error instanceof Error ? error.message : 'unknown')
@@ -543,6 +554,34 @@ function MyPageContent() {
 
           {/* === 身分証ステータスバナー === */}
           <VerificationBanner />
+
+          {/* 会員ステータス - 外国人男性のみ */}
+          {(() => {
+            const isForeignMale = profile?.gender === 'male' && profile?.nationality && profile?.nationality !== '日本'
+            if (!isForeignMale) return null
+            return (
+              <div className="app-card mt-4 mx-4 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Crown className="w-4 h-4" style={{ color: hasSubscription ? '#8b1a2e' : 'var(--color-text-sub)' }} />
+                    <span className="font-shippori text-base" style={{ color: 'var(--color-text)' }}>
+                      会員ステータス
+                    </span>
+                  </div>
+                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${hasSubscription ? 'bg-[#fdf6ef] text-[#8b1a2e]' : 'bg-[#ede0d4] text-[#6b4c3b]'}`}>
+                    {hasSubscription ? '✓ 有料会員' : '無料会員'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => router.push('/mypage/plans')}
+                  className="w-full btn-primary py-3 rounded-full font-medium"
+                  style={{ letterSpacing: '0.08em' }}
+                >
+                  料金プランを見る →
+                </button>
+              </div>
+            )
+          })()}
 
           {/* === 下部リスト: メニューセクション === */}
           <div className="app-card mt-4 mx-4 overflow-hidden">
