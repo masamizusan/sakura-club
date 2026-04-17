@@ -582,13 +582,50 @@ export default function ChatPage() {
     return date.toLocaleDateString(getLocale())
   }
 
-  // 送信前の翻訳プレビュー
+  // 送信前の翻訳プレビュー（入力500ms後に自動翻訳）
+  useEffect(() => {
+    if (!newMessage.trim()) {
+      setPreviewTranslation(null)
+      return
+    }
+    // プロフィールロード前は翻訳しない
+    if (isJapaneseUser === null) return
+
+    const timer = setTimeout(async () => {
+      setIsTranslatingPreview(true)
+      try {
+        const targetLang = isForeignMale ? 'ja' : 'en'
+        const res = await fetch('/api/translate/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messageId: `preview-${Date.now()}`,
+            text: newMessage.trim(),
+            targetLanguage: targetLang,
+          }),
+        })
+        const data = await res.json()
+        // 元テキストと同じなら表示しない
+        if (data.translatedText && data.translatedText !== newMessage.trim()) {
+          setPreviewTranslation(data.translatedText)
+        } else {
+          setPreviewTranslation(null)
+        }
+      } catch {
+        setPreviewTranslation(null)
+      } finally {
+        setIsTranslatingPreview(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [newMessage, isForeignMale, isJapaneseUser])
+
+  // 旧: handlePreviewTranslation は削除（useEffectで自動化）
   const handlePreviewTranslation = async () => {
     if (!newMessage.trim()) return
-
     setIsTranslatingPreview(true)
     setPreviewTranslation(null)
-
     try {
       const response = await fetch('/api/translate/message', {
         method: 'POST',
@@ -596,7 +633,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           messageId: `preview-${Date.now()}`,
           text: newMessage.trim(),
-          targetLanguage: currentLanguage === 'ja' ? 'en' : 'ja',
+          targetLanguage: isForeignMale ? 'ja' : 'en',
         }),
       })
       const result = await response.json()
@@ -922,16 +959,25 @@ export default function ChatPage() {
         <div className="p-4" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
-            {/* 翻訳プレビュー表示 */}
+            {/* 翻訳プレビュー（自動・コンパクト表示） */}
             {(previewTranslation || isTranslatingPreview) && (
-              <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#ede0d4', border: '1px solid var(--color-border)' }}>
-                <p className="text-xs mb-1" style={{ color: '#a08070' }}>
+              <div style={{
+                display: 'flex',
+                gap: '6px',
+                alignItems: 'flex-start',
+                padding: '4px 12px',
+                marginBottom: '8px',
+                borderRadius: '8px',
+                background: '#f5ebe0',
+                borderTop: '1px solid #e8ddd5',
+              }}>
+                <span style={{ fontSize: '11px', color: '#a08070', flexShrink: 0, paddingTop: '1px' }}>
                   {isForeignMale ? '日本語：' : 'English:'}
-                </p>
+                </span>
                 {isTranslatingPreview ? (
-                  <p className="text-sm italic" style={{ color: '#a08070' }}>{t('translating')}</p>
+                  <span style={{ fontSize: '12px', color: '#a08070', fontStyle: 'italic' }}>...</span>
                 ) : (
-                  <p className="text-sm" style={{ color: 'var(--color-text)' }}>{previewTranslation}</p>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text)' }}>{previewTranslation}</span>
                 )}
               </div>
             )}
@@ -1034,7 +1080,6 @@ export default function ChatPage() {
                     value={newMessage}
                     onChange={(e) => {
                       setNewMessage(e.target.value)
-                      setPreviewTranslation(null)
                       e.target.style.height = 'auto'
                       e.target.style.height = `${e.target.scrollHeight}px`
                     }}
@@ -1063,21 +1108,6 @@ export default function ChatPage() {
                     className="flex-shrink-0" style={{ color: 'var(--color-text-sub)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}
                   >
                     <Mic className="w-4 h-4" />
-                  </Button>
-
-                  {/* 翻訳確認ボタン */}
-                  <Button
-                    onClick={handlePreviewTranslation}
-                    disabled={!newMessage.trim() || isTranslatingPreview}
-                    variant="outline"
-                    size="sm"
-                    className="text-[#8b1a2e] border-[#d4a89a] hover:bg-[#fdf6ef] flex-shrink-0"
-                  >
-                    {isTranslatingPreview ? (
-                      <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
-                    ) : (
-                      t('previewTranslation')
-                    )}
                   </Button>
 
                   {/* 送信ボタン */}
