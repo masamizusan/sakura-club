@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useSubscription } from '@/hooks/useSubscription'
 import SubscriptionModal from '@/components/SubscriptionModal'
 import RequirementsModal from '@/components/RequirementsModal'
+import { isJapaneseWoman as checkIsJapaneseWoman, isForeignMaleUser as checkIsForeignMale, getTranslationTargetLang, getPreviewLabel } from '@/utils/userHelpers'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -497,19 +498,17 @@ export default function ChatPage() {
     }
   }, [conversationId, currentUserId, currentLanguage])
 
-  // 日本人女性かどうかを判定（nationality='日本' AND gender='female'）
-  const isJapaneseWoman: boolean | null = userProfile === null
-    ? null
-    : userProfile.nationality === '日本' && userProfile.gender === 'female'
-  // isJapaneseUser は後方互換のためエイリアスとして残す
-  const isJapaneseUser = isJapaneseWoman
-  const isForeignMale = isJapaneseWoman === false
-  // 翻訳先言語：日本人女性='ja'（英語→日本語）、外国人男性='en'（日本語→英語）
-  const myReadLang = isJapaneseWoman === null ? currentLanguage : isJapaneseWoman ? 'ja' : 'en'
+  // ユーザータイプ判定（utils/userHelpers.ts に一元化）
+  // gender='female' を優先判定 → nationality null でも誤判定しない
+  const isJapaneseWoman = checkIsJapaneseWoman(userProfile)
+  const isJapaneseUser = isJapaneseWoman   // 後方互換エイリアス
+  const isForeignMale = userProfile !== null && checkIsForeignMale(userProfile)
+  // 翻訳先言語：日本人女性='ja'、外国人男性='en'
+  const myReadLang = userProfile === null ? currentLanguage : getTranslationTargetLang(userProfile)
 
   const handleSend = async () => {
-    // 外国人男性の場合は身分確認・課金の両方をチェックして統合モーダルを表示
-    if (isForeignMale && (!isVerified || isSubscribed === false)) {
+    // 日本人女性は無条件で送信可能。外国人男性のみ身分確認・課金チェック。
+    if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed === false)) {
       setShowRequirementsModal(true)
       return
     }
@@ -517,10 +516,10 @@ export default function ChatPage() {
     try {
       setIsSending(true)
 
-      // 相手の言語に翻訳してから送信（外国人男性→ja、日本人女性→en）
+      // 相手の言語に翻訳してから送信
       let translatedContent: string | null = null
       try {
-        const targetLang = isForeignMale ? 'ja' : 'en'
+        const targetLang = getTranslationTargetLang(userProfile)
         const translateRes = await fetch('/api/translate/message', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -590,8 +589,8 @@ export default function ChatPage() {
     setIsTranslatingPreview(true)
     setPreviewTranslation(null)
     try {
-      // 外国人男性→日本語プレビュー、日本人女性→英語プレビュー
-      const targetLang = isForeignMale ? 'ja' : 'en'
+      // 日本人女性→英語プレビュー、外国人男性→日本語プレビュー
+      const targetLang = getTranslationTargetLang(userProfile)
       const response = await fetch('/api/translate/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -937,7 +936,7 @@ export default function ChatPage() {
                 borderTop: '1px solid #e8ddd5',
               }}>
                 <span style={{ fontSize: '11px', color: '#a08070', flexShrink: 0, paddingTop: '1px' }}>
-                  {isForeignMale ? '日本語：' : 'English:'}
+                  {getPreviewLabel(userProfile)}
                 </span>
                 {isTranslatingPreview ? (
                   <span style={{ fontSize: '12px', color: '#a08070', fontStyle: 'italic' }}>...</span>
