@@ -232,10 +232,23 @@ function ProfileDetailContent() {
 
   const handleBlock = async () => {
     if (!viewerId || !profileId || viewerId === profileId) return
-    const supabase2 = createClient()
-    await supabase2.from('blocks').insert({ blocker_id: viewerId, blocked_id: profileId })
-    setShowMenu(false)
-    router.push('/matches')
+    try {
+      const supabase2 = createClient()
+      const { error } = await supabase2
+        .from('blocks')
+        .insert({ blocker_id: viewerId, blocked_id: profileId })
+      if (error) {
+        console.error('ブロックエラー:', error)
+        alert('ブロックに失敗しました: ' + error.message)
+        return
+      }
+      setShowMenu(false)
+      alert('ブロックしました')
+      router.push('/matches')
+    } catch (e) {
+      console.error('ブロック例外:', e)
+      alert('エラーが発生しました')
+    }
   }
 
   const handleReport = async () => {

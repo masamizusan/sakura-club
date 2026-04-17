@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// NOTE: クライアントはハンドラ内で生成（ビルド時に環境変数なしでクラッシュするのを防ぐ）
 
 const SYSTEM_PROMPT = `
 あなたはマッチングアプリのメッセージ安全監視AIです。
@@ -28,6 +25,11 @@ const SYSTEM_PROMPT = `
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     const { message_id, content, sender_id } = await req.json()
 
     if (!content || !message_id) {
@@ -65,12 +67,18 @@ export async function POST(req: NextRequest) {
 
     // スコア0.7以上でフラグを立てる
     if (judgment.flagged && judgment.score >= 0.7) {
-      await supabase.from('message_flags').insert({
+      const { data: flagData, error: flagError } = await supabase.from('message_flags').insert({
         message_id,
         flag_type: judgment.category,
         score: judgment.score,
         detail: judgment.reason,
       })
+
+      console.log('AIフラグ書き込み結果:', { data: flagData, error: flagError, judgment })
+
+      if (flagError) {
+        console.error('message_flags書き込みエラー:', flagError)
+      }
 
       // 管理者通知
       const adminUserId = process.env.ADMIN_USER_ID

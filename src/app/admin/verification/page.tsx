@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag } from 'lucide-react'
 
-type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags'
+type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags' | 'reports'
 
 // AIフラグ種別ラベル
 const flagTypeLabel: Record<string, string> = {
@@ -27,6 +27,18 @@ type MessageFlag = {
     sender_id: string
     profiles: { name: string; gender: string; nationality: string } | null
   } | null
+}
+
+type Report = {
+  id: string
+  reporter_id: string
+  reported_id: string
+  reason: string
+  detail: string | null
+  status: string
+  created_at: string
+  reporter: { nickname: string } | null
+  reported: { nickname: string; gender: string; nationality: string } | null
 }
 
 type VerificationRequest = {
@@ -87,6 +99,12 @@ const TAB_CONFIG: { key: TabType; label: string; icon: React.ReactNode; badgeCol
     icon: <Flag className="w-4 h-4" />,
     badgeColor: 'bg-orange-100 text-orange-800',
   },
+  {
+    key: 'reports',
+    label: '通報',
+    icon: <AlertTriangle className="w-4 h-4" />,
+    badgeColor: 'bg-red-100 text-red-800',
+  },
 ]
 
 // verification_statusのDBカラム値とタブTypeのマッピング
@@ -96,12 +114,13 @@ const TAB_STATUS_MAP: Record<TabType, string[]> = {
   manual_approved: ['approved'], // 手動承認はstatus='approved' + ai_review_result.auto_approve=false or null
   rejected: ['rejected'],
   ai_flags: [],
+  reports: [],
 }
 
 export default function AdminVerificationPage() {
   const [activeTab, setActiveTab] = useState<TabType>('requires_review')
   const [requests, setRequests] = useState<VerificationRequest[]>([])
-  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0, ai_flags: 0 })
+  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0, ai_flags: 0, reports: 0 })
   const [loading, setLoading] = useState(true)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
   const [processing, setProcessing] = useState<Record<string, boolean>>({})
@@ -110,18 +129,50 @@ export default function AdminVerificationPage() {
   const [flags, setFlags] = useState<MessageFlag[]>([])
   const [flagsLoading, setFlagsLoading] = useState(false)
 
+  // 通報用state
+  const [reports, setReports] = useState<Report[]>([])
+  const [reportsLoading, setReportsLoading] = useState(false)
+
   const fetchFlags = useCallback(async () => {
     setFlagsLoading(true)
     const supabase = createClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('message_flags')
       .select(`*, messages(content, sender_id, profiles(name, gender, nationality))`)
       .eq('reviewed', false)
       .order('score', { ascending: false })
       .order('created_at', { ascending: false })
+    console.log('フラグ取得結果:', { flags: data, error })
     setFlags((data as MessageFlag[]) || [])
     setFlagsLoading(false)
   }, [])
+
+  const fetchReports = useCallback(async () => {
+    setReportsLoading(true)
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .select(`
+        *,
+        reporter:profiles!reporter_id (nickname),
+        reported:profiles!reported_id (nickname, gender, nationality)
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+    console.log('通報取得結果:', { reports: data, error })
+    setReports((data as Report[]) || [])
+    setReportsLoading(false)
+  }, [])
+
+  const handleReportAction = async (reportId: string, action: string, reportedId?: string) => {
+    const supabase = createClient()
+    await supabase.from('reports').update({ status: action }).eq('id', reportId)
+    if (action === 'suspended' && reportedId) {
+      await supabase.from('profiles').update({ is_active: false }).eq('id', reportedId)
+    }
+    setReports(prev => prev.filter(r => r.id !== reportId))
+    fetchCounts()
+  }
 
   const handleFlagAction = async (flagId: string, action: string) => {
     const supabase = createClient()
@@ -156,7 +207,11 @@ export default function AdminVerificationPage() {
         .from('message_flags')
         .select('id', { count: 'exact', head: true })
         .eq('reviewed', false)
-      setCounts({ requires_review: requires, auto_approved: auto, manual_approved: manual, rejected, ai_flags: flagCount || 0 })
+      const { count: reportCount } = await supabase2
+        .from('reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      setCounts({ requires_review: requires, auto_approved: auto, manual_approved: manual, rejected, ai_flags: flagCount || 0, reports: reportCount || 0 })
     }
   }, [])
 
@@ -230,10 +285,12 @@ export default function AdminVerificationPage() {
   useEffect(() => {
     if (activeTab === 'ai_flags') {
       fetchFlags()
+    } else if (activeTab === 'reports') {
+      fetchReports()
     } else {
       fetchRequests(activeTab)
     }
-  }, [activeTab, fetchRequests, fetchFlags])
+  }, [activeTab, fetchRequests, fetchFlags, fetchReports])
 
   const handleApprove = async (userId: string) => {
     setProcessing(prev => ({ ...prev, [userId]: true }))
@@ -523,6 +580,71 @@ export default function AdminVerificationPage() {
                 )
               })}
             </div>
+          </>
+        )}
+
+        {/* 通報タブ */}
+        {activeTab === 'reports' && (
+          <>
+            {reportsLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">未対応の通報はありません</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-4 mb-4 text-sm text-gray-600">
+                  <span>未対応の通報: <strong className="text-[#8b1a2e]">{reports.length}</strong></span>
+                </div>
+                {reports.map(report => (
+                  <div
+                    key={report.id}
+                    className="rounded-xl p-4"
+                    style={{ background: '#fdf6ef', border: '1px solid #d4a89a' }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs" style={{ color: '#6b4c3b' }}>
+                        通報者: {report.reporter?.nickname || '不明'}
+                      </span>
+                      <span className="text-xs" style={{ color: '#a08070' }}>
+                        {new Date(report.created_at).toLocaleString('ja-JP')}
+                      </span>
+                    </div>
+                    <p className="font-medium mb-2" style={{ color: '#2c1810' }}>
+                      対象: {report.reported?.nickname || '不明'}
+                      {report.reported?.nationality && ` (${report.reported.nationality})`}
+                    </p>
+                    <span
+                      className="text-xs text-white px-3 py-0.5 rounded-full"
+                      style={{ backgroundColor: '#8b1a2e' }}
+                    >
+                      {report.reason}
+                    </span>
+                    {report.detail && (
+                      <p className="text-sm mt-2" style={{ color: '#2c1810' }}>
+                        詳細: {report.detail}
+                      </p>
+                    )}
+                    <div className="flex gap-2 flex-wrap mt-3">
+                      <button
+                        onClick={() => handleReportAction(report.id, 'resolved')}
+                        className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
+                      >
+                        対応済み
+                      </button>
+                      <button
+                        onClick={() => handleReportAction(report.id, 'suspended', report.reported_id)}
+                        className="px-3 py-1.5 text-xs text-white rounded-full transition-colors"
+                        style={{ backgroundColor: '#8b1a2e' }}
+                      >
+                        アカウント停止
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

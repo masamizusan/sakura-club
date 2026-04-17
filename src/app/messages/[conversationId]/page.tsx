@@ -177,10 +177,23 @@ export default function ChatPage() {
 
   const handleBlock = async () => {
     if (!currentUserId || !conversation?.partnerId) return
-    const supabase = createClient()
-    await supabase.from('blocks').insert({ blocker_id: currentUserId, blocked_id: conversation.partnerId })
-    setShowMenu(false)
-    router.push('/messages')
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('blocks')
+        .insert({ blocker_id: currentUserId, blocked_id: conversation.partnerId })
+      if (error) {
+        console.error('ブロックエラー:', error)
+        alert('ブロックに失敗しました: ' + error.message)
+        return
+      }
+      setShowMenu(false)
+      alert('ブロックしました')
+      router.push('/messages')
+    } catch (e) {
+      console.error('ブロック例外:', e)
+      alert('エラーが発生しました')
+    }
   }
 
   const handleReport = async () => {
