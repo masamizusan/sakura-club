@@ -60,6 +60,10 @@ function MyPageContent() {
       verificationApprovedDesc: 'すべての機能をご利用いただけます',
       verificationRejected: '年齢確認が却下されました',
       verificationRejectedDesc: '再度年齢確認を行ってください',
+      membershipStatus: '会員ステータス',
+      freeMember: '無料会員',
+      premiumMember: '✓ 有料会員',
+      viewPlans: '料金プランを見る →',
     },
     en: {
       title: 'My Page',
@@ -83,6 +87,10 @@ function MyPageContent() {
       verificationApprovedDesc: 'You have access to all features',
       verificationRejected: 'Age Verification Rejected',
       verificationRejectedDesc: 'Please resubmit your ID for age verification',
+      membershipStatus: 'Membership Status',
+      freeMember: 'Free Member',
+      premiumMember: '✓ Premium Member',
+      viewPlans: 'View Plans →',
     },
     ko: {
       title: '마이페이지',
@@ -106,6 +114,10 @@ function MyPageContent() {
       verificationApprovedDesc: '모든 기능을 이용하실 수 있습니다',
       verificationRejected: '나이 확인이 거절되었습니다',
       verificationRejectedDesc: '다시 나이 확인을 진행해 주세요',
+      membershipStatus: '회원 상태',
+      freeMember: '무료 회원',
+      premiumMember: '✓ 유료 회원',
+      viewPlans: '요금제 보기 →',
     },
     'zh-tw': {
       title: '我的頁面',
@@ -129,6 +141,10 @@ function MyPageContent() {
       verificationApprovedDesc: '您可以使用所有功能',
       verificationRejected: '年齡確認被拒絕',
       verificationRejectedDesc: '請重新進行年齡確認',
+      membershipStatus: '會員狀態',
+      freeMember: '免費會員',
+      premiumMember: '✓ 付費會員',
+      viewPlans: '查看方案 →',
     }
   }
 
@@ -565,11 +581,11 @@ function MyPageContent() {
                   <div className="flex items-center gap-2">
                     <Crown className="w-4 h-4" style={{ color: hasSubscription ? '#8b1a2e' : 'var(--color-text-sub)' }} />
                     <span className="font-shippori text-base" style={{ color: 'var(--color-text)' }}>
-                      会員ステータス
+                      {getMypageTranslation('membershipStatus')}
                     </span>
                   </div>
                   <span className={`text-sm font-medium px-3 py-1 rounded-full ${hasSubscription ? 'bg-[#fdf6ef] text-[#8b1a2e]' : 'bg-[#ede0d4] text-[#6b4c3b]'}`}>
-                    {hasSubscription ? '✓ 有料会員' : '無料会員'}
+                    {hasSubscription ? getMypageTranslation('premiumMember') : getMypageTranslation('freeMember')}
                   </span>
                 </div>
                 <button
@@ -577,7 +593,7 @@ function MyPageContent() {
                   className="w-full btn-primary py-3 rounded-full font-medium"
                   style={{ letterSpacing: '0.08em' }}
                 >
-                  料金プランを見る →
+                  {getMypageTranslation('viewPlans')}
                 </button>
               </div>
             )
