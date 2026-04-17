@@ -582,58 +582,21 @@ export default function ChatPage() {
     return date.toLocaleDateString(getLocale())
   }
 
-  // 送信前の翻訳プレビュー（入力500ms後に自動翻訳）
-  useEffect(() => {
-    if (!newMessage.trim()) {
-      setPreviewTranslation(null)
-      return
-    }
-    // プロフィールロード前は翻訳しない
-    if (isJapaneseUser === null) return
-
-    const timer = setTimeout(async () => {
-      setIsTranslatingPreview(true)
-      try {
-        const targetLang = isForeignMale ? 'ja' : 'en'
-        const res = await fetch('/api/translate/message', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messageId: `preview-${Date.now()}`,
-            text: newMessage.trim(),
-            targetLanguage: targetLang,
-          }),
-        })
-        const data = await res.json()
-        // 元テキストと同じなら表示しない
-        if (data.translatedText && data.translatedText !== newMessage.trim()) {
-          setPreviewTranslation(data.translatedText)
-        } else {
-          setPreviewTranslation(null)
-        }
-      } catch {
-        setPreviewTranslation(null)
-      } finally {
-        setIsTranslatingPreview(false)
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [newMessage, isForeignMale, isJapaneseUser])
-
-  // 旧: handlePreviewTranslation は削除（useEffectで自動化）
+  // 送信前の翻訳プレビュー（ボタンクリック式）
   const handlePreviewTranslation = async () => {
     if (!newMessage.trim()) return
     setIsTranslatingPreview(true)
     setPreviewTranslation(null)
     try {
+      // 外国人男性→日本語プレビュー、日本人女性→英語プレビュー
+      const targetLang = isForeignMale ? 'ja' : 'en'
       const response = await fetch('/api/translate/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messageId: `preview-${Date.now()}`,
           text: newMessage.trim(),
-          targetLanguage: isForeignMale ? 'ja' : 'en',
+          targetLanguage: targetLang,
         }),
       })
       const result = await response.json()
@@ -1080,6 +1043,7 @@ export default function ChatPage() {
                     value={newMessage}
                     onChange={(e) => {
                       setNewMessage(e.target.value)
+                      setPreviewTranslation(null)
                       e.target.style.height = 'auto'
                       e.target.style.height = `${e.target.scrollHeight}px`
                     }}
@@ -1108,6 +1072,22 @@ export default function ChatPage() {
                     className="flex-shrink-0" style={{ color: 'var(--color-text-sub)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}
                   >
                     <Mic className="w-4 h-4" />
+                  </Button>
+
+                  {/* 翻訳確認ボタン */}
+                  <Button
+                    onClick={handlePreviewTranslation}
+                    disabled={!newMessage.trim() || isTranslatingPreview}
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0"
+                    style={{ color: 'var(--color-primary)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}
+                  >
+                    {isTranslatingPreview ? (
+                      <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
+                    ) : (
+                      t('previewTranslation')
+                    )}
                   </Button>
 
                   {/* 送信ボタン */}
