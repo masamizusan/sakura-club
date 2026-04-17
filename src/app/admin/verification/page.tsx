@@ -95,6 +95,7 @@ const TAB_STATUS_MAP: Record<TabType, string[]> = {
   auto_approved: ['approved'],   // AI自動承認はstatus='approved' + ai_review_result.auto_approve=true
   manual_approved: ['approved'], // 手動承認はstatus='approved' + ai_review_result.auto_approve=false or null
   rejected: ['rejected'],
+  ai_flags: [],
 }
 
 export default function AdminVerificationPage() {
