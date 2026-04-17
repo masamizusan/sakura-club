@@ -6,6 +6,7 @@ import { z } from 'zod'
 const sendMessageSchema = z.object({
   content: z.string().max(1000, 'メッセージは1000文字以内で入力してください').default(''),
   image_url: z.string().url().optional(),
+  translated_content: z.string().max(2000).nullable().optional(),
 }).refine(data => data.content.trim().length > 0 || !!data.image_url, {
   message: 'メッセージまたは画像を入力してください',
 })
@@ -105,6 +106,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       id: message.id,
       senderId: message.sender_id,
       content: message.content,
+      translated_content: message.translated_content || null,
       image_url: message.image_url || null,
       timestamp: message.created_at,
       isRead: message.is_read,
@@ -167,7 +169,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { content, image_url } = validationResult.data
+    const { content, image_url, translated_content } = validationResult.data
 
     // 会話の存在確認とアクセス権限チェック
     const { data: conversation, error: convError } = await supabase
@@ -198,6 +200,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         conversation_id: conversationId,
         sender_id: user.id,
         content,
+        translated_content: translated_content || null,
         image_url: image_url || null,
         is_read: false,
         created_at: new Date().toISOString(),
@@ -237,6 +240,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       id: newMessage.id,
       senderId: newMessage.sender_id,
       content: newMessage.content,
+      translated_content: newMessage.translated_content || null,
       image_url: newMessage.image_url || null,
       timestamp: newMessage.created_at,
       isRead: newMessage.is_read,

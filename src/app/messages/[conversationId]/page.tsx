@@ -344,9 +344,19 @@ export default function ChatPage() {
   }
 
   // 相手のメッセージを自動翻訳（未翻訳のみ）
-  const autoTranslateMessages = async (msgs: any[], myId: string, existingTranslations?: Record<string, string>) => {
+  // targetLang: 日本人女性='ja'（英語→日本語）、外国人男性='en'（日本語→英語）
+  const autoTranslateMessages = async (
+    msgs: any[],
+    myId: string,
+    existingTranslations?: Record<string, string>,
+    targetLang?: string,
+  ) => {
     const translations = existingTranslations || translatedMessages
-    const partnerMessages = msgs.filter(m => m.senderId !== myId && !translations[m.id])
+    // translated_contentがDB側にある場合はスキップ
+    const partnerMessages = msgs.filter(m =>
+      m.senderId !== myId && !translations[m.id] && !m.translated_content
+    )
+    const resolvedTarget = targetLang || currentLanguage
 
     for (const msg of partnerMessages) {
       try {
@@ -356,7 +366,7 @@ export default function ChatPage() {
           body: JSON.stringify({
             messageId: msg.id,
             text: msg.content,
-            targetLanguage: currentLanguage,
+            targetLanguage: resolvedTarget,
           }),
         })
         const result = await response.json()
@@ -411,8 +421,16 @@ export default function ChatPage() {
           }
 
           // 未翻訳のメッセージだけ新たに翻訳
+          // 国籍ベースでターゲット言語を決定（外国人男性→'en'、日本人女性→'ja'）
           if (currentUserId) {
-            autoTranslateMessages(result.messages, currentUserId, cachedTranslations)
+            const supabase2 = createClient()
+            const { data: myProf } = await supabase2
+              .from('profiles')
+              .select('nationality')
+              .eq('id', currentUserId)
+              .single()
+            const isJpUser = myProf?.nationality === '日本'
+            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, isJpUser ? 'ja' : 'en')
           }
         }
       } catch (error) {
@@ -456,6 +474,7 @@ export default function ChatPage() {
             id: payload.new.id,
             senderId: payload.new.sender_id,
             content: payload.new.content,
+            translated_content: payload.new.translated_content || null,
             image_url: payload.new.image_url || null,
             timestamp: payload.new.created_at,
             isRead: false,
@@ -465,8 +484,10 @@ export default function ChatPage() {
 
           setMessages(prev => [...prev, newMessage])
 
-          // 相手のメッセージは自動翻訳
-          autoTranslateMessages([newMessage], currentUserId)
+          // translated_contentがなければAPIで翻訳（正しいターゲット言語で）
+          if (!newMessage.translated_content) {
+            autoTranslateMessages([newMessage], currentUserId, undefined, myReadLang)
+          }
         }
       )
       .subscribe()
@@ -476,13 +497,13 @@ export default function ChatPage() {
     }
   }, [conversationId, currentUserId, currentLanguage])
 
-  // 外国人男性かどうかを判定
-  const isJapanesePerson = (nationality: string | null | undefined): boolean => {
-    if (!nationality) return true
-    const n = nationality.toLowerCase().trim()
-    return n === '' || n === 'jp' || n === 'japan' || n === '日本' || n === 'japanese'
-  }
-  const isForeignMale = userProfile?.gender === 'male' && !isJapanesePerson(userProfile?.nationality)
+  // 日本人ユーザー（日本人女性）かどうかを判定
+  const isJapaneseUser: boolean | null = userProfile === null
+    ? null
+    : userProfile.nationality === '日本'
+  const isForeignMale = isJapaneseUser === false
+  // 翻訳先言語：外国人男性='en'、日本人女性='ja'
+  const myReadLang = isJapaneseUser === null ? currentLanguage : isJapaneseUser ? 'ja' : 'en'
 
   const handleSend = async () => {
     // 外国人男性の場合は身分確認・課金の両方をチェックして統合モーダルを表示
@@ -493,15 +514,38 @@ export default function ChatPage() {
     if (!newMessage.trim() || isSending) return
     try {
       setIsSending(true)
+
+      // 相手の言語に翻訳してから送信（外国人男性→ja、日本人女性→en）
+      let translatedContent: string | null = null
+      try {
+        const targetLang = isForeignMale ? 'ja' : 'en'
+        const translateRes = await fetch('/api/translate/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messageId: `send-${Date.now()}`,
+            text: newMessage.trim(),
+            targetLanguage: targetLang,
+          }),
+        })
+        const translateData = await translateRes.json()
+        if (translateData.translatedText && translateData.translatedText !== newMessage.trim()) {
+          translatedContent = translateData.translatedText
+        }
+      } catch {
+        // 翻訳失敗は無視して送信継続
+      }
+
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newMessage.trim() }),
+        body: JSON.stringify({ content: newMessage.trim(), translated_content: translatedContent }),
       })
       const result = await response.json()
       if (response.ok) {
         setMessages(prev => [...prev, result.data])
         setNewMessage('')
+        setPreviewTranslation(null)
         if (textareaRef.current) {
           textareaRef.current.style.height = '40px'
         }
@@ -789,7 +833,7 @@ export default function ChatPage() {
               {messages.map((message) => {
                 const isMyMessage = currentUserId && message.senderId === currentUserId
                 const isTranslating = translatingIds.has(message.id)
-                const hasTranslation = translatedMessages[message.id]
+                const hasTranslation = message.translated_content || translatedMessages[message.id]
 
                 return (
                   <div key={message.id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
@@ -811,49 +855,56 @@ export default function ChatPage() {
                         </p>
                       </div>
                     ) : (
-                      // 相手のメッセージ（翻訳トグル付き）
+                      // 相手のメッセージ（翻訳デフォルト表示）
                       <div
-                        onClick={() => !message.image_url && toggleTranslation(message.id)}
-                        className="max-w-[75%] px-4 py-2 rounded-2xl shadow-sm cursor-pointer transition-all break-words"
+                        className="max-w-[75%] px-4 py-2 rounded-2xl shadow-sm break-words"
                         style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
-                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#ede0d4')}
-                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'var(--color-bg-card)')}
                       >
                         {message.image_url ? (
                           <img
                             src={message.image_url}
                             className="max-w-xs rounded-lg cursor-pointer"
-                            onClick={(e) => { e.stopPropagation(); window.open(message.image_url, '_blank') }}
+                            onClick={() => window.open(message.image_url, '_blank')}
                             alt=""
                           />
                         ) : (
                           <>
-                            {/* 翻訳中表示 */}
+                            {/* 翻訳中スピナー */}
                             {isTranslating && (
-                              <p className="text-xs text-gray-500 italic flex items-center mb-1">
+                              <p className="text-xs italic flex items-center mb-1" style={{ color: 'var(--color-text-sub)' }}>
                                 <span className="w-3 h-3 border border-t-transparent rounded-full animate-spin mr-1" style={{ borderColor: 'var(--color-text-sub)', borderTopColor: 'transparent' }}></span>
                                 {t('translating')}
                               </p>
                             )}
 
-                            {/* 翻訳がある場合：デフォルトで翻訳表示、タップで原文表示 */}
-                            {hasTranslation && !showOriginal[message.id] ? (
-                              <>
-                                <p className="text-sm">{translatedMessages[message.id]}</p>
-                                <p className="text-xs text-blue-500 mt-1">{t('showOriginal')}</p>
-                              </>
-                            ) : (
-                              <>
-                                <p className="text-sm">{message.content}</p>
-                                {hasTranslation && (
-                                  <p className="text-xs text-blue-500 mt-1">{t('showTranslation')}</p>
-                                )}
-                              </>
-                            )}
+                            {/* 表示テキスト：translated_contentかキャッシュ翻訳をデフォルト表示 */}
+                            {(() => {
+                              const displayTranslation = message.translated_content || translatedMessages[message.id]
+                              const showingOriginal = showOriginal[message.id]
+                              return (
+                                <>
+                                  <p className="text-sm">
+                                    {displayTranslation && !showingOriginal
+                                      ? displayTranslation
+                                      : message.content}
+                                  </p>
+                                  {displayTranslation && message.content !== displayTranslation && (
+                                    <button
+                                      onClick={() => toggleTranslation(message.id)}
+                                      style={{ fontSize: '11px', color: '#a08070', background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', display: 'block', marginTop: '2px' }}
+                                    >
+                                      {showingOriginal
+                                        ? (isJapaneseUser ? '翻訳を表示' : 'Show translation')
+                                        : (isJapaneseUser ? '原文を表示' : 'Show original')}
+                                    </button>
+                                  )}
+                                </>
+                              )
+                            })()}
                           </>
                         )}
 
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs mt-1" style={{ color: '#a08070' }}>
                           {formatTime(message.timestamp)}
                         </p>
                       </div>
@@ -874,13 +925,13 @@ export default function ChatPage() {
             {/* 翻訳プレビュー表示 */}
             {(previewTranslation || isTranslatingPreview) && (
               <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: '#ede0d4', border: '1px solid var(--color-border)' }}>
-                <p className="text-xs text-gray-400 mb-1">
-                  {currentLanguage === 'ja' ? '英語での表示：' : '日本語での表示：'}
+                <p className="text-xs mb-1" style={{ color: '#a08070' }}>
+                  {isForeignMale ? '日本語：' : 'English:'}
                 </p>
                 {isTranslatingPreview ? (
-                  <p className="text-sm text-gray-400 italic">{t('translating')}</p>
+                  <p className="text-sm italic" style={{ color: '#a08070' }}>{t('translating')}</p>
                 ) : (
-                  <p className="text-sm text-gray-700">{previewTranslation}</p>
+                  <p className="text-sm" style={{ color: 'var(--color-text)' }}>{previewTranslation}</p>
                 )}
               </div>
             )}
