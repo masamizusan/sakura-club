@@ -40,7 +40,9 @@ export function isForeignMaleUser(profile: MinimalProfile | null | undefined): b
  * - 外国人男性: 相手（日本人女性）の日本語メッセージを英語に → 'en'
  */
 export function getTranslationTargetLang(profile: MinimalProfile | null | undefined): 'ja' | 'en' {
-  return isJapaneseWoman(profile) ? 'ja' : 'en'
+  // 日本人女性：日本語で入力 → 英語に翻訳して相手（外国人男性）へ届ける
+  // 外国人男性：英語で入力 → 日本語に翻訳して相手（日本人女性）へ届ける
+  return isJapaneseWoman(profile) ? 'en' : 'ja'
 }
 
 /**
