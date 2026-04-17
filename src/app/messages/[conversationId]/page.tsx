@@ -426,11 +426,11 @@ export default function ChatPage() {
             const supabase2 = createClient()
             const { data: myProf } = await supabase2
               .from('profiles')
-              .select('nationality')
+              .select('nationality, gender')
               .eq('id', currentUserId)
               .single()
-            const isJpUser = myProf?.nationality === '日本'
-            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, isJpUser ? 'ja' : 'en')
+            const isJpWoman = myProf?.nationality === '日本' && myProf?.gender === 'female'
+            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, isJpWoman ? 'ja' : 'en')
           }
         }
       } catch (error) {
@@ -497,13 +497,15 @@ export default function ChatPage() {
     }
   }, [conversationId, currentUserId, currentLanguage])
 
-  // 日本人ユーザー（日本人女性）かどうかを判定
-  const isJapaneseUser: boolean | null = userProfile === null
+  // 日本人女性かどうかを判定（nationality='日本' AND gender='female'）
+  const isJapaneseWoman: boolean | null = userProfile === null
     ? null
-    : userProfile.nationality === '日本'
-  const isForeignMale = isJapaneseUser === false
-  // 翻訳先言語：外国人男性='en'、日本人女性='ja'
-  const myReadLang = isJapaneseUser === null ? currentLanguage : isJapaneseUser ? 'ja' : 'en'
+    : userProfile.nationality === '日本' && userProfile.gender === 'female'
+  // isJapaneseUser は後方互換のためエイリアスとして残す
+  const isJapaneseUser = isJapaneseWoman
+  const isForeignMale = isJapaneseWoman === false
+  // 翻訳先言語：日本人女性='ja'（英語→日本語）、外国人男性='en'（日本語→英語）
+  const myReadLang = isJapaneseWoman === null ? currentLanguage : isJapaneseWoman ? 'ja' : 'en'
 
   const handleSend = async () => {
     // 外国人男性の場合は身分確認・課金の両方をチェックして統合モーダルを表示
