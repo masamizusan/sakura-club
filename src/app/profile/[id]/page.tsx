@@ -11,7 +11,11 @@ import {
   Loader2,
   MapPin,
   Globe,
-  Languages
+  Languages,
+  MoreVertical,
+  Ban,
+  Flag,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
@@ -218,6 +222,38 @@ function ProfileDetailContent() {
 
   // 言語コンテキスト
   const { currentLanguage } = useLanguage()
+
+  // ブロック・通報
+  const [showMenu, setShowMenu] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetail, setReportDetail] = useState('')
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+
+  const handleBlock = async () => {
+    if (!viewerId || !profileId || viewerId === profileId) return
+    const supabase2 = createClient()
+    await supabase2.from('blocks').insert({ blocker_id: viewerId, blocked_id: profileId })
+    setShowMenu(false)
+    router.push('/matches')
+  }
+
+  const handleReport = async () => {
+    if (!viewerId || !profileId || !reportReason) return
+    setIsSubmittingReport(true)
+    const supabase2 = createClient()
+    await supabase2.from('reports').insert({
+      reporter_id: viewerId,
+      reported_id: profileId,
+      reason: reportReason,
+      detail: reportDetail || null,
+    })
+    setIsSubmittingReport(false)
+    setShowReportModal(false)
+    setReportReason('')
+    setReportDetail('')
+    alert('通報を受け付けました。')
+  }
 
   // 翻訳用state
   const [translatedBio, setTranslatedBio] = useState<string | null>(null)
@@ -506,14 +542,93 @@ function ProfileDetailContent() {
             <ArrowLeft className="w-5 h-5 mr-2" />
             {t('back')}
           </button>
-          <div className="flex items-center gap-2">
-            <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-400'}`} />
-            <span className="text-sm text-gray-600">
-              {t('remaining')} <span className="font-bold">{likesRemaining}</span>/10
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <Heart className={`w-5 h-5 ${likesRemaining > 0 ? 'text-[#8b1a2e]' : 'text-gray-400'}`} />
+              <span className="text-sm text-gray-600">
+                {t('remaining')} <span className="font-bold">{likesRemaining}</span>/10
+              </span>
+            </div>
+            {/* ・・・メニュー（自分以外のプロフィールのみ） */}
+            {viewerId && viewerId !== profileId && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(v => !v)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 top-9 z-50 w-40 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                    <button
+                      onClick={() => { setShowMenu(false); setShowReportModal(true) }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left hover:bg-[#ede0d4] transition-colors"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <Flag className="w-4 h-4" />
+                      通報する
+                    </button>
+                    <button
+                      onClick={handleBlock}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left hover:bg-[#ede0d4] transition-colors"
+                      style={{ color: '#8b1a2e' }}
+                    >
+                      <Ban className="w-4 h-4" />
+                      ブロックする
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* 通報モーダル */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="app-card max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-shippori text-lg" style={{ color: 'var(--color-text)' }}>通報する</h3>
+              <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--color-text-sub)' }}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm mb-3" style={{ color: 'var(--color-text-sub)' }}>通報理由を選択してください</p>
+            <div className="space-y-2 mb-4">
+              {['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他'].map(reason => (
+                <button
+                  key={reason}
+                  onClick={() => setReportReason(reason)}
+                  className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+                  style={{
+                    border: `1px solid ${reportReason === reason ? '#8b1a2e' : 'var(--color-border)'}`,
+                    backgroundColor: reportReason === reason ? '#fdf6ef' : 'transparent',
+                    color: reportReason === reason ? '#8b1a2e' : 'var(--color-text)',
+                  }}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+            <textarea
+              placeholder="詳細（任意）"
+              value={reportDetail}
+              onChange={e => setReportDetail(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg px-3 py-2 text-sm mb-4"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
+            />
+            <button
+              onClick={handleReport}
+              disabled={!reportReason || isSubmittingReport}
+              className="w-full btn-primary py-3 rounded-full font-medium disabled:opacity-50"
+            >
+              {isSubmittingReport ? '送信中...' : '通報を送信'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* プロフィールコンテンツ */}
       <div className="py-8 px-4">

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Send, ArrowLeft, Heart, User, Mic, Camera, ShieldAlert } from 'lucide-react'
+import { Send, ArrowLeft, Heart, User, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -164,6 +164,40 @@ export default function ChatPage() {
   const audioContextRef = useRef<AudioContext | null>(null)
   const animationIdRef = useRef<number | null>(null)
   const isCancelledRef = useRef(false)
+
+  // ブロック・通報
+  const [showMenu, setShowMenu] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetail, setReportDetail] = useState('')
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+
+  const reportReasons = ['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他']
+
+  const handleBlock = async () => {
+    if (!currentUserId || !conversation?.partnerId) return
+    const supabase = createClient()
+    await supabase.from('blocks').insert({ blocker_id: currentUserId, blocked_id: conversation.partnerId })
+    setShowMenu(false)
+    router.push('/messages')
+  }
+
+  const handleReport = async () => {
+    if (!currentUserId || !conversation?.partnerId || !reportReason) return
+    setIsSubmittingReport(true)
+    const supabase = createClient()
+    await supabase.from('reports').insert({
+      reporter_id: currentUserId,
+      reported_id: conversation.partnerId,
+      reason: reportReason,
+      detail: reportDetail || null,
+    })
+    setIsSubmittingReport(false)
+    setShowReportModal(false)
+    setReportReason('')
+    setReportDetail('')
+    alert('通報を受け付けました。')
+  }
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -471,6 +505,18 @@ export default function ChatPage() {
         if (textareaRef.current) {
           textareaRef.current.style.height = '40px'
         }
+        // 非同期でAI監視（エラーでも送信は止めない）
+        if (result.data?.id) {
+          fetch('/api/messages/moderate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message_id: result.data.id,
+              content: result.data.content,
+              sender_id: currentUserId,
+            }),
+          }).catch(() => {})
+        }
       } else {
         alert(t('sendError'))
       }
@@ -678,7 +724,7 @@ export default function ChatPage() {
               <User className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             </div>
           )}
-          <div>
+          <div className="flex-1">
             <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
             {conversation && (
               <p className="text-sm text-gray-500">
@@ -689,6 +735,39 @@ export default function ChatPage() {
               </p>
             )}
           </div>
+
+          {/* ・・・メニュー */}
+          {conversation && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(v => !v)}
+                className="p-2 rounded-full transition-colors"
+                style={{ color: 'var(--color-text-sub)' }}
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 top-10 z-50 w-44 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
+                  <button
+                    onClick={() => { setShowMenu(false); setShowReportModal(true) }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left transition-colors hover:bg-[#ede0d4]"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <Flag className="w-4 h-4" />
+                    通報する
+                  </button>
+                  <button
+                    onClick={handleBlock}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-left transition-colors hover:bg-[#ede0d4]"
+                    style={{ color: '#8b1a2e' }}
+                  >
+                    <Ban className="w-4 h-4" />
+                    ブロックする
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* メッセージ一覧 */}
@@ -991,6 +1070,52 @@ export default function ChatPage() {
       />
 
       {/* アップグレード誘導モーダル */}
+      {/* 通報モーダル */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="app-card max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-shippori text-lg" style={{ color: 'var(--color-text)' }}>通報する</h3>
+              <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--color-text-sub)' }}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm mb-3" style={{ color: 'var(--color-text-sub)' }}>通報理由を選択してください</p>
+            <div className="space-y-2 mb-4">
+              {['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他'].map(reason => (
+                <button
+                  key={reason}
+                  onClick={() => setReportReason(reason)}
+                  className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+                  style={{
+                    border: `1px solid ${reportReason === reason ? '#8b1a2e' : 'var(--color-border)'}`,
+                    backgroundColor: reportReason === reason ? '#fdf6ef' : 'transparent',
+                    color: reportReason === reason ? '#8b1a2e' : 'var(--color-text)',
+                  }}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+            <textarea
+              placeholder="詳細（任意）"
+              value={reportDetail}
+              onChange={e => setReportDetail(e.target.value)}
+              rows={2}
+              className="w-full rounded-lg px-3 py-2 text-sm mb-4"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
+            />
+            <button
+              onClick={handleReport}
+              disabled={!reportReason || isSubmittingReport}
+              className="w-full btn-primary py-3 rounded-full font-medium disabled:opacity-50"
+            >
+              {isSubmittingReport ? '送信中...' : '通報を送信'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {showUpgradeModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="app-card max-w-sm w-full p-6 text-center">

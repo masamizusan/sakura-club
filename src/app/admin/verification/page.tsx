@@ -2,9 +2,32 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag } from 'lucide-react'
 
-type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected'
+type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags'
+
+// AIフラグ種別ラベル
+const flagTypeLabel: Record<string, string> = {
+  money:         '💰 金銭要求',
+  spam:          '🚫 業者・スパム',
+  redirect:      '↗️ 外部誘導',
+  inappropriate: '⚠️ 不適切内容',
+  personal_info: '🔒 個人情報収集',
+}
+
+type MessageFlag = {
+  id: string
+  flag_type: string
+  score: number
+  detail: string
+  reviewed: boolean
+  created_at: string
+  messages: {
+    content: string
+    sender_id: string
+    profiles: { name: string; gender: string; nationality: string } | null
+  } | null
+}
 
 type VerificationRequest = {
   id: string
@@ -58,6 +81,12 @@ const TAB_CONFIG: { key: TabType; label: string; icon: React.ReactNode; badgeCol
     icon: <Ban className="w-4 h-4" />,
     badgeColor: 'bg-red-100 text-red-800',
   },
+  {
+    key: 'ai_flags',
+    label: 'AIフラグ',
+    icon: <Flag className="w-4 h-4" />,
+    badgeColor: 'bg-orange-100 text-orange-800',
+  },
 ]
 
 // verification_statusのDBカラム値とタブTypeのマッピング
@@ -71,10 +100,38 @@ const TAB_STATUS_MAP: Record<TabType, string[]> = {
 export default function AdminVerificationPage() {
   const [activeTab, setActiveTab] = useState<TabType>('requires_review')
   const [requests, setRequests] = useState<VerificationRequest[]>([])
-  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0 })
+  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0, ai_flags: 0 })
   const [loading, setLoading] = useState(true)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
   const [processing, setProcessing] = useState<Record<string, boolean>>({})
+
+  // AIフラグ用state
+  const [flags, setFlags] = useState<MessageFlag[]>([])
+  const [flagsLoading, setFlagsLoading] = useState(false)
+
+  const fetchFlags = useCallback(async () => {
+    setFlagsLoading(true)
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('message_flags')
+      .select(`*, messages(content, sender_id, profiles(name, gender, nationality))`)
+      .eq('reviewed', false)
+      .order('score', { ascending: false })
+      .order('created_at', { ascending: false })
+    setFlags((data as MessageFlag[]) || [])
+    setFlagsLoading(false)
+  }, [])
+
+  const handleFlagAction = async (flagId: string, action: string) => {
+    const supabase = createClient()
+    const flag = flags.find(f => f.id === flagId)
+    await supabase.from('message_flags').update({ reviewed: true }).eq('id', flagId)
+    if (action === 'suspended' && flag?.messages?.sender_id) {
+      await supabase.from('profiles').update({ is_active: false }).eq('id', flag.messages.sender_id)
+    }
+    fetchFlags()
+    fetchCounts()
+  }
 
   const fetchCounts = useCallback(async () => {
     const supabase = createClient()
@@ -93,7 +150,12 @@ export default function AdminVerificationPage() {
           else manual++
         } else if (row.verification_status === 'rejected') rejected++
       }
-      setCounts({ requires_review: requires, auto_approved: auto, manual_approved: manual, rejected })
+      const supabase2 = createClient()
+      const { count: flagCount } = await supabase2
+        .from('message_flags')
+        .select('id', { count: 'exact', head: true })
+        .eq('reviewed', false)
+      setCounts({ requires_review: requires, auto_approved: auto, manual_approved: manual, rejected, ai_flags: flagCount || 0 })
     }
   }, [])
 
@@ -165,8 +227,12 @@ export default function AdminVerificationPage() {
   }, [fetchCounts])
 
   useEffect(() => {
-    fetchRequests(activeTab)
-  }, [activeTab, fetchRequests])
+    if (activeTab === 'ai_flags') {
+      fetchFlags()
+    } else {
+      fetchRequests(activeTab)
+    }
+  }, [activeTab, fetchRequests, fetchFlags])
 
   const handleApprove = async (userId: string) => {
     setProcessing(prev => ({ ...prev, [userId]: true }))
@@ -456,6 +522,79 @@ export default function AdminVerificationPage() {
                 )
               })}
             </div>
+          </>
+        )}
+
+        {/* AIフラグタブ */}
+        {activeTab === 'ai_flags' && (
+          <>
+            {flagsLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : flags.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">未確認フラグはありません</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-4 mb-4 text-sm text-gray-600">
+                  <span>未確認フラグ: <strong className="text-[#8b1a2e]">{flags.length}</strong></span>
+                  <span>本日検知数: <strong>{flags.filter(f => new Date(f.created_at).toDateString() === new Date().toDateString()).length}</strong></span>
+                </div>
+                {flags.map(flag => (
+                  <div
+                    key={flag.id}
+                    className="rounded-xl p-4"
+                    style={{
+                      background: '#fdf6ef',
+                      border: `1px solid ${flag.score >= 0.9 ? '#8b1a2e' : '#d4a89a'}`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs text-white px-2.5 py-0.5 rounded-full" style={{ backgroundColor: '#8b1a2e' }}>
+                        {flagTypeLabel[flag.flag_type] || flag.flag_type}
+                      </span>
+                      <span className="text-xs" style={{ color: '#6b4c3b' }}>
+                        スコア: {Math.round(flag.score * 100)}%
+                      </span>
+                      <span className="text-xs ml-auto" style={{ color: '#6b4c3b' }}>
+                        {new Date(flag.created_at).toLocaleString('ja-JP')}
+                      </span>
+                    </div>
+                    <p className="text-sm mb-1" style={{ color: '#2c1810' }}>
+                      「{flag.messages?.content}」
+                    </p>
+                    <p className="text-xs mb-1" style={{ color: '#6b4c3b' }}>
+                      送信者: {flag.messages?.profiles?.name || '不明'}
+                      {flag.messages?.profiles?.nationality && ` / ${flag.messages.profiles.nationality}`}
+                    </p>
+                    <p className="text-xs mb-3" style={{ color: '#8b1a2e' }}>
+                      理由: {flag.detail}
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => handleFlagAction(flag.id, 'resolved')}
+                        className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
+                      >
+                        問題なし
+                      </button>
+                      <button
+                        onClick={() => handleFlagAction(flag.id, 'warned')}
+                        className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
+                      >
+                        ユーザーに警告
+                      </button>
+                      <button
+                        onClick={() => handleFlagAction(flag.id, 'suspended')}
+                        className="px-3 py-1.5 text-xs rounded-full text-white transition-colors"
+                        style={{ backgroundColor: '#8b1a2e' }}
+                      >
+                        アカウント停止
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
