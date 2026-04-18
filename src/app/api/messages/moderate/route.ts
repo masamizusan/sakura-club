@@ -25,7 +25,8 @@ const SYSTEM_PROMPT = `
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient(
+    // service_role で RLS をバイパス（ビルド時クラッシュ防止のためハンドラ内で初期化）
+    const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
@@ -65,16 +66,20 @@ export async function POST(req: NextRequest) {
     const data = await response.json()
     const judgment = JSON.parse(data.choices[0].message.content || '{}')
 
+    console.log('AI判定結果:', judgment)
+
     // スコア0.7以上でフラグを立てる
     if (judgment.flagged && judgment.score >= 0.7) {
-      const { data: flagData, error: flagError } = await supabase.from('message_flags').insert({
+      const { data: flagData, error: flagError } = await supabaseAdmin.from('message_flags').insert({
         message_id,
         flag_type: judgment.category,
         score: judgment.score,
         detail: judgment.reason,
+        reviewed: false,
+        status: 'pending',
       })
 
-      console.log('AIフラグ書き込み結果:', { data: flagData, error: flagError, judgment })
+      console.log('フラグ書き込み:', { data: flagData, error: flagError })
 
       if (flagError) {
         console.error('message_flags書き込みエラー:', flagError)
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
       // 管理者通知
       const adminUserId = process.env.ADMIN_USER_ID
       if (adminUserId) {
-        await supabase.from('notifications').insert({
+        await supabaseAdmin.from('notifications').insert({
           user_id: adminUserId,
           type: 'ai_flag',
           content: `AIが不審なメッセージを検知しました: ${judgment.reason}`,

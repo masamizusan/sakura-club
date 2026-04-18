@@ -232,21 +232,24 @@ function ProfileDetailContent() {
 
   const handleBlock = async () => {
     if (!viewerId || !profileId || viewerId === profileId) return
+    if (!confirm('このユーザーをブロックしますか？')) return
+
     try {
-      const supabase2 = createClient()
-      const { error } = await supabase2
-        .from('blocks')
-        .insert({ blocker_id: viewerId, blocked_id: profileId })
-      if (error) {
-        console.error('ブロックエラー:', error)
-        alert('ブロックに失敗しました: ' + error.message)
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocked_id: profileId }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert('ブロックに失敗しました: ' + (json.error ?? res.status))
         return
       }
       setShowMenu(false)
       alert('ブロックしました')
       router.push('/matches')
     } catch (e) {
-      console.error('ブロック例外:', e)
+      console.error('ブロックエラー:', e)
       alert('エラーが発生しました')
     }
   }
@@ -254,18 +257,31 @@ function ProfileDetailContent() {
   const handleReport = async () => {
     if (!viewerId || !profileId || !reportReason) return
     setIsSubmittingReport(true)
-    const supabase2 = createClient()
-    await supabase2.from('reports').insert({
-      reporter_id: viewerId,
-      reported_id: profileId,
-      reason: reportReason,
-      detail: reportDetail || null,
-    })
-    setIsSubmittingReport(false)
-    setShowReportModal(false)
-    setReportReason('')
-    setReportDetail('')
-    alert('通報を受け付けました。')
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reported_id: profileId,
+          reason: reportReason,
+          detail: reportDetail || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert('通報に失敗しました: ' + (json.error ?? res.status))
+        return
+      }
+      setShowReportModal(false)
+      setReportReason('')
+      setReportDetail('')
+      alert('通報を受け付けました。ご協力ありがとうございます。')
+    } catch (e) {
+      console.error('通報エラー:', e)
+      alert('エラーが発生しました')
+    } finally {
+      setIsSubmittingReport(false)
+    }
   }
 
   // 翻訳用state

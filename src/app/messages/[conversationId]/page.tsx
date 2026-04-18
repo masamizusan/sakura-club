@@ -177,21 +177,24 @@ export default function ChatPage() {
 
   const handleBlock = async () => {
     if (!currentUserId || !conversation?.partnerId) return
+    if (!confirm('このユーザーをブロックしますか？')) return
+
     try {
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('blocks')
-        .insert({ blocker_id: currentUserId, blocked_id: conversation.partnerId })
-      if (error) {
-        console.error('ブロックエラー:', error)
-        alert('ブロックに失敗しました: ' + error.message)
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocked_id: conversation.partnerId }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert('ブロックに失敗しました: ' + (json.error ?? res.status))
         return
       }
       setShowMenu(false)
       alert('ブロックしました')
       router.push('/messages')
     } catch (e) {
-      console.error('ブロック例外:', e)
+      console.error('ブロックエラー:', e)
       alert('エラーが発生しました')
     }
   }
@@ -199,18 +202,31 @@ export default function ChatPage() {
   const handleReport = async () => {
     if (!currentUserId || !conversation?.partnerId || !reportReason) return
     setIsSubmittingReport(true)
-    const supabase = createClient()
-    await supabase.from('reports').insert({
-      reporter_id: currentUserId,
-      reported_id: conversation.partnerId,
-      reason: reportReason,
-      detail: reportDetail || null,
-    })
-    setIsSubmittingReport(false)
-    setShowReportModal(false)
-    setReportReason('')
-    setReportDetail('')
-    alert('通報を受け付けました。')
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reported_id: conversation.partnerId,
+          reason: reportReason,
+          detail: reportDetail,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert('通報に失敗しました: ' + (json.error ?? res.status))
+        return
+      }
+      setShowReportModal(false)
+      setReportReason('')
+      setReportDetail('')
+      alert('通報を受け付けました。ご協力ありがとうございます。')
+    } catch (e) {
+      console.error('通報エラー:', e)
+      alert('エラーが発生しました')
+    } finally {
+      setIsSubmittingReport(false)
+    }
   }
 
   // textarea ref
