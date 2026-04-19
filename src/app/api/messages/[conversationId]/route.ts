@@ -115,6 +115,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     // 会話情報を構築
     const conversationInfo = partner ? {
+      partnerId: partnerId,           // ブロック・通報処理に必須
       partnerName: partner.name || 'ユーザー',
       partnerAge: partner.age || null,
       partnerNationality: partner.nationality || '',
