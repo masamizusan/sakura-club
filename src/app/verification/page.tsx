@@ -101,7 +101,7 @@ export default function VerificationIntroPage() {
       {/* 登録ボタン */}
       <Link
         href="/verification/upload"
-        className="block w-full bg-[#fdf6ef]0 text-white text-center py-4 rounded-full font-bold text-lg hover:bg-[#6e1525] transition-colors"
+        className="block w-full bg-[#8b1a2e] text-white text-center py-4 rounded-full font-bold text-lg hover:bg-[#6e1525] transition-colors"
       >
         {t.startButton}
       </Link>
