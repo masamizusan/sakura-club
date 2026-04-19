@@ -231,8 +231,13 @@ function ProfileDetailContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   const handleBlock = async () => {
-    if (!viewerId || !profileId || viewerId === profileId) return
+    console.log('[handleBlock] called', { viewerId, profileId })
+    if (!viewerId || !profileId || viewerId === profileId) {
+      console.warn('[handleBlock] early return: missing viewerId/profileId or self-block')
+      return
+    }
     if (!confirm('このユーザーをブロックしますか？')) return
+    console.log('[handleBlock] confirmed, calling /api/blocks')
 
     try {
       const res = await fetch('/api/blocks', {
@@ -255,7 +260,11 @@ function ProfileDetailContent() {
   }
 
   const handleReport = async () => {
-    if (!viewerId || !profileId || !reportReason) return
+    console.log('[handleReport] called', { viewerId, profileId, reportReason })
+    if (!viewerId || !profileId || !reportReason) {
+      console.warn('[handleReport] early return: missing field')
+      return
+    }
     setIsSubmittingReport(true)
     try {
       const res = await fetch('/api/reports', {

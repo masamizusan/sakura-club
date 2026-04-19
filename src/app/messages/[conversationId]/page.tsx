@@ -176,8 +176,13 @@ export default function ChatPage() {
   const reportReasons = ['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他']
 
   const handleBlock = async () => {
-    if (!currentUserId || !conversation?.partnerId) return
+    console.log('[handleBlock] called', { currentUserId, partnerId: conversation?.partnerId })
+    if (!currentUserId || !conversation?.partnerId) {
+      console.warn('[handleBlock] early return: missing currentUserId or partnerId')
+      return
+    }
     if (!confirm('このユーザーをブロックしますか？')) return
+    console.log('[handleBlock] confirmed, calling /api/blocks')
 
     try {
       const res = await fetch('/api/blocks', {
@@ -200,7 +205,11 @@ export default function ChatPage() {
   }
 
   const handleReport = async () => {
-    if (!currentUserId || !conversation?.partnerId || !reportReason) return
+    console.log('[handleReport] called', { currentUserId, partnerId: conversation?.partnerId, reportReason })
+    if (!currentUserId || !conversation?.partnerId || !reportReason) {
+      console.warn('[handleReport] early return: missing field')
+      return
+    }
     setIsSubmittingReport(true)
     try {
       const res = await fetch('/api/reports', {
@@ -589,7 +598,10 @@ export default function ChatPage() {
               content: result.data.content,
               sender_id: currentUserId,
             }),
-          }).catch(() => {})
+          }).then(r => {
+            if (!r.ok) console.warn('[moderate] API error:', r.status)
+            else console.log('[moderate] AI判定送信完了')
+          }).catch(e => console.error('[moderate] fetch失敗:', e))
         }
       } else {
         alert(t('sendError'))
