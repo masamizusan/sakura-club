@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 // メッセージ送信のスキーマ
@@ -154,6 +155,45 @@ export async function POST(request: NextRequest, { params }: Params) {
         { status: 401 }
       )
     }
+
+    // ===== セキュリティチェック（APIレベル・回避不可） =====
+    // service_role で RLS をバイパスして確実に取得
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: senderProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('verification_status, gender')
+      .eq('id', user.id)
+      .single()
+
+    // 年齢認証チェック（全ユーザー共通 — フロントエンド迂回不可）
+    if (senderProfile?.verification_status !== 'approved') {
+      return NextResponse.json(
+        { error: '年齢認証が完了していません', code: 'verification_required' },
+        { status: 403 }
+      )
+    }
+
+    // 外国人男性のみ：課金チェック（日本人女性はスキップ）
+    const senderIsJapaneseWoman = senderProfile?.gender === 'female'
+    if (!senderIsJapaneseWoman) {
+      const { data: activeSub } = await supabaseAdmin
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (!activeSub) {
+        return NextResponse.json(
+          { error: 'サブスクリプションが必要です', code: 'subscription_required' },
+          { status: 403 }
+        )
+      }
+    }
+    // ===== セキュリティチェック終了 =====
 
     // リクエストボディの解析
     const body = await request.json()

@@ -852,3 +852,299 @@ setDidInitialCalc(true)
 ## 🚀 次章：多言語拡張・対象国拡大検討
 
 （本文は今後追加予定）
+
+---
+
+## 🔐 セキュリティ原則（2026-04-19確立・絶対遵守）
+
+### ⚠️ フロントエンドチェックはセキュリティではない
+
+フロントエンドの条件分岐（`if (!isVerified) return`）は「UX補助」に過ぎない。
+悪意あるユーザーはブラウザのDevToolsやcurlで簡単に迂回できる。
+
+**以下は必ずAPIレベル + DBレベルの両方で制御すること:**
+
+| 制御項目 | フロントエンド | APIレベル | DBレベル(RLS) |
+|---------|-------------|---------|-------------|
+| 年齢認証チェック | ✅ UX補助 | ✅ **必須** | ✅ **必須** |
+| 課金チェック（外国人男性） | ✅ UX補助 | ✅ **必須** | ✅ **必須** |
+
+### 🔒 実装済み保護（絶対に削除・変更禁止）
+
+#### APIレベル（`src/app/api/messages/[conversationId]/route.ts` POST）
+```typescript
+// ===== セキュリティチェック（APIレベル・回避不可） =====
+// service_role で RLS をバイパスして確実に取得
+const supabaseAdmin = createAdminClient(...)
+const { data: senderProfile } = await supabaseAdmin
+  .from('profiles').select('verification_status, gender').eq('id', user.id).single()
+
+// 年齢認証チェック（全ユーザー共通 — フロントエンド迂回不可）
+if (senderProfile?.verification_status !== 'approved') {
+  return NextResponse.json({ error: '年齢認証が完了していません', code: 'verification_required' }, { status: 403 })
+}
+
+// 外国人男性のみ：課金チェック（日本人女性はスキップ）
+const senderIsJapaneseWoman = senderProfile?.gender === 'female'
+if (!senderIsJapaneseWoman) {
+  const { data: activeSub } = await supabaseAdmin
+    .from('subscriptions').select('id').eq('user_id', user.id).eq('status', 'active').maybeSingle()
+  if (!activeSub) {
+    return NextResponse.json({ error: 'サブスクリプションが必要です', code: 'subscription_required' }, { status: 403 })
+  }
+}
+// ===== セキュリティチェック終了 =====
+```
+
+#### DBレベル（Supabase RLS: `messages_insert_verified_participant`）
+```sql
+-- マイグレーション: supabase/migrations/20260419_messages_insert_security.sql
+CREATE POLICY "messages_insert_verified_participant" ON public.messages FOR INSERT
+WITH CHECK (
+  auth.uid() = sender_id AND
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND verification_status = 'approved') AND
+  (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND gender = 'female')
+    OR
+    EXISTS (SELECT 1 FROM public.subscriptions WHERE user_id = auth.uid() AND status = 'active')
+  )
+);
+```
+
+### 🚫 セキュリティ改修時の禁止事項
+
+1. **APIレベルチェックを削除しない** — リファクタ・デザイン変更時も必ず維持
+2. **`senderIsJapaneseWoman = gender === 'female'` の判定を変更しない**
+3. **serviceRoleKeyを使わないコード** で verification_status を読まない（RLS で取れない可能性）
+4. **RLSポリシー `messages_insert_verified_participant` を削除しない**
+
+### 教訓：今回の事故の根本原因
+
+デザイン統一作業やリファクタリング中に、`handleSend` 内の `if (!isVerified)` チェックが上書き・削除された。
+フロントエンドのみの制御は「コードを変えると動く保護」であり、真のセキュリティではない。
+**この種の保護は必ずAPIとDBの2層で実装する。**
+
+---
+
+## 🔒 profile_initialized による遷移制御（2026-02-02完了）
+
+### 仕様（固定）
+- `profiles.profile_initialized` (boolean, default false) でプロフィール完成状態を管理
+- **プレビュー確定保存時のみ** `profile_initialized = true` をセット
+- ログイン後: `profile_initialized === true` → `/mypage`、それ以外 → `/profile/edit`
+- `post-signup-profile` API では `profile_initialized` を絶対に true にしない（初期注入APIの責務外）
+
+### 変更ファイル（保護対象）
+- `supabase/migrations/20260202_add_profile_initialized.sql` — カラム追加 + バックフィル
+- `src/app/profile/preview/page.tsx` — upsertPayload に `profile_initialized: true`
+- `src/app/login/page.tsx` — ログイン後遷移判定
+
+---
+
+## 🐛 fromMyPage クエリ結合バグ修正（2026-02-02完了）
+
+### 問題と解決
+- **原因**: `createLanguageAwareUrl` が既存クエリ付きパスに `?lang=ja` を二重付与し、`fromMyPage=true?lang=ja` となって `fromMyPage` が認識されなかった
+- **影響**: 既存ユーザーが新規扱い分岐に入り、ニックネーム等が空になった
+- **対策**: URL生成を `URL` オブジェクト + `URLSearchParams` に統一し、クエリパラメータを正しくマージ
+- **変更ファイル（保護対象）**: `src/utils/languageNavigation.ts`
+
+---
+
+## 🔐 マルチタブ認証制御（2026-02-22完了）
+
+### 設計方針（固定）
+- 同一ブラウザ内では「最後にログインしたユーザーに統一」を正とする
+- ユーザー不一致（incoming !== base）が発生した場合のみ通知
+
+### 挙動
+
+| 状態 | 動作 |
+|------|------|
+| PASSIVE（裏タブ） | alert → reload（1回のみ） |
+| ACTIVE（前面） | 非ブロッキングバナー表示 |
+| incoming === base | 何もしない（SKIP_SAME_USER） |
+
+### 安全機構（変更禁止）
+- **alertLock（TTL）**: 10秒間の連続 alert 防止
+- **reloadGuard**: 8秒間の連続 reload 防止
+- **postReloadSync**: reload 後の base 収束トランザクション
+- **SKIP理由ログ**: SKIP_SAME_USER, SKIP_ALERT_LOCK, SKIP_GUARD_ACTIVE 等
+
+### 変更ファイル（保護対象）
+- `src/store/authStore.ts` — ACTIVE/PASSIVE 分岐、Banner State、SKIP ログ
+- `src/components/auth/AuthSwitchBanner.tsx` — バナー UI
+- `src/components/auth/AuthDebugPanel.tsx` — Debug Panel
+- `src/app/layout.tsx` — AuthSwitchBanner 追加
+
+### ブロック判定の SSOT ルール（修繕D・絶対遵守）
+- ブロック判定は `supabase.auth.getUser()` で取得した `currentAuthUserId` と `previewData.__ownerUserId` の一致のみで行う
+- `sc_real_login_user`（グローバル localStorage キー）はログ補助情報。**ブロック判定に使用禁止**
+- 理由: localStorage は別タブ/別ログインで上書きされるため誤ブロックが発生する
+
+### デバッグ
+- `?debugAuth=1` で Auth Debug Panel 表示
+
+---
+
+## 💬 チャット翻訳機能（2026-04 完了）
+
+### 概要
+外国人男性（英語）と日本人女性（日本語）のリアルタイム翻訳チャット機能。
+
+### ユーザータイプ判定の集約（`src/utils/userHelpers.ts`）
+
+**⚠️ このファイルは保護対象。変更禁止。**
+
+```typescript
+// gender='female' を一次判定とする（nationality が null でも誤判定しない）
+export function isJapaneseWoman(profile): boolean
+export function isForeignMaleUser(profile): boolean
+// 翻訳方向の決定（送信者→受信者の言語へ翻訳）
+export function getTranslationTargetLang(profile): 'ja' | 'en'
+// 送信前プレビューラベル
+export function getPreviewLabel(profile): string  // 日本人女性→'English:' / 外国人男性→'日本語：'
+```
+
+**翻訳方向ロジック（絶対に変えない）:**
+- 日本人女性が日本語で送信 → **英語**に翻訳して外国人男性に届ける（targetLang: `'en'`）
+- 外国人男性が英語で送信 → **日本語**に翻訳して日本人女性に届ける（targetLang: `'ja'`）
+
+### DB要件（Supabase手動実行が必要）
+```sql
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS translated_content TEXT;
+```
+
+### メッセージAPIの変更（`src/app/api/messages/[conversationId]/route.ts`）
+- `translated_content` をスキーマ・INSERT・SELECT・GETレスポンスに追加済み
+- 送信時に `translated_content` を保存することで既読時の再翻訳API呼び出しを削減
+
+### メッセージ画面の主要仕様（`src/app/messages/[conversationId]/page.tsx`）
+
+**ユーザータイプ判定（userHelpers経由）:**
+```typescript
+import { isJapaneseWoman as checkIsJapaneseWoman, isForeignMaleUser as checkIsForeignMale, getTranslationTargetLang, getPreviewLabel } from '@/utils/userHelpers'
+const isJapaneseWoman = checkIsJapaneseWoman(userProfile)
+const isForeignMale = userProfile !== null && checkIsForeignMale(userProfile)
+```
+
+**日本人女性はサブスクリプションモーダルを表示しない（絶対ルール）:**
+```typescript
+// isJapaneseWoman === false を明示チェック（null/undefined 時の誤発火防止）
+if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed === false)) {
+  setShowRequirementsModal(true)
+  return
+}
+```
+
+**相手のメッセージ表示:**
+- `translated_content` があればデフォルトで翻訳を表示
+- 「原文を表示」/「翻訳を表示」トグルボタンで切り替え
+- 日本人ユーザー: ラベルは `'原文を表示'` / `'翻訳を表示'`
+- 外国人男性: ラベルは `'Show original'` / `'Show translation'`
+
+**送信前プレビュー:**
+- `getPreviewLabel(userProfile)` で動的ラベル（`'English:'` or `'日本語：'`）
+- 翻訳確認ボタン方式（自動翻訳useEffectではなく手動ボタン）
+
+**autoTranslateMessages:**
+- `targetLang` パラメータで翻訳先言語を明示指定
+- `translated_content` が既にある場合はスキップ（二重翻訳防止）
+
+### 保護対象ファイル（変更禁止）
+- `src/utils/userHelpers.ts` — ユーザータイプ判定の唯一の正ロジック
+- `src/app/messages/[conversationId]/page.tsx` — 翻訳表示・送信ロジック
+- `src/app/api/messages/[conversationId]/route.ts` — translated_content の保存
+
+---
+
+## 🚨 デプロイ注意：Worktree と 本番リポジトリは別ディレクトリ
+
+**この点を必ず守ること。過去に何度もこれで本番反映漏れが発生した。**
+
+| 対象 | パス |
+|------|------|
+| 本番（Vercel デプロイ元） | `/Users/mizunomasafumi/sakura-club/src/` |
+| Worktree（claude/elegant-mccarthy ブランチ） | `/Users/mizunomasafumi/sakura-club/.claude/worktrees/elegant-mccarthy/src/` |
+
+- Worktree で編集しても本番には反映されない
+- 本番修正は必ず `/Users/mizunomasafumi/sakura-club/src/` を直接編集すること
+- または Worktree → main にマージしてからデプロイする
+---
+
+## 📋 Claude Code指示書テンプレート（完全版）
+
+> 毎回の指示書の冒頭に以下をコピペして使用すること
+
+### 【⚠️ 作業前に必ず確認】
+
+#### ■ デプロイ注意事項
+- 必ず /Users/mizunomasafumi/sakura-club（本番リポジトリ）を編集
+- worktree（.claude/worktrees/配下）は編集しない
+- デプロイ前に必ず `git diff` で変更内容を確認
+
+#### ■ 🔴 絶対変更禁止
+
+**src/utils/userHelpers.ts**
+- isJapaneseWoman()：gender==='female'のみで判定（nationalityは使わない）
+- getTranslationTargetLang()：日本人女性→'en' / 外国人男性→'ja'
+- getPreviewLabel()：日本人女性→'English:' / 外国人男性→'日本語：'
+
+**app/api/stripe/ 配下すべて**
+- 価格・プランID・金額変更禁止
+
+**app/api/messages/moderate/route.ts**
+- AIフラグ判定ロジック・5カテゴリ・スコア閾値変更禁止
+
+**app/api/verification/ 配下すべて**
+- GPT-4o Vision審査ロジック変更禁止
+- 今日の日付を明示的に渡す処理を維持
+
+**Supabase RLSポリシー（ダッシュボードで管理）**
+- messages INSERTポリシー変更禁止
+- blocks / reports / message_flags テーブル変更禁止
+
+#### ■ 🟡 変更時は必ずgit diffで確認
+
+**components/ChatWindow.tsx**
+- 翻訳確認ボタン方式を維持（自動翻訳に戻さない）
+- 日本人女性：モーダル表示なし・送信制限なし（isJapaneseWoman===false の明示チェック）
+- 相手メッセージはtranslated_contentをデフォルト表示
+- 「原文を表示」ボタンでトグル
+
+**components/Sidebar.tsx**
+- 5秒ポーリング方式を維持（イベント方式に変えない）
+- バッジwriteはservice_role APIを使用
+
+**app/globals.css**
+- 背景#f5ebe0 / 深紅#8b1a2e 変更時は全ページ確認必須
+- Shippori Mincho B1 / Cormorant Garamond 変更禁止
+
+**languageNavigation.ts**
+- URL二重付与バグ修正済み。クエリパラメータ処理を変更しない
+
+#### ■ 重要な実装仕様
+
+**プロフィール遷移制御**
+- profile_initializedフラグで初回登録フローを制御
+- 変更時はマイページ・登録フロー両方を確認
+
+**マルチタブ認証制御**
+- ACTIVE/PASSIVE分岐・alertLock・reloadGuardを維持
+- sc_real_login_userをブロック判定に使用禁止（SSOT違反）
+
+**多言語対応**
+- 日本語・英語・韓国語・繁体字の4言語
+- 新規テキスト追加時は4言語全て対応必須
+- 国籍データはDBに日本語で保存→japaneseToISO変換で表示
+
+**翻訳機能（変更禁止）**
+- 翻訳方向：日本人女性＝日本語→英語 / 外国人男性＝英語→日本語
+- 方式：翻訳確認ボタンを押したときのみ翻訳（自動翻訳なし）
+- 送信時：translated_contentをDBに保存
+- 相手メッセージ：translated_contentをデフォルト表示
+
+**Supabase手動対応済み**
+- messages.translated_contentカラム（追加済み）
+- blocks / reports / message_flagsテーブル（作成済み）
+
