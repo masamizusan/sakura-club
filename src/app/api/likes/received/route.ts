@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -85,9 +86,24 @@ export async function GET(request: NextRequest) {
       ids: matchedUserIds.map(id => id.slice(0, 8))
     })
 
-    // 除外するユーザーIDのセット（マッチング済みのみ）
+    // 除外するユーザーIDのセット（マッチング済み + ブロック済み）
     const excludeUserIds = new Set(matchedUserIds)
-    console.log('🚫 [likes/received] Total exclude count:', excludeUserIds.size)
+
+    // ブロック済みユーザーも除外（service_roleでRLSバイパス）
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: blockList } = await supabaseAdmin
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(`blocker_id.eq.${currentUserId},blocked_id.eq.${currentUserId}`)
+    blockList?.forEach(b => {
+      const blockedId = b.blocker_id === currentUserId ? b.blocked_id : b.blocker_id
+      excludeUserIds.add(blockedId)
+    })
+
+    console.log('🚫 [likes/received] Total exclude count:', excludeUserIds.size, '(matched + blocked)')
 
     // 3. 自分にいいねをしてきたユーザーを取得（新しい順）
     console.log('📥 [likes/received] Step 3: Getting received likes...')

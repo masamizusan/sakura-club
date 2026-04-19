@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -74,7 +75,21 @@ export async function GET(request: NextRequest) {
         visitorMap.set(f.visitor_id, f.created_at)
       }
     })
-    const visitorIds = Array.from(visitorMap.keys())
+    const allVisitorIds = Array.from(visitorMap.keys())
+
+    // ブロック済みユーザーを除外（service_roleでRLSバイパス）
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: blockList } = await supabaseAdmin
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(`blocker_id.eq.${currentUserId},blocked_id.eq.${currentUserId}`)
+    const blockedIdSet = new Set(blockList?.map(b =>
+      b.blocker_id === currentUserId ? b.blocked_id : b.blocker_id
+    ) ?? [])
+    const visitorIds = allVisitorIds.filter(id => !blockedIdSet.has(id))
 
     // プロフィール情報を取得
     const { data: profiles, error: profilesError } = await supabase

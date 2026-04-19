@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,13 +72,32 @@ export async function GET(request: NextRequest) {
     })
 
     // myProfileId でフィルタリング（JavaScript側）
-    const conversations = allConversations?.filter(c =>
+    const allMyConversations = allConversations?.filter(c =>
       c.user1_id === myProfileId || c.user2_id === myProfileId
     ) || []
+
+    // ブロック済みユーザーとの会話を除外（service_roleでRLSバイパス）
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: blockList } = await supabaseAdmin
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(`blocker_id.eq.${myProfileId},blocked_id.eq.${myProfileId}`)
+    const blockedIdSet = new Set(blockList?.map(b =>
+      b.blocker_id === myProfileId ? b.blocked_id : b.blocker_id
+    ) ?? [])
+
+    const conversations = allMyConversations.filter(c => {
+      const partnerId = c.user1_id === myProfileId ? c.user2_id : c.user1_id
+      return !blockedIdSet.has(partnerId)
+    })
 
     console.log('📋 [messages] Filtered conversations:', {
       total: allConversations?.length || 0,
       filtered: conversations.length,
+      blockedFiltered: allMyConversations.length - conversations.length,
       myProfileId: myProfileId
     })
 

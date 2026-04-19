@@ -168,6 +168,7 @@ export default function ChatPage() {
 
   // ブロック・通報
   const [showMenu, setShowMenu] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportDetail, setReportDetail] = useState('')
@@ -175,28 +176,25 @@ export default function ChatPage() {
 
   const reportReasons = ['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他']
 
-  const handleBlock = async () => {
-    console.log('[handleBlock] called', { currentUserId, partnerId: conversation?.partnerId })
-    if (!currentUserId || !conversation?.partnerId) {
-      console.warn('[handleBlock] early return: missing currentUserId or partnerId')
-      return
-    }
-    if (!confirm('このユーザーをブロックしますか？')) return
-    console.log('[handleBlock] confirmed, calling /api/blocks')
+  const handleBlock = () => {
+    if (!currentUserId || !conversation?.partnerId) return
+    setShowMenu(false)
+    setShowBlockModal(true)
+  }
 
+  const executeBlock = async () => {
     try {
       const res = await fetch('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blocked_id: conversation.partnerId }),
+        body: JSON.stringify({ blocked_id: conversation!.partnerId }),
       })
       const json = await res.json()
       if (!res.ok) {
         alert('ブロックに失敗しました: ' + (json.error ?? res.status))
         return
       }
-      setShowMenu(false)
-      alert('ブロックしました')
+      setShowBlockModal(false)
       router.push('/messages')
     } catch (e) {
       console.error('ブロックエラー:', e)
@@ -1171,6 +1169,55 @@ export default function ChatPage() {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
       />
+
+      {/* ブロックモーダル */}
+      {showBlockModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '360px',
+            width: '90%',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '64px', marginBottom: '1rem' }}>🚫</div>
+            <h2 style={{ color: '#8b1a2e', fontFamily: 'Shippori Mincho B1', fontSize: '20px', marginBottom: '8px' }}>
+              ブロックしますか？
+            </h2>
+            <p style={{ color: '#8b1a2e', fontSize: '13px', marginBottom: '16px' }}>
+              ブロックは解除できません。
+            </p>
+            <div style={{
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              padding: '12px',
+              fontSize: '13px',
+              color: '#444',
+              textAlign: 'left',
+              marginBottom: '24px',
+              lineHeight: 1.8,
+            }}>
+              <p>※ブロックした事はお相手ユーザーには通知されません。</p>
+              <p>※ブロックすると自分やお相手から全てのページで非表示となります。</p>
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowBlockModal(false)}
+                style={{ flex: 1, background: '#ccc', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={executeBlock}
+                style={{ flex: 1, background: '#8b1a2e', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+              >
+                ブロックする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* アップグレード誘導モーダル */}
       {/* 通報モーダル */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 // 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
@@ -136,6 +137,20 @@ export async function GET(request: NextRequest) {
 
     console.log('💝 [recommendations] Already liked:', likedUserIds.length, 'users')
 
+    // ブロックリスト取得（双方向・service_roleでRLSバイパス）
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: blockList } = await supabaseAdmin
+      .from('blocks')
+      .select('blocker_id, blocked_id')
+      .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`)
+    const blockedIds = blockList?.map(b =>
+      b.blocker_id === user.id ? b.blocked_id : b.blocker_id
+    ) ?? []
+    console.log('🚫 [recommendations] Blocked users:', blockedIds.length)
+
     // 候補を取得（存在するカラムのみ指定）
     let query = supabase
       .from('profiles')
@@ -154,6 +169,11 @@ export async function GET(request: NextRequest) {
     // いいね済みユーザーを除外（空配列の場合はスキップ）
     if (likedUserIds.length > 0) {
       query = query.not('id', 'in', `(${likedUserIds.join(',')})`)
+    }
+
+    // ブロック済みユーザーを除外（双方向）
+    if (blockedIds.length > 0) {
+      query = query.not('id', 'in', `(${blockedIds.join(',')})`)
     }
 
     if (targetIsJapanese) {
