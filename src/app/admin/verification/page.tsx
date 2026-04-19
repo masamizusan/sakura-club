@@ -133,67 +133,69 @@ export default function AdminVerificationPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [reportsLoading, setReportsLoading] = useState(false)
 
+  // service_role経由でフラグ取得（RLS回避のため /api/admin/flags を使用）
   const fetchFlags = useCallback(async () => {
     setFlagsLoading(true)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('message_flags')
-      .select(`*, messages(content, sender_id, profiles(name, gender, nationality))`)
-      .eq('reviewed', false)
-      .order('score', { ascending: false })
-      .order('created_at', { ascending: false })
-    console.log('フラグ取得結果:', { flags: data, error })
-    setFlags((data as MessageFlag[]) || [])
-    setFlagsLoading(false)
+    try {
+      const res = await fetch('/api/admin/flags')
+      const json = await res.json()
+      console.log('フラグ取得:', { count: json.flags?.length, error: json.error })
+      setFlags((json.flags as MessageFlag[]) || [])
+    } catch (e) {
+      console.error('fetchFlags error:', e)
+    } finally {
+      setFlagsLoading(false)
+    }
   }, [])
 
+  // service_role経由で通報取得（RLS回避のため /api/admin/reports を使用）
   const fetchReports = useCallback(async () => {
     setReportsLoading(true)
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .select(`
-        *,
-        reporter:profiles!reporter_id (nickname),
-        reported:profiles!reported_id (nickname, gender, nationality)
-      `)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-    console.log('通報取得結果:', { reports: data, error })
-    setReports((data as Report[]) || [])
-    setReportsLoading(false)
+    try {
+      const res = await fetch('/api/admin/reports')
+      const json = await res.json()
+      console.log('通報取得:', { count: json.reports?.length, error: json.error })
+      setReports((json.reports as Report[]) || [])
+    } catch (e) {
+      console.error('fetchReports error:', e)
+    } finally {
+      setReportsLoading(false)
+    }
   }, [])
 
+  // service_role経由で通報アクション（PATCH /api/admin/reports）
   const handleReportAction = async (reportId: string, action: string, reportedId?: string) => {
-    const supabase = createClient()
-    await supabase.from('reports').update({ status: action }).eq('id', reportId)
-    if (action === 'suspended' && reportedId) {
-      await supabase.from('profiles').update({ is_active: false }).eq('id', reportedId)
-    }
+    await fetch('/api/admin/reports', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reportId, action, reportedId }),
+    })
     setReports(prev => prev.filter(r => r.id !== reportId))
     fetchCounts()
   }
 
+  // service_role経由でフラグアクション（PATCH /api/admin/flags）
   const handleFlagAction = async (flagId: string, action: string) => {
-    const supabase = createClient()
     const flag = flags.find(f => f.id === flagId)
-    await supabase.from('message_flags').update({ reviewed: true }).eq('id', flagId)
-    if (action === 'suspended' && flag?.messages?.sender_id) {
-      await supabase.from('profiles').update({ is_active: false }).eq('id', flag.messages.sender_id)
-    }
+    await fetch('/api/admin/flags', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flagId, action, senderId: flag?.messages?.sender_id }),
+    })
     fetchFlags()
     fetchCounts()
   }
 
   const fetchCounts = useCallback(async () => {
+    // 身分証審査カウントは anon で取得可能
     const supabase = createClient()
     const { data } = await supabase
       .from('profiles')
       .select('id, verification_status, ai_review_result')
       .in('verification_status', ['requires_review', 'approved', 'rejected'])
 
+    let requires = 0, auto = 0, manual = 0, rejected = 0
     if (data) {
-      let requires = 0, auto = 0, manual = 0, rejected = 0
       for (const row of data) {
         if (row.verification_status === 'requires_review') requires++
         else if (row.verification_status === 'approved') {
@@ -202,17 +204,22 @@ export default function AdminVerificationPage() {
           else manual++
         } else if (row.verification_status === 'rejected') rejected++
       }
-      const supabase2 = createClient()
-      const { count: flagCount } = await supabase2
-        .from('message_flags')
-        .select('id', { count: 'exact', head: true })
-        .eq('reviewed', false)
-      const { count: reportCount } = await supabase2
-        .from('reports')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending')
-      setCounts({ requires_review: requires, auto_approved: auto, manual_approved: manual, rejected, ai_flags: flagCount || 0, reports: reportCount || 0 })
     }
+
+    // フラグ・通報カウントは service_role 経由（RLS回避）
+    const [flagsJson, reportsJson] = await Promise.all([
+      fetch('/api/admin/flags?count_only=true').then(r => r.json()),
+      fetch('/api/admin/reports?count_only=true').then(r => r.json()),
+    ])
+
+    setCounts({
+      requires_review: requires,
+      auto_approved: auto,
+      manual_approved: manual,
+      rejected,
+      ai_flags: flagsJson.count || 0,
+      reports: reportsJson.count || 0,
+    })
   }, [])
 
   const fetchRequests = useCallback(async (tab: TabType) => {
