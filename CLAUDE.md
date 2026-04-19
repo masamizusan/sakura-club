@@ -1148,3 +1148,25 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 - messages.translated_contentカラム（追加済み）
 - blocks / reports / message_flagsテーブル（作成済み）
 
+
+## 🔴 追加保護対象：年齢認証フロー（2026/04/19追記）
+
+以下のファイルは変更禁止。CSSクラスのtypoを含む小さな変更でも
+ボタンが消えるなど致命的なバグになる。
+
+### 保護ファイル
+- `app/verification/page.tsx` — 説明ページ（「年齢確認を始める」ボタン）
+- `app/verification/upload/page.tsx` — アップロードUI（完全実装済み）
+- `app/verification/pending/page.tsx` — 審査中ページ
+- `app/api/verification/review/route.ts` — GPT-4o Vision AIレビューAPI
+
+### 実装済み機能（変更禁止）
+- 身分証種別セレクト（6種類・4言語）
+- カメラ撮影（capture="environment"）/ アルバム選択
+- Supabase Storage（identity-documents）アップロード
+- AIレビューAPI呼び出し → /verification/pending遷移
+
+### よくあるバグパターン
+- TailwindクラスのTypo（例：bg-[#fdf6ef]0 → ボタンが消える）
+- デザイン統一作業でCSSを上書きしてボタンが見えなくなる
+- リファクタ時にhandleImageSelectやfileInputが消える
