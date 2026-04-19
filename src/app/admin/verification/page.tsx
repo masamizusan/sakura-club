@@ -37,8 +37,8 @@ type Report = {
   detail: string | null
   status: string
   created_at: string
-  reporter: { nickname: string } | null
-  reported: { nickname: string; gender: string; nationality: string } | null
+  reporter: { name: string } | null
+  reported: { name: string; gender: string; nationality: string } | null
 }
 
 type VerificationRequest = {
@@ -430,8 +430,8 @@ export default function AdminVerificationPage() {
           </div>
         ) : (
           <>
-            {/* 0件 */}
-            {requests.length === 0 && (
+            {/* 0件（通報・AIフラグタブは専用UIを使うのでここでは出さない） */}
+            {requests.length === 0 && activeTab !== 'reports' && activeTab !== 'ai_flags' && (
               <div className="text-center text-gray-400 mt-24">
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-400" />
                 <p className="text-lg font-medium text-gray-600">
@@ -625,14 +625,14 @@ export default function AdminVerificationPage() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs" style={{ color: '#6b4c3b' }}>
-                        通報者: {report.reporter?.nickname || '不明'}
+                        通報者: {report.reporter?.name || '不明'}
                       </span>
                       <span className="text-xs" style={{ color: '#a08070' }}>
                         {new Date(report.created_at).toLocaleString('ja-JP')}
                       </span>
                     </div>
                     <p className="font-medium mb-2" style={{ color: '#2c1810' }}>
-                      対象: {report.reported?.nickname || '不明'}
+                      対象: {report.reported?.name || '不明'}
                       {report.reported?.nationality && ` (${report.reported.nationality})`}
                     </p>
                     <span

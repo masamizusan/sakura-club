@@ -49,17 +49,19 @@ export async function GET(req: NextRequest) {
 
     const { data: profiles } = await supabaseAdmin
       .from('profiles')
-      .select('id, nickname, gender, nationality')
+      .select('id, name, gender, nationality')
       .in('id', allUserIds)
 
-    const profileMap: Record<string, { nickname: string; gender: string; nationality: string }> = {}
+    console.log('[admin/reports] profiles取得:', profiles?.length, profiles?.[0])
+
+    const profileMap: Record<string, { name: string; gender: string; nationality: string }> = {}
     for (const p of profiles || []) {
-      profileMap[p.id] = { nickname: p.nickname ?? '', gender: p.gender ?? '', nationality: p.nationality ?? '' }
+      profileMap[p.id] = { name: p.name ?? '', gender: p.gender ?? '', nationality: p.nationality ?? '' }
     }
 
     const enriched = data.map((r: { reporter_id: string; reported_id: string }) => ({
       ...r,
-      reporter: profileMap[r.reporter_id] ? { nickname: profileMap[r.reporter_id].nickname } : null,
+      reporter: profileMap[r.reporter_id] ? { name: profileMap[r.reporter_id].name } : null,
       reported: profileMap[r.reported_id] ?? null,
     }))
 
