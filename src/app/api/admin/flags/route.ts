@@ -53,9 +53,10 @@ export async function PATCH(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // フラグを確認済み + ステータス更新
     const { error } = await supabaseAdmin
       .from('message_flags')
-      .update({ reviewed: true })
+      .update({ reviewed: true, status: action })
       .eq('id', flagId)
 
     if (error) {
@@ -63,11 +64,41 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const now = new Date().toISOString()
+
+    // 警告：通知を送信
+    if (action === 'warned' && senderId) {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: senderId,
+        type: 'system',
+        title: '⚠️ メッセージへの警告',
+        message: 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
+        data: { action: 'warned' },
+        is_read: false,
+        created_at: now,
+        updated_at: now,
+      })
+      console.log('[admin/flags] 警告通知送信:', senderId)
+    }
+
+    // アカウント停止：is_active=false + 通知
     if (action === 'suspended' && senderId) {
-      await supabaseAdmin
+      const { error: suspendError } = await supabaseAdmin
         .from('profiles')
         .update({ is_active: false })
         .eq('id', senderId)
+      console.log('[admin/flags] アカウント停止:', { senderId, suspendError })
+
+      await supabaseAdmin.from('notifications').insert({
+        user_id: senderId,
+        type: 'system',
+        title: '🚫 アカウント停止',
+        message: '規約違反のため、アカウントが停止されました。',
+        data: { action: 'suspended' },
+        is_read: false,
+        created_at: now,
+        updated_at: now,
+      })
     }
 
     return NextResponse.json({ ok: true })

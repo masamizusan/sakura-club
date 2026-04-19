@@ -654,6 +654,12 @@ export default function AdminVerificationPage() {
                         対応済み
                       </button>
                       <button
+                        onClick={() => handleReportAction(report.id, 'warned', report.reported_id)}
+                        className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
+                      >
+                        警告を送る
+                      </button>
+                      <button
                         onClick={() => handleReportAction(report.id, 'suspended', report.reported_id)}
                         className="px-3 py-1.5 text-xs text-white rounded-full transition-colors"
                         style={{ backgroundColor: '#8b1a2e' }}

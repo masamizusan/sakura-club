@@ -91,11 +91,41 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const now = new Date().toISOString()
+
+    // 警告：通知を送信
+    if (action === 'warned' && reportedId) {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: reportedId,
+        type: 'system',
+        title: '⚠️ 通報への警告',
+        message: 'あなたのアカウントが他のユーザーから通報され、規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
+        data: { action: 'warned' },
+        is_read: false,
+        created_at: now,
+        updated_at: now,
+      })
+      console.log('[admin/reports] 警告通知送信:', reportedId)
+    }
+
+    // アカウント停止：is_active=false + 通知
     if (action === 'suspended' && reportedId) {
-      await supabaseAdmin
+      const { error: suspendError } = await supabaseAdmin
         .from('profiles')
         .update({ is_active: false })
         .eq('id', reportedId)
+      console.log('[admin/reports] アカウント停止:', { reportedId, suspendError })
+
+      await supabaseAdmin.from('notifications').insert({
+        user_id: reportedId,
+        type: 'system',
+        title: '🚫 アカウント停止',
+        message: '規約違反のため、アカウントが停止されました。',
+        data: { action: 'suspended' },
+        is_read: false,
+        created_at: now,
+        updated_at: now,
+      })
     }
 
     return NextResponse.json({ ok: true })
