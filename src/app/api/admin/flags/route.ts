@@ -68,17 +68,20 @@ export async function PATCH(req: NextRequest) {
 
     // 警告：通知を送信
     if (action === 'warned' && senderId) {
-      await supabaseAdmin.from('notifications').insert({
-        user_id: senderId,
-        type: 'system',
-        title: '⚠️ メッセージへの警告',
-        message: 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
-        data: { action: 'warned' },
-        is_read: false,
-        created_at: now,
-        updated_at: now,
-      })
-      console.log('[admin/flags] 警告通知送信:', senderId)
+      const { data: notifData, error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: senderId,
+          type: 'system',
+          title: '⚠️ メッセージへの警告',
+          message: 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
+          data: { action: 'warned' },
+          is_read: false,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+      console.log('[admin/flags] 警告通知送信結果:', { notifData, notifError: notifError?.message, notifDetails: notifError?.details, notifCode: notifError?.code })
     }
 
     // アカウント停止：is_active=false + 通知
@@ -87,18 +90,22 @@ export async function PATCH(req: NextRequest) {
         .from('profiles')
         .update({ is_active: false })
         .eq('id', senderId)
-      console.log('[admin/flags] アカウント停止:', { senderId, suspendError })
+      console.log('[admin/flags] アカウント停止:', { senderId, suspendError: suspendError?.message })
 
-      await supabaseAdmin.from('notifications').insert({
-        user_id: senderId,
-        type: 'system',
-        title: '🚫 アカウント停止',
-        message: '規約違反のため、アカウントが停止されました。',
-        data: { action: 'suspended' },
-        is_read: false,
-        created_at: now,
-        updated_at: now,
-      })
+      const { data: notifData, error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: senderId,
+          type: 'system',
+          title: '🚫 アカウント停止',
+          message: '規約違反のため、アカウントが停止されました。',
+          data: { action: 'suspended' },
+          is_read: false,
+          created_at: now,
+          updated_at: now,
+        })
+        .select()
+      console.log('[admin/flags] 停止通知送信結果:', { notifData, notifError: notifError?.message, notifDetails: notifError?.details, notifCode: notifError?.code })
     }
 
     return NextResponse.json({ ok: true })
