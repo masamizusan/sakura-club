@@ -207,18 +207,31 @@ export default function AdminVerificationPage() {
     }
 
     // フラグ・通報カウントは service_role 経由（RLS回避）
-    const [flagsJson, reportsJson] = await Promise.all([
-      fetch('/api/admin/flags?count_only=true').then(r => r.json()),
-      fetch('/api/admin/reports?count_only=true').then(r => r.json()),
-    ])
+    let flagCount = 0
+    let reportCount = 0
+    try {
+      const [flagsRes, reportsRes] = await Promise.all([
+        fetch('/api/admin/flags?count_only=true'),
+        fetch('/api/admin/reports?count_only=true'),
+      ])
+      const [flagsJson, reportsJson] = await Promise.all([
+        flagsRes.json(),
+        reportsRes.json(),
+      ])
+      flagCount = flagsJson.count ?? 0
+      reportCount = reportsJson.count ?? 0
+      console.log('カウント取得:', { flagCount, reportCount, flagsJson, reportsJson })
+    } catch (e) {
+      console.error('fetchCounts API error:', e)
+    }
 
     setCounts({
       requires_review: requires,
       auto_approved: auto,
       manual_approved: manual,
       rejected,
-      ai_flags: flagsJson.count || 0,
-      reports: reportsJson.count || 0,
+      ai_flags: flagCount,
+      reports: reportCount,
     })
   }, [])
 
