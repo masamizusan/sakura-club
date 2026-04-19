@@ -27,20 +27,43 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ count: count || 0 })
     }
 
+    // JOIN を使わずシンプルに取得（FK制約がなくてもOK）
     const { data, error } = await supabaseAdmin
       .from('reports')
-      .select(`
-        *,
-        reporter:profiles!reporter_id (nickname),
-        reported:profiles!reported_id (nickname, gender, nationality)
-      `)
+      .select('*')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
 
     console.log('[admin/reports] GET:', { count: data?.length, error: error?.message })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    return NextResponse.json({ reports: data || [], count: data?.length || 0 })
+    if (!data || data.length === 0) {
+      return NextResponse.json({ reports: [], count: 0 })
+    }
+
+    // reporter / reported のプロフィールを別クエリで取得してマージ
+    const allUserIds = Array.from(new Set([
+      ...data.map((r: { reporter_id: string }) => r.reporter_id),
+      ...data.map((r: { reported_id: string }) => r.reported_id),
+    ]))
+
+    const { data: profiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id, nickname, gender, nationality')
+      .in('id', allUserIds)
+
+    const profileMap: Record<string, { nickname: string; gender: string; nationality: string }> = {}
+    for (const p of profiles || []) {
+      profileMap[p.id] = { nickname: p.nickname ?? '', gender: p.gender ?? '', nationality: p.nationality ?? '' }
+    }
+
+    const enriched = data.map((r: { reporter_id: string; reported_id: string }) => ({
+      ...r,
+      reporter: profileMap[r.reporter_id] ? { nickname: profileMap[r.reporter_id].nickname } : null,
+      reported: profileMap[r.reported_id] ?? null,
+    }))
+
+    return NextResponse.json({ reports: enriched, count: enriched.length })
   } catch (e) {
     console.error('[admin/reports] GET error:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
