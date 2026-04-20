@@ -34,7 +34,6 @@ export async function GET(req: NextRequest) {
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
 
-    console.log('[admin/reports] GET:', { count: data?.length, error: error?.message })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     if (!data || data.length === 0) {
@@ -51,8 +50,6 @@ export async function GET(req: NextRequest) {
       .from('profiles')
       .select('id, name, gender, nationality')
       .in('id', allUserIds)
-
-    console.log('[admin/reports] profiles取得:', profiles?.length, profiles?.[0])
 
     const profileMap: Record<string, { name: string; gender: string; nationality: string }> = {}
     for (const p of profiles || []) {
@@ -73,76 +70,62 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json()
-  console.log('[reports PATCH] リクエスト受信:', body)
+  try {
+    const { reportId, action, reportedId } = await req.json()
 
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-  const { reportId, action, reportedId } = body
+    // ① reportsテーブルを更新
+    const { error: updateError } = await supabaseAdmin
+      .from('reports')
+      .update({ status: action })
+      .eq('id', reportId)
 
-  // Step1: reportsテーブルを更新
-  const { error: updateError } = await supabaseAdmin
-    .from('reports')
-    .update({ status: action })
-    .eq('id', reportId)
+    if (updateError) {
+      console.error('[admin/reports] PATCH reports error:', updateError)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    }
 
-  console.log('[reports PATCH] report更新:', { updateError: updateError?.message })
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 })
-  }
-
-  // Step2: 通知を書き込む（contentカラムで試みる）
-  if ((action === 'warned' || action === 'suspended') && reportedId) {
-    const warningText = action === 'warned'
-      ? 'あなたのアカウントが他のユーザーから通報され、規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。'
-      : '規約違反のため、アカウントが停止されました。'
-
-    // まず content カラムで試みる
-    const { data: notif, error: notifError } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: reportedId,
-        type: 'system',
-        content: warningText,
-        is_read: false,
-      })
-      .select()
-
-    console.log('[reports PATCH] 通知書き込み(content):', { notif, notifError: notifError?.message, notifCode: notifError?.code, notifDetails: notifError?.details })
-
-    // content で失敗した場合は message+title でも試みる
-    if (notifError) {
-      const now = new Date().toISOString()
-      const title = action === 'warned' ? '⚠️ 通報への警告' : '🚫 アカウント停止'
-      const { data: notif2, error: notifError2 } = await supabaseAdmin
+    // ② 警告通知を送信
+    if (action === 'warned' && reportedId) {
+      const { error: notifError } = await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: reportedId,
-          type: 'system',
-          title,
-          message: warningText,
-          data: { action },
+          type: 'warning',
+          title: '⚠️ 警告',
+          message: 'あなたのアカウントが他のユーザーから通報され、規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
           is_read: false,
-          created_at: now,
-          updated_at: now,
         })
-        .select()
-      console.log('[reports PATCH] 通知書き込み(message+title):', { notif2, notifError2: notifError2?.message, notifCode2: notifError2?.code })
+      if (notifError) console.error('[admin/reports] 警告通知エラー:', notifError.message)
     }
+
+    // ③ アカウント停止：is_active=false + 停止通知
+    if (action === 'suspended' && reportedId) {
+      const { error: suspendError } = await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('id', reportedId)
+      if (suspendError) console.error('[admin/reports] 停止エラー:', suspendError.message)
+
+      const { error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: reportedId,
+          type: 'suspended',
+          title: '🚫 アカウント停止',
+          message: '規約違反のため、アカウントが停止されました。',
+          is_read: false,
+        })
+      if (notifError) console.error('[admin/reports] 停止通知エラー:', notifError.message)
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    console.error('[admin/reports] PATCH error:', e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  // Step3: アカウント停止
-  if (action === 'suspended' && reportedId) {
-    const { error: suspendError } = await supabaseAdmin
-      .from('profiles')
-      .update({ is_active: false })
-      .eq('id', reportedId)
-
-    console.log('[reports PATCH] アカウント停止:', { suspendError: suspendError?.message })
-  }
-
-  return NextResponse.json({ ok: true, reportedId, action })
 }

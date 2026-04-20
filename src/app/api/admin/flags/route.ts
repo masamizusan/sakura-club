@@ -34,7 +34,6 @@ export async function GET(req: NextRequest) {
       .order('score', { ascending: false })
       .order('created_at', { ascending: false })
 
-    console.log('[admin/flags] GET:', { count: data?.length, error: error?.message })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     if (!data || data.length === 0) {
@@ -79,100 +78,83 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json()
-  console.log('[flags PATCH] リクエスト受信:', body)
+  try {
+    const { flagId, action } = await req.json()
 
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-  const { flagId, action } = body
+    // ① flagId → message_id → sender_id をサーバーサイドで解決
+    const { data: flagRow, error: flagFetchError } = await supabaseAdmin
+      .from('message_flags')
+      .select('message_id')
+      .eq('id', flagId)
+      .maybeSingle()
 
-  // Step1: flagIdからmessage_idを取得
-  const { data: flag, error: flagError } = await supabaseAdmin
-    .from('message_flags')
-    .select('message_id')
-    .eq('id', flagId)
-    .single()
+    if (flagFetchError) {
+      console.error('[admin/flags] flagRow fetch error:', flagFetchError.message)
+    }
 
-  console.log('[flags PATCH] flag取得:', { flag, flagError: flagError?.message })
-  if (flagError || !flag) {
-    return NextResponse.json({ error: 'flag not found', flagError: flagError?.message }, { status: 404 })
-  }
+    let senderId: string | null = null
+    if (flagRow?.message_id) {
+      const { data: msgRow } = await supabaseAdmin
+        .from('messages')
+        .select('sender_id')
+        .eq('id', flagRow.message_id)
+        .maybeSingle()
+      senderId = msgRow?.sender_id ?? null
+    }
 
-  // Step2: message_idからsender_idを取得
-  const { data: message, error: messageError } = await supabaseAdmin
-    .from('messages')
-    .select('sender_id')
-    .eq('id', flag.message_id)
-    .single()
+    // ② フラグを確認済み + ステータス更新
+    const { error: updateError } = await supabaseAdmin
+      .from('message_flags')
+      .update({ reviewed: true, status: action })
+      .eq('id', flagId)
 
-  console.log('[flags PATCH] message取得:', { message, messageError: messageError?.message })
-  if (messageError || !message) {
-    return NextResponse.json({ error: 'message not found', messageError: messageError?.message }, { status: 404 })
-  }
+    if (updateError) {
+      console.error('[admin/flags] PATCH flags error:', updateError)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    }
 
-  const senderId = message.sender_id
-  console.log('[flags PATCH] senderId確定:', senderId)
-
-  // Step3: フラグを更新
-  const { error: updateError } = await supabaseAdmin
-    .from('message_flags')
-    .update({ reviewed: true, status: action })
-    .eq('id', flagId)
-
-  console.log('[flags PATCH] flag更新:', { updateError: updateError?.message })
-
-  // Step4: 通知を書き込む（notifications実テーブルに合わせてcontentカラムを使用）
-  if (action === 'warned' || action === 'suspended') {
-    const warningText = action === 'warned'
-      ? 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。'
-      : '規約違反のため、アカウントが停止されました。'
-
-    // まず content カラムで試みる（moderate/route.tsと同じパターン）
-    const { data: notif, error: notifError } = await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: senderId,
-        type: action === 'warned' ? 'system' : 'system',
-        content: warningText,
-        is_read: false,
-      })
-      .select()
-
-    console.log('[flags PATCH] 通知書き込み(content):', { notif, notifError: notifError?.message, notifCode: notifError?.code, notifDetails: notifError?.details })
-
-    // content で失敗した場合は message+title でも試みる
-    if (notifError) {
-      const now = new Date().toISOString()
-      const title = action === 'warned' ? '⚠️ メッセージへの警告' : '🚫 アカウント停止'
-      const { data: notif2, error: notifError2 } = await supabaseAdmin
+    // ③ 警告通知を送信
+    if (action === 'warned' && senderId) {
+      const { error: notifError } = await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: senderId,
-          type: 'system',
-          title,
-          message: warningText,
-          data: { action },
+          type: 'warning',
+          title: '⚠️ 警告',
+          message: 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
           is_read: false,
-          created_at: now,
-          updated_at: now,
         })
-        .select()
-      console.log('[flags PATCH] 通知書き込み(message+title):', { notif2, notifError2: notifError2?.message, notifCode2: notifError2?.code })
+      if (notifError) console.error('[admin/flags] 警告通知エラー:', notifError.message)
     }
+
+    // ④ アカウント停止：is_active=false + 停止通知
+    if (action === 'suspended' && senderId) {
+      const { error: suspendError } = await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: false })
+        .eq('id', senderId)
+      if (suspendError) console.error('[admin/flags] 停止エラー:', suspendError.message)
+
+      const { error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: senderId,
+          type: 'suspended',
+          title: '🚫 アカウント停止',
+          message: '規約違反のため、アカウントが停止されました。',
+          is_read: false,
+        })
+      if (notifError) console.error('[admin/flags] 停止通知エラー:', notifError.message)
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    console.error('[admin/flags] PATCH error:', e)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  // Step5: アカウント停止
-  if (action === 'suspended') {
-    const { error: suspendError } = await supabaseAdmin
-      .from('profiles')
-      .update({ is_active: false })
-      .eq('id', senderId)
-
-    console.log('[flags PATCH] アカウント停止:', { suspendError: suspendError?.message })
-  }
-
-  return NextResponse.json({ ok: true, senderId, action })
 }
