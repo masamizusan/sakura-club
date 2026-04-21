@@ -175,15 +175,26 @@ export default function AdminVerificationPage() {
   }
 
   // service_role経由でフラグアクション（PATCH /api/admin/flags）
-  const handleFlagAction = async (flagId: string, action: string) => {
-    const flag = flags.find(f => f.id === flagId)
-    await fetch('/api/admin/flags', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flagId, action, senderId: flag?.messages?.sender_id }),
-    })
-    fetchFlags()
-    fetchCounts()
+  const handleFlagAction = async (flagId: string, action: 'resolved' | 'warned' | 'suspended') => {
+    console.log('handleFlagAction called:', { flagId, action })
+    try {
+      const res = await fetch('/api/admin/flags', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagId, action }),
+      })
+      const json = await res.json()
+      console.log('PATCH /api/admin/flags response:', json)
+      if (!res.ok) {
+        alert('エラー: ' + (json.error || JSON.stringify(json)))
+        return
+      }
+      fetchFlags()
+      fetchCounts()
+    } catch (e) {
+      console.error('handleFlagAction error:', e)
+      alert('ネットワークエラーが発生しました')
+    }
   }
 
   const fetchCounts = useCallback(async () => {
