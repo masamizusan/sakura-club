@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const contactCategories = [
@@ -25,22 +25,24 @@ const inputStyle: React.CSSProperties = {
   fontSize: '14px',
 }
 
-export default function ContactPage() {
-  const router = useRouter()
+// useSearchParams を使う部分を分離（Suspense 必須）
+function CategoryInitializer({ onCategory }: { onCategory: (cat: string) => void }) {
   const searchParams = useSearchParams()
+  useEffect(() => {
+    const cat = searchParams?.get('category')
+    if (cat && contactCategories.includes(cat)) {
+      onCategory(cat)
+    }
+  }, [searchParams, onCategory])
+  return null
+}
 
+function ContactForm() {
+  const router = useRouter()
   const [category, setCategory] = useState('')
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDone, setIsDone] = useState(false)
-
-  // URLパラメータでカテゴリを初期化（退会フローなど）
-  useEffect(() => {
-    const cat = searchParams.get('category')
-    if (cat && contactCategories.includes(cat)) {
-      setCategory(cat)
-    }
-  }, [searchParams])
 
   const handleSubmit = async () => {
     if (!category || !message.trim()) return
@@ -69,6 +71,11 @@ export default function ContactPage() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1.5rem 1rem', background: '#f5ebe0', minHeight: '100vh' }}>
+      {/* URLパラメータでカテゴリ初期化（退会フローなど） */}
+      <Suspense fallback={null}>
+        <CategoryInitializer onCategory={setCategory} />
+      </Suspense>
+
       {/* 戻るボタン */}
       <button
         onClick={() => router.push('/mypage')}
@@ -175,4 +182,8 @@ export default function ContactPage() {
       )}
     </div>
   )
+}
+
+export default function ContactPage() {
+  return <ContactForm />
 }
