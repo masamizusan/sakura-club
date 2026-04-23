@@ -614,7 +614,7 @@ function MyPageContent() {
               icon={Settings}
               label={getMypageTranslation('notificationSettings')}
               subText={getMypageTranslation('notificationSettingsDesc')}
-              onClick={() => router.push('/settings')}
+              onClick={() => router.push('/mypage/settings')}
             />
 
             {/* お問い合わせ */}
@@ -622,7 +622,7 @@ function MyPageContent() {
               icon={Mail}
               label={getMypageTranslation('contact')}
               subText={getMypageTranslation('contactDesc')}
-              onClick={() => window.location.href = 'mailto:support@sakura-club.jp'}
+              onClick={() => router.push('/mypage/contact')}
             />
 
             {/* よくある質問 */}
@@ -630,7 +630,7 @@ function MyPageContent() {
               icon={HelpCircle}
               label={getMypageTranslation('faq')}
               subText={getMypageTranslation('faqDesc')}
-              onClick={() => router.push('/faq')}
+              onClick={() => router.push('/mypage/faq')}
             />
 
             {/* ログアウト */}
