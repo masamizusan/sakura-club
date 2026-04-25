@@ -9,8 +9,8 @@ type Notification = {
   type: string
   title: string
   message: string
-  is_read: boolean
-  created_at: string
+  isRead: boolean
+  createdAt: string
 }
 
 const notificationIcons: Record<string, string> = {
@@ -74,7 +74,7 @@ export default function SettingsPage() {
       setNotifications(json.notifications ?? [])
 
       // 未読を既読に更新
-      if ((json.notifications ?? []).some((n: Notification) => !n.is_read)) {
+      if ((json.notifications ?? []).some((n: Notification) => !n.isRead)) {
         await fetch('/api/notifications/mark-all-read', { method: 'POST' })
       }
     } catch (e) {
@@ -170,8 +170,8 @@ export default function SettingsPage() {
               <div
                 key={notif.id}
                 style={{
-                  background: notif.is_read ? '#fdf6ef' : '#fff',
-                  border: `1px solid ${notif.is_read ? '#d4a89a' : '#8b1a2e'}`,
+                  background: notif.isRead ? '#fdf6ef' : '#fff',
+                  border: `1px solid ${notif.isRead ? '#d4a89a' : '#8b1a2e'}`,
                   borderRadius: '0.75rem',
                   padding: '1rem',
                   marginBottom: '0.75rem',
@@ -187,7 +187,7 @@ export default function SettingsPage() {
                   <p style={{
                     fontFamily: 'Shippori Mincho B1, serif',
                     color: '#2c1810',
-                    fontWeight: notif.is_read ? 400 : 500,
+                    fontWeight: notif.isRead ? 400 : 500,
                     marginBottom: '4px',
                     fontSize: '14px',
                   }}>
@@ -197,10 +197,10 @@ export default function SettingsPage() {
                     {notif.message}
                   </p>
                   <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
-                    {new Date(notif.created_at).toLocaleString('ja-JP')}
+                    {new Date(notif.createdAt).toLocaleString('ja-JP')}
                   </p>
                 </div>
-                {!notif.is_read && (
+                {!notif.isRead && (
                   <div style={{
                     width: '8px',
                     height: '8px',
