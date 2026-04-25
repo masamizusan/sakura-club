@@ -22,6 +22,8 @@ interface MenuRowProps {
   labelColor?: string
   /** 区切り線を表示するか（デフォルト: true） */
   showDivider?: boolean
+  /** アイコン右上に赤丸ドットを表示するか（未読バッジ用） */
+  showBadge?: boolean
 }
 
 export function MenuRow({
@@ -33,7 +35,8 @@ export function MenuRow({
   onClick,
   iconColor,
   labelColor,
-  showDivider = true
+  showDivider = true,
+  showBadge = false
 }: MenuRowProps) {
   const Component = clickable && onClick ? 'button' : 'div'
 
@@ -52,11 +55,19 @@ export function MenuRow({
       onMouseLeave={clickable && onClick ? (e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '' } : undefined}
     >
       {/* 左側アイコン */}
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${iconColor || ''}`}
-        style={{ backgroundColor: '#ede0d4', color: iconColor ? undefined : '#8b1a2e' }}
-      >
-        <Icon className="w-5 h-5" />
+      <div className="relative mr-3">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center ${iconColor || ''}`}
+          style={{ backgroundColor: '#ede0d4', color: iconColor ? undefined : '#8b1a2e' }}
+        >
+          <Icon className="w-5 h-5" />
+        </div>
+        {showBadge && (
+          <span
+            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white"
+            aria-label="未読通知あり"
+          />
+        )}
       </div>
 
       {/* 中央テキスト */}

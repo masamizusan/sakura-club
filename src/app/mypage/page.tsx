@@ -617,9 +617,7 @@ function MyPageContent() {
               label={getMypageTranslation('notificationSettings')}
               subText={getMypageTranslation('notificationSettingsDesc')}
               onClick={() => router.push('/mypage/settings')}
-              rightContent={unreadNotifications > 0 ? (
-                <span className="w-2 h-2 bg-red-500 rounded-full inline-block" aria-label="未読通知あり" />
-              ) : undefined}
+              showBadge={unreadNotifications > 0}
             />
 
             {/* お問い合わせ */}
