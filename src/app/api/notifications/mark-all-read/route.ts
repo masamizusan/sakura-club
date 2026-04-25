@@ -27,12 +27,12 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // 注: notifications.updated_at カラムは本番スキーマキャッシュに存在せず、
+    // 含めると "Could not find the 'updated_at' column" で UPDATE 全体が失敗する。
+    // 既存の flags/route.ts と同様、is_read のみ更新する。
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('notifications')
-      .update({
-        is_read: true,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ is_read: true })
       .eq('user_id', user.id)
       .eq('is_read', false)
       .select('id')
