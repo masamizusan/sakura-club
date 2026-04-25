@@ -7,6 +7,7 @@ interface NotificationCounts {
   unreadMessages: number
   unseenLikes: number
   unreadFootprints: number
+  unreadNotifications: number
 }
 
 const POLL_INTERVAL_MS = 5000
@@ -16,6 +17,7 @@ export function useNotifications() {
     unreadMessages: 0,
     unseenLikes: 0,
     unreadFootprints: 0,
+    unreadNotifications: 0,
   })
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -66,10 +68,18 @@ export function useNotifications() {
 
       const uniqueFootprintsCount = new Set(footprintsData?.map(f => f.visitor_id)).size
 
+      // 4. 未読通知数（warning/suspended/system 等）
+      const { count: notifCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', uid)
+        .eq('is_read', false)
+
       setCounts({
         unreadMessages,
         unseenLikes: likesCount || 0,
         unreadFootprints: uniqueFootprintsCount,
+        unreadNotifications: notifCount || 0,
       })
     } catch (err) {
       console.error('Notification count fetch error:', err)

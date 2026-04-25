@@ -65,7 +65,7 @@ export default function SettingsPage() {
   // 退会確認モーダル
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  // 通知取得 + 既読化
+  // 通知取得 + 全件自動既読化（履歴は残し、未読フラグのみクリア）
   const fetchNotifications = useCallback(async () => {
     setIsLoadingNotif(true)
     try {
@@ -73,10 +73,10 @@ export default function SettingsPage() {
       const json = await res.json()
       setNotifications(json.notifications ?? [])
 
-      // 未読を既読に更新
-      if ((json.notifications ?? []).some((n: Notification) => !n.isRead)) {
-        await fetch('/api/notifications/mark-all-read', { method: 'POST' })
-      }
+      // 設定ページを開いた時点で全件既読扱いにする
+      // （マイページの赤丸ドットを次回訪問時に消すため）
+      fetch('/api/notifications/mark-all-read', { method: 'POST' })
+        .catch(e => console.error('既読化エラー:', e))
     } catch (e) {
       console.error('通知取得エラー:', e)
     } finally {
@@ -170,8 +170,8 @@ export default function SettingsPage() {
               <div
                 key={notif.id}
                 style={{
-                  background: notif.isRead ? '#fdf6ef' : '#fff',
-                  border: `1px solid ${notif.isRead ? '#d4a89a' : '#8b1a2e'}`,
+                  background: '#fdf6ef',
+                  border: '1px solid #d4a89a',
                   borderRadius: '0.75rem',
                   padding: '1rem',
                   marginBottom: '0.75rem',
@@ -187,7 +187,6 @@ export default function SettingsPage() {
                   <p style={{
                     fontFamily: 'Shippori Mincho B1, serif',
                     color: '#2c1810',
-                    fontWeight: notif.isRead ? 400 : 500,
                     marginBottom: '4px',
                     fontSize: '14px',
                   }}>
@@ -200,16 +199,6 @@ export default function SettingsPage() {
                     {new Date(notif.createdAt).toLocaleString('ja-JP')}
                   </p>
                 </div>
-                {!notif.isRead && (
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#8b1a2e',
-                    flexShrink: 0,
-                    marginTop: '4px',
-                  }} />
-                )}
               </div>
             ))
           )}

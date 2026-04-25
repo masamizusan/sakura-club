@@ -29,12 +29,14 @@ import Link from 'next/link'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { MenuRow, LikeRemainingRow } from '@/components/mypage/MenuRow'
+import { useNotifications } from '@/hooks/useNotifications'
 
 function MyPageContent() {
   const { user } = useAuth()
   const router = useRouter()
   const languageRouter = useLanguageAwareRouter()
   const { currentLanguage } = useLanguage()
+  const { unreadNotifications } = useNotifications()
 
   // MyPage専用翻訳辞書
   const mypageTranslations: Record<string, Record<string, string>> = {
@@ -615,6 +617,9 @@ function MyPageContent() {
               label={getMypageTranslation('notificationSettings')}
               subText={getMypageTranslation('notificationSettingsDesc')}
               onClick={() => router.push('/mypage/settings')}
+              rightContent={unreadNotifications > 0 ? (
+                <span className="w-2 h-2 bg-red-500 rounded-full inline-block" aria-label="未読通知あり" />
+              ) : undefined}
             />
 
             {/* お問い合わせ */}
