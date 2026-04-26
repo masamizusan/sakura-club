@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import HeroSlideshow from '@/components/HeroSlideshow'
 
 // ─── 翻訳（全面改訂版） ──────────────────────────────────────────────────────
 const T = {
@@ -291,6 +292,8 @@ function HeroSection({ t }: { t: Translations }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: 'var(--color-washi)' }}>
+      {/* 四季の日本庭園 4枚クロスフェードスライドショー（背面） */}
+      <HeroSlideshow />
       {/* 竹装飾・左 */}
       <div className="absolute left-0 top-0 h-full w-24 opacity-40 pointer-events-none animate-bamboo">
         <BambooSVG className="h-full w-full" />
