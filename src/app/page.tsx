@@ -14,6 +14,7 @@ const T = {
     heroSub: '彼女がドアを開けてくれる。あとは日本が語りかけてくる。',
     ctaWomen: '日本人女性（無料）',
     ctaMen: '外国籍男性として登録',
+    alreadyMember: 'すでに登録済みの方はこちら',
     menTag: '外国人男性の方へ',
     menTitle: '彼女に、日本の中へ連れて行ってもらおう。',
     menSub: '一つの出会いから。たくさんの日本が、見えてくる。',
@@ -54,6 +55,7 @@ const T = {
     heroSub: 'She opens the door. Japan does the rest.',
     ctaWomen: 'Japanese Women (Free)',
     ctaMen: 'Foreign Men (Join)',
+    alreadyMember: 'Already a member? Sign in',
     menTag: 'For Foreign Men',
     menTitle: "Let her bring you into it.",
     menSub: 'One encounter. A world of Japan to discover.',
@@ -94,6 +96,7 @@ const T = {
     heroSub: '그녀가 문을 열어줍니다. 나머지는 일본이 말해줍니다.',
     ctaWomen: '일본 여성（무료）',
     ctaMen: '외국인 남성으로 가입',
+    alreadyMember: '이미 회원이신가요? 로그인',
     menTag: '외국인 남성 분들께',
     menTitle: '그녀가 일본 안으로 데려가 줄 거예요.',
     menSub: '하나의 만남에서. 수많은 일본이 보이기 시작합니다.',
@@ -134,6 +137,7 @@ const T = {
     heroSub: '她為你開啟了門。日本會為你說完剩下的故事。',
     ctaWomen: '日本女性（免費）',
     ctaMen: '外籍男性加入',
+    alreadyMember: '已是會員？立即登入',
     menTag: '外國男性',
     menTitle: '讓她帶你走進真正的日本。',
     menSub: '一次相遇。無數個日本等你發現。',
@@ -263,10 +267,23 @@ function Nav({ t }: { t: Translations }) {
           <a href="#why" className="font-zen-kaku text-sm transition-opacity hover:opacity-60"
             style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.safety}</a>
           <LanguageSelector variant="light" size="sm" showIcon={false} />
-          <Link href="/login" className="font-zen-kaku text-sm transition-opacity hover:opacity-60"
-            style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.login}</Link>
-          <Link href="/signup" className="font-zen-kaku text-sm px-5 py-2 rounded-full text-white transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.signup}</Link>
+          {/*
+            上段ヘッダーは「再訪ユーザー専用エリア」として深紅アウトライン Login のみ。
+            新規登録動線（Join Free）はヒーロー中央CTAに集約。
+            参考: kikonclub.com の動線分離パターン。
+          */}
+          <Link href="/login" className="font-zen-kaku text-sm px-5 py-2 rounded-full transition-colors"
+            style={{
+              border: '1.5px solid var(--color-beni)',
+              color: 'var(--color-beni)',
+              backgroundColor: 'transparent',
+              fontWeight: 300,
+              letterSpacing: '0.08em',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(139, 26, 46, 0.06)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}>
+            {t.nav.login}
+          </Link>
         </nav>
         <button className="md:hidden p-2" onClick={() => setOpen(!open)}
           style={{ color: 'var(--color-sumi)' }}>
@@ -278,9 +295,17 @@ function Nav({ t }: { t: Translations }) {
           <a href="#how" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.howItWorks}</a>
           <a href="#why" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.safety}</a>
           <div className="pt-2"><LanguageSelector variant="light" size="sm" showIcon={false} /></div>
-          <Link href="/login" className="block font-zen-kaku text-sm" style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.login}</Link>
-          <Link href="/signup" className="block font-zen-kaku text-sm text-center py-2 rounded-full text-white"
-            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.nav.signup}</Link>
+          {/* モバイルメニューも上段は Login のみ。新規登録は中央CTAへ集約 */}
+          <Link href="/login" className="block font-zen-kaku text-sm text-center py-2 rounded-full"
+            style={{
+              border: '1.5px solid var(--color-beni)',
+              color: 'var(--color-beni)',
+              backgroundColor: 'transparent',
+              fontWeight: 300,
+              letterSpacing: '0.08em',
+            }}>
+            {t.nav.login}
+          </Link>
         </div>
       )}
     </header>
@@ -368,6 +393,20 @@ function HeroSection({ t }: { t: Translations }) {
               letterSpacing: '0.08em',
             }}>
             {t.ctaMen}
+          </Link>
+        </div>
+
+        {/* 再訪ユーザー向けログインリンク（kikonclub.com 参考の動線分離） */}
+        <div className="text-center mt-6 animate-fade-up animate-delay-600">
+          <Link
+            href="/login"
+            className="font-zen-kaku text-sm underline underline-offset-4 transition-colors hover:no-underline"
+            style={{
+              color: 'var(--color-beni)',
+              fontWeight: 300,
+              letterSpacing: '0.05em',
+            }}>
+            {t.alreadyMember}
           </Link>
         </div>
       </div>
