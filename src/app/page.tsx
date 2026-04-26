@@ -358,7 +358,15 @@ function HeroSection({ t }: { t: Translations }) {
           </Link>
           <Link href="/signup?gender=male"
             className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
-            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-sumi)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
+            style={{
+              border: '1.5px solid var(--color-gold)',
+              color: 'var(--color-sumi)',
+              backgroundColor: 'rgba(245, 235, 224, 0.85)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              fontWeight: 300,
+              letterSpacing: '0.08em',
+            }}>
             {t.ctaMen}
           </Link>
         </div>
