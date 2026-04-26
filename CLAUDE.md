@@ -1170,3 +1170,33 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 - TailwindクラスのTypo（例：bg-[#fdf6ef]0 → ボタンが消える）
 - デザイン統一作業でCSSを上書きしてボタンが見えなくなる
 - リファクタ時にhandleImageSelectやfileInputが消える
+
+---
+
+## 📝 2026/04/26 追記：通知バッジ実装と updated_at 問題
+
+### 解決済み: notificationsテーブルのupdated_at問題（2026/04/26 コミット 789e40c1）
+- 原因: 移行ファイル 002_add_notifications_and_reviews.sql に
+  `updated_at` カラムは定義されているが、本番Supabaseの
+  PostgRESTスキーマキャッシュに反映されていなかった
+- 症状: UPDATE payload に updated_at を含めると、
+  is_read 等の他カラム更新もまるごと拒否され UPDATE 0件
+- 対処: UPDATE payload から updated_at を削除
+- 学び: service_role は RLS をバイパスするが、
+  PostgRESTのスキーマ検証はバイパスしない
+
+### 残課題: 同様のupdated_at問題が他APIにも
+- src/app/api/notifications/route.ts POST: insert に updated_at
+- src/app/api/notifications/route.ts PUT: update に updated_at
+- 現状の機能では呼ばれていないため影響なし
+- 将来呼び出し元が増えたら同様に削除が必要
+- 根本対応: 本番Supabaseで `NOTIFY pgrst, 'reload schema'` を実行、
+  または updated_at カラムをマイグレーションで再作成
+
+### 完了: マイページ通知バッジ
+- 通知の未読数をマイページの歯車アイコン右上に赤丸ドット表示
+- 設定ページ開いた瞬間に自動既読化
+- 5秒ポーリング（既存useNotificationsフックを拡張）
+- API: /api/notifications/mark-all-read（service_role使用）
+- バッジ位置: `absolute -top-1 -right-1 w-2 h-2 bg-red-500 ring-2 ring-white`
+  （Sidebarの足跡バッジと同パターン）
