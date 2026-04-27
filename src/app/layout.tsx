@@ -8,6 +8,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import { AuthSwitchGuard } from '@/components/AuthSwitchGuard'
 import { AuthDebugPanel } from '@/components/auth/AuthDebugPanel'
 import { AuthSwitchBanner } from '@/components/auth/AuthSwitchBanner'
+import BottomNav from '@/components/layout/BottomNav'
 
 const inter = Inter({ subsets: ['latin'] })
 const notoSansJP = Noto_Sans_JP({
@@ -56,6 +57,8 @@ export default function RootLayout({
               <AuthDebugPanel />
             </Suspense>
             <AuthSwitchBanner />
+            {/* モバイル用ボトムナビ。LP・login・signup 等では内部で null を返す */}
+            <BottomNav />
           </AuthProvider>
         </LanguageProvider>
       </body>
