@@ -52,7 +52,16 @@ export default function RootLayout({
         <LanguageProvider>
           <AuthProvider>
             <AuthSwitchGuard />
-            {children}
+            {/*
+              モバイル時はボトムナビ(h-16=64px)+iOS Safe Area分の下余白を確保し、
+              ページ最下部の固定/通常CTAボタンがボトムナビに隠れないようにする。
+              md以上では Sidebar のみなので余白は不要(0)。
+              ボトムナビ自身は LP/login/signup 等で null を返すが、ここでは
+              一律に padding を付与しても無害（LP はフッター後の余白が増えるだけ）。
+            */}
+            <main className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+              {children}
+            </main>
             <Suspense fallback={null}>
               <AuthDebugPanel />
             </Suspense>
