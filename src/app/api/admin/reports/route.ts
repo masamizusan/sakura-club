@@ -3,9 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/admin/reports           → 通報一覧取得
-// GET /api/admin/reports?count_only=true → 件数のみ
-// PATCH /api/admin/reports         → 通報アクション（対応済み・停止）
+// GET /api/admin/reports                       → 未対応通報一覧（既定）
+// GET /api/admin/reports?status=pending        → 未対応（status='pending'）
+// GET /api/admin/reports?status=done           → 対応済み（status != 'pending'）
+// GET /api/admin/reports?status=resolved       → 対応済みのうち「対応済み」のみ
+// GET /api/admin/reports?status=warned         → 対応済みのうち「警告」のみ
+// GET /api/admin/reports?status=suspended      → 対応済みのうち「停止」のみ
+// GET /api/admin/reports?count_only=true       → 件数のみ（status クエリと併用可）
+// PATCH /api/admin/reports                     → 通報アクション（対応済み・警告・停止）
+type ReportStatusFilter = 'pending' | 'done' | 'resolved' | 'warned' | 'suspended'
+
+function parseReportStatus(raw: string | null): ReportStatusFilter {
+  if (raw === 'done' || raw === 'resolved' || raw === 'warned' || raw === 'suspended') {
+    return raw
+  }
+  return 'pending'
+}
+
 export async function GET(req: NextRequest) {
   try {
     const supabaseAdmin = createClient(
@@ -14,12 +28,20 @@ export async function GET(req: NextRequest) {
     )
 
     const countOnly = req.nextUrl.searchParams.get('count_only') === 'true'
+    const status = parseReportStatus(req.nextUrl.searchParams.get('status'))
 
     if (countOnly) {
-      const { count, error } = await supabaseAdmin
+      let countQuery = supabaseAdmin
         .from('reports')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending')
+      if (status === 'pending') {
+        countQuery = countQuery.eq('status', 'pending')
+      } else if (status === 'done') {
+        countQuery = countQuery.neq('status', 'pending')
+      } else {
+        countQuery = countQuery.eq('status', status)
+      }
+      const { count, error } = await countQuery
       if (error) {
         console.error('[admin/reports] count error:', error)
         return NextResponse.json({ count: 0 })
@@ -28,11 +50,15 @@ export async function GET(req: NextRequest) {
     }
 
     // JOIN を使わずシンプルに取得（FK制約がなくてもOK）
-    const { data, error } = await supabaseAdmin
-      .from('reports')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
+    let listQuery = supabaseAdmin.from('reports').select('*')
+    if (status === 'pending') {
+      listQuery = listQuery.eq('status', 'pending')
+    } else if (status === 'done') {
+      listQuery = listQuery.neq('status', 'pending')
+    } else {
+      listQuery = listQuery.eq('status', status)
+    }
+    const { data, error } = await listQuery.order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

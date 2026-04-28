@@ -21,6 +21,7 @@ type MessageFlag = {
   score: number
   detail: string
   reviewed: boolean
+  status: string  // pending | resolved | warned | suspended
   created_at: string
   messages: {
     content: string
@@ -28,6 +29,8 @@ type MessageFlag = {
     profiles: { name: string; gender: string; nationality: string } | null
   } | null
 }
+
+type SubTab = 'pending' | 'done'
 
 type Report = {
   id: string
@@ -128,18 +131,22 @@ export default function AdminVerificationPage() {
   // AIフラグ用state
   const [flags, setFlags] = useState<MessageFlag[]>([])
   const [flagsLoading, setFlagsLoading] = useState(false)
+  const [flagsSubTab, setFlagsSubTab] = useState<SubTab>('pending')
+  const [flagsDoneCount, setFlagsDoneCount] = useState(0)
 
   // 通報用state
   const [reports, setReports] = useState<Report[]>([])
   const [reportsLoading, setReportsLoading] = useState(false)
+  const [reportsSubTab, setReportsSubTab] = useState<SubTab>('pending')
+  const [reportsDoneCount, setReportsDoneCount] = useState(0)
 
   // service_role経由でフラグ取得（RLS回避のため /api/admin/flags を使用）
-  const fetchFlags = useCallback(async () => {
+  const fetchFlags = useCallback(async (subTab: SubTab) => {
     setFlagsLoading(true)
     try {
-      const res = await fetch('/api/admin/flags')
+      const res = await fetch(`/api/admin/flags?status=${subTab}`)
       const json = await res.json()
-      console.log('フラグ取得:', { count: json.flags?.length, error: json.error })
+      console.log('フラグ取得:', { subTab, count: json.flags?.length, error: json.error })
       setFlags((json.flags as MessageFlag[]) || [])
     } catch (e) {
       console.error('fetchFlags error:', e)
@@ -149,12 +156,12 @@ export default function AdminVerificationPage() {
   }, [])
 
   // service_role経由で通報取得（RLS回避のため /api/admin/reports を使用）
-  const fetchReports = useCallback(async () => {
+  const fetchReports = useCallback(async (subTab: SubTab) => {
     setReportsLoading(true)
     try {
-      const res = await fetch('/api/admin/reports')
+      const res = await fetch(`/api/admin/reports?status=${subTab}`)
       const json = await res.json()
-      console.log('通報取得:', { count: json.reports?.length, error: json.error })
+      console.log('通報取得:', { subTab, count: json.reports?.length, error: json.error })
       setReports((json.reports as Report[]) || [])
     } catch (e) {
       console.error('fetchReports error:', e)
@@ -170,7 +177,8 @@ export default function AdminVerificationPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reportId, action, reportedId }),
     })
-    setReports(prev => prev.filter(r => r.id !== reportId))
+    // 現在のサブタブで再フェッチ（pending のときは消える、done のときは入ってくる）
+    fetchReports(reportsSubTab)
     fetchCounts()
   }
 
@@ -189,7 +197,8 @@ export default function AdminVerificationPage() {
         alert('エラー: ' + (json.error || JSON.stringify(json)))
         return
       }
-      fetchFlags()
+      // 現在開いているサブタブで再フェッチ（pendingなら一覧から消える）
+      fetchFlags(flagsSubTab)
       fetchCounts()
     } catch (e) {
       console.error('handleFlagAction error:', e)
@@ -218,20 +227,29 @@ export default function AdminVerificationPage() {
     }
 
     // フラグ・通報カウントは service_role 経由（RLS回避）
+    // 未対応 + 対応済みの両方の件数を取得（サブタブのバッジ表示用）
     let flagCount = 0
+    let flagDone = 0
     let reportCount = 0
+    let reportDone = 0
     try {
-      const [flagsRes, reportsRes] = await Promise.all([
-        fetch('/api/admin/flags?count_only=true'),
-        fetch('/api/admin/reports?count_only=true'),
+      const [flagsPendingRes, flagsDoneRes, reportsPendingRes, reportsDoneRes] = await Promise.all([
+        fetch('/api/admin/flags?count_only=true&status=pending'),
+        fetch('/api/admin/flags?count_only=true&status=done'),
+        fetch('/api/admin/reports?count_only=true&status=pending'),
+        fetch('/api/admin/reports?count_only=true&status=done'),
       ])
-      const [flagsJson, reportsJson] = await Promise.all([
-        flagsRes.json(),
-        reportsRes.json(),
+      const [flagsPendingJson, flagsDoneJson, reportsPendingJson, reportsDoneJson] = await Promise.all([
+        flagsPendingRes.json(),
+        flagsDoneRes.json(),
+        reportsPendingRes.json(),
+        reportsDoneRes.json(),
       ])
-      flagCount = flagsJson.count ?? 0
-      reportCount = reportsJson.count ?? 0
-      console.log('カウント取得:', { flagCount, reportCount, flagsJson, reportsJson })
+      flagCount = flagsPendingJson.count ?? 0
+      flagDone = flagsDoneJson.count ?? 0
+      reportCount = reportsPendingJson.count ?? 0
+      reportDone = reportsDoneJson.count ?? 0
+      console.log('カウント取得:', { flagCount, flagDone, reportCount, reportDone })
     } catch (e) {
       console.error('fetchCounts API error:', e)
     }
@@ -244,6 +262,8 @@ export default function AdminVerificationPage() {
       ai_flags: flagCount,
       reports: reportCount,
     })
+    setFlagsDoneCount(flagDone)
+    setReportsDoneCount(reportDone)
   }, [])
 
   const fetchRequests = useCallback(async (tab: TabType) => {
@@ -315,13 +335,13 @@ export default function AdminVerificationPage() {
 
   useEffect(() => {
     if (activeTab === 'ai_flags') {
-      fetchFlags()
+      fetchFlags(flagsSubTab)
     } else if (activeTab === 'reports') {
-      fetchReports()
+      fetchReports(reportsSubTab)
     } else {
       fetchRequests(activeTab)
     }
-  }, [activeTab, fetchRequests, fetchFlags, fetchReports])
+  }, [activeTab, flagsSubTab, reportsSubTab, fetchRequests, fetchFlags, fetchReports])
 
   const handleApprove = async (userId: string) => {
     setProcessing(prev => ({ ...prev, [userId]: true }))
@@ -388,6 +408,68 @@ export default function AdminVerificationPage() {
   }
 
   const totalPending = counts.requires_review
+
+  // 対応済みカードに付与するステータスバッジ（status: resolved | warned | suspended）
+  const renderActionStatusBadge = (status: string) => {
+    if (status === 'resolved') {
+      return (
+        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700 inline-flex items-center gap-1">
+          ✅ 問題なし
+        </span>
+      )
+    }
+    if (status === 'warned') {
+      return (
+        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700 inline-flex items-center gap-1">
+          ⚠️ 警告済
+        </span>
+      )
+    }
+    if (status === 'suspended') {
+      return (
+        <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-red-100 text-red-700 inline-flex items-center gap-1">
+          🚫 停止済
+        </span>
+      )
+    }
+    return null
+  }
+
+  // 内側サブタブ（未対応 / 対応済み）切替UI
+  const SubTabSwitcher = ({
+    value,
+    onChange,
+    pendingCount,
+    doneCount,
+  }: {
+    value: SubTab
+    onChange: (next: SubTab) => void
+    pendingCount: number
+    doneCount: number
+  }) => (
+    <div className="inline-flex rounded-full p-1 mb-4" style={{ background: '#fdf6ef', border: '1px solid #d4a89a' }}>
+      {(['pending', 'done'] as const).map(key => {
+        const isActive = value === key
+        const label = key === 'pending' ? '未対応' : '対応済み'
+        const cnt = key === 'pending' ? pendingCount : doneCount
+        return (
+          <button
+            key={key}
+            onClick={() => onChange(key)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              isActive ? 'text-white shadow-sm' : 'text-[#6b4c3b] hover:bg-white/40'
+            }`}
+            style={isActive ? { backgroundColor: '#8b1a2e' } : undefined}
+          >
+            {label}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-white/30' : 'bg-white text-[#8b1a2e]'}`}>
+              {cnt}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -617,30 +699,44 @@ export default function AdminVerificationPage() {
         {/* 通報タブ */}
         {activeTab === 'reports' && (
           <>
+            <SubTabSwitcher
+              value={reportsSubTab}
+              onChange={setReportsSubTab}
+              pendingCount={counts.reports}
+              doneCount={reportsDoneCount}
+            />
+            {reportsSubTab === 'done' && (
+              <p className="text-xs mb-3" style={{ color: '#a08070' }}>
+                ※ 表示日時は通報の生成日時です。対応日時は記録されていません。
+              </p>
+            )}
             {reportsLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-8 h-8 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : reports.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">未対応の通報はありません</div>
+              <div className="text-center py-12 text-gray-500">
+                {reportsSubTab === 'pending' ? '未対応の通報はありません' : '対応済みの通報はまだありません'}
+              </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex gap-4 mb-4 text-sm text-gray-600">
-                  <span>未対応の通報: <strong className="text-[#8b1a2e]">{reports.length}</strong></span>
-                </div>
                 {reports.map(report => (
                   <div
                     key={report.id}
                     className="rounded-xl p-4"
                     style={{ background: '#fdf6ef', border: '1px solid #d4a89a' }}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
                       <span className="text-xs" style={{ color: '#6b4c3b' }}>
                         通報者: {report.reporter?.name || '不明'}
                       </span>
-                      <span className="text-xs" style={{ color: '#a08070' }}>
-                        {new Date(report.created_at).toLocaleString('ja-JP')}
-                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {reportsSubTab === 'done' && renderActionStatusBadge(report.status)}
+                        <span className="text-xs" style={{ color: '#a08070' }}>
+                          {reportsSubTab === 'done' ? '生成: ' : ''}
+                          {new Date(report.created_at).toLocaleString('ja-JP')}
+                        </span>
+                      </div>
                     </div>
                     <p className="font-medium mb-2" style={{ color: '#2c1810' }}>
                       対象: {report.reported?.name || '不明'}
@@ -657,27 +753,29 @@ export default function AdminVerificationPage() {
                         詳細: {report.detail}
                       </p>
                     )}
-                    <div className="flex gap-2 flex-wrap mt-3">
-                      <button
-                        onClick={() => handleReportAction(report.id, 'resolved')}
-                        className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
-                      >
-                        対応済み
-                      </button>
-                      <button
-                        onClick={() => handleReportAction(report.id, 'warned', report.reported_id)}
-                        className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
-                      >
-                        警告を送る
-                      </button>
-                      <button
-                        onClick={() => handleReportAction(report.id, 'suspended', report.reported_id)}
-                        className="px-3 py-1.5 text-xs text-white rounded-full transition-colors"
-                        style={{ backgroundColor: '#8b1a2e' }}
-                      >
-                        アカウント停止
-                      </button>
-                    </div>
+                    {reportsSubTab === 'pending' && (
+                      <div className="flex gap-2 flex-wrap mt-3">
+                        <button
+                          onClick={() => handleReportAction(report.id, 'resolved')}
+                          className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
+                        >
+                          対応済み
+                        </button>
+                        <button
+                          onClick={() => handleReportAction(report.id, 'warned', report.reported_id)}
+                          className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
+                        >
+                          警告を送る
+                        </button>
+                        <button
+                          onClick={() => handleReportAction(report.id, 'suspended', report.reported_id)}
+                          className="px-3 py-1.5 text-xs text-white rounded-full transition-colors"
+                          style={{ backgroundColor: '#8b1a2e' }}
+                        >
+                          アカウント停止
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -688,37 +786,55 @@ export default function AdminVerificationPage() {
         {/* AIフラグタブ */}
         {activeTab === 'ai_flags' && (
           <>
+            <SubTabSwitcher
+              value={flagsSubTab}
+              onChange={setFlagsSubTab}
+              pendingCount={counts.ai_flags}
+              doneCount={flagsDoneCount}
+            />
+            {flagsSubTab === 'done' && (
+              <p className="text-xs mb-3" style={{ color: '#a08070' }}>
+                ※ 表示日時はフラグの生成日時です。対応日時は記録されていません。
+              </p>
+            )}
             {flagsLoading ? (
               <div className="flex justify-center py-12">
                 <div className="w-8 h-8 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : flags.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">未確認フラグはありません</div>
+              <div className="text-center py-12 text-gray-500">
+                {flagsSubTab === 'pending' ? '未確認フラグはありません' : '対応済みフラグはまだありません'}
+              </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex gap-4 mb-4 text-sm text-gray-600">
-                  <span>未確認フラグ: <strong className="text-[#8b1a2e]">{flags.length}</strong></span>
-                  <span>本日検知数: <strong>{flags.filter(f => new Date(f.created_at).toDateString() === new Date().toDateString()).length}</strong></span>
-                </div>
+                {flagsSubTab === 'pending' && (
+                  <div className="flex gap-4 mb-1 text-sm text-gray-600">
+                    <span>本日検知数: <strong>{flags.filter(f => new Date(f.created_at).toDateString() === new Date().toDateString()).length}</strong></span>
+                  </div>
+                )}
                 {flags.map(flag => (
                   <div
                     key={flag.id}
                     className="rounded-xl p-4"
                     style={{
                       background: '#fdf6ef',
-                      border: `1px solid ${flag.score >= 0.9 ? '#8b1a2e' : '#d4a89a'}`,
+                      border: `1px solid ${flagsSubTab === 'pending' && flag.score >= 0.9 ? '#8b1a2e' : '#d4a89a'}`,
                     }}
                   >
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-xs text-white px-2.5 py-0.5 rounded-full" style={{ backgroundColor: '#8b1a2e' }}>
                         {flagTypeLabel[flag.flag_type] || flag.flag_type}
                       </span>
                       <span className="text-xs" style={{ color: '#6b4c3b' }}>
                         スコア: {Math.round(flag.score * 100)}%
                       </span>
-                      <span className="text-xs ml-auto" style={{ color: '#6b4c3b' }}>
-                        {new Date(flag.created_at).toLocaleString('ja-JP')}
-                      </span>
+                      <div className="ml-auto flex items-center gap-2 flex-wrap">
+                        {flagsSubTab === 'done' && renderActionStatusBadge(flag.status)}
+                        <span className="text-xs" style={{ color: '#6b4c3b' }}>
+                          {flagsSubTab === 'done' ? '生成: ' : ''}
+                          {new Date(flag.created_at).toLocaleString('ja-JP')}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-sm mb-1" style={{ color: '#2c1810' }}>
                       「{flag.messages?.content}」
@@ -730,27 +846,29 @@ export default function AdminVerificationPage() {
                     <p className="text-xs mb-3" style={{ color: '#8b1a2e' }}>
                       理由: {flag.detail}
                     </p>
-                    <div className="flex gap-2 flex-wrap">
-                      <button
-                        onClick={() => handleFlagAction(flag.id, 'resolved')}
-                        className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
-                      >
-                        問題なし
-                      </button>
-                      <button
-                        onClick={() => handleFlagAction(flag.id, 'warned')}
-                        className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
-                      >
-                        ユーザーに警告
-                      </button>
-                      <button
-                        onClick={() => handleFlagAction(flag.id, 'suspended')}
-                        className="px-3 py-1.5 text-xs rounded-full text-white transition-colors"
-                        style={{ backgroundColor: '#8b1a2e' }}
-                      >
-                        アカウント停止
-                      </button>
-                    </div>
+                    {flagsSubTab === 'pending' && (
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleFlagAction(flag.id, 'resolved')}
+                          className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
+                        >
+                          問題なし
+                        </button>
+                        <button
+                          onClick={() => handleFlagAction(flag.id, 'warned')}
+                          className="px-3 py-1.5 text-xs rounded-full border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors"
+                        >
+                          ユーザーに警告
+                        </button>
+                        <button
+                          onClick={() => handleFlagAction(flag.id, 'suspended')}
+                          className="px-3 py-1.5 text-xs rounded-full text-white transition-colors"
+                          style={{ backgroundColor: '#8b1a2e' }}
+                        >
+                          アカウント停止
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
