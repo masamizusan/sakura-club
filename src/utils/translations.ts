@@ -579,6 +579,9 @@ type TranslationKeys = {
     signupFailed: string
     japaneseNationalityConfirm: string
     required: string
+    inviteCode: string
+    inviteCodePlaceholder: string
+    inviteCodeError: string
   }
 
   // ログイン画面
@@ -1250,7 +1253,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       ageRestriction: '18歳以上の方のみご利用いただけます',
       signupFailed: '登録に失敗しました。もう一度お試しください。',
       japaneseNationalityConfirm: '私は日本国籍の女性です',
-      required: '必須'
+      required: '必須',
+      inviteCode: '招待コード',
+      inviteCodePlaceholder: 'βテスター様へ配布したコード',
+      inviteCodeError: '招待コードが正しくありません'
     },
 
     login: {
@@ -1915,7 +1921,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       ageRestriction: 'Must be 18 years or older',
       signupFailed: 'Registration failed. Please try again.',
       japaneseNationalityConfirm: 'I am a Japanese national female',
-      required: 'Required'
+      required: 'Required',
+      inviteCode: 'Invitation Code',
+      inviteCodePlaceholder: 'Beta tester invitation code',
+      inviteCodeError: 'Invalid invitation code'
     },
 
     login: {
@@ -2580,7 +2589,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       ageRestriction: '18세 이상만 이용할 수 있습니다',
       signupFailed: '가입에 실패했습니다. 다시 시도해 주세요.',
       japaneseNationalityConfirm: '저는 일본 국적의 여성입니다',
-      required: '필수'
+      required: '필수',
+      inviteCode: '초대 코드',
+      inviteCodePlaceholder: '베타 테스터 초대 코드',
+      inviteCodeError: '유효하지 않은 초대 코드입니다'
     },
 
     login: {
@@ -3244,7 +3256,10 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       ageRestriction: '僅限18歲以上使用',
       signupFailed: '註冊失敗。請再試一次。',
       japaneseNationalityConfirm: '我是日本國籍的女性',
-      required: '必填'
+      required: '必填',
+      inviteCode: '邀請碼',
+      inviteCodePlaceholder: '測試版用戶邀請碼',
+      inviteCodeError: '邀請碼不正確'
     },
 
     login: {

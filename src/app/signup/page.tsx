@@ -62,6 +62,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
+  // βテスト用：招待コード入力（サーバー側で検証）
+  const [inviteCode, setInviteCode] = useState('')
   const router = useRouter()
   const languageRouter = useLanguageAwareRouter()
   
@@ -199,9 +201,30 @@ export default function SignupPage() {
     }
 
     try {
+      // 🔒 βテスト用：招待コード検証（サーバーサイドで判定、INVITE_CODE は環境変数）
+      try {
+        const inviteRes = await fetch('/api/auth/check-invite-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inviteCode }),
+        })
+        if (!inviteRes.ok) {
+          // 403: コード不一致 / 400: 未入力 / 500: 環境変数未設定
+          // いずれもユーザーには「招待コードが正しくありません」と表示してフロントから先に進めない
+          setSignupError(t('signup.inviteCodeError'))
+          setIsLoading(false)
+          return
+        }
+      } catch (e) {
+        logger.error('[SIGNUP] invite code check failed', e)
+        setSignupError(t('signup.inviteCodeError'))
+        setIsLoading(false)
+        return
+      }
+
       // 年齢を計算
       const age = calculateAge(data.birth_date)
-      
+
       // 18歳未満チェック
       if (age < 18) {
         setSignupError(t('signup.ageRestriction'))
@@ -355,6 +378,21 @@ export default function SignupPage() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* βテスト用：招待コード（最上段に配置して未入力なら登録不可） */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('signup.inviteCode')} <span className="text-red-500">{t('signup.required')}</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder={t('signup.inviteCodePlaceholder')}
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+              </div>
+
               {/* メールアドレス */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
