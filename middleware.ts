@@ -34,9 +34,12 @@ export async function middleware(request: NextRequest) {
   // supabase.auth.getUser(). This refreshes the session if expired.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 停止ユーザーチェック（/suspended, /login, /signup, /api/ は除外）
+  // 停止/退会ユーザーチェック（/suspended, /account-deleted, /leave-completed,
+  // /login, /signup, /api/, /register は除外）
   const isExcluded =
     pathname.startsWith('/suspended') ||
+    pathname.startsWith('/account-deleted') ||
+    pathname.startsWith('/leave-completed') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/api/') ||
@@ -49,14 +52,26 @@ export async function middleware(request: NextRequest) {
     )
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('is_active')
+      .select('is_active, status')
       .eq('id', user.id)
       .maybeSingle()
 
+    // 1) 管理者による停止 (is_active=false) → /suspended
     if (profile && profile.is_active === false) {
       const suspendedUrl = request.nextUrl.clone()
       suspendedUrl.pathname = '/suspended'
       return NextResponse.redirect(suspendedUrl)
+    }
+
+    // 2) ユーザー自身の退会 (status='deleted_pending' or 'deleted_permanent')
+    //    → /account-deleted。status カラムは 20260503_add_account_status 以降に存在。
+    //    旧スキーマで undefined のまま残っているケースでも誤発火させないため、
+    //    'deleted_pending' / 'deleted_permanent' の明示一致でのみ判定する。
+    const status = (profile as { status?: string } | null)?.status
+    if (status === 'deleted_pending' || status === 'deleted_permanent') {
+      const deletedUrl = request.nextUrl.clone()
+      deletedUrl.pathname = '/account-deleted'
+      return NextResponse.redirect(deletedUrl)
     }
   }
 

@@ -62,9 +62,6 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChangingPw, setIsChangingPw] = useState(false)
 
-  // 退会確認モーダル
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-
   // 通知取得 + 全件自動既読化（履歴は残し、未読フラグのみクリア）
   const fetchNotifications = useCallback(async () => {
     setIsLoadingNotif(true)
@@ -110,12 +107,6 @@ export default function SettingsPage() {
     } finally {
       setIsChangingPw(false)
     }
-  }
-
-  const handleDeleteAccount = async () => {
-    // 退会処理（サポートへの問い合わせを案内）
-    setShowDeleteModal(false)
-    router.push('/mypage/contact?category=アカウントの停止・削除について')
   }
 
   return (
@@ -279,7 +270,7 @@ export default function SettingsPage() {
           {/* 退会 */}
           <div style={{ marginTop: '1.5rem' }}>
             <button
-              onClick={() => setShowDeleteModal(true)}
+              onClick={() => router.push('/mypage/leave')}
               style={{
                 width: '100%',
                 background: 'transparent',
@@ -293,39 +284,6 @@ export default function SettingsPage() {
             >
               退会する
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* 退会確認モーダル */}
-      {showDeleteModal && (
-        <div style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem',
-        }}>
-          <div style={{ background: '#fff', borderRadius: '1rem', padding: '2rem', maxWidth: '360px', width: '100%' }}>
-            <h3 style={{ fontFamily: 'Shippori Mincho B1, serif', color: '#2c1810', marginBottom: '1rem', textAlign: 'center' }}>
-              退会について
-            </h3>
-            <p style={{ fontSize: '13px', color: '#6b4c3b', lineHeight: 1.8, marginBottom: '1.5rem' }}>
-              退会をご希望の場合は、お問い合わせフォームよりご連絡ください。アカウントの削除手続きをご案内いたします。
-            </p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{ flex: 1, padding: '12px', border: '1px solid #d4a89a', borderRadius: '9999px', background: '#fff', color: '#6b4c3b', cursor: 'pointer' }}
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '9999px', background: '#8b1a2e', color: '#fff', cursor: 'pointer' }}
-              >
-                お問い合わせへ
-              </button>
-            </div>
           </div>
         </div>
       )}

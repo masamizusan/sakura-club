@@ -2,9 +2,31 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag, UserMinus } from 'lucide-react'
 
-type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags' | 'reports'
+type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags' | 'reports' | 'leave_surveys'
+
+type LeaveSurvey = {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  user_nickname: string | null
+  user_gender: string | null
+  user_nationality: string | null
+  reasons: string[]
+  feedback: string
+  created_at: string
+}
+
+const REASON_LABEL_JA: Record<string, string> = {
+  foundMatch: '出会いを見つけられた',
+  noMatch: 'お目当ての相手が見つからない',
+  expensive: '料金が高い',
+  languageBarrier: '言語の壁を感じた',
+  hardToUse: '使いづらい',
+  tempLeave: '一時的に休会したい',
+  other: 'その他',
+}
 
 // AIフラグ種別ラベル
 const flagTypeLabel: Record<string, string> = {
@@ -108,6 +130,12 @@ const TAB_CONFIG: { key: TabType; label: string; icon: React.ReactNode; badgeCol
     icon: <AlertTriangle className="w-4 h-4" />,
     badgeColor: 'bg-red-100 text-red-800',
   },
+  {
+    key: 'leave_surveys',
+    label: '退会者',
+    icon: <UserMinus className="w-4 h-4" />,
+    badgeColor: 'bg-gray-100 text-gray-800',
+  },
 ]
 
 // verification_statusのDBカラム値とタブTypeのマッピング
@@ -118,12 +146,13 @@ const TAB_STATUS_MAP: Record<TabType, string[]> = {
   rejected: ['rejected'],
   ai_flags: [],
   reports: [],
+  leave_surveys: [],
 }
 
 export default function AdminVerificationPage() {
   const [activeTab, setActiveTab] = useState<TabType>('requires_review')
   const [requests, setRequests] = useState<VerificationRequest[]>([])
-  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0, ai_flags: 0, reports: 0 })
+  const [counts, setCounts] = useState<TabCounts>({ requires_review: 0, auto_approved: 0, manual_approved: 0, rejected: 0, ai_flags: 0, reports: 0, leave_surveys: 0 })
   const [loading, setLoading] = useState(true)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
   const [processing, setProcessing] = useState<Record<string, boolean>>({})
@@ -139,6 +168,25 @@ export default function AdminVerificationPage() {
   const [reportsLoading, setReportsLoading] = useState(false)
   const [reportsSubTab, setReportsSubTab] = useState<SubTab>('pending')
   const [reportsDoneCount, setReportsDoneCount] = useState(0)
+
+  // 退会者アンケート用state
+  const [leaveSurveys, setLeaveSurveys] = useState<LeaveSurvey[]>([])
+  const [leaveSurveysLoading, setLeaveSurveysLoading] = useState(false)
+
+  // 退会者アンケート取得（service_role 経由 / RLS 回避）
+  const fetchLeaveSurveys = useCallback(async () => {
+    setLeaveSurveysLoading(true)
+    try {
+      const res = await fetch('/api/admin/leave-surveys')
+      const json = await res.json()
+      console.log('退会アンケート取得:', { count: json.surveys?.length, error: json.error })
+      setLeaveSurveys((json.surveys as LeaveSurvey[]) || [])
+    } catch (e) {
+      console.error('fetchLeaveSurveys error:', e)
+    } finally {
+      setLeaveSurveysLoading(false)
+    }
+  }, [])
 
   // service_role経由でフラグ取得（RLS回避のため /api/admin/flags を使用）
   const fetchFlags = useCallback(async (subTab: SubTab) => {
@@ -226,30 +274,34 @@ export default function AdminVerificationPage() {
       }
     }
 
-    // フラグ・通報カウントは service_role 経由（RLS回避）
-    // 未対応 + 対応済みの両方の件数を取得（サブタブのバッジ表示用）
+    // フラグ・通報・退会アンケートのカウントは service_role 経由（RLS回避）
+    // 未対応 + 対応済み + 退会者数を一括取得
     let flagCount = 0
     let flagDone = 0
     let reportCount = 0
     let reportDone = 0
+    let leaveCount = 0
     try {
-      const [flagsPendingRes, flagsDoneRes, reportsPendingRes, reportsDoneRes] = await Promise.all([
+      const [flagsPendingRes, flagsDoneRes, reportsPendingRes, reportsDoneRes, leaveRes] = await Promise.all([
         fetch('/api/admin/flags?count_only=true&status=pending'),
         fetch('/api/admin/flags?count_only=true&status=done'),
         fetch('/api/admin/reports?count_only=true&status=pending'),
         fetch('/api/admin/reports?count_only=true&status=done'),
+        fetch('/api/admin/leave-surveys?count_only=true'),
       ])
-      const [flagsPendingJson, flagsDoneJson, reportsPendingJson, reportsDoneJson] = await Promise.all([
+      const [flagsPendingJson, flagsDoneJson, reportsPendingJson, reportsDoneJson, leaveJson] = await Promise.all([
         flagsPendingRes.json(),
         flagsDoneRes.json(),
         reportsPendingRes.json(),
         reportsDoneRes.json(),
+        leaveRes.json(),
       ])
       flagCount = flagsPendingJson.count ?? 0
       flagDone = flagsDoneJson.count ?? 0
       reportCount = reportsPendingJson.count ?? 0
       reportDone = reportsDoneJson.count ?? 0
-      console.log('カウント取得:', { flagCount, flagDone, reportCount, reportDone })
+      leaveCount = leaveJson.count ?? 0
+      console.log('カウント取得:', { flagCount, flagDone, reportCount, reportDone, leaveCount })
     } catch (e) {
       console.error('fetchCounts API error:', e)
     }
@@ -261,6 +313,7 @@ export default function AdminVerificationPage() {
       rejected,
       ai_flags: flagCount,
       reports: reportCount,
+      leave_surveys: leaveCount,
     })
     setFlagsDoneCount(flagDone)
     setReportsDoneCount(reportDone)
@@ -338,10 +391,12 @@ export default function AdminVerificationPage() {
       fetchFlags(flagsSubTab)
     } else if (activeTab === 'reports') {
       fetchReports(reportsSubTab)
+    } else if (activeTab === 'leave_surveys') {
+      fetchLeaveSurveys()
     } else {
       fetchRequests(activeTab)
     }
-  }, [activeTab, flagsSubTab, reportsSubTab, fetchRequests, fetchFlags, fetchReports])
+  }, [activeTab, flagsSubTab, reportsSubTab, fetchRequests, fetchFlags, fetchReports, fetchLeaveSurveys])
 
   const handleApprove = async (userId: string) => {
     setProcessing(prev => ({ ...prev, [userId]: true }))
@@ -524,7 +579,7 @@ export default function AdminVerificationPage() {
         ) : (
           <>
             {/* 0件（通報・AIフラグタブは専用UIを使うのでここでは出さない） */}
-            {requests.length === 0 && activeTab !== 'reports' && activeTab !== 'ai_flags' && (
+            {requests.length === 0 && activeTab !== 'reports' && activeTab !== 'ai_flags' && activeTab !== 'leave_surveys' && (
               <div className="text-center text-gray-400 mt-24">
                 <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-400" />
                 <p className="text-lg font-medium text-gray-600">
@@ -869,6 +924,65 @@ export default function AdminVerificationPage() {
                         </button>
                       </div>
                     )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* 退会者アンケートタブ */}
+        {activeTab === 'leave_surveys' && (
+          <>
+            {leaveSurveysLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-2 border-[#8b1a2e] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : leaveSurveys.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">退会者アンケートはまだありません</div>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-sm text-gray-600 mb-2">
+                  退会者アンケート: <strong className="text-[#8b1a2e]">{leaveSurveys.length}</strong>件（最新50件 / 新しい順）
+                </div>
+                {leaveSurveys.map(survey => (
+                  <div
+                    key={survey.id}
+                    className="rounded-xl p-4"
+                    style={{ background: '#fdf6ef', border: '1px solid #d4a89a' }}
+                  >
+                    <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                      <span className="text-xs font-medium" style={{ color: '#2c1810' }}>
+                        {survey.user_nickname || '(名前未設定)'}
+                        {survey.user_gender && ` / ${survey.user_gender === 'female' ? '女性' : '男性'}`}
+                        {survey.user_nationality && ` / ${survey.user_nationality}`}
+                      </span>
+                      <span className="text-xs" style={{ color: '#a08070' }}>
+                        退会日時: {new Date(survey.created_at).toLocaleString('ja-JP')}
+                      </span>
+                    </div>
+                    {survey.user_email && (
+                      <p className="text-xs mb-2" style={{ color: '#6b4c3b' }}>
+                        Email: {survey.user_email}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {(survey.reasons ?? []).map(key => (
+                        <span
+                          key={key}
+                          className="text-xs px-2.5 py-0.5 rounded-full"
+                          style={{ background: '#fff', border: '1px solid #d4a89a', color: '#6b4c3b' }}
+                        >
+                          {REASON_LABEL_JA[key] ?? key}
+                        </span>
+                      ))}
+                    </div>
+                    <div
+                      className="text-sm whitespace-pre-line p-3 rounded-md"
+                      style={{ color: '#2c1810', background: '#fff', border: '1px solid #f0e1d2' }}
+                    >
+                      {survey.feedback}
+                    </div>
                   </div>
                 ))}
               </div>
