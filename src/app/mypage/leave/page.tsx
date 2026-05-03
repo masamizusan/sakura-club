@@ -20,7 +20,7 @@ type Dict = {
   feedbackDescription: string
   feedbackPlaceholder: string
   feedbackTooShort: (n: number) => string
-  charCount: (n: number) => string
+  charCount: (n: number, min: number) => string  // "5 / 10文字以上" のような表記
   submit: string
   submitting: string
   confirmTitle: string
@@ -40,9 +40,9 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '運営へのご意見',
     required: '必須',
     feedbackDescription: 'サービスへのご感想・ご要望を自由にご記載ください。',
-    feedbackPlaceholder: '10文字以上でご入力ください。',
+    feedbackPlaceholder: '10文字以上でご入力ください。改善のヒントとなる具体的なご意見をお願いします。',
     feedbackTooShort: (n) => `${n}文字以上で入力してください`,
-    charCount: (n) => `${n} 文字`,
+    charCount: (n, min) => `${n} / ${min}文字以上`,
     submit: '退会する',
     submitting: '処理中...',
     confirmTitle: '本当に退会しますか？',
@@ -79,9 +79,9 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: 'Feedback to the team',
     required: 'required',
     feedbackDescription: 'Please share any thoughts or requests about the service.',
-    feedbackPlaceholder: 'Please enter at least 10 characters.',
+    feedbackPlaceholder: 'Please enter at least 10 characters. Specific feedback helps us improve.',
     feedbackTooShort: (n) => `Please enter at least ${n} characters`,
-    charCount: (n) => `${n} characters`,
+    charCount: (n, min) => `${n} / min ${min} characters`,
     submit: 'Leave SAKURA CLUB',
     submitting: 'Processing...',
     confirmTitle: 'Are you sure you want to leave?',
@@ -118,9 +118,9 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '운영팀에 의견',
     required: '필수',
     feedbackDescription: '서비스에 대한 감상이나 요청을 자유롭게 기재해 주세요.',
-    feedbackPlaceholder: '10자 이상 입력해 주세요.',
+    feedbackPlaceholder: '10자 이상 입력해 주세요. 구체적인 의견이 큰 도움이 됩니다.',
     feedbackTooShort: (n) => `${n}자 이상 입력해 주세요`,
-    charCount: (n) => `${n}자`,
+    charCount: (n, min) => `${n} / ${min}자 이상`,
     submit: '탈퇴하기',
     submitting: '처리 중...',
     confirmTitle: '정말 탈퇴하시겠습니까?',
@@ -157,9 +157,9 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '對營運的意見',
     required: '必填',
     feedbackDescription: '請自由填寫對服務的感想或建議。',
-    feedbackPlaceholder: '請輸入10字以上。',
+    feedbackPlaceholder: '請輸入10字以上。具體的意見有助於我們改善。',
     feedbackTooShort: (n) => `請輸入${n}字以上`,
-    charCount: (n) => `${n} 字`,
+    charCount: (n, min) => `${n} / 至少${min}字`,
     submit: '退會',
     submitting: '處理中...',
     confirmTitle: '您確定要退會嗎？',
@@ -343,9 +343,19 @@ export default function LeavePage() {
             resize: 'vertical',
           }}
         />
-        <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
-          {t.charCount(feedback.trim().length)}
-        </p>
+        {/* 文字数カウンタ：10文字未満は赤、10文字以上は緑で表示 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+          <span
+            style={{
+              fontSize: '12px',
+              color: feedback.trim().length < FEEDBACK_MIN_LENGTH ? '#8b1a2e' : '#2e7d32',
+              fontWeight: feedback.trim().length < FEEDBACK_MIN_LENGTH ? 500 : 400,
+              transition: 'color 0.15s',
+            }}
+          >
+            {t.charCount(feedback.trim().length, FEEDBACK_MIN_LENGTH)}
+          </span>
+        </div>
       </div>
 
       {error && (
