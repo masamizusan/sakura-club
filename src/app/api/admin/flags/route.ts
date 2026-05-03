@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getLanguageFromNationality } from '@/utils/language'
+import {
+  buildFlagWarningNotification,
+  localeForLanguage,
+  truncateSnippet,
+} from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,10 +122,10 @@ export async function PATCH(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // ① flagId → message_id → sender_id をサーバーサイドで解決
+    // ① flagId → message_id → sender_id + メッセージ詳細 + フラグ詳細をサーバーサイドで解決
     const { data: flagRow, error: flagFetchError } = await supabaseAdmin
       .from('message_flags')
-      .select('message_id')
+      .select('message_id, flag_type')
       .eq('id', flagId)
       .maybeSingle()
 
@@ -128,13 +134,17 @@ export async function PATCH(req: NextRequest) {
     }
 
     let senderId: string | null = null
+    let messageContent: string | null = null
+    let messageCreatedAt: string | null = null
     if (flagRow?.message_id) {
       const { data: msgRow } = await supabaseAdmin
         .from('messages')
-        .select('sender_id')
+        .select('sender_id, content, created_at')
         .eq('id', flagRow.message_id)
         .maybeSingle()
       senderId = msgRow?.sender_id ?? null
+      messageContent = msgRow?.content ?? null
+      messageCreatedAt = msgRow?.created_at ?? null
     }
 
     // ② フラグを確認済み + ステータス更新
@@ -148,15 +158,37 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    // ③ 警告通知を送信
+    // ③ 警告通知を送信（受信者の言語に応じてローカライズ + 日時/抜粋/カテゴリを含める）
     if (action === 'warned' && senderId) {
+      // 受信者（=違反メッセージ送信者）の国籍から表示言語を決定
+      const { data: recipientProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('nationality')
+        .eq('id', senderId)
+        .maybeSingle()
+
+      const lang = getLanguageFromNationality(recipientProfile?.nationality)
+      const date = messageCreatedAt ? new Date(messageCreatedAt) : new Date()
+      const formattedDate = new Intl.DateTimeFormat(localeForLanguage(lang), {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      }).format(date)
+      const snippet = truncateSnippet(messageContent)
+
+      const { title, message } = buildFlagWarningNotification({
+        lang,
+        formattedDate,
+        snippet,
+        category: flagRow?.flag_type ?? '',
+      })
+
       const { error: notifError } = await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: senderId,
           type: 'warning',
-          title: '⚠️ 警告',
-          message: 'あなたのメッセージが規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
+          title,
+          message,
           is_read: false,
         })
       if (notifError) console.error('[admin/flags] 警告通知エラー:', notifError.message)

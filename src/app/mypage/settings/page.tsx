@@ -192,7 +192,12 @@ export default function SettingsPage() {
                   }}>
                     {notif.title}
                   </p>
-                  <p style={{ fontSize: '13px', color: '#6b4c3b', lineHeight: 1.7 }}>
+                  <p style={{
+                    fontSize: '13px',
+                    color: '#6b4c3b',
+                    lineHeight: 1.7,
+                    whiteSpace: 'pre-line', // 警告通知の改行(\n)をそのまま表示
+                  }}>
                     {notif.message}
                   </p>
                   <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getLanguageFromNationality } from '@/utils/language'
+import {
+  buildReportWarningNotification,
+  localeForLanguage,
+} from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,7 +109,13 @@ export async function PATCH(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // ① reportsテーブルを更新
+    // ① reportsテーブルから詳細取得（reason / created_at）→ ステータス更新
+    const { data: reportRow } = await supabaseAdmin
+      .from('reports')
+      .select('reason, created_at')
+      .eq('id', reportId)
+      .maybeSingle()
+
     const { error: updateError } = await supabaseAdmin
       .from('reports')
       .update({ status: action })
@@ -115,15 +126,35 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    // ② 警告通知を送信
+    // ② 警告通知を送信（受信者の言語に応じてローカライズ + 通報日時/理由を含める）
     if (action === 'warned' && reportedId) {
+      const { data: recipientProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('nationality')
+        .eq('id', reportedId)
+        .maybeSingle()
+
+      const lang = getLanguageFromNationality(recipientProfile?.nationality)
+      const reportDate = reportRow?.created_at ? new Date(reportRow.created_at) : new Date()
+      const formattedDate = new Intl.DateTimeFormat(localeForLanguage(lang), {
+        year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      }).format(reportDate)
+      const reason = (reportRow?.reason ?? '').toString()
+
+      const { title, message } = buildReportWarningNotification({
+        lang,
+        formattedDate,
+        reason,
+      })
+
       const { error: notifError } = await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: reportedId,
           type: 'warning',
-          title: '⚠️ 警告',
-          message: 'あなたのアカウントが他のユーザーから通報され、規約違反として警告を受けました。今後同様の行為が続く場合、アカウントが停止される場合があります。',
+          title,
+          message,
           is_read: false,
         })
       if (notifError) console.error('[admin/reports] 警告通知エラー:', notifError.message)
