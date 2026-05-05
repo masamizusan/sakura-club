@@ -49,6 +49,32 @@ function LoginForm() {
 
       const result = await authService.signIn(data)
 
+      // 退会・停止アカウントのブロック（多重防御 / middleware と二重）
+      if (result.user?.id) {
+        const supabase = createClient()
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', result.user.id)
+          .maybeSingle()
+
+        const status = profile?.status
+
+        if (status === 'deleted_pending' || status === 'deleted_permanent') {
+          console.log('[LOGIN] account deleted - blocking sign-in:', status)
+          await authService.signOut()
+          router.push('/account-deleted')
+          return
+        }
+
+        if (status === 'suspended') {
+          console.log('[LOGIN] account suspended - blocking sign-in')
+          await authService.signOut()
+          router.push('/suspended')
+          return
+        }
+      }
+
       // 🚨 CRITICAL: 他タブへ通知（タブ間同期）
       // broadcastが確実に送信されるように明示的にログ
       if (result.user?.id) {
