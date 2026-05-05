@@ -65,52 +65,30 @@ function LoginForm() {
       // Check for redirect parameter
       const redirectTo = searchParams?.get('redirectTo')
 
-      // 🚨 退会済み/停止済みアカウントのログインを遮断（middleware失敗時の二重防御）
-      // redirectTo 指定の有無に関わらず必ず status と is_active を確認する。
-      // status='deleted_pending'/'deleted_permanent' → /account-deleted
-      // is_active=false                              → /suspended
-      const supabase = createClient()
-      const authUser = result.user ?? (await supabase.auth.getUser()).data.user
-      const userId = authUser?.id
-      const email = authUser?.email ?? data.email ?? ''
-
-      type LoginProfile = {
-        profile_initialized: boolean | null
-        gender: string | null
-        nationality: string | null
-        status: string | null
-        is_active: boolean | null
-      }
-      let prof: LoginProfile | null = null
-      if (userId) {
-        const { data: profData } = await supabase
-          .from('profiles')
-          .select('profile_initialized, gender, nationality, status, is_active')
-          .eq('id', userId)
-          .maybeSingle()
-        // status / is_active が生成済み Supabase 型に未反映のため unknown 経由でキャスト
-        prof = (profData as unknown) as LoginProfile | null
-      }
-
-      if (prof?.status === 'deleted_pending' || prof?.status === 'deleted_permanent') {
-        logger.debug('[LOGIN] account deleted - blocking sign-in:', prof.status)
-        await authService.signOut().catch(() => {})
-        languageRouter.replace('/account-deleted')
-        return
-      }
-      if (prof?.is_active === false) {
-        logger.debug('[LOGIN] account suspended - blocking sign-in')
-        await authService.signOut().catch(() => {})
-        languageRouter.replace('/suspended')
-        return
-      }
-
       let destination: string
       if (redirectTo) {
         destination = redirectTo
         logger.debug('[LOGIN_ROUTING]', { destination, reason: 'redirectParam' })
       } else {
+        // profile_initialized を確認して遷移先を判定
+        const supabase = createClient()
+
+        // ユーザーID確定: result.user を優先、なければ getUser() で再取得
+        const authUser = result.user ?? (await supabase.auth.getUser()).data.user
+        const userId = authUser?.id
+        const email = authUser?.email ?? data.email ?? ''
+
         const sessionCheck = await supabase.auth.getSession()
+
+        let prof: { profile_initialized: boolean | null; gender: string | null; nationality: string | null } | null = null
+        if (userId) {
+          const { data: profData } = await supabase
+            .from('profiles')
+            .select('profile_initialized, gender, nationality')
+            .eq('id', userId)
+            .maybeSingle()
+          prof = profData
+        }
 
         if (prof?.profile_initialized === true) {
           destination = '/mypage'
