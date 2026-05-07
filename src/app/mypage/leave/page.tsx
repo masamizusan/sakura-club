@@ -40,13 +40,13 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '運営へのご意見',
     required: '必須',
     feedbackDescription: 'サービスへのご感想・ご要望を自由にご記載ください。',
-    feedbackPlaceholder: '10文字以上でご入力ください。',
+    feedbackPlaceholder: '具体的なご意見をお聞かせください',
     feedbackTooShort: (n) => `${n}文字以上で入力してください`,
-    charCount: (n) => `${n} 文字`,
+    charCount: (n) => `${n} / 10文字以上`,
     submit: '退会する',
     submitting: '処理中...',
     confirmTitle: '本当に退会しますか？',
-    confirmBody: '30日以内であれば運営へのご連絡で復旧可能です。それ以降はデータが完全に削除されます。',
+    confirmBody: '退会すると、プロフィール、メッセージ、いいね、足跡などすべてのデータが即時に削除されます。\nこの操作は取り消せません。\n\n退会後、同じメールアドレスで新規登録から再開することは可能です。',
     confirmYes: '退会する',
     confirmNo: 'キャンセル',
     reasons: {
@@ -79,13 +79,13 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: 'Feedback to the team',
     required: 'required',
     feedbackDescription: 'Please share any thoughts or requests about the service.',
-    feedbackPlaceholder: 'Please enter at least 10 characters.',
+    feedbackPlaceholder: 'Specific feedback helps us improve.',
     feedbackTooShort: (n) => `Please enter at least ${n} characters`,
-    charCount: (n) => `${n} characters`,
+    charCount: (n) => `${n} / min 10 characters`,
     submit: 'Leave SAKURA CLUB',
     submitting: 'Processing...',
     confirmTitle: 'Are you sure you want to leave?',
-    confirmBody: 'Within 30 days, you can request restoration by contacting us. After that, your data will be permanently deleted.',
+    confirmBody: 'When you leave, your profile, messages, likes, footprints, and all other data will be deleted immediately.\nThis action cannot be undone.\n\nAfter leaving, you can sign up again with the same email address from the registration page.',
     confirmYes: 'Leave',
     confirmNo: 'Cancel',
     reasons: {
@@ -118,13 +118,13 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '운영팀에 의견',
     required: '필수',
     feedbackDescription: '서비스에 대한 감상이나 요청을 자유롭게 기재해 주세요.',
-    feedbackPlaceholder: '10자 이상 입력해 주세요.',
+    feedbackPlaceholder: '구체적인 의견을 들려주세요',
     feedbackTooShort: (n) => `${n}자 이상 입력해 주세요`,
-    charCount: (n) => `${n}자`,
+    charCount: (n) => `${n} / 10자 이상`,
     submit: '탈퇴하기',
     submitting: '처리 중...',
     confirmTitle: '정말 탈퇴하시겠습니까?',
-    confirmBody: '30일 이내라면 운영팀 연락으로 복구 가능합니다. 그 이후에는 데이터가 완전히 삭제됩니다.',
+    confirmBody: '탈퇴하시면 프로필, 메시지, 좋아요, 발자취 등 모든 데이터가 즉시 삭제됩니다.\n이 작업은 취소할 수 없습니다.\n\n탈퇴 후 동일한 이메일 주소로 신규 가입 페이지에서 다시 시작하실 수 있습니다.',
     confirmYes: '탈퇴',
     confirmNo: '취소',
     reasons: {
@@ -157,13 +157,13 @@ const T: Record<SupportedLanguage, Dict> = {
     feedbackLabel: '對營運的意見',
     required: '必填',
     feedbackDescription: '請自由填寫對服務的感想或建議。',
-    feedbackPlaceholder: '請輸入10字以上。',
+    feedbackPlaceholder: '請告訴我們具體的意見',
     feedbackTooShort: (n) => `請輸入${n}字以上`,
-    charCount: (n) => `${n} 字`,
+    charCount: (n) => `${n} / 至少10字`,
     submit: '退會',
     submitting: '處理中...',
     confirmTitle: '您確定要退會嗎？',
-    confirmBody: '30天內可透過聯絡營運團隊恢復帳號。之後資料將被完全刪除。',
+    confirmBody: '退會後，個人檔案、訊息、按讚、足跡等所有資料將立即刪除。\n此操作無法復原。\n\n退會後，可使用相同的電子郵件地址從新會員註冊頁面重新開始。',
     confirmYes: '退會',
     confirmNo: '取消',
     reasons: {
@@ -343,9 +343,20 @@ export default function LeavePage() {
             resize: 'vertical',
           }}
         />
-        <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
-          {t.charCount(feedback.trim().length)}
-        </p>
+        {(() => {
+          const trimmedLen = feedback.trim().length
+          const meetsMin = trimmedLen >= FEEDBACK_MIN_LENGTH
+          return (
+            <p style={{
+              fontSize: '11px',
+              color: meetsMin ? '#2e7d32' : '#8b1a2e',
+              fontWeight: meetsMin ? 400 : 500,
+              marginTop: '4px',
+            }}>
+              {t.charCount(trimmedLen)}
+            </p>
+          )
+        })()}
       </div>
 
       {error && (
@@ -387,7 +398,7 @@ export default function LeavePage() {
             <h3 style={{ fontFamily: 'Shippori Mincho B1, serif', color: '#2c1810', marginBottom: '1rem', textAlign: 'center', fontSize: '17px' }}>
               {t.confirmTitle}
             </h3>
-            <p style={{ fontSize: '13px', color: '#6b4c3b', lineHeight: 1.8, marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '13px', color: '#6b4c3b', lineHeight: 1.8, marginBottom: '1.5rem', whiteSpace: 'pre-line' }}>
               {t.confirmBody}
             </p>
             <div style={{ display: 'flex', gap: '8px' }}>

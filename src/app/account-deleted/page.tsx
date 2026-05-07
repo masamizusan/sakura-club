@@ -14,25 +14,25 @@ const T: Record<SupportedLanguage, {
 }> = {
   ja: {
     title: '退会済みアカウント',
-    message: 'このアカウントは退会処理されています。\n30日以内であれば運営へのご連絡で復旧可能です。\n以降はデータが完全に削除されます。',
+    message: 'このアカウントは退会処理されています。\nすべてのデータは削除されました。\n\n再度ご利用をご希望の場合は、新規登録ページよりお手続きください。',
     contactLink: 'お問い合わせ',
     backToHome: 'トップページへ戻る',
   },
   en: {
     title: 'Account Deleted',
-    message: 'This account has been deleted.\nWithin 30 days, restoration is possible by contacting the operations team.\nAfter that, the data will be permanently deleted.',
+    message: 'This account has been deleted.\nAll data has been removed.\n\nIf you wish to use the service again, please proceed from the sign-up page.',
     contactLink: 'Contact us',
     backToHome: 'Back to Home',
   },
   ko: {
     title: '탈퇴한 계정',
-    message: '이 계정은 탈퇴 처리되었습니다.\n30일 이내라면 운영팀 연락으로 복구 가능합니다.\n이후에는 데이터가 완전히 삭제됩니다.',
+    message: '이 계정은 탈퇴 처리되었습니다.\n모든 데이터가 삭제되었습니다.\n\n다시 이용하시려면 신규 가입 페이지에서 진행해 주세요.',
     contactLink: '문의하기',
     backToHome: '홈으로 돌아가기',
   },
   'zh-tw': {
     title: '已退會帳號',
-    message: '此帳號已完成退會程序。\n30天內可透過聯絡營運團隊恢復帳號。\n之後資料將被完全刪除。',
+    message: '此帳號已完成退會處理。\n所有資料皆已刪除。\n\n如欲再次使用服務，請從新會員註冊頁面進行操作。',
     contactLink: '聯絡我們',
     backToHome: '返回首頁',
   },
