@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
 
 type Notification = {
   id: string
@@ -11,6 +13,131 @@ type Notification = {
   message: string
   isRead: boolean
   createdAt: string
+}
+
+type Dict = {
+  // ナビゲーション
+  backToMyPage: string
+  pageTitle: string
+  // タブ
+  tabNotifications: string
+  tabSettings: string
+  // 通知一覧
+  loading: string
+  emptyNotifications: string
+  dateLocale: string
+  // パスワード変更
+  passwordChangeTitle: string
+  passwordPlaceholder: string
+  passwordConfirmPlaceholder: string
+  passwordChanging: string
+  passwordChange: string
+  // サポート
+  supportTitle: string
+  supportDescription: string
+  contactButton: string
+  faqButton: string
+  leaveButton: string
+  // alert
+  alertPasswordMismatch: string
+  alertPasswordTooShort: string
+  alertChangeFailed: (msg: string) => string
+  alertPasswordChanged: string
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: {
+    backToMyPage: '← マイページに戻る',
+    pageTitle: '通知・設定',
+    tabNotifications: '🔔 通知',
+    tabSettings: '⚙️ 設定',
+    loading: '読み込み中...',
+    emptyNotifications: '通知はありません',
+    dateLocale: 'ja-JP',
+    passwordChangeTitle: 'パスワードの変更',
+    passwordPlaceholder: '新しいパスワード(8文字以上)',
+    passwordConfirmPlaceholder: '新しいパスワード(再確認)',
+    passwordChanging: '変更中...',
+    passwordChange: '変更する',
+    supportTitle: 'サポート',
+    supportDescription: 'ご不明な点はお気軽にお問い合わせください',
+    contactButton: 'お問い合わせ',
+    faqButton: 'よくある質問',
+    leaveButton: '退会する',
+    alertPasswordMismatch: 'パスワードが一致しません',
+    alertPasswordTooShort: 'パスワードは8文字以上で入力してください',
+    alertChangeFailed: (msg) => `変更に失敗しました: ${msg}`,
+    alertPasswordChanged: 'パスワードを変更しました',
+  },
+  en: {
+    backToMyPage: '← Back to My Page',
+    pageTitle: 'Notifications & Settings',
+    tabNotifications: '🔔 Notifications',
+    tabSettings: '⚙️ Settings',
+    loading: 'Loading...',
+    emptyNotifications: 'No notifications',
+    dateLocale: 'en-US',
+    passwordChangeTitle: 'Change Password',
+    passwordPlaceholder: 'New password (min 8 characters)',
+    passwordConfirmPlaceholder: 'Confirm new password',
+    passwordChanging: 'Changing...',
+    passwordChange: 'Change',
+    supportTitle: 'Support',
+    supportDescription: 'Feel free to contact us if you have any questions',
+    contactButton: 'Contact Us',
+    faqButton: 'FAQ',
+    leaveButton: 'Leave',
+    alertPasswordMismatch: 'Passwords do not match',
+    alertPasswordTooShort: 'Password must be at least 8 characters',
+    alertChangeFailed: (msg) => `Failed to change: ${msg}`,
+    alertPasswordChanged: 'Password changed successfully',
+  },
+  ko: {
+    backToMyPage: '← 마이페이지로 돌아가기',
+    pageTitle: '알림 · 설정',
+    tabNotifications: '🔔 알림',
+    tabSettings: '⚙️ 설정',
+    loading: '로딩 중...',
+    emptyNotifications: '알림이 없습니다',
+    dateLocale: 'ko-KR',
+    passwordChangeTitle: '비밀번호 변경',
+    passwordPlaceholder: '새 비밀번호 (8자 이상)',
+    passwordConfirmPlaceholder: '새 비밀번호 (재확인)',
+    passwordChanging: '변경 중...',
+    passwordChange: '변경하기',
+    supportTitle: '지원',
+    supportDescription: '궁금한 점이 있으시면 부담없이 문의해 주세요',
+    contactButton: '문의하기',
+    faqButton: '자주 묻는 질문',
+    leaveButton: '탈퇴하기',
+    alertPasswordMismatch: '비밀번호가 일치하지 않습니다',
+    alertPasswordTooShort: '비밀번호는 8자 이상으로 입력해 주세요',
+    alertChangeFailed: (msg) => `변경에 실패했습니다: ${msg}`,
+    alertPasswordChanged: '비밀번호가 변경되었습니다',
+  },
+  'zh-tw': {
+    backToMyPage: '← 返回個人頁面',
+    pageTitle: '通知 · 設定',
+    tabNotifications: '🔔 通知',
+    tabSettings: '⚙️ 設定',
+    loading: '載入中...',
+    emptyNotifications: '沒有通知',
+    dateLocale: 'zh-TW',
+    passwordChangeTitle: '變更密碼',
+    passwordPlaceholder: '新密碼（8個字元以上）',
+    passwordConfirmPlaceholder: '新密碼（再次確認）',
+    passwordChanging: '變更中...',
+    passwordChange: '變更',
+    supportTitle: '支援',
+    supportDescription: '如有任何疑問,歡迎隨時聯絡我們',
+    contactButton: '聯絡我們',
+    faqButton: '常見問題',
+    leaveButton: '退會',
+    alertPasswordMismatch: '密碼不一致',
+    alertPasswordTooShort: '密碼請輸入8個字元以上',
+    alertChangeFailed: (msg) => `變更失敗:${msg}`,
+    alertPasswordChanged: '密碼已變更',
+  },
 }
 
 const notificationIcons: Record<string, string> = {
@@ -52,6 +179,8 @@ const primaryButtonStyle: React.CSSProperties = {
 export default function SettingsPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { currentLanguage } = useLanguage()
+  const t = T[currentLanguage] ?? T.ja
 
   const [activeTab, setActiveTab] = useState<'notifications' | 'settings'>('notifications')
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -87,20 +216,20 @@ export default function SettingsPage() {
 
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
-      alert('パスワードが一致しません')
+      alert(t.alertPasswordMismatch)
       return
     }
     if (newPassword.length < 8) {
-      alert('パスワードは8文字以上で入力してください')
+      alert(t.alertPasswordTooShort)
       return
     }
     setIsChangingPw(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) {
-        alert('変更に失敗しました: ' + error.message)
+        alert(t.alertChangeFailed(error.message))
       } else {
-        alert('パスワードを変更しました')
+        alert(t.alertPasswordChanged)
         setNewPassword('')
         setConfirmPassword('')
       }
@@ -116,11 +245,11 @@ export default function SettingsPage() {
         onClick={() => router.push('/mypage')}
         style={{ background: 'none', border: 'none', color: '#6b4c3b', cursor: 'pointer', marginBottom: '1rem', fontSize: '14px' }}
       >
-        ← マイページに戻る
+        {t.backToMyPage}
       </button>
 
       <h1 style={{ fontFamily: 'Shippori Mincho B1, serif', color: '#2c1810', fontSize: '22px', marginBottom: '1.5rem' }}>
-        通知・設定
+        {t.pageTitle}
       </h1>
 
       {/* タブ */}
@@ -141,7 +270,7 @@ export default function SettingsPage() {
               fontSize: '14px',
             }}
           >
-            {tab === 'notifications' ? '🔔 通知' : '⚙️ 設定'}
+            {tab === 'notifications' ? t.tabNotifications : t.tabSettings}
           </button>
         ))}
       </div>
@@ -150,11 +279,11 @@ export default function SettingsPage() {
       {activeTab === 'notifications' && (
         <div>
           {isLoadingNotif ? (
-            <p style={{ color: '#6b4c3b', textAlign: 'center', padding: '2rem' }}>読み込み中...</p>
+            <p style={{ color: '#6b4c3b', textAlign: 'center', padding: '2rem' }}>{t.loading}</p>
           ) : notifications.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#a08070' }}>
               <p style={{ fontSize: '40px', marginBottom: '0.5rem' }}>🔔</p>
-              <p>通知はありません</p>
+              <p>{t.emptyNotifications}</p>
             </div>
           ) : (
             notifications.map(notif => (
@@ -192,7 +321,7 @@ export default function SettingsPage() {
                     {notif.message}
                   </p>
                   <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
-                    {new Date(notif.createdAt).toLocaleString('ja-JP')}
+                    {new Date(notif.createdAt).toLocaleString(t.dateLocale)}
                   </p>
                 </div>
               </div>
@@ -207,18 +336,18 @@ export default function SettingsPage() {
           {/* パスワード変更 */}
           <div style={{ background: '#fff', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1rem', border: '1px solid #d4a89a' }}>
             <h2 style={{ fontFamily: 'Shippori Mincho B1, serif', color: '#2c1810', fontSize: '16px', marginBottom: '1rem' }}>
-              パスワードの変更
+              {t.passwordChangeTitle}
             </h2>
             <input
               type="password"
-              placeholder="新しいパスワード（8文字以上）"
+              placeholder={t.passwordPlaceholder}
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
               style={inputStyle}
             />
             <input
               type="password"
-              placeholder="新しいパスワード（再確認）"
+              placeholder={t.passwordConfirmPlaceholder}
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               style={inputStyle}
@@ -231,23 +360,23 @@ export default function SettingsPage() {
                 opacity: isChangingPw || !newPassword || !confirmPassword ? 0.6 : 1,
               }}
             >
-              {isChangingPw ? '変更中...' : '変更する'}
+              {isChangingPw ? t.passwordChanging : t.passwordChange}
             </button>
           </div>
 
           {/* お問い合わせへのリンク */}
           <div style={{ background: '#fff', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1rem', border: '1px solid #d4a89a' }}>
             <h2 style={{ fontFamily: 'Shippori Mincho B1, serif', color: '#2c1810', fontSize: '16px', marginBottom: '0.5rem' }}>
-              サポート
+              {t.supportTitle}
             </h2>
             <p style={{ fontSize: '13px', color: '#6b4c3b', marginBottom: '1rem' }}>
-              ご不明な点はお気軽にお問い合わせください
+              {t.supportDescription}
             </p>
             <button
               onClick={() => router.push('/mypage/contact')}
               style={{ ...primaryButtonStyle, marginBottom: '0.75rem' }}
             >
-              お問い合わせ
+              {t.contactButton}
             </button>
             <button
               onClick={() => router.push('/mypage/faq')}
@@ -263,7 +392,7 @@ export default function SettingsPage() {
                 fontSize: '14px',
               }}
             >
-              よくある質問
+              {t.faqButton}
             </button>
           </div>
 
@@ -282,7 +411,7 @@ export default function SettingsPage() {
                 fontSize: '14px',
               }}
             >
-              退会する
+              {t.leaveButton}
             </button>
           </div>
         </div>
