@@ -187,3 +187,66 @@ export function buildReportWarningNotification(args: {
       }
   }
 }
+
+// 通報UIラジオの日本語値 → 内部キー
+export type ReportReasonKey =
+  | 'spam' | 'money' | 'inappropriate' | 'redirect'
+  | 'impersonation' | 'other'
+
+const REPORT_REASON_JA_TO_KEY: Record<string, ReportReasonKey> = {
+  '業者・スパム': 'spam',
+  '金銭の要求': 'money',
+  '不適切なメッセージ': 'inappropriate',
+  '他サービスへの誘導': 'redirect',
+  'なりすまし': 'impersonation',
+  'その他': 'other',
+}
+
+export const REPORT_REASON_LABELS: Record<SupportedLanguage, Record<ReportReasonKey, string>> = {
+  ja: {
+    spam: 'スパム・宣伝行為',
+    money: '金銭の要求・送金の勧誘',
+    inappropriate: '不適切な内容',
+    redirect: '他サービスへの誘導',
+    impersonation: 'なりすまし',
+    other: 'その他',
+  },
+  en: {
+    spam: 'Spam or promotional content',
+    money: 'Money requests or solicitation',
+    inappropriate: 'Inappropriate content',
+    redirect: 'Redirect to other service',
+    impersonation: 'Impersonation',
+    other: 'Other',
+  },
+  ko: {
+    spam: '스팸・광고 행위',
+    money: '금전 요구・송금 권유',
+    inappropriate: '부적절한 내용',
+    redirect: '다른 서비스로 유도',
+    impersonation: '사칭',
+    other: '기타',
+  },
+  'zh-tw': {
+    spam: '垃圾訊息・宣傳行為',
+    money: '金錢要求・匯款勸誘',
+    inappropriate: '不當內容',
+    redirect: '其他服務引導',
+    impersonation: '冒充身分',
+    other: '其他',
+  },
+}
+
+/**
+ * 通報理由(reports.reason、日本語固定文字列)を受信者言語に翻訳する。
+ * 未知の値(古い手入力フリーテキスト等)は原文をそのまま返す safety valve あり。
+ */
+export function localizeReportReason(
+  lang: SupportedLanguage,
+  raw: string | null | undefined
+): string {
+  if (!raw) return ''
+  const key = REPORT_REASON_JA_TO_KEY[raw]
+  if (!key) return raw
+  return REPORT_REASON_LABELS[lang][key]
+}

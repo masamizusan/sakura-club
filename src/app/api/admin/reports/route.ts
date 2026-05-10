@@ -4,6 +4,7 @@ import { getLanguageFromNationality } from '@/utils/language'
 import {
   buildReportWarningNotification,
   localeForLanguage,
+  localizeReportReason,
 } from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
@@ -140,7 +141,8 @@ export async function PATCH(req: NextRequest) {
         year: 'numeric', month: 'long', day: 'numeric',
         hour: '2-digit', minute: '2-digit',
       }).format(reportDate)
-      const reason = (reportRow?.reason ?? '').toString()
+      const reasonRaw = (reportRow?.reason ?? '').toString()
+      const reason = localizeReportReason(lang, reasonRaw)
 
       const { title, message } = buildReportWarningNotification({
         lang,
