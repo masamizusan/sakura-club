@@ -1104,6 +1104,12 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 - messages INSERTポリシー変更禁止
 - blocks / reports / message_flags テーブル変更禁止
 
+**profiles.is_active カラム参照禁止**
+- profiles テーブルに is_active カラムは存在しない（幻覚カラム）
+- 過去事故: コミット 52cbdedc で middleware/login が SELECT して退会者ブロック失効
+- 停止/退会判定は profiles.status (text) で統一済み
+- 詳細は末尾「退会フロー フェーズ1.5」セクション参照
+
 #### ■ 🟡 変更時は必ずgit diffで確認
 
 **components/ChatWindow.tsx**
@@ -1147,6 +1153,17 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 **Supabase手動対応済み**
 - messages.translated_contentカラム（追加済み）
 - blocks / reports / message_flagsテーブル（作成済み）
+- archived_violations テーブル（作成済み、2026/05/07）
+
+**退会フロー（2026/05/07確立）**
+- 即時物理削除モデル（30日復旧フローは廃止）
+- 詳細: 末尾「退会フロー フェーズ1.5」セクション参照
+
+**新規ページの 4言語対応**
+- per-page i18n パターン: useLanguage() + T:Record<SupportedLanguage,Dict>
+- 流用元: src/app/mypage/leave/page.tsx
+- 既存の messages/*.json + translations.ts 基盤とは併存（既存ページのものは触らない）
+- 詳細: 末尾「per-page i18n パターン」セクション参照
 
 
 ## 🔴 追加保護対象：年齢認証フロー（2026/04/19追記）
@@ -1221,3 +1238,139 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 
 将来「やっぱり既読を実装したい」議論が出た時は、
 この判断理由を再検討してから決定すること。
+
+---
+
+## 🔒 退会フロー フェーズ1.5（2026/05/07確立・即時物理削除モデル）
+
+### 仕様要約
+- ユーザーが退会すると **即座に物理削除**（30日復旧フローは廃止）
+- 削除順: subscriptions → likes → profiles → auth.users
+- profiles に CASCADE 設定があるため messages/matches/footprints/blocks/notifications/reports は連鎖削除
+- 違反履歴は archived_violations テーブルにスナップショット保存して残す
+- Stripe cancel が失敗した場合は退会全体を中断（整合性最優先）
+- status='suspended' のユーザーも退会可能（経済的抑止が効くため拒否しない）
+- 同メールアドレスでの新規登録 = 別アカウントとして即可能
+
+### profiles.status カラム（text 単独で4状態管理）
+- `active`: 通常
+- `suspended`: 管理者により停止中
+- `deleted_pending`: （旧モデル名残、現在は使用されない）
+- `deleted_permanent`: （旧モデル名残、現在は使用されない）
+
+### ⚠️ is_active カラムは存在しない
+- profiles テーブルに **is_active カラムは存在しない**
+- 過去の事故（コミット 52cbdedc）: is_active を SELECT する middleware/login が `.maybeSingle()` で null 返り → 退会者ブロック失効 + 通常ユーザー誤遷移
+- **新規 SQL を書く前に必ず `information_schema.columns` で実在確認すること**
+- service_role は RLS をバイパスするが PostgREST スキーマ検証はバイパスしない（`updated_at` 問題と同じ構造）
+
+### 関連ファイル
+- src/app/api/auth/leave/route.ts — 退会 API（物理削除実行）
+- src/app/mypage/leave/page.tsx — 退会フォーム UI
+- src/app/leave-completed/page.tsx — 退会完了画面
+- src/app/account-deleted/page.tsx — 退会済みユーザー誤アクセス時の画面
+- supabase/migrations/20260507_create_archived_violations.sql
+
+### 関連コミット
+- d63f8d76: is_active 全廃 + status text 単独管理への移行
+- 6faa20d7: フェーズ1.5 即時物理削除モデル実装
+
+---
+
+## 🌐 per-page i18n パターン（2026/05/10確立）
+
+### 既存の翻訳基盤との関係
+- **旧パターン**: `messages/*.json` + `src/utils/translations.ts`（プロフィール編集等で使用、保護対象）
+- **新パターン**: per-page ローカル辞書（マイページ周辺で確立、新規ページの標準）
+- 両者は併存。既存ページの翻訳基盤を変更してはいけない
+
+### 新パターンの構成
+```typescript
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
+
+type Dict = {
+  // 全 UI 文字列のキーを明示
+  pageTitle: string
+  charCount: (n: number) => string  // 引数を取る場合は関数型
+  // ...
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: { /* ... */ },
+  en: { /* ... */ },
+  ko: { /* ... */ },
+  'zh-tw': { /* ... */ },
+}
+
+// コンポーネント内
+const { currentLanguage } = useLanguage()
+const t = T[currentLanguage] ?? T.ja
+```
+
+### 4原則
+1. `useLanguage()` フック + `T: Record<SupportedLanguage, Dict>` ローカル辞書 + `?? T.ja` フォールバック
+2. 配列定数は `as const` でリテラルユニオン型化（例: `categoryValues`、`SECTION_IDS`）
+3. アコーディオン等の React key には日本語ではなく安定 ID を使う（言語切替で破綻防止）
+4. プレフィックス + リンク + サフィックスの3断片構造は、各言語で自然な文を構成するように prefix/suffix を分割
+
+### 設計判断: パターンB（value は日本語維持、表示ラベルのみ翻訳）
+- contact ページの問い合わせカテゴリで採用
+- option の value（DB 保存値）は日本語のまま、表示ラベルだけ4言語化
+- 理由: API 改修不要、ディープリンク互換性維持、admin 画面で日本語カテゴリが揃って管理しやすい
+- トレードオフ: notifications.title が日本語固定で保存される → 別タスクで一括対応予定
+
+### 流用元（優先順）
+- `src/app/mypage/leave/page.tsx` — 文字数カウンタ等の関数型ラベル例あり
+- `src/app/mypage/settings/page.tsx` — toLocaleString のロケール切替例あり
+- `src/app/mypage/contact/page.tsx` — option value 設計判断とディープリンク互換性
+- `src/app/mypage/faq/page.tsx` — Record<SectionId, ...> 構造化リファクタ例
+
+### 完了済みページ（2026/05/10時点）
+- /mypage/leave （前フェーズ）
+- /mypage/settings （コミット f9746aff）
+- /mypage/contact （コミット 0e29fbc1、パターンB）
+- /mypage/faq （コミット acc88918、構造リファクタ）
+
+### 翻訳品質の現状
+- en/ko/zh-tw は機械翻訳ベース、意味は正確だが自然さは将来課題
+- 韓国語の敬語レベル感、繁体字の用語局所化（台湾向け）はネイティブレビュー必要
+
+---
+
+## 🛡️ スキーマ検証ルール（is_active 事故の教訓・2026/05/06確立）
+
+### 必須運用ルール
+新規に SELECT/UPDATE/INSERT を書く前に、対象カラムが本番 Supabase に **実在するか** を必ず確認する。
+
+### 検証手順
+```sql
+-- Supabase SQL Editor で実行
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'profiles'
+ORDER BY ordinal_position;
+```
+
+### なぜ必要か（事故の構造）
+1. マイグレーションファイルにカラム定義があっても、本番 Supabase のスキーマキャッシュに未反映の可能性がある
+2. 存在しないカラムを SELECT すると `.maybeSingle()` が null を返す
+3. null チェックの分岐次第で、本来ブロックすべきユーザーをパススルーさせる致命的バグになる
+4. service_role は RLS をバイパスするが、PostgREST のスキーマ検証はバイパスしない
+
+### 過去事例
+- 事故 1: notifications.updated_at（2026/04/26、コミット 789e40c1）— UPDATE が0件で拒否
+- 事故 2: profiles.is_active（2026/05/06、コミット 52cbdedc）— SELECT が null 返却で退会者ブロック失効
+
+### Claude Code への指示時の必須項目
+退会・認証・権限管理に関わる SQL を書く指示書には、以下を必ず含める:
+
+```
+スキーマ検証（必須）
+[該当テーブル]の[該当カラム]が本番 Supabase に実在することを確認:
+SELECT column_name FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = '[テーブル名]'
+  AND column_name = '[カラム名]';
+存在しない場合は実装を中断し、プロダクトオーナーに報告すること。
+```
