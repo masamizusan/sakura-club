@@ -15,6 +15,10 @@ const NATIONALITY_TO_LANGUAGE: Record<string, SupportedLanguage> = {
   'ニュージーランド': 'en',
   'アイルランド': 'en',
   'ジャマイカ': 'en',
+  'ドイツ': 'en',
+  'スペイン': 'en',
+  'イタリア': 'en',
+  'フランス': 'en',
   'その他': 'en', // Default is English
 
   // Korean
@@ -28,12 +32,42 @@ const NATIONALITY_TO_LANGUAGE: Record<string, SupportedLanguage> = {
 }
 
 /**
- * Get appropriate language from nationality
+ * Get appropriate language from nationality.
+ * Accepts both Japanese-script keys (signup flow) and normalized English/ISO
+ * values (case-insensitive, separator-stripped) for test-seed/manual-INSERT
+ * variants.
  */
 export function getLanguageFromNationality(nationality: string | null | undefined): SupportedLanguage {
-  if (!nationality) return 'en' // Default is English
+  if (!nationality) return 'en'
 
-  return NATIONALITY_TO_LANGUAGE[nationality] || 'en'
+  if (NATIONALITY_TO_LANGUAGE[nationality]) {
+    return NATIONALITY_TO_LANGUAGE[nationality]
+  }
+
+  const normalized = nationality.toLowerCase().replace(/[\s_-]/g, '')
+
+  if (normalized === 'japan' || normalized === 'jp' || normalized === 'jpn') {
+    return 'ja'
+  }
+  if (
+    normalized === 'korea' ||
+    normalized === 'southkorea' ||
+    normalized === 'kr' ||
+    normalized === 'kor'
+  ) {
+    return 'ko'
+  }
+  if (
+    normalized === 'taiwan' ||
+    normalized === 'tw' ||
+    normalized === 'twn' ||
+    normalized === 'hongkong' ||
+    normalized === 'hk'
+  ) {
+    return 'zh-tw'
+  }
+
+  return 'en'
 }
 
 /**
