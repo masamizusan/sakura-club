@@ -218,6 +218,7 @@ function ProfileDetailContent() {
   const [likesRemaining, setLikesRemaining] = useState<number>(10)
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
+  const [isMatched, setIsMatched] = useState(false)
   const supabase = createClient()
 
   // 言語コンテキスト
@@ -389,23 +390,36 @@ function ProfileDetailContent() {
     }
   }, [profileId])
 
-  // 足跡を記録（自分以外のプロフィール閲覧時）
+  // マッチ判定 → 未マッチなら足跡を記録
+  // (matched 同士の閲覧は会話導線の一部なので足跡には残さない)
   useEffect(() => {
-    const recordFootprint = async () => {
+    if (!profileId) return
+
+    const checkMatchAndRecordFootprint = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || user.id === profileId) return
 
-      await supabase
-        .from('footprints')
-        .insert({
-          profile_owner_id: profileId,
-          visitor_id: user.id,
-        })
+      const { data: matchData } = await supabase
+        .from('matches')
+        .select('id')
+        .eq('is_matched', true)
+        .or(`and(liker_user_id.eq.${user.id},liked_user_id.eq.${profileId}),and(liker_user_id.eq.${profileId},liked_user_id.eq.${user.id})`)
+        .maybeSingle()
+
+      const matched = !!matchData
+      setIsMatched(matched)
+
+      if (!matched) {
+        await supabase
+          .from('footprints')
+          .insert({
+            profile_owner_id: profileId,
+            visitor_id: user.id,
+          })
+      }
     }
 
-    if (profileId) {
-      recordFootprint()
-    }
+    checkMatchAndRecordFootprint()
   }, [profileId])
 
   // 足跡・いいねを個別既読（service_role API経由でRLS回避）
@@ -919,37 +933,39 @@ function ProfileDetailContent() {
                 </div>
               )}
 
-              {/* いいねボタン */}
-              <div className="pt-4">
-                <Button
-                  variant="sakura"
-                  className="w-full"
-                  size="lg"
-                  onClick={handleLike}
-                  disabled={isLiking || hasLiked || likesRemaining <= 0 || viewerId === profileId}
-                >
-                  {isLiking ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t('sending')}
-                    </>
-                  ) : hasLiked ? (
-                    <>
-                      <Heart className="w-4 h-4 mr-2 fill-current" />
-                      {t('liked')}
-                    </>
-                  ) : likesRemaining <= 0 ? (
-                    t('dailyLimitReached')
-                  ) : viewerId === profileId ? (
-                    t('ownProfile')
-                  ) : (
-                    <>
-                      <Heart className="w-4 h-4 mr-2" />
-                      {t('like')}
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* いいねボタン (マッチ済み相手には非表示) */}
+              {!isMatched && (
+                <div className="pt-4">
+                  <Button
+                    variant="sakura"
+                    className="w-full"
+                    size="lg"
+                    onClick={handleLike}
+                    disabled={isLiking || hasLiked || likesRemaining <= 0 || viewerId === profileId}
+                  >
+                    {isLiking ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {t('sending')}
+                      </>
+                    ) : hasLiked ? (
+                      <>
+                        <Heart className="w-4 h-4 mr-2 fill-current" />
+                        {t('liked')}
+                      </>
+                    ) : likesRemaining <= 0 ? (
+                      t('dailyLimitReached')
+                    ) : viewerId === profileId ? (
+                      t('ownProfile')
+                    ) : (
+                      <>
+                        <Heart className="w-4 h-4 mr-2" />
+                        {t('like')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

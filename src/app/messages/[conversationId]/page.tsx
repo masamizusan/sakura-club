@@ -117,6 +117,13 @@ const messagesTranslations: Record<string, Record<string, string>> = {
   },
 }
 
+const profileLinkLabels: Record<string, string> = {
+  ja: 'プロフィールを見る',
+  en: 'View profile',
+  ko: '프로필 보기',
+  'zh-tw': '查看個人資料',
+}
+
 export default function ChatPage() {
   const params = useParams()
   const router = useRouter()
@@ -801,24 +808,30 @@ export default function ChatPage() {
           <button onClick={() => router.push('/messages')} style={{ color: 'var(--color-text-sub)' }}>
             <ArrowLeft className="w-5 h-5" />
           </button>
-          {conversation?.partnerAvatar ? (
-            <img src={conversation.partnerAvatar} alt={conversation.partnerName} className="w-10 h-10 rounded-full object-cover" />
-          ) : (
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
-              <User className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-            </div>
-          )}
-          <div className="flex-1">
-            <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
-            {conversation && (
-              <p className="text-sm text-gray-500">
-                {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
-                  <>{getNationalityLabel(conversation.partnerNationality, currentLanguage)} · </>
-                )}
-                {conversation.partnerAge && <>{conversation.partnerAge}{t('yearsOld')}</>}
-              </p>
+          <Link
+            href={conversation?.partnerId ? `/profile/${conversation.partnerId}` : '#'}
+            className="flex items-center space-x-3 flex-1 hover:opacity-80 transition-opacity"
+            aria-label={profileLinkLabels[currentLanguage] ?? profileLinkLabels.ja}
+          >
+            {conversation?.partnerAvatar ? (
+              <img src={conversation.partnerAvatar} alt={conversation.partnerName} className="w-10 h-10 rounded-full object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
+                <User className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+              </div>
             )}
-          </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
+              {conversation && (
+                <p className="text-sm text-gray-500">
+                  {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
+                    <>{getNationalityLabel(conversation.partnerNationality, currentLanguage)} · </>
+                  )}
+                  {conversation.partnerAge && <>{conversation.partnerAge}{t('yearsOld')}</>}
+                </p>
+              )}
+            </div>
+          </Link>
 
           {/* ・・・メニュー */}
           {conversation && (
