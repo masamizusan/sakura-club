@@ -399,12 +399,20 @@ function ProfileDetailContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || user.id === profileId) return
 
-      const { data: matchData } = await supabase
+      // matched ペアは matches テーブルに双方向2行（is_matched=true）が存在するため、
+      // .limit(1) で DB 側に1行に絞ってから .maybeSingle() に渡す。
+      // 失敗は console.error で必ず可視化する（サイレント無視禁止）。
+      const { data: matchData, error: matchError } = await supabase
         .from('matches')
         .select('id')
         .eq('is_matched', true)
         .or(`and(liker_user_id.eq.${user.id},liked_user_id.eq.${profileId}),and(liker_user_id.eq.${profileId},liked_user_id.eq.${user.id})`)
+        .limit(1)
         .maybeSingle()
+
+      if (matchError) {
+        console.error('[profile] match check failed:', matchError.message)
+      }
 
       const matched = !!matchData
       setIsMatched(matched)
