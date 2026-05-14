@@ -1374,3 +1374,108 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
   AND column_name = '[カラム名]';
 存在しない場合は実装を中断し、プロダクトオーナーに報告すること。
 ```
+
+### 追加条項（2026/05/15 — 架空スキーマ参照3回目事故の教訓）
+
+過去3回の事故（notifications.updated_at、profiles.is_active、matches.{liker_user_id, liked_user_id, is_matched}）を踏まえ、以下も必須とする:
+
+1. **既存コードを「実証済み」と判断する場合の追加確認**
+   - 単に「該当テーブルを参照しているコードが存在する」だけでは実証にならない
+   - そのコードが **実際に呼び出されている** ことを、`grep` でルーティング層・UI コンポーネント層まで遡って確認
+   - 呼び出し元0件のコードは **死コード** として扱い、参考にしない
+
+2. **指示書での SQL 確認の必須化**
+   - 新規テーブル参照を含む指示書では `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='<table>'` を必ず最初に実行
+   - 「形式上のもの」として SQL 確認をスキップする判断は今後しない（2026/05/15 事故の主因）
+
+3. **エラーハンドリングの必須化**
+   - Supabase クエリの戻り値は必ず `{ data, error }` で分割代入
+   - `error` を `console.error('[component] description:', error.message)` で可視化
+   - サイレント無視するエラーハンドリングは禁止（2026/05/15 でこのログが救った実績あり）
+
+### 過去事例（追記）
+- 事故 3: matches.{liker_user_id, liked_user_id, is_matched, matched_at}（2026/05/15、コミット 8e824ca3 で修正）— 死コード `src/app/api/matches/{like,matched}/route.ts` から架空カラム名をコピペして profile/[id]/page.tsx に持ち込んだ。マッチ済みユーザーで `isMatched` が常に false に振れ続けた
+
+---
+
+## 🪦 既知の死コード一覧
+
+**最終確認日**: 2026/05/15
+
+以下のコードは存在するが **実行されていない** 死コードである。新規実装時の参考にしてはいけない:
+
+| ファイル | 死コードの理由 |
+|---|---|
+| `src/app/api/matches/like/route.ts` | UI は `/api/likes` を叩く。matches/like は呼び出し元0件 |
+| `src/app/api/matches/matched/route.ts` | 同上、`/api/likes/received` が後継 |
+| `src/app/api/matches/recommendations/route.ts:133` `.select('liked_user_id')` | `liked_user_id` は matches テーブルに存在しない。要詳細確認 |
+
+これらのファイルには **架空カラム参照**（`liker_user_id`、`liked_user_id`、`is_matched`、`matched_at`、`action`）が含まれているため、コピペ流用は厳禁。
+
+整理タスクは別途実施予定。
+
+---
+
+## 📚 matches テーブル実スキーマと正しいクエリパターン（2026/05/15確立）
+
+### 実スキーマ
+
+```
+id           uuid
+user1_id     uuid
+user2_id     uuid
+status       text  -- 'pending' | 'matched' | 'rejected'
+created_at   timestamp
+updated_at   timestamp
+```
+
+### 設計上の重要ルール
+
+- `user1_id` / `user2_id` は **昇順 UUID で順序固定**（`getOrderedUserIds in src/app/api/likes/route.ts:55-62` で実装）
+- **1ペア1行**管理（双方向2行ではない）
+- マッチ成立判定は `status='matched'`
+
+### 正しいクエリパターン
+
+#### ペアのマッチ状態を確認したい時
+
+```typescript
+const [user1_id, user2_id] = user.id < profileId
+  ? [user.id, profileId]
+  : [profileId, user.id]
+
+const { data: matchData, error: matchError } = await supabase
+  .from('matches')
+  .select('id')
+  .eq('user1_id', user1_id)
+  .eq('user2_id', user2_id)
+  .eq('status', 'matched')
+  .maybeSingle()
+
+if (matchError) {
+  console.error('[component] match check failed:', matchError.message)
+}
+```
+
+#### 特定ユーザーのマッチ一覧を取得したい時
+
+```typescript
+// likes/received/route.ts のパターンを踏襲
+const { data: matchedRecords, error: matchedError } = await supabase
+  .from('matches')
+  .select('user1_id, user2_id')
+  .eq('status', 'matched')
+  .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
+```
+
+### やってはいけないクエリパターン
+
+```typescript
+// ❌ 架空カラム参照（2026/05/15 事故の元凶）
+.eq('is_matched', true)
+.eq('liker_user_id', userId)
+.eq('liked_user_id', targetId)
+
+// ❌ ネストした and の or（構文は正しいが、実スキーマでは不要）
+.or(`and(liker_user_id.eq.${a},liked_user_id.eq.${b}),and(liker_user_id.eq.${b},liked_user_id.eq.${a})`)
+```
