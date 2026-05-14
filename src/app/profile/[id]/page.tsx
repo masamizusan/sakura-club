@@ -399,15 +399,20 @@ function ProfileDetailContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || user.id === profileId) return
 
-      // matched ペアは matches テーブルに双方向2行（is_matched=true）が存在するため、
-      // .limit(1) で DB 側に1行に絞ってから .maybeSingle() に渡す。
+      // matches テーブルは (user1_id, user2_id) を昇順UUIDで順序固定、1ペア1行で記録。
+      // ここでも同じ順序ルールをインラインで適用してから 1 行を直接引く。
+      // 共通ヘルパー (likes/route.ts の getOrderedUserIds) との統合は別タスク。
       // 失敗は console.error で必ず可視化する（サイレント無視禁止）。
+      const [user1_id, user2_id] = user.id < profileId
+        ? [user.id, profileId]
+        : [profileId, user.id]
+
       const { data: matchData, error: matchError } = await supabase
         .from('matches')
         .select('id')
-        .eq('is_matched', true)
-        .or(`and(liker_user_id.eq.${user.id},liked_user_id.eq.${profileId}),and(liker_user_id.eq.${profileId},liked_user_id.eq.${user.id})`)
-        .limit(1)
+        .eq('user1_id', user1_id)
+        .eq('user2_id', user2_id)
+        .eq('status', 'matched')
         .maybeSingle()
 
       if (matchError) {
