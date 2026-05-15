@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { getLanguageFromNationality } from '@/utils/language'
+import { buildContactReceiptNotification } from '@/utils/contactNotifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,14 +28,33 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // 受信者（=問い合わせ送信者本人）の言語を nationality から解決。
+    // 取得失敗時は getLanguageFromNationality(undefined) -> 'en' にフォールバック。
+    const { data: recipientProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('nationality')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profileError) {
+      console.error('[api/contact] recipient profile fetch error:', profileError.message)
+    }
+
+    const lang = getLanguageFromNationality(recipientProfile?.nationality)
+    const { title, message: notifMessage } = buildContactReceiptNotification(
+      lang,
+      category,
+      message.trim(),
+    )
+
     // ユーザー自身の通知として保存（受付確認）
     const { error: notifError } = await supabaseAdmin
       .from('notifications')
       .insert({
         user_id: user.id,
         type: 'system',
-        title: `お問い合わせを受け付けました：${category}`,
-        message: `以下のお問い合わせを受け付けました。通常2〜3営業日以内にご返答いたします。\n\n【内容】\n${message.trim()}`,
+        title,
+        message: notifMessage,
         is_read: false,
       })
 
@@ -42,7 +63,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '送信に失敗しました' }, { status: 500 })
     }
 
-    console.log('[api/contact] お問い合わせ受付:', { userId: user.id, category })
+    console.log('[api/contact] お問い合わせ受付:', { userId: user.id, category, lang })
     return NextResponse.json({ ok: true })
 
   } catch (e) {

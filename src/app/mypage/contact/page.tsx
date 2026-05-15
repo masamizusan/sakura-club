@@ -4,16 +4,10 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { SupportedLanguage } from '@/utils/language'
-
-const categoryValues = [
-  '登録・ログインについて',
-  '課金・お支払いについて',
-  'マッチング・メッセージについて',
-  '年齢確認について',
-  'アカウントの停止・削除について',
-  'その他',
-] as const
-type CategoryValue = typeof categoryValues[number]
+import {
+  CONTACT_CATEGORY_VALUES as categoryValues,
+  CONTACT_CATEGORY_LABELS,
+} from '@/utils/contactCategories'
 
 type Dict = {
   // ナビゲーション
@@ -39,8 +33,6 @@ type Dict = {
   alertSubmitFailed: (msg: string) => string
   alertUnknownError: string
   alertNetworkError: string
-  // カテゴリラベル(value は日本語のまま、表示のみ翻訳)
-  categoryLabels: Record<CategoryValue, string>
 }
 
 const T: Record<SupportedLanguage, Dict> = {
@@ -62,14 +54,6 @@ const T: Record<SupportedLanguage, Dict> = {
     alertSubmitFailed: (msg) => `送信に失敗しました: ${msg}`,
     alertUnknownError: '不明なエラー',
     alertNetworkError: 'ネットワークエラーが発生しました',
-    categoryLabels: {
-      '登録・ログインについて': '登録・ログインについて',
-      '課金・お支払いについて': '課金・お支払いについて',
-      'マッチング・メッセージについて': 'マッチング・メッセージについて',
-      '年齢確認について': '年齢確認について',
-      'アカウントの停止・削除について': 'アカウントの停止・削除について',
-      'その他': 'その他',
-    },
   },
   en: {
     backToMyPage: '← Back to My Page',
@@ -89,14 +73,6 @@ const T: Record<SupportedLanguage, Dict> = {
     alertSubmitFailed: (msg) => `Failed to send: ${msg}`,
     alertUnknownError: 'Unknown error',
     alertNetworkError: 'A network error occurred',
-    categoryLabels: {
-      '登録・ログインについて': 'Registration & Login',
-      '課金・お支払いについて': 'Billing & Payment',
-      'マッチング・メッセージについて': 'Matching & Messages',
-      '年齢確認について': 'Age Verification',
-      'アカウントの停止・削除について': 'Account Suspension & Deletion',
-      'その他': 'Other',
-    },
   },
   ko: {
     backToMyPage: '← 마이페이지로 돌아가기',
@@ -116,14 +92,6 @@ const T: Record<SupportedLanguage, Dict> = {
     alertSubmitFailed: (msg) => `전송에 실패했습니다: ${msg}`,
     alertUnknownError: '알 수 없는 오류',
     alertNetworkError: '네트워크 오류가 발생했습니다',
-    categoryLabels: {
-      '登録・ログインについて': '가입・로그인 관련',
-      '課金・お支払いについて': '결제・지불 관련',
-      'マッチング・メッセージについて': '매칭・메시지 관련',
-      '年齢確認について': '연령 확인 관련',
-      'アカウントの停止・削除について': '계정 정지・삭제 관련',
-      'その他': '기타',
-    },
   },
   'zh-tw': {
     backToMyPage: '← 返回個人頁面',
@@ -143,14 +111,6 @@ const T: Record<SupportedLanguage, Dict> = {
     alertSubmitFailed: (msg) => `傳送失敗:${msg}`,
     alertUnknownError: '未知錯誤',
     alertNetworkError: '發生網路錯誤',
-    categoryLabels: {
-      '登録・ログインについて': '註冊・登入相關',
-      '課金・お支払いについて': '付費・支付相關',
-      'マッチング・メッセージについて': '配對・訊息相關',
-      '年齢確認について': '年齡驗證相關',
-      'アカウントの停止・削除について': '帳號暫停・刪除相關',
-      'その他': '其他',
-    },
   },
 }
 
@@ -183,6 +143,7 @@ function ContactForm() {
   const router = useRouter()
   const { currentLanguage } = useLanguage()
   const t = T[currentLanguage] ?? T.ja
+  const categoryLabels = CONTACT_CATEGORY_LABELS[currentLanguage] ?? CONTACT_CATEGORY_LABELS.ja
   const [category, setCategory] = useState('')
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -282,7 +243,7 @@ function ContactForm() {
             >
               <option value="">{t.categoryPlaceholder}</option>
               {categoryValues.map(cv => (
-                <option key={cv} value={cv}>{t.categoryLabels[cv]}</option>
+                <option key={cv} value={cv}>{categoryLabels[cv]}</option>
               ))}
             </select>
           </div>
