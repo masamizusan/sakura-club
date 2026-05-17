@@ -24,6 +24,7 @@ import { LanguageSkill } from '@/types/profile'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getReportModalLabels } from '@/utils/reportModalI18n'
 import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
+import { getBlockI18nLabels } from '@/utils/blockI18n'
 import {
   formatOccupation,
   formatBodyType,
@@ -234,12 +235,13 @@ function ProfileDetailContent() {
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   const handleBlock = async () => {
+    const blockLabels = getBlockI18nLabels(currentLanguage)
     console.log('[handleBlock] called', { viewerId, profileId })
     if (!viewerId || !profileId || viewerId === profileId) {
       console.warn('[handleBlock] early return: missing viewerId/profileId or self-block')
       return
     }
-    if (!confirm('このユーザーをブロックしますか？')) return
+    if (!confirm(blockLabels.confirmDialogText)) return
     console.log('[handleBlock] confirmed, calling /api/blocks')
 
     try {
@@ -250,15 +252,16 @@ function ProfileDetailContent() {
       })
       const json = await res.json()
       if (!res.ok) {
-        alert('ブロックに失敗しました: ' + (json.error ?? res.status))
+        console.error('[profile] block failed:', json.error ?? res.status)
+        alert(`${blockLabels.alertFailedPrefix}${json.error ?? res.status}`)
         return
       }
       setShowMenu(false)
-      alert('ブロックしました')
+      alert(blockLabels.alertSuccess)
       router.push('/matches')
     } catch (e) {
-      console.error('ブロックエラー:', e)
-      alert('エラーが発生しました')
+      console.error('[profile] block exception:', e)
+      alert(blockLabels.alertExceptionGeneric)
     }
   }
 
@@ -643,7 +646,7 @@ function ProfileDetailContent() {
                       style={{ color: '#8b1a2e' }}
                     >
                       <Ban className="w-4 h-4" />
-                      ブロックする
+                      {getBlockI18nLabels(currentLanguage).menuItem}
                     </button>
                   </div>
                 )}

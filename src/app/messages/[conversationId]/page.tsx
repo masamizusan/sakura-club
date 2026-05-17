@@ -15,6 +15,7 @@ import RequirementsModal from '@/components/RequirementsModal'
 import { isJapaneseWoman as checkIsJapaneseWoman, isForeignMaleUser as checkIsForeignMale, getTranslationTargetLang, getPreviewLabel } from '@/utils/userHelpers'
 import { getReportModalLabels } from '@/utils/reportModalI18n'
 import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
+import { getBlockI18nLabels } from '@/utils/blockI18n'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -190,6 +191,7 @@ export default function ChatPage() {
   }
 
   const executeBlock = async () => {
+    const blockLabels = getBlockI18nLabels(currentLanguage)
     try {
       const res = await fetch('/api/blocks', {
         method: 'POST',
@@ -198,14 +200,15 @@ export default function ChatPage() {
       })
       const json = await res.json()
       if (!res.ok) {
-        alert('ブロックに失敗しました: ' + (json.error ?? res.status))
+        console.error('[messages] block failed:', json.error ?? res.status)
+        alert(`${blockLabels.alertFailedPrefix}${json.error ?? res.status}`)
         return
       }
       setShowBlockModal(false)
       router.push('/messages')
     } catch (e) {
-      console.error('ブロックエラー:', e)
-      alert('エラーが発生しました')
+      console.error('[messages] block exception:', e)
+      alert(blockLabels.alertExceptionGeneric)
     }
   }
 
@@ -861,7 +864,7 @@ export default function ChatPage() {
                     style={{ color: '#8b1a2e' }}
                   >
                     <Ban className="w-4 h-4" />
-                    ブロックする
+                    {getBlockI18nLabels(currentLanguage).menuItem}
                   </button>
                 </div>
               )}
@@ -1186,53 +1189,56 @@ export default function ChatPage() {
       />
 
       {/* ブロックモーダル */}
-      {showBlockModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.5)' }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: '1rem',
-            padding: '2rem',
-            maxWidth: '360px',
-            width: '90%',
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '64px', marginBottom: '1rem' }}>🚫</div>
-            <h2 style={{ color: '#8b1a2e', fontFamily: 'Shippori Mincho B1', fontSize: '20px', marginBottom: '8px' }}>
-              ブロックしますか？
-            </h2>
-            <p style={{ color: '#8b1a2e', fontSize: '13px', marginBottom: '16px' }}>
-              ブロックは解除できません。
-            </p>
+      {showBlockModal && (() => {
+        const blockLabels = getBlockI18nLabels(currentLanguage)
+        return (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.5)' }}>
             <div style={{
-              background: '#f5f5f5',
-              borderRadius: '8px',
-              padding: '12px',
-              fontSize: '13px',
-              color: '#444',
-              textAlign: 'left',
-              marginBottom: '24px',
-              lineHeight: 1.8,
+              background: '#fff',
+              borderRadius: '1rem',
+              padding: '2rem',
+              maxWidth: '360px',
+              width: '90%',
+              textAlign: 'center',
             }}>
-              <p>※ブロックした事はお相手ユーザーには通知されません。</p>
-              <p>※ブロックすると自分やお相手から全てのページで非表示となります。</p>
-            </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => setShowBlockModal(false)}
-                style={{ flex: 1, background: '#ccc', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={executeBlock}
-                style={{ flex: 1, background: '#8b1a2e', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
-              >
-                ブロックする
-              </button>
+              <div style={{ fontSize: '64px', marginBottom: '1rem' }}>🚫</div>
+              <h2 style={{ color: '#8b1a2e', fontFamily: 'Shippori Mincho B1', fontSize: '20px', marginBottom: '8px' }}>
+                {blockLabels.modalHeading}
+              </h2>
+              <p style={{ color: '#8b1a2e', fontSize: '13px', marginBottom: '16px' }}>
+                {blockLabels.modalSubheading}
+              </p>
+              <div style={{
+                background: '#f5f5f5',
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '13px',
+                color: '#444',
+                textAlign: 'left',
+                marginBottom: '24px',
+                lineHeight: 1.8,
+              }}>
+                <p>{blockLabels.noteNotNotified}</p>
+                <p>{blockLabels.noteHidden}</p>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setShowBlockModal(false)}
+                  style={{ flex: 1, background: '#ccc', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+                >
+                  {blockLabels.cancelButton}
+                </button>
+                <button
+                  onClick={executeBlock}
+                  style={{ flex: 1, background: '#8b1a2e', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+                >
+                  {blockLabels.confirmButton}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* アップグレード誘導モーダル */}
       {/* 通報モーダル */}
