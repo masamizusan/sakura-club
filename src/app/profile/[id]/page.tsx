@@ -22,6 +22,8 @@ import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
 import { LanguageSkill } from '@/types/profile'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getReportModalLabels } from '@/utils/reportModalI18n'
+import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
 import {
   formatOccupation,
   formatBodyType,
@@ -261,6 +263,7 @@ function ProfileDetailContent() {
   }
 
   const handleReport = async () => {
+    const reportLabels = getReportModalLabels(currentLanguage)
     console.log('[handleReport] called', { viewerId, profileId, reportReason })
     if (!viewerId || !profileId || !reportReason) {
       console.warn('[handleReport] early return: missing field')
@@ -273,22 +276,23 @@ function ProfileDetailContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reported_id: profileId,
-          reason: reportReason,
+          reason: reportReason,  // 日本語固定（Pattern B / admin 翻訳パス互換）
           detail: reportDetail || null,
         }),
       })
       const json = await res.json()
       if (!res.ok) {
-        alert('通報に失敗しました: ' + (json.error ?? res.status))
+        console.error('[profile] report failed:', json.error ?? res.status)
+        alert(`${reportLabels.alertFailedPrefix}${json.error ?? res.status}`)
         return
       }
       setShowReportModal(false)
       setReportReason('')
       setReportDetail('')
-      alert('通報を受け付けました。ご協力ありがとうございます。')
+      alert(reportLabels.alertSuccess)
     } catch (e) {
-      console.error('通報エラー:', e)
-      alert('エラーが発生しました')
+      console.error('[profile] report exception:', e)
+      alert(reportLabels.alertExceptionGeneric)
     } finally {
       setIsSubmittingReport(false)
     }
@@ -631,7 +635,7 @@ function ProfileDetailContent() {
                       style={{ color: 'var(--color-text)' }}
                     >
                       <Flag className="w-4 h-4" />
-                      通報する
+                      {getReportModalLabels(currentLanguage).menuItem}
                     </button>
                     <button
                       onClick={handleBlock}
@@ -650,50 +654,58 @@ function ProfileDetailContent() {
       </div>
 
       {/* 通報モーダル */}
-      {showReportModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="app-card max-w-sm w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-shippori text-lg" style={{ color: 'var(--color-text)' }}>通報する</h3>
-              <button onClick={() => setShowReportModal(false)} style={{ color: 'var(--color-text-sub)' }}>
-                <X className="w-5 h-5" />
+      {showReportModal && (() => {
+        const reportLabels = getReportModalLabels(currentLanguage)
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="app-card max-w-sm w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-shippori text-lg" style={{ color: 'var(--color-text)' }}>{reportLabels.modalTitle}</h3>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  aria-label={reportLabels.closeAriaLabel}
+                  style={{ color: 'var(--color-text-sub)' }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm mb-3" style={{ color: 'var(--color-text-sub)' }}>{reportLabels.reasonGuide}</p>
+              <div className="space-y-2 mb-4">
+                {/* value（reportReason / API payload）は日本語固定。表示だけ翻訳。Pattern B */}
+                {Object.keys(REPORT_REASON_JA_TO_KEY).map(reasonJa => (
+                  <button
+                    key={reasonJa}
+                    onClick={() => setReportReason(reasonJa)}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
+                    style={{
+                      border: `1px solid ${reportReason === reasonJa ? '#8b1a2e' : 'var(--color-border)'}`,
+                      backgroundColor: reportReason === reasonJa ? '#fdf6ef' : 'transparent',
+                      color: reportReason === reasonJa ? '#8b1a2e' : 'var(--color-text)',
+                    }}
+                  >
+                    {localizeReportReason(currentLanguage, reasonJa)}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder={reportLabels.detailsPlaceholder}
+                value={reportDetail}
+                onChange={e => setReportDetail(e.target.value)}
+                rows={2}
+                className="w-full rounded-lg px-3 py-2 text-sm mb-4"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
+              />
+              <button
+                onClick={handleReport}
+                disabled={!reportReason || isSubmittingReport}
+                className="w-full btn-primary py-3 rounded-full font-medium disabled:opacity-50"
+              >
+                {isSubmittingReport ? reportLabels.submitting : reportLabels.submitButton}
               </button>
             </div>
-            <p className="text-sm mb-3" style={{ color: 'var(--color-text-sub)' }}>通報理由を選択してください</p>
-            <div className="space-y-2 mb-4">
-              {['業者・スパム', '金銭の要求', '不適切なメッセージ', '他サービスへの誘導', 'なりすまし', 'その他'].map(reason => (
-                <button
-                  key={reason}
-                  onClick={() => setReportReason(reason)}
-                  className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
-                  style={{
-                    border: `1px solid ${reportReason === reason ? '#8b1a2e' : 'var(--color-border)'}`,
-                    backgroundColor: reportReason === reason ? '#fdf6ef' : 'transparent',
-                    color: reportReason === reason ? '#8b1a2e' : 'var(--color-text)',
-                  }}
-                >
-                  {reason}
-                </button>
-              ))}
-            </div>
-            <textarea
-              placeholder="詳細（任意）"
-              value={reportDetail}
-              onChange={e => setReportDetail(e.target.value)}
-              rows={2}
-              className="w-full rounded-lg px-3 py-2 text-sm mb-4"
-              style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
-            />
-            <button
-              onClick={handleReport}
-              disabled={!reportReason || isSubmittingReport}
-              className="w-full btn-primary py-3 rounded-full font-medium disabled:opacity-50"
-            >
-              {isSubmittingReport ? '送信中...' : '通報を送信'}
-            </button>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* プロフィールコンテンツ */}
       <div className="py-8 px-4">

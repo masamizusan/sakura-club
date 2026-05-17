@@ -193,7 +193,10 @@ export type ReportReasonKey =
   | 'spam' | 'money' | 'inappropriate' | 'redirect'
   | 'impersonation' | 'other'
 
-const REPORT_REASON_JA_TO_KEY: Record<string, ReportReasonKey> = {
+// 通報UIで表示する日本語表示文字列 → 内部キーへのマップ。
+// プロパティの宣言順が UI の表示順序を兼ねる（Object.keys() は挿入順を保証）。
+// 通報モーダル UI（messages / profile page）から Object.keys() でループされる。
+export const REPORT_REASON_JA_TO_KEY: Record<string, ReportReasonKey> = {
   '業者・スパム': 'spam',
   '金銭の要求': 'money',
   '不適切なメッセージ': 'inappropriate',
