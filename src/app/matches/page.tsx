@@ -183,7 +183,10 @@ export default function MatchesPage() {
 
   const filterLabels = getSearchFilterI18n(currentLanguage)
   const meIsJapaneseWoman = myProfile ? isJapaneseWoman(myProfile) : false
-  const showNationalitySection = myProfile !== null && !meIsJapaneseWoman
+  // 国籍セクションは日本人女性ログイン時のみ表示。
+  // (検索対象が外国人男性の時のみ国籍に多様性があり、絞り込みに意味があるため)
+  // 外国人男性ログイン時は対象が全員日本人なので非表示。
+  const showNationalitySection = myProfile !== null && meIsJapaneseWoman
 
   // 翻訳取得関数
   const t = (key: string, replacements: Record<string, string | number> = {}): string => {
