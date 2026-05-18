@@ -698,7 +698,7 @@ export default function MatchesPage() {
                   </div>
                 </section>
 
-                {/* 国籍（外国人男性検索時のみ表示） */}
+                {/* 国籍（日本人女性ログイン時のみ表示、検索対象=外国人男性に国籍多様性があるため） */}
                 {showNationalitySection && (
                   <section>
                     <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.nationality}</h3>
