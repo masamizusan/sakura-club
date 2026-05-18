@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Heart,
   MapPin,
@@ -11,7 +9,8 @@ import {
   Search,
   User,
   Globe,
-  Coffee
+  Coffee,
+  X
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
@@ -20,6 +19,24 @@ import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTag } from '@/utils/profileTagFormatters'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
+import { isJapaneseWoman } from '@/utils/userHelpers'
+import {
+  type SearchFilters,
+  type MaritalStatusFilter,
+  type LastActiveFilter,
+  DEFAULT_FILTERS,
+  isFilterActive,
+  AGE_MIN_LIMIT,
+  AGE_MAX_LIMIT,
+} from '@/types/searchFilters'
+import { getSearchFilterI18n } from '@/utils/searchFilterI18n'
+import { NATIONALITY_FILTER_OPTIONS } from '@/utils/nationalityNormalize'
+import {
+  PREFECTURE_REGIONS,
+  REGION_LABELS,
+  getPrefectureLabel,
+  type RegionKey,
+} from '@/utils/prefectures'
 
 // 4言語翻訳辞書
 const matchesTranslations: Record<string, Record<string, string>> = {
@@ -27,11 +44,6 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     pageTitle: 'おすすめのお相手',
     pageSubtitle: 'あなたにぴったりのお相手を見つけて、素敵な文化体験を一緒に楽しみませんか？',
     likesRemaining: '本日の残りいいね',
-    searchPlaceholder: '名前、趣味で検索...',
-    nationalityPlaceholder: '国籍を選択',
-    agePlaceholder: '年齢を選択',
-    all: 'すべて',
-    reset: 'リセット',
     loading: '読み込み中…',
     matchesFound: '{count} 人のお相手が見つかりました',
     noMatchesTitle: '条件に合うお相手が見つかりませんでした',
@@ -49,28 +61,12 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     matched: 'マッチしました！メッセージを送ってみましょう。',
     likeFailed: 'いいねの送信に失敗しました。もう一度お試しください。',
     errorOccurred: 'エラーが発生しました。もう一度お試しください。',
-    // 国籍
-    usa: 'アメリカ',
-    canada: 'カナダ',
-    uk: 'イギリス',
-    korea: '韓国',
-    china: '中国',
-    // 年齢
-    age18to25: '18-25歳',
-    age26to30: '26-30歳',
-    age31to35: '31-35歳',
-    age36plus: '36歳以上',
     plannedPrefectures: '訪問予定の都道府県',
   },
   en: {
     pageTitle: 'Recommended Matches',
     pageSubtitle: 'Find your perfect match and enjoy wonderful cultural experiences together!',
     likesRemaining: 'Likes remaining today',
-    searchPlaceholder: 'Search by name, interests...',
-    nationalityPlaceholder: 'Select nationality',
-    agePlaceholder: 'Select age',
-    all: 'All',
-    reset: 'Reset',
     loading: 'Loading...',
     matchesFound: '{count} matches found',
     noMatchesTitle: 'No matches found',
@@ -88,26 +84,12 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     matched: 'It\'s a match! Send them a message.',
     likeFailed: 'Failed to send like. Please try again.',
     errorOccurred: 'An error occurred. Please try again.',
-    usa: 'USA',
-    canada: 'Canada',
-    uk: 'UK',
-    korea: 'Korea',
-    china: 'China',
-    age18to25: '18-25',
-    age26to30: '26-30',
-    age31to35: '31-35',
-    age36plus: '36+',
     plannedPrefectures: 'Planned Prefectures',
   },
   ko: {
     pageTitle: '추천 상대',
     pageSubtitle: '당신에게 딱 맞는 상대를 찾아 멋진 문화 체험을 함께 즐겨보세요!',
     likesRemaining: '오늘 남은 좋아요',
-    searchPlaceholder: '이름, 취미로 검색...',
-    nationalityPlaceholder: '국적 선택',
-    agePlaceholder: '나이 선택',
-    all: '전체',
-    reset: '초기화',
     loading: '로딩 중...',
     matchesFound: '{count}명의 상대를 찾았습니다',
     noMatchesTitle: '조건에 맞는 상대를 찾지 못했습니다',
@@ -125,26 +107,12 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     matched: '매칭되었습니다! 메시지를 보내보세요.',
     likeFailed: '좋아요 전송에 실패했습니다. 다시 시도해주세요.',
     errorOccurred: '오류가 발생했습니다. 다시 시도해주세요.',
-    usa: '미국',
-    canada: '캐나다',
-    uk: '영국',
-    korea: '한국',
-    china: '중국',
-    age18to25: '18-25세',
-    age26to30: '26-30세',
-    age31to35: '31-35세',
-    age36plus: '36세 이상',
     plannedPrefectures: '방문 예정 지역',
   },
   'zh-tw': {
     pageTitle: '推薦對象',
     pageSubtitle: '找到最適合您的對象，一起享受美好的文化體驗吧！',
     likesRemaining: '今日剩餘按讚數',
-    searchPlaceholder: '搜尋姓名、興趣...',
-    nationalityPlaceholder: '選擇國籍',
-    agePlaceholder: '選擇年齡',
-    all: '全部',
-    reset: '重設',
     loading: '載入中...',
     matchesFound: '找到 {count} 位對象',
     noMatchesTitle: '找不到符合條件的對象',
@@ -162,17 +130,14 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     matched: '配對成功！發送訊息吧。',
     likeFailed: '按讚失敗，請重試。',
     errorOccurred: '發生錯誤，請重試。',
-    usa: '美國',
-    canada: '加拿大',
-    uk: '英國',
-    korea: '韓國',
-    china: '中國',
-    age18to25: '18-25歲',
-    age26to30: '26-30歲',
-    age31to35: '31-35歲',
-    age36plus: '36歲以上',
     plannedPrefectures: '預計前往的地區',
   }
+}
+
+interface MyProfileSummary {
+  id: string
+  gender: string | null
+  nationality: string | null
 }
 
 // ユーザープロフィールの型定義
@@ -201,14 +166,24 @@ export default function MatchesPage() {
   const { currentLanguage } = useLanguage()
   const [matches, setMatches] = useState<UserProfile[]>([])
   const [filteredMatches, setFilteredMatches] = useState<UserProfile[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedNationality, setSelectedNationality] = useState('all')
-  const [selectedAge, setSelectedAge] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
+
+  // 自分のプロフィール要約（モーダル UI の出し分け用）
+  const [myProfile, setMyProfile] = useState<MyProfileSummary | null>(null)
+
+  // 適用中のフィルタとモーダル下書きフィルタ
+  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+  const [draftFilters, setDraftFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+  const [showFilterModal, setShowFilterModal] = useState(false)
+  const [expandedRegions, setExpandedRegions] = useState<RegionKey[]>([])
 
   // いいね残り回数
   const [likesRemaining, setLikesRemaining] = useState<number>(10)
   const [likesLimit] = useState<number>(10)
+
+  const filterLabels = getSearchFilterI18n(currentLanguage)
+  const meIsJapaneseWoman = myProfile ? isJapaneseWoman(myProfile) : false
+  const showNationalitySection = myProfile !== null && !meIsJapaneseWoman
 
   // 翻訳取得関数
   const t = (key: string, replacements: Record<string, string | number> = {}): string => {
@@ -275,6 +250,15 @@ export default function MatchesPage() {
         })
 
         const result = await response.json()
+
+        // 自分のプロフィール要約を debug から取り出して保持（モーダル UI 用）
+        if (result?.debug?.myId) {
+          setMyProfile({
+            id: result.debug.myId,
+            gender: result.debug.myGender ?? null,
+            nationality: result.debug.myNationality ?? null,
+          })
+        }
 
         if (response.ok && result.candidates && result.candidates.length > 0) {
           const formattedMatches = result.candidates.map((profile: any) => ({
@@ -378,62 +362,26 @@ export default function MatchesPage() {
             </div>
           </div>
 
-          {/* 検索・フィルター */}
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* 検索 */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder={t('searchPlaceholder')}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* 国籍選択 */}
-              <Select value={selectedNationality} onValueChange={setSelectedNationality}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('nationalityPlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('all')}</SelectItem>
-                  <SelectItem value="usa">{t('usa')}</SelectItem>
-                  <SelectItem value="canada">{t('canada')}</SelectItem>
-                  <SelectItem value="uk">{t('uk')}</SelectItem>
-                  <SelectItem value="korea">{t('korea')}</SelectItem>
-                  <SelectItem value="china">{t('china')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* 年齢選択 */}
-              <Select value={selectedAge} onValueChange={setSelectedAge}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('agePlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('all')}</SelectItem>
-                  <SelectItem value="18-25">{t('age18to25')}</SelectItem>
-                  <SelectItem value="26-30">{t('age26to30')}</SelectItem>
-                  <SelectItem value="31-35">{t('age31to35')}</SelectItem>
-                  <SelectItem value="36+">{t('age36plus')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* リセットボタン */}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchTerm('')
-                  setSelectedNationality('all')
-                  setSelectedAge('all')
-                }}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                {t('reset')}
-              </Button>
-            </div>
+          {/* 絞り込みボタン */}
+          <div className="flex justify-center mb-8">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDraftFilters(filters)
+                setExpandedRegions([])
+                setShowFilterModal(true)
+              }}
+              disabled={myProfile === null}
+              className="relative px-6"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              {filterLabels.filterBtnLabel}
+              {isFilterActive(filters) && (
+                <span className="ml-2 inline-flex items-center bg-[#8b1a2e] text-white text-xs px-2 py-0.5 rounded-full">
+                  {filterLabels.filterAppliedBadge}
+                </span>
+              )}
+            </Button>
           </div>
 
           {/* 結果カウント */}
@@ -619,9 +567,8 @@ export default function MatchesPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setSearchTerm('')
-                  setSelectedNationality('all')
-                  setSelectedAge('all')
+                  setFilters(DEFAULT_FILTERS)
+                  setDraftFilters(DEFAULT_FILTERS)
                 }}
               >
                 {t('resetConditions')}
@@ -635,11 +582,11 @@ export default function MatchesPage() {
               variant="sakura"
               size="lg"
               onClick={() => {
-                setSearchTerm('')
-                setSelectedNationality('all')
-                setSelectedAge('all')
+                setDraftFilters(filters)
+                setExpandedRegions([])
+                setShowFilterModal(true)
               }}
-              disabled={isLoading}
+              disabled={isLoading || myProfile === null}
             >
               {isLoading ? (
                 <>
@@ -656,6 +603,295 @@ export default function MatchesPage() {
           </div>
         </div>
       </div>
+
+      {/* 絞り込みモーダル */}
+      {showFilterModal && (() => {
+        const labels = filterLabels
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setShowFilterModal(false)}
+            role="presentation"
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={labels.modalTitle}
+            >
+              {/* ヘッダー */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">{labels.modalTitle}</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowFilterModal(false)}
+                  aria-label={labels.closeAria}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* 本体 */}
+              <div className="overflow-y-auto px-6 py-4 space-y-6">
+                {/* 年齢 */}
+                <section>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.ageRange}</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {labels.ageRangeReadout
+                      .replace('{min}', String(draftFilters.ageMin))
+                      .replace('{max}', String(draftFilters.ageMax))}
+                  </p>
+                  <div className="space-y-3">
+                    <input
+                      type="range"
+                      min={AGE_MIN_LIMIT}
+                      max={AGE_MAX_LIMIT}
+                      value={draftFilters.ageMin}
+                      onChange={(e) => {
+                        const v = Number(e.target.value)
+                        setDraftFilters(prev => ({
+                          ...prev,
+                          ageMin: v,
+                          ageMax: Math.max(prev.ageMax, v),
+                        }))
+                      }}
+                      aria-label={`${labels.ageRange} min`}
+                      className="w-full accent-[#8b1a2e]"
+                    />
+                    <input
+                      type="range"
+                      min={AGE_MIN_LIMIT}
+                      max={AGE_MAX_LIMIT}
+                      value={draftFilters.ageMax}
+                      onChange={(e) => {
+                        const v = Number(e.target.value)
+                        setDraftFilters(prev => ({
+                          ...prev,
+                          ageMax: v,
+                          ageMin: Math.min(prev.ageMin, v),
+                        }))
+                      }}
+                      aria-label={`${labels.ageRange} max`}
+                      className="w-full accent-[#8b1a2e]"
+                    />
+                  </div>
+                </section>
+
+                {/* 国籍（外国人男性検索時のみ表示） */}
+                {showNationalitySection && (
+                  <section>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.nationality}</h3>
+                    <p className="text-xs text-gray-500 mb-2">
+                      {draftFilters.nationalityIso.length === 0
+                        ? labels.nationalityNoneSelected
+                        : labels.nationalitySelectedCount.replace(
+                            '{count}',
+                            String(draftFilters.nationalityIso.length),
+                          )}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {NATIONALITY_FILTER_OPTIONS.map(opt => {
+                        const checked = draftFilters.nationalityIso.includes(opt.iso)
+                        return (
+                          <button
+                            key={opt.iso}
+                            type="button"
+                            onClick={() => {
+                              setDraftFilters(prev => ({
+                                ...prev,
+                                nationalityIso: checked
+                                  ? prev.nationalityIso.filter(c => c !== opt.iso)
+                                  : [...prev.nationalityIso, opt.iso],
+                              }))
+                            }}
+                            aria-pressed={checked}
+                            className={`px-3 py-1 rounded-full text-sm border transition ${
+                              checked
+                                ? 'bg-[#8b1a2e] text-white border-[#8b1a2e]'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-[#8b1a2e]'
+                            }`}
+                          >
+                            {opt.labels[currentLanguage] ?? opt.labels.ja}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </section>
+                )}
+
+                {/* 婚姻状態 */}
+                <section>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.maritalStatus}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(['all', 'single', 'married'] as const).map(value => {
+                      const valueLabels: Record<MaritalStatusFilter, string> = {
+                        all: labels.maritalAll,
+                        single: labels.maritalSingle,
+                        married: labels.maritalMarried,
+                      }
+                      const active = draftFilters.maritalStatus === value
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setDraftFilters(prev => ({ ...prev, maritalStatus: value }))
+                          }
+                          aria-pressed={active}
+                          className={`px-4 py-2 rounded-lg text-sm border transition ${
+                            active
+                              ? 'bg-[#8b1a2e] text-white border-[#8b1a2e]'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-[#8b1a2e]'
+                          }`}
+                        >
+                          {valueLabels[value]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+
+                {/* 都道府県 */}
+                <section>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-1">{labels.prefecture}</h3>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {meIsJapaneseWoman
+                      ? labels.prefecturePlannedVisitHint
+                      : labels.prefectureResidenceHint}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {draftFilters.prefectures.length === 0
+                      ? labels.prefectureNoneSelected
+                      : labels.prefectureSelectedCount.replace(
+                          '{count}',
+                          String(draftFilters.prefectures.length),
+                        )}
+                  </p>
+                  <div className="space-y-2">
+                    {PREFECTURE_REGIONS.map(region => {
+                      const expanded = expandedRegions.includes(region.key)
+                      const selectedInRegion = region.prefectures.filter(p =>
+                        draftFilters.prefectures.includes(p),
+                      ).length
+                      return (
+                        <div
+                          key={region.key}
+                          className="border border-gray-200 rounded-lg overflow-hidden"
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedRegions(prev =>
+                                expanded
+                                  ? prev.filter(k => k !== region.key)
+                                  : [...prev, region.key],
+                              )
+                            }
+                            aria-expanded={expanded}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-sm text-gray-800"
+                          >
+                            <span className="font-medium">
+                              {REGION_LABELS[currentLanguage][region.key]}
+                              {selectedInRegion > 0 && (
+                                <span className="ml-2 text-xs text-[#8b1a2e]">
+                                  ({selectedInRegion})
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-xs text-gray-500">{expanded ? '▾' : '▸'}</span>
+                          </button>
+                          {expanded && (
+                            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 bg-white">
+                              {region.prefectures.map(p => {
+                                const checked = draftFilters.prefectures.includes(p)
+                                return (
+                                  <label
+                                    key={p}
+                                    className="flex items-center gap-2 text-sm cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => {
+                                        setDraftFilters(prev => ({
+                                          ...prev,
+                                          prefectures: checked
+                                            ? prev.prefectures.filter(x => x !== p)
+                                            : [...prev.prefectures, p],
+                                        }))
+                                      }}
+                                      className="accent-[#8b1a2e]"
+                                    />
+                                    <span>{getPrefectureLabel(p, currentLanguage)}</span>
+                                  </label>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+
+                {/* 最終アクティブ */}
+                <section>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.lastActive}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(['all', '24h', '7d'] as const).map(value => {
+                      const valueLabels: Record<LastActiveFilter, string> = {
+                        all: labels.lastActiveAll,
+                        '24h': labels.lastActive24h,
+                        '7d': labels.lastActive7d,
+                      }
+                      const active = draftFilters.lastActive === value
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setDraftFilters(prev => ({ ...prev, lastActive: value }))
+                          }
+                          aria-pressed={active}
+                          className={`px-4 py-2 rounded-lg text-sm border transition ${
+                            active
+                              ? 'bg-[#8b1a2e] text-white border-[#8b1a2e]'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-[#8b1a2e]'
+                          }`}
+                        >
+                          {valueLabels[value]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+              </div>
+
+              {/* フッター */}
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setDraftFilters(DEFAULT_FILTERS)}
+                  className="text-sm text-gray-600 hover:text-[#8b1a2e] underline-offset-2 hover:underline"
+                >
+                  {labels.reset}
+                </button>
+                <Button
+                  variant="sakura"
+                  onClick={() => {
+                    setFilters(draftFilters)
+                    setShowFilterModal(false)
+                  }}
+                >
+                  {labels.search}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 
