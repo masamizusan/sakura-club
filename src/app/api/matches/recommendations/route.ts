@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { isoToDbValueCandidates } from '@/utils/nationalityNormalize'
+import { isJapaneseWoman } from '@/utils/userHelpers'
 
 // 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
@@ -185,6 +187,70 @@ export async function GET(request: NextRequest) {
         .not('nationality', 'ilike', 'jp')
         .not('nationality', 'ilike', 'japan')
     }
+
+    // ===== モーダル絞り込みフィルタ（query parameter ベース） =====
+    const params = request.nextUrl.searchParams
+
+    // 国籍: 自分が日本人女性(=targetIsJapanese=false, 相手は外国人男性)の時のみ意味がある。
+    // 自分が外国人男性(=targetIsJapanese=true)時は UI でセクション非表示のため
+    // 送られない想定だが、念のため targetIsJapanese 時は無視する。
+    const nationalityParam = params.get('nationality')
+    if (nationalityParam && !targetIsJapanese) {
+      const isoList = nationalityParam.split(',').map(s => s.trim()).filter(Boolean)
+      const dbValueCandidates: string[] = []
+      for (const iso of isoList) {
+        for (const candidate of isoToDbValueCandidates(iso)) {
+          if (!dbValueCandidates.includes(candidate)) dbValueCandidates.push(candidate)
+        }
+      }
+      if (dbValueCandidates.length > 0) {
+        query = query.in('nationality', dbValueCandidates)
+      }
+    }
+
+    // 年齢
+    const ageMinRaw = params.get('age_min')
+    const ageMaxRaw = params.get('age_max')
+    if (ageMinRaw !== null) {
+      const v = Number(ageMinRaw)
+      if (Number.isFinite(v) && v > 18) query = query.gte('age', v)
+    }
+    if (ageMaxRaw !== null) {
+      const v = Number(ageMaxRaw)
+      if (Number.isFinite(v) && v < 80) query = query.lte('age', v)
+    }
+
+    // 婚姻状態（'all' or 未送信 → 絞り込まない、NULL を含む）
+    const maritalStatus = params.get('marital_status')
+    if (maritalStatus === 'single' || maritalStatus === 'married') {
+      query = query.eq('marital_status', maritalStatus)
+    }
+
+    // 都道府県: 自分の性別で相手の対象カラムを切替
+    //   自分が日本人女性 → 相手は外国人男性 → planned_prefectures (TEXT[]) ANY
+    //   自分が外国人男性 → 相手は日本人女性 → residence (TEXT) IN
+    const prefecturesParam = params.get('prefectures')
+    if (prefecturesParam) {
+      const prefList = prefecturesParam.split(',').map(s => s.trim()).filter(Boolean)
+      if (prefList.length > 0) {
+        if (isJapaneseWoman(myProfile)) {
+          query = query.overlaps('planned_prefectures', prefList)
+        } else {
+          query = query.in('residence', prefList)
+        }
+      }
+    }
+
+    // 最終アクティブ(updated_at 近似)
+    const lastActive = params.get('last_active')
+    if (lastActive === '24h') {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      query = query.gte('updated_at', since)
+    } else if (lastActive === '7d') {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      query = query.gte('updated_at', since)
+    }
+    // ===== 絞り込みフィルタここまで =====
 
     const { data: candidates, error: fetchError } = await query
 

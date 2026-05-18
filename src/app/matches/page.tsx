@@ -233,6 +233,21 @@ export default function MatchesPage() {
     }
   }, [user, authLoading])
 
+  // フィルタを query string にシリアライズ
+  const buildFiltersQueryString = (f: SearchFilters): string => {
+    const params = new URLSearchParams()
+    if (f.nationalityIso.length > 0) {
+      params.set('nationality', f.nationalityIso.join(','))
+    }
+    if (f.ageMin !== AGE_MIN_LIMIT) params.set('age_min', String(f.ageMin))
+    if (f.ageMax !== AGE_MAX_LIMIT) params.set('age_max', String(f.ageMax))
+    if (f.maritalStatus !== 'all') params.set('marital_status', f.maritalStatus)
+    if (f.prefectures.length > 0) params.set('prefectures', f.prefectures.join(','))
+    if (f.lastActive !== 'all') params.set('last_active', f.lastActive)
+    const qs = params.toString()
+    return qs ? `?${qs}` : ''
+  }
+
   // データ取得
   useEffect(() => {
     const fetchMatches = async () => {
@@ -244,7 +259,8 @@ export default function MatchesPage() {
 
       try {
         setIsLoading(true)
-        const response = await fetch('/api/matches/recommendations', {
+        const qs = buildFiltersQueryString(filters)
+        const response = await fetch(`/api/matches/recommendations${qs}`, {
           cache: 'no-store',
           credentials: 'include'
         })
@@ -295,7 +311,7 @@ export default function MatchesPage() {
     }
 
     fetchMatches()
-  }, [user, authLoading])
+  }, [user, authLoading, filters])
 
   // フィルタリング処理
   useEffect(() => {
