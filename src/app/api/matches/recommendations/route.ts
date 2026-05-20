@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
-import { isoToDbValueCandidates } from '@/utils/nationalityNormalize'
 import { isJapaneseWoman } from '@/utils/userHelpers'
 
 // 完全に動的（キャッシュ無効）
@@ -194,17 +193,28 @@ export async function GET(request: NextRequest) {
     // 国籍: 自分が日本人女性(=targetIsJapanese=false, 相手は外国人男性)の時のみ意味がある。
     // 自分が外国人男性(=targetIsJapanese=true)時は UI でセクション非表示のため
     // 送られない想定だが、念のため targetIsJapanese 時は無視する。
+    //
+    // 2026/05/20: dbValue (日本語カタカナ「アメリカ」/「その他」) ベースに統一。
+    // 「その他」は完全一致(eq)で扱う(signup で 'その他' 文字列が保存される設計)。
     const nationalityParam = params.get('nationality')
     if (nationalityParam && !targetIsJapanese) {
-      const isoList = nationalityParam.split(',').map(s => s.trim()).filter(Boolean)
-      const dbValueCandidates: string[] = []
-      for (const iso of isoList) {
-        for (const candidate of isoToDbValueCandidates(iso)) {
-          if (!dbValueCandidates.includes(candidate)) dbValueCandidates.push(candidate)
-        }
-      }
-      if (dbValueCandidates.length > 0) {
-        query = query.in('nationality', dbValueCandidates)
+      const dbValues = nationalityParam
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+      const hasOther = dbValues.includes('その他')
+      const concreteValues = dbValues.filter(v => v !== 'その他')
+
+      if (hasOther && concreteValues.length > 0) {
+        // 「その他」+ 具体国 = OR 条件
+        const inClause = concreteValues.map(v => `"${v}"`).join(',')
+        query = query.or(`nationality.in.(${inClause}),nationality.eq.その他`)
+      } else if (hasOther) {
+        // 「その他」のみ
+        query = query.eq('nationality', 'その他')
+      } else if (concreteValues.length > 0) {
+        // 具体国のみ(dbValue 直接 in、表記揺れは別タスクで対応)
+        query = query.in('nationality', concreteValues)
       }
     }
 

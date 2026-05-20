@@ -30,7 +30,7 @@ import {
   AGE_MAX_LIMIT,
 } from '@/types/searchFilters'
 import { getSearchFilterI18n } from '@/utils/searchFilterI18n'
-import { NATIONALITY_FILTER_OPTIONS } from '@/utils/nationalityNormalize'
+import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 import {
   PREFECTURE_REGIONS,
   REGION_LABELS,
@@ -237,10 +237,12 @@ export default function MatchesPage() {
   }, [user, authLoading])
 
   // フィルタを query string にシリアライズ
+  // 注: nationality は dbValue(日本語カタカナ / 「その他」)を送る。
+  // URLSearchParams が自動的に URL エンコードしてくれる。
   const buildFiltersQueryString = (f: SearchFilters): string => {
     const params = new URLSearchParams()
-    if (f.nationalityIso.length > 0) {
-      params.set('nationality', f.nationalityIso.join(','))
+    if (f.nationalityValues.length > 0) {
+      params.set('nationality', f.nationalityValues.join(','))
     }
     if (f.ageMin !== AGE_MIN_LIMIT) params.set('age_min', String(f.ageMin))
     if (f.ageMax !== AGE_MAX_LIMIT) params.set('age_max', String(f.ageMax))
@@ -703,26 +705,26 @@ export default function MatchesPage() {
                   <section>
                     <h3 className="text-sm font-semibold text-gray-800 mb-2">{labels.nationality}</h3>
                     <p className="text-xs text-gray-500 mb-2">
-                      {draftFilters.nationalityIso.length === 0
+                      {draftFilters.nationalityValues.length === 0
                         ? labels.nationalityNoneSelected
                         : labels.nationalitySelectedCount.replace(
                             '{count}',
-                            String(draftFilters.nationalityIso.length),
+                            String(draftFilters.nationalityValues.length),
                           )}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {NATIONALITY_FILTER_OPTIONS.map(opt => {
-                        const checked = draftFilters.nationalityIso.includes(opt.iso)
+                      {NATIONALITY_OPTIONS.map(opt => {
+                        const checked = draftFilters.nationalityValues.includes(opt.dbValue)
                         return (
                           <button
-                            key={opt.iso}
+                            key={opt.dbValue}
                             type="button"
                             onClick={() => {
                               setDraftFilters(prev => ({
                                 ...prev,
-                                nationalityIso: checked
-                                  ? prev.nationalityIso.filter(c => c !== opt.iso)
-                                  : [...prev.nationalityIso, opt.iso],
+                                nationalityValues: checked
+                                  ? prev.nationalityValues.filter(c => c !== opt.dbValue)
+                                  : [...prev.nationalityValues, opt.dbValue],
                               }))
                             }}
                             aria-pressed={checked}

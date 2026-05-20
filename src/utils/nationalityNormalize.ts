@@ -93,41 +93,9 @@ export function isoToDbValueCandidates(iso: string): string[] {
   return out
 }
 
-/**
- * モーダル UI 用: 絞り込み選択肢リスト。
- * 日本(JP)は絞り込み対象外(日本人女性検索時はそもそも非表示、外国人男性検索時は
- * 相手が外国人男性なので JP は選ばれない前提)。
- * 機械翻訳ベース、ネイティブレビューは別タスク。
- */
-export const NATIONALITY_FILTER_OPTIONS: Array<{
-  iso: string
-  labels: { ja: string; en: string; ko: string; 'zh-tw': string }
-}> = [
-  { iso: 'US', labels: { ja: 'アメリカ',       en: 'USA',         ko: '미국',     'zh-tw': '美國' } },
-  { iso: 'GB', labels: { ja: 'イギリス',       en: 'UK',          ko: '영국',     'zh-tw': '英國' } },
-  { iso: 'CA', labels: { ja: 'カナダ',         en: 'Canada',      ko: '캐나다',   'zh-tw': '加拿大' } },
-  { iso: 'AU', labels: { ja: 'オーストラリア', en: 'Australia',   ko: '호주',     'zh-tw': '澳洲' } },
-  { iso: 'NZ', labels: { ja: 'ニュージーランド', en: 'New Zealand', ko: '뉴질랜드', 'zh-tw': '紐西蘭' } },
-  { iso: 'DE', labels: { ja: 'ドイツ',         en: 'Germany',     ko: '독일',     'zh-tw': '德國' } },
-  { iso: 'FR', labels: { ja: 'フランス',       en: 'France',      ko: '프랑스',   'zh-tw': '法國' } },
-  { iso: 'IT', labels: { ja: 'イタリア',       en: 'Italy',       ko: '이탈리아', 'zh-tw': '義大利' } },
-  { iso: 'ES', labels: { ja: 'スペイン',       en: 'Spain',       ko: '스페인',   'zh-tw': '西班牙' } },
-  { iso: 'NL', labels: { ja: 'オランダ',       en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' } },
-  { iso: 'CH', labels: { ja: 'スイス',         en: 'Switzerland', ko: '스위스',   'zh-tw': '瑞士' } },
-  { iso: 'KR', labels: { ja: '韓国',           en: 'Korea',       ko: '한국',     'zh-tw': '韓國' } },
-  { iso: 'CN', labels: { ja: '中国',           en: 'China',       ko: '중국',     'zh-tw': '中國' } },
-  { iso: 'TW', labels: { ja: '台湾',           en: 'Taiwan',      ko: '대만',     'zh-tw': '台灣' } },
-  { iso: 'TH', labels: { ja: 'タイ',           en: 'Thailand',    ko: '태국',     'zh-tw': '泰國' } },
-  { iso: 'VN', labels: { ja: 'ベトナム',       en: 'Vietnam',     ko: '베트남',   'zh-tw': '越南' } },
-  { iso: 'PH', labels: { ja: 'フィリピン',     en: 'Philippines', ko: '필리핀',   'zh-tw': '菲律賓' } },
-  { iso: 'ID', labels: { ja: 'インドネシア',   en: 'Indonesia',   ko: '인도네시아', 'zh-tw': '印尼' } },
-  { iso: 'SG', labels: { ja: 'シンガポール',   en: 'Singapore',   ko: '싱가포르', 'zh-tw': '新加坡' } },
-  { iso: 'MY', labels: { ja: 'マレーシア',     en: 'Malaysia',    ko: '말레이시아', 'zh-tw': '馬來西亞' } },
-  { iso: 'IN', labels: { ja: 'インド',         en: 'India',       ko: '인도',     'zh-tw': '印度' } },
-  { iso: 'BR', labels: { ja: 'ブラジル',       en: 'Brazil',      ko: '브라질',   'zh-tw': '巴西' } },
-  { iso: 'MX', labels: { ja: 'メキシコ',       en: 'Mexico',      ko: '멕시코',   'zh-tw': '墨西哥' } },
-  { iso: 'RU', labels: { ja: 'ロシア',         en: 'Russia',      ko: '러시아',   'zh-tw': '俄羅斯' } },
-]
+// (旧 NATIONALITY_FILTER_OPTIONS — 24カ国 ISO ベース絞り込み専用リスト — は
+//  2026/05/20 削除。後継は下記 NATIONALITY_OPTIONS で signup と統一(17 + 「その他」)。
+//  /matches 絞り込みも本リストを直接参照する。)
 
 // =====================================================================
 // 共通国籍マスター (NATIONALITY_OPTIONS)
