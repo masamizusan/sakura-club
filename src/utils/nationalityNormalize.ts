@@ -128,3 +128,71 @@ export const NATIONALITY_FILTER_OPTIONS: Array<{
   { iso: 'MX', labels: { ja: 'メキシコ',       en: 'Mexico',      ko: '멕시코',   'zh-tw': '墨西哥' } },
   { iso: 'RU', labels: { ja: 'ロシア',         en: 'Russia',      ko: '러시아',   'zh-tw': '俄羅斯' } },
 ]
+
+// =====================================================================
+// 共通国籍マスター (NATIONALITY_OPTIONS)
+// ---------------------------------------------------------------------
+// signup / profile-edit / matches 絞り込みが全てここを参照する単一ソース。
+// 過去は3箇所(signup の FOREIGN_NATIONALITIES、profile-edit の getNationalities、
+// matches の NATIONALITY_FILTER_OPTIONS)で重複していたが、2026/05/20 に統合。
+//
+// - 17選択肢 + 「その他」、外国人男性向け(日本人女性は signup 時に '日本' 自動)
+// - dbValue は日本語カタカナ(過去の DB 実値との後方互換)
+// - 「その他」は iso=null、isOther=true、絞り込みでは完全一致(eq) で扱う
+// =====================================================================
+
+import type { SupportedLanguage } from '@/utils/language'
+
+export interface NationalityOption {
+  /** signup/profile-edit で DB に保存される値(現状の DB 実値踏襲) */
+  dbValue: string
+  /** ISO 2文字コード(「その他」は null) */
+  iso: string | null
+  /** 4言語表示ラベル */
+  labels: Record<SupportedLanguage, string>
+  /** 「その他」フラグ(絞り込み API での特殊扱い用) */
+  isOther?: boolean
+}
+
+export const NATIONALITY_OPTIONS: readonly NationalityOption[] = [
+  { dbValue: 'アメリカ',     iso: 'US', labels: { ja: 'アメリカ',     en: 'USA',         ko: '미국',     'zh-tw': '美國' } },
+  { dbValue: 'イギリス',     iso: 'GB', labels: { ja: 'イギリス',     en: 'UK',          ko: '영국',     'zh-tw': '英國' } },
+  { dbValue: 'カナダ',       iso: 'CA', labels: { ja: 'カナダ',       en: 'Canada',      ko: '캐나다',   'zh-tw': '加拿大' } },
+  { dbValue: 'オーストラリア', iso: 'AU', labels: { ja: 'オーストラリア', en: 'Australia',   ko: '호주',     'zh-tw': '澳洲' } },
+  { dbValue: 'ドイツ',       iso: 'DE', labels: { ja: 'ドイツ',       en: 'Germany',     ko: '독일',     'zh-tw': '德國' } },
+  { dbValue: 'フランス',     iso: 'FR', labels: { ja: 'フランス',     en: 'France',      ko: '프랑스',   'zh-tw': '法國' } },
+  { dbValue: 'イタリア',     iso: 'IT', labels: { ja: 'イタリア',     en: 'Italy',       ko: '이탈리아', 'zh-tw': '義大利' } },
+  { dbValue: 'スペイン',     iso: 'ES', labels: { ja: 'スペイン',     en: 'Spain',       ko: '스페인',   'zh-tw': '西班牙' } },
+  { dbValue: 'オランダ',     iso: 'NL', labels: { ja: 'オランダ',     en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' } },
+  { dbValue: 'スウェーデン', iso: 'SE', labels: { ja: 'スウェーデン', en: 'Sweden',      ko: '스웨덴',   'zh-tw': '瑞典' } },
+  { dbValue: 'ノルウェー',   iso: 'NO', labels: { ja: 'ノルウェー',   en: 'Norway',      ko: '노르웨이', 'zh-tw': '挪威' } },
+  { dbValue: 'デンマーク',   iso: 'DK', labels: { ja: 'デンマーク',   en: 'Denmark',     ko: '덴마크',   'zh-tw': '丹麥' } },
+  { dbValue: '韓国',         iso: 'KR', labels: { ja: '韓国',         en: 'Korea',       ko: '한국',     'zh-tw': '韓國' } },
+  { dbValue: '台湾',         iso: 'TW', labels: { ja: '台湾',         en: 'Taiwan',      ko: '대만',     'zh-tw': '台灣' } },
+  { dbValue: 'タイ',         iso: 'TH', labels: { ja: 'タイ',         en: 'Thailand',    ko: '태국',     'zh-tw': '泰國' } },
+  { dbValue: 'シンガポール', iso: 'SG', labels: { ja: 'シンガポール', en: 'Singapore',   ko: '싱가포르', 'zh-tw': '新加坡' } },
+  { dbValue: 'その他',       iso: null, labels: { ja: 'その他',       en: 'Other',       ko: '기타',     'zh-tw': '其他' }, isOther: true },
+] as const
+
+/**
+ * dbValue から NationalityOption を引く。O(N) だが N=17 なので実用上問題なし。
+ * 未知の値(過去の手動 INSERT 等)は undefined を返す。
+ */
+export function findNationalityOption(dbValue: string | null | undefined): NationalityOption | undefined {
+  if (!dbValue) return undefined
+  return NATIONALITY_OPTIONS.find(opt => opt.dbValue === dbValue)
+}
+
+/**
+ * 言語に応じた表示ラベルを返す。マスターに無い値は dbValue をそのまま fallback。
+ * 既存 `nationalityTranslations.ts` の `getNationalityLabel()` とは引数構造が異なるため
+ * 共存可能(あちらは ISO ベース、こちらは dbValue ベース)。
+ */
+export function getNationalityLabel(
+  dbValue: string | null | undefined,
+  lang: SupportedLanguage,
+): string {
+  if (!dbValue) return ''
+  const opt = findNationalityOption(dbValue)
+  return opt?.labels[lang] ?? dbValue
+}
