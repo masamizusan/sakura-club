@@ -34,13 +34,14 @@ import { logger } from '@/utils/logger'
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
 import { LanguageSelector } from '@/components/LanguageSelector'
-import { 
-  type LanguageSkill, 
-  type LanguageCode, 
+import {
+  type LanguageSkill,
+  type LanguageCode,
   type LanguageLevelCode,
   hasValidLanguageSkills,
-  generateLanguageSkillsFromLegacy 
+  generateLanguageSkillsFromLegacy
 } from '@/types/profile'
+import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 
 const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
@@ -1932,31 +1933,8 @@ function ProfileEditContent() {
   // 🌐 プロフィールタイプ変更時の言語設定（削除：日本人女性も言語選択可能に）
 
   // Constants and helper functions (moved from top level to after hooks)
-  // 国籍の翻訳関数
-  const getNationalityLabel = (value: string): string => {
-    const nationalityMap: { [key: string]: { [lang: string]: string } } = {
-      '日本': { ja: '日本', en: 'Japan', ko: '일본', 'zh-tw': '日本' },
-      'アメリカ': { ja: 'アメリカ', en: 'United States', ko: '미국', 'zh-tw': '美國' },
-      'イギリス': { ja: 'イギリス', en: 'United Kingdom', ko: '영국', 'zh-tw': '英國' },
-      'カナダ': { ja: 'カナダ', en: 'Canada', ko: '캐나다', 'zh-tw': '加拿大' },
-      'オーストラリア': { ja: 'オーストラリア', en: 'Australia', ko: '호주', 'zh-tw': '澳洲' },
-      'ドイツ': { ja: 'ドイツ', en: 'Germany', ko: '독일', 'zh-tw': '德國' },
-      'フランス': { ja: 'フランス', en: 'France', ko: '프랑스', 'zh-tw': '法國' },
-      'オランダ': { ja: 'オランダ', en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' },
-      'イタリア': { ja: 'イタリア', en: 'Italy', ko: '이탈리아', 'zh-tw': '義大利' },
-      'スペイン': { ja: 'スペイン', en: 'Spain', ko: '스페인', 'zh-tw': '西班牙' },
-      'スウェーデン': { ja: 'スウェーデン', en: 'Sweden', ko: '스웨덴', 'zh-tw': '瑞典' },
-      'ノルウェー': { ja: 'ノルウェー', en: 'Norway', ko: '노르웨이', 'zh-tw': '挪威' },
-      'デンマーク': { ja: 'デンマーク', en: 'Denmark', ko: '덴마크', 'zh-tw': '丹麥' },
-      '韓国': { ja: '韓国', en: 'South Korea', ko: '한국', 'zh-tw': '韓國' },
-      '中国': { ja: '中国', en: 'China', ko: '중국', 'zh-tw': '中國' },
-      '台湾': { ja: '台湾', en: 'Taiwan', ko: '대만', 'zh-tw': '台灣' },
-      'タイ': { ja: 'タイ', en: 'Thailand', ko: '태국', 'zh-tw': '泰國' },
-      'シンガポール': { ja: 'シンガポール', en: 'Singapore', ko: '싱가포르', 'zh-tw': '新加坡' },
-      'その他': { ja: 'その他', en: 'Other', ko: '기타', 'zh-tw': '其他' },
-    }
-    return nationalityMap[value]?.[currentLanguage] || value
-  }
+  // 国籍リスト・ラベル変換は src/utils/nationalityNormalize.ts の
+  // NATIONALITY_OPTIONS を SSOT として参照する(signup と共通)。
 
   // 都道府県の翻訳関数
   const getPrefectureLabel = (value: string): string => {
@@ -2105,50 +2083,14 @@ function ProfileEditContent() {
     return options
   }
 
-  // 国籍オプション（プロフィールタイプに応じて順序変更）
-  const getNationalities = () => {
-    if (isJapaneseFemale) {
-      // 日本人女性の場合、日本を最初に
-      return [
-        { value: '日本', label: getNationalityLabel('日本') },
-        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
-        { value: 'イギリス', label: getNationalityLabel('イギリス') },
-        { value: 'カナダ', label: getNationalityLabel('カナダ') },
-        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
-        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
-        { value: 'フランス', label: getNationalityLabel('フランス') },
-        { value: 'オランダ', label: getNationalityLabel('オランダ') },
-        { value: 'イタリア', label: getNationalityLabel('イタリア') },
-        { value: 'スペイン', label: getNationalityLabel('スペイン') },
-        { value: '韓国', label: getNationalityLabel('韓国') },
-        { value: '中国', label: getNationalityLabel('中国') },
-        { value: 'その他', label: getNationalityLabel('その他') },
-      ]
-    } else {
-      // 外国人男性の場合、よくある国を最初に
-      return [
-        { value: 'アメリカ', label: getNationalityLabel('アメリカ') },
-        { value: 'イギリス', label: getNationalityLabel('イギリス') },
-        { value: 'カナダ', label: getNationalityLabel('カナダ') },
-        { value: 'オーストラリア', label: getNationalityLabel('オーストラリア') },
-        { value: 'ドイツ', label: getNationalityLabel('ドイツ') },
-        { value: 'フランス', label: getNationalityLabel('フランス') },
-        { value: 'イタリア', label: getNationalityLabel('イタリア') },
-        { value: 'スペイン', label: getNationalityLabel('スペイン') },
-        { value: 'オランダ', label: getNationalityLabel('オランダ') },
-        { value: 'スウェーデン', label: getNationalityLabel('スウェーデン') },
-        { value: 'ノルウェー', label: getNationalityLabel('ノルウェー') },
-        { value: 'デンマーク', label: getNationalityLabel('デンマーク') },
-        { value: '韓国', label: getNationalityLabel('韓国') },
-        { value: '台湾', label: getNationalityLabel('台湾') },
-        { value: 'タイ', label: getNationalityLabel('タイ') },
-        { value: 'シンガポール', label: getNationalityLabel('シンガポール') },
-        { value: 'その他', label: getNationalityLabel('その他') },
-      ]
-    }
-  }
-
-  const NATIONALITIES = getNationalities()
+  // 国籍オプションは NATIONALITY_OPTIONS (SSOT) を直接参照。
+  // 過去にあった isJapaneseFemale 分岐は実質的な使用箇所が無い死コードだったため削除。
+  // 国籍編集 UI は isForeignMale==true の時のみレンダリングされる(L5455 周辺)ため、
+  // 日本人女性は国籍編集 UI 自体を見ない(nationality='日本' は signup 時に自動固定)。
+  const NATIONALITIES = NATIONALITY_OPTIONS.map((opt) => ({
+    value: opt.dbValue,
+    label: opt.labels[currentLanguage as SupportedLanguage] ?? opt.labels.ja,
+  }))
 
   // 都道府県オプション（翻訳対応）
   const getPrefectures = () => [

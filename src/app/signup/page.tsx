@@ -18,6 +18,7 @@ import { useUnifiedTranslation } from '@/utils/translations'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { logger } from '@/utils/logger'
+import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -51,12 +52,8 @@ const PREFECTURES = [
   '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ]
 
-// 対象外国籍（外国人男性向け - 日本は除外）
-const FOREIGN_NATIONALITIES = [
-  'アメリカ', 'イギリス', 'カナダ', 'オーストラリア', 'ドイツ', 'フランス',
-  'イタリア', 'スペイン', 'オランダ', 'スウェーデン', 'ノルウェー', 'デンマーク',
-  '韓国', '台湾', 'タイ', 'シンガポール', 'その他'
-]
+// 国籍リスト・ラベル変換は src/utils/nationalityNormalize.ts の
+// NATIONALITY_OPTIONS / getNationalityLabel を SSOT として参照する。
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -82,30 +79,6 @@ export default function SignupPage() {
 
   // 性別の監視
   const selectedGender = watch('gender')
-
-  // 国籍の翻訳関数
-  const getNationalityLabel = (value: string): string => {
-    const nationalityMap: { [key: string]: { [lang: string]: string } } = {
-      'アメリカ': { ja: 'アメリカ', en: 'United States', ko: '미국', 'zh-tw': '美國' },
-      'イギリス': { ja: 'イギリス', en: 'United Kingdom', ko: '영국', 'zh-tw': '英國' },
-      'カナダ': { ja: 'カナダ', en: 'Canada', ko: '캐나다', 'zh-tw': '加拿大' },
-      'オーストラリア': { ja: 'オーストラリア', en: 'Australia', ko: '호주', 'zh-tw': '澳洲' },
-      'ドイツ': { ja: 'ドイツ', en: 'Germany', ko: '독일', 'zh-tw': '德國' },
-      'フランス': { ja: 'フランス', en: 'France', ko: '프랑스', 'zh-tw': '法國' },
-      'イタリア': { ja: 'イタリア', en: 'Italy', ko: '이탈리아', 'zh-tw': '義大利' },
-      'スペイン': { ja: 'スペイン', en: 'Spain', ko: '스페인', 'zh-tw': '西班牙' },
-      'オランダ': { ja: 'オランダ', en: 'Netherlands', ko: '네덜란드', 'zh-tw': '荷蘭' },
-      'スウェーデン': { ja: 'スウェーデン', en: 'Sweden', ko: '스웨덴', 'zh-tw': '瑞典' },
-      'ノルウェー': { ja: 'ノルウェー', en: 'Norway', ko: '노르웨이', 'zh-tw': '挪威' },
-      'デンマーク': { ja: 'デンマーク', en: 'Denmark', ko: '덴마크', 'zh-tw': '丹麥' },
-      '韓国': { ja: '韓国', en: 'South Korea', ko: '한국', 'zh-tw': '韓國' },
-      '台湾': { ja: '台湾', en: 'Taiwan', ko: '대만', 'zh-tw': '台灣' },
-      'タイ': { ja: 'タイ', en: 'Thailand', ko: '태국', 'zh-tw': '泰國' },
-      'シンガポール': { ja: 'シンガポール', en: 'Singapore', ko: '싱가포르', 'zh-tw': '新加坡' },
-      'その他': { ja: 'その他', en: 'Other', ko: '기타', 'zh-tw': '其他' },
-    }
-    return nationalityMap[value]?.[currentLanguage] || value
-  }
 
   // 都道府県の翻訳関数
   const getPrefectureLabel = (value: string): string => {
@@ -524,11 +497,17 @@ export default function SignupPage() {
                       <SelectValue placeholder={selectedGender === 'male' ? t('signup.selectNationality') : t('signup.selectPrefecture')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {(selectedGender === 'male' ? FOREIGN_NATIONALITIES : PREFECTURES).map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {selectedGender === 'male' ? getNationalityLabel(option) : getPrefectureLabel(option)}
-                        </SelectItem>
-                      ))}
+                      {selectedGender === 'male'
+                        ? NATIONALITY_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.dbValue} value={opt.dbValue}>
+                              {opt.labels[currentLanguage as SupportedLanguage] ?? opt.labels.ja}
+                            </SelectItem>
+                          ))
+                        : PREFECTURES.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {getPrefectureLabel(option)}
+                            </SelectItem>
+                          ))}
                     </SelectContent>
                   </Select>
                   {errors.prefecture && (
