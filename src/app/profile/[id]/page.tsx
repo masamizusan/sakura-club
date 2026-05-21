@@ -25,6 +25,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getReportModalLabels } from '@/utils/reportModalI18n'
 import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
 import { getBlockI18nLabels } from '@/utils/blockI18n'
+import { getMatchModalLabels } from '@/utils/matchModalI18n'
 import {
   formatOccupation,
   formatBodyType,
@@ -185,13 +186,10 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
   }
 }
 
-// alert用多言語テキスト
-const matchedTexts: Record<string, string> = {
-  ja: 'マッチしました！メッセージを送ってみましょう。',
-  en: "It's a match! Send them a message.",
-  ko: '매칭되었습니다! 메시지를 보내보세요.',
-  'zh-tw': '配對成功！來發送訊息吧。',
-}
+// マッチ成立時のテキストは src/utils/matchModalI18n.ts (MATCH_MODAL_LABELS) に集約済み。
+// 旧 `matchedTexts: Record<string, string>` (window.alert 用) は 2026/05/21 削除。
+//
+// alert 用多言語テキスト
 const dailyLimitTexts: Record<string, string> = {
   ja: '本日のいいね上限（10回）に達しました。明日またお試しください。',
   en: "You've reached your daily like limit (10). Please try again tomorrow.",
@@ -234,6 +232,10 @@ function ProfileDetailContent() {
   const [reportReason, setReportReason] = useState('')
   const [reportDetail, setReportDetail] = useState('')
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+
+  // マッチ成立モーダル(2026/05/21 追加、旧 window.alert を置換)
+  const [showMatchModal, setShowMatchModal] = useState(false)
+  const [matchConversationId, setMatchConversationId] = useState<string | null>(null)
 
   // メニュー「ブロックする」クリック時はモーダルを開くだけ。
   // 実 API 呼び出しはモーダル内の「ブロックする」ボタン → executeBlock 経由。
@@ -525,7 +527,12 @@ function ProfileDetailContent() {
         }
 
         if (result.matched) {
-          alert(matchedTexts[currentLanguage] || matchedTexts.ja)
+          // 2026/05/21: window.alert からカスタム祝福モーダルに置換
+          // setIsMatched(true) も同時に走らせ、L437 周辺の初期マウント時 SELECT 由来の
+          // 古いマッチ状態でいいねボタンが二度押しできる競合を防ぐ。
+          setMatchConversationId(result.conversationId ?? null)
+          setShowMatchModal(true)
+          setIsMatched(true)
         }
       } else if (response.status === 429) {
         setLikesRemaining(0)
@@ -769,6 +776,152 @@ function ProfileDetailContent() {
                   style={{ flex: 1, background: '#8b1a2e', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
                 >
                   {blockLabels.confirmButton}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* マッチ成立モーダル — 旧 window.alert('It's a match!...') を置換、CTA で /messages/{id} 遷移 */}
+      {showMatchModal && (() => {
+        const labels = getMatchModalLabels(currentLanguage)
+        const handleSendMessage = () => {
+          setShowMatchModal(false)
+          if (matchConversationId) {
+            router.push(`/messages/${matchConversationId}`)
+          } else {
+            // 通常到達しない経路: API レスポンスから conversationId が欠落した場合のフォールバック。
+            // 一覧画面に飛ばしてユーザーが該当会話を選べる状態にする。
+            console.error('[profile] match modal: conversationId is null, falling back to /messages')
+            router.push('/messages')
+          }
+        }
+        const handleLater = () => {
+          setShowMatchModal(false)
+        }
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              padding: '1rem',
+            }}
+            // 背景クリックは無効(誤タップ防止、祝福イベントのため意図的に閉じない)
+          >
+            <div
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '1rem',
+                padding: '2rem',
+                maxWidth: '360px',
+                width: '90%',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+                position: 'relative',
+              }}
+            >
+              {/* 右上 ✕ ボタン */}
+              <button
+                type="button"
+                onClick={handleLater}
+                aria-label={labels.closeAriaLabel}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: '#999',
+                  fontSize: '20px',
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+
+              {/* アイコン(🌸 + ❤️) */}
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '56px',
+                  lineHeight: 1,
+                  marginBottom: '16px',
+                  marginTop: '8px',
+                }}
+              >
+                <span role="img" aria-hidden="true">🌸</span>
+                <span role="img" aria-hidden="true" style={{ marginLeft: '4px' }}>❤️</span>
+              </div>
+
+              {/* メインタイトル(深紅、Shippori Mincho B1、中央寄せ) */}
+              <h2
+                style={{
+                  textAlign: 'center',
+                  fontSize: '22px',
+                  fontWeight: 'bold',
+                  color: '#8b1a2e',
+                  fontFamily: '"Shippori Mincho B1", serif',
+                  marginBottom: '8px',
+                }}
+              >
+                {labels.heading}
+              </h2>
+
+              {/* サブタイトル(控えめなグレー、中央寄せ) */}
+              <p
+                style={{
+                  textAlign: 'center',
+                  fontSize: '14px',
+                  color: '#666',
+                  lineHeight: 1.6,
+                  marginBottom: '24px',
+                }}
+              >
+                {labels.subheading}
+              </p>
+
+              {/* ボタン2つ(左:あとで グレー / 右:メッセージを送る 深紅 CTA) */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={handleLater}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#f5f5f5',
+                    color: '#666',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {labels.laterButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendMessage}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#8b1a2e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {labels.sendMessageButton}
                 </button>
               </div>
             </div>
