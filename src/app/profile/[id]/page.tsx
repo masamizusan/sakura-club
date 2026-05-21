@@ -887,30 +887,15 @@ function ProfileDetailContent() {
                 {labels.subheading}
               </p>
 
-              {/* ボタン2つ(左:あとで グレー / 右:メッセージを送る 深紅 CTA) */}
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={handleLater}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#f5f5f5',
-                    color: '#666',
-                    border: 'none',
-                    borderRadius: '9999px',
-                    padding: '14px',
-                    fontSize: '15px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {labels.laterButton}
-                </button>
+              {/* ボタン2つ(縦並び、上:メッセージを送る 深紅 CTA / 下:あとで グレー)
+                  横並びだと ja「メッセージを送/る」/ en「Send a/message」が2行折り返しに
+                  なったため、4言語安定性を優先して縦並びに変更(2026/05/21) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button
                   type="button"
                   onClick={handleSendMessage}
                   style={{
-                    flex: 1,
+                    width: '100%',
                     backgroundColor: '#8b1a2e',
                     color: 'white',
                     border: 'none',
@@ -922,6 +907,23 @@ function ProfileDetailContent() {
                   }}
                 >
                   {labels.sendMessageButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLater}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#f5f5f5',
+                    color: '#666',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    padding: '14px',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {labels.laterButton}
                 </button>
               </div>
             </div>
