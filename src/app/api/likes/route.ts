@@ -271,29 +271,43 @@ export async function POST(request: NextRequest) {
     }
 
     // ===== 9. マッチした場合の追加処理 =====
+    // conversationId はマッチ成立モーダルの CTA「メッセージを送る」遷移先で使う。
+    // matched=false の通常いいねでは null のまま返す(conversations 行は作らないため)。
+    let conversationId: string | null = null
     if (isMatched) {
       console.log('💕 [likes] Match created!')
 
-      // conversations 作成（is_seen を明示的に false に設定）
+      // conversations 作成 or 既存行リセット
+      // 2026/05/21: 旧 INSERT→ON ERROR UPDATE フォールバックを upsert に統合し
+      // 必ず conversations.id を取得する。user_pair_key は generated column で
+      // UNIQUE 制約あり(supabase/migrations/20260211_fix_messaging_rls_and_triggers.sql L25-26)。
+      // 既存挙動温存: is_seen_user1/user2=false リセット + updated_at 更新は INSERT/UPDATE 両方で発生。
+      // created_at は payload に含めない → INSERT 時は DB DEFAULT、UPDATE 時は既存値温存。
       const now = new Date().toISOString()
-      const { error: conversationError } = await supabase
+      const { data: conversationRow, error: conversationError } = await supabase
         .from('conversations')
-        .insert({
+        .upsert({
           user1_id,
           user2_id,
           is_seen_user1: false,
           is_seen_user2: false,
-          created_at: now,
-          updated_at: now
-        })
+          updated_at: now,
+        }, { onConflict: 'user_pair_key' })
+        .select('id')
+        .single()
 
-      if (conversationError) {
-        // 既存会話がある場合（重複エラー）→ is_seen を false にリセット
-        await supabase
+      if (conversationError || !conversationRow?.id) {
+        console.error('[api/likes] conversation upsert failed:', conversationError)
+        // フォールバック: SELECT で既存行を取得(SQL §C-4 で matched↔conversations 1:1 実証済み)
+        const { data: existing } = await supabase
           .from('conversations')
-          .update({ is_seen_user1: false, is_seen_user2: false, updated_at: now })
+          .select('id')
           .eq('user1_id', user1_id)
           .eq('user2_id', user2_id)
+          .maybeSingle()
+        conversationId = existing?.id ?? null
+      } else {
+        conversationId = conversationRow.id
       }
 
       // 通知送信
@@ -337,7 +351,10 @@ export async function POST(request: NextRequest) {
       message: isMatched ? 'マッチしました！' : 'いいねしました',
       matched: isMatched,
       remaining: newRemaining,
-      limit: DAILY_LIMIT
+      limit: DAILY_LIMIT,
+      // マッチ成立モーダルの「メッセージを送る」CTA 遷移用(2026/05/21 追加)。
+      // matched=false 時は null(通常いいねでは conversations 行を作らないため)。
+      conversationId: isMatched ? conversationId : null,
     }, { headers: noCacheHeaders })
 
   } catch (error) {
