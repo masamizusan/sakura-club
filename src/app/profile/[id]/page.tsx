@@ -229,21 +229,28 @@ function ProfileDetailContent() {
 
   // ブロック・通報
   const [showMenu, setShowMenu] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportDetail, setReportDetail] = useState('')
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
-  const handleBlock = async () => {
-    const blockLabels = getBlockI18nLabels(currentLanguage)
+  // メニュー「ブロックする」クリック時はモーダルを開くだけ。
+  // 実 API 呼び出しはモーダル内の「ブロックする」ボタン → executeBlock 経由。
+  // messages page (L187-191) と同じパターンに統一(2026/05/21)。
+  const handleBlock = () => {
     console.log('[handleBlock] called', { viewerId, profileId })
     if (!viewerId || !profileId || viewerId === profileId) {
       console.warn('[handleBlock] early return: missing viewerId/profileId or self-block')
       return
     }
-    if (!confirm(blockLabels.confirmDialogText)) return
-    console.log('[handleBlock] confirmed, calling /api/blocks')
+    setShowMenu(false)
+    setShowBlockModal(true)
+  }
 
+  const executeBlock = async () => {
+    const blockLabels = getBlockI18nLabels(currentLanguage)
+    console.log('[executeBlock] confirmed via modal, calling /api/blocks')
     try {
       const res = await fetch('/api/blocks', {
         method: 'POST',
@@ -256,7 +263,7 @@ function ProfileDetailContent() {
         alert(`${blockLabels.alertFailedPrefix}${json.error ?? res.status}`)
         return
       }
-      setShowMenu(false)
+      setShowBlockModal(false)
       alert(blockLabels.alertSuccess)
       router.push('/matches')
     } catch (e) {
@@ -705,6 +712,65 @@ function ProfileDetailContent() {
               >
                 {isSubmittingReport ? reportLabels.submitting : reportLabels.submitButton}
               </button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ブロックモーダル — messages page (L1192-1241) と完全同一スタイル/文言/i18n キー */}
+      {showBlockModal && (() => {
+        const blockLabels = getBlockI18nLabels(currentLanguage)
+        return (
+          <div
+            className="fixed inset-0 flex items-center justify-center z-50"
+            style={{ background: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setShowBlockModal(false)}
+          >
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '1rem',
+                padding: '2rem',
+                maxWidth: '360px',
+                width: '90%',
+                textAlign: 'center',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ fontSize: '64px', marginBottom: '1rem' }} role="img" aria-label="block">🚫</div>
+              <h2 style={{ color: '#8b1a2e', fontFamily: 'Shippori Mincho B1', fontSize: '20px', marginBottom: '8px' }}>
+                {blockLabels.modalHeading}
+              </h2>
+              <p style={{ color: '#8b1a2e', fontSize: '13px', marginBottom: '16px' }}>
+                {blockLabels.modalSubheading}
+              </p>
+              <div style={{
+                background: '#f5f5f5',
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '13px',
+                color: '#444',
+                textAlign: 'left',
+                marginBottom: '24px',
+                lineHeight: 1.8,
+              }}>
+                <p>{blockLabels.noteNotNotified}</p>
+                <p>{blockLabels.noteHidden}</p>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setShowBlockModal(false)}
+                  style={{ flex: 1, background: '#ccc', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+                >
+                  {blockLabels.cancelButton}
+                </button>
+                <button
+                  onClick={executeBlock}
+                  style={{ flex: 1, background: '#8b1a2e', color: '#fff', borderRadius: '9999px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
+                >
+                  {blockLabels.confirmButton}
+                </button>
+              </div>
             </div>
           </div>
         )
