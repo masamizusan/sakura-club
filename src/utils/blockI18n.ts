@@ -36,7 +36,6 @@ export const BLOCK_I18N_LABELS: Record<
     confirmDialogText: string  // 「このユーザーをブロックしますか？」
 
     // alert
-    alertSuccess: string           // 「ブロックしました」（profile page）
     alertFailedPrefix: string      // 「ブロックに失敗しました: 」
     alertExceptionGeneric: string  // 「エラーが発生しました」
   }
@@ -50,7 +49,6 @@ export const BLOCK_I18N_LABELS: Record<
     cancelButton: 'キャンセル',
     confirmButton: 'ブロックする',
     confirmDialogText: 'このユーザーをブロックしますか？',
-    alertSuccess: 'ブロックしました',
     alertFailedPrefix: 'ブロックに失敗しました: ',
     alertExceptionGeneric: 'エラーが発生しました',
   },
@@ -63,7 +61,6 @@ export const BLOCK_I18N_LABELS: Record<
     cancelButton: 'Cancel',
     confirmButton: 'Block',
     confirmDialogText: 'Block this user?',
-    alertSuccess: 'User blocked.',
     alertFailedPrefix: 'Failed to block: ',
     alertExceptionGeneric: 'An error occurred',
   },
@@ -76,7 +73,6 @@ export const BLOCK_I18N_LABELS: Record<
     cancelButton: '취소',
     confirmButton: '차단',
     confirmDialogText: '이 사용자를 차단하시겠습니까?',
-    alertSuccess: '차단되었습니다.',
     alertFailedPrefix: '차단에 실패했습니다: ',
     alertExceptionGeneric: '오류가 발생했습니다',
   },
@@ -89,7 +85,6 @@ export const BLOCK_I18N_LABELS: Record<
     cancelButton: '取消',
     confirmButton: '封鎖',
     confirmDialogText: '要封鎖這位用戶嗎？',
-    alertSuccess: '已封鎖。',
     alertFailedPrefix: '封鎖失敗：',
     alertExceptionGeneric: '發生錯誤',
   },
