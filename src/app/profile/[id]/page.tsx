@@ -266,7 +266,6 @@ function ProfileDetailContent() {
         return
       }
       setShowBlockModal(false)
-      alert(blockLabels.alertSuccess)
       router.push('/matches')
     } catch (e) {
       console.error('[profile] block exception:', e)
