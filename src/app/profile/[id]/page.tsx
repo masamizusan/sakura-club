@@ -241,7 +241,6 @@ function ProfileDetailContent() {
   // 実 API 呼び出しはモーダル内の「ブロックする」ボタン → executeBlock 経由。
   // messages page (L187-191) と同じパターンに統一(2026/05/21)。
   const handleBlock = () => {
-    console.log('[handleBlock] called', { viewerId, profileId })
     if (!viewerId || !profileId || viewerId === profileId) {
       console.warn('[handleBlock] early return: missing viewerId/profileId or self-block')
       return
@@ -252,7 +251,6 @@ function ProfileDetailContent() {
 
   const executeBlock = async () => {
     const blockLabels = getBlockI18nLabels(currentLanguage)
-    console.log('[executeBlock] confirmed via modal, calling /api/blocks')
     try {
       const res = await fetch('/api/blocks', {
         method: 'POST',
@@ -275,7 +273,6 @@ function ProfileDetailContent() {
 
   const handleReport = async () => {
     const reportLabels = getReportModalLabels(currentLanguage)
-    console.log('[handleReport] called', { viewerId, profileId, reportReason })
     if (!viewerId || !profileId || !reportReason) {
       console.warn('[handleReport] early return: missing field')
       return
