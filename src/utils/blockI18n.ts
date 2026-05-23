@@ -32,9 +32,6 @@ export const BLOCK_I18N_LABELS: Record<
     cancelButton: string     // 「キャンセル」
     confirmButton: string    // モーダルの「ブロックする」（実行）
 
-    // profile page の window.confirm 用（messages のモーダルとは別文言）
-    confirmDialogText: string  // 「このユーザーをブロックしますか？」
-
     // alert
     alertFailedPrefix: string      // 「ブロックに失敗しました: 」
     alertExceptionGeneric: string  // 「エラーが発生しました」
@@ -48,7 +45,6 @@ export const BLOCK_I18N_LABELS: Record<
     noteHidden: '※ブロックすると自分やお相手から全てのページで非表示となります。',
     cancelButton: 'キャンセル',
     confirmButton: 'ブロックする',
-    confirmDialogText: 'このユーザーをブロックしますか？',
     alertFailedPrefix: 'ブロックに失敗しました: ',
     alertExceptionGeneric: 'エラーが発生しました',
   },
@@ -60,7 +56,6 @@ export const BLOCK_I18N_LABELS: Record<
     noteHidden: 'Once blocked, you and the other user will be hidden from each other across all pages.',
     cancelButton: 'Cancel',
     confirmButton: 'Block',
-    confirmDialogText: 'Block this user?',
     alertFailedPrefix: 'Failed to block: ',
     alertExceptionGeneric: 'An error occurred',
   },
@@ -72,7 +67,6 @@ export const BLOCK_I18N_LABELS: Record<
     noteHidden: '※차단하면 모든 페이지에서 서로 표시되지 않습니다.',
     cancelButton: '취소',
     confirmButton: '차단',
-    confirmDialogText: '이 사용자를 차단하시겠습니까?',
     alertFailedPrefix: '차단에 실패했습니다: ',
     alertExceptionGeneric: '오류가 발생했습니다',
   },
@@ -84,7 +78,6 @@ export const BLOCK_I18N_LABELS: Record<
     noteHidden: '※封鎖後，您與對方在所有頁面將互不顯示。',
     cancelButton: '取消',
     confirmButton: '封鎖',
-    confirmDialogText: '要封鎖這位用戶嗎？',
     alertFailedPrefix: '封鎖失敗：',
     alertExceptionGeneric: '發生錯誤',
   },
