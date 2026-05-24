@@ -735,21 +735,34 @@ export default function ChatPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaStreamRef.current = stream
-      const mediaRecorder = new MediaRecorder(stream)
+      // Chrome は webm;opus、Safari は mp4 をサポート。両方を試して使えるものを選ぶ
+      const preferredMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : ''
+      const mediaRecorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
       const chunks: BlobPart[] = []
       isCancelledRef.current = false
 
       // 無音検知 + 波形の設定
-      const audioContext = new AudioContext()
+      // Safari は user gesture 後でも AudioContext が suspended のままになるため明示的に resume が必要
+      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      const audioContext = new AudioCtx()
       audioContextRef.current = audioContext
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume()
+      }
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 256
       source.connect(analyser)
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount)
-      let silenceStart: number | null = Date.now()
+      let silenceStart: number | null = null
 
       const checkSilence = () => {
         analyser.getByteFrequencyData(dataArray)
@@ -788,9 +801,11 @@ export default function ChatPage() {
         if (isCancelledRef.current || chunks.length === 0) return
 
         setIsTranscribing(true)
-        const blob = new Blob(chunks, { type: 'audio/webm' })
+        const actualMimeType = mediaRecorder.mimeType || 'audio/webm'
+        const blob = new Blob(chunks, { type: actualMimeType })
+        const fileExtension = actualMimeType.includes('mp4') ? 'mp4' : 'webm'
         const formData = new FormData()
-        formData.append('audio', blob, 'recording.webm')
+        formData.append('audio', blob, `recording.${fileExtension}`)
         const whisperLang = currentLanguage === 'ja' ? 'ja'
           : currentLanguage === 'ko' ? 'ko'
           : currentLanguage === 'zh-tw' ? 'zh'
