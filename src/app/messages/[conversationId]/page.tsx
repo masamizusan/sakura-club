@@ -230,7 +230,6 @@ export default function ChatPage() {
 
   const handleReport = async () => {
     const reportLabels = getReportModalLabels(currentLanguage)
-    console.log('[handleReport] called', { currentUserId, partnerId: conversation?.partnerId, reportReason })
     if (!currentUserId || !conversation?.partnerId || !reportReason) {
       console.warn('[handleReport] early return: missing field')
       return
