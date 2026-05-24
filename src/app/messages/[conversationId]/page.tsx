@@ -26,7 +26,11 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     messagePlaceholder: 'メッセージを入力...',
     yearsOld: '歳',
     online: 'オンライン',
-    sendError: 'メッセージの送信に失敗しました。もう一度お試しください。',
+    sendError: 'メッセージの送信に失敗しました。しばらく経ってからお試しください。',
+    sendErrorAuthRequired: 'セッションの有効期限が切れました。再度ログインしてください。',
+    sendErrorVerificationRequired: 'メッセージを送るには本人年齢確認が必要です。マイページから手続きを完了してください。',
+    sendErrorSubscriptionRequired: 'メッセージを送信するには有料プランへの登録が必要です。プラン画面からお手続きください。',
+    sendErrorConversationNotFound: '会話が見つかりません。一度メッセージ一覧に戻ってからお試しください。',
     loading: '読み込み中...',
     translating: '翻訳中...',
     translateError: '翻訳に失敗しました',
@@ -51,7 +55,11 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     messagePlaceholder: 'Type a message...',
     yearsOld: 'y/o',
     online: 'Online',
-    sendError: 'Failed to send message. Please try again.',
+    sendError: 'Failed to send message. Please try again later.',
+    sendErrorAuthRequired: 'Your session has expired. Please log in again.',
+    sendErrorVerificationRequired: 'Identity verification is required to send messages. Please complete it from My Page.',
+    sendErrorSubscriptionRequired: 'A subscription is required to send messages. Please sign up from the Plans page.',
+    sendErrorConversationNotFound: 'Conversation not found. Please return to the messages list and try again.',
     loading: 'Loading...',
     translating: 'Translating...',
     translateError: 'Translation failed',
@@ -76,7 +84,11 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     messagePlaceholder: '메시지를 입력...',
     yearsOld: '세',
     online: '온라인',
-    sendError: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
+    sendError: '메시지 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+    sendErrorAuthRequired: '세션이 만료되었습니다. 다시 로그인해 주세요.',
+    sendErrorVerificationRequired: '메시지를 보내려면 본인 연령 확인이 필요합니다. 마이페이지에서 절차를 완료해 주세요.',
+    sendErrorSubscriptionRequired: '메시지를 보내려면 유료 플랜 가입이 필요합니다. 플랜 페이지에서 등록해 주세요.',
+    sendErrorConversationNotFound: '대화를 찾을 수 없습니다. 메시지 목록으로 돌아간 후 다시 시도해 주세요.',
     loading: '로딩 중...',
     translating: '번역 중...',
     translateError: '번역 실패',
@@ -101,7 +113,11 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     messagePlaceholder: '輸入訊息...',
     yearsOld: '歲',
     online: '線上',
-    sendError: '訊息發送失敗，請再試一次。',
+    sendError: '傳送訊息失敗。請稍後再試。',
+    sendErrorAuthRequired: '登入工作階段已逾期。請重新登入。',
+    sendErrorVerificationRequired: '傳送訊息需要完成身分年齡驗證。請從我的頁面完成驗證程序。',
+    sendErrorSubscriptionRequired: '傳送訊息需要訂閱付費方案。請至方案頁面進行訂閱。',
+    sendErrorConversationNotFound: '找不到此對話。請返回訊息列表後再試一次。',
     loading: '載入中...',
     translating: '翻譯中...',
     translateError: '翻譯失敗',
@@ -614,7 +630,17 @@ export default function ChatPage() {
           }).catch(e => console.error('[moderate] fetch失敗:', e))
         }
       } else {
-        alert(t('sendError'))
+        let errorKey = 'sendError'
+        if (response.status === 401) {
+          errorKey = 'sendErrorAuthRequired'
+        } else if (result?.code === 'verification_required') {
+          errorKey = 'sendErrorVerificationRequired'
+        } else if (result?.code === 'subscription_required') {
+          errorKey = 'sendErrorSubscriptionRequired'
+        } else if (response.status === 404) {
+          errorKey = 'sendErrorConversationNotFound'
+        }
+        alert(t(errorKey))
       }
     } catch (error) {
       console.error(error)
