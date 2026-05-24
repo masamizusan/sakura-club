@@ -571,8 +571,11 @@ export default function ChatPage() {
   const myReadLang = userProfile === null ? currentLanguage : getTranslationTargetLang(userProfile)
 
   const handleSend = async () => {
-    // 日本人女性は無条件で送信可能。外国人男性のみ身分確認・課金チェック。
-    if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed === false)) {
+    // 日本人女性: 未認証時のみモーダル(課金不要)
+    // 外国人男性: 未認証 OR 未課金でモーダル
+    const needsVerification = !isVerified
+    const needsSubscription = isForeignMale && (isSubscribed === false)
+    if (needsVerification || needsSubscription) {
       setShowRequirementsModal(true)
       return
     }
@@ -1202,6 +1205,7 @@ export default function ChatPage() {
         onClose={() => setShowRequirementsModal(false)}
         isVerified={isVerified}
         isSubscribed={isSubscribed ?? false}
+        showSubscriptionStep={isForeignMale}
         onSelectPlan={() => {
           setShowRequirementsModal(false)
           setShowSubscriptionModal(true)
