@@ -628,7 +628,6 @@ export default function ChatPage() {
             }),
           }).then(r => {
             if (!r.ok) console.warn('[moderate] API error:', r.status)
-            else console.log('[moderate] AI判定送信完了')
           }).catch(e => console.error('[moderate] fetch失敗:', e))
         }
       } else {
