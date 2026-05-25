@@ -3318,7 +3318,7 @@ function ProfileEditContent() {
         const rawNationality = defaults.nationality || profile?.nationality || ''
         const normalizedNationality = isForeignMale 
           ? (prefectureNames.includes(rawNationality) ? 'アメリカ' : (rawNationality || (isNewUser ? 'アメリカ' : '')))
-          : 'japan'
+          : '日本'
         
         logger.debug('[INIT] nationality:', normalizedNationality)
         
