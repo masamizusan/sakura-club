@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import AuthGuard from '@/components/auth/AuthGuard'
 import {
@@ -55,6 +55,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     translationFailed: '翻訳に失敗しました。時間をおいて再試行してください。',
     retry: '再試行',
     backToSearch: 'さがすに戻る',
+    backToMessages: 'メッセージに戻る',
+    backToLikes: 'お相手からに戻る',
+    backToFootprints: '足跡に戻る',
     loading: 'プロフィールを読み込んでいます...',
     notFound: 'プロフィールが見つかりません',
     loginRequired: 'ログインが必要です',
@@ -90,6 +93,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     translationFailed: 'Translation failed. Please try again later.',
     retry: 'Retry',
     backToSearch: 'Back to Search',
+    backToMessages: 'Back to Messages',
+    backToLikes: 'Back to Likes',
+    backToFootprints: 'Back to Footprints',
     loading: 'Loading profile...',
     notFound: 'Profile not found',
     loginRequired: 'Login required',
@@ -125,6 +131,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     translationFailed: '번역에 실패했습니다. 잠시 후 다시 시도해주세요.',
     retry: '재시도',
     backToSearch: '검색으로 돌아가기',
+    backToMessages: '메시지로 돌아가기',
+    backToLikes: '좋아요로 돌아가기',
+    backToFootprints: '발자국으로 돌아가기',
     loading: '프로필을 불러오는 중...',
     notFound: '프로필을 찾을 수 없습니다',
     loginRequired: '로그인이 필요합니다',
@@ -160,6 +169,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     translationFailed: '翻譯失敗，請稍後再試。',
     retry: '重試',
     backToSearch: '返回搜尋',
+    backToMessages: '返回訊息',
+    backToLikes: '返回喜歡',
+    backToFootprints: '返回足跡',
     loading: '正在載入個人資料...',
     notFound: '找不到個人資料',
     loginRequired: '需要登入',
@@ -211,6 +223,8 @@ const shouldDisplayValue = (value: string | null | undefined): boolean => {
 function ProfileDetailContent() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const from = searchParams?.get('from') ?? null
   const profileId = params?.id as string
   const [profile, setProfile] = useState<any>(null)
   const [viewerId, setViewerId] = useState<string | null>(null)
@@ -1214,12 +1228,26 @@ function ProfileDetailContent() {
             </div>
           </div>
 
-          {/* さがすに戻るリンク */}
-          <div className="mt-6 text-center">
-            <Link href="/matches" className="text-[#8b1a2e] hover:text-[#8b1a2e] text-sm">
-              ← {t('backToSearch')}
-            </Link>
-          </div>
+          {/* 戻り先リンク(遷移元の ?from= に応じて切替) */}
+          {(() => {
+            const backTarget =
+              from === 'messages' ? '/messages'
+              : from === 'likes' ? '/likes'
+              : from === 'footprints' ? '/footprints'
+              : '/matches'
+            const backLabelKey =
+              from === 'messages' ? 'backToMessages'
+              : from === 'likes' ? 'backToLikes'
+              : from === 'footprints' ? 'backToFootprints'
+              : 'backToSearch'
+            return (
+              <div className="mt-6 text-center">
+                <Link href={backTarget} className="text-[#8b1a2e] hover:text-[#8b1a2e] text-sm">
+                  ← {t(backLabelKey)}
+                </Link>
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>

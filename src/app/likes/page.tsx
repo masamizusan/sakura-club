@@ -394,7 +394,7 @@ export default function LikesPage() {
                       return (
                         <Link
                           key={liker.id}
-                          href={`/profile/${liker.id}`}
+                          href={`/profile/${liker.id}?from=likes`}
                           className="block"
                         >
                           <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer p-4">

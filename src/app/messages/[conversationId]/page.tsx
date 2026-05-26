@@ -856,7 +856,7 @@ export default function ChatPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <Link
-            href={conversation?.partnerId ? `/profile/${conversation.partnerId}` : '#'}
+            href={conversation?.partnerId ? `/profile/${conversation.partnerId}?from=messages` : '#'}
             className="flex items-center space-x-3 flex-1 hover:opacity-80 transition-opacity"
             aria-label={profileLinkLabels[currentLanguage] ?? profileLinkLabels.ja}
           >
