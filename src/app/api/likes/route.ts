@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { notificationService } from '@/lib/notifications'
 
 // 完全に動的（キャッシュ無効）
@@ -277,6 +278,27 @@ export async function POST(request: NextRequest) {
     if (isMatched) {
       console.log('💕 [likes] Match created!')
 
+      // マッチ成立時:既存の pending 側 likes(相手→自分)を既読化
+      // orphan(マッチ済みなのに is_seen=false でバッジ滞留)の発生を防ぐ
+      // /api/likes/seen と同パターンで service_role を使用(RLS バイパス)
+      try {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+        const { error: seenError } = await supabaseAdmin
+          .from('likes')
+          .update({ is_seen: true })
+          .eq('liker_id', likedUserId)
+          .eq('liked_user_id', likerId)
+          .eq('is_seen', false)
+        if (seenError) {
+          console.warn('[likes] mark existing like as seen failed:', seenError.message)
+        }
+      } catch (seenError) {
+        console.warn('[likes] mark existing like as seen exception:', seenError)
+      }
+
       // conversations 作成 or 既存行リセット
       // 2026/05/21: 旧 INSERT→ON ERROR UPDATE フォールバックを upsert に統合し
       // 必ず conversations.id を取得する。user_pair_key は generated column で
@@ -332,7 +354,11 @@ export async function POST(request: NextRequest) {
 
     // ===== 10. likesテーブルにカウント記録 =====
     try {
-      await supabase.from('likes').insert({ liker_id: likerId, liked_user_id: likedUserId })
+      await supabase.from('likes').insert({
+        liker_id: likerId,
+        liked_user_id: likedUserId,
+        is_seen: isMatched,  // マッチ成立時は最初から既読扱い(orphan 防止)
+      })
     } catch (likesError) {
       console.error('[likes] likes table error:', likesError)
     }
