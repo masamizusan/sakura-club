@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button'
 import {
   Heart,
   MapPin,
-  User,
   Globe,
   Coffee
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -402,17 +402,11 @@ export default function LikesPage() {
                             <div className="flex">
                               {/* 写真エリア（左側）- 160px */}
                               <div className="relative w-[160px] h-[160px] flex-shrink-0">
-                                {liker.avatar_url ? (
-                                  <img
-                                    src={liker.avatar_url}
-                                    alt={liker.name}
-                                    className="w-full h-full object-cover rounded-lg"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-[#ede0d4] rounded-lg">
-                                    <User className="w-14 h-14" style={{ color: '#d4a89a' }} />
-                                  </div>
-                                )}
+                                <Avatar
+                                  src={liker.avatar_url}
+                                  alt={liker.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
                               </div>
 
                               {/* 基本情報（右側） */}

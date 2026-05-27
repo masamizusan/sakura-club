@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input'
 import {
   MessageCircle,
   Search,
-  User,
   Globe
 } from 'lucide-react'
 import Sidebar from '@/components/layout/Sidebar'
+import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 
@@ -315,17 +315,11 @@ export default function MessagesPage() {
                         <div className="flex items-center space-x-4">
                           {/* アバター */}
                           <div className="relative flex-shrink-0">
-                            {conversation.partnerAvatar ? (
-                              <img
-                                src={conversation.partnerAvatar}
-                                alt={conversation.partnerName}
-                                className="w-16 h-16 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
-                                <User className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
-                              </div>
-                            )}
+                            <Avatar
+                              src={conversation.partnerAvatar}
+                              alt={conversation.partnerName}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
                             {conversation.isOnline && (
                               <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                             )}

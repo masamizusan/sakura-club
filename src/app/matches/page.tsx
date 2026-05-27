@@ -7,13 +7,13 @@ import {
   MapPin,
   Filter,
   Search,
-  User,
   Globe,
   Coffee,
   X
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -468,17 +468,11 @@ export default function MatchesPage() {
                     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                       {/* プロフィール画像エリア */}
                       <div className="relative h-56 bg-gray-50">
-                        {user.profileImage ? (
-                          <img
-                            src={user.profileImage}
-                            alt={user.firstName}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-[#ede0d4]">
-                            <User className="w-20 h-20" style={{ color: '#d4a89a' }} />
-                          </div>
-                        )}
+                        <Avatar
+                          src={user.profileImage}
+                          alt={user.firstName}
+                          className="w-full h-full object-contain"
+                        />
 
                         {user.isOnline && (
                           <div className="absolute top-3 left-3">

@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Send, ArrowLeft, Heart, User, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X } from 'lucide-react'
+import { Send, ArrowLeft, Heart, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { createClient } from '@/lib/supabase/client'
@@ -860,13 +861,11 @@ export default function ChatPage() {
             className="flex items-center space-x-3 flex-1 hover:opacity-80 transition-opacity"
             aria-label={profileLinkLabels[currentLanguage] ?? profileLinkLabels.ja}
           >
-            {conversation?.partnerAvatar ? (
-              <img src={conversation.partnerAvatar} alt={conversation.partnerName} className="w-10 h-10 rounded-full object-cover" />
-            ) : (
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ede0d4' }}>
-                <User className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-              </div>
-            )}
+            <Avatar
+              src={conversation?.partnerAvatar}
+              alt={conversation?.partnerName || ''}
+              className="w-10 h-10 rounded-full object-cover"
+            />
             <div className="flex-1">
               <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
               {conversation && (

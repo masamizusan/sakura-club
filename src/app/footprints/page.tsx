@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   History,
-  User,
   Coffee
 } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTag } from '@/utils/profileTagFormatters'
@@ -315,17 +315,11 @@ function FootprintsContent() {
                             <div className="flex">
                               {/* 写真エリア（左側）- 160px */}
                               <div className="relative w-[160px] h-[160px] flex-shrink-0">
-                                {visitor.avatar_url ? (
-                                  <img
-                                    src={visitor.avatar_url}
-                                    alt={visitor.name}
-                                    className="w-full h-full object-cover rounded-lg"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-[#ede0d4] rounded-lg">
-                                    <User className="w-14 h-14 text-[#d4a89a]" />
-                                  </div>
-                                )}
+                                <Avatar
+                                  src={visitor.avatar_url}
+                                  alt={visitor.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
                               </div>
 
                               {/* 基本情報（右側） */}
