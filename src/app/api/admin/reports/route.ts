@@ -162,13 +162,22 @@ export async function PATCH(req: NextRequest) {
       if (notifError) console.error('[admin/reports] 警告通知エラー:', notifError.message)
     }
 
-    // ③ アカウント停止：status='suspended' + 停止通知
+    // ③ アカウント停止：status='suspended' + session 強制無効化 + 停止通知
     if (action === 'suspended' && reportedId) {
       const { error: suspendError } = await supabaseAdmin
         .from('profiles')
         .update({ status: 'suspended' })
         .eq('id', reportedId)
       if (suspendError) console.error('[admin/reports] 停止エラー:', suspendError.message)
+
+      // 対象ユーザーの session 強制無効化 + 新規ログイン拒否
+      // SDK v2.53 の auth.admin.signOut(jwt, scope) は JWT 必須で管理者からは使えないため
+      // ban_duration による永久 ban を採用(既存 session 即時失効 + Supabase レベルでログイン拒否)
+      // 停止解除する場合は ban_duration: 'none' を別途呼ぶ
+      const { error: banError } = await supabaseAdmin.auth.admin.updateUserById(reportedId, {
+        ban_duration: '876000h',
+      })
+      if (banError) console.error('[admin/reports] user ban failed:', banError.message)
 
       const { error: notifError } = await supabaseAdmin
         .from('notifications')
