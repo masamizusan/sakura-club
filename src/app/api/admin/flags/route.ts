@@ -194,11 +194,11 @@ export async function PATCH(req: NextRequest) {
       if (notifError) console.error('[admin/flags] 警告通知エラー:', notifError.message)
     }
 
-    // ④ アカウント停止：is_active=false + 停止通知
+    // ④ アカウント停止：status='suspended' + 停止通知
     if (action === 'suspended' && senderId) {
       const { error: suspendError } = await supabaseAdmin
         .from('profiles')
-        .update({ is_active: false })
+        .update({ status: 'suspended' })
         .eq('id', senderId)
       if (suspendError) console.error('[admin/flags] 停止エラー:', suspendError.message)
 
