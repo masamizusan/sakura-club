@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,15 @@ export async function POST(req: NextRequest) {
     const supabase = createClient(req)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: '認証が必要です' }, { status: 401 })
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
+      )
+    }
 
     const { conversationId } = await req.json()
     if (!conversationId) return NextResponse.json({ error: 'conversationId が必要です' }, { status: 400 })

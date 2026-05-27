@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -21,6 +22,15 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabaseUser.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
+  const guard = await requireActiveProfile(user.id)
+  if (!guard.ok) {
+    return NextResponse.json(
+      { error: guard.message, code: guard.code },
+      { status: guard.httpStatus }
+    )
   }
 
   const { blocked_id } = await req.json()

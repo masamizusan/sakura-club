@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import crypto from 'crypto'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 export const dynamic = 'force-dynamic'
 
@@ -157,6 +158,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Authentication required', code: ERROR_CODES.AUTH_REQUIRED },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 
