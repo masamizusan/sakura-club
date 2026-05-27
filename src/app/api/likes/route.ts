@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { notificationService } from '@/lib/notifications'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 // 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
@@ -90,6 +91,15 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401, headers: noCacheHeaders })
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
+      )
     }
 
     const likerId = user.id
