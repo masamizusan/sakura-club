@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react'
 import Link from 'next/link'
+import Avatar from '@/components/Avatar'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
 import { createClient } from '@/lib/supabase'
 import { LanguageSkill } from '@/types/profile'
@@ -947,17 +948,11 @@ function ProfileDetailContent() {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* メイン画像 */}
             <div className="relative aspect-square bg-gray-100">
-              {mainImage ? (
-                <img
-                  src={resolveAvatarSrc(mainImage, supabase) || ''}
-                  alt={`${name}のプロフィール`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#ede0d4]">
-                  <User className="w-24 h-24 text-[#d4a89a]" />
-                </div>
-              )}
+              <Avatar
+                src={mainImage}
+                alt={`${name}のプロフィール`}
+                className="w-full h-full object-cover"
+              />
 
               {/* サブ画像 */}
               {displayImages.length > 1 && (

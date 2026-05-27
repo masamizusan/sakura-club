@@ -12,9 +12,8 @@ import Sidebar from '@/components/layout/Sidebar'
 import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import { logger } from '@/utils/logger'
-import { resolveAvatarSrc } from '@/utils/imageResolver'
+import Avatar from '@/components/Avatar'
 import {
-  User,
   Edit3,
   Settings,
   Mail,
@@ -517,20 +516,11 @@ function MyPageContent() {
               <div className="flex items-start">
                 {/* アバター */}
                 <div className="flex-shrink-0">
-                  {(() => {
-                    const avatarSrc = resolveAvatarSrc(profile?.avatar_url, supabase)
-                    return avatarSrc ? (
-                      <img
-                        src={avatarSrc}
-                        alt="プロフィール写真"
-                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gray-200 border-2 border-gray-200 flex items-center justify-center">
-                        <User className="w-10 h-10 text-gray-400" />
-                      </div>
-                    )
-                  })()}
+                  <Avatar
+                    src={profile?.avatar_url}
+                    alt="プロフィール写真"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                  />
                 </div>
 
                 {/* 右側: 名前 + 完成度 */}
