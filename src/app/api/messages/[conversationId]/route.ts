@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 // メッセージ送信のスキーマ
 const sendMessageSchema = z.object({
@@ -153,6 +154,15 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 
