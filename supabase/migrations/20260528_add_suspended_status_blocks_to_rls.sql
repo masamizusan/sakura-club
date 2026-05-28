@@ -142,12 +142,26 @@ CREATE POLICY "Users can update own profile" ON public.profiles
   );
 
 -- ===============================================================
--- 検証 SELECT
+-- 検証 SELECT (改良版 - 偽陽性排除)
 -- ===============================================================
 -- 全 7 ポリシーが期待通り更新されたかを確認
--- 期待: 7 行返却、全行 has_status_check = true
+--
+-- 各列の意味:
+--   has_profiles_status_check: 'profiles.status' プレフィックス付きで条件式に含まれるか
+--     → 6 件 (blocks/conversations/footprints/likes/messages/reports) で true 期待
+--   has_status_in_using:       USING 句に status が含まれるか
+--     → blocks (ALL) と profiles (UPDATE) で true 期待
+--   has_status_in_with_check:  WITH CHECK 句に status が含まれるか
+--     → blocks/conversations/footprints/likes/messages/reports で true 期待
+--
+-- ⚠️ 旧版検証クエリの欠陥(Phase 3-3 で判明):
+--   `OR with_check LIKE '%status%'` だけだと messages の既存
+--   subscription.status = 'active' 条件で偽陽性が出る
+--   → 必ず `profiles.status` プレフィックスで判定すること
 SELECT tablename, policyname, cmd,
-       (qual LIKE '%status%' OR with_check LIKE '%status%') AS has_status_check
+       (qual LIKE '%profiles.status%' OR with_check LIKE '%profiles.status%') AS has_profiles_status_check,
+       (qual LIKE '%status%') AS has_status_in_using,
+       (with_check LIKE '%status%') AS has_status_in_with_check
 FROM pg_policies
 WHERE schemaname = 'public'
   AND (
@@ -162,8 +176,13 @@ WHERE schemaname = 'public'
 ORDER BY tablename, cmd, policyname;
 
 -- ===============================================================
--- 結果を確認して、すべて has_status_check=true なら次を実行:
---   COMMIT;
--- 異常があれば:
---   ROLLBACK;
+-- 自己完結トランザクション: 明示的 COMMIT
 -- ===============================================================
+-- ⚠️ Phase 3-3 教訓:
+--   Supabase SQL Editor は BEGIN; を含むスクリプトで明示的 COMMIT; が無いと
+--   クエリ実行終了時に自動 ROLLBACK される(別セッション扱い)
+--   COMMIT; をコメント化したままだと、DROP/CREATE は反映されない
+--
+-- 万一検証 SELECT で異常が見つかった場合は、本ファイル全文を実行する前に
+-- COMMIT; 行を ROLLBACK; に書き換えてから実行すること
+COMMIT;
