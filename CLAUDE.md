@@ -1400,7 +1400,7 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
 
 ## 🪦 既知の死コード一覧
 
-**最終確認日**: 2026/05/15
+**最終確認日**: 2026/05/28
 
 以下のコードは存在するが **実行されていない** 死コードである。新規実装時の参考にしてはいけない:
 
@@ -1409,8 +1409,11 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
 | `src/app/api/matches/like/route.ts` | UI は `/api/likes` を叩く。matches/like は呼び出し元0件 |
 | `src/app/api/matches/matched/route.ts` | 同上、`/api/likes/received` が後継 |
 | `src/app/api/matches/recommendations/route.ts:133` `.select('liked_user_id')` | `liked_user_id` は matches テーブルに存在しない。要詳細確認 |
+| `src/app/api/profile/route.ts` | `/api/profile` への呼び出し元 0 件（複数 grep パターンで確認）。GET / PUT 両方とも未使用。プロフィール更新は `src/app/api/profile/update/route.ts` POST、`src/utils/saveProfileToDb.ts` 経由が実体。指示書 #31 Phase 2B (2026/05/28) で死コード確定し status ガード追加対象から除外 |
 
 これらのファイルには **架空カラム参照**（`liker_user_id`、`liked_user_id`、`is_matched`、`matched_at`、`action`）が含まれているため、コピペ流用は厳禁。
+
+`profile/route.ts` PUT は `.eq('user_id', user.id)` を使用しており、profiles の PK は `id` であるため二重参照状態（後述「profiles.status 2 層防御」セクションの残課題 ㉜ 参照）。
 
 整理タスクは別途実施予定。
 
@@ -1479,3 +1482,166 @@ const { data: matchedRecords, error: matchedError } = await supabase
 // ❌ ネストした and の or（構文は正しいが、実スキーマでは不要）
 .or(`and(liker_user_id.eq.${a},liked_user_id.eq.${b}),and(liker_user_id.eq.${b},liked_user_id.eq.${a})`)
 ```
+
+---
+
+## 🔒 profiles.status='suspended' 2 層防御（2026/05/28 確立・絶対遵守）
+
+### 設計原則
+
+memory #1 の「フロントエンドチェックはセキュリティではない / API + DB の 2 層で制御」原則を `profiles.status='suspended'` にも完全適用。指示書 #31 で実装完了。
+
+| 層 | 仕組み | 該当 |
+|---|---|---|
+| **API レイヤー** | `requireActiveProfile()` ヘルパーで status を確認、suspended なら 403 | ユーザー操作系 9 API ルート |
+| **DB レイヤー (RLS)** | `EXISTS (SELECT 1 FROM profiles WHERE id=auth.uid() AND status='active')` を WITH CHECK/USING に追加 | 7 ポリシー |
+
+両方ともバイパス不可。フロントエンドの分岐は UX 補助のみ。
+
+### 🛡️ 保護対象ファイル（変更禁止）
+
+| ファイル | 役割 |
+|---|---|
+| `src/lib/auth/requireActiveProfile.ts` | suspended ブロックの API 共通ヘルパー。戻り値型 `ProfileGuardOk` / `ProfileGuardFail` |
+| `supabase/migrations/20260528_add_suspended_status_blocks_to_rls.sql` | 7 ポリシーの DROP/CREATE 全文。BEGIN; ... COMMIT; 自己完結トランザクション |
+
+### 🔧 API ハンドラ実装規約
+
+ユーザー操作系（書き込み/コスト発生）の API ルートでは、必ず冒頭で `requireActiveProfile()` を呼び出すこと:
+
+```typescript
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+
+// 認証チェック (既存)
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) return NextResponse.json({ error: '...' }, { status: 401 })
+
+// memory #1 の 2 層防御: suspended ユーザーをここで弾く
+const guard = await requireActiveProfile(user.id)
+if (!guard.ok) {
+  return NextResponse.json(
+    { error: guard.message, code: guard.code },
+    { status: guard.httpStatus }
+  )
+}
+
+// 既存の verification_status / subscription / その他チェックは触らずに続行
+```
+
+挿入位置: **認証チェック直後、既存のいかなるセキュリティチェック（verification_status、subscription、レート制限等）よりも前**。
+
+### 📊 API + RLS 防御マップ（指示書 #31 完了時点）
+
+| 経路 | API 防御 | RLS 防御 | 備考 |
+|---|---|---|---|
+| `/api/messages/[conversationId]` POST | ✅ Phase 2A | ✅ messages_insert_participant | 既存 verification_status/subscription/gender に追加 |
+| `/api/likes` POST | ✅ Phase 2B | ✅ likes_insert_own | |
+| `/api/profile/update` POST | ✅ Phase 2B | ✅ Users can update own profile (USING) | profiles UPDATE は USING のみ追加（案 A） |
+| `/api/blocks` POST | ✅ Phase 2C | ✅ users_manage_own_blocks (ALL) | USING/WITH CHECK 両方追加 |
+| `/api/reports` POST | ✅ Phase 2C | ✅ users_create_reports | |
+| `/api/contact` POST | ✅ Phase 2C | — (notifications テーブルは service_role のみ) | |
+| `/api/conversations/seen` POST | ✅ Phase 2C | ✅ conversations_insert_participant | |
+| `/api/translate/message` POST | ✅ Phase 2C | — | OpenAI コスト発生防止が主目的 |
+| `/api/translate/profile-bio` POST | ✅ Phase 2C | — | 同上 |
+| **footprints INSERT** | ❌ **API 無し** | ✅ **唯一の防御線** | `profile/[id]/page.tsx:454` の anon 直接 INSERT |
+| profiles 直接 UPDATE (anon) | — | ✅ Users can update own profile (USING) | profile/edit/page.tsx 等の avatar_url クリア処理 |
+
+### 📌 主要 API ルートの注記（指示書 #31 で判明）
+
+| ルート | 実態 | 注意 |
+|---|---|---|
+| `src/app/api/messages/route.ts` | **GET only**（会話一覧取得） | 送信は `[conversationId]/route.ts` POST が実体 |
+| `src/app/api/footprints/route.ts` | **GET only**（自分への足跡一覧） | INSERT は `profile/[id]/page.tsx:454` の anon 直接経路、**API ルート存在せず** |
+| `src/app/api/footprints/read/route.ts` | POST（既読化、service_role） | 別ファイル |
+| `src/app/api/profile/route.ts` | 🪦 **dead code** | 「既知の死コード一覧」参照 |
+
+### ⚠️ Supabase SQL Editor の BEGIN/COMMIT 仕様（Phase 3-3 教訓）
+
+**RLS マイグレーション実行時の絶対ルール**:
+
+- Supabase SQL Editor は `BEGIN;` を含むスクリプトで **明示的な `COMMIT;` が無いと、クエリ実行終了時に自動 ROLLBACK** される
+- 「実行結果は返ってくるが、再ログイン後 or 別セッションで確認すると変更が消えている」現象が発生する
+- 対策: マイグレーション SQL ファイルは末尾 `COMMIT;` を含めて **自己完結トランザクション**にする
+- `--   COMMIT;` のようにコメント化していると無効
+
+過去事例: Phase 3-3 で BEGIN; のみで COMMIT; をコメント化していたため、DROP/CREATE が反映されないまま「成功」表示が出る誤検知が発生（`ac0eb535` で修正済）。
+
+### ⚠️ RLS 検証 SELECT 設計の注意（Phase 3-3 教訓）
+
+`profiles.status='suspended'` 系の RLS ポリシー検証では:
+
+```sql
+-- ❌ 偽陽性が出る検証
+(qual LIKE '%status%' OR with_check LIKE '%status%') AS has_status_check
+```
+
+→ messages の既存条件に `subscriptions.status = 'active'` があるため、ポリシーが旧定義のままでも `true` を返す。
+
+```sql
+-- ✅ 偽陽性を排除した検証
+(qual LIKE '%profiles.status%' OR with_check LIKE '%profiles.status%') AS has_profiles_status_check,
+(qual LIKE '%status%') AS has_status_in_using,
+(with_check LIKE '%status%') AS has_status_in_with_check
+```
+
+→ `profiles.status` プレフィックスで判定 + 3 列で USING/WITH CHECK を分離して確認。
+
+### 🚫 セキュリティ改修時の禁止事項
+
+1. **`src/lib/auth/requireActiveProfile.ts` を削除しない** — 2 層防御の核
+2. **既存 API の `requireActiveProfile()` 呼び出しを削除しない** — リファクタ・デザイン変更時も維持
+3. **RLS 7 ポリシーから `profiles.status = 'active'` 条件を消さない** — DB 層の防御線
+4. **footprints INSERT 経路を変更する場合は RLS が唯一の防御線であることを念頭に置く** — API ルート新設するなら status ガード必須
+5. **profiles UPDATE ポリシーの USING 句から `status = 'active'` を消さない** — anon 直接 UPDATE 防御線
+6. **`/api/auth/leave` を anon クライアント経由に変更しない** — 現状 service_role 物理削除モデルだから profiles UPDATE 制限が成立している
+
+### 📜 関連コミット（指示書 #31）
+
+| Phase | コミット | 内容 |
+|---|---|---|
+| Phase 1 | `44bc72fa` | requireActiveProfile ヘルパー新規 |
+| Phase 2A | `e093397c` | messages 系 API ガード |
+| Phase 2B | `9f48ac89` | likes / profile/update API ガード |
+| Phase 2C | `ad431c63` | blocks/reports/contact/conversations/seen/translate ×2 API ガード |
+| Phase 3-2 | `aec4c100` | RLS マイグレーション SQL 作成 |
+| Phase 3-3 後処理 | `ac0eb535` | マイグレーション自己完結化 + 検証 SELECT 改良 |
+
+### 🧪 検証手順（Phase 5）
+
+- suspended ユーザーで全 9 API が 403 を返すこと
+- suspended ユーザーが `/profile/[他人 ID]` を開いて footprints が記録されないこと（RLS で拒否）
+- active ユーザーは全機能が通常動作すること
+- `/api/auth/leave` （退会）は status='suspended' でも実行可能であること（誤停止救済）
+
+---
+
+## 📌 残課題
+
+### ㉜ profiles テーブルに `user_id` カラムが実在（`id` と二重参照、要調査）
+
+**発見**: 指示書 #31 Phase 2B (2026/05/28) で調査中に判明
+
+**現象**:
+- profiles テーブルの PK は `id`（auth.users(id) への外部キー、001_initial_schema 定義）
+- しかしクライアント側コードの複数箇所で `.eq('user_id', user.id)` を使用:
+  - `src/app/profile/edit/page.tsx` L1558, L2124, L2187, L2476
+  - `src/utils/avatarUploader.ts` L216
+  - `src/lib/auth.ts` L102
+  - `src/app/api/profile/route.ts` L138 (dead code)
+- profiles RLS ポリシー `Users can update own profile` の USING/WITH CHECK にも `(auth.uid() = user_id) OR (auth.uid() = id)` の二重判定がある
+
+**仮説**:
+- profiles テーブルに `user_id` カラムが追加されたタイミングがあり、マイグレーション履歴に記録がない
+- または、`user_id` が NULL で `.eq()` がサイレント無視されている可能性
+- 実機で動作している = カラムが実在するか、別経路で更新されている
+
+**確認方法**（memory #15 遵守）:
+```sql
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name = 'profiles'
+  AND column_name IN ('id', 'user_id');
+```
+
+**対応**: 別タスクで本番 DB 確認 → 不要なら `user_id` 参照を `id` に統一するリファクタタスク化
