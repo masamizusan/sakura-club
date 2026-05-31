@@ -70,7 +70,8 @@ function LoginForm() {
         if (status === 'suspended') {
           console.log('[LOGIN] account suspended - blocking sign-in')
           await authService.signOut()
-          router.push('/suspended')
+          // 指示書 #33: /suspended ページを廃止し top page に統一(middleware の suspended 分岐と整合)
+          router.push('/')
           return
         }
       }

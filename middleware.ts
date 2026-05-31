@@ -34,10 +34,12 @@ export async function middleware(request: NextRequest) {
   // supabase.auth.getUser(). This refreshes the session if expired.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 停止/退会ユーザーチェック（/suspended, /account-deleted, /leave-completed,
+  // 停止/退会ユーザーチェック（/account-deleted, /leave-completed,
   // /login, /signup, /api/, /register は除外）
+  // 指示書 #33: /suspended ページを廃止し top page (/) へ統一したため、
+  // isExcluded から /suspended を除外。/ への redirect は matcher で
+  // 自動処理される(top page は middleware ループしない)
   const isExcluded =
-    pathname.startsWith('/suspended') ||
     pathname.startsWith('/account-deleted') ||
     pathname.startsWith('/leave-completed') ||
     pathname.startsWith('/login') ||
@@ -63,6 +65,10 @@ export async function middleware(request: NextRequest) {
     //    停止ユーザーは行き先を意識させず、自然に未認証 LP に戻す。
     //    新規ログインは Supabase 側で ban_duration により拒否される(指示書 #30)
     if (status === 'suspended') {
+      // 既に top page にいる場合は redirect しない(無限ループ防止)
+      // C 案: deleted_pending / deleted_permanent の /account-deleted 誘導は維持しつつ、
+      // suspended の / リダイレクトだけをループから守る最小スキップ
+      if (pathname === '/') return supabaseResponse
       const topUrl = request.nextUrl.clone()
       topUrl.pathname = '/'
       return NextResponse.redirect(topUrl)

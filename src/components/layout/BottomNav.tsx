@@ -22,7 +22,6 @@ const PUBLIC_ROUTE_PREFIXES = [
   '/login',
   '/signup',
   '/register',
-  '/suspended',
   '/verify-email',
   '/auth',
 ] as const
