@@ -58,11 +58,14 @@ export async function middleware(request: NextRequest) {
 
     const status = profile?.status
 
-    // 1) 管理者による停止 → /suspended
+    // 1) 管理者による停止 → / (top page)
+    //    指示書 #33: 「停止 = ログイン不可」モデルへの転換。
+    //    停止ユーザーは行き先を意識させず、自然に未認証 LP に戻す。
+    //    新規ログインは Supabase 側で ban_duration により拒否される(指示書 #30)
     if (status === 'suspended') {
-      const suspendedUrl = request.nextUrl.clone()
-      suspendedUrl.pathname = '/suspended'
-      return NextResponse.redirect(suspendedUrl)
+      const topUrl = request.nextUrl.clone()
+      topUrl.pathname = '/'
+      return NextResponse.redirect(topUrl)
     }
 
     // 2) ユーザー自身の退会 → /account-deleted
