@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { notificationService } from '@/lib/notifications'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { getOrderedUserIds } from '@/utils/userPair'
 
 // 完全に動的（キャッシュ無効）
 export const dynamic = 'force-dynamic'
@@ -50,17 +51,6 @@ function getTodayStartUTC(): Date {
   const todayStartJST = new Date(Date.UTC(jstYear, jstMonth, jstDate, 0, 0, 0, 0))
   const todayStartUTC = new Date(todayStartJST.getTime() - jstOffset)
   return todayStartUTC
-}
-
-/**
- * user1_id / user2_id を順序固定で返す（小さい方がuser1_id）
- */
-function getOrderedUserIds(idA: string, idB: string): { user1_id: string; user2_id: string } {
-  if (idA < idB) {
-    return { user1_id: idA, user2_id: idB }
-  } else {
-    return { user1_id: idB, user2_id: idA }
-  }
 }
 
 export async function POST(request: NextRequest) {

@@ -38,6 +38,7 @@ import {
   formatLanguageName,
   formatNationality
 } from '@/utils/profileFieldFormatters'
+import { getOrderedUserIds } from '@/utils/userPair'
 import {
   formatPersonalityTag,
   formatCultureTag
@@ -427,12 +428,9 @@ function ProfileDetailContent() {
       if (!user || user.id === profileId) return
 
       // matches テーブルは (user1_id, user2_id) を昇順UUIDで順序固定、1ペア1行で記録。
-      // ここでも同じ順序ルールをインラインで適用してから 1 行を直接引く。
-      // 共通ヘルパー (likes/route.ts の getOrderedUserIds) との統合は別タスク。
+      // 共通ヘルパー src/utils/userPair.ts で順序固定を実施。
       // 失敗は console.error で必ず可視化する（サイレント無視禁止）。
-      const [user1_id, user2_id] = user.id < profileId
-        ? [user.id, profileId]
-        : [profileId, user.id]
+      const { user1_id, user2_id } = getOrderedUserIds(user.id, profileId)
 
       const { data: matchData, error: matchError } = await supabase
         .from('matches')
