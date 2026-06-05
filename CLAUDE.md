@@ -1394,7 +1394,7 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
    - サイレント無視するエラーハンドリングは禁止（2026/05/15 でこのログが救った実績あり）
 
 ### 過去事例（追記）
-- 事故 3: matches.{liker_user_id, liked_user_id, is_matched, matched_at}（2026/05/15、コミット 8e824ca3 で修正）— 死コード `src/app/api/matches/{like,matched}/route.ts` から架空カラム名をコピペして profile/[id]/page.tsx に持ち込んだ。マッチ済みユーザーで `isMatched` が常に false に振れ続けた
+- 事故 3: matches.{liker_user_id, liked_user_id, is_matched, matched_at}（2026/05/15、コミット 8e824ca3 で修正）— 死コード `src/app/api/matches/{like,matched}/route.ts` から架空カラム名をコピペして profile/[id]/page.tsx に持ち込んだ。マッチ済みユーザーで `isMatched` が常に false に振れ続けた（2026/06/06 コミット `7af84c4b` で削除済み）
 
 ---
 
@@ -1406,16 +1406,13 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
 
 | ファイル | 死コードの理由 |
 |---|---|
-| `src/app/api/matches/like/route.ts` | UI は `/api/likes` を叩く。matches/like は呼び出し元0件 |
-| `src/app/api/matches/matched/route.ts` | 同上、`/api/likes/received` が後継 |
-| `src/app/api/matches/recommendations/route.ts:133` `.select('liked_user_id')` | `liked_user_id` は matches テーブルに存在しない。要詳細確認 |
 | `src/app/api/profile/route.ts` | `/api/profile` への呼び出し元 0 件（複数 grep パターンで確認）。GET / PUT 両方とも未使用。プロフィール更新は `src/app/api/profile/update/route.ts` POST、`src/utils/saveProfileToDb.ts` 経由が実体。指示書 #31 Phase 2B (2026/05/28) で死コード確定し status ガード追加対象から除外 |
 
-これらのファイルには **架空カラム参照**（`liker_user_id`、`liked_user_id`、`is_matched`、`matched_at`、`action`）が含まれているため、コピペ流用は厳禁。
+過去に存在した `src/app/api/matches/{like,matched}/route.ts` には **架空カラム参照**（`liker_user_id`、`liked_user_id`、`is_matched`、`matched_at`、`action`）があり、2026/06/06 にコミット `7af84c4b` で削除済み。これが過去のコピペ事故（事故 3）の原因だった。同種の架空カラム参照の悪例は「やってはいけないクエリパターン」節を参照。
 
 `profile/route.ts` PUT は `.eq('user_id', user.id)` を使用しており、profiles の PK は `id` であるため二重参照状態（後述「profiles.status 2 層防御」セクションの残課題 ㉜ 参照）。
 
-整理タスクは別途実施予定。
+matches 系死コードは 2026/06/06 にコミット `7af84c4b` で削除済み。`profile/route.ts` の整理（`user_id`/`id` 二重参照、残課題 ㉜ 関連）は将来課題。
 
 ---
 
