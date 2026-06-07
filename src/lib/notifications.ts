@@ -35,7 +35,6 @@ export class NotificationService {
           data,
           is_read: false,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         })
         .select()
         .single()

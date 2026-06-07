@@ -209,9 +209,8 @@ export async function PUT(request: NextRequest) {
     // 通知の既読状態を更新
     const { error: updateError } = await supabase
       .from('notifications')
-      .update({ 
-        is_read: mark_as_read,
-        updated_at: new Date().toISOString()
+      .update({
+        is_read: mark_as_read
       })
       .eq('user_id', user.id)
       .in('id', notification_ids)
