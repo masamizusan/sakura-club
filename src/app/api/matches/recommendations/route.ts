@@ -152,6 +152,22 @@ export async function GET(request: NextRequest) {
     ) ?? []
     console.log('🚫 [recommendations] Blocked users:', blockedIds.length)
 
+    // マッチ済みユーザーを取得（除外用、matches テーブルを直接参照）
+    // 過去のマッチで likes に記録が無いペアも matches を直接見れば確実に除外できる
+    const { data: matchedRecords, error: matchedError } = await supabase
+      .from('matches')
+      .select('user1_id, user2_id')
+      .eq('status', 'matched')
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+
+    if (matchedError) {
+      console.error('[recommendations] matched error:', matchedError.message)
+    }
+    const matchedUserIds = matchedRecords?.map(m =>
+      m.user1_id === user.id ? m.user2_id : m.user1_id
+    ) || []
+    console.log('💕 [recommendations] Matched users (will be excluded):', matchedUserIds.length)
+
     // 候補を取得（存在するカラムのみ指定）
     let query = supabase
       .from('profiles')
@@ -176,6 +192,11 @@ export async function GET(request: NextRequest) {
     // ブロック済みユーザーを除外（双方向）
     if (blockedIds.length > 0) {
       query = query.not('id', 'in', `(${blockedIds.join(',')})`)
+    }
+
+    // マッチ済みユーザーを除外
+    if (matchedUserIds.length > 0) {
+      query = query.not('id', 'in', `(${matchedUserIds.join(',')})`)
     }
 
     if (targetIsJapanese) {
