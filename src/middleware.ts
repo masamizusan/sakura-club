@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
     // profile_initialized=false) で読める。
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('status')
+      .select('status, last_seen_at')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -88,6 +88,25 @@ export async function middleware(request: NextRequest) {
       const deletedUrl = request.nextUrl.clone()
       deletedUrl.pathname = '/account-deleted'
       return NextResponse.redirect(deletedUrl)
+    }
+
+    // 3) ⑫ last_seen_at の間引き更新 (15 分以上経過時のみ)
+    //    - suspended / deleted_* は上で return 済のため、ここに到達するのは active のみ
+    //    - isExcluded パス(/login, /api/ 等)はこの if ブロックの外なので走らない
+    //    - void で fire-and-forget: middleware のレスポンスを遅延させない
+    //    - エラーは console.error でログ（memory #18 サイレント失敗禁止）
+    const LAST_SEEN_INTERVAL_MS = 15 * 60 * 1000
+    const lastSeenAt = profile?.last_seen_at ? new Date(profile.last_seen_at).getTime() : 0
+    if (Date.now() - lastSeenAt > LAST_SEEN_INTERVAL_MS) {
+      void supabase
+        .from('profiles')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('id', user.id)
+        .then(({ error: updateError }) => {
+          if (updateError) {
+            console.error('[middleware] last_seen_at update error:', updateError.message)
+          }
+        })
     }
   }
 
