@@ -180,7 +180,6 @@ export class NotificationService {
       data: params.data || {},
       is_read: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }))
 
     try {
