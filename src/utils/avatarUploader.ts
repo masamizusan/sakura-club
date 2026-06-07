@@ -214,8 +214,7 @@ export async function updateProfileAvatar(
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          avatar_url: uploadResult.publicUrl,
-          updated_at: new Date().toISOString()
+          avatar_url: uploadResult.publicUrl
         })
         .eq('user_id', userId)
 

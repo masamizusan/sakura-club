@@ -33,7 +33,7 @@ const ALLOWED_UPDATE_FIELDS = [
   'personality', 'personality_tags', 'culture_tags',
   'japanese_level', 'english_level', 'language_skills',
   'visit_schedule', 'travel_companion', 'planned_prefectures', 'planned_stations',
-  'profile_initialized', 'updated_at'
+  'profile_initialized'
 ]
 
 export async function POST(request: NextRequest) {
@@ -109,9 +109,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // updated_at を自動追加
-    safeUpdates.updated_at = new Date().toISOString()
-
     console.log('📝 [profile/update] Safe updates:', Object.keys(safeUpdates))
 
     // プロフィール更新（user_idで特定）
@@ -119,7 +116,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .update(safeUpdates)
       .eq('user_id', user.id)
-      .select('id, user_id, name, avatar_url, profile_image, updated_at')
+      .select('id, user_id, name, avatar_url, profile_image')
       .single()
 
     if (updateError) {
