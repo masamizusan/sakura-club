@@ -153,7 +153,7 @@ interface UserProfile {
   hobbies: string[]
   selfIntroduction: string
   profileImage?: string
-  lastSeen: string
+  lastSeen: string | null
   isOnline: boolean
   matchPercentage: number
   commonInterests: string[]
@@ -296,7 +296,7 @@ export default function MatchesPage() {
             hobbies: Array.isArray(profile.interests) ? profile.interests : [],
             selfIntroduction: profile.bio || profile.self_introduction || '',
             profileImage: profile.avatar_url || (Array.isArray(profile.photo_urls) ? profile.photo_urls[0] : null),
-            lastSeen: profile.updated_at || new Date().toISOString(),
+            lastSeen: profile.last_seen_at,
             isOnline: false,
             matchPercentage: 0,
             commonInterests: [],
@@ -509,7 +509,7 @@ export default function MatchesPage() {
                               <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                               {t('onlineNow')}
                             </span>
-                          ) : formatLastSeen(user.lastSeen)}
+                          ) : user.lastSeen ? formatLastSeen(user.lastSeen) : null}
                         </p>
 
                         {user.selfIntroduction && (

@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
         id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, interests,
         occupation, height, body_type, is_verified, profile_initialized,
-        planned_prefectures, created_at
+        planned_prefectures, created_at, last_seen_at
       `)
       .eq('profile_initialized', true)
       .eq('gender', targetGender)
@@ -251,14 +251,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 最終アクティブ(updated_at 近似)
+    // 最終アクティブ(last_seen_at で正確に絞り込む (#⑫))
     const lastActive = params.get('last_active')
     if (lastActive === '24h') {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      query = query.gte('updated_at', since)
+      query = query.gte('last_seen_at', since)
     } else if (lastActive === '7d') {
       const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-      query = query.gte('updated_at', since)
+      query = query.gte('last_seen_at', since)
     }
     // ===== 絞り込みフィルタここまで =====
 
