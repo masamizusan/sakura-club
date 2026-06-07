@@ -176,6 +176,7 @@ export async function GET(request: NextRequest) {
       `)
       .in('id', likerIds)
       .eq('profile_initialized', true)
+      .eq('status', 'active')
 
     if (profilesError) {
       console.error('[likes/received] profiles error:', profilesError.message)

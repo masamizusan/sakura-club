@@ -112,6 +112,7 @@ export async function GET(request: NextRequest) {
       `)
       .in('id', visitorIds)
       .eq('profile_initialized', true)
+      .eq('status', 'active')
 
     if (profilesError) {
       console.error('[footprints] profiles error:', profilesError.message)

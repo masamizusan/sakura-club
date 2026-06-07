@@ -162,6 +162,7 @@ export async function GET(request: NextRequest) {
         planned_prefectures, created_at, last_seen_at
       `)
       .eq('profile_initialized', true)
+      .eq('status', 'active')
       .eq('gender', targetGender)
       .neq('id', myProfile.id)
       .order('created_at', { ascending: false })
