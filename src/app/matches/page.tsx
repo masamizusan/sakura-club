@@ -172,8 +172,29 @@ export default function MatchesPage() {
   const [myProfile, setMyProfile] = useState<MyProfileSummary | null>(null)
 
   // 適用中のフィルタとモーダル下書きフィルタ
-  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<SearchFilters>(() => {
+    try {
+      const saved = localStorage.getItem('sakura:matches:filters')
+      if (!saved) return DEFAULT_FILTERS
+      const parsed = JSON.parse(saved) as Partial<SearchFilters>
+      return {
+        ...DEFAULT_FILTERS,
+        ...parsed,
+      }
+    } catch {
+      return DEFAULT_FILTERS
+    }
+  })
   const [draftFilters, setDraftFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+
+  // filters が変わるたびに localStorage へ保存
+  useEffect(() => {
+    try {
+      localStorage.setItem('sakura:matches:filters', JSON.stringify(filters))
+    } catch {
+      // localStorage が使えない環境（プライベートブラウジング容量超過等）は無視
+    }
+  }, [filters])
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [expandedRegions, setExpandedRegions] = useState<RegionKey[]>([])
 
@@ -584,6 +605,11 @@ export default function MatchesPage() {
                 onClick={() => {
                   setFilters(DEFAULT_FILTERS)
                   setDraftFilters(DEFAULT_FILTERS)
+                  try {
+                    localStorage.removeItem('sakura:matches:filters')
+                  } catch {
+                    // 無視
+                  }
                 }}
               >
                 {t('resetConditions')}
