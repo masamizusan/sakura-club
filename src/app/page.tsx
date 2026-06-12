@@ -22,7 +22,8 @@ const T = {
     menBody: '観光地では出会えない日本がある。地元の食事、静かな神社、何気ない日常の風景。彼女と一緒だから、初めて見えてくるものがある。',
     menCta: '登録する',
     womenTag: '日本人女性の方へ',
-    womenTitle: '日本に興味を持ってくれた彼を、\nあなたの手で迎え入れよう。',
+    womenTitleLine1: '日本に興味を持ってくれた彼を、',
+    womenTitleLine2: 'あなたの手で迎え入れよう。',
     womenSub: 'おもてなしの心で、彼と繋がろう。',
     womenBody: 'プロのガイドじゃなくていい。あなたの日本を、彼と分かち合って。彼はあなたの日常に興味を持っている。それだけで十分特別。',
     womenCta: '無料で始める',
@@ -64,7 +65,8 @@ const T = {
     menBody: "There's a Japan you can't find on tourist maps. Local food, quiet shrines, everyday moments. With her beside you, Japan reveals itself.",
     menCta: 'Get Started',
     womenTag: 'For Japanese Women',
-    womenTitle: 'Welcome him — someone who cherishes Japan\n— with your own hands.',
+    womenTitleLine1: 'Welcome him — someone who cherishes Japan',
+    womenTitleLine2: '— with your own hands.',
     womenSub: 'Connect with him through the spirit of omotenashi.',
     womenBody: "You don't need to be a guide. Just share your Japan with him. He's curious about your everyday life. That's already something special.",
     womenCta: 'Join Free',
@@ -106,7 +108,8 @@ const T = {
     menBody: '관광지에서는 만날 수 없는 일본이 있습니다. 현지 음식, 조용한 신사, 일상의 풍경. 그녀와 함께이기에 처음으로 보이는 것들이 있습니다.',
     menCta: '시작하기',
     womenTag: '일본인 여성 분들께',
-    womenTitle: '일본을 사랑해준 그를\n당신의 손으로 맞이해보세요.',
+    womenTitleLine1: '일본을 사랑해준 그를',
+    womenTitleLine2: '당신의 손으로 맞이해보세요.',
     womenSub: '오모테나시의 마음으로 그와 연결되세요.',
     womenBody: '전문 가이드가 아니어도 됩니다. 당신의 일본을 그와 나눠보세요. 그는 당신의 일상에 관심을 갖고 있습니다. 그것만으로도 충분히 특별합니다.',
     womenCta: '무료로 시작하기',
@@ -148,7 +151,8 @@ const T = {
     menBody: '有一個日本，是旅遊景點找不到的。當地美食、寧靜神社、日常風景。因為有她在身邊，日本才真正展現自己。',
     menCta: '立即開始',
     womenTag: '日本女性',
-    womenTitle: '用你的雙手，\n迎接那個愛上日本的他。',
+    womenTitleLine1: '用你的雙手，',
+    womenTitleLine2: '迎接那個愛上日本的他。',
     womenSub: '以款待之心與他連結。',
     womenBody: '不需要是專業導遊。只需將你的日本與他分享。他對你的日常生活感到好奇，這本身就已經很特別了。',
     womenCta: '免費加入',
@@ -432,7 +436,7 @@ function SplitSection({ t }: { t: Translations }) {
           </div>
           <span className="font-shippori text-xs tracking-widest mb-4"
             style={{ color: 'var(--color-take)', letterSpacing: '0.12em' }}>{t.menTag}</span>
-          <h2 className="font-shippori text-xl md:text-2xl mb-3 whitespace-nowrap"
+          <h2 className="font-shippori text-xl md:text-2xl mb-3"
             style={{ color: 'var(--color-sumi)', letterSpacing: '0.05em', lineHeight: 1.7 }}>
             {t.menTitle}
           </h2>
@@ -463,9 +467,10 @@ function SplitSection({ t }: { t: Translations }) {
           </div>
           <span className="font-shippori text-xs mb-4"
             style={{ color: 'var(--color-beni)', letterSpacing: '0.12em' }}>{t.womenTag}</span>
-          <h2 className="font-shippori text-2xl md:text-3xl whitespace-pre-line mb-3"
+          <h2 className="font-shippori text-xl md:text-3xl mb-3"
             style={{ color: 'var(--color-sumi)', letterSpacing: '0.08em', lineHeight: 1.7 }}>
-            {t.womenTitle}
+            <span className="block">{t.womenTitleLine1}</span>
+            <span className="block">{t.womenTitleLine2}</span>
           </h2>
           <p className="font-cormorant italic text-base mb-5"
             style={{ color: 'var(--color-beni)', letterSpacing: '0.05em' }}>
@@ -537,7 +542,7 @@ function WhySection({ t }: { t: Translations }) {
             style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>
             The real Japan begins with a real connection.
           </p>
-          <h2 className="font-cormorant italic text-2xl md:text-3xl"
+          <h2 className="font-cormorant italic text-xl md:text-3xl"
             style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
