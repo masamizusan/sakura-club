@@ -350,7 +350,7 @@ function HeroSection({ t }: { t: Translations }) {
       {/* コンテンツ */}
       <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
         {/* メインキャッチ */}
-        <p className="text-3xl md:text-5xl animate-fade-in"
+        <p className="text-2xl md:text-5xl animate-fade-in"
           style={{
             fontFamily: "'Cormorant Garamond', 'Shippori Mincho B1', Georgia, serif",
             fontStyle: 'italic',
