@@ -542,7 +542,7 @@ function WhySection({ t }: { t: Translations }) {
             style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>
             The real Japan begins with a real connection.
           </p>
-          <h2 className="font-cormorant italic text-lg md:text-3xl"
+          <h2 className="font-cormorant italic text-base md:text-3xl"
             style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
