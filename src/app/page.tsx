@@ -467,7 +467,7 @@ function SplitSection({ t }: { t: Translations }) {
           </div>
           <span className="font-shippori text-xs mb-4"
             style={{ color: 'var(--color-beni)', letterSpacing: '0.12em' }}>{t.womenTag}</span>
-          <h2 className="font-shippori text-xl md:text-3xl mb-3"
+          <h2 className="font-shippori text-lg md:text-3xl mb-3"
             style={{ color: 'var(--color-sumi)', letterSpacing: '0.08em', lineHeight: 1.7 }}>
             <span className="block">{t.womenTitleLine1}</span>
             <span className="block">{t.womenTitleLine2}</span>
@@ -542,7 +542,7 @@ function WhySection({ t }: { t: Translations }) {
             style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>
             The real Japan begins with a real connection.
           </p>
-          <h2 className="font-cormorant italic text-xl md:text-3xl"
+          <h2 className="font-cormorant italic text-lg md:text-3xl"
             style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
