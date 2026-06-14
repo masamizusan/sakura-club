@@ -10,8 +10,8 @@ import HeroSlideshow from '@/components/HeroSlideshow'
 const T = {
   ja: {
     nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'ログイン', signup: 'Join Free' },
-    heroMainLine1: '本物の日本は、',
-    heroMainLine2: '一つの出会いから始まる。',
+    heroMainLine1: 'あなたは何しに日本に来るの？',
+    heroMainLine2: '日本の日常を、特別な人と。',
     heroSub: '彼女がドアを開けてくれる。あとは日本が語りかけてくる。',
     ctaWomen: '日本人女性（無料）',
     ctaMen: '外国籍男性として登録',
@@ -53,8 +53,8 @@ const T = {
   },
   en: {
     nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'Login', signup: 'Join Free' },
-    heroMainLine1: 'The real Japan begins with',
-    heroMainLine2: 'one real connection.',
+    heroMainLine1: 'Why do you come to Japan?',
+    heroMainLine2: 'Experience everyday Japan with someone special.',
     heroSub: 'She opens the door. Japan does the rest.',
     ctaWomen: 'Japanese Women (Free)',
     ctaMen: 'Foreign Men (Join)',
@@ -96,8 +96,8 @@ const T = {
   },
   ko: {
     nav: { howItWorks: '이용 방법', safety: 'Safety & Trust', login: '로그인', signup: '무료 가입' },
-    heroMainLine1: '진짜 일본은',
-    heroMainLine2: '진짜 만남에서 시작됩니다.',
+    heroMainLine1: '당신은 왜 일본에 오나요?',
+    heroMainLine2: '일본의 일상을, 특별한 사람과 함께.',
     heroSub: '그녀가 문을 열어줍니다. 나머지는 일본이 말해줍니다.',
     ctaWomen: '일본 여성（무료）',
     ctaMen: '외국인 남성으로 가입',
@@ -139,8 +139,8 @@ const T = {
   },
   'zh-tw': {
     nav: { howItWorks: '使用方式', safety: 'Safety & Trust', login: '登入', signup: '免費加入' },
-    heroMainLine1: '真實的日本，',
-    heroMainLine2: '從真實的相遇開始。',
+    heroMainLine1: '你來日本是為了什麼？',
+    heroMainLine2: '與特別的人，共享日本的日常。',
     heroSub: '她為你開啟了門。日本會為你說完剩下的故事。',
     ctaWomen: '日本女性（免費）',
     ctaMen: '外籍男性加入',
