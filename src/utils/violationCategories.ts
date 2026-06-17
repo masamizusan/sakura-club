@@ -10,6 +10,7 @@ import type { SupportedLanguage } from './language'
 
 export type ViolationCategory =
   | 'money'
+  | 'contact_exchange'
   | 'spam'
   | 'redirect'
   | 'inappropriate'
@@ -18,6 +19,7 @@ export type ViolationCategory =
 export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategory, string>> = {
   ja: {
     money: '金銭の要求・送金の勧誘',
+    contact_exchange: '連絡先交換',
     spam: 'スパム・宣伝行為',
     redirect: '外部サイト・他サービスへの誘導',
     inappropriate: '不適切な内容',
@@ -25,6 +27,7 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
   },
   en: {
     money: 'Money requests or solicitation',
+    contact_exchange: 'Contact Exchange',
     spam: 'Spam or promotional content',
     redirect: 'Redirect to external site or service',
     inappropriate: 'Inappropriate content',
@@ -32,6 +35,7 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
   },
   ko: {
     money: '금전 요구・송금 권유',
+    contact_exchange: '연락처 교환',
     spam: '스팸・광고 행위',
     redirect: '외부 사이트・다른 서비스로 유도',
     inappropriate: '부적절한 내용',
@@ -39,6 +43,7 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
   },
   'zh-tw': {
     money: '金錢要求・匯款勸誘',
+    contact_exchange: '聯絡方式交換',
     spam: '垃圾訊息・宣傳行為',
     redirect: '外部網站・其他服務引導',
     inappropriate: '不當內容',
