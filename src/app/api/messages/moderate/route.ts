@@ -9,7 +9,8 @@ const SYSTEM_PROMPT = `
 
 カテゴリ：
 - money: 金銭要求・送金・投資・ギフト
-- spam: LINE/SNS誘導・外部URL・業者的勧誘
+- contact_exchange: LINE ID・メールアドレス・電話番号などの直接連絡先の交換
+- spam: 他の出会い系サービス・マッチングアプリへの誘導、業者的勧誘、外部URL共有
 - redirect: 他サービスへの誘導
 - inappropriate: 性的・ハラスメント・暴力
 - personal_info: 住所・口座・パスワード収集
@@ -82,10 +83,15 @@ export async function POST(req: NextRequest) {
       console.log('フラグ書き込み:', { data: flagData, error: flagError })
 
       if (flagError) {
-        console.error('message_flags書き込みエラー:', flagError)
+        console.error('[moderate] message_flags書き込みエラー:', flagError)
       }
 
-      // 管理者通知
+      // contact_exchange（LINE/メール/電話番号交換）はカウントのみ・管理者通知なし
+      if (judgment.category === 'contact_exchange') {
+        return NextResponse.json({ ok: true, judgment })
+      }
+
+      // それ以外のカテゴリは管理者通知あり
       const adminUserId = process.env.ADMIN_USER_ID
       if (adminUserId) {
         await supabaseAdmin.from('notifications').insert({
