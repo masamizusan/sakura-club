@@ -185,9 +185,12 @@ export async function POST(req: NextRequest) {
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // 4) 物理削除（subscriptions → likes → profiles → auth.users の順）
-    //    profiles と likes は ON DELETE CASCADE で auth.users 経由でも消えるが、
-    //    エラー検知のため明示削除を先に実行する。
+    // 4) 物理削除（subscriptions → likes → auth.users の順）
+    //    profiles は auth.users の ON DELETE CASCADE で自動削除されるため、
+    //    auth.users を先に削除する。auth.users 削除が失敗した時点で中断すれば
+    //    「profiles だけ消えて auth.users が残る」孤児状態を構造的に防げる。
+    //    leave_surveys.user_id は ON DELETE SET NULL、archived_violations は FK なしのため、
+    //    auth.users 削除後も証跡・アンケートは残る。
     // ─────────────────────────────────────────────────────────────────
     await supabaseAdmin.from('subscriptions').delete().eq('user_id', user.id)
 
@@ -196,24 +199,13 @@ export async function POST(req: NextRequest) {
       .delete()
       .or(`liker_id.eq.${user.id},liked_user_id.eq.${user.id}`)
 
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .delete()
-      .eq('id', user.id)
-    if (profileError) {
-      console.error('[LEAVE] profile delete failed:', profileError)
-      return NextResponse.json(
-        { error: 'プロフィールの削除に失敗しました。' },
-        { status: 500 }
-      )
-    }
-
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
     if (authDeleteError) {
       console.error('[LEAVE] auth.users delete failed:', authDeleteError)
-      // この時点で profiles は既に削除済みなので、エラーは記録するが処理は継続。
-      // ユーザーには成功を返すが、運営に通知が必要（実装はフェーズ2で）。
-      console.warn('[LEAVE] CRITICAL: profiles deleted but auth.users remains. user_id:', user.id)
+      return NextResponse.json(
+        { error: '退会処理に失敗しました。しばらく時間をおいて再度お試しください。' },
+        { status: 500 }
+      )
     }
 
     // 5) セッションを破棄（クライアント側で signOut も併用するが、サーバ側でも破棄）
