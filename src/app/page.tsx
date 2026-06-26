@@ -417,6 +417,10 @@ function HeroSection({ t }: { t: Translations }) {
             }}>
             {t.alreadyMember}
           </Link>
+          <p className="text-xs mt-3"
+            style={{ color: 'var(--color-usuzumi)' }}>
+            ※18歳未満の方はご登録いただけません。
+          </p>
         </div>
       </div>
     </section>
