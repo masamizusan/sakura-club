@@ -35,7 +35,7 @@ export default function Header() {
           <Link href="/how-it-works" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('howItWorks')}
           </Link>
-          <Link href="/safety" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
+          <Link href="/#why" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             {t('safety')}
           </Link>
           <Link href="/experiences" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
@@ -105,7 +105,7 @@ export default function Header() {
             <Link href="/how-it-works" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('howItWorks')}
             </Link>
-            <Link href="/safety" className="block text-gray-700 hover:text-[#8b1a2e]">
+            <Link href="/#why" className="block text-gray-700 hover:text-[#8b1a2e]">
               {t('safety')}
             </Link>
             <Link href="/experiences" className="block text-gray-700 hover:text-[#8b1a2e]">

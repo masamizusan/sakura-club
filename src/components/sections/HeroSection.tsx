@@ -22,7 +22,7 @@ function SimpleNavHeader() {
           <a href="/how-it-works" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             仕組み
           </a>
-          <a href="/safety" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
+          <a href="/#why" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             安心・安全
           </a>
           <a href="/experiences" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">

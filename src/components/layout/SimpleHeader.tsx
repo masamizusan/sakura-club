@@ -25,7 +25,7 @@ export default function SimpleHeader() {
           <Link href="/how-it-works" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             仕組み
           </Link>
-          <Link href="/safety" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
+          <Link href="/#why" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
             安心・安全
           </Link>
           <Link href="/experiences" className="text-gray-700 hover:text-[#8b1a2e] transition-colors">
@@ -63,7 +63,7 @@ export default function SimpleHeader() {
             <Link href="/how-it-works" className="block text-gray-700 hover:text-[#8b1a2e]">
               仕組み
             </Link>
-            <Link href="/safety" className="block text-gray-700 hover:text-[#8b1a2e]">
+            <Link href="/#why" className="block text-gray-700 hover:text-[#8b1a2e]">
               安心・安全
             </Link>
             <Link href="/experiences" className="block text-gray-700 hover:text-[#8b1a2e]">

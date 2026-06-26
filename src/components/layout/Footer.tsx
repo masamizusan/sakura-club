@@ -50,7 +50,7 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">サポート</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/safety" className="text-gray-600 hover:text-[#8b1a2e] transition-colors flex items-center">
+                <Link href="/#why" className="text-gray-600 hover:text-[#8b1a2e] transition-colors flex items-center">
                   <Shield className="w-3 h-3 mr-1" />
                   安全性
                 </Link>

@@ -35,6 +35,8 @@ const T = {
     step3Title: '本物の日本を体験する',
     step3Body: '彼女を通して、日本はただの旅先以上のものになる。',
     whyTitle: '本物の日本は、一つの出会いから始まる。',
+    featureJpTitle: '日本発・日本人運営',
+    featureJpBody: '日本の会社が、日本人によって運営するマッチングサービス。安心してご利用いただけます。',
     feature1Title: '安心・安全',
     feature1Body: 'AI審査で身元確認。安心して出会える環境を整えています。',
     feature2Title: '4言語対応',
@@ -78,6 +80,8 @@ const T = {
     step3Title: 'Experience Real Japan',
     step3Body: 'Through her, Japan becomes more than a destination.',
     whyTitle: 'The real Japan begins with a real connection.',
+    featureJpTitle: 'Japanese-run Service',
+    featureJpBody: 'Founded and operated by Japanese, in Japan. A trustworthy platform you can rely on.',
     feature1Title: 'Verified & Safe',
     feature1Body: 'AI-powered identity verification for a safe and trusted experience.',
     feature2Title: '4 Languages',
@@ -121,6 +125,8 @@ const T = {
     step3Title: '진짜 일본 체험하기',
     step3Body: '그녀를 통해 일본은 단순한 여행지 그 이상이 됩니다.',
     whyTitle: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    featureJpTitle: '일본 현지 운영',
+    featureJpBody: '일본 회사가 일본인에 의해 운영하는 매칭 서비스입니다. 안심하고 이용하실 수 있습니다.',
     feature1Title: '안심 · 안전',
     feature1Body: 'AI 심사로 신원 확인. 안심하고 만날 수 있는 환경.',
     feature2Title: '4개 언어 지원',
@@ -164,6 +170,8 @@ const T = {
     step3Title: '體驗真實的日本',
     step3Body: '透過她，日本不再只是一個目的地。',
     whyTitle: '真實的日本，從真實的相遇開始。',
+    featureJpTitle: '日本人營運',
+    featureJpBody: '由日本公司、日本人營運的交友服務。讓您安心使用。',
     feature1Title: '安心・安全',
     feature1Body: 'AI審核身份驗證。為您打造安心的相遇環境。',
     feature2Title: '4種語言支援',
@@ -533,6 +541,7 @@ function HowItWorksSection({ t }: { t: Translations }) {
 // ─── SECTION 4：Why SAKURA CLUB ───────────────────────────────────────────────
 function WhySection({ t }: { t: Translations }) {
   const features = [
+    { icon: '🇯🇵', title: t.featureJpTitle, body: t.featureJpBody },
     { icon: '🪪', title: t.feature1Title, body: t.feature1Body },
     { icon: '🌏', title: t.feature2Title, body: t.feature2Body },
     { icon: '💬', title: t.feature3Title, body: t.feature3Body },
