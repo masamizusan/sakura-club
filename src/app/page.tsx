@@ -35,6 +35,7 @@ const T = {
     step3Title: '本物の日本を体験する',
     step3Body: '彼女を通して、日本はただの旅先以上のものになる。',
     whyTitle: '本物の日本は、一つの出会いから始まる。',
+    whySubtitle: '欧米・台湾・韓国など、日本文化を愛する海外の男性と日本人女性のための出会いの場です。',
     featureJpTitle: '日本発・日本人運営',
     featureJpBody: '日本の会社が、日本人によって運営するマッチングサービス。安心してご利用いただけます。',
     feature1Title: '安心・安全',
@@ -80,6 +81,7 @@ const T = {
     step3Title: 'Experience Real Japan',
     step3Body: 'Through her, Japan becomes more than a destination.',
     whyTitle: 'The real Japan begins with a real connection.',
+    whySubtitle: 'A meeting place for Japanese women and men from the West, Taiwan, Korea, and beyond who love Japanese culture.',
     featureJpTitle: 'Japanese-run Service',
     featureJpBody: 'Founded and operated by Japanese, in Japan. A trustworthy platform you can rely on.',
     feature1Title: 'Verified & Safe',
@@ -125,6 +127,7 @@ const T = {
     step3Title: '진짜 일본 체험하기',
     step3Body: '그녀를 통해 일본은 단순한 여행지 그 이상이 됩니다.',
     whyTitle: '진짜 일본은 진짜 만남에서 시작됩니다.',
+    whySubtitle: '일본 문화를 사랑하는 유럽·미국·대만·한국 등 해외 남성과 일본인 여성을 위한 만남의 장입니다.',
     featureJpTitle: '일본 현지 운영',
     featureJpBody: '일본 회사가 일본인에 의해 운영하는 매칭 서비스입니다. 안심하고 이용하실 수 있습니다.',
     feature1Title: '안심 · 안전',
@@ -170,6 +173,7 @@ const T = {
     step3Title: '體驗真實的日本',
     step3Body: '透過她，日本不再只是一個目的地。',
     whyTitle: '真實的日本，從真實的相遇開始。',
+    whySubtitle: '為熱愛日本文化的歐美、台灣、韓國等海外男性與日本女性而打造的相遇之所。',
     featureJpTitle: '日本人營運',
     featureJpBody: '由日本公司、日本人營運的交友服務。讓您安心使用。',
     feature1Title: '安心・安全',
@@ -557,6 +561,10 @@ function WhySection({ t }: { t: Translations }) {
           </p>
           <h2 className="font-cormorant italic text-base md:text-3xl"
             style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
+          <p className="text-sm md:text-base mt-4 max-w-2xl mx-auto text-center"
+            style={{ color: 'var(--color-usuzumi)', letterSpacing: '0.05em', lineHeight: 1.8 }}>
+            {t.whySubtitle}
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {features.map(f => (
