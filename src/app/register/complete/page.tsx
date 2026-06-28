@@ -70,7 +70,7 @@ function RegisterCompleteContent() {
                     <SelectItem value="ja">日本語</SelectItem>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="ko">한국어</SelectItem>
-                    <SelectItem value="zh-tw">繁體中文</SelectItem>
+                    <SelectItem value="zh-tw">繁體中文（台灣）</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

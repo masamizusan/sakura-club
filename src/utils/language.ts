@@ -78,7 +78,7 @@ export function getLanguageDisplayName(language: SupportedLanguage): string {
     'ja': '日本語',
     'en': 'English',
     'ko': '한국어',
-    'zh-tw': '繁體中文'
+    'zh-tw': '繁體中文（台灣）'
   }
 
   return displayNames[language]
