@@ -45,7 +45,7 @@ const T = {
     feature3Title: '翻訳機能内蔵',
     feature3Body: 'メッセージを送る前に翻訳確認。あなたの言葉で届けよう。会話しながら、言語も身につく。',
     feature4Title: '文化交流',
-    feature4Body: '観光地じゃない。地元の人が愛する日本を、一緒に。',
+    feature4Body: 'あなたの好きな日本で、出会いが始まる。',
     planTitle: 'あなたの日本物語を、始めよう。',
     planFree: '日本人女性は、完全無料。',
     planSub: '一つの出会いから。たくさんの日本が、見えてくる。',
