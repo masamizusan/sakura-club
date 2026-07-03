@@ -41,7 +41,7 @@ const T = {
     feature1Title: '安心・安全',
     feature1Body: 'AI審査で身元確認。安心して出会える環境を整えています。',
     feature2Title: '4言語対応',
-    feature2Body: '日本語・英語・韓国語・繁体字中国語対応。言語が違っても、気持ちは伝わる。',
+    feature2Body: '日本語・英語・韓国語・台湾語（繁体字）対応。言語が違っても、気持ちは伝わる。',
     feature3Title: '翻訳機能内蔵',
     feature3Body: 'メッセージを送る前に翻訳確認。あなたの言葉で、彼・彼女に届けよう。',
     feature4Title: '文化交流',
