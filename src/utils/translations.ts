@@ -1261,7 +1261,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
 
     login: {
       title: 'ログイン',
-      subtitle: 'アカウントにログインして文化体験を楽しみましょう',
+      subtitle: '日本の中へ、一緒に入ろう。',
       emailAddress: 'メールアドレス',
       emailPlaceholder: 'your-email@example.com',
       password: 'パスワード',
