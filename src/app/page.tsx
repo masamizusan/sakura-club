@@ -14,6 +14,7 @@ const T = {
     heroMainLine2: '日本の日常を、特別な人と。',
     heroSub: '日本を愛する海外の男性と、日本人女性をつなぐ出会いの場。',
     ageNotice: '※18歳未満の方はご登録いただけません。',
+    womenOnlyNotice: '※日本人女性の方のみご登録いただけます',
     ctaWomen: '日本人女性（無料）',
     ctaMen: '海外の男性として登録',
     alreadyMember: 'すでに登録済みの方はこちら',
@@ -61,6 +62,7 @@ const T = {
     heroMainLine2: 'Experience everyday Japan with someone special.',
     heroSub: 'Step inside Japan, together.',
     ageNotice: '※Must be 18 years or older to register.',
+    womenOnlyNotice: '※Open to Japanese women only',
     ctaWomen: 'Japanese Women (Free)',
     ctaMen: 'Join as International Men',
     alreadyMember: 'Already a member? Sign in',
@@ -108,6 +110,7 @@ const T = {
     heroMainLine2: '일본의 일상을, 특별한 사람과 함께.',
     heroSub: '일본 안으로, 함께 들어가자.',
     ageNotice: '※18세 미만은 가입하실 수 없습니다.',
+    womenOnlyNotice: '※일본인 여성만 가입하실 수 있습니다',
     ctaWomen: '일본 여성（무료）',
     ctaMen: '해외 남성으로 가입',
     alreadyMember: '이미 회원이신가요? 로그인',
@@ -155,6 +158,7 @@ const T = {
     heroMainLine2: '與特別的人，共享日本的日常。',
     heroSub: '一起走進日本的內裡。',
     ageNotice: '※未滿18歲者不得註冊。',
+    womenOnlyNotice: '※僅限日本女性註冊',
     ctaWomen: '日本女性（免費）',
     ctaMen: '海外男性加入',
     alreadyMember: '已是會員？立即登入',
@@ -401,11 +405,17 @@ function HeroSection({ t }: { t: Translations }) {
 
         {/* CTAボタン */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up animate-delay-600">
-          <Link href="/signup?gender=female"
-            className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
-            {t.ctaWomen}
-          </Link>
+          <div className="flex flex-col items-center">
+            <Link href="/signup?gender=female"
+              className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
+              style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
+              {t.ctaWomen}
+            </Link>
+            <p className="text-xs mt-2 text-center"
+              style={{ color: 'var(--color-usuzumi)' }}>
+              {t.womenOnlyNotice}
+            </p>
+          </div>
           <Link href="/signup?gender=male"
             className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
             style={{
