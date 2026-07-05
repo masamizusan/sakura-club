@@ -416,19 +416,22 @@ function HeroSection({ t }: { t: Translations }) {
               {t.womenOnlyNotice}
             </p>
           </div>
-          <Link href="/signup?gender=male"
-            className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
-            style={{
-              border: '1.5px solid var(--color-gold)',
-              color: 'var(--color-sumi)',
-              backgroundColor: 'rgba(245, 235, 224, 0.85)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              fontWeight: 300,
-              letterSpacing: '0.08em',
-            }}>
-            {t.ctaMen}
-          </Link>
+          <div className="flex flex-col items-center">
+            <Link href="/signup?gender=male"
+              className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 w-full text-center"
+              style={{
+                border: '1.5px solid var(--color-gold)',
+                color: 'var(--color-sumi)',
+                backgroundColor: 'rgba(245, 235, 224, 0.85)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                fontWeight: 300,
+                letterSpacing: '0.08em',
+              }}>
+              {t.ctaMen}
+            </Link>
+            <p className="text-xs mt-2 opacity-0">&nbsp;</p>
+          </div>
         </div>
 
         {/* 再訪ユーザー向けログインリンク（kikonclub.com 参考の動線分離） */}
