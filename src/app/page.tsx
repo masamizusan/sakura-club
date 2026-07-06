@@ -17,6 +17,7 @@ const T = {
     womenOnlyNotice: '※日本人女性の方のみご登録いただけます',
     ctaWomen: '日本人女性（無料）',
     ctaMen: '海外の男性として登録',
+    ctaNote: '※日本人女性の方のみご登録いただけます',
     alreadyMember: 'すでに登録済みの方はこちら',
     menTag: '海外の男性の方へ',
     menTitle: '日本の中へ、一緒に入ろう。',
@@ -65,6 +66,7 @@ const T = {
     womenOnlyNotice: '※Open to Japanese women only',
     ctaWomen: 'Japanese Women (Free)',
     ctaMen: 'Join as International Men',
+    ctaNote: '※ Open to Japanese women only',
     alreadyMember: 'Already a member? Sign in',
     menTag: 'For International Men',
     menTitle: 'Step inside Japan, together.',
@@ -113,6 +115,7 @@ const T = {
     womenOnlyNotice: '※일본인 여성만 가입하실 수 있습니다',
     ctaWomen: '일본 여성（무료）',
     ctaMen: '해외 남성으로 가입',
+    ctaNote: '※ 일본 여성 전용 서비스입니다',
     alreadyMember: '이미 회원이신가요? 로그인',
     menTag: '해외 남성 분들께',
     menTitle: '일본 안으로, 함께 들어가자.',
@@ -161,6 +164,7 @@ const T = {
     womenOnlyNotice: '※僅限日本女性註冊',
     ctaWomen: '日本女性（免費）',
     ctaMen: '海外男性加入',
+    ctaNote: '※ 僅限日本女性註冊',
     alreadyMember: '已是會員？立即登入',
     menTag: '海外男性',
     menTitle: '一起走進日本的內裡。',
@@ -638,6 +642,9 @@ function CtaSection({ t }: { t: Translations }) {
             {t.ctaMen}
           </Link>
         </div>
+        <p className="mt-6 font-shippori text-xs text-white/50 text-center">
+          {t.ctaNote}
+        </p>
       </div>
     </section>
   )
