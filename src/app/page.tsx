@@ -641,11 +641,13 @@ function CtaSection({ t }: { t: Translations }) {
               {t.ctaNote}
             </p>
           </div>
-          <Link href="/signup?gender=male"
-            className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 min-w-[200px]"
-            style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-gold)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
-            {t.ctaMen}
-          </Link>
+          <div className="flex flex-col items-center">
+            <Link href="/signup?gender=male"
+              className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 min-w-[200px]"
+              style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-gold)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
+              {t.ctaMen}
+            </Link>
+          </div>
         </div>
       </div>
     </section>
