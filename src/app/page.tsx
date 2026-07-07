@@ -631,20 +631,22 @@ function CtaSection({ t }: { t: Translations }) {
           {t.ctaSub}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/signup?gender=female"
-            className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
-            style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
-            {t.ctaWomen}
-          </Link>
+          <div className="flex flex-col items-center gap-1">
+            <Link href="/signup?gender=female"
+              className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
+              style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
+              {t.ctaWomen}
+            </Link>
+            <p className="font-shippori text-xs text-white/40">
+              {t.ctaNote}
+            </p>
+          </div>
           <Link href="/signup?gender=male"
             className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70"
             style={{ border: '1.5px solid var(--color-gold)', color: 'var(--color-gold)', backgroundColor: 'transparent', fontWeight: 300, letterSpacing: '0.08em' }}>
             {t.ctaMen}
           </Link>
         </div>
-        <p className="mt-6 font-shippori text-xs text-white/50 text-center">
-          {t.ctaNote}
-        </p>
       </div>
     </section>
   )
