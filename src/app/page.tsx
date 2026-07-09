@@ -278,7 +278,7 @@ export default function LandingPage() {
       <HeroSection t={t} language={currentLanguage} />
       <SplitSection t={t} />
       <HowItWorksSection t={t} />
-      <WhySection t={t} />
+      <WhySection t={t} language={currentLanguage} />
       <CtaSection t={t} language={currentLanguage} />
       <Footer t={t} />
     </div>
@@ -573,7 +573,7 @@ function HowItWorksSection({ t }: { t: Translations }) {
 }
 
 // ─── SECTION 4：Why SAKURA CLUB ───────────────────────────────────────────────
-function WhySection({ t }: { t: Translations }) {
+function WhySection({ t, language }: { t: Translations; language: string }) {
   const features = [
     { icon: '🇯🇵', title: t.featureJpTitle, body: t.featureJpBody },
     { icon: '🪪', title: t.feature1Title, body: t.feature1Body },
@@ -585,7 +585,7 @@ function WhySection({ t }: { t: Translations }) {
     <section id="why" className="py-24 scroll-fade" style={{ backgroundColor: 'var(--color-washi)' }}>
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16">
-          <p className="font-cormorant italic text-base mb-2"
+          <p className={`font-cormorant italic text-base mb-2${language === 'en' ? ' hidden' : ''}`}
             style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.08em' }}>
             The real Japan begins with a real connection.
           </p>
