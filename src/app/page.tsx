@@ -9,7 +9,7 @@ import HeroSlideshow from '@/components/HeroSlideshow'
 // ─── 翻訳（全面改訂版） ──────────────────────────────────────────────────────
 const T = {
   ja: {
-    nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'ログイン', signup: 'Join Free' },
+    nav: { howItWorks: 'ご利用の流れ', safety: '安心・安全', login: 'ログイン', signup: 'Join Free' },
     heroMainLine1: 'あなたは何しに日本に来るの？',
     heroMainLine2: '日本の日常を、特別な人と。',
     heroSub: '日本を愛する海外の男性と、日本人女性をつなぐ出会いの場。',
@@ -107,7 +107,7 @@ const T = {
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   ko: {
-    nav: { howItWorks: '이용 방법', safety: 'Safety & Trust', login: '로그인', signup: '무료 가입' },
+    nav: { howItWorks: '이용 방법', safety: '안심・안전', login: '로그인', signup: '무료 가입' },
     heroMainLine1: '당신은 왜 일본에 오나요?',
     heroMainLine2: '일본의 일상을, 특별한 사람과 함께.',
     heroSub: '일본을 사랑하는 해외 남성과 일본인 여성이 만나는 곳.',
@@ -156,7 +156,7 @@ const T = {
     footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
   },
   'zh-tw': {
-    nav: { howItWorks: '使用方式', safety: 'Safety & Trust', login: '登入', signup: '免費加入' },
+    nav: { howItWorks: '使用方式', safety: '安心・安全', login: '登入', signup: '免費加入' },
     heroMainLine1: '你來日本是為了什麼？',
     heroMainLine2: '與特別的人，共享日本的日常。',
     heroSub: '連結熱愛日本的海外男性與日本女性的相遇之所。',
