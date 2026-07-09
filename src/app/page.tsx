@@ -271,7 +271,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--color-washi)' }}>
       <Nav t={t} />
-      <HeroSection t={t} />
+      <HeroSection t={t} language={currentLanguage} />
       <SplitSection t={t} />
       <HowItWorksSection t={t} />
       <WhySection t={t} />
@@ -345,7 +345,7 @@ function Nav({ t }: { t: Translations }) {
 }
 
 // ─── SECTION 1：Hero ──────────────────────────────────────────────────────────
-function HeroSection({ t }: { t: Translations }) {
+function HeroSection({ t, language }: { t: Translations; language: string }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: 'var(--color-washi)' }}>
@@ -388,7 +388,12 @@ function HeroSection({ t }: { t: Translations }) {
             lineHeight: 1.7,
           }}>
           <span className="block">{t.heroMainLine1}</span>
-          <span className="block">{t.heroMainLine2}</span>
+          <span
+            className="block"
+            style={language === 'ko' ? { fontSize: 'clamp(1.4rem, 3.2vw, 2.4rem)' } : undefined}
+          >
+            {t.heroMainLine2}
+          </span>
         </p>
 
         {/* 区切り線 */}
