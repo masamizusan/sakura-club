@@ -29,7 +29,7 @@
 
 /* フォントユーティリティ */
 .font-serif-jp   { font-family: var(--font-noto-serif-jp), serif; }
-.font-cormorant  { font-family: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif; }
+.font-cormorant  { font-family: var(--font-cormorant), 'Cormorant Garamond', 'Shippori Mincho B1', Georgia, serif; }
 .font-shippori   { font-family: 'Shippori Mincho B1', var(--font-noto-serif-jp), serif; }
 .font-zen-kaku   { font-family: 'Zen Kaku Gothic New', var(--font-noto-sans-jp), sans-serif; }
 
