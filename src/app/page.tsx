@@ -587,7 +587,7 @@ function WhySection({ t }: { t: Translations }) {
           </p>
           <h2 className="font-cormorant italic text-base md:text-3xl"
             style={{ color: 'var(--color-sumi)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.whyTitle}</h2>
-          <p className="text-sm md:text-base mt-4 max-w-2xl mx-auto text-center"
+          <p className="text-sm md:text-base mt-4 max-w-3xl mx-auto text-center"
             style={{ color: 'var(--color-usuzumi)', letterSpacing: '0.05em', lineHeight: 1.8 }}>
             {t.whySubtitle}
           </p>
