@@ -275,7 +275,7 @@ export default function LandingPage() {
       <SplitSection t={t} />
       <HowItWorksSection t={t} />
       <WhySection t={t} />
-      <CtaSection t={t} />
+      <CtaSection t={t} language={currentLanguage} />
       <Footer t={t} />
     </div>
   )
@@ -610,7 +610,7 @@ function WhySection({ t }: { t: Translations }) {
 }
 
 // ─── SECTION 6：CTA ───────────────────────────────────────────────────────────
-function CtaSection({ t }: { t: Translations }) {
+function CtaSection({ t, language }: { t: Translations; language: string }) {
   return (
     <section className="relative py-28 overflow-hidden scroll-fade" style={{ backgroundColor: 'var(--color-sumi)' }}>
       <div className="absolute left-0 top-0 h-full w-16 opacity-10 pointer-events-none animate-bamboo">
@@ -622,7 +622,7 @@ function CtaSection({ t }: { t: Translations }) {
       </div>
       <div className="relative z-10 text-center px-6 max-w-2xl mx-auto">
         <p className="font-cormorant italic text-3xl md:text-5xl leading-tight mb-4 whitespace-pre-line"
-          style={{ color: '#fff', fontWeight: 300, letterSpacing: '0.05em', lineHeight: 1.7 }}>
+          style={{ color: '#fff', fontWeight: 300, letterSpacing: '0.05em', lineHeight: 1.7, fontSize: language === 'zh-tw' ? 'clamp(1.2rem, 2.8vw, 2.1rem)' : undefined }}>
           {t.ctaTitle}
         </p>
         <div className="w-16 h-px mx-auto my-6" style={{ backgroundColor: 'var(--color-gold)' }} />
