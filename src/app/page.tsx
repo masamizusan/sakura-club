@@ -30,6 +30,7 @@ const T = {
     womenSub: 'おもてなしの心は、あなたの世界も広げていく。',
     womenBody: 'あなたの日本を、彼と分かち合って。彼はあなたの日常に興味を持っている。それだけで十分特別。',
     womenCta: '無料で始める',
+    howEyebrow: 'ご利用の流れ',
     howTitle: '出会いから、日本体験へ。',
     step1Title: 'プロフィールを作成',
     step1Body: 'あなたのことを教えてください。好きな場所、興味のある文化、大切にしていること。',
@@ -79,6 +80,7 @@ const T = {
     womenSub: 'The spirit of omotenashi will broaden your world too.',
     womenBody: "Share your Japan with him. He's curious about your everyday life. That's already something special.",
     womenCta: 'Join Free',
+    howEyebrow: 'How It Works',
     howTitle: 'From connection to experience.',
     step1Title: 'Create Your Profile',
     step1Body: 'Tell us about yourself. Your favorite places, your culture, what matters to you.',
@@ -128,6 +130,7 @@ const T = {
     womenSub: '오모테나시의 마음은, 당신의 세계도 넓혀간다.',
     womenBody: '당신의 일본을 그와 나눠보세요. 그는 당신의 일상에 관심을 갖고 있습니다. 그것만으로도 충분히 특별합니다.',
     womenCta: '무료로 시작하기',
+    howEyebrow: '이용 방법',
     howTitle: '만남에서 일본 체험으로.',
     step1Title: '프로필 만들기',
     step1Body: '당신에 대해 알려주세요. 좋아하는 장소, 관심 있는 문화, 소중히 여기는 것들.',
@@ -177,6 +180,7 @@ const T = {
     womenSub: '款待之心，也將拓展你自己的世界。',
     womenBody: '將你的日本與他分享。他對你的日常生活感到好奇，這本身就已經很特別了。',
     womenCta: '免費加入',
+    howEyebrow: '使用方式',
     howTitle: '從相遇到體驗日本。',
     step1Title: '建立個人檔案',
     step1Body: '告訴我們關於你的事。喜愛的地方、感興趣的文化、珍視的事物。',
@@ -545,7 +549,7 @@ function HowItWorksSection({ t }: { t: Translations }) {
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16">
           <p className="font-cormorant italic text-base mb-2"
-            style={{ color: 'var(--color-gold)', fontWeight: 300, letterSpacing: '0.08em' }}>How It Works</p>
+            style={{ color: 'var(--color-gold)', fontWeight: 300, letterSpacing: '0.08em' }}>{t.howEyebrow}</p>
           <h2 className="font-shippori text-2xl md:text-3xl"
             style={{ color: '#fff', letterSpacing: '0.1em', lineHeight: 1.7 }}>{t.howTitle}</h2>
         </div>
