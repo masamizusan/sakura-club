@@ -12,7 +12,7 @@ const T = {
     nav: { howItWorks: 'ご利用の流れ', safety: '安心・安全', login: 'ログイン', signup: 'Join Free' },
     heroMainLine1: 'あなたは何しに日本に来るの？',
     heroMainLine2: '日本の日常を、特別な人と。',
-    heroSub: '日本を愛する海外の男性と、日本人女性をつなぐ出会いの場。',
+    heroSub: '日本を愛する海外の男性と、\n日本人女性をつなぐ出会いの場。',
     ageNotice: '※18歳未満の方はご登録いただけません。',
     womenOnlyNotice: '※日本人女性の方のみご登録いただけます',
     ctaWomen: '日本人女性（無料）',
@@ -410,7 +410,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
           style={{ backgroundColor: 'var(--color-gold)' }} />
 
         {/* サブコピー */}
-        <p className="text-base md:text-lg animate-fade-up animate-delay-400"
+        <p className="text-base md:text-lg animate-fade-up animate-delay-400 whitespace-pre-line"
           style={{
             fontFamily: "'Shippori Mincho B1', var(--font-noto-serif-jp), serif",
             fontWeight: 400,
