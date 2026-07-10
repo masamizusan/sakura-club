@@ -391,7 +391,12 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
             letterSpacing: '0.05em',
             lineHeight: 1.7,
           }}>
-          <span className="block">{t.heroMainLine1}</span>
+          <span
+            className="block"
+            style={language === 'ja' ? { fontSize: 'clamp(1.2rem, 5vw, 1.8rem)' } : undefined}
+          >
+            {t.heroMainLine1}
+          </span>
           <span
             className="block"
             style={language === 'ko' ? { fontSize: 'clamp(1.4rem, 3.2vw, 2.4rem)' } : undefined}
@@ -410,7 +415,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
             fontFamily: "'Shippori Mincho B1', var(--font-noto-serif-jp), serif",
             fontWeight: 400,
             color: 'var(--color-beni)',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.05em',
             lineHeight: 2.0,
           }}>
           {t.heroSub}
