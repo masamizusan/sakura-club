@@ -425,7 +425,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up animate-delay-600">
           <div className="flex flex-col items-center">
             <Link href="/signup?gender=female"
-              className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80"
+              className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80 min-w-[200px]"
               style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
               {t.ctaWomen}
             </Link>
@@ -436,7 +436,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
           </div>
           <div className="flex flex-col items-center">
             <Link href="/signup?gender=male"
-              className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 w-full text-center"
+              className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 min-w-[200px] text-center"
               style={{
                 border: '1.5px solid var(--color-gold)',
                 color: 'var(--color-sumi)',
