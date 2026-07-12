@@ -429,7 +429,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
               style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
               {t.ctaWomen}
             </Link>
-            <p className="text-xs mt-2 text-center"
+            <p className="text-xs mt-2 text-center max-w-[200px] whitespace-normal"
               style={{ color: 'var(--color-usuzumi)' }}>
               {t.womenOnlyNotice}
             </p>
