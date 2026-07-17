@@ -422,19 +422,13 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
         </p>
 
         {/* CTAボタン */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up animate-delay-600">
-          <div className="flex flex-col items-center min-w-[200px]">
+        <div className="flex flex-col items-center mt-12 animate-fade-up animate-delay-600">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup?gender=female"
               className="font-zen-kaku px-8 py-3 rounded-full text-white text-sm transition-opacity hover:opacity-80 min-w-[200px]"
               style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
               {t.ctaWomen}
             </Link>
-            <p className="text-xs mt-2 text-center max-w-[200px] whitespace-normal"
-              style={{ color: 'var(--color-usuzumi)' }}>
-              {t.womenOnlyNotice}
-            </p>
-          </div>
-          <div className="flex flex-col items-center min-w-[200px]">
             <Link href="/signup?gender=male"
               className="font-zen-kaku px-8 py-3 rounded-full text-sm transition-opacity hover:opacity-70 min-w-[200px] text-center"
               style={{
@@ -448,8 +442,10 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
               }}>
               {t.ctaMen}
             </Link>
-            <p className="text-xs mt-2 opacity-0">&nbsp;</p>
           </div>
+          <p className="text-xs mt-2 text-center" style={{ color: 'var(--color-usuzumi)' }}>
+            {t.womenOnlyNotice}
+          </p>
         </div>
 
         {/* 再訪ユーザー向けログインリンク（kikonclub.com 参考の動線分離） */}
