@@ -183,7 +183,7 @@ const T = {
     howEyebrow: '使用方式',
     howTitle: '從相遇到體驗日本。',
     step1Title: '建立個人檔案',
-    step1Body: '告訴我們關於你的事。喜愛的地方、感興趣的文化、珍視的事物。',
+    step1Body: '告訴我們關於你的事。喜愛的地方、感興趣的文化、珍視之物。',
     step2Title: '尋找緣分',
     step2Body: '熱愛日本的海外男性與日本女性相遇的地方。',
     step3Title: '體驗真實的日本',
