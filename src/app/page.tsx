@@ -56,7 +56,12 @@ const T = {
     planMonthly: '月額', plan3month: '3ヶ月', plan6month: '6ヶ月', planYearly: '年額', planPopular: 'おすすめ',
     ctaTitle: 'ここから始まる、\nあなただけの日本。',
     ctaSub: '日本を愛してくれた彼を、あなたの日本へ。',
-    footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
+    footerNav: [
+      { label: 'About', href: '/about' },
+      { label: '安心・安全', href: '/#why' },
+      { label: 'プライバシー', href: '/privacy' },
+      { label: '利用規約', href: '/terms' },
+    ],
   },
   en: {
     nav: { howItWorks: 'How It Works', safety: 'Safety & Trust', login: 'Login', signup: 'Join Free' },
@@ -106,7 +111,12 @@ const T = {
     planMonthly: 'Monthly', plan3month: '3 Months', plan6month: '6 Months', planYearly: 'Annual', planPopular: 'Popular',
     ctaTitle: 'Your Japan starts here.',
     ctaSub: 'Welcome him — the one who fell in love with Japan — into your Japan.',
-    footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
+    footerNav: [
+      { label: 'About', href: '/about' },
+      { label: 'Safety', href: '/#why' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
+    ],
   },
   ko: {
     nav: { howItWorks: '이용 방법', safety: '안심・안전', login: '로그인', signup: '무료 가입' },
@@ -156,7 +166,12 @@ const T = {
     planMonthly: '월간', plan3month: '3개월', plan6month: '6개월', planYearly: '연간', planPopular: '추천',
     ctaTitle: '진짜 일본은 진짜 만남에서 시작됩니다.',
     ctaSub: '당신이 좋아하는 일본에서, 특별한 만남이 시작됩니다.',
-    footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
+    footerNav: [
+      { label: 'About', href: '/about' },
+      { label: '안심・안전', href: '/#why' },
+      { label: '개인정보', href: '/privacy' },
+      { label: '이용약관', href: '/terms' },
+    ],
   },
   'zh-tw': {
     nav: { howItWorks: '使用方式', safety: '安心・安全', login: '登入', signup: '免費加入' },
@@ -206,7 +221,12 @@ const T = {
     planMonthly: '月繳', plan3month: '3個月', plan6month: '6個月', planYearly: '年繳', planPopular: '推薦',
     ctaTitle: '真實的日本，從真實的相遇開始。',
     ctaSub: '從你熱愛的日本出發，遇見那個特別的人。',
-    footerNav: ['About', 'Safety', 'Privacy', 'Terms'],
+    footerNav: [
+      { label: 'About', href: '/about' },
+      { label: '安心・安全', href: '/#why' },
+      { label: '隱私政策', href: '/privacy' },
+      { label: '使用條款', href: '/terms' },
+    ],
   },
 }
 
@@ -674,8 +694,8 @@ function Footer({ t }: { t: Translations }) {
         <span className="font-cormorant" style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 300, letterSpacing: '0.25em' }}>SAKURA CLUB</span>
         <nav className="flex gap-6">
           {t.footerNav.map(item => (
-            <a key={item} href="#" className="font-zen-kaku text-xs transition-opacity hover:opacity-60"
-              style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 300, letterSpacing: '0.08em' }}>{item}</a>
+            <a key={item.label} href={item.href} className="font-zen-kaku text-xs transition-opacity hover:opacity-60"
+              style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 300, letterSpacing: '0.08em' }}>{item.label}</a>
           ))}
         </nav>
         <p className="font-zen-kaku text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 300 }}>© 2026 SAKURA CLUB</p>
