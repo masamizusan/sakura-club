@@ -1261,7 +1261,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
 
     login: {
       title: 'ログイン',
-      subtitle: '日本の中へ、一緒に入ろう。',
+      subtitle: 'あなたの知らない日本へ。',
       emailAddress: 'メールアドレス',
       emailPlaceholder: 'your-email@example.com',
       password: 'パスワード',
@@ -1929,7 +1929,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
 
     login: {
       title: 'Login',
-      subtitle: 'Log in to your account to enjoy cultural experiences',
+      subtitle: 'Discover a Japan you\'ve never known.',
       emailAddress: 'Email Address',
       emailPlaceholder: 'your-email@example.com',
       password: 'Password',
@@ -2597,7 +2597,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
 
     login: {
       title: '로그인',
-      subtitle: '계정에 로그인하여 문화 체험을 즐겨보세요',
+      subtitle: '당신이 몰랐던 일본으로.',
       emailAddress: '이메일 주소',
       emailPlaceholder: 'your-email@example.com',
       password: '비밀번호',
@@ -3264,7 +3264,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
 
     login: {
       title: '登入',
-      subtitle: '登入您的帳戶以享受文化體驗',
+      subtitle: '前往你不曾認識的日本。',
       emailAddress: '電子郵件地址',
       emailPlaceholder: 'your-email@example.com',
       password: '密碼',
