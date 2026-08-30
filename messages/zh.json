@@ -149,65 +149,65 @@
     "searchConversations": "搜尋對話..."
   },
   "experiences": {
-    "title": "文化体验",
-    "subtitle": "体验日本传统文化，享受新的邂逅",
-    "createExperience": "创建新体验",
-    "joinExperience": "参加",
-    "viewDetails": "查看详情",
-    "category": "类别",
+    "title": "文化體驗",
+    "subtitle": "體驗日本傳統文化，享受新的邂逅",
+    "createExperience": "建立新體驗",
+    "joinExperience": "參加",
+    "viewDetails": "查看詳情",
+    "category": "類別",
     "date": "日期",
-    "time": "时间",
-    "price": "价格",
-    "participants": "参与者",
-    "maxParticipants": "最大参与人数",
-    "location": "地点",
-    "organizer": "组织者",
+    "time": "時間",
+    "price": "價格",
+    "participants": "參與者",
+    "maxParticipants": "最大參與人數",
+    "location": "地點",
+    "organizer": "組織者",
     "description": "描述",
-    "included": "包含内容",
-    "toBring": "需要携带",
-    "requirements": "参与要求",
-    "upcoming": "即将进行",
-    "available": "可参加",
-    "full": "已满",
+    "included": "包含內容",
+    "toBring": "需要攜帶",
+    "requirements": "參與要求",
+    "upcoming": "即將進行",
+    "available": "可參加",
+    "full": "已滿",
     "completed": "已完成",
-    "noExperiences": "未找到体验",
-    "experienceCreated": "体验创建成功",
-    "joinSuccess": "成功参与体验",
+    "noExperiences": "未找到體驗",
+    "experienceCreated": "體驗建立成功",
+    "joinSuccess": "成功參與體驗",
     "categories": {
       "tea-ceremony": "茶道",
-      "calligraphy": "书道",
+      "calligraphy": "書道",
       "cooking": "料理",
       "flower-arrangement": "花道",
       "martial-arts": "武道",
-      "traditional-crafts": "传统工艺",
-      "music": "音乐",
+      "traditional-crafts": "傳統工藝",
+      "music": "音樂",
       "dance": "舞蹈",
-      "festival": "节庆",
+      "festival": "節慶",
       "other": "其他"
     }
   },
   "reviews": {
-    "title": "评价",
-    "writeReview": "写评价",
-    "rating": "评分",
-    "reviewText": "评价内容",
-    "anonymous": "匿名发布",
-    "postReview": "发布评价",
-    "editReview": "编辑评价",
-    "deleteReview": "删除评价",
-    "noReviews": "暂无评价",
-    "averageRating": "平均评分",
-    "reviewCount": "{count}条评价",
+    "title": "評價",
+    "writeReview": "寫評價",
+    "rating": "評分",
+    "reviewText": "評價內容",
+    "anonymous": "匿名發布",
+    "postReview": "發布評價",
+    "editReview": "編輯評價",
+    "deleteReview": "刪除評價",
+    "noReviews": "暫無評價",
+    "averageRating": "平均評分",
+    "reviewCount": "{count}則評價",
     "ratingLabels": {
       "1": "很差",
       "2": "一般",
-      "3": "不错",
+      "3": "不錯",
       "4": "很好",
-      "5": "优秀"
+      "5": "優秀"
     },
-    "reviewPosted": "评价发布成功",
-    "reviewUpdated": "评价更新成功",
-    "reviewDeleted": "评价删除成功"
+    "reviewPosted": "評價發布成功",
+    "reviewUpdated": "評價更新成功",
+    "reviewDeleted": "評價刪除成功"
   },
   "notifications": {
     "title": "通知",
@@ -266,45 +266,45 @@
   },
   "pwa": {
     "installPrompt": {
-      "title": "安装应用",
-      "description": "安装Sakura Club以获得更好的体验。",
-      "install": "安装",
-      "later": "稍后",
-      "addToHomeScreen": "添加到主屏幕",
-      "addToHomeScreenDescription": "将Sakura Club添加到主屏幕，像应用一样使用。",
+      "title": "安裝應用程式",
+      "description": "安裝Sakura Club以獲得更好的體驗。",
+      "install": "安裝",
+      "later": "稍後",
+      "addToHomeScreen": "加入主畫面",
+      "addToHomeScreenDescription": "將Sakura Club加入主畫面，像應用程式一樣使用。",
       "iosInstructions": {
-        "step1": "1. 点击底部的分享按钮 □",
-        "step2": "2. 选择「添加到主屏幕」",
-        "step3": "3. 点击「添加」"
+        "step1": "1. 點擊底部的分享按鈕 □",
+        "step2": "2. 選擇「加入主畫面」",
+        "step3": "3. 點擊「加入」"
       },
       "understood": "明白了"
     },
     "offline": {
-      "indicator": "离线模式",
-      "connecting": "连接中...",
-      "reconnected": "已重新连接"
+      "indicator": "離線模式",
+      "connecting": "連線中...",
+      "reconnected": "已重新連線"
     }
   },
   "home": {
     "hero": {
-      "title": "通过文化体验实现真正的邂逅",
-      "subtitle": "为访日外国男性和日本女性提供的安全可靠平台，通过茶道、书道、料理教室等文化体验享受自然的邂逅。",
-      "cta": "立即开始",
+      "title": "透過文化體驗實現真正的邂逅",
+      "subtitle": "為訪日外國男性和日本女性提供的安全可靠平台，透過茶道、書道、料理教室等文化體驗享受自然的邂逅。",
+      "cta": "立即開始",
       "learnMore": "了解更多"
     },
     "features": {
       "title": "Sakura Club的特色",
       "cultural": {
-        "title": "以文化为中心",
-        "description": "在一起体验茶道、书道等日本传统文化的同时实现自然的邂逅"
+        "title": "以文化為核心",
+        "description": "在一起體驗茶道、書道等日本傳統文化的同時實現自然的邂逅"
       },
       "safe": {
         "title": "安全可靠",
-        "description": "仅限已验证用户，在公共场所进行体验确保安全性"
+        "description": "僅限已驗證用戶，在公共場所進行體驗確保安全性"
       },
       "international": {
-        "title": "国际交流",
-        "description": "与来自世界各国的访日游客实现真正的国际交流"
+        "title": "國際交流",
+        "description": "與來自世界各國的訪日旅客實現真正的國際交流"
       }
     }
   },
