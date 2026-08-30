@@ -63,24 +63,24 @@
     "language": "語言"
   },
   "auth": {
-    "welcomeBack": "欢迎回来",
-    "signInToAccount": "请登录您的账户",
-    "dontHaveAccount": "还没有账户？",
-    "alreadyHaveAccount": "已有账户？",
-    "forgotPassword": "忘记密码？",
-    "createAccount": "创建账户",
-    "signUp": "注册",
-    "signIn": "登录",
-    "emailRequired": "请输入邮箱地址",
-    "passwordRequired": "请输入密码",
-    "passwordMinLength": "密码至少需要8个字符",
-    "firstNameRequired": "请输入名字",
-    "lastNameRequired": "请输入姓氏",
-    "signUpSuccess": "账户创建成功",
-    "signInSuccess": "登录成功",
-    "signOutSuccess": "退出登录成功",
-    "invalidCredentials": "邮箱或密码错误",
-    "emailAlreadyExists": "此邮箱已被使用"
+    "welcomeBack": "歡迎回來",
+    "signInToAccount": "請登入您的帳戶",
+    "dontHaveAccount": "還沒有帳戶？",
+    "alreadyHaveAccount": "已有帳戶？",
+    "forgotPassword": "忘記密碼？",
+    "createAccount": "建立帳戶",
+    "signUp": "註冊",
+    "signIn": "登入",
+    "emailRequired": "請輸入電子信箱",
+    "passwordRequired": "請輸入密碼",
+    "passwordMinLength": "密碼至少需要8個字元",
+    "firstNameRequired": "請輸入名字",
+    "lastNameRequired": "請輸入姓氏",
+    "signUpSuccess": "帳戶建立成功",
+    "signInSuccess": "登入成功",
+    "signOutSuccess": "登出成功",
+    "invalidCredentials": "電子信箱或密碼錯誤",
+    "emailAlreadyExists": "此電子信箱已被使用"
   },
   "profile": {
     "editProfile": "编辑个人资料",
@@ -137,16 +137,16 @@
     "findMoreMatches": "寻找更多匹配"
   },
   "messages": {
-    "title": "消息",
-    "noConversations": "暂无消息",
-    "selectConversation": "选择对话",
-    "selectConversationDescription": "从左侧选择一个对话开始聊天",
-    "typeMessage": "输入消息...",
-    "send": "发送",
+    "title": "訊息",
+    "noConversations": "暫無訊息",
+    "selectConversation": "選擇對話",
+    "selectConversationDescription": "從左側選擇一個對話開始聊天",
+    "typeMessage": "輸入訊息...",
+    "send": "發送",
     "you": "您",
-    "newMessage": "新消息",
-    "matchedOn": "匹配于{date}",
-    "searchConversations": "搜索对话..."
+    "newMessage": "新訊息",
+    "matchedOn": "配對於{date}",
+    "searchConversations": "搜尋對話..."
   },
   "experiences": {
     "title": "文化体验",
@@ -211,57 +211,57 @@
   },
   "notifications": {
     "title": "通知",
-    "markAllRead": "全部标记为已读",
-    "noNotifications": "暂无新通知",
+    "markAllRead": "全部標記為已讀",
+    "noNotifications": "暫無新通知",
     "viewAll": "查看所有通知",
     "types": {
-      "match": "新匹配",
-      "message": "新消息",
-      "experience_invitation": "体验邀请",
-      "experience_reminder": "体验提醒",
-      "review_request": "评价请求",
-      "system": "系统通知"
+      "match": "新配對",
+      "message": "新訊息",
+      "experience_invitation": "體驗邀請",
+      "experience_reminder": "體驗提醒",
+      "review_request": "評價請求",
+      "system": "系統通知"
     },
     "settings": {
-      "title": "推送通知",
-      "description": "实时接收新匹配、消息、体验邀请等重要通知。",
-      "enable": "启用通知",
-      "disable": "禁用通知",
-      "test": "测试通知",
-      "enabled": "已启用",
-      "disabled": "已禁用",
-      "denied": "已拒绝",
-      "notSupported": "不支持推送通知",
-      "notSupportedDescription": "您的浏览器不支持推送通知。请使用Chrome、Firefox或Safari等现代浏览器。",
-      "deniedDescription": "通知已被阻止。请在浏览器设置中允许Sakura Club的通知。",
-      "testSent": "测试通知已发送！",
-      "enableSuccess": "推送通知启用成功！",
-      "disableSuccess": "推送通知已禁用。"
+      "title": "推播通知",
+      "description": "即時接收新配對、訊息、體驗邀請等重要通知。",
+      "enable": "啟用通知",
+      "disable": "停用通知",
+      "test": "測試通知",
+      "enabled": "已啟用",
+      "disabled": "已停用",
+      "denied": "已拒絕",
+      "notSupported": "不支援推播通知",
+      "notSupportedDescription": "您的瀏覽器不支援推播通知。請使用Chrome、Firefox或Safari等現代瀏覽器。",
+      "deniedDescription": "通知已被封鎖。請在瀏覽器設定中允許Sakura Club的通知。",
+      "testSent": "測試通知已發送！",
+      "enableSuccess": "推播通知啟用成功！",
+      "disableSuccess": "推播通知已停用。"
     }
   },
   "dashboard": {
-    "welcomeBack": "欢迎回来，{name}",
-    "subtitle": "今天也来享受美妙的文化体验吧",
+    "welcomeBack": "歡迎回來，{name}",
+    "subtitle": "今天也來享受美妙的文化體驗吧",
     "stats": {
-      "matches": "匹配数",
-      "upcomingExperiences": "即将参与",
+      "matches": "配對數",
+      "upcomingExperiences": "即將參與",
       "completedExperiences": "已完成",
-      "newMessages": "新消息"
+      "newMessages": "新訊息"
     },
     "quickActions": {
-      "findMatches": "寻找匹配",
-      "findMatchesDescription": "发现新朋友",
-      "messages": "消息",
-      "messagesDescription": "继续对话",
-      "experiences": "文化体验",
-      "experiencesDescription": "寻找新体验",
-      "editProfile": "编辑资料",
-      "editProfileDescription": "更新您的信息"
+      "findMatches": "尋找配對",
+      "findMatchesDescription": "發現新朋友",
+      "messages": "訊息",
+      "messagesDescription": "繼續對話",
+      "experiences": "文化體驗",
+      "experiencesDescription": "尋找新體驗",
+      "editProfile": "編輯資料",
+      "editProfileDescription": "更新您的資訊"
     },
     "tabs": {
-      "matches": "匹配",
-      "experiences": "体验",
-      "messages": "消息"
+      "matches": "配對",
+      "experiences": "體驗",
+      "messages": "訊息"
     }
   },
   "pwa": {
