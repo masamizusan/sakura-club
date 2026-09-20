@@ -850,7 +850,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <Sidebar className="w-64 hidden md:block" />
-      <div className="md:ml-64 fixed inset-0 md:left-64 flex flex-col">
+      <div className="md:ml-64 fixed inset-0 md:left-64 flex flex-col" style={{ height: '100dvh' }}>
         {/* ヘッダー */}
         <div className="p-4 flex items-center space-x-3" style={{ backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)' }}>
           <button onClick={() => router.push('/messages')} style={{ color: 'var(--color-text-sub)' }}>
@@ -1018,7 +1018,7 @@ export default function ChatPage() {
         </div>
 
         {/* 入力欄（常に表示） */}
-        <div className="p-4" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        <div className="p-4 flex-shrink-0" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
             {/* 翻訳プレビュー（自動・コンパクト表示） */}
