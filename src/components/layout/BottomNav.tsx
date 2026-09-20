@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Search, MessageCircle, Heart, History, User } from 'lucide-react'
@@ -62,9 +63,25 @@ export default function BottomNav() {
   const { currentLanguage } = useLanguage()
   const { unreadMessages, unseenLikes, unreadFootprints, unreadNotifications } = useNotifications()
 
+  // モバイルキーボード表示時はボトムナビを非表示（入力欄との重なり防止）
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.visualViewport) {
+        const keyboardOpen = window.visualViewport.height < window.screen.height * 0.75
+        setIsKeyboardOpen(keyboardOpen)
+      }
+    }
+    window.visualViewport?.addEventListener('resize', handleResize)
+    return () => window.visualViewport?.removeEventListener('resize', handleResize)
+  }, [])
+
   // LP・認証前ページではボトムナビを表示しない
   if (pathname === '/') return null
   if (PUBLIC_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix))) return null
+  // キーボード表示時は非表示
+  if (isKeyboardOpen) return null
 
   const t = labels[currentLanguage] || labels.ja
 
