@@ -80,6 +80,8 @@ export default function BottomNav() {
   // LP・認証前ページではボトムナビを表示しない
   if (pathname === '/') return null
   if (PUBLIC_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix))) return null
+  // チャット個別画面（/messages/[id]）では常に非表示（LINE/WhatsApp 型UX）
+  if (/^\/messages\/.+/.test(pathname)) return null
   // キーボード表示時は非表示
   if (isKeyboardOpen) return null
 
