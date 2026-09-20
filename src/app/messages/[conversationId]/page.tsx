@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Send, ArrowLeft, Heart, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X } from 'lucide-react'
+import { Send, ArrowLeft, Heart, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X, Languages } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import Avatar from '@/components/Avatar'
@@ -1180,12 +1180,13 @@ export default function ChatPage() {
                     variant="outline"
                     size="sm"
                     className="flex-shrink-0"
+                    title={t('previewTranslation')}
                     style={{ color: 'var(--color-primary)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}
                   >
                     {isTranslatingPreview ? (
                       <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
                     ) : (
-                      t('previewTranslation')
+                      <Languages className="w-4 h-4" />
                     )}
                   </Button>
 
