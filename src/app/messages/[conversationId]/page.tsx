@@ -17,6 +17,7 @@ import { isJapaneseWoman as checkIsJapaneseWoman, isForeignMaleUser as checkIsFo
 import { getReportModalLabels } from '@/utils/reportModalI18n'
 import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
 import { getBlockI18nLabels } from '@/utils/blockI18n'
+import { extractChatImagePath, resolveChatImageUrls } from '@/lib/chatImages'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -32,6 +33,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorVerificationRequired: 'メッセージを送るには本人年齢確認が必要です。マイページから手続きを完了してください。',
     sendErrorSubscriptionRequired: 'メッセージを送信するには有料プランへの登録が必要です。プラン画面からお手続きください。',
     sendErrorConversationNotFound: '会話が見つかりません。一度メッセージ一覧に戻ってからお試しください。',
+    imageInvalidType: '送信できる画像は JPEG・PNG・WebP・GIF のみです。',
+    imageTooLarge: '画像のサイズは 10MB 以下にしてください。',
+    imageUnavailable: '画像を表示できません',
     loading: '読み込み中...',
     translating: '翻訳中...',
     translateError: '翻訳に失敗しました',
@@ -61,6 +65,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorVerificationRequired: 'Identity verification is required to send messages. Please complete it from My Page.',
     sendErrorSubscriptionRequired: 'A subscription is required to send messages. Please sign up from the Plans page.',
     sendErrorConversationNotFound: 'Conversation not found. Please return to the messages list and try again.',
+    imageInvalidType: 'Only JPEG, PNG, WebP, or GIF images can be sent.',
+    imageTooLarge: 'Images must be 10MB or smaller.',
+    imageUnavailable: 'Image unavailable',
     loading: 'Loading...',
     translating: 'Translating...',
     translateError: 'Translation failed',
@@ -90,6 +97,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorVerificationRequired: '메시지를 보내려면 본인 연령 확인이 필요합니다. 마이페이지에서 절차를 완료해 주세요.',
     sendErrorSubscriptionRequired: '메시지를 보내려면 유료 플랜 가입이 필요합니다. 플랜 페이지에서 등록해 주세요.',
     sendErrorConversationNotFound: '대화를 찾을 수 없습니다. 메시지 목록으로 돌아간 후 다시 시도해 주세요.',
+    imageInvalidType: 'JPEG, PNG, WebP, GIF 이미지만 보낼 수 있습니다.',
+    imageTooLarge: '이미지 크기는 10MB 이하로 해 주세요.',
+    imageUnavailable: '이미지를 표시할 수 없습니다',
     loading: '로딩 중...',
     translating: '번역 중...',
     translateError: '번역 실패',
@@ -119,6 +129,9 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorVerificationRequired: '傳送訊息需要完成身分年齡驗證。請從我的頁面完成驗證程序。',
     sendErrorSubscriptionRequired: '傳送訊息需要訂閱付費方案。請至方案頁面進行訂閱。',
     sendErrorConversationNotFound: '找不到此對話。請返回訊息列表後再試一次。',
+    imageInvalidType: '僅能傳送 JPEG、PNG、WebP、GIF 格式的圖片。',
+    imageTooLarge: '圖片大小請控制在 10MB 以內。',
+    imageUnavailable: '無法顯示圖片',
     loading: '載入中...',
     translating: '翻譯中...',
     translateError: '翻譯失敗',
@@ -181,6 +194,11 @@ export default function ChatPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // チャット画像の表示用 URL（{ image_url の値 → 署名付き URL | null(表示不可) }、未登録は変換中）
+  const [chatImageUrls, setChatImageUrls] = useState<Record<string, string | null>>({})
+  const requestedChatImagesRef = useRef<Set<string>>(new Set())
+  const retriedChatImagesRef = useRef<Set<string>>(new Set())
 
   // 音声入力（Whisper API + 無音検知）
   const [isRecording, setIsRecording] = useState(false)
@@ -276,10 +294,29 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  // チャット画像: 送信可能な形式（MIME タイプ → 拡張子）と上限サイズ
+  const CHAT_IMAGE_EXTENSIONS: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+  }
+  const CHAT_IMAGE_MAX_BYTES = 10 * 1024 * 1024
+
   // 画像選択処理
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!CHAT_IMAGE_EXTENSIONS[file.type]) {
+      alert(t('imageInvalidType'))
+      e.target.value = ''
+      return
+    }
+    if (file.size > CHAT_IMAGE_MAX_BYTES) {
+      alert(t('imageTooLarge'))
+      e.target.value = ''
+      return
+    }
     setSelectedImage(file)
     const reader = new FileReader()
     reader.onload = () => setImagePreview(reader.result as string)
@@ -292,20 +329,23 @@ export default function ChatPage() {
     setIsUploadingImage(true)
     try {
       const supabase = createClient()
-      const fileName = `${Date.now()}_${selectedImage.name}`
+      // 元のファイル名は使わない（拡張子は MIME タイプから決定）
+      const ext = CHAT_IMAGE_EXTENSIONS[selectedImage.type]
+      if (!ext) {
+        alert(t('imageInvalidType'))
+        return
+      }
+      const fileName = `${crypto.randomUUID()}.${ext}`
       const { data, error } = await supabase.storage
         .from('chat-images')
-        .upload(`${conversationId}/${fileName}`, selectedImage)
+        .upload(`${conversationId}/${fileName}`, selectedImage, { contentType: selectedImage.type })
       if (error) throw error
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(data.path)
 
-      // 画像URLをメッセージとして送信
+      // Storage のパス（{conversationId}/{ファイル名}）をメッセージとして送信（表示時に署名付き URL へ変換）
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: '', image_url: publicUrl }),
+        body: JSON.stringify({ content: '', image_url: data.path }),
       })
       if (response.ok) {
         const result = await response.json()
@@ -319,6 +359,83 @@ export default function ChatPage() {
     } finally {
       setIsUploadingImage(false)
     }
+  }
+
+  // チャット画像: 初回読み込み・送信直後・リアルタイム受信で messages に入った image_url を表示用 URL に変換
+  useEffect(() => {
+    const pending = messages
+      .map(m => m?.image_url)
+      .filter((v): v is string => typeof v === 'string' && v !== '' && !requestedChatImagesRef.current.has(v))
+    if (pending.length === 0) return
+    const unique = Array.from(new Set(pending))
+    unique.forEach(v => requestedChatImagesRef.current.add(v))
+
+    // パスに変換できないもの（外部 URL など）は即「表示できません」
+    const unresolvable = unique.filter(v => extractChatImagePath(v) === null)
+    const resolvable = unique.filter(v => extractChatImagePath(v) !== null)
+    if (unresolvable.length > 0) {
+      setChatImageUrls(prev => {
+        const next = { ...prev }
+        unresolvable.forEach(v => { next[v] = null })
+        return next
+      })
+    }
+    if (resolvable.length === 0) return
+
+    resolveChatImageUrls(resolvable).then(result => {
+      setChatImageUrls(prev => {
+        const next = { ...prev }
+        resolvable.forEach(v => { next[v] = result[v] ?? null })
+        return next
+      })
+    })
+  }, [messages])
+
+  // チャット画像: 読み込み失敗時（署名期限切れ等）に 1 回だけ署名し直す
+  const handleChatImageError = (value: string) => {
+    if (retriedChatImagesRef.current.has(value)) {
+      setChatImageUrls(prev => ({ ...prev, [value]: null }))
+      return
+    }
+    retriedChatImagesRef.current.add(value)
+    resolveChatImageUrls([value]).then(result => {
+      setChatImageUrls(prev => ({ ...prev, [value]: result[value] ?? null }))
+    })
+  }
+
+  // チャット画像の表示（変換中 / 表示不可 / 署名付き URL）
+  const renderChatImage = (value: string) => {
+    const url = chatImageUrls[value]
+    if (url === undefined) {
+      return (
+        <div
+          className="w-48 h-48 max-w-full rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: 'var(--color-border)' }}
+          aria-label={t('loading')}
+        >
+          <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-text-sub)', borderTopColor: 'transparent' }} />
+        </div>
+      )
+    }
+    if (url === null) {
+      return (
+        <div
+          className="w-48 h-32 max-w-full rounded-lg flex items-center justify-center text-xs px-2 text-center"
+          style={{ backgroundColor: 'var(--color-border)', color: 'var(--color-text-sub)' }}
+        >
+          {t('imageUnavailable')}
+        </div>
+      )
+    }
+    return (
+      <img
+        src={url}
+        className="max-w-xs rounded-lg cursor-pointer"
+        onClick={() => window.open(url, '_blank')}
+        onError={() => handleChatImageError(value)}
+        alt=""
+      />
+    )
   }
 
   // 原文↔翻訳トグル
@@ -942,12 +1059,7 @@ export default function ChatPage() {
                       // 自分のメッセージ（翻訳機能なし）
                       <div className="max-w-[75%] px-4 py-2 rounded-2xl bg-[#fdf6ef] text-[#2c1810] break-words">
                         {message.image_url ? (
-                          <img
-                            src={message.image_url}
-                            className="max-w-xs rounded-lg cursor-pointer"
-                            onClick={() => window.open(message.image_url, '_blank')}
-                            alt=""
-                          />
+                          renderChatImage(message.image_url)
                         ) : (
                           <p className="text-sm">{message.content}</p>
                         )}
@@ -962,12 +1074,7 @@ export default function ChatPage() {
                         style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
                       >
                         {message.image_url ? (
-                          <img
-                            src={message.image_url}
-                            className="max-w-xs rounded-lg cursor-pointer"
-                            onClick={() => window.open(message.image_url, '_blank')}
-                            alt=""
-                          />
+                          renderChatImage(message.image_url)
                         ) : (
                           <>
                             {/* 翻訳中スピナー */}

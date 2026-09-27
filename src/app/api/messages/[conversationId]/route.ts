@@ -7,7 +7,8 @@ import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 // メッセージ送信のスキーマ
 const sendMessageSchema = z.object({
   content: z.string().max(1000, 'メッセージは1000文字以内で入力してください').default(''),
-  image_url: z.string().url().optional(),
+  // 段階1-B: chat-images のパス「{conversationId}/{ファイル名}」のみ（形式と会話 ID の一致は POST 内で検証）
+  image_url: z.string().optional(),
   translated_content: z.string().max(2000).nullable().optional(),
 }).refine(data => data.content.trim().length > 0 || !!data.image_url, {
   message: 'メッセージまたは画像を入力してください',
@@ -221,6 +222,19 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     const { content, image_url, translated_content } = validationResult.data
+
+    // 段階1-B: image_url は「{この会話の ID}/{英数字・ハイフン・ドット・アンダースコアのみのファイル名}」のみ許可
+    if (image_url !== undefined) {
+      const fileName = image_url.startsWith(`${conversationId}/`)
+        ? image_url.slice(conversationId.length + 1)
+        : ''
+      if (!/^[A-Za-z0-9._-]+$/.test(fileName) || fileName.includes('..')) {
+        return NextResponse.json(
+          { error: 'バリデーションエラー', details: [{ path: ['image_url'], message: 'invalid image path' }] },
+          { status: 400 }
+        )
+      }
+    }
 
     // 会話の存在確認とアクセス権限チェック
     const { data: conversation, error: convError } = await supabase
