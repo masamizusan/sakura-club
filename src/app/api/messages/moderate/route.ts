@@ -40,9 +40,10 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { message_id, content } = await req.json()
+    // content は body ではなく DB の値を使う（判定対象の改ざん防止）
+    const { message_id } = await req.json()
 
-    if (!content || !message_id) {
+    if (!message_id) {
       return NextResponse.json({ ok: false, error: 'missing fields' }, { status: 400 })
     }
 
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     // （他人のメッセージへのフラグ付与・OpenAI コストの不正消費を防ぐ）
     const { data: targetMessage, error: targetError } = await supabaseAdmin
       .from('messages')
-      .select('sender_id')
+      .select('sender_id, content')
       .eq('id', message_id)
       .maybeSingle()
     if (targetError) {
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
     }
     if (!targetMessage || targetMessage.sender_id !== user.id) {
       return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
+    }
+
+    const content: string | null = targetMessage.content
+    if (!content) {
+      return NextResponse.json({ ok: false, error: 'missing fields' }, { status: 400 })
     }
 
     // OpenAI API key check
