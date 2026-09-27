@@ -267,25 +267,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    // 会話の最終メッセージと更新時刻を更新
-    const now = new Date().toISOString()
-    const lastMessagePreview = image_url && !content.trim()
-      ? '📷 画像'
-      : content.length > 50 ? content.slice(0, 50) + '…' : content
-
-    const { error: updateConvError } = await supabase
-      .from('conversations')
-      .update({
-        updated_at: now,
-        last_message: lastMessagePreview,
-        last_message_at: now,
-      })
-      .eq('id', conversationId)
-
-    if (updateConvError) {
-      console.error('Conversation update error:', updateConvError)
-    }
-
     // フロントエンド用の形式で返す
     const formattedMessage = {
       id: newMessage.id,

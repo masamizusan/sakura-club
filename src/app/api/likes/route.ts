@@ -278,14 +278,16 @@ export async function POST(request: NextRequest) {
     if (isMatched) {
       console.log('💕 [likes] Match created!')
 
+      // service_role クライアント(RLS バイパス): likes 既読化・conversations upsert で共用
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+
       // マッチ成立時:既存の pending 側 likes(相手→自分)を既読化
       // orphan(マッチ済みなのに is_seen=false でバッジ滞留)の発生を防ぐ
       // /api/likes/seen と同パターンで service_role を使用(RLS バイパス)
       try {
-        const supabaseAdmin = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
         const { error: seenError } = await supabaseAdmin
           .from('likes')
           .update({ is_seen: true })
@@ -305,8 +307,9 @@ export async function POST(request: NextRequest) {
       // UNIQUE 制約あり(supabase/migrations/20260211_fix_messaging_rls_and_triggers.sql L25-26)。
       // 既存挙動温存: is_seen_user1/user2=false リセット + updated_at 更新は INSERT/UPDATE 両方で発生。
       // created_at は payload に含めない → INSERT 時は DB DEFAULT、UPDATE 時は既存値温存。
+      // 段階1-A: ユーザー権限での conversations INSERT/UPDATE を RLS で禁止するため service_role で実行
       const now = new Date().toISOString()
-      const { data: conversationRow, error: conversationError } = await supabase
+      const { data: conversationRow, error: conversationError } = await supabaseAdmin
         .from('conversations')
         .upsert({
           user1_id,
@@ -321,7 +324,7 @@ export async function POST(request: NextRequest) {
       if (conversationError || !conversationRow?.id) {
         console.error('[api/likes] conversation upsert failed:', conversationError)
         // フォールバック: SELECT で既存行を取得(SQL §C-4 で matched↔conversations 1:1 実証済み)
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
           .from('conversations')
           .select('id')
           .eq('user1_id', user1_id)

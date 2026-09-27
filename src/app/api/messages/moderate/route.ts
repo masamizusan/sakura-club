@@ -121,14 +121,21 @@ export async function POST(req: NextRequest) {
       }
 
       // それ以外のカテゴリは管理者通知あり
+      // notifications.type の CHECK 制約に合わせ type='system'、種別は data.kind で識別
       const adminUserId = process.env.ADMIN_USER_ID
-      if (adminUserId) {
-        await supabaseAdmin.from('notifications').insert({
+      if (!adminUserId) {
+        console.warn('[moderate] ADMIN_USER_ID 未設定のため管理者通知をスキップ')
+      } else {
+        const { error: adminNotifError } = await supabaseAdmin.from('notifications').insert({
           user_id: adminUserId,
-          type: 'ai_flag',
-          content: `AIが不審なメッセージを検知しました: ${judgment.reason}`,
-          related_id: message_id,
+          type: 'system',
+          title: '【管理】AIフラグ検知',
+          message: `AIが不審なメッセージを検知しました: ${judgment.reason}`,
+          data: { kind: 'ai_flag', message_id },
         })
+        if (adminNotifError) {
+          console.error('[moderate] 管理者通知エラー:', adminNotifError.message)
+        }
       }
     }
 

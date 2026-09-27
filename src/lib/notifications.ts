@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 
 export type NotificationType = 'match' | 'message' | 'experience_invitation' | 'experience_reminder' | 'review_request' | 'system'
@@ -12,8 +12,15 @@ export interface CreateNotificationParams {
 }
 
 export class NotificationService {
-  private getSupabase(request?: NextRequest) {
-    return createClient(request)
+  // 段階1-A: 他ユーザー宛て通知を作成するため service_role で INSERT する
+  // (ユーザー権限での notifications INSERT は RLS で禁止する方針)
+  // request は既存の呼び出し元との互換のため受け取るが使用しない
+  // ビルド時に環境変数なしでクラッシュしないよう、クライアントは関数内で生成する
+  private getSupabase(_request?: NextRequest) {
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
   }
 
   async createNotification({

@@ -25,15 +25,14 @@ const noCacheHeaders = {
 
 // 更新可能なフィールドのホワイトリスト
 const ALLOWED_UPDATE_FIELDS = [
-  'name', 'first_name', 'last_name', 'gender', 'age', 'birth_date',
+  'name', 'first_name', 'last_name', 'age', 'birth_date',
   'nationality', 'residence', 'prefecture', 'city',
   'bio', 'self_introduction', 'interests', 'hobbies',
   'avatar_url', 'profile_image', 'photo_urls',
   'occupation', 'height', 'body_type', 'marital_status',
   'personality', 'personality_tags', 'culture_tags',
   'japanese_level', 'english_level', 'language_skills',
-  'visit_schedule', 'travel_companion', 'planned_prefectures', 'planned_stations',
-  'profile_initialized'
+  'visit_schedule', 'travel_companion', 'planned_prefectures', 'planned_stations'
 ]
 
 export async function POST(request: NextRequest) {
