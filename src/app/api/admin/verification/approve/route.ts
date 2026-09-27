@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
+    // 段階0: 管理者のみ許可（未ログイン 401 / 非管理者 403）
+    const admin = await requireAdmin()
+    if (!admin.ok) {
+      return NextResponse.json(
+        { error: admin.message, code: admin.code },
+        { status: admin.httpStatus }
+      )
+    }
+
     const { userId } = await req.json()
 
     if (!userId) {

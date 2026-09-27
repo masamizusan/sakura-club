@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, filePath, idType } = await req.json()
-    console.log('[verification/review] called:', { userId: userId?.slice(0, 8), filePath, idType })
+    // 段階0: ログイン必須。対象ユーザーは body ではなくセッションのユーザーで確定する
+    const supabaseUser = createServerClient(req)
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    const userId = user.id
 
-    if (!userId || !filePath || !idType) {
+    const { filePath, idType } = await req.json()
+    console.log('[verification/review] called:', { userId: userId.slice(0, 8), filePath, idType })
+
+    if (!filePath || !idType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // 書類パスは本人フォルダ（`{user.id}/{ファイル名}`）のみ許可
+    if (
+      typeof filePath !== 'string' ||
+      !filePath.startsWith(`${userId}/`) ||
+      filePath.includes('..') ||
+      filePath.slice(userId.length + 1).includes('/') ||
+      filePath.length === userId.length + 1
+    ) {
+      return NextResponse.json({ error: 'Invalid filePath' }, { status: 400 })
     }
 
     // Service roleクライアント（関数内で初期化）

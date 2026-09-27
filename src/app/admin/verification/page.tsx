@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag, UserMinus } from 'lucide-react'
 
 type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags' | 'reports' | 'leave_surveys'
@@ -255,12 +254,19 @@ export default function AdminVerificationPage() {
   }
 
   const fetchCounts = useCallback(async () => {
-    // 身分証審査カウントは anon で取得可能
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, verification_status, ai_review_result')
-      .in('verification_status', ['requires_review', 'approved', 'rejected'])
+    // 身分証審査カウントは service_role 経由（GET /api/admin/verification）
+    let data: { id: string; verification_status: string; ai_review_result: unknown }[] | null = null
+    try {
+      const res = await fetch('/api/admin/verification?count_only=true', { credentials: 'include' })
+      const json = await res.json()
+      if (res.ok) {
+        data = json.rows ?? []
+      } else {
+        console.error('[admin/verification] count fetch error:', json.error)
+      }
+    } catch (e) {
+      console.error('[admin/verification] count fetch error:', e)
+    }
 
     let requires = 0, auto = 0, manual = 0, rejected = 0
     if (data) {
@@ -320,26 +326,23 @@ export default function AdminVerificationPage() {
   }, [])
 
   const fetchRequests = useCallback(async (tab: TabType) => {
-    const supabase = createClient()
     setLoading(true)
     setImageUrls({})
 
-    let query = supabase
-      .from('profiles')
-      .select('id, name, age, nationality, avatar_url, verification_status, id_document_type, id_document_url, verification_submitted_at, ai_review_result, ai_review_flags')
-      .order('verification_submitted_at', { ascending: tab === 'requires_review' })
-
-    if (tab === 'requires_review') {
-      query = query.eq('verification_status', 'requires_review')
-    } else if (tab === 'auto_approved') {
-      query = query.eq('verification_status', 'approved')
-    } else if (tab === 'manual_approved') {
-      query = query.eq('verification_status', 'approved')
-    } else if (tab === 'rejected') {
-      query = query.eq('verification_status', 'rejected')
+    // service_role 経由で取得（GET /api/admin/verification）
+    let data: VerificationRequest[] | null = null
+    let error: unknown = null
+    try {
+      const res = await fetch(`/api/admin/verification?tab=${tab}`, { credentials: 'include' })
+      const json = await res.json()
+      if (res.ok) {
+        data = json.rows ?? []
+      } else {
+        error = json.error ?? res.status
+      }
+    } catch (e) {
+      error = e
     }
-
-    const { data, error } = await query
 
     if (error) {
       console.error('[admin/verification] fetch error:', error)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { createClient } from '@supabase/supabase-js'
 import { getLanguageFromNationality } from '@/utils/language'
 import {
@@ -28,6 +29,15 @@ function parseReportStatus(raw: string | null): ReportStatusFilter {
 
 export async function GET(req: NextRequest) {
   try {
+    // 段階0: 管理者のみ許可（未ログイン 401 / 非管理者 403）
+    const admin = await requireAdmin()
+    if (!admin.ok) {
+      return NextResponse.json(
+        { error: admin.message, code: admin.code },
+        { status: admin.httpStatus }
+      )
+    }
+
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -103,6 +113,15 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    // 段階0: 管理者のみ許可（未ログイン 401 / 非管理者 403）
+    const admin = await requireAdmin()
+    if (!admin.ok) {
+      return NextResponse.json(
+        { error: admin.message, code: admin.code },
+        { status: admin.httpStatus }
+      )
+    }
+
     const { reportId, action, reportedId } = await req.json()
 
     const supabaseAdmin = createClient(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 // NOTE: クライアントはハンドラ内で生成（ビルド時に環境変数なしでクラッシュするのを防ぐ）
 
@@ -26,16 +27,38 @@ const SYSTEM_PROMPT = `
 
 export async function POST(req: NextRequest) {
   try {
+    // 段階0: ログイン必須（送信者は body ではなくセッションのユーザーで確定）
+    const supabaseUser = createServerClient(req)
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 })
+    }
+
     // service_role で RLS をバイパス（ビルド時クラッシュ防止のためハンドラ内で初期化）
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { message_id, content, sender_id } = await req.json()
+    const { message_id, content } = await req.json()
 
     if (!content || !message_id) {
       return NextResponse.json({ ok: false, error: 'missing fields' }, { status: 400 })
+    }
+
+    // 対象メッセージの送信者がログインユーザー本人であることを確認
+    // （他人のメッセージへのフラグ付与・OpenAI コストの不正消費を防ぐ）
+    const { data: targetMessage, error: targetError } = await supabaseAdmin
+      .from('messages')
+      .select('sender_id')
+      .eq('id', message_id)
+      .maybeSingle()
+    if (targetError) {
+      console.error('[moderate] message lookup error:', targetError.message)
+      return NextResponse.json({ ok: false, error: 'message lookup failed' }, { status: 500 })
+    }
+    if (!targetMessage || targetMessage.sender_id !== user.id) {
+      return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
     }
 
     // OpenAI API key check

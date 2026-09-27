@@ -9,15 +9,6 @@ const getNotificationsSchema = z.object({
   unread_only: z.boolean().optional().default(false),
 })
 
-// 通知作成のスキーマ
-const createNotificationSchema = z.object({
-  user_id: z.string().uuid(),
-  type: z.enum(['match', 'message', 'experience_invitation', 'experience_reminder', 'review_request', 'system']),
-  title: z.string().min(1).max(200),
-  message: z.string().min(1),
-  data: z.record(z.any()).optional().default({}),
-})
-
 // GET: 通知一覧取得
 export async function GET(request: NextRequest) {
   try {
@@ -92,88 +83,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Notifications GET error:', error)
-    return NextResponse.json(
-      { error: 'サーバーエラーが発生しました' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST: 新しい通知作成（システム内部用）
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = createClient(request)
-    
-    // 認証ユーザーの取得（管理者権限チェックは省略）
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認証が必要です' },
-        { status: 401 }
-      )
-    }
-
-    // リクエストボディの解析
-    const body = await request.json()
-    
-    // バリデーション
-    const validationResult = createNotificationSchema.safeParse(body)
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'バリデーションエラー',
-          details: validationResult.error.errors 
-        },
-        { status: 400 }
-      )
-    }
-
-    const { user_id, type, title, message, data } = validationResult.data
-
-    // 通知の作成
-    const { data: newNotification, error: createError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id,
-        type,
-        title,
-        message,
-        data,
-        is_read: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (createError) {
-      console.error('Notification creation error:', createError)
-      return NextResponse.json(
-        { error: '通知の作成に失敗しました' },
-        { status: 500 }
-      )
-    }
-
-    // フロントエンド用の形式で返す
-    const formattedNotification = {
-      id: newNotification.id,
-      type: newNotification.type,
-      title: newNotification.title,
-      message: newNotification.message,
-      data: newNotification.data || {},
-      isRead: newNotification.is_read,
-      createdAt: newNotification.created_at,
-      updatedAt: newNotification.updated_at,
-    }
-
-    return NextResponse.json({
-      message: '通知が正常に作成されました',
-      notification: formattedNotification
-    }, { status: 201 })
-
-  } catch (error) {
-    console.error('Notification POST error:', error)
     return NextResponse.json(
       { error: 'サーバーエラーが発生しました' },
       { status: 500 }

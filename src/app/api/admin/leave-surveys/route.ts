@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
@@ -7,12 +8,20 @@ export const dynamic = 'force-dynamic'
 // GET /api/admin/leave-surveys?count_only=true    → 件数のみ
 // GET /api/admin/leave-surveys?page=2             → ページネーション（10件刻み）
 //
-// 注: 既存の /api/admin/* と同じく service_role でバイパス。
-// 管理者かどうかの明示チェックは現状の admin API 群と同様に未実装（既存設計に追従）。
+// 注: requireAdmin で管理者判定後、service_role でバイパスして取得。
 const PAGE_SIZE = 10
 
 export async function GET(req: NextRequest) {
   try {
+    // 段階0: 管理者のみ許可（未ログイン 401 / 非管理者 403）
+    const admin = await requireAdmin()
+    if (!admin.ok) {
+      return NextResponse.json(
+        { error: admin.message, code: admin.code },
+        { status: admin.httpStatus }
+      )
+    }
+
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
