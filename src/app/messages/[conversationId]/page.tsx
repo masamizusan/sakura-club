@@ -266,6 +266,8 @@ export default function ChatPage() {
 
   // textarea ref
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // IME 変換中フラグ（変換確定の Enter で誤送信しないための判定用）
+  const isComposingRef = useRef(false)
 
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -1146,11 +1148,19 @@ export default function ChatPage() {
                       e.target.style.height = 'auto'
                       e.target.style.height = `${e.target.scrollHeight}px`
                     }}
+                    onCompositionStart={() => { isComposingRef.current = true }}
+                    onCompositionEnd={() => {
+                      // Safari は compositionend → keydown の順で発火するため、直後の keydown まで変換中扱いを残す
+                      setTimeout(() => { isComposingRef.current = false }, 0)
+                    }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSend()
-                      }
+                      if (e.key !== 'Enter' || e.shiftKey) return
+                      // 変換確定の Enter は送信しない（Chrome: isComposing / Safari: keyCode 229 / composition 状態）
+                      if (e.nativeEvent.isComposing || e.keyCode === 229 || isComposingRef.current) return
+                      // タッチ端末（スマホ・タブレット）は Enter で改行のみ。送信は送信ボタンのみ
+                      if (window.matchMedia('(pointer: coarse)').matches) return
+                      e.preventDefault()
+                      handleSend()
                     }}
                     rows={1}
                     className="flex-1 rounded-md px-3 py-2 text-sm focus-visible:outline-none"
