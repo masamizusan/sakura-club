@@ -36,6 +36,19 @@ const translations: Record<string, Record<string, string>> = {
     threeMonth: '3ヶ月（おすすめ）',
     sixMonth: '6ヶ月',
     yearly: '年間',
+    sakuraTitle: '🌸 さくらいいね',
+    sakuraDesc1: 'お相手の「お相手から」一覧の上位に、特別に表示されます。',
+    sakuraDesc2: '一言メッセージを添えられます（年齢確認済み・有料プラン会員のみ）。',
+    sakuraBalance: '残り',
+    sakuraUnit: '個',
+    sakuraNextExpiry: '次の失効日',
+    sakuraPack1: '1個',
+    sakuraPack5: '5個',
+    sakuraPack30: '30個',
+    sakuraPerUnit: '1個あたり',
+    sakuraBuy: '購入する',
+    sakuraNotice: '有効期限は購入から180日です。未使用分・期限切れ分の返金はできません。',
+    sakuraPurchaseError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
   },
   en: {
     title: 'Pricing Plans',
@@ -63,6 +76,19 @@ const translations: Record<string, Record<string, string>> = {
     threeMonth: '3 Months (Recommended)',
     sixMonth: '6 Months',
     yearly: 'Annual',
+    sakuraTitle: '🌸 Sakura Like',
+    sakuraDesc1: 'Your like is specially shown at the top of her “Likes received” list.',
+    sakuraDesc2: 'You can add a short message (verified age and paid members only).',
+    sakuraBalance: 'Remaining',
+    sakuraUnit: '',
+    sakuraNextExpiry: 'Next expiry',
+    sakuraPack1: '1 Like',
+    sakuraPack5: '5 Likes',
+    sakuraPack30: '30 Likes',
+    sakuraPerUnit: 'per like',
+    sakuraBuy: 'Buy',
+    sakuraNotice: 'Sakura Likes expire 180 days after purchase. Unused or expired Sakura Likes are non-refundable.',
+    sakuraPurchaseError: 'Could not start checkout. Please try again later.',
   },
   ko: {
     title: '요금제',
@@ -90,6 +116,19 @@ const translations: Record<string, Record<string, string>> = {
     threeMonth: '3개월（추천）',
     sixMonth: '6개월',
     yearly: '연간',
+    sakuraTitle: '🌸 사쿠라 좋아요',
+    sakuraDesc1: '상대방의 「받은 좋아요」 목록 상단에 특별히 표시됩니다.',
+    sakuraDesc2: '한마디 메시지를 함께 보낼 수 있습니다(연령 확인 완료・유료 플랜 회원 한정).',
+    sakuraBalance: '남은 개수',
+    sakuraUnit: '개',
+    sakuraNextExpiry: '다음 만료일',
+    sakuraPack1: '1개',
+    sakuraPack5: '5개',
+    sakuraPack30: '30개',
+    sakuraPerUnit: '1개당',
+    sakuraBuy: '구매하기',
+    sakuraNotice: '유효기간은 구매일로부터 180일입니다. 미사용분・만료분은 환불되지 않습니다.',
+    sakuraPurchaseError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
   },
   'zh-tw': {
     title: '定價方案',
@@ -117,6 +156,19 @@ const translations: Record<string, Record<string, string>> = {
     threeMonth: '3個月（推薦）',
     sixMonth: '6個月',
     yearly: '年費',
+    sakuraTitle: '🌸 櫻花讚',
+    sakuraDesc1: '會特別顯示在對方「收到的讚」列表的最上方。',
+    sakuraDesc2: '可附上一句話留言（僅限已完成年齡驗證的付費方案會員）。',
+    sakuraBalance: '剩餘',
+    sakuraUnit: '個',
+    sakuraNextExpiry: '下次到期日',
+    sakuraPack1: '1個',
+    sakuraPack5: '5個',
+    sakuraPack30: '30個',
+    sakuraPerUnit: '每個',
+    sakuraBuy: '購買',
+    sakuraNotice: '有效期限為購買日起180天。未使用及已過期的部分恕不退款。',
+    sakuraPurchaseError: '無法開始結帳，請稍後再試。',
   },
 }
 
@@ -170,6 +222,20 @@ const plans = [
   },
 ]
 
+// 段階3-2: さくらいいね回数券（表示価格は既存プランと同じく直書き。Stripe の Price と揃えること）
+const sakuraPacks = [
+  { pack: 1, labelKey: 'sakuraPack1', price: '$3.99', perUnit: '$3.99' },
+  { pack: 5, labelKey: 'sakuraPack5', price: '$13.99', perUnit: '$2.80' },
+  { pack: 30, labelKey: 'sakuraPack30', price: '$49.99', perUnit: '$1.67' },
+] as const
+
+const DATE_LOCALES: Record<string, string> = {
+  ja: 'ja-JP',
+  en: 'en-US',
+  ko: 'ko-KR',
+  'zh-tw': 'zh-TW',
+}
+
 const features = [
   { key: 'browseProfiles', free: true, paid: true },
   { key: 'sendLikes', free: true, paid: true },
@@ -186,6 +252,10 @@ function PlansContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState('3month')
   const [isProcessing, setIsProcessing] = useState(false)
+  // さくらいいね回数券
+  const [sakuraBalance, setSakuraBalance] = useState<number | null>(null)
+  const [sakuraNextExpiry, setSakuraNextExpiry] = useState<string | null>(null)
+  const [sakuraProcessingPack, setSakuraProcessingPack] = useState<number | null>(null)
 
   const supabase = createClient()
 
@@ -234,6 +304,54 @@ function PlansContent() {
 
     loadData()
   }, [user])
+
+  // さくらいいね: 残り枚数と次の失効日
+  useEffect(() => {
+    if (!user?.id) return
+    const loadSakuraBalance = async () => {
+      try {
+        const res = await fetch('/api/sakura/balance', { cache: 'no-store', credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        setSakuraBalance(typeof data.balance === 'number' ? data.balance : 0)
+        setSakuraNextExpiry(data.next_expiry ?? null)
+      } catch (e) {
+        console.error('[plans] sakura balance fetch error:', e)
+      }
+    }
+    loadSakuraBalance()
+  }, [user])
+
+  // /mypage/plans#sakura で遷移してきた場合、読み込み完了後にさくらいいね欄へスクロール
+  useEffect(() => {
+    if (isLoading) return
+    if (typeof window !== 'undefined' && window.location.hash === '#sakura') {
+      document.getElementById('sakura')?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [isLoading])
+
+  const handleSakuraPurchase = async (pack: number) => {
+    if (sakuraProcessingPack !== null) return
+    setSakuraProcessingPack(pack)
+    try {
+      const res = await fetch('/api/stripe/create-sakura-checkout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack }),
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      alert(t('sakuraPurchaseError'))
+    } catch {
+      alert(t('sakuraPurchaseError'))
+    } finally {
+      setSakuraProcessingPack(null)
+    }
+  }
 
   const handleSubscribe = async () => {
     if (isProcessing) return
@@ -459,6 +577,61 @@ function PlansContent() {
               </button>
             </div>
           )}
+
+          {/* さくらいいね（段階3-2。サブスクの有無に関係なく表示） */}
+          <div id="sakura" className="app-card p-5 mt-6">
+            <h2 className="font-shippori text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+              {t('sakuraTitle')}
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--color-text-sub)' }}>{t('sakuraDesc1')}</p>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-text-sub)' }}>{t('sakuraDesc2')}</p>
+
+            {sakuraBalance !== null && (
+              <div className="rounded-xl px-4 py-3 mb-4" style={{ backgroundColor: '#fdf6ef', border: '1px solid #d4a89a' }}>
+                <p className="text-sm" style={{ color: 'var(--color-text)' }}>
+                  {t('sakuraBalance')}: <span className="font-bold" style={{ color: '#8b1a2e' }}>{sakuraBalance}</span>{t('sakuraUnit') ? ` ${t('sakuraUnit')}` : ''}
+                </p>
+                {sakuraBalance > 0 && sakuraNextExpiry && (
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text-sub)' }}>
+                    {t('sakuraNextExpiry')}: {new Date(sakuraNextExpiry).toLocaleDateString(DATE_LOCALES[currentLanguage] ?? 'ja-JP')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {sakuraPacks.map((p) => (
+                <div
+                  key={p.pack}
+                  className="flex items-center justify-between rounded-2xl p-4"
+                  style={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}
+                >
+                  <div>
+                    <p className="font-shippori font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                      {t(p.labelKey)}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--color-text-sub)' }}>
+                      {t('sakuraPerUnit')} {p.perUnit}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                    <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>{p.price}</span>
+                    <button
+                      onClick={() => handleSakuraPurchase(p.pack)}
+                      disabled={sakuraProcessingPack !== null}
+                      className="btn-primary px-4 py-2 rounded-full text-sm font-medium transition-opacity disabled:opacity-60"
+                    >
+                      {sakuraProcessingPack === p.pack ? t('processingPayment') : t('sakuraBuy')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs mt-4" style={{ color: 'var(--color-text-sub)' }}>
+              {t('sakuraNotice')}
+            </p>
+          </div>
 
         </div>
       </div>

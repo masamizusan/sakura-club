@@ -52,6 +52,41 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session
       const userId = session.metadata?.supabase_user_id
       const planType = session.metadata?.plan_type
+
+      // 段階3-2: さくらいいね回数券（単発決済）。サブスク処理には進まない
+      if (session.mode === 'payment' && session.metadata?.kind === 'sakura_like') {
+        if (session.payment_status !== 'paid') break
+
+        const quantity = Number(session.metadata?.quantity)
+        if (![1, 5, 30].includes(quantity) || !userId) {
+          console.error('[stripe/webhook] sakura_like invalid metadata:', { sessionId: session.id, quantity: session.metadata?.quantity, hasUser: !!userId })
+          break
+        }
+
+        const paymentIntentId = typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent?.id ?? null
+
+        const { data: grantResult, error: grantError } = await supabase.rpc('grant_sakura_tickets', {
+          p_user: userId,
+          p_quantity: quantity,
+          p_session_id: session.id,
+          p_payment_intent: paymentIntentId,
+          p_amount_total: session.amount_total,
+          p_currency: session.currency,
+        })
+
+        if (grantError) {
+          // Stripe に再送させる（grant_sakura_tickets は同じ session_id を 1 回だけ付与するため再送しても二重付与しない）
+          console.error('[stripe/webhook] grant_sakura_tickets error:', grantError.message)
+          return NextResponse.json({ error: 'Failed to grant sakura tickets' }, { status: 500 })
+        }
+        if (!grantResult?.ok) {
+          console.error('[stripe/webhook] grant_sakura_tickets not ok:', { sessionId: session.id, code: grantResult?.code })
+        }
+        break
+      }
+
       if (!userId || !session.subscription) break
 
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
@@ -97,6 +132,25 @@ export async function POST(req: NextRequest) {
       await supabase.from('subscriptions')
         .update({ status: 'inactive', updated_at: new Date().toISOString() })
         .eq('stripe_subscription_id', sub.id)
+      break
+    }
+
+    // 段階3-2: 返金時にその決済のさくらいいね回数券の残りを 0 にする
+    // （さくらいいね以外の決済では updated:0 になるだけなので条件分岐は不要）
+    case 'charge.refunded': {
+      const charge = event.data.object as Stripe.Charge
+      const paymentIntentId = typeof charge.payment_intent === 'string'
+        ? charge.payment_intent
+        : charge.payment_intent?.id ?? null
+      if (!paymentIntentId) break
+
+      const { error: revokeError } = await supabase.rpc('revoke_sakura_tickets', {
+        p_payment_intent: paymentIntentId,
+      })
+      if (revokeError) {
+        console.error('[stripe/webhook] revoke_sakura_tickets error:', revokeError.message)
+        return NextResponse.json({ error: 'Failed to revoke sakura tickets' }, { status: 500 })
+      }
       break
     }
 
