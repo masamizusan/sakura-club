@@ -144,9 +144,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ===== 4. 対象ユーザー存在チェック =====
+    // 段階2-A: 公開用ビューで確認（未完成・停止中・ブロック関係の相手は見つからず 404）
     const { data: targetUser, error: targetError } = await supabase
-      .from('profiles')
-      .select('id, name, profile_initialized')
+      .from('profiles_public')
+      .select('id, name')
       .eq('id', likedUserId)
       .single()
 

@@ -36,6 +36,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: '送信できる画像は JPEG・PNG・WebP・GIF のみです。',
     imageTooLarge: '画像のサイズは 10MB 以下にしてください。',
     imageUnavailable: '画像を表示できません',
+    partnerUnavailable: 'このユーザーは現在ご利用いただけません',
     loading: '読み込み中...',
     translating: '翻訳中...',
     translateError: '翻訳に失敗しました',
@@ -68,6 +69,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: 'Only JPEG, PNG, WebP, or GIF images can be sent.',
     imageTooLarge: 'Images must be 10MB or smaller.',
     imageUnavailable: 'Image unavailable',
+    partnerUnavailable: 'This user is currently unavailable',
     loading: 'Loading...',
     translating: 'Translating...',
     translateError: 'Translation failed',
@@ -100,6 +102,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: 'JPEG, PNG, WebP, GIF 이미지만 보낼 수 있습니다.',
     imageTooLarge: '이미지 크기는 10MB 이하로 해 주세요.',
     imageUnavailable: '이미지를 표시할 수 없습니다',
+    partnerUnavailable: '이 사용자는 현재 이용할 수 없습니다',
     loading: '로딩 중...',
     translating: '번역 중...',
     translateError: '번역 실패',
@@ -132,6 +135,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: '僅能傳送 JPEG、PNG、WebP、GIF 格式的圖片。',
     imageTooLarge: '圖片大小請控制在 10MB 以內。',
     imageUnavailable: '無法顯示圖片',
+    partnerUnavailable: '此使用者目前無法使用',
     loading: '載入中...',
     translating: '翻譯中...',
     translateError: '翻譯失敗',
@@ -165,6 +169,8 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState<any[]>([])
   const [conversation, setConversation] = useState<any>(null)
+  // 会話相手が利用不可（停止中・ブロック関係・退会など）の場合 true（段階2-A）
+  const [partnerUnavailable, setPartnerUnavailable] = useState(false)
   const [newMessage, setNewMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
@@ -586,6 +592,7 @@ export default function ChatPage() {
         if (response.ok && result.messages) {
           setMessages(result.messages)
           setConversation(result.conversation || null)
+          setPartnerUnavailable(result.partner_unavailable === true)
 
           // キャッシュから翻訳を即座に取得
           const supabase = createClient()
@@ -986,7 +993,9 @@ export default function ChatPage() {
               className="w-10 h-10 rounded-full object-cover"
             />
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">{conversation?.partnerName || t('loading')}</p>
+              <p className="font-semibold text-gray-900">
+                {partnerUnavailable ? t('partnerUnavailable') : (conversation?.partnerName || t('loading'))}
+              </p>
               {conversation && (
                 <p className="text-sm text-gray-500">
                   {conversation.partnerNationality && conversation.partnerNationality !== '未設定' && (
@@ -1126,7 +1135,8 @@ export default function ChatPage() {
           )}
         </div>
 
-        {/* 入力欄（常に表示） */}
+        {/* 入力欄（会話相手が利用不可のときは表示しない） */}
+        {!partnerUnavailable && (
         <div className="p-4 flex-shrink-0" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
           <div className="max-w-2xl mx-auto">
 
@@ -1326,6 +1336,7 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* 統合要件モーダル（身分確認 + サブスクリプション） */}

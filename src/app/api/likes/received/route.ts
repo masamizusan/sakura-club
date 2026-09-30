@@ -156,13 +156,14 @@ export async function GET(request: NextRequest) {
 
     // 4. ユーザープロフィール情報を取得
     console.log('👤 [likes/received] Step 4: Getting profiles...')
+    // 段階2-A: 公開用ビュー（完成済み・active・ブロック関係なしはビュー側で保証）
     const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select(`
         id,
         name,
         gender,
-        birth_date,
+        age,
         nationality,
         residence,
         bio,
@@ -175,8 +176,6 @@ export async function GET(request: NextRequest) {
         planned_prefectures
       `)
       .in('id', likerIds)
-      .eq('profile_initialized', true)
-      .eq('status', 'active')
 
     if (profilesError) {
       console.error('[likes/received] profiles error:', profilesError.message)
@@ -211,17 +210,11 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // 年齢計算関数
-    const calculateAge = (birthDate: string | null): number | null => {
-      if (!birthDate) return null
-      const birth = new Date(birthDate)
-      const today = new Date()
-      let age = today.getFullYear() - birth.getFullYear()
-      const monthDiff = today.getMonth() - birth.getMonth()
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--
-      }
-      return age
+    // 年齢: 公開用ビューの age（生年月日から日本時間基準で算出済み）を number | null で返す
+    const toAge = (value: unknown): number | null => {
+      if (value === null || value === undefined || value === '') return null
+      const n = Number(value)
+      return Number.isFinite(n) ? n : null
     }
 
     // プロフィールを整形（いいねの順番で並べ替え）
@@ -230,7 +223,7 @@ export async function GET(request: NextRequest) {
         id: profile.id,
         name: profile.name || '',
         gender: profile.gender || '',
-        age: calculateAge(profile.birth_date),
+        age: toAge(profile.age),
         nationality: profile.nationality || '',
         residence: profile.residence || '',
         prefecture: profile.residence || '',

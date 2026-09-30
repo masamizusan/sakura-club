@@ -2,6 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
+// 段階2-A: 主催者名は profiles の埋め込みではなく公開用ビュー（profiles_public）から別クエリで取得する
+// （他人の last_name 等を読まない。ビューに載らない主催者は名前なし＝「未知」表示）
+async function fetchOrganizerNames(
+  supabase: ReturnType<typeof createClient>,
+  organizerIds: (string | null | undefined)[]
+): Promise<Map<string, string>> {
+  const ids = Array.from(new Set(organizerIds.filter((id): id is string => !!id)))
+  const nameMap = new Map<string, string>()
+  if (ids.length === 0) return nameMap
+  const { data, error } = await supabase
+    .from('profiles_public')
+    .select('id, name')
+    .in('id', ids)
+  if (error) {
+    console.error('[experiences] organizer fetch error:', error.message)
+    return nameMap
+  }
+  for (const p of data || []) {
+    if (p.id && p.name) nameMap.set(p.id, p.name)
+  }
+  return nameMap
+}
+
 // 体験作成のスキーマ
 const createExperienceSchema = z.object({
   title: z.string().min(1, 'タイトルを入力してください').max(100, 'タイトルは100文字以内で入力してください'),
@@ -38,14 +61,7 @@ export async function GET(request: NextRequest) {
     // ベースクエリ
     let query = supabase
       .from('experiences')
-      .select(`
-        *,
-        organizer:profiles!experiences_organizer_id_fkey(
-          id,
-          first_name,
-          last_name
-        )
-      `)
+      .select('*')
       .eq('status', 'upcoming')
       .order('date', { ascending: true })
 
@@ -77,6 +93,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const organizerNames = await fetchOrganizerNames(supabase, (experiences || []).map(exp => exp.organizer_id))
+
     // フロントエンド用のデータ形式に変換
     const formattedExperiences = experiences?.map(exp => ({
       id: exp.id,
@@ -96,7 +114,7 @@ export async function GET(request: NextRequest) {
       price: exp.price,
       currency: 'JPY',
       organizerId: exp.organizer_id,
-      organizerName: exp.organizer ? `${exp.organizer.first_name} ${exp.organizer.last_name}` : '未知',
+      organizerName: organizerNames.get(exp.organizer_id) ?? '未知',
       status: exp.status,
       imageUrl: exp.image_url,
       rating: exp.rating,
@@ -221,14 +239,7 @@ export async function POST(request: NextRequest) {
     const { data: newExperience, error: createError } = await supabase
       .from('experiences')
       .insert(experienceData)
-      .select(`
-        *,
-        organizer:profiles!experiences_organizer_id_fkey(
-          id,
-          first_name,
-          last_name
-        )
-      `)
+      .select('*')
       .single()
 
     if (createError) {
@@ -238,6 +249,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    const newOrganizerNames = await fetchOrganizerNames(supabase, [newExperience.organizer_id])
 
     // フロントエンド用の形式で返す
     const formattedExperience = {
@@ -258,7 +271,7 @@ export async function POST(request: NextRequest) {
       price: newExperience.price,
       currency: 'JPY',
       organizerId: newExperience.organizer_id,
-      organizerName: newExperience.organizer ? `${newExperience.organizer.first_name} ${newExperience.organizer.last_name}` : '未知',
+      organizerName: newOrganizerNames.get(newExperience.organizer_id) ?? '未知',
       status: newExperience.status,
       included: newExperience.included ? newExperience.included.split('\n') : [],
       toBring: newExperience.to_bring ? newExperience.to_bring.split('\n') : [],

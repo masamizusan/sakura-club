@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+// 段階2-A: 主催者は profiles の埋め込みではなく公開用ビュー（profiles_public）から別クエリで取得する
+// （他人の last_name 等を読まない。ビューに載らない主催者は null ＝「未知」表示）
+async function fetchOrganizer(
+  supabase: ReturnType<typeof createClient>,
+  organizerId: string | null | undefined
+): Promise<{ id: string; name: string | null; created_at: string | null } | null> {
+  if (!organizerId) return null
+  const { data, error } = await supabase
+    .from('profiles_public')
+    .select('id, name, created_at')
+    .eq('id', organizerId)
+    .maybeSingle()
+  if (error) {
+    console.error('[experiences/[id]] organizer fetch error:', error.message)
+    return null
+  }
+  return data ?? null
+}
+
 // GET: 個別体験の詳細取得
 export async function GET(
   request: NextRequest,
@@ -15,12 +34,6 @@ export async function GET(
       .from('experiences')
       .select(`
         *,
-        organizer:profiles!experiences_organizer_id_fkey(
-          id,
-          first_name,
-          last_name,
-          created_at
-        ),
         experience_participants(
           user_id,
           status
@@ -43,6 +56,8 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    const organizer = await fetchOrganizer(supabase, experience.organizer_id)
 
     // 参加者数を計算
     const currentParticipants = experience.experience_participants?.filter(
@@ -81,7 +96,7 @@ export async function GET(
       price: experience.price,
       currency: 'JPY',
       organizerId: experience.organizer_id,
-      organizerName: experience.organizer ? `${experience.organizer.first_name} ${experience.organizer.last_name}` : '未知',
+      organizerName: organizer?.name ?? '未知',
       status: experience.status,
       imageUrl: experience.image_url,
       rating: experience.rating,
@@ -92,7 +107,7 @@ export async function GET(
       organizerProfile: {
         bio: '文化体験の主催者として活動しています。', // 今後プロフィールテーブルに追加
         experienceCount: 1, // 今後計算
-        joinedDate: experience.organizer?.created_at,
+        joinedDate: organizer?.created_at,
         rating: 4.8, // 今後計算
       },
       reviews: [], // 今後実装
@@ -175,14 +190,7 @@ export async function PUT(
       .from('experiences')
       .update(updateData)
       .eq('id', experienceId)
-      .select(`
-        *,
-        organizer:profiles!experiences_organizer_id_fkey(
-          id,
-          first_name,
-          last_name
-        )
-      `)
+      .select('*')
       .single()
 
     if (updateError) {
@@ -193,9 +201,15 @@ export async function PUT(
       )
     }
 
+    const updatedOrganizer = updatedExperience
+      ? await fetchOrganizer(supabase, updatedExperience.organizer_id)
+      : null
+
     return NextResponse.json({
       message: '体験が正常に更新されました',
       experience: updatedExperience
+        ? { ...updatedExperience, organizer: updatedOrganizer ? { id: updatedOrganizer.id, name: updatedOrganizer.name } : null }
+        : updatedExperience
     })
 
   } catch (error) {

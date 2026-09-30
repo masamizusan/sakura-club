@@ -65,16 +65,18 @@ export async function GET(request: NextRequest, { params }: Params) {
     // パートナーのIDを特定
     const partnerId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id
 
-    // パートナーのプロフィール情報を取得
+    // パートナーのプロフィール情報を取得（段階2-A: 公開用ビュー）
+    // 未完成・停止中・ブロック関係・退会の相手は取得できない → エラーにせず partner_unavailable で返す
     const { data: partner, error: partnerError } = await supabase
-      .from('profiles')
+      .from('profiles_public')
       .select('id, name, age, nationality, residence, city, avatar_url')
       .eq('id', partnerId)
-      .single()
+      .maybeSingle()
 
     if (partnerError) {
       console.error('Partner profile fetch error:', partnerError)
     }
+    const partnerUnavailable = !partner
 
     // メッセージ一覧を取得
     const { data: messages, error: messagesError } = await supabase
@@ -129,6 +131,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({
       messages: formattedMessages,
       conversation: conversationInfo,
+      partner_unavailable: partnerUnavailable,
       total: formattedMessages.length,
       hasMore: formattedMessages.length === limit
     })

@@ -55,20 +55,19 @@ export async function GET(
       )
     }
 
-    // プロフィール取得（機微情報を除外）
-    const { data: profile, error: fetchError } = await supabase
-      .from('profiles')
+    // プロフィール取得（段階2-A: 公開用ビュー。完成済み・active・ブロック関係なしの行のみ、機微情報なし）
+    const { data: publicProfile, error: fetchError } = await supabase
+      .from('profiles_public')
       .select(`
         id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, interests,
         occupation, height, body_type, marital_status,
         personality_tags, language_skills,
         visit_schedule, travel_companion, planned_prefectures,
-        is_verified, profile_initialized,
+        is_verified,
         created_at
       `)
       .eq('id', profileId)
-      .eq('profile_initialized', true)
       .maybeSingle()
 
     if (fetchError) {
@@ -79,12 +78,15 @@ export async function GET(
       )
     }
 
-    if (!profile) {
+    if (!publicProfile) {
       return NextResponse.json(
         { error: 'Profile not found' },
         { status: 404, headers: noCacheHeaders }
       )
     }
+
+    // レスポンス互換: ビューに載る行は完成済みのみのため profile_initialized は true 固定
+    const profile = { ...publicProfile, profile_initialized: true }
 
     return NextResponse.json({
       profile,

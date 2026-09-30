@@ -145,10 +145,10 @@ export async function GET(request: NextRequest) {
           partnerId: partnerId?.slice(0, 8)
         })
 
-        // パートナーのプロフィール情報を取得（profiles.id ベースで検索）
+        // パートナーのプロフィール情報を取得（段階2-A: 公開用ビュー。未完成・停止中・ブロック関係の相手は取得できず、下の処理で一覧から除外）
         const { data: partner, error: partnerError } = await supabase
-          .from('profiles')
-          .select('id, name, age, nationality, residence, city, avatar_url, profile_initialized')
+          .from('profiles_public')
+          .select('id, name, age, nationality, residence, city, avatar_url')
           .eq('id', partnerId)
           .single()
 
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
         console.log('👤 [messages] Partner profile:', partner ? {
           id: partner.id?.slice(0, 8),
           name: partner.name,
-          initialized: partner.profile_initialized
+          initialized: true
         } : 'NOT FOUND')
 
         if (!partner) {

@@ -168,17 +168,15 @@ export async function GET(request: NextRequest) {
     ) || []
     console.log('💕 [recommendations] Matched users (will be excluded):', matchedUserIds.length)
 
-    // 候補を取得（存在するカラムのみ指定）
+    // 候補を取得（段階2-A: 公開用ビュー。完成済み・active・ブロック関係なしはビュー側で保証）
     let query = supabase
-      .from('profiles')
+      .from('profiles_public')
       .select(`
         id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, interests,
-        occupation, height, body_type, is_verified, profile_initialized,
+        occupation, height, body_type, is_verified,
         planned_prefectures, created_at, last_seen_at
       `)
-      .eq('profile_initialized', true)
-      .eq('status', 'active')
       .eq('gender', targetGender)
       .neq('id', myProfile.id)
       .order('created_at', { ascending: false })
@@ -301,9 +299,12 @@ export async function GET(request: NextRequest) {
       targetIsJapanese
     })
 
+    // レスポンス互換: ビューに載る行は完成済みのみのため profile_initialized は true 固定
+    const candidatesWithInitialized = (candidates || []).map(c => ({ ...c, profile_initialized: true }))
+
     return NextResponse.json({
-      candidates: candidates || [],
-      total: candidates?.length || 0,
+      candidates: candidatesWithInitialized,
+      total: candidatesWithInitialized.length,
       debug: {
         myId: myProfile.id,
         myGender: myProfile.gender,
