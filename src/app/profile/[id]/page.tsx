@@ -67,6 +67,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     // ボタン
     sending: '送信中...',
     liked: 'いいね済み',
+    likeTargetUnavailable: 'このユーザーには現在いいねできません',
+    likeAlreadyMatched: 'すでにマッチしています',
+    likeProfileIncomplete: 'プロフィールを完成させると、いいねを送れます',
     dailyLimitReached: '本日の上限に達しました',
     ownProfile: '自分のプロフィールです',
     like: 'いいね',
@@ -105,6 +108,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     // ボタン
     sending: 'Sending...',
     liked: 'Liked',
+    likeTargetUnavailable: 'You cannot like this user right now.',
+    likeAlreadyMatched: 'You are already matched.',
+    likeProfileIncomplete: 'Complete your profile to send likes.',
     dailyLimitReached: 'Daily limit reached',
     ownProfile: 'This is your profile',
     like: 'Like',
@@ -143,6 +149,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     // ボタン
     sending: '전송 중...',
     liked: '좋아요 완료',
+    likeTargetUnavailable: '현재 이 사용자에게 좋아요를 보낼 수 없습니다.',
+    likeAlreadyMatched: '이미 매칭되었습니다.',
+    likeProfileIncomplete: '프로필을 완성하면 좋아요를 보낼 수 있습니다.',
     dailyLimitReached: '오늘의 한도에 도달했습니다',
     ownProfile: '본인의 프로필입니다',
     like: '좋아요',
@@ -181,6 +190,9 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     // ボタン
     sending: '發送中...',
     liked: '已按讚',
+    likeTargetUnavailable: '目前無法對此使用者按讚。',
+    likeAlreadyMatched: '你們已經配對成功。',
+    likeProfileIncomplete: '完成個人資料後即可按讚。',
     dailyLimitReached: '已達到今日上限',
     ownProfile: '這是您的個人資料',
     like: '按讚',
@@ -405,6 +417,8 @@ function ProfileDetailContent() {
 
         setProfile(data.profile)
         setViewerId(data.viewerId)
+        // 段階2-B: 過去にいいね済みなら「いいね済み」から表示する
+        setHasLiked(data.viewer_has_liked === true)
       } catch (err) {
         console.error('Error fetching profile:', err)
         setError(t('errorOccurred'))
@@ -543,11 +557,26 @@ function ProfileDetailContent() {
           setShowMatchModal(true)
           setIsMatched(true)
         }
-      } else if (response.status === 429) {
-        setLikesRemaining(0)
-        alert(dailyLimitTexts[currentLanguage] || dailyLimitTexts.ja)
       } else {
-        alert(result.error || likeFailedTexts[currentLanguage] || likeFailedTexts.ja)
+        // 段階2-B: API の error 文言ではなく code で表示を切り替える
+        switch (result.code) {
+          case 'daily_limit':
+            setLikesRemaining(0)
+            alert(dailyLimitTexts[currentLanguage] || dailyLimitTexts.ja)
+            break
+          case 'target_unavailable':
+            alert(t('likeTargetUnavailable'))
+            break
+          case 'already_matched':
+            alert(t('likeAlreadyMatched'))
+            break
+          case 'profile_incomplete':
+            alert(t('likeProfileIncomplete'))
+            router.push('/mypage')
+            break
+          default:
+            alert(likeFailedTexts[currentLanguage] || likeFailedTexts.ja)
+        }
       }
     } catch (error) {
       console.error('Error liking user:', error)

@@ -13,29 +13,11 @@ const noCacheHeaders = {
   'Expires': '0',
 }
 
-const DAILY_LIMIT = 10
-
-/**
- * Asia/Tokyo基準で今日の開始時刻（UTC）を取得
- */
-function getTodayStartUTC(): Date {
-  const now = new Date()
-  const jstOffset = 9 * 60 * 60 * 1000
-  const jstNow = new Date(now.getTime() + jstOffset)
-  const jstYear = jstNow.getUTCFullYear()
-  const jstMonth = jstNow.getUTCMonth()
-  const jstDate = jstNow.getUTCDate()
-  const todayStartJST = new Date(Date.UTC(jstYear, jstMonth, jstDate, 0, 0, 0, 0))
-  const todayStartUTC = new Date(todayStartJST.getTime() - jstOffset)
-  return todayStartUTC
-}
-
 /**
  * GET /api/likes/remaining
  *
  * 今日の残りいいね回数を取得する
- * - 1日10回の制限
- * - 日付はAsia/Tokyo基準
+ * - 上限・使用数は DB 関数 get_like_quota（日付は Asia/Tokyo 基準）
  */
 export async function GET(request: NextRequest) {
   console.log('🚀 [likes/remaining] API started')
@@ -89,33 +71,25 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ [likes/remaining] Authenticated user:', user.id)
 
-    const userId = user.id
-    const todayStartUTC = getTodayStartUTC()
+    // 段階2-B: 上限・使用数・残り回数は DB 関数 get_like_quota に一本化（日付区切りは JST）
+    const { data: quota, error } = await supabase.rpc('get_like_quota')
 
-    // 今日のいいね数をカウント
-    const { count, error } = await supabase
-      .from('likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('liker_id', userId)
-      .gte('created_at', todayStartUTC.toISOString())
-
-    if (error) {
-      console.error('[likes/remaining] count error:', error)
+    if (error || !quota) {
+      console.error('[likes/remaining] get_like_quota error:', error?.message)
       return NextResponse.json({
         error: 'Database error',
-        debug: { message: error.message }
+        debug: { message: error?.message ?? 'no data' }
       }, { status: 500, headers: noCacheHeaders })
     }
 
-    const used = count || 0
-    const remaining = Math.max(0, DAILY_LIMIT - used)
+    const { limit, used, remaining } = quota as { limit: number; used: number; remaining: number }
 
-    console.log('✅ [likes/remaining] Result:', { used, remaining, limit: DAILY_LIMIT })
+    console.log('✅ [likes/remaining] Result:', { used, remaining, limit })
 
     return NextResponse.json({
       remaining,
       used,
-      limit: DAILY_LIMIT
+      limit
     }, { headers: noCacheHeaders })
 
   } catch (error) {

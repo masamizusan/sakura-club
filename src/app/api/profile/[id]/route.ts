@@ -88,9 +88,22 @@ export async function GET(
     // レスポンス互換: ビューに載る行は完成済みのみのため profile_initialized は true 固定
     const profile = { ...publicProfile, profile_initialized: true }
 
+    // 段階2-B: 閲覧者がこの相手にいいね済みか（RLS likes_select_own_sent で自分の送信分のみ読める）
+    const { data: sentLike, error: sentLikeError } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('liker_id', user.id)
+      .eq('liked_user_id', profileId)
+      .maybeSingle()
+
+    if (sentLikeError) {
+      console.error('[profile/[id]] viewer like check error:', sentLikeError.message)
+    }
+
     return NextResponse.json({
       profile,
-      viewerId: user.id
+      viewerId: user.id,
+      viewer_has_liked: !!sentLike
     }, { headers: noCacheHeaders })
 
   } catch (error) {

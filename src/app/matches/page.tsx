@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
@@ -60,6 +61,9 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeLimitReached: '本日のいいね上限（10回）に達しました。明日またお試しください。',
     matched: 'マッチしました！メッセージを送ってみましょう。',
     likeFailed: 'いいねの送信に失敗しました。もう一度お試しください。',
+    likeTargetUnavailable: 'このユーザーには現在いいねできません',
+    likeAlreadyMatched: 'すでにマッチしています',
+    likeProfileIncomplete: 'プロフィールを完成させると、いいねを送れます',
     errorOccurred: 'エラーが発生しました。もう一度お試しください。',
     plannedPrefectures: '訪問予定の都道府県',
   },
@@ -83,6 +87,9 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeLimitReached: 'You have reached your daily like limit (10). Please try again tomorrow.',
     matched: 'It\'s a match! Send them a message.',
     likeFailed: 'Failed to send like. Please try again.',
+    likeTargetUnavailable: 'You cannot like this user right now.',
+    likeAlreadyMatched: 'You are already matched.',
+    likeProfileIncomplete: 'Complete your profile to send likes.',
     errorOccurred: 'An error occurred. Please try again.',
     plannedPrefectures: 'Planned Prefectures',
   },
@@ -106,6 +113,9 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeLimitReached: '오늘의 좋아요 한도(10회)에 도달했습니다. 내일 다시 시도해주세요.',
     matched: '매칭되었습니다! 메시지를 보내보세요.',
     likeFailed: '좋아요 전송에 실패했습니다. 다시 시도해주세요.',
+    likeTargetUnavailable: '현재 이 사용자에게 좋아요를 보낼 수 없습니다.',
+    likeAlreadyMatched: '이미 매칭되었습니다.',
+    likeProfileIncomplete: '프로필을 완성하면 좋아요를 보낼 수 있습니다.',
     errorOccurred: '오류가 발생했습니다. 다시 시도해주세요.',
     plannedPrefectures: '방문 예정 지역',
   },
@@ -129,6 +139,9 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeLimitReached: '您已達到今日按讚上限（10次）。請明天再試。',
     matched: '配對成功！發送訊息吧。',
     likeFailed: '按讚失敗，請重試。',
+    likeTargetUnavailable: '目前無法對此使用者按讚。',
+    likeAlreadyMatched: '你們已經配對成功。',
+    likeProfileIncomplete: '完成個人資料後即可按讚。',
     errorOccurred: '發生錯誤，請重試。',
     plannedPrefectures: '預計前往的地區',
   }
@@ -164,6 +177,7 @@ interface UserProfile {
 export default function MatchesPage() {
   const { user, isLoading: authLoading } = useAuth()
   const { currentLanguage } = useLanguage()
+  const router = useRouter()
   const [matches, setMatches] = useState<UserProfile[]>([])
   const [filteredMatches, setFilteredMatches] = useState<UserProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -360,6 +374,7 @@ export default function MatchesPage() {
 
       const result = await response.json()
 
+      // 成功（alreadyLiked:true も同じ扱い: 一覧から外し remaining を反映）
       if (response.ok) {
         setFilteredMatches(prev => prev.filter(user => user.id !== userId))
         setMatches(prev => prev.filter(user => user.id !== userId))
@@ -371,11 +386,26 @@ export default function MatchesPage() {
         if (result.matched) {
           alert(t('matched'))
         }
-      } else if (response.status === 429) {
-        setLikesRemaining(0)
-        alert(t('likeLimitReached'))
       } else {
-        alert(result.error || t('likeFailed'))
+        // 段階2-B: API の error 文言ではなく code で表示を切り替える
+        switch (result.code) {
+          case 'daily_limit':
+            setLikesRemaining(0)
+            alert(t('likeLimitReached'))
+            break
+          case 'target_unavailable':
+            alert(t('likeTargetUnavailable'))
+            break
+          case 'already_matched':
+            alert(t('likeAlreadyMatched'))
+            break
+          case 'profile_incomplete':
+            alert(t('likeProfileIncomplete'))
+            router.push('/mypage')
+            break
+          default:
+            alert(t('likeFailed'))
+        }
       }
     } catch (error) {
       console.error('Error liking user:', error)
