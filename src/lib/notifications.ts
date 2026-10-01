@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 
-export type NotificationType = 'match' | 'message' | 'experience_invitation' | 'experience_reminder' | 'review_request' | 'system'
+export type NotificationType = 'match' | 'like' | 'message' | 'experience_invitation' | 'experience_reminder' | 'review_request' | 'system'
 
 export interface CreateNotificationParams {
   userId: string
@@ -68,6 +68,20 @@ export class NotificationService {
       data: {
         matched_user_id: matchedUserId,
         matched_user_name: matchedUserName
+      }
+    }, request)
+  }
+
+  // さくらいいね通知を作成（段階3-3。受け手は日本人女性のため文言は日本語）
+  async createSakuraLikeNotification(userId: string, fromUserName: string, fromUserId: string, request?: NextRequest) {
+    return this.createNotification({
+      userId,
+      type: 'like',
+      title: 'さくらいいねが届きました',
+      message: `${fromUserName}さんからさくらいいねが届きました`,
+      data: {
+        kind: 'sakura_like',
+        from_user_id: fromUserId
       }
     }, request)
   }

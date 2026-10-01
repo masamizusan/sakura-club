@@ -89,9 +89,10 @@ export async function GET(
     const profile = { ...publicProfile, profile_initialized: true }
 
     // 段階2-B: 閲覧者がこの相手にいいね済みか（RLS likes_select_own_sent で自分の送信分のみ読める）
+    // 段階3-3: さくらいいね済みか（is_special）も返す
     const { data: sentLike, error: sentLikeError } = await supabase
       .from('likes')
-      .select('id')
+      .select('id, is_special')
       .eq('liker_id', user.id)
       .eq('liked_user_id', profileId)
       .maybeSingle()
@@ -103,7 +104,8 @@ export async function GET(
     return NextResponse.json({
       profile,
       viewerId: user.id,
-      viewer_has_liked: !!sentLike
+      viewer_has_liked: !!sentLike,
+      viewer_has_special: sentLike?.is_special === true
     }, { headers: noCacheHeaders })
 
   } catch (error) {

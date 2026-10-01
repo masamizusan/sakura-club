@@ -39,6 +39,8 @@ import {
   formatNationality
 } from '@/utils/profileFieldFormatters'
 import { getOrderedUserIds } from '@/utils/userPair'
+import { isForeignMaleUser } from '@/utils/userHelpers'
+import { useSubscription } from '@/hooks/useSubscription'
 import {
   formatPersonalityTag,
   formatCultureTag
@@ -70,6 +72,21 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     likeTargetUnavailable: 'このユーザーには現在いいねできません',
     likeAlreadyMatched: 'すでにマッチしています',
     likeProfileIncomplete: 'プロフィールを完成させると、いいねを送れます',
+    // さくらいいね（段階3-3）
+    sakuraLike: '🌸 さくらいいね',
+    sakuraRemaining: '残り',
+    sakuraSent: '🌸 さくらいいね済み',
+    sakuraBuy: 'さくらいいねを購入する',
+    sakuraModalDesc: 'お相手の「お相手から」の上位に特別に表示されます。回数券を1枚使います。',
+    sakuraMessageLabel: '一言メッセージ（任意）',
+    sakuraMessagePlaceholder: 'お相手へのひとことを添えられます',
+    sakuraMessageNotAllowed: '一言メッセージは年齢確認済みの有料プラン会員のみ送れます',
+    sakuraSend: '送る',
+    sakuraCancel: 'キャンセル',
+    sakuraNoTickets: 'さくらいいねの残りがありません',
+    sakuraAlreadySent: 'すでにさくらいいねを送っています',
+    sakuraMessageRejected: 'このメッセージは送信できません。内容を変えて、もう一度お試しください',
+    sakuraCheckUnavailable: '現在メッセージを確認できません。時間をおいてお試しください',
     dailyLimitReached: '本日の上限に達しました',
     ownProfile: '自分のプロフィールです',
     like: 'いいね',
@@ -111,6 +128,21 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     likeTargetUnavailable: 'You cannot like this user right now.',
     likeAlreadyMatched: 'You are already matched.',
     likeProfileIncomplete: 'Complete your profile to send likes.',
+    // Sakura Like (stage 3-3)
+    sakuraLike: '🌸 Sakura Like',
+    sakuraRemaining: 'left',
+    sakuraSent: '🌸 Sakura Like sent',
+    sakuraBuy: 'Buy Sakura Likes',
+    sakuraModalDesc: 'Your like is specially shown at the top of her “Likes received” list. This uses 1 Sakura Like.',
+    sakuraMessageLabel: 'Short message (optional)',
+    sakuraMessagePlaceholder: 'Add a short note for her',
+    sakuraMessageNotAllowed: 'Short messages are available only to age-verified paid members.',
+    sakuraSend: 'Send',
+    sakuraCancel: 'Cancel',
+    sakuraNoTickets: 'You have no Sakura Likes left.',
+    sakuraAlreadySent: 'You have already sent a Sakura Like.',
+    sakuraMessageRejected: 'This message cannot be sent. Please change it and try again.',
+    sakuraCheckUnavailable: 'We cannot check your message right now. Please try again later.',
     dailyLimitReached: 'Daily limit reached',
     ownProfile: 'This is your profile',
     like: 'Like',
@@ -152,6 +184,21 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     likeTargetUnavailable: '현재 이 사용자에게 좋아요를 보낼 수 없습니다.',
     likeAlreadyMatched: '이미 매칭되었습니다.',
     likeProfileIncomplete: '프로필을 완성하면 좋아요를 보낼 수 있습니다.',
+    // 사쿠라 좋아요 (단계3-3)
+    sakuraLike: '🌸 사쿠라 좋아요',
+    sakuraRemaining: '남은',
+    sakuraSent: '🌸 사쿠라 좋아요 완료',
+    sakuraBuy: '사쿠라 좋아요 구매하기',
+    sakuraModalDesc: '상대방의 「받은 좋아요」 상단에 특별히 표시됩니다. 이용권 1개를 사용합니다.',
+    sakuraMessageLabel: '한마디 메시지 (선택)',
+    sakuraMessagePlaceholder: '상대방에게 한마디를 남길 수 있습니다',
+    sakuraMessageNotAllowed: '한마디 메시지는 연령 확인을 완료한 유료 플랜 회원만 보낼 수 있습니다.',
+    sakuraSend: '보내기',
+    sakuraCancel: '취소',
+    sakuraNoTickets: '남은 사쿠라 좋아요가 없습니다.',
+    sakuraAlreadySent: '이미 사쿠라 좋아요를 보냈습니다.',
+    sakuraMessageRejected: '이 메시지는 보낼 수 없습니다. 내용을 바꿔서 다시 시도해 주세요.',
+    sakuraCheckUnavailable: '현재 메시지를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     dailyLimitReached: '오늘의 한도에 도달했습니다',
     ownProfile: '본인의 프로필입니다',
     like: '좋아요',
@@ -193,6 +240,21 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     likeTargetUnavailable: '目前無法對此使用者按讚。',
     likeAlreadyMatched: '你們已經配對成功。',
     likeProfileIncomplete: '完成個人資料後即可按讚。',
+    // 櫻花讚（階段3-3）
+    sakuraLike: '🌸 櫻花讚',
+    sakuraRemaining: '剩餘',
+    sakuraSent: '🌸 已送出櫻花讚',
+    sakuraBuy: '購買櫻花讚',
+    sakuraModalDesc: '會特別顯示在對方「收到的讚」列表的最上方。將使用1張櫻花讚券。',
+    sakuraMessageLabel: '一句話留言（選填）',
+    sakuraMessagePlaceholder: '可以附上一句話給對方',
+    sakuraMessageNotAllowed: '一句話留言僅限已完成年齡驗證的付費方案會員使用。',
+    sakuraSend: '送出',
+    sakuraCancel: '取消',
+    sakuraNoTickets: '櫻花讚已用完。',
+    sakuraAlreadySent: '您已經送出櫻花讚了。',
+    sakuraMessageRejected: '此訊息無法送出。請修改內容後再試一次。',
+    sakuraCheckUnavailable: '目前無法確認訊息內容，請稍後再試。',
     dailyLimitReached: '已達到今日上限',
     ownProfile: '這是您的個人資料',
     like: '按讚',
@@ -248,6 +310,16 @@ function ProfileDetailContent() {
   const [isLiking, setIsLiking] = useState(false)
   const [hasLiked, setHasLiked] = useState(false)
   const [isMatched, setIsMatched] = useState(false)
+
+  // さくらいいね（段階3-3）
+  const SAKURA_MESSAGE_MAX = 100
+  const [hasSpecial, setHasSpecial] = useState(false)
+  const [sakuraBalance, setSakuraBalance] = useState<number | null>(null)
+  const [viewerProfile, setViewerProfile] = useState<{ gender: string | null; nationality: string | null; verification_status: string | null } | null>(null)
+  const [showSakuraModal, setShowSakuraModal] = useState(false)
+  const [sakuraMessage, setSakuraMessage] = useState('')
+  const [isSendingSakura, setIsSendingSakura] = useState(false)
+  const { isSubscribed } = useSubscription()
   const supabase = createClient()
 
   // 言語コンテキスト
@@ -419,6 +491,8 @@ function ProfileDetailContent() {
         setViewerId(data.viewerId)
         // 段階2-B: 過去にいいね済みなら「いいね済み」から表示する
         setHasLiked(data.viewer_has_liked === true)
+        // 段階3-3: さくらいいね済みか
+        setHasSpecial(data.viewer_has_special === true)
       } catch (err) {
         console.error('Error fetching profile:', err)
         setError(t('errorOccurred'))
@@ -504,6 +578,38 @@ function ProfileDetailContent() {
     markAsRead()
   }, [profileId])
 
+  // さくらいいね: 自分の性別・国籍・年齢確認状況（表示の補助）と回数券の残り
+  useEffect(() => {
+    if (!profileId) return
+    const loadSakuraContext = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || user.id === profileId) return
+
+        const { data: me, error: meError } = await supabase
+          .from('profiles')
+          .select('gender, nationality, verification_status')
+          .eq('id', user.id)
+          .maybeSingle()
+        if (meError) {
+          console.error('[profile] viewer profile fetch error:', meError.message)
+          return
+        }
+        setViewerProfile(me ?? null)
+        if (!isForeignMaleUser(me)) return
+
+        const res = await fetch('/api/sakura/balance', { cache: 'no-store', credentials: 'include' })
+        if (res.ok) {
+          const balanceData = await res.json()
+          setSakuraBalance(typeof balanceData.balance === 'number' ? balanceData.balance : 0)
+        }
+      } catch (e) {
+        console.error('[profile] sakura context error:', e)
+      }
+    }
+    loadSakuraContext()
+  }, [profileId])
+
   // 残りいいね数を取得
   useEffect(() => {
     const fetchLikesRemaining = async () => {
@@ -524,6 +630,88 @@ function ProfileDetailContent() {
   }, [])
 
   // いいね送信
+  // さくらいいね: 一言メッセージを送れるか（表示上の補助。実際の判定は API / DB）
+  const canSendSakuraMessage = viewerProfile?.verification_status === 'approved' && isSubscribed === true
+
+  const handleSakuraLike = async () => {
+    if (isSendingSakura || hasSpecial) return
+    const message = canSendSakuraMessage ? sakuraMessage.trim() : ''
+
+    setIsSendingSakura(true)
+    try {
+      const response = await fetch('/api/likes/special', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          likedUserId: profileId,
+          ...(message ? { message } : {}),
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setHasLiked(true)
+        setHasSpecial(true)
+        setSakuraBalance(prev => (prev === null ? prev : Math.max(0, prev - 1)))
+        setShowSakuraModal(false)
+        setSakuraMessage('')
+
+        if (result.matched) {
+          setMatchConversationId(result.conversationId ?? null)
+          setShowMatchModal(true)
+          setIsMatched(true)
+        }
+        return
+      }
+
+      switch (result.code) {
+        case 'no_tickets':
+          setSakuraBalance(0)
+          setShowSakuraModal(false)
+          alert(t('sakuraNoTickets'))
+          router.push('/mypage/plans#sakura')
+          break
+        case 'already_special':
+          setHasSpecial(true)
+          setShowSakuraModal(false)
+          alert(t('sakuraAlreadySent'))
+          break
+        case 'message_rejected':
+          alert(t('sakuraMessageRejected'))
+          break
+        case 'moderation_unavailable':
+        case 'translation_unavailable':
+          alert(t('sakuraCheckUnavailable'))
+          break
+        case 'message_not_allowed':
+          alert(t('sakuraMessageNotAllowed'))
+          break
+        case 'target_unavailable':
+          setShowSakuraModal(false)
+          alert(t('likeTargetUnavailable'))
+          break
+        case 'already_matched':
+          setShowSakuraModal(false)
+          alert(t('likeAlreadyMatched'))
+          break
+        case 'profile_incomplete':
+          setShowSakuraModal(false)
+          alert(t('likeProfileIncomplete'))
+          router.push('/mypage')
+          break
+        default:
+          alert(likeFailedTexts[currentLanguage] || likeFailedTexts.ja)
+      }
+    } catch (error) {
+      console.error('Error sending sakura like:', error)
+      alert(t('errorOccurred'))
+    } finally {
+      setIsSendingSakura(false)
+    }
+  }
+
   const handleLike = async () => {
     if (isLiking || hasLiked || likesRemaining <= 0) return
 
@@ -820,6 +1008,66 @@ function ProfileDetailContent() {
           </div>
         )
       })()}
+
+      {/* さくらいいね確認モーダル（段階3-3。通報モーダルと同じ app-card の作り） */}
+      {showSakuraModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="app-card max-w-sm w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-shippori text-lg" style={{ color: 'var(--color-text)' }}>{t('sakuraLike')}</h3>
+              <button
+                onClick={() => setShowSakuraModal(false)}
+                aria-label={t('sakuraCancel')}
+                style={{ color: 'var(--color-text-sub)' }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm mb-4" style={{ color: 'var(--color-text-sub)' }}>{t('sakuraModalDesc')}</p>
+
+            <label className="block text-sm mb-1" style={{ color: 'var(--color-text)' }}>
+              {t('sakuraMessageLabel')}
+            </label>
+            <textarea
+              placeholder={t('sakuraMessagePlaceholder')}
+              value={sakuraMessage}
+              onChange={e => {
+                // DB の char_length と同じくコードポイント単位で 100 文字まで
+                const chars = Array.from(e.target.value)
+                setSakuraMessage(chars.length > SAKURA_MESSAGE_MAX ? chars.slice(0, SAKURA_MESSAGE_MAX).join('') : e.target.value)
+              }}
+              disabled={!canSendSakuraMessage || isSendingSakura}
+              rows={3}
+              className="w-full rounded-lg px-3 py-2 text-sm disabled:opacity-50"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
+            />
+            <div className="flex items-start justify-between mt-1 mb-4 gap-2">
+              <p className="text-xs" style={{ color: 'var(--color-text-sub)' }}>
+                {!canSendSakuraMessage ? t('sakuraMessageNotAllowed') : ''}
+              </p>
+              <p className="text-xs flex-shrink-0" style={{ color: 'var(--color-text-sub)' }}>
+                {Array.from(sakuraMessage).length}/{SAKURA_MESSAGE_MAX}
+              </p>
+            </div>
+
+            <button
+              onClick={handleSakuraLike}
+              disabled={isSendingSakura}
+              className="w-full btn-primary py-3 rounded-full font-medium disabled:opacity-50"
+            >
+              {isSendingSakura ? t('sending') : t('sakuraSend')}
+            </button>
+            <button
+              onClick={() => setShowSakuraModal(false)}
+              disabled={isSendingSakura}
+              className="w-full mt-2 py-3 rounded-full text-sm"
+              style={{ color: 'var(--color-text-sub)' }}
+            >
+              {t('sakuraCancel')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* マッチ成立モーダル — 旧 window.alert('It's a match!...') を置換、CTA で /messages/{id} 遷移 */}
       {showMatchModal && (() => {
@@ -1245,6 +1493,30 @@ function ProfileDetailContent() {
                       </>
                     )}
                   </Button>
+
+                  {/* さくらいいね（段階3-3。外国人男性の閲覧者のみ） */}
+                  {isForeignMaleUser(viewerProfile) && viewerId !== profileId && sakuraBalance !== null && (
+                    <Button
+                      variant="outline"
+                      className="w-full mt-3"
+                      size="lg"
+                      disabled={hasSpecial || isSendingSakura}
+                      onClick={() => {
+                        if (sakuraBalance <= 0) {
+                          router.push('/mypage/plans#sakura')
+                          return
+                        }
+                        setShowSakuraModal(true)
+                      }}
+                      style={{ color: '#8b1a2e', borderColor: '#d4a89a', backgroundColor: '#fdf6ef' }}
+                    >
+                      {hasSpecial
+                        ? t('sakuraSent')
+                        : sakuraBalance <= 0
+                          ? t('sakuraBuy')
+                          : `${t('sakuraLike')}（${t('sakuraRemaining')} ${sakuraBalance}）`}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
