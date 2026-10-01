@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     console.log('📥 [likes/received] Step 3: Getting received likes...')
     const { data: receivedLikes, error: receivedError } = await supabase
       .from('likes')
-      .select('liker_id, created_at')
+      .select('liker_id, created_at, is_special, special_message, special_message_ja, special_sent_at')
       .eq('liked_user_id', currentUserId)
       .order('created_at', { ascending: false })
 
@@ -210,6 +210,25 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // 段階3-4: liker_id → さくらいいね情報（同じ人の行が複数あれば is_special の行を優先）
+    type SpecialInfo = {
+      isSpecial: boolean
+      specialMessage: string | null
+      specialMessageJa: string | null
+      specialSentAt: string | null
+    }
+    const likerSpecialMap = new Map<string, SpecialInfo>()
+    receivedLikes?.forEach(like => {
+      const current = likerSpecialMap.get(like.liker_id)
+      if (current?.isSpecial) return
+      likerSpecialMap.set(like.liker_id, {
+        isSpecial: like.is_special === true,
+        specialMessage: like.is_special === true ? (like.special_message ?? null) : null,
+        specialMessageJa: like.is_special === true ? (like.special_message_ja ?? null) : null,
+        specialSentAt: like.is_special === true ? (like.special_sent_at ?? null) : null,
+      })
+    })
+
     // 年齢: 公開用ビューの age（生年月日から日本時間基準で算出済み）を number | null で返す
     const toAge = (value: unknown): number | null => {
       if (value === null || value === undefined || value === '') return null
@@ -235,8 +254,21 @@ export async function GET(request: NextRequest) {
         culture_tags: Array.isArray(profile.culture_tags) ? profile.culture_tags : [],
         planned_prefectures: Array.isArray(profile.planned_prefectures) ? profile.planned_prefectures : [],
         liked_at: likerCreatedAtMap.get(profile.id) || null,
+        isSpecial: likerSpecialMap.get(profile.id)?.isSpecial ?? false,
+        specialMessage: likerSpecialMap.get(profile.id)?.specialMessage ?? null,
+        specialMessageJa: likerSpecialMap.get(profile.id)?.specialMessageJa ?? null,
+        specialSentAt: likerSpecialMap.get(profile.id)?.specialSentAt ?? null,
       }))
-      .sort((a, b) => (likerIdOrder.get(a.id) ?? 999) - (likerIdOrder.get(b.id) ?? 999)) || []
+      // 段階3-4: さくらいいね（isSpecial）を先頭に special_sent_at の新しい順、続いて既存の並び（いいねの新しい順）
+      .sort((a, b) => {
+        if (a.isSpecial !== b.isSpecial) return a.isSpecial ? -1 : 1
+        if (a.isSpecial && b.isSpecial) {
+          const at = a.specialSentAt ? new Date(a.specialSentAt).getTime() : 0
+          const bt = b.specialSentAt ? new Date(b.specialSentAt).getTime() : 0
+          if (at !== bt) return bt - at
+        }
+        return (likerIdOrder.get(a.id) ?? 999) - (likerIdOrder.get(b.id) ?? 999)
+      }) || []
 
     // 最終レスポンスの詳細ログ
     console.log('✅ [likes/received] FINAL RESPONSE:', {

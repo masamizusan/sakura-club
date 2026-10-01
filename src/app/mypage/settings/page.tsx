@@ -11,6 +11,7 @@ type Notification = {
   type: string
   title: string
   message: string
+  data?: Record<string, any>
   isRead: boolean
   createdAt: string
 }
@@ -301,7 +302,7 @@ export default function SettingsPage() {
                 }}
               >
                 <span style={{ fontSize: '24px', flexShrink: 0 }}>
-                  {notificationIcons[notif.type] ?? 'ℹ️'}
+                  {notif.type === 'like' && notif.data?.kind === 'sakura_like' ? '🌸' : (notificationIcons[notif.type] ?? 'ℹ️')}
                 </span>
                 <div style={{ flex: 1 }}>
                   <p style={{

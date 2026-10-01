@@ -32,6 +32,9 @@ const likesTranslations: Record<string, Record<string, string>> = {
     yesterday: '昨日',
     markAllSeen: '全て既読にする',
     plannedPrefectures: '訪問予定',
+    sakuraSectionTitle: '🌸 さくらいいね',
+    showOriginal: '原文を表示',
+    showTranslation: '訳を表示',
   },
   en: {
     pageTitle: 'Likes Received',
@@ -46,6 +49,9 @@ const likesTranslations: Record<string, Record<string, string>> = {
     yesterday: 'Yesterday',
     markAllSeen: 'Mark all as read',
     plannedPrefectures: 'Visiting',
+    sakuraSectionTitle: '🌸 Sakura Likes',
+    showOriginal: 'Show original',
+    showTranslation: 'Show translation',
   },
   ko: {
     pageTitle: '관심',
@@ -60,6 +66,9 @@ const likesTranslations: Record<string, Record<string, string>> = {
     yesterday: '어제',
     markAllSeen: '모두 읽음 표시',
     plannedPrefectures: '방문 예정',
+    sakuraSectionTitle: '🌸 사쿠라 좋아요',
+    showOriginal: '원문 보기',
+    showTranslation: '번역 보기',
   },
   'zh-tw': {
     pageTitle: '喜歡我的人',
@@ -74,6 +83,9 @@ const likesTranslations: Record<string, Record<string, string>> = {
     yesterday: '昨天',
     markAllSeen: '全部標為已讀',
     plannedPrefectures: '預定訪問',
+    sakuraSectionTitle: '🌸 櫻花讚',
+    showOriginal: '顯示原文',
+    showTranslation: '顯示翻譯',
   }
 }
 
@@ -94,6 +106,11 @@ interface LikerProfile {
   culture_tags: string[]
   planned_prefectures?: string[]
   liked_at: string | null
+  // 段階3-4: さくらいいね
+  isSpecial?: boolean
+  specialMessage?: string | null
+  specialMessageJa?: string | null
+  specialSentAt?: string | null
 }
 
 // 日付グループの型定義
@@ -109,6 +126,8 @@ export default function LikesPage() {
   const [likers, setLikers] = useState<LikerProfile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isMarkingSeen, setIsMarkingSeen] = useState(false)
+  // さくらいいねの一言メッセージ: liker.id → 原文を表示中か（既定は日本語訳）
+  const [showSpecialOriginal, setShowSpecialOriginal] = useState<Record<string, boolean>>({})
 
   // いいね残り回数
   const [likesRemaining, setLikesRemaining] = useState<number>(10)
@@ -190,14 +209,18 @@ export default function LikesPage() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   }
 
+  // 段階3-4: さくらいいねの人は専用の区画に表示し、日付グループには含めない
+  const specialLikers = useMemo(() => likers.filter(liker => liker.isSpecial === true), [likers])
+  const normalLikers = useMemo(() => likers.filter(liker => liker.isSpecial !== true), [likers])
+
   // いいねを日付でグループ化
   const groupedLikers = useMemo((): DateGroup[] => {
-    if (likers.length === 0) return []
+    if (normalLikers.length === 0) return []
 
     const groups = new Map<string, LikerProfile[]>()
     const dateOrder: string[] = []
 
-    likers.forEach(liker => {
+    normalLikers.forEach(liker => {
       const dateKey = liker.liked_at ? getDateKey(liker.liked_at) : 'unknown'
       if (!groups.has(dateKey)) {
         groups.set(dateKey, [])
@@ -218,7 +241,149 @@ export default function LikesPage() {
         likers: likersInGroup
       }
     })
-  }, [likers, currentLanguage])
+  }, [normalLikers, currentLanguage])
+
+  // いいねカード（通常・さくらいいね共通。さくらいいねは桜マーク・桜色の枠・一言メッセージを追加）
+  const renderLikerCard = (liker: LikerProfile) => {
+    const isSpecial = liker.isSpecial === true
+    const messageJa = liker.specialMessageJa ?? null
+    const messageOriginal = liker.specialMessage ?? null
+    // 訳と原文が同じ（または片方しか無い）場合は切り替えを出さない
+    const canToggle = !!messageJa && !!messageOriginal && messageJa !== messageOriginal
+    const showingOriginal = canToggle && showSpecialOriginal[liker.id] === true
+    const displayMessage = showingOriginal ? messageOriginal : (messageJa ?? messageOriginal)
+
+    const isJapanese = !liker.nationality ||
+      liker.nationality === '' ||
+      liker.nationality.toLowerCase() === 'jp' ||
+      liker.nationality.toLowerCase() === 'japan' ||
+      liker.nationality === '日本' ||
+      liker.nationality.toLowerCase() === 'japanese'
+
+    const locationLabel = isJapanese
+      ? formatPrefecture(liker.prefecture || liker.residence, currentLanguage) || liker.prefecture || liker.residence
+      : formatNationality(liker.nationality, currentLanguage) || liker.nationality
+
+    return (
+      <Link
+        key={liker.id}
+        href={`/profile/${liker.id}?from=likes`}
+        className="block"
+      >
+        <div
+          className={`rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer p-4 ${isSpecial ? '' : 'bg-white'}`}
+          style={isSpecial ? { backgroundColor: '#fff5f7', border: '1px solid #f4c2cf' } : undefined}
+        >
+          {/* 上部: 写真 + 基本情報 */}
+          <div className="flex">
+            {/* 写真エリア（左側）- 160px */}
+            <div className="relative w-[160px] h-[160px] flex-shrink-0">
+              <Avatar
+                src={liker.avatar_url}
+                alt={liker.name}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
+
+            {/* 基本情報（右側） */}
+            <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
+              {/* 時刻 */}
+              {liker.liked_at && (
+                <p className="text-sm text-gray-400 mb-1">
+                  {formatTime(liker.liked_at)}
+                </p>
+              )}
+              {/* 年齢 */}
+              {liker.age && (
+                <p className="text-2xl font-bold text-gray-800">
+                  {liker.age}{t('yearsOld')}
+                </p>
+              )}
+              {/* 居住地/国籍 */}
+              {locationLabel && (
+                <p className="text-xl font-bold text-amber-700">
+                  {locationLabel}
+                </p>
+              )}
+              {/* 名前 */}
+              <p className="text-lg font-medium text-gray-700 truncate">
+                {liker.name}{isSpecial && <span className="ml-1" aria-hidden="true">🌸</span>}
+              </p>
+            </div>
+          </div>
+
+          {/* さくらいいねの一言メッセージ（吹き出し。既定は日本語訳、原文に切り替え可） */}
+          {isSpecial && displayMessage && (
+            <div className="mt-3 rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#ffffff', border: '1px solid #f4c2cf', color: 'var(--color-text)' }}>
+              <p className="whitespace-pre-wrap break-words">{displayMessage}</p>
+              {canToggle && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowSpecialOriginal(prev => ({ ...prev, [liker.id]: !prev[liker.id] }))
+                  }}
+                  className="mt-1 text-xs underline"
+                  style={{ color: '#8b1a2e' }}
+                >
+                  {showingOriginal ? t('showTranslation') : t('showOriginal')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* 下部: 自己紹介 + タグ（カード幅いっぱい） */}
+          {(liker.bio || (liker.interests && liker.interests.length > 0)) && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              {/* 自己紹介（2行） */}
+              {liker.bio && (
+                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                  {liker.bio}
+                </p>
+              )}
+              {/* 興味タグ */}
+              {liker.interests && liker.interests.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {liker.interests.slice(0, 4).map((interest, index) => (
+                    <span
+                      key={index}
+                      className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
+                    >
+                      {formatCultureTag(interest, currentLanguage)}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {/* 訪問予定の都道府県 */}
+              {liker.planned_prefectures && liker.planned_prefectures.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-400 mb-1">
+                    📍 {t('plannedPrefectures')}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {liker.planned_prefectures.slice(0, 4).map((pref, index) => (
+                      <span
+                        key={index}
+                        className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-sm font-medium"
+                      >
+                        {formatPrefecture(pref, currentLanguage) || pref}
+                      </span>
+                    ))}
+                    {liker.planned_prefectures.length > 4 && (
+                      <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-sm">
+                        +{liker.planned_prefectures.length - 4}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Link>
+    )
+  }
 
   const markAllSeen = async () => {
     setIsMarkingSeen(true)
@@ -367,6 +532,18 @@ export default function LikesPage() {
             </div>
           )}
 
+          {/* さくらいいね（段階3-4。日付グループの前に独立した区画） */}
+          {!isLoading && specialLikers.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-bold mb-3" style={{ color: '#8b1a2e' }}>
+                {t('sakuraSectionTitle')}
+              </h2>
+              <div className="flex flex-col gap-4">
+                {specialLikers.map((liker) => renderLikerCard(liker))}
+              </div>
+            </div>
+          )}
+
           {/* いいねをくれたユーザー一覧（日付グループ） */}
           {!isLoading && groupedLikers.length > 0 && (
             <div className="flex flex-col gap-6">
@@ -380,112 +557,7 @@ export default function LikesPage() {
                   {/* その日のいいね一覧 */}
                   <div className="flex flex-col gap-4">
                     {group.likers.map((liker) => {
-                      const isJapanese = !liker.nationality ||
-                        liker.nationality === '' ||
-                        liker.nationality.toLowerCase() === 'jp' ||
-                        liker.nationality.toLowerCase() === 'japan' ||
-                        liker.nationality === '日本' ||
-                        liker.nationality.toLowerCase() === 'japanese'
-
-                      const locationLabel = isJapanese
-                        ? formatPrefecture(liker.prefecture || liker.residence, currentLanguage) || liker.prefecture || liker.residence
-                        : formatNationality(liker.nationality, currentLanguage) || liker.nationality
-
-                      return (
-                        <Link
-                          key={liker.id}
-                          href={`/profile/${liker.id}?from=likes`}
-                          className="block"
-                        >
-                          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer p-4">
-                            {/* 上部: 写真 + 基本情報 */}
-                            <div className="flex">
-                              {/* 写真エリア（左側）- 160px */}
-                              <div className="relative w-[160px] h-[160px] flex-shrink-0">
-                                <Avatar
-                                  src={liker.avatar_url}
-                                  alt={liker.name}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              </div>
-
-                              {/* 基本情報（右側） */}
-                              <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
-                                {/* 時刻 */}
-                                {liker.liked_at && (
-                                  <p className="text-sm text-gray-400 mb-1">
-                                    {formatTime(liker.liked_at)}
-                                  </p>
-                                )}
-                                {/* 年齢 */}
-                                {liker.age && (
-                                  <p className="text-2xl font-bold text-gray-800">
-                                    {liker.age}{t('yearsOld')}
-                                  </p>
-                                )}
-                                {/* 居住地/国籍 */}
-                                {locationLabel && (
-                                  <p className="text-xl font-bold text-amber-700">
-                                    {locationLabel}
-                                  </p>
-                                )}
-                                {/* 名前 */}
-                                <p className="text-lg font-medium text-gray-700 truncate">
-                                  {liker.name}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* 下部: 自己紹介 + タグ（カード幅いっぱい） */}
-                            {(liker.bio || (liker.interests && liker.interests.length > 0)) && (
-                              <div className="mt-3 pt-3 border-t border-gray-100">
-                                {/* 自己紹介（2行） */}
-                                {liker.bio && (
-                                  <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                                    {liker.bio}
-                                  </p>
-                                )}
-                                {/* 興味タグ */}
-                                {liker.interests && liker.interests.length > 0 && (
-                                  <div className="flex flex-wrap gap-2 mt-2">
-                                    {liker.interests.slice(0, 4).map((interest, index) => (
-                                      <span
-                                        key={index}
-                                        className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
-                                      >
-                                        {formatCultureTag(interest, currentLanguage)}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                                {/* 訪問予定の都道府県 */}
-                                {liker.planned_prefectures && liker.planned_prefectures.length > 0 && (
-                                  <div className="mt-2">
-                                    <p className="text-xs text-gray-400 mb-1">
-                                      📍 {t('plannedPrefectures')}
-                                    </p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {liker.planned_prefectures.slice(0, 4).map((pref, index) => (
-                                        <span
-                                          key={index}
-                                          className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-sm font-medium"
-                                        >
-                                          {formatPrefecture(pref, currentLanguage) || pref}
-                                        </span>
-                                      ))}
-                                      {liker.planned_prefectures.length > 4 && (
-                                        <span className="bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full text-sm">
-                                          +{liker.planned_prefectures.length - 4}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </Link>
-                      )
+                      return renderLikerCard(liker)
                     })}
                   </div>
                 </div>

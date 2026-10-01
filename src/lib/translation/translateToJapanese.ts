@@ -6,11 +6,23 @@
  * translate/message/route.ts 本体は変更しない。
  *
  * 失敗時（API キーなし・OpenAI のエラー・空の翻訳・例外）は null を返す。
+ *
+ * 段階3-4（さくらいいね専用の調整。チャットの翻訳 route は変更しない）:
+ * - 原文がすでに日本語（ひらがな・カタカナを含む）なら OpenAI を呼ばずに原文をそのまま返す
+ * - REQUIREMENTS に「原文にない言葉・絵文字・記号を追加しない」を追加
  */
 
 const TARGET_LANGUAGE_NAME = 'Japanese'
 
+// ひらがな（U+3040–309F）・カタカナ（U+30A0–30FF）を含むか
+const KANA_REGEX = /[\u3040-\u309F\u30A0-\u30FF]/
+
 export async function translateToJapanese(text: string): Promise<string | null> {
+  // すでに日本語なら翻訳しない（原文と訳が同じになり、画面の切り替えも出ない）
+  if (KANA_REGEX.test(text)) {
+    return text
+  }
+
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     console.error('[translateToJapanese] OPENAI_API_KEY is not configured')
@@ -40,7 +52,8 @@ REQUIREMENTS:
 6. Romanized Japanese proper nouns (e.g. Asakusa, Kaminarimon, Senso-ji) must be converted to proper Japanese (kanji/hiragana)
    Examples: "Asakusa" → 浅草 / "Kaminarimon" → 雷門 / "Senso-ji" → 浅草寺 / "Monjayaki" → もんじゃ焼き
 7. Unknown proper nouns that cannot be converted should be written in katakana
-8. Do NOT over-translate English proper nouns into Japanese`
+8. Do NOT over-translate English proper nouns into Japanese
+9. Do NOT add any words, emojis, or symbols that are not in the original text`
           },
           {
             role: 'user',
