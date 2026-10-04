@@ -35,6 +35,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorConversationNotFound: '会話が見つかりません。一度メッセージ一覧に戻ってからお試しください。',
     imageInvalidType: '送信できる画像は JPEG・PNG・WebP・GIF のみです。',
     imageTooLarge: '画像のサイズは 10MB 以下にしてください。',
+    imageUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください（写真アプリから選んだ場合は、一度ファイルとして保存してからお試しください）。',
     imageUnavailable: '画像を表示できません',
     partnerUnavailable: 'このユーザーは現在ご利用いただけません',
     loading: '読み込み中...',
@@ -68,6 +69,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorConversationNotFound: 'Conversation not found. Please return to the messages list and try again.',
     imageInvalidType: 'Only JPEG, PNG, WebP, or GIF images can be sent.',
     imageTooLarge: 'Images must be 10MB or smaller.',
+    imageUnreadable: "We couldn't read this image. Please select it again (if you chose it from the Photos app, try saving it as a file first).",
     imageUnavailable: 'Image unavailable',
     partnerUnavailable: 'This user is currently unavailable',
     loading: 'Loading...',
@@ -101,6 +103,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorConversationNotFound: '대화를 찾을 수 없습니다. 메시지 목록으로 돌아간 후 다시 시도해 주세요.',
     imageInvalidType: 'JPEG, PNG, WebP, GIF 이미지만 보낼 수 있습니다.',
     imageTooLarge: '이미지 크기는 10MB 이하로 해 주세요.',
+    imageUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요(사진 앱에서 선택한 경우, 파일로 저장한 후 다시 시도해 주세요).',
     imageUnavailable: '이미지를 표시할 수 없습니다',
     partnerUnavailable: '이 사용자는 현재 이용할 수 없습니다',
     loading: '로딩 중...',
@@ -134,6 +137,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendErrorConversationNotFound: '找不到此對話。請返回訊息列表後再試一次。',
     imageInvalidType: '僅能傳送 JPEG、PNG、WebP、GIF 格式的圖片。',
     imageTooLarge: '圖片大小請控制在 10MB 以內。',
+    imageUnreadable: '無法讀取此圖片。請重新選擇（若是從「照片」App 選取，請先另存為檔案後再試一次）。',
     imageUnavailable: '無法顯示圖片',
     partnerUnavailable: '此使用者目前無法使用',
     loading: '載入中...',
@@ -341,10 +345,24 @@ export default function ChatPage() {
         alert(t('imageInvalidType'))
         return
       }
+      // Safari 対策: File をそのまま渡すと FormData 経由で中身が空になる場合があるため、
+      // 先に中身を ArrayBuffer に読み込んで確定させ、ArrayBuffer として送る
+      let imageBuffer: ArrayBuffer
+      try {
+        imageBuffer = await selectedImage.arrayBuffer()
+      } catch (readError) {
+        console.error('[chat-image] file read error:', readError)
+        alert(t('imageUnreadable'))
+        return
+      }
+      if (imageBuffer.byteLength === 0) {
+        alert(t('imageUnreadable'))
+        return
+      }
       const fileName = `${crypto.randomUUID()}.${ext}`
       const { data, error } = await supabase.storage
         .from('chat-images')
-        .upload(`${conversationId}/${fileName}`, selectedImage, { contentType: selectedImage.type })
+        .upload(`${conversationId}/${fileName}`, imageBuffer, { contentType: selectedImage.type })
       if (error) throw error
 
       // Storage のパス（{conversationId}/{ファイル名}）をメッセージとして送信（表示時に署名付き URL へ変換）

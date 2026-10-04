@@ -31,6 +31,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '身分証の種類を選択してください',
     fileRequired: '身分証の画像を選択してください',
     uploadError: 'アップロードに失敗しました。もう一度お試しください。',
+    fileUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください（写真アプリから選んだ場合は、一度ファイルとして保存してからお試しください）。',
     back: '戻る',
   },
   en: {
@@ -54,6 +55,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: 'Please select an ID type',
     fileRequired: 'Please select an ID image',
     uploadError: 'Upload failed. Please try again.',
+    fileUnreadable: "We couldn't read this image. Please select it again (if you chose it from the Photos app, try saving it as a file first).",
     back: 'Back',
   },
   ko: {
@@ -77,6 +79,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '신분증 종류를 선택해 주세요',
     fileRequired: '신분증 사진을 선택해 주세요',
     uploadError: '업로드에 실패했습니다. 다시 시도해 주세요.',
+    fileUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요(사진 앱에서 선택한 경우, 파일로 저장한 후 다시 시도해 주세요).',
     back: '뒤로',
   },
   'zh-tw': {
@@ -100,6 +103,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '請選擇證件類型',
     fileRequired: '請選擇身份證照片',
     uploadError: '上傳失敗，請重試。',
+    fileUnreadable: '無法讀取此圖片。請重新選擇（若是從「照片」App 選取，請先另存為檔案後再試一次）。',
     back: '返回',
   },
 }
@@ -124,6 +128,12 @@ function VerificationContent() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     if (!f) return
+    // Safari（写真ライブラリ由来など）で中身が空の File になる場合は選択を取り消す
+    if (f.size === 0) {
+      setError(t('fileUnreadable'))
+      e.target.value = ''
+      return
+    }
     setFile(f)
     setPreview(URL.createObjectURL(f))
     setError(null)
@@ -142,12 +152,40 @@ function VerificationContent() {
       if (!user) return
 
       // Storage にアップロード
-      const ext = file.name.split('.').pop() || 'jpg'
+      // Safari 対策: File をそのまま渡すと FormData 経由で中身が空になる場合があるため、
+      // 先に中身を ArrayBuffer に読み込んで確定させ、ArrayBuffer として送る
+      let buffer: ArrayBuffer
+      try {
+        buffer = await file.arrayBuffer()
+      } catch (readError) {
+        console.error('[verification] file read error:', readError)
+        setError(t('fileUnreadable'))
+        setUploading(false)
+        return
+      }
+      console.log('[verification] file info:', { size: file.size, type: file.type, byteLength: buffer.byteLength })
+      if (buffer.byteLength === 0) {
+        setError(t('fileUnreadable'))
+        setUploading(false)
+        return
+      }
+
+      // contentType: file.type → 拡張子から推定 → image/jpeg
+      const NAME_EXT_TO_TYPE: Record<string, string> = {
+        jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', heic: 'image/heic',
+      }
+      const TYPE_TO_EXT: Record<string, string> = {
+        'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic',
+      }
+      const nameExt = (file.name.split('.').pop() || '').toLowerCase()
+      const contentType = file.type || NAME_EXT_TO_TYPE[nameExt] || 'image/jpeg'
+      // 保存パスの拡張子は contentType から決める（元のファイル名は使わない）
+      const ext = TYPE_TO_EXT[contentType] || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
       console.log('[verification] uploading to identity-documents:', { path, userId: user.id })
       const { error: uploadError } = await supabase.storage
         .from('identity-documents')
-        .upload(path, file)
+        .upload(path, buffer, { contentType, upsert: false })
 
       console.log('[verification] upload result:', { uploadError })
       if (uploadError) {
