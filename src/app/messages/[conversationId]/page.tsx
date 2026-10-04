@@ -38,6 +38,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください（写真アプリから選んだ場合は、一度ファイルとして保存してからお試しください）。',
     imageUnavailable: '画像を表示できません',
     partnerUnavailable: 'このユーザーは現在ご利用いただけません',
+    messageSending: '送信中…',
+    messageFailed: '送信できませんでした',
+    messageRetry: '再送',
+    messageDelete: '削除',
     loading: '読み込み中...',
     translating: '翻訳中...',
     translateError: '翻訳に失敗しました',
@@ -72,6 +76,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageUnreadable: "We couldn't read this image. Please select it again (if you chose it from the Photos app, try saving it as a file first).",
     imageUnavailable: 'Image unavailable',
     partnerUnavailable: 'This user is currently unavailable',
+    messageSending: 'Sending…',
+    messageFailed: 'Failed to send',
+    messageRetry: 'Retry',
+    messageDelete: 'Delete',
     loading: 'Loading...',
     translating: 'Translating...',
     translateError: 'Translation failed',
@@ -106,6 +114,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요(사진 앱에서 선택한 경우, 파일로 저장한 후 다시 시도해 주세요).',
     imageUnavailable: '이미지를 표시할 수 없습니다',
     partnerUnavailable: '이 사용자는 현재 이용할 수 없습니다',
+    messageSending: '전송 중…',
+    messageFailed: '전송하지 못했습니다',
+    messageRetry: '다시 보내기',
+    messageDelete: '삭제',
     loading: '로딩 중...',
     translating: '번역 중...',
     translateError: '번역 실패',
@@ -140,6 +152,10 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageUnreadable: '無法讀取此圖片。請重新選擇（若是從「照片」App 選取，請先另存為檔案後再試一次）。',
     imageUnavailable: '無法顯示圖片',
     partnerUnavailable: '此使用者目前無法使用',
+    messageSending: '傳送中…',
+    messageFailed: '傳送失敗',
+    messageRetry: '重新傳送',
+    messageDelete: '刪除',
     loading: '載入中...',
     translating: '翻譯中...',
     translateError: '翻譯失敗',
@@ -197,6 +213,8 @@ export default function ChatPage() {
 
   // 送信前翻訳プレビュー
   const [previewTranslation, setPreviewTranslation] = useState<string | null>(null)
+  // 「翻訳確認」で訳した元の文（trim 済み）。送信時に入力文と完全一致すれば訳を使い回す
+  const [previewSource, setPreviewSource] = useState<string | null>(null)
   const [isTranslatingPreview, setIsTranslatingPreview] = useState(false)
 
   // 画像送信
@@ -714,53 +732,47 @@ export default function ChatPage() {
   // 翻訳先言語：日本人女性='ja'、外国人男性='en'
   const myReadLang = userProfile === null ? currentLanguage : getTranslationTargetLang(userProfile)
 
-  const handleSend = async () => {
-    // 日本人女性: 未認証時のみモーダル(課金不要)
-    // 外国人男性: 未認証 OR 未課金でモーダル
-    const needsVerification = !isVerified
-    const needsSubscription = isForeignMale && (isSubscribed === false)
-    if (needsVerification || needsSubscription) {
-      setShowRequirementsModal(true)
-      return
-    }
-    if (!newMessage.trim() || isSending) return
+  // テキスト送信（即時表示）: 翻訳 → 保存 を実行し、仮メッセージ（tempId）を結果で差し替える
+  // reuseTranslation: 使い回す訳（undefined なら翻訳 API を呼ぶ。null は「訳なし」で確定）
+  // 制約: 保存は成功したが応答が届く前に通信が切れた場合、画面は「送信できませんでした」になり、
+  //       再送すると同じメッセージが二重に保存されうる（保存 API に重複防止の仕組みがないため。今回は未対策）
+  const sendText = async (tempId: string, text: string, reuseTranslation?: string | null) => {
+    setIsSending(true)
+    // 相手の言語に翻訳してから送信
+    let translatedContent: string | null = null
     try {
-      setIsSending(true)
-
-      // 相手の言語に翻訳してから送信
-      let translatedContent: string | null = null
-      try {
-        const targetLang = getTranslationTargetLang(userProfile)
-        const translateRes = await fetch('/api/translate/message', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messageId: `send-${Date.now()}`,
-            text: newMessage.trim(),
-            targetLanguage: targetLang,
-          }),
-        })
-        const translateData = await translateRes.json()
-        if (translateData.translatedText && translateData.translatedText !== newMessage.trim()) {
-          translatedContent = translateData.translatedText
+      if (reuseTranslation !== undefined) {
+        translatedContent = reuseTranslation
+      } else {
+        try {
+          const targetLang = getTranslationTargetLang(userProfile)
+          const translateRes = await fetch('/api/translate/message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messageId: `send-${Date.now()}`,
+              text,
+              targetLanguage: targetLang,
+            }),
+          })
+          const translateData = await translateRes.json()
+          if (translateData.translatedText && translateData.translatedText !== text) {
+            translatedContent = translateData.translatedText
+          }
+        } catch {
+          // 翻訳失敗は無視して送信継続
         }
-      } catch {
-        // 翻訳失敗は無視して送信継続
       }
 
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: newMessage.trim(), translated_content: translatedContent }),
+        body: JSON.stringify({ content: text, translated_content: translatedContent }),
       })
       const result = await response.json()
       if (response.ok) {
-        setMessages(prev => [...prev, result.data])
-        setNewMessage('')
-        setPreviewTranslation(null)
-        if (textareaRef.current) {
-          textareaRef.current.style.height = '40px'
-        }
+        // 仮メッセージを保存結果に差し替え
+        setMessages(prev => prev.map(m => (m.id === tempId ? result.data : m)))
         // 非同期でAI監視（エラーでも送信は止めない）
         if (result.data?.id) {
           fetch('/api/messages/moderate', {
@@ -776,6 +788,8 @@ export default function ChatPage() {
           }).catch(e => console.error('[moderate] fetch失敗:', e))
         }
       } else {
+        // 失敗: 仮メッセージを「送信できませんでした」に（成功済みの訳は再送で使い回す）
+        setMessages(prev => prev.map(m => (m.id === tempId ? { ...m, status: 'failed', pendingTranslation: translatedContent } : m)))
         let errorKey = 'sendError'
         if (response.status === 401) {
           errorKey = 'sendErrorAuthRequired'
@@ -786,14 +800,76 @@ export default function ChatPage() {
         } else if (response.status === 404) {
           errorKey = 'sendErrorConversationNotFound'
         }
-        alert(t(errorKey))
+        if (errorKey !== 'sendError') alert(t(errorKey))
       }
     } catch (error) {
       console.error(error)
-      alert(t('sendError'))
+      setMessages(prev => prev.map(m => (m.id === tempId ? { ...m, status: 'failed', pendingTranslation: translatedContent } : m)))
     } finally {
       setIsSending(false)
     }
+  }
+
+  const handleSend = async () => {
+    // 日本人女性: 未認証時のみモーダル(課金不要)
+    // 外国人男性: 未認証 OR 未課金でモーダル
+    const needsVerification = !isVerified
+    const needsSubscription = isForeignMale && (isSubscribed === false)
+    if (needsVerification || needsSubscription) {
+      setShowRequirementsModal(true)
+      return
+    }
+    if (!newMessage.trim() || isSending) return
+    // 仮メッセージの送信者を確定できない場合は送信しない
+    if (!currentUserId) return
+
+    const text = newMessage.trim()
+    // 「翻訳確認」の訳が今の入力文と完全に同じ文に対するものなら使い回す（訳が原文と同じなら「訳なし」）
+    const reuseTranslation: string | null | undefined =
+      previewSource !== null && previewSource === text && previewTranslation
+        ? (previewTranslation !== text ? previewTranslation : null)
+        : undefined
+
+    // 即時表示: 仮メッセージを追加し、入力欄をクリア（スクロールは messages の変化で自動）
+    const tempId = `temp-${crypto.randomUUID()}`
+    setMessages(prev => [...prev, {
+      id: tempId,
+      senderId: currentUserId,
+      content: text,
+      translated_content: null,
+      image_url: null,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      status: 'sending',
+    }])
+    setNewMessage('')
+    setPreviewTranslation(null)
+    setPreviewSource(null)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '40px'
+    }
+
+    await sendText(tempId, text, reuseTranslation)
+  }
+
+  // 送信失敗メッセージの再送: 末尾に移して「送信中」に戻し、成功済みの訳があれば使い回す
+  const handleRetrySend = async (tempId: string) => {
+    if (isSending) return
+    const failed = messages.find(m => m.id === tempId)
+    if (!failed) return
+    setMessages(prev => [
+      ...prev.filter(m => m.id !== tempId),
+      { ...failed, status: 'sending', timestamp: new Date().toISOString() },
+    ])
+    const reuse: string | null | undefined = failed.pendingTranslation !== undefined && failed.pendingTranslation !== null
+      ? failed.pendingTranslation
+      : undefined
+    await sendText(tempId, failed.content, reuse)
+  }
+
+  // 送信失敗メッセージの削除（DB には保存されていないので画面から消すだけ）
+  const handleDeleteFailed = (tempId: string) => {
+    setMessages(prev => prev.filter(m => m.id !== tempId))
   }
 
   const formatTime = (timestamp: string) => {
@@ -825,6 +901,7 @@ export default function ChatPage() {
       })
       const result = await response.json()
       setPreviewTranslation(result.translatedText || null)
+      setPreviewSource(newMessage.trim())
     } catch (error) {
       console.error('Preview translation error:', error)
     } finally {
@@ -1090,9 +1167,32 @@ export default function ChatPage() {
                         ) : (
                           <p className="text-sm">{message.content}</p>
                         )}
-                        <p className="text-xs mt-1 text-[#d4a89a]">
-                          {formatTime(message.timestamp)}
-                        </p>
+                        {message.status === 'sending' ? (
+                          <p className="text-xs mt-1 text-[#d4a89a]">{t('messageSending')}</p>
+                        ) : message.status === 'failed' ? (
+                          <div className="mt-1 flex items-center justify-end gap-3 text-xs">
+                            <span className="text-red-600">{t('messageFailed')}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRetrySend(message.id)}
+                              disabled={isSending}
+                              className="underline text-[#8b1a2e] disabled:opacity-50"
+                            >
+                              {t('messageRetry')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFailed(message.id)}
+                              className="underline text-gray-500"
+                            >
+                              {t('messageDelete')}
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-xs mt-1 text-[#d4a89a]">
+                            {formatTime(message.timestamp)}
+                          </p>
+                        )}
                       </div>
                     ) : (
                       // 相手のメッセージ（翻訳デフォルト表示）
