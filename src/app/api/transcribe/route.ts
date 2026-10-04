@@ -5,6 +5,10 @@ import { isJapaneseWoman } from '@/utils/userHelpers'
 
 export const dynamic = 'force-dynamic'
 
+// 文字起こしモデル（優先 → エラー時のフォールバック）
+const PRIMARY_MODEL = 'gpt-4o-mini-transcribe'
+const FALLBACK_MODEL = 'whisper-1'
+
 // Whisper API のファイルサイズ上限（25MB）
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024
 
@@ -40,7 +44,15 @@ export async function POST(request: NextRequest) {
     }
 
     // memory #1 の 2 層防御: suspended ユーザーをここで弾く（OpenAI コスト発生防止）
-    const guard = await requireActiveProfile(user.id)
+    // 言語判定用のプロフィール取得と並列に実行（画面から送られた language は使わない）
+    const [guard, { data: profile, error: profileError }] = await Promise.all([
+      requireActiveProfile(user.id),
+      supabase
+        .from('profiles')
+        .select('gender, nationality')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ])
     if (!guard.ok) {
       return NextResponse.json(
         { error: guard.message, code: guard.code },
@@ -64,33 +76,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Audio file too large (max 25MB)' }, { status: 400 })
     }
 
-    // 言語はログインユーザーのプロフィールで決める（画面から送られた language は使わない）
-    // 日本人女性 → 'ja' を指定 / 外国人男性・その他 → 指定しない（Whisper の自動判定）
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('gender, nationality')
-      .eq('id', user.id)
-      .maybeSingle()
+    // 言語はログインユーザーのプロフィールで決める
+    // 日本人女性 → 'ja' を指定 / 外国人男性・その他 → 指定しない（自動判定）
     if (profileError) {
       console.error('[transcribe] profile fetch error:', profileError.message)
     }
     const language = isJapaneseWoman(profile) ? 'ja' : null
 
-    // Whisper APIにリクエスト（ファイル名は実際の形式に合わせる）
-    const whisperFormData = new FormData()
-    whisperFormData.append('file', audio, `recording.${resolveAudioExtension(audio)}`)
-    whisperFormData.append('model', 'whisper-1')
-    if (language) {
-      whisperFormData.append('language', language)
+    // 文字起こし（ファイル名は実際の形式に合わせる）
+    const fileName = `recording.${resolveAudioExtension(audio)}`
+    const transcribe = async (model: string) => {
+      const transcriptionFormData = new FormData()
+      transcriptionFormData.append('file', audio, fileName)
+      transcriptionFormData.append('model', model)
+      if (language) {
+        transcriptionFormData.append('language', language)
+      }
+      const startedAt = Date.now()
+      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: transcriptionFormData,
+      })
+      // 計測ログ（ユーザーID・本文は出さない）
+      console.log(`[transcribe] model=${model} ms=${Date.now() - startedAt} bytes=${audio.size} status=${res.status}`)
+      return res
     }
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: whisperFormData,
-    })
+    // gpt-4o-mini-transcribe を優先し、エラー時は whisper-1 で 1 回だけ再実行（フォールバック）
+    let response = await transcribe(PRIMARY_MODEL)
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`[transcribe] ${PRIMARY_MODEL} error, falling back to ${FALLBACK_MODEL}:`, errorText)
+      response = await transcribe(FALLBACK_MODEL)
+    }
 
     if (!response.ok) {
       const errorText = await response.text()
