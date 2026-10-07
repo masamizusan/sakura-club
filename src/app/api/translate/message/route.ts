@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 export const dynamic = 'force-dynamic'
@@ -207,17 +208,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // キャッシュ確認
-    const { data: cached, error: cacheReadError } = await supabase
-      .from('message_translations')
-      .select('translated_text')
-      .eq('message_id', messageId)
-      .eq('language', targetLanguage)
-      .maybeSingle()
+    // キャッシュは実在するメッセージ（message_id は uuid）だけが対象。
+    // send-… / preview-… などは読み書きせず、翻訳だけ行う
+    const isCacheableMessageId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId)
 
-    if (cacheReadError) {
-      console.error('[TRANSLATE_MSG] Cache read error:', cacheReadError.message)
-      // キャッシュ読み取りエラーは続行（翻訳を実行）
+    // キャッシュ確認（ユーザー権限で読み込み）
+    let cached: { translated_text: string } | null = null
+    if (isCacheableMessageId) {
+      const { data: cachedRow, error: cacheReadError } = await supabase
+        .from('message_translations')
+        .select('translated_text')
+        .eq('message_id', messageId)
+        .eq('language', targetLanguage)
+        .maybeSingle()
+
+      if (cacheReadError) {
+        console.error('[TRANSLATE_MSG] Cache read error:', cacheReadError.message)
+        // キャッシュ読み取りエラーは続行（翻訳を実行）
+      }
+      cached = cachedRow
     }
 
     if (cached) {
@@ -262,20 +271,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // キャッシュ保存
-    const { error: cacheWriteError } = await supabase
-      .from('message_translations')
-      .upsert({
-        message_id: messageId,
-        language: targetLanguage,
-        translated_text: translatedText
-      }, {
-        onConflict: 'message_id,language'
-      })
+    // キャッシュ保存（service_role で書き込み。ユーザー権限での書き込みは RLS で禁止する方針）
+    // 実在するメッセージで、かつ自分が参加している会話のものだけ保存する
+    if (isCacheableMessageId) {
+      try {
+        const serviceSupabase = createServiceClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
 
-    if (cacheWriteError) {
-      console.error('[TRANSLATE_MSG] Cache write error:', cacheWriteError.message)
-      // キャッシュ保存エラーでも翻訳結果は返す
+        const { data: messageRow, error: messageError } = await serviceSupabase
+          .from('messages')
+          .select('conversation_id')
+          .eq('id', messageId)
+          .maybeSingle()
+
+        const { data: conversationRow, error: conversationError } = messageRow
+          ? await serviceSupabase
+              .from('conversations')
+              .select('user1_id, user2_id')
+              .eq('id', messageRow.conversation_id)
+              .maybeSingle()
+          : { data: null, error: null }
+
+        if (messageError || conversationError) {
+          console.error('[TRANSLATE_MSG] Cache write check error:', (messageError ?? conversationError)?.message)
+        } else if (conversationRow && (conversationRow.user1_id === user.id || conversationRow.user2_id === user.id)) {
+          const { error: cacheWriteError } = await serviceSupabase
+            .from('message_translations')
+            .upsert({
+              message_id: messageId,
+              language: targetLanguage,
+              translated_text: translatedText
+            }, {
+              onConflict: 'message_id,language'
+            })
+
+          if (cacheWriteError) {
+            console.error('[TRANSLATE_MSG] Cache write error:', cacheWriteError.message)
+            // キャッシュ保存エラーでも翻訳結果は返す
+          }
+        }
+      } catch (cacheError) {
+        console.error('[TRANSLATE_MSG] Cache write exception:', cacheError)
+        // キャッシュ保存エラーでも翻訳結果は返す
+      }
     }
 
     const duration = Date.now() - startTime
