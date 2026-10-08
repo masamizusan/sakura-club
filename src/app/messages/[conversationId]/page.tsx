@@ -1093,6 +1093,12 @@ export default function ChatPage() {
       // 解析が実際に音を拾えているか（一度でも 0 以外の値が来たか）
       // 拾えていない間は無音の自動停止を使わない（話していても止まるのを防ぐ）
       let hasAnalyserSignal = false
+      // 波形の描画用（無音判定には使わない）: 直近の最大音量に合わせて表示を自動拡大する
+      // Safari は同じ声でも解析値が小さく出るため、端末判定ではなく実測値に合わせて拡大率を決める
+      const WAVE_MIN_PEAK = 0.12     // これより小さい音は拡大しすぎない（雑音でバーが伸びるのを防ぐ）
+      const WAVE_PEAK_DECAY = 0.995  // 最大値を少しずつ下げて、声が小さくなっても追従させる
+      const WAVE_MAX_RATIO = 0.85    // 一番大きい声でも上限の 85% に収める（振り切れ防止）
+      let wavePeak = WAVE_MIN_PEAK
 
       const checkSilence = () => {
         analyser.getByteFrequencyData(dataArray)
@@ -1103,7 +1109,8 @@ export default function ChatPage() {
 
         // 波形データを蓄積（左→右に積み上げ）
         const currentVolume = volume / 255
-        const newBar = Math.max(0.05, currentVolume)
+        wavePeak = Math.max(currentVolume, wavePeak * WAVE_PEAK_DECAY, WAVE_MIN_PEAK)
+        const newBar = Math.max(0.05, Math.min(1, currentVolume / wavePeak) * WAVE_MAX_RATIO)
         setVolumeData(prev => {
           const updated = [...prev, newBar]
           return updated.length > 40 ? updated.slice(-40) : updated
