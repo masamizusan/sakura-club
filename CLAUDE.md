@@ -1694,6 +1694,8 @@ WHERE table_schema = 'public'
 - D1 いいね上限「10」の画面直書き：`profile/[id]/page.tsx:861`（/10）、`:282`（上限（10回））、`matches/page.tsx:61`。上限は DB 関数 `like_daily_limit()` に一本化済みのため、変更時に表示がずれる
 - D2 身分証が HEIC のまま届いた場合、AI 審査が読めず失敗する可能性（推測）
 
+- D5（#20）体験ページ（`/experiences`）への入口がない → **方針**：体験の企画が固まるまで公開しない。入口は作らず、一覧は準備中表示（`src/app/experiences/page.tsx` の `EXPERIENCES_COMING_SOON = true`）。公開時に false に戻して入口を追加する
+
 **📱 H. スマホのチャット入力欄（`src/app/messages/[conversationId]/page.tsx`・保護対象）**
 - 経緯：2026/09/20 の別セッションで、100dvh 化・チャット画面での BottomNav 非表示までは対応済み。「文字の下が切れる」「キーボード表示時に送信ボタンが右端で切れる」は未解決のまま記録が終わっている
 - H1 textarea の文字サイズが 14px（`text-sm`）。iPhone Safari は 16px 未満でフォーカス時に自動拡大するため、送信ボタンのはみ出しの原因の可能性（推測）

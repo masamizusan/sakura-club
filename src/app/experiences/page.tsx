@@ -9,6 +9,10 @@ import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
 
+// 体験の企画が固まるまで一覧は「準備中」表示にする（体験 API は呼ばない）
+// 公開時は false に戻し、ナビゲーションに入口を追加する
+const EXPERIENCES_COMING_SOON = true
+
 const experiencesTranslations: Record<string, Record<string, string>> = {
   ja: {
     pageTitle: '文化体験一覧',
@@ -31,6 +35,7 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     peopleCount: '{current}/{max}名',
     loadError: '体験を読み込めませんでした。通信環境を確認して、もう一度お試しください。',
     reload: '再読み込み',
+    comingSoon: '日本の文化を体験できる企画を準備しています。公開まで、もうしばらくお待ちください。',
   },
   en: {
     pageTitle: 'Cultural Experiences',
@@ -53,6 +58,7 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     peopleCount: '{current}/{max}',
     loadError: "Couldn't load experiences. Please check your connection and try again.",
     reload: 'Reload',
+    comingSoon: "We're preparing cultural experiences in Japan. Please stay tuned.",
   },
   ko: {
     pageTitle: '문화 체험 목록',
@@ -75,6 +81,7 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     peopleCount: '{current}/{max}명',
     loadError: '체험을 불러오지 못했습니다. 통신 환경을 확인한 후 다시 시도해 주세요.',
     reload: '다시 불러오기',
+    comingSoon: '일본 문화를 체험할 수 있는 프로그램을 준비하고 있습니다. 공개될 때까지 조금만 기다려 주세요.',
   },
   'zh-tw': {
     pageTitle: '文化體驗列表',
@@ -97,6 +104,7 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     peopleCount: '{current}/{max}人',
     loadError: '無法載入體驗。請確認網路連線後再試一次。',
     reload: '重新載入',
+    comingSoon: '我們正在籌備體驗日本文化的活動，敬請期待正式推出。',
   },
 }
 
@@ -152,6 +160,8 @@ export default function ExperiencesPage() {
   const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
+    // 準備中の間は体験 API を呼ばない
+    if (EXPERIENCES_COMING_SOON) return
     const fetchExperiences = async () => {
       try {
         setIsLoading(true)
@@ -210,6 +220,22 @@ export default function ExperiencesPage() {
     setSearchTerm('')
     setSelectedCategory('all')
     setSelectedPrefecture('all')
+  }
+
+  // 準備中：検索・絞り込み・件数・一覧・エラー表示は出さず、案内だけを表示する
+  if (EXPERIENCES_COMING_SOON) {
+    return (
+      <div className="min-h-screen bg-[#f5ebe0]">
+        <Sidebar className="w-64 hidden md:block" />
+
+        <div className="md:ml-64 py-8 px-4">
+          <div className="max-w-3xl mx-auto text-center py-16">
+            <h1 className="text-4xl font-bold text-gray-900 mb-6">{T.pageTitle}</h1>
+            <p className="text-lg text-gray-600">{T.comingSoon}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

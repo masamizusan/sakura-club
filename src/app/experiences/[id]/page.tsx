@@ -70,27 +70,32 @@ interface ExperienceDetail extends Experience {
   }[]
 }
 
-// 4 言語の文言（今回追加分のみ。既存の日本語の文言はそのまま）
+// 4 言語の文言（「見つかりません」画面）
 type Dict = {
   notFound: string
+  notFoundDesc: string
   backToList: string
 }
 
 const T: Record<SupportedLanguage, Dict> = {
   ja: {
     notFound: '体験が見つかりませんでした。',
+    notFoundDesc: '指定された体験は存在しないか、削除されました。',
     backToList: '体験一覧へ戻る',
   },
   en: {
     notFound: "We couldn't find this experience.",
+    notFoundDesc: "This experience doesn't exist or has been removed.",
     backToList: 'Back to experiences',
   },
   ko: {
     notFound: '체험을 찾을 수 없습니다.',
+    notFoundDesc: '해당 체험이 존재하지 않거나 삭제되었습니다.',
     backToList: '체험 목록으로 돌아가기',
   },
   'zh-tw': {
     notFound: '找不到這個體驗。',
+    notFoundDesc: '此體驗不存在或已被刪除。',
     backToList: '返回體驗列表',
   },
 }
@@ -176,7 +181,7 @@ export default function ExperienceDetailPage() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t.notFound}</h2>
-          <p className="text-gray-600 mb-4">指定された体験は存在しないか、削除されました。</p>
+          <p className="text-gray-600 mb-4">{t.notFoundDesc}</p>
           <Link href="/experiences">
             <Button variant="sakura">{t.backToList}</Button>
           </Link>
