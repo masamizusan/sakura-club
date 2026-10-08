@@ -680,47 +680,142 @@ export default function ChatPage() {
     }).catch(() => {})
   }, [conversationId])
 
+  // Realtime の取りこぼし対策: 取り直し判定用に最新の messages を参照する
+  const messagesRef = useRef<any[]>([])
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
   // リアルタイムメッセージ受信
   useEffect(() => {
     if (!conversationId || !currentUserId) return
 
     const supabase = createClient()
+    let isDisposed = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let hadSubscriptionProblem = false
+    let lastRefetchAt = 0
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    const REFETCH_THROTTLE_MS = 3000
 
-    const channel = supabase
-      .channel(`messages:${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload: any) => {
-          const newMessage = {
-            id: payload.new.id,
-            senderId: payload.new.sender_id,
-            content: payload.new.content,
-            translated_content: payload.new.translated_content || null,
-            image_url: payload.new.image_url || null,
-            timestamp: payload.new.created_at,
-            isRead: false,
-          }
-          // 自分が送ったメッセージは既に追加済みなのでスキップ
-          if (newMessage.senderId === currentUserId) return
-
-          setMessages(prev => [...prev, newMessage])
-
-          // translated_contentがなければAPIで翻訳（正しいターゲット言語で）
-          if (!newMessage.translated_content) {
-            autoTranslateMessages([newMessage], currentUserId, undefined, myReadLang)
-          }
+    // 取りこぼしの保険: 一覧取得 API（初回読み込みと同じ GET /api/messages/{id}）で取り直す
+    // 送信中・送信失敗の仮メッセージ（temp-…）は消さず、取り直した一覧の末尾に残す
+    const refetchMessages = async () => {
+      if (isDisposed) return
+      const now = Date.now()
+      if (now - lastRefetchAt < REFETCH_THROTTLE_MS) return
+      // 送信中の仮メッセージがある間は、保存結果との二重表示を避けるため少し待ってから取り直す
+      if (messagesRef.current.some(m => m?.status === 'sending')) {
+        if (!retryTimer) {
+          retryTimer = setTimeout(() => {
+            retryTimer = null
+            refetchMessages()
+          }, REFETCH_THROTTLE_MS)
         }
-      )
-      .subscribe()
+        return
+      }
+      lastRefetchAt = now
+      try {
+        const response = await fetch(`/api/messages/${conversationId}`)
+        const result = await response.json()
+        if (isDisposed || !response.ok || !Array.isArray(result.messages)) return
+
+        const knownIds = new Set(messagesRef.current.map(m => m?.id))
+        const fetched: any[] = result.messages
+        setMessages(prev => {
+          const temps = prev.filter(m => typeof m?.id === 'string' && m.id.startsWith('temp-'))
+          return [...fetched, ...temps]
+        })
+
+        // 取りこぼしていた相手のメッセージに訳が無ければ、受信時と同じく翻訳する
+        const missedPartnerMessages = fetched.filter(m => !knownIds.has(m.id) && m.senderId !== currentUserId)
+        if (missedPartnerMessages.length > 0) {
+          autoTranslateMessages(missedPartnerMessages, currentUserId, undefined, myReadLang)
+        }
+      } catch (error) {
+        console.warn('[realtime] refetch failed:', error instanceof Error ? error.message : 'unknown')
+      }
+    }
+
+    // 画面が前面に戻ったときに取り直す
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetchMessages()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // トークン更新時に Realtime の認証を更新（ライブラリも heartbeat ごとに更新するが、
+    // 画面が裏にある間は heartbeat が遅れるため、更新イベントでも即時に反映する）
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') && session?.access_token) {
+        supabase.realtime.setAuth(session.access_token)
+      }
+    })
+
+    const subscribeChannel = async () => {
+      // 購読前に現在のトークンを Realtime に設定
+      const { data: { session } } = await supabase.auth.getSession()
+      if (isDisposed) return
+      if (session?.access_token) {
+        await supabase.realtime.setAuth(session.access_token)
+      }
+      if (isDisposed) return
+
+      channel = supabase
+        .channel(`messages:${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload: any) => {
+            const newMessage = {
+              id: payload.new.id,
+              senderId: payload.new.sender_id,
+              content: payload.new.content,
+              translated_content: payload.new.translated_content || null,
+              image_url: payload.new.image_url || null,
+              timestamp: payload.new.created_at,
+              isRead: false,
+            }
+            // 自分が送ったメッセージは既に追加済みなのでスキップ
+            if (newMessage.senderId === currentUserId) return
+
+            // 取り直しで既に一覧にある場合は追加しない（二重表示防止）
+            setMessages(prev => (prev.some(m => m?.id === newMessage.id) ? prev : [...prev, newMessage]))
+
+            // translated_contentがなければAPIで翻訳（正しいターゲット言語で）
+            if (!newMessage.translated_content) {
+              autoTranslateMessages([newMessage], currentUserId, undefined, myReadLang)
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          if (isDisposed) return
+          // ユーザーID・本文は出さない
+          if (status === 'SUBSCRIBED') {
+            if (hadSubscriptionProblem) {
+              hadSubscriptionProblem = false
+              refetchMessages()
+            }
+            return
+          }
+          hadSubscriptionProblem = true
+          console.warn('[realtime] messages channel status:', status, err?.message ?? '')
+        })
+    }
+    subscribeChannel()
 
     return () => {
-      supabase.removeChannel(channel)
+      isDisposed = true
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      authSubscription.unsubscribe()
+      if (retryTimer) clearTimeout(retryTimer)
+      if (channel) supabase.removeChannel(channel)
     }
   }, [conversationId, currentUserId, currentLanguage])
 
