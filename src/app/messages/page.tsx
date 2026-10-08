@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,6 +11,7 @@ import {
 import Sidebar from '@/components/layout/Sidebar'
 import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useNotifications } from '@/hooks/useNotifications'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
@@ -223,6 +224,103 @@ export default function MessagesPage() {
 
     fetchConversations()
   }, [searchTerm])
+
+  // ===== 一覧を開いている間の新着反映（C: バッジの未読数の変化 / D: 画面が前面に戻ったとき） =====
+  // 新しい定期取得は追加しない。共有のバッジ件数（useNotifications）の変化を合図に取り直す
+  const REFRESH_THROTTLE_MS = 3000
+  const searchTermRef = useRef(searchTerm)
+  searchTermRef.current = searchTerm
+  const isRefreshingRef = useRef(false)
+  const hasPendingRefreshRef = useRef(false)
+  const lastRefreshAtRef = useRef(0)
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isUnmountedRef = useRef(false)
+
+  // 裏で一覧を取り直す（読み込み中の表示は出さない。失敗時は今の一覧をそのまま残す）
+  const runRefresh = useCallback(async () => {
+    if (isUnmountedRef.current) return
+    if (isRefreshingRef.current) {
+      // 取得中に呼ばれた場合は、終わったあとに 1 回だけ取り直す
+      hasPendingRefreshRef.current = true
+      return
+    }
+    isRefreshingRef.current = true
+    lastRefreshAtRef.current = Date.now()
+    const term = searchTermRef.current
+    try {
+      const params = new URLSearchParams()
+      if (term) params.append('search', term)
+      const response = await fetch(`/api/messages?${params.toString()}`)
+      const result = await response.json()
+      // 取得中に検索欄が変わった場合は、検索側の取得に任せて結果を捨てる
+      if (!isUnmountedRef.current && response.ok && term === searchTermRef.current) {
+        setConversations(result.conversations || [])
+      }
+    } catch (error) {
+      console.warn('[messages] list refresh failed:', error instanceof Error ? error.message : 'unknown')
+    } finally {
+      isRefreshingRef.current = false
+      if (hasPendingRefreshRef.current) {
+        hasPendingRefreshRef.current = false
+        runRefresh()
+      }
+    }
+  }, [])
+
+  // C と D が短時間に重なったときは 1 回にまとめる（前回から 3 秒以内なら、3 秒後に 1 回だけ）
+  const requestRefresh = useCallback(() => {
+    if (isUnmountedRef.current) return
+    const elapsed = Date.now() - lastRefreshAtRef.current
+    if (elapsed >= REFRESH_THROTTLE_MS) {
+      runRefresh()
+      return
+    }
+    if (refreshTimerRef.current) return
+    refreshTimerRef.current = setTimeout(() => {
+      refreshTimerRef.current = null
+      runRefresh()
+    }, REFRESH_THROTTLE_MS - elapsed)
+  }, [runRefresh])
+
+  useEffect(() => {
+    isUnmountedRef.current = false
+    // 既存の初回取得（上の useEffect）と重ねないよう、表示した時点を前回取得とみなす
+    lastRefreshAtRef.current = Date.now()
+    return () => {
+      isUnmountedRef.current = true
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = null
+      }
+    }
+  }, [])
+
+  // C: バッジの未読数（未読メッセージ + 未確認マッチ）が変わったら取り直す
+  const { unreadMessages, userId: badgeUserId } = useNotifications()
+  const prevUnreadRef = useRef(unreadMessages)
+  const mountedAtRef = useRef(Date.now())
+  // 表示時にバッジの件数がまだ取れていない（ユーザー未確定）場合、最初に入る値は「初回の値」として扱う
+  const awaitingInitialBadgeRef = useRef(badgeUserId === null)
+  const INITIAL_BADGE_WINDOW_MS = 5000
+  useEffect(() => {
+    if (unreadMessages === prevUnreadRef.current) return
+    prevUnreadRef.current = unreadMessages
+    if (awaitingInitialBadgeRef.current) {
+      awaitingInitialBadgeRef.current = false
+      // 表示直後に入った初回の値では取り直さない（既存の初回取得と重ねない）
+      if (Date.now() - mountedAtRef.current < INITIAL_BADGE_WINDOW_MS) return
+    }
+    requestRefresh()
+  }, [unreadMessages, requestRefresh])
+
+  // D: 画面が前面に戻ったら取り直す
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') requestRefresh()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [requestRefresh])
 
   // 検索フィルタ
   const filteredConversations = conversations.filter(conv =>
