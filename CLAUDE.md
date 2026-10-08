@@ -1658,3 +1658,49 @@ WHERE table_schema = 'public'
 - C. footprints 未読は一覧ではなく件数で取る
 
 **注意**: `Sidebar.tsx` は 🟡 慎重対象、`mypage/page.tsx` は保護対象。着手前に調査指示 → 承認の順で進める
+
+### ㉞ 残作業の一覧（2026/10/08 時点・全体の棚卸し）
+
+**🔐 A. セキュリティ**
+- A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）。キャッシュ件数が 124 件から増えたことを確認してから SQL 実行
+- A2 `/api/messages/moderate` に `requireActiveProfile` が無い（判定ロジックは変更禁止。ガード追加のみ）
+- A3 `/api/verification/review` に `requireActiveProfile` が無い（保護対象。許可範囲の指定が必要）
+- A4 権限点検 SQL 1〜5 の「要確認」の結果待ち：subscriptions / footprints / blocks / reports / avatars Storage の INSERT・DELETE
+- A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開（方針判断待ち）
+
+**💳 B. 決済・法務**
+- B1 Stripe Webhook に `charge.refunded` が登録されているか確認（未登録だと返金時に回数券が無効にならない）
+- B2 特定商取引法ページ（`/tokushoho`）が「準備中」。サブスク価格、さくらいいね $3.99 / $13.99 / $49.99、有効期限 180 日、返金の扱いを記載
+- B3 価格の 3 か所管理（`mypage/plans/page.tsx` の USD 直書き / Stripe Price / 特商法ページ）。変更時は手でそろえる運用
+- B4 サブスク未加入者がさくらいいねを買うたびに Stripe customer が新規作成される（支払いに影響なし・任意）
+
+**⚡ C. 性能・通信量**
+- C1 ㉝ 未読バッジのポーリング重複
+- C2 `[transcribe]` ログでモデル・処理時間を確認（Vercel ログ待ち）
+
+**🎨 D. 画面・仕様**
+- D1 いいね上限「10」の画面直書き：`profile/[id]/page.tsx:861`（/10）、`:282`（上限（10回））、`matches/page.tsx:61`。上限は DB 関数 `like_daily_limit()` に一本化済みのため、変更時に表示がずれる
+- D2 身分証が HEIC のまま届いた場合、AI 審査が読めず失敗する可能性（推測）
+
+**📱 H. スマホのチャット入力欄（`src/app/messages/[conversationId]/page.tsx`・保護対象）**
+- 経緯：2026/09/20 の別セッションで、100dvh 化・チャット画面での BottomNav 非表示までは対応済み。「文字の下が切れる」「キーボード表示時に送信ボタンが右端で切れる」は未解決のまま記録が終わっている
+- H1 textarea の文字サイズが 14px（`text-sm`）。iPhone Safari は 16px 未満でフォーカス時に自動拡大するため、送信ボタンのはみ出しの原因の可能性（推測）
+- H2 1 行に「カメラ・入力欄・マイク・翻訳・送信」の 5 要素が並び、入力欄が窮屈
+- H3 「翻訳」ボタンの文字が日本語直書き（4 言語対応漏れ）
+- H4 textarea の高さに上限が無く、長文でメッセージ一覧が見えなくなる
+- H5 入力欄の文字の下が切れる件が今も起きるか、実機確認が必要
+- 直し方の方向（未実装）：16px 化 / スマホではカメラ・マイク・翻訳を下段または＋ボタンにまとめる / 「翻訳」を辞書へ / 高さ上限（例：5 行）
+
+**🧹 E. 技術的な負債**
+- E1 ㉜ profiles の `user_id` / `id` 二重参照
+- E2 死コード `src/app/api/profile/route.ts` の整理
+- E3 `notifications.title` が日本語固定で保存される
+- E4 上の「残課題: 同様のupdated_at問題が他APIにも」は、現在のコードでは解消済みの見込み（POST は削除済み、PUT に `updated_at` 無し）。記載の整理のみ
+
+**🌐 F. 長期・品質**
+- F1 en/ko/zh-tw 翻訳のネイティブレビュー
+- F2 next-intl 移行（長期計画）
+- F3 「次章：多言語拡張・対象国拡大」の本文が未記入
+
+**🗂️ G. 片付け**
+- G1 `~/Downloads/20260927_stage1a_rls_hardening.sql` が残っている（リポジトリに記録済み。不要なら削除）
