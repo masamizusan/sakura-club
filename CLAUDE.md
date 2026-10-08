@@ -1643,7 +1643,9 @@ WHERE table_schema = 'public'
 
 **対応**: 別タスクで本番 DB 確認 → 不要なら `user_id` 参照を `id` に統一するリファクタタスク化
 
-### ㉝ 未読バッジのポーリングが重複して通信量が多い（2026/10/08 記録・あとで対応）
+### ✅ ㉝ 未読バッジのポーリングが重複して通信量が多い（2026/10/08 記録 → 同日完了）
+
+**完了**: `e212ece9`（共有ストアで重複解消・裏タブ停止）、`1a61ff26`（DB 関数 `get_badge_counts` 1 回で取得、`supabase/migrations/20261008_stage5_badge_counts.sql`）。旧ロジックと unread-count API は失敗時の予備として残置（安定確認後に削除）
 
 **現象（コードで確認済み）**:
 - `src/hooks/useNotifications.ts` が 5 秒ごとに 4 本の通信（`/api/messages/unread-count`、likes 未読件数、footprints 未読の一覧、notifications 未読件数）を行う
@@ -1675,10 +1677,14 @@ WHERE table_schema = 'public'
 - B4 サブスク未加入者がさくらいいねを買うたびに Stripe customer が新規作成される（支払いに影響なし・任意）
 
 **⚡ C. 性能・通信量**
-- C1 ㉝ 未読バッジのポーリング重複
+- ✅ C1 ㉝ 未読バッジのポーリング重複 → **完了**（`e212ece9`・`1a61ff26`）
+- ✅ C3 メッセージ一覧を開いている間に新着の未読表示が反映されない → **完了**（`4b6b7f34`。バッジ未読数の変化・前面復帰で一覧を取り直す）
+- C4 一覧 API（`/api/messages` GET）が 1.2〜1.5 秒かかる。会話ごとに未読数を数えている（`src/app/api/messages/route.ts:180-185`）ため → DB 関数化を検討
 - C2 `[transcribe]` ログでモデル・処理時間を確認（Vercel ログ待ち）
+- C5 `useNotifications` の旧ロジック（`fetchCountsLegacy`）と unread-count API の削除（Console に `[badge] get_badge_counts failed` が出ないことを確認後、別コミット）
 
 **🎨 D. 画面・仕様**
+- D3 メッセージ一覧（`src/app/messages/page.tsx`）の初回読み込み失敗時にサンプル会話（`SAMPLE_CONVERSATIONS`）を表示する作りを、**公開前に**エラー表示へ変更
 - D1 いいね上限「10」の画面直書き：`profile/[id]/page.tsx:861`（/10）、`:282`（上限（10回））、`matches/page.tsx:61`。上限は DB 関数 `like_daily_limit()` に一本化済みのため、変更時に表示がずれる
 - D2 身分証が HEIC のまま届いた場合、AI 審査が読めず失敗する可能性（推測）
 
