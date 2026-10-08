@@ -1048,6 +1048,15 @@ export default function ChatPage() {
     }
 
     try {
+      // 波形・無音検知用の AudioContext は、ボタン操作の直後（マイク許可を待つ前）に作って動かす
+      // Safari は操作から時間が空くと suspended のまま動かないことがあるため
+      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      const audioContext = new AudioCtx()
+      audioContextRef.current = audioContext
+      const resumePromise = audioContext.state === 'suspended'
+        ? audioContext.resume().catch(() => {})
+        : Promise.resolve()
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaStreamRef.current = stream
       // Chrome は webm;opus、Safari は mp4 をサポート。両方を試して使えるものを選ぶ
@@ -1064,24 +1073,33 @@ export default function ChatPage() {
       isCancelledRef.current = false
 
       // 無音検知 + 波形の設定
-      // Safari は user gesture 後でも AudioContext が suspended のままになるため明示的に resume が必要
-      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      const audioContext = new AudioCtx()
-      audioContextRef.current = audioContext
+      await resumePromise
       if (audioContext.state === 'suspended') {
-        await audioContext.resume()
+        await audioContext.resume().catch(() => {})
       }
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 256
       source.connect(analyser)
+      // Safari は出口（destination）までつながっていないと解析に音が流れないことがあるため、
+      // 音量 0 の経路で destination までつなぐ（スピーカーから音は出ない）
+      const silentGain = audioContext.createGain()
+      silentGain.gain.value = 0
+      analyser.connect(silentGain)
+      silentGain.connect(audioContext.destination)
 
       const dataArray = new Uint8Array(analyser.frequencyBinCount)
       let silenceStart: number | null = null
+      // 解析が実際に音を拾えているか（一度でも 0 以外の値が来たか）
+      // 拾えていない間は無音の自動停止を使わない（話していても止まるのを防ぐ）
+      let hasAnalyserSignal = false
 
       const checkSilence = () => {
         analyser.getByteFrequencyData(dataArray)
         const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
+        if (!hasAnalyserSignal && dataArray.some(v => v > 0)) {
+          hasAnalyserSignal = true
+        }
 
         // 波形データを蓄積（左→右に積み上げ）
         const currentVolume = volume / 255
@@ -1091,7 +1109,9 @@ export default function ChatPage() {
           return updated.length > 40 ? updated.slice(-40) : updated
         })
 
-        if (volume < 10) {
+        if (!hasAnalyserSignal) {
+          silenceStart = null
+        } else if (volume < 10) {
           if (silenceStart === null) silenceStart = Date.now()
           if (Date.now() - silenceStart >= 8000) {
             stopRecording()
@@ -1159,6 +1179,8 @@ export default function ChatPage() {
       animationIdRef.current = requestAnimationFrame(checkSilence)
     } catch (err) {
       console.error('Microphone access error:', err)
+      // マイク許可前に作った AudioContext などを解放する
+      cleanupRecording()
       alert(t('voiceNotSupported'))
     }
   }
