@@ -57,8 +57,29 @@ function isPageVisible() {
   return typeof document === 'undefined' || document.visibilityState !== 'hidden'
 }
 
-// 件数の取得（数え方は従来どおり）
+// 件数の取得：DB 関数 get_badge_counts で 4 件数を 1 回で取る（auth.uid() 基準）
+// エラー時は旧ロジック（4 本の問い合わせ）で取り直す
 async function fetchCounts(uid: string): Promise<NotificationCounts | null> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.rpc('get_badge_counts')
+  // jsonb（オブジェクト）でも、RETURNS TABLE（1 行の配列）でも読めるようにする
+  const row = Array.isArray(data) ? data[0] : data
+  if (!error && row && typeof row === 'object') {
+    const result = row as Record<string, unknown>
+    return {
+      unreadMessages: Number(result.unread_messages) || 0,
+      unseenLikes: Number(result.unseen_likes) || 0,
+      unreadFootprints: Number(result.unread_footprints) || 0,
+      unreadNotifications: Number(result.unread_notifications) || 0,
+    }
+  }
+  console.warn('[badge] get_badge_counts failed, using legacy queries:', error?.message ?? 'invalid response')
+  return fetchCountsLegacy(uid)
+}
+
+// 旧ロジック（4 本の問い合わせ。数え方は従来どおり）
+// get_badge_counts のエラー時のみ使用。安定確認後に unread-count API とあわせて削除予定
+async function fetchCountsLegacy(uid: string): Promise<NotificationCounts | null> {
   const supabase = getSupabase()
   try {
     // 1. 未読メッセージ数 + 未確認マッチ数（サーバーAPIで取得）
