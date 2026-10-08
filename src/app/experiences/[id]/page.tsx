@@ -21,6 +21,8 @@ import {
   AlertCircle
 } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
 
 // 文化体験のタイプ定義（experiences/page.tsxと同じ）
 interface Experience {
@@ -68,82 +70,36 @@ interface ExperienceDetail extends Experience {
   }[]
 }
 
-// サンプルデータ
-const SAMPLE_EXPERIENCE_DETAILS: Record<string, ExperienceDetail> = {
-  '1': {
-    id: '1',
-    title: '伝統的な茶道体験',
-    description: '静寂な茶室で、本格的な茶道の世界を体験してください。和の心を学び、日本文化の奥深さを感じることができます。',
-    fullDescription: `静寂に包まれた茶室で、400年以上の歴史を持つ表千家流の茶道を本格的に学べる体験です。\n\n経験豊富な茶道師範による丁寧な指導のもと、茶の湯の精神「一期一会」の心を学び、美しい所作とともに日本文化の奥深さを体感していただきます。\n\n体験では、実際にお茶を点てて、季節の和菓子とともにお楽しみいただけます。茶道の歴史や哲学についても分かりやすく解説いたします。`,
-    category: '茶道',
-    date: '2025-08-15',
-    timeStart: '14:00',
-    timeEnd: '16:00',
-    location: '表参道茶道会館',
-    address: '東京都渋谷区神宮前4-12-10 表参道ヒルズ近く',
-    prefecture: '東京都',
-    city: '渋谷区',
-    maxParticipants: 8,
-    currentParticipants: 3,
-    price: 3500,
-    currency: 'JPY',
-    organizerId: 'organizer1',
-    organizerName: '田中 美和子',
-    status: 'upcoming',
-    imageUrl: '/tea-ceremony.jpg',
-    rating: 4.8,
-    reviewCount: 24,
-    requirements: [
-      '正座が困難な方はご相談ください',
-      '和室での体験のため、清潔な靴下をご着用ください',
-      '写真撮影は指定時間のみ可能'
-    ],
-    included: [
-      '茶道具一式の使用',
-      '抹茶・季節の和菓子',
-      '茶道の基本レッスン',
-      '修了証（希望者のみ）'
-    ],
-    toBring: [
-      '特にありません',
-      '着物での参加も歓迎（着付けサービスなし）',
-      'カメラ（写真撮影時間有り）'
-    ],
-    organizerProfile: {
-      bio: '表千家茶道師範として20年以上の経験を持ち、国際交流を通じた茶道の普及に取り組んでいます。',
-      experienceCount: 156,
-      joinedDate: '2020-03-15',
-      rating: 4.9
-    },
-    reviews: [
-      {
-        id: '1',
-        userName: 'Sarah M.',
-        rating: 5,
-        comment: '素晴らしい体験でした。田中先生の丁寧な指導で、茶道の深い精神性を学ぶことができました。',
-        date: '2025-07-20'
-      },
-      {
-        id: '2',
-        userName: 'Michael K.',
-        rating: 5,
-        comment: 'Perfect introduction to tea ceremony. Very peaceful and educational experience.',
-        date: '2025-07-15'
-      },
-      {
-        id: '3',
-        userName: '山田 花子',
-        rating: 4,
-        comment: '初心者でしたが、とても分かりやすく教えていただけました。和菓子も美味しかったです。',
-        date: '2025-07-10'
-      }
-    ]
-  }
+// 4 言語の文言（今回追加分のみ。既存の日本語の文言はそのまま）
+type Dict = {
+  notFound: string
+  backToList: string
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: {
+    notFound: '体験が見つかりませんでした。',
+    backToList: '体験一覧へ戻る',
+  },
+  en: {
+    notFound: "We couldn't find this experience.",
+    backToList: 'Back to experiences',
+  },
+  ko: {
+    notFound: '체험을 찾을 수 없습니다.',
+    backToList: '체험 목록으로 돌아가기',
+  },
+  'zh-tw': {
+    notFound: '找不到這個體驗。',
+    backToList: '返回體驗列表',
+  },
 }
 
 export default function ExperienceDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
+  const t = T[currentLanguage] ?? T.ja
   const [experience, setExperience] = useState<ExperienceDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
@@ -160,20 +116,13 @@ export default function ExperienceDetailPage() {
         if (response.ok) {
           setExperience(result)
         } else {
+          // 取得失敗（ID が存在しない場合を含む）は「体験が見つかりません」を表示する
           console.error('Failed to fetch experience:', result.error)
-          // フォールバックとしてサンプルデータを使用
-          const experienceData = SAMPLE_EXPERIENCE_DETAILS[params.id as string]
-          if (experienceData) {
-            setExperience(experienceData)
-          }
+          setExperience(null)
         }
       } catch (error) {
         console.error('Error loading experience:', error)
-        // エラー時はサンプルデータを使用
-        const experienceData = SAMPLE_EXPERIENCE_DETAILS[params.id as string]
-        if (experienceData) {
-          setExperience(experienceData)
-        }
+        setExperience(null)
       } finally {
         setIsLoading(false)
       }
@@ -226,10 +175,10 @@ export default function ExperienceDetailPage() {
       <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">体験が見つかりません</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t.notFound}</h2>
           <p className="text-gray-600 mb-4">指定された体験は存在しないか、削除されました。</p>
           <Link href="/experiences">
-            <Button variant="sakura">体験一覧に戻る</Button>
+            <Button variant="sakura">{t.backToList}</Button>
           </Link>
         </div>
       </div>

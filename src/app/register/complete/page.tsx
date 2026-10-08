@@ -125,53 +125,6 @@ function RegisterCompleteContent() {
               </div>
             </div>
 
-            {/* Test Skip Button - Always show for testing */}
-            {true && (
-              <div className="mt-6">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-start">
-                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-yellow-900 mb-2">{t('registerComplete.testModeTitle')}</h4>
-                      <p className="text-yellow-800 text-sm mb-3">
-                        {t('registerComplete.testModeDescription')}
-                      </p>
-                      <Button 
-                        onClick={() => {
-                          // Extract all signup data from URL parameters
-                          const urlParams = new URLSearchParams(window.location.search)
-                          const gender = urlParams.get('gender')
-                          const nickname = urlParams.get('nickname')
-                          const birth_date = urlParams.get('birth_date')
-                          const age = urlParams.get('age')
-                          const nationality = urlParams.get('nationality')
-                          const prefecture = urlParams.get('prefecture')
-                          
-                          // Create URL parameters for profile edit page
-                          const profileParams = new URLSearchParams({
-                            type: gender === 'male' ? 'foreign-male' : 'japanese-female'
-                          })
-                          
-                          // Add signup data if available
-                          if (nickname) profileParams.set('nickname', nickname)
-                          if (gender) profileParams.set('gender', gender)
-                          if (birth_date) profileParams.set('birth_date', birth_date)
-                          if (age) profileParams.set('age', age)
-                          if (nationality) profileParams.set('nationality', nationality)
-                          if (prefecture) profileParams.set('prefecture', prefecture)
-                          
-                          window.location.href = `/profile/edit?${profileParams.toString()}`
-                        }}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
-                      >
-                        {t('registerComplete.testModeButton')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Actions */}
             <div className="mt-8 space-y-3">
               <Link href="/login">

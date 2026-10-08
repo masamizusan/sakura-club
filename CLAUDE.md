@@ -1684,7 +1684,13 @@ WHERE table_schema = 'public'
 - C5 `useNotifications` の旧ロジック（`fetchCountsLegacy`）と unread-count API の削除（Console に `[badge] get_badge_counts failed` が出ないことを確認後、別コミット）
 
 **🎨 D. 画面・仕様**
-- D3 メッセージ一覧（`src/app/messages/page.tsx`）の初回読み込み失敗時にサンプル会話（`SAMPLE_CONVERSATIONS`）を表示する作りを、**公開前に**エラー表示へ変更
+- ✅ D3 サンプル・見本データ表示の削除 → **完了**（#6「サンプル表示を削除し、読み込み失敗時のエラー表示を追加…」のコミット）
+  - メッセージ一覧 `src/app/messages/page.tsx`：`SAMPLE_CONVERSATIONS` を削除 → 読み込み失敗時はエラー文＋再読み込みボタン（4 言語）
+  - 体験一覧 `src/app/experiences/page.tsx`：`SAMPLE_EXPERIENCES` を削除 → 同上
+  - 体験詳細 `src/app/experiences/[id]/page.tsx`：`SAMPLE_EXPERIENCE_DETAILS` を削除 → 「体験が見つかりませんでした」＋一覧へ戻るリンク（4 言語）
+  - 登録完了 `src/app/register/complete/page.tsx`：常時表示されていた「開発者向けテスト機能」（認証スキップボタン）を削除。`translations.ts` の `registerComplete.testMode*` は保護対象のため残置
+  - `src/app/messages/page.tsx.backup` を削除
+- D4 `src/app/profile/edit/page.tsx:3172-3178`：名前「テスト」または自己紹介に「テスト用の自己紹介です」を含むユーザーの入力データを消す処理が有効になっている。本物の利用者が対象になるおそれ。**保護対象のため、別途許可を得て削除する**
 - D1 いいね上限「10」の画面直書き：`profile/[id]/page.tsx:861`（/10）、`:282`（上限（10回））、`matches/page.tsx:61`。上限は DB 関数 `like_daily_limit()` に一本化済みのため、変更時に表示がずれる
 - D2 身分証が HEIC のまま届いた場合、AI 審査が読めず失敗する可能性（推測）
 
@@ -1707,6 +1713,13 @@ WHERE table_schema = 'public'
 - F1 en/ko/zh-tw 翻訳のネイティブレビュー
 - F2 next-intl 移行（長期計画）
 - F3 「次章：多言語拡張・対象国拡大」の本文が未記入
+
+**📧 I. 会社メールアドレス作成後の作業**
+- I1 認証メール等の送信を会社ドメインの SMTP に切り替え
+- I2 迷惑メール対策（SPF・DKIM・DMARC の DNS 設定）
+- I3 各ページ（特商法・問い合わせ・プライバシーポリシー等）・Stripe・各サービスの連絡先メールの変更
+- I4 通知（問い合わせ・通報・Stripe・Vercel・Supabase 等）の受け取り先の変更
+- I5 実際のメール（Gmail・iCloud・Outlook 等）への到達テスト（迷惑メールに入らないか）
 
 **🗂️ G. 片付け**
 - G1 `~/Downloads/20260927_stage1a_rls_hardening.sql` が残っている（リポジトリに記録済み。不要なら削除）

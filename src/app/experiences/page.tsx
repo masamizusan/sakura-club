@@ -29,6 +29,8 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     allCategories: 'すべて',
     allPrefectures: 'すべて',
     peopleCount: '{current}/{max}名',
+    loadError: '体験を読み込めませんでした。通信環境を確認して、もう一度お試しください。',
+    reload: '再読み込み',
   },
   en: {
     pageTitle: 'Cultural Experiences',
@@ -49,6 +51,8 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     allCategories: 'All',
     allPrefectures: 'All',
     peopleCount: '{current}/{max}',
+    loadError: "Couldn't load experiences. Please check your connection and try again.",
+    reload: 'Reload',
   },
   ko: {
     pageTitle: '문화 체험 목록',
@@ -69,6 +73,8 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     allCategories: '전체',
     allPrefectures: '전체',
     peopleCount: '{current}/{max}명',
+    loadError: '체험을 불러오지 못했습니다. 통신 환경을 확인한 후 다시 시도해 주세요.',
+    reload: '다시 불러오기',
   },
   'zh-tw': {
     pageTitle: '文化體驗列表',
@@ -89,6 +95,8 @@ const experiencesTranslations: Record<string, Record<string, string>> = {
     allCategories: '全部',
     allPrefectures: '全部',
     peopleCount: '{current}/{max}人',
+    loadError: '無法載入體驗。請確認網路連線後再試一次。',
+    reload: '重新載入',
   },
 }
 
@@ -126,98 +134,6 @@ interface Experience {
   reviewCount?: number
 }
 
-// サンプルデータ
-const SAMPLE_EXPERIENCES: Experience[] = [
-  {
-    id: '1',
-    title: '伝統的な茶道体験',
-    description: '静寂な茶室で、本格的な茶道の世界を体験してください。和の心を学び、日本文化の奥深さを感じることができます。',
-    category: '茶道',
-    date: '2025-08-15',
-    timeStart: '14:00',
-    timeEnd: '16:00',
-    location: '表参道茶道会館',
-    prefecture: '東京都',
-    city: '渋谷区',
-    maxParticipants: 8,
-    currentParticipants: 3,
-    price: 3500,
-    currency: 'JPY',
-    organizerId: 'organizer1',
-    organizerName: '田中 美和子',
-    status: 'upcoming',
-    imageUrl: '/tea-ceremony.jpg',
-    rating: 4.8,
-    reviewCount: 24
-  },
-  {
-    id: '2',
-    title: '書道・筆文字アート教室',
-    description: '美しい筆文字の書き方を学びながら、自分だけの作品を作成します。初心者でも丁寧に指導いたします。',
-    category: '書道',
-    date: '2025-08-18',
-    timeStart: '10:00',
-    timeEnd: '12:00',
-    location: '銀座文化センター',
-    prefecture: '東京都',
-    city: '中央区',
-    maxParticipants: 12,
-    currentParticipants: 7,
-    price: 2800,
-    currency: 'JPY',
-    organizerId: 'organizer2',
-    organizerName: '山田 博文',
-    status: 'upcoming',
-    imageUrl: '/calligraphy.jpg',
-    rating: 4.6,
-    reviewCount: 18
-  },
-  {
-    id: '3',
-    title: '日本料理調理体験',
-    description: '季節の食材を使った本格的な日本料理の作り方を学びます。作った料理は皆さんで一緒にお召し上がりいただきます。',
-    category: '料理',
-    date: '2025-08-20',
-    timeStart: '11:00',
-    timeEnd: '15:00',
-    location: '和食料理教室「四季」',
-    prefecture: '東京都',
-    city: '新宿区',
-    maxParticipants: 10,
-    currentParticipants: 5,
-    price: 5200,
-    currency: 'JPY',
-    organizerId: 'organizer3',
-    organizerName: '佐藤 恵子',
-    status: 'upcoming',
-    imageUrl: '/cooking.jpg',
-    rating: 4.9,
-    reviewCount: 31
-  },
-  {
-    id: '4',
-    title: '着物着付け体験',
-    description: '美しい着物の着付けを体験し、日本の伝統的な美しさを感じてください。写真撮影も含まれています。',
-    category: '着物',
-    date: '2025-08-22',
-    timeStart: '13:00',
-    timeEnd: '16:00',
-    location: '浅草着物レンタル館',
-    prefecture: '東京都',
-    city: '台東区',
-    maxParticipants: 6,
-    currentParticipants: 2,
-    price: 4200,
-    currency: 'JPY',
-    organizerId: 'organizer4',
-    organizerName: '鈴木 雅美',
-    status: 'upcoming',
-    imageUrl: '/kimono.jpg',
-    rating: 4.7,
-    reviewCount: 15
-  },
-]
-
 export default function ExperiencesPage() {
   const { currentLanguage } = useLanguage()
   const currentLang = ['ja', 'en', 'ko', 'zh-tw'].includes(currentLanguage) ? currentLanguage : 'en'
@@ -230,11 +146,16 @@ export default function ExperiencesPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedPrefecture, setSelectedPrefecture] = useState('all')
   const [isLoading, setIsLoading] = useState(true)
+  // 取得に失敗したとき true（エラー文と再読み込みボタンを表示）
+  const [loadError, setLoadError] = useState(false)
+  // 再読み込みボタン用：値を変えると最初の読み込みと同じ取得処理をもう一度行う
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
         setIsLoading(true)
+        setLoadError(false)
         const params = new URLSearchParams()
         if (searchTerm) params.append('search', searchTerm)
         if (selectedCategory !== 'all') params.append('category', selectedCategory)
@@ -246,16 +167,18 @@ export default function ExperiencesPage() {
         if (response.ok) {
           setExperiences(result.experiences || [])
         } else {
-          setExperiences(SAMPLE_EXPERIENCES)
+          setExperiences([])
+          setLoadError(true)
         }
       } catch (error) {
-        setExperiences(SAMPLE_EXPERIENCES)
+        setExperiences([])
+        setLoadError(true)
       } finally {
         setIsLoading(false)
       }
     }
     fetchExperiences()
-  }, [searchTerm, selectedCategory, selectedPrefecture])
+  }, [searchTerm, selectedCategory, selectedPrefecture, reloadKey])
 
   useEffect(() => {
     setFilteredExperiences(experiences)
@@ -356,12 +279,28 @@ export default function ExperiencesPage() {
             </div>
           </div>
 
+          {/* 読み込み失敗時 */}
+          {loadError && !isLoading && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 mb-4">{T.loadError}</p>
+              <Button
+                variant="outline"
+                onClick={() => setReloadKey(k => k + 1)}
+                disabled={isLoading}
+              >
+                {T.reload}
+              </Button>
+            </div>
+          )}
+
           {/* 結果カウント */}
+          {!loadError && (
           <div className="mb-6">
             <p className="text-gray-600">
               {T.resultsCount.replace('{n}', String(filteredExperiences.length))}
             </p>
           </div>
+          )}
 
           {/* 体験カード一覧 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -452,7 +391,7 @@ export default function ExperiencesPage() {
           </div>
 
           {/* 結果が0件の場合 */}
-          {filteredExperiences.length === 0 && !isLoading && (
+          {filteredExperiences.length === 0 && !isLoading && !loadError && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <Search className="w-16 h-16 mx-auto" />

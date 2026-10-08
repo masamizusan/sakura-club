@@ -27,6 +27,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendError: 'メッセージの送信に失敗しました。もう一度お試しください。',
     minutesAgo: '{min}分前',
     hoursAgo: '{hours}時間前',
+    loadError: 'メッセージを読み込めませんでした。通信環境を確認して、もう一度お試しください。',
+    reload: '再読み込み',
   },
   en: {
     pageTitle: 'Messages',
@@ -40,6 +42,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendError: 'Failed to send message. Please try again.',
     minutesAgo: '{min} min ago',
     hoursAgo: '{hours}h ago',
+    loadError: "Couldn't load your messages. Please check your connection and try again.",
+    reload: 'Reload',
   },
   ko: {
     pageTitle: '메시지',
@@ -53,6 +57,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendError: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
     minutesAgo: '{min}분 전',
     hoursAgo: '{hours}시간 전',
+    loadError: '메시지를 불러오지 못했습니다. 통신 환경을 확인한 후 다시 시도해 주세요.',
+    reload: '다시 불러오기',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -66,6 +72,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     sendError: '訊息發送失敗，請再試一次。',
     minutesAgo: '{min}分鐘前',
     hoursAgo: '{hours}小時前',
+    loadError: '無法載入訊息。請確認網路連線後再試一次。',
+    reload: '重新載入',
   },
 }
 
@@ -94,92 +102,16 @@ interface Conversation {
   isNewMatch: boolean  // 新規マッチ未確認フラグ
 }
 
-// サンプル会話データ
-const SAMPLE_CONVERSATIONS: Conversation[] = [
-  {
-    id: 'conv1',
-    partnerId: 'user1',
-    partnerName: 'Sarah Johnson',
-    partnerAge: 26,
-    partnerNationality: 'アメリカ',
-    partnerLocation: '東京都渋谷区',
-    lastMessage: {
-      id: 'msg1',
-      senderId: 'user1',
-      content: '明日の茶道体験、とても楽しみにしています！何か持参するものはありますか？',
-      timestamp: '2025-07-30T14:30:00Z',
-      isRead: false
-    },
-    unreadCount: 2,
-    isOnline: true,
-    matchedDate: '2025-07-25T10:00:00Z',
-    isNewMatch: false,
-  },
-  {
-    id: 'conv2',
-    partnerId: 'user2',
-    partnerName: 'Michael Chen',
-    partnerAge: 29,
-    partnerNationality: 'カナダ',
-    partnerLocation: '東京都新宿区',
-    lastMessage: {
-      id: 'msg2',
-      senderId: 'current_user',
-      content: 'お疲れ様でした！今度は書道体験はいかがですか？',
-      timestamp: '2025-07-29T20:15:00Z',
-      isRead: true
-    },
-    unreadCount: 0,
-    isOnline: false,
-    matchedDate: '2025-07-20T15:30:00Z',
-    isNewMatch: false,
-  },
-  {
-    id: 'conv3',
-    partnerId: 'user3',
-    partnerName: 'Emma Thompson',
-    partnerAge: 24,
-    partnerNationality: 'イギリス',
-    partnerLocation: '東京都港区',
-    lastMessage: {
-      id: 'msg3',
-      senderId: 'user3',
-      content: 'こんにちは！プロフィールを拝見させていただきました。共通の趣味がたくさんありますね。',
-      timestamp: '2025-07-28T11:45:00Z',
-      isRead: true
-    },
-    unreadCount: 0,
-    isOnline: false,
-    matchedDate: '2025-07-28T09:20:00Z',
-    isNewMatch: false,
-  },
-  {
-    id: 'conv4',
-    partnerId: 'user4',
-    partnerName: 'David Kim',
-    partnerAge: 31,
-    partnerNationality: '韓国',
-    partnerLocation: '神奈川県横浜市',
-    lastMessage: {
-      id: 'msg4',
-      senderId: 'user4',
-      content: '剣道の体験、ありがとうございました！とても勉強になりました。',
-      timestamp: '2025-07-27T16:20:00Z',
-      isRead: true
-    },
-    unreadCount: 0,
-    isOnline: false,
-    matchedDate: '2025-07-15T12:00:00Z',
-    isNewMatch: false,
-  }
-]
-
 export default function MessagesPage() {
   const router = useRouter()
   const { currentLanguage } = useLanguage()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  // 初回・検索・再読み込みの取得に失敗したとき true（エラー文と再読み込みボタンを表示）
+  const [loadError, setLoadError] = useState(false)
+  // 再読み込みボタン用：値を変えると最初の読み込みと同じ取得処理をもう一度行う
+  const [reloadKey, setReloadKey] = useState(0)
 
   // 翻訳関数
   const t = (key: string, params?: Record<string, string | number>) => {
@@ -199,6 +131,7 @@ export default function MessagesPage() {
     const fetchConversations = async () => {
       try {
         setIsLoading(true)
+        setLoadError(false)
 
         const params = new URLSearchParams()
         if (searchTerm) params.append('search', searchTerm)
@@ -210,20 +143,20 @@ export default function MessagesPage() {
           setConversations(result.conversations || [])
         } else {
           console.error('Failed to fetch conversations:', result.error)
-          // フォールバックとしてサンプルデータを使用
-          setConversations(SAMPLE_CONVERSATIONS)
+          setConversations([])
+          setLoadError(true)
         }
       } catch (error) {
         console.error('Error fetching conversations:', error)
-        // エラー時はサンプルデータを使用
-        setConversations(SAMPLE_CONVERSATIONS)
+        setConversations([])
+        setLoadError(true)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchConversations()
-  }, [searchTerm])
+  }, [searchTerm, reloadKey])
 
   // ===== 一覧を開いている間の新着反映（C: バッジの未読数の変化 / D: 画面が前面に戻ったとき） =====
   // 新しい定期取得は追加しない。共有のバッジ件数（useNotifications）の変化を合図に取り直す
@@ -255,6 +188,8 @@ export default function MessagesPage() {
       // 取得中に検索欄が変わった場合は、検索側の取得に任せて結果を捨てる
       if (!isUnmountedRef.current && response.ok && term === searchTermRef.current) {
         setConversations(result.conversations || [])
+        // 裏での取り直しに成功したらエラー表示を解除する（失敗時はエラー表示に切り替えず、今の表示を残す）
+        setLoadError(false)
       }
     } catch (error) {
       console.warn('[messages] list refresh failed:', error instanceof Error ? error.message : 'unknown')
@@ -385,6 +320,20 @@ export default function MessagesPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : loadError ? (
+                <div className="p-6 text-center text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="mb-4">{t('loadError')}</p>
+                  <button
+                    type="button"
+                    onClick={() => setReloadKey(k => k + 1)}
+                    disabled={isLoading}
+                    className="px-4 py-2 rounded-md text-sm font-medium text-white disabled:opacity-50"
+                    style={{ backgroundColor: 'var(--color-primary)' }}
+                  >
+                    {t('reload')}
+                  </button>
                 </div>
               ) : filteredConversations.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
