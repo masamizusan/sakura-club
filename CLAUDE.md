@@ -1662,11 +1662,11 @@ WHERE table_schema = 'public'
 ### ㉞ 残作業の一覧（2026/10/08 時点・全体の棚卸し）
 
 **🔐 A. セキュリティ**
-- A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）。キャッシュ件数が 124 件から増えたことを確認してから SQL 実行
+- ✅ A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）→ **完了**（`2c7caa2e`、2026/10/08 本番実行済み。`supabase/migrations/20261008_stage4_translations_rls.sql`）
 - A2 `/api/messages/moderate` に `requireActiveProfile` が無い（判定ロジックは変更禁止。ガード追加のみ）
 - A3 `/api/verification/review` に `requireActiveProfile` が無い（保護対象。許可範囲の指定が必要）
 - A4 権限点検 SQL 1〜5 の「要確認」の結果待ち：subscriptions / footprints / blocks / reports / avatars Storage の INSERT・DELETE
-- A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開（方針判断待ち）
+- ✅ A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開 → **完了**。`experience_participants` はログインユーザーのみに制限（段階4）。`experiences` 本体は宣伝用ページのため、**意図的に公開のまま**（ユーザー判断）
 
 **💳 B. 決済・法務**
 - B1 Stripe Webhook に `charge.refunded` が登録されているか確認（未登録だと返金時に回数券が無効にならない）
