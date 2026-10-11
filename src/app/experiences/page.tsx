@@ -8,10 +8,8 @@ import { Calendar, MapPin, Clock, Users, Search, Filter, Plus, Heart, Star } fro
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
 import { useLanguage } from '@/contexts/LanguageContext'
-
 // 体験の企画が固まるまで一覧は「準備中」表示にする（体験 API は呼ばない）
-// 公開時は false に戻し、ナビゲーションに入口を追加する
-const EXPERIENCES_COMING_SOON = true
+import { EXPERIENCES_COMING_SOON } from '@/lib/featureFlags'
 
 const experiencesTranslations: Record<string, Record<string, string>> = {
   ja: {

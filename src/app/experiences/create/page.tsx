@@ -22,6 +22,34 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { z } from 'zod'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
+import { EXPERIENCES_COMING_SOON } from '@/lib/featureFlags'
+
+// 準備中の案内（体験一覧 /experiences と同じ文言。一覧の辞書はページファイル内にあり import できないため、ここに同じ文言を置く）
+type ComingSoonDict = {
+  pageTitle: string
+  comingSoon: string
+}
+
+const COMING_SOON_T: Record<SupportedLanguage, ComingSoonDict> = {
+  ja: {
+    pageTitle: '文化体験一覧',
+    comingSoon: '日本の文化を体験できる企画を準備しています。公開まで、もうしばらくお待ちください。',
+  },
+  en: {
+    pageTitle: 'Cultural Experiences',
+    comingSoon: "We're preparing cultural experiences in Japan. Please stay tuned.",
+  },
+  ko: {
+    pageTitle: '문화 체험 목록',
+    comingSoon: '일본 문화를 체험할 수 있는 프로그램을 준비하고 있습니다. 공개될 때까지 조금만 기다려 주세요.',
+  },
+  'zh-tw': {
+    pageTitle: '文化體驗列表',
+    comingSoon: '我們正在籌備體驗日本文化的活動，敬請期待正式推出。',
+  },
+}
 
 const experienceCreateSchema = z.object({
   title: z.string().min(1, 'タイトルを入力してください').max(100, 'タイトルは100文字以内で入力してください'),
@@ -51,6 +79,8 @@ export default function ExperienceCreatePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
+  const comingSoonT = COMING_SOON_T[currentLanguage] ?? COMING_SOON_T.ja
 
   const {
     register,
@@ -100,6 +130,18 @@ export default function ExperienceCreatePage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // 準備中：フォームは出さず、体験一覧と同じ案内だけを表示する（false に戻せば下のフォームが表示される）
+  if (EXPERIENCES_COMING_SOON) {
+    return (
+      <div className="min-h-screen bg-[#f5ebe0] py-12 px-4">
+        <div className="max-w-3xl mx-auto text-center py-16">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">{comingSoonT.pageTitle}</h1>
+          <p className="text-lg text-gray-600">{comingSoonT.comingSoon}</p>
+        </div>
+      </div>
+    )
   }
 
   if (success) {

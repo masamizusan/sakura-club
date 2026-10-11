@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { EXPERIENCES_COMING_SOON } from '@/lib/featureFlags'
 
 // 段階2-A: 主催者は profiles の埋め込みではなく公開用ビュー（profiles_public）から別クエリで取得する
 // （他人の last_name 等を読まない。ビューに載らない主催者は null ＝「未知」表示）
@@ -132,6 +133,14 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // 体験機能は公開まで停止（認証より前に拒否）
+    if (EXPERIENCES_COMING_SOON) {
+      return NextResponse.json(
+        { error: '体験機能は準備中です', code: 'experiences_coming_soon' },
+        { status: 403 }
+      )
+    }
+
     const supabase = createClient(request)
     const experienceId = params.id
     
@@ -227,6 +236,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // 体験機能は公開まで停止（認証より前に拒否）
+    if (EXPERIENCES_COMING_SOON) {
+      return NextResponse.json(
+        { error: '体験機能は準備中です', code: 'experiences_coming_soon' },
+        { status: 403 }
+      )
+    }
+
     const supabase = createClient(request)
     const experienceId = params.id
     

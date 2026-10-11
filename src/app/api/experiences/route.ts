@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { EXPERIENCES_COMING_SOON } from '@/lib/featureFlags'
 
 // 段階2-A: 主催者名は profiles の埋め込みではなく公開用ビュー（profiles_public）から別クエリで取得する
 // （他人の last_name 等を読まない。ビューに載らない主催者は名前なし＝「未知」表示）
@@ -144,6 +145,14 @@ export async function GET(request: NextRequest) {
 // POST: 新しい体験作成
 export async function POST(request: NextRequest) {
   try {
+    // 体験機能は公開まで停止（認証より前に拒否）
+    if (EXPERIENCES_COMING_SOON) {
+      return NextResponse.json(
+        { error: '体験機能は準備中です', code: 'experiences_coming_soon' },
+        { status: 403 }
+      )
+    }
+
     const supabase = createClient(request)
     
     // 認証ユーザーの取得

@@ -1690,11 +1690,21 @@ WHERE table_schema = 'public'
   - 体験詳細 `src/app/experiences/[id]/page.tsx`：`SAMPLE_EXPERIENCE_DETAILS` を削除 → 「体験が見つかりませんでした」＋一覧へ戻るリンク（4 言語）
   - 登録完了 `src/app/register/complete/page.tsx`：常時表示されていた「開発者向けテスト機能」（認証スキップボタン）を削除。`translations.ts` の `registerComplete.testMode*` は保護対象のため残置
   - `src/app/messages/page.tsx.backup` を削除
-- D4 `src/app/profile/edit/page.tsx:3172-3178`：名前「テスト」または自己紹介に「テスト用の自己紹介です」を含むユーザーの入力データを消す処理が有効になっている。本物の利用者が対象になるおそれ。**保護対象のため、別途許可を得て削除する**
+- ✅ D4（#37）`src/app/profile/edit/page.tsx` の、名前「テスト」または自己紹介に「テスト用の自己紹介です」を含むユーザーの入力データを DB から消す処理 → **完了**（#37 のコミットで削除。未使用の `isTestData`、コメントアウト済みの新規登録時消去ブロックもあわせて削除。開発初期 2025-08 のデバッグボタン用の掃除処理だった）
 - D1 いいね上限「10」の画面直書き：`profile/[id]/page.tsx:861`（/10）、`:282`（上限（10回））、`matches/page.tsx:61`。上限は DB 関数 `like_daily_limit()` に一本化済みのため、変更時に表示がずれる
 - D2 身分証が HEIC のまま届いた場合、AI 審査が読めず失敗する可能性（推測）
 
-- D5（#20）体験ページ（`/experiences`）への入口がない → **方針**：体験の企画が固まるまで公開しない。入口は作らず、一覧は準備中表示（`src/app/experiences/page.tsx` の `EXPERIENCES_COMING_SOON = true`）。公開時に false に戻して入口を追加する
+- D6（#38）体験の作成・変更・削除を公開まで停止 → **対応済み**（#38 のコミット）
+  - フラグを `src/lib/featureFlags.ts` の `EXPERIENCES_COMING_SOON` に集約（体験一覧・作成画面・API で共通）
+  - true の間：`/api/experiences` POST、`/api/experiences/[id]` PUT・DELETE は認証より前に 403（`code: 'experiences_coming_soon'`）。GET は変更なし
+  - 作成画面 `/experiences/create` はフォームを出さず準備中表示（フォームのコードは残置）
+  - DB：stage6（`20261011_stage6_experiences_lock.sql`）で作成・参加の書き込みルールを外した
+  - **公開時に決めること**：
+    - 誰が体験を作れるか（管理者のみ等）
+    - 作成・参加 API のチェック（`requireActiveProfile`、性別・年齢確認）
+    - DB のポリシーの作り直し（stage6 で experiences / experience_participants の書き込みルールを外したため、公開時に作り直す）
+    - 参加申し込みの実装（詳細ページの「申し込む」は `// TODO: 実際の予約処理` のまま。DB に書き込まない）
+- D5（#20）体験ページ（`/experiences`）への入口がない → **方針**：体験の企画が固まるまで公開しない。入口は作らず、一覧は準備中表示（`src/lib/featureFlags.ts` の `EXPERIENCES_COMING_SOON = true`）。公開時に false に戻して入口を追加する
 
 **📱 H. スマホのチャット入力欄（`src/app/messages/[conversationId]/page.tsx`・保護対象）**
 - 経緯：2026/09/20 の別セッションで、100dvh 化・チャット画面での BottomNav 非表示までは対応済み。「文字の下が切れる」「キーボード表示時に送信ボタンが右端で切れる」は未解決のまま記録が終わっている
