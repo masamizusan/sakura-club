@@ -30,6 +30,7 @@ const translations: Record<string, Record<string, string>> = {
     savings: 'お得',
     subscribe: 'このプランで始める',
     managePlan: '現在ご利用中のプランを管理する',
+    manageBilling: 'お支払い・プランの管理',
     currentPlanNote: '有料プランをご利用中です',
     processingPayment: '処理中...',
     monthly: '月額',
@@ -49,6 +50,8 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '購入する',
     sakuraNotice: '有効期限は購入から180日です。未使用分・期限切れ分の返金はできません。',
     sakuraPurchaseError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
+    portalError: 'お支払い管理の画面を開けませんでした。時間をおいてもう一度お試しください。',
+    cancelScheduled: '{date}で解約予定です。それまでは引き続きご利用いただけます。',
   },
   en: {
     title: 'Pricing Plans',
@@ -70,6 +73,7 @@ const translations: Record<string, Record<string, string>> = {
     savings: 'savings',
     subscribe: 'Get Started',
     managePlan: 'Manage your current plan',
+    manageBilling: 'Manage billing & plan',
     currentPlanNote: 'You are on a paid plan',
     processingPayment: 'Processing...',
     monthly: 'Monthly',
@@ -89,6 +93,8 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: 'Buy',
     sakuraNotice: 'Sakura Likes expire 180 days after purchase. Unused or expired Sakura Likes are non-refundable.',
     sakuraPurchaseError: 'Could not start checkout. Please try again later.',
+    portalError: "Couldn't open the billing page. Please try again later.",
+    cancelScheduled: 'Your plan will end on {date}. You can keep using it until then.',
   },
   ko: {
     title: '요금제',
@@ -110,6 +116,7 @@ const translations: Record<string, Record<string, string>> = {
     savings: '절약',
     subscribe: '시작하기',
     managePlan: '현재 이용 중인 플랜 관리',
+    manageBilling: '결제·플랜 관리',
     currentPlanNote: '유료 플랜을 이용 중입니다',
     processingPayment: '처리 중...',
     monthly: '월정액',
@@ -129,6 +136,8 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '구매하기',
     sakuraNotice: '유효기간은 구매일로부터 180일입니다. 미사용분・만료분은 환불되지 않습니다.',
     sakuraPurchaseError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+    portalError: '결제 관리 화면을 열 수 없습니다. 잠시 후 다시 시도해 주세요.',
+    cancelScheduled: '{date}에 해지될 예정입니다. 그때까지는 계속 이용하실 수 있습니다.',
   },
   'zh-tw': {
     title: '定價方案',
@@ -150,6 +159,7 @@ const translations: Record<string, Record<string, string>> = {
     savings: '優惠',
     subscribe: '立即開始',
     managePlan: '管理目前使用中的方案',
+    manageBilling: '付款與方案管理',
     currentPlanNote: '您正在使用付費方案',
     processingPayment: '處理中...',
     monthly: '月費',
@@ -169,6 +179,8 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '購買',
     sakuraNotice: '有效期限為購買日起180天。未使用及已過期的部分恕不退款。',
     sakuraPurchaseError: '無法開始結帳，請稍後再試。',
+    portalError: '無法開啟付款管理頁面，請稍後再試。',
+    cancelScheduled: '您的方案將於{date}終止，在此之前仍可繼續使用。',
   },
 }
 
@@ -256,6 +268,11 @@ function PlansContent() {
   const [sakuraBalance, setSakuraBalance] = useState<number | null>(null)
   const [sakuraNextExpiry, setSakuraNextExpiry] = useState<string | null>(null)
   const [sakuraProcessingPack, setSakuraProcessingPack] = useState<number | null>(null)
+  // #2-2: カスタマーポータル（解約・支払い方法の管理）と解約予約の表示
+  const [hasStripeCustomer, setHasStripeCustomer] = useState(false)
+  const [cancelScheduledAt, setCancelScheduledAt] = useState<string | null>(null)
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false)
+  const [portalError, setPortalError] = useState(false)
 
   const supabase = createClient()
 
@@ -286,15 +303,20 @@ function PlansContent() {
           return
         }
 
-        // Check subscription
-        const { data: subData } = await supabase
+        // Check subscription（#2-2: 解約予約とポータル表示用に、active 以外の行も読む）
+        const { data: subData, error: subError } = await supabase
           .from('subscriptions')
-          .select('status')
+          .select('status, stripe_customer_id, cancel_at_period_end, cancel_at')
           .eq('user_id', user.id)
-          .eq('status', 'active')
           .maybeSingle()
 
-        setHasSubscription(!!subData)
+        if (subError) {
+          console.error('[plans] subscription fetch error:', subError.message)
+        }
+        const isActive = subData?.status === 'active'
+        setHasSubscription(isActive)
+        setHasStripeCustomer(!!subData?.stripe_customer_id)
+        setCancelScheduledAt(isActive && subData?.cancel_at_period_end && subData?.cancel_at ? subData.cancel_at : null)
       } catch {
         // continue
       } finally {
@@ -384,6 +406,28 @@ function PlansContent() {
     }
   }
 
+  // #2-2: Stripe カスタマーポータルを開く（解約・支払い方法の管理）
+  const handleOpenPortal = async () => {
+    if (isOpeningPortal) return
+    setIsOpeningPortal(true)
+    setPortalError(false)
+    try {
+      const res = await fetch('/api/stripe/create-portal-session', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      setPortalError(true)
+    } catch {
+      setPortalError(true)
+    }
+    setIsOpeningPortal(false)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -432,6 +476,16 @@ function PlansContent() {
               {hasSubscription ? `✓ ${t('paidMember')}` : t('freeMember')}
             </span>
           </div>
+
+          {/* #2-2: 解約予約中の案内 */}
+          {cancelScheduledAt && (
+            <p className="text-sm" style={{ color: 'var(--color-text-sub)' }}>
+              {t('cancelScheduled').replace(
+                '{date}',
+                new Date(cancelScheduledAt).toLocaleDateString(DATE_LOCALES[currentLanguage] ?? 'ja-JP')
+              )}
+            </p>
+          )}
 
           {/* Feature Comparison Table */}
           <div className="app-card overflow-hidden">
@@ -558,23 +612,33 @@ function PlansContent() {
             </div>
           )}
 
-          {/* Already subscribed */}
-          {hasSubscription && (
+          {/* Already subscribed / 解約・お支払いの管理（Stripe の customer がある人だけ） */}
+          {(hasSubscription || hasStripeCustomer) && (
             <div className="app-card p-5 text-center">
-              <p className="text-sm mb-4" style={{ color: 'var(--color-text-sub)' }}>
-                {t('currentPlanNote')}
-              </p>
-              <button
-                onClick={() => alert('Stripe customer portal coming soon')}
-                className="w-full py-3 rounded-full font-medium text-sm border transition-colors"
-                style={{
-                  color: 'var(--color-text-sub)',
-                  borderColor: 'var(--color-border)',
-                  backgroundColor: 'transparent',
-                }}
-              >
-                {t('managePlan')}
-              </button>
+              {hasSubscription && (
+                <p className="text-sm mb-4" style={{ color: 'var(--color-text-sub)' }}>
+                  {t('currentPlanNote')}
+                </p>
+              )}
+              {hasStripeCustomer && (
+                <button
+                  onClick={handleOpenPortal}
+                  disabled={isOpeningPortal}
+                  className="w-full py-3 rounded-full font-medium text-sm border transition-colors disabled:opacity-50"
+                  style={{
+                    color: 'var(--color-text-sub)',
+                    borderColor: 'var(--color-border)',
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  {t('manageBilling')}
+                </button>
+              )}
+              {portalError && (
+                <p className="text-sm mt-3" style={{ color: '#8b1a2e' }}>
+                  {t('portalError')}
+                </p>
+              )}
             </div>
           )}
 

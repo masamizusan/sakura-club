@@ -1675,6 +1675,17 @@ WHERE table_schema = 'public'
 - B2 特定商取引法ページ（`/tokushoho`）が「準備中」。サブスク価格、さくらいいね $3.99 / $13.99 / $49.99、有効期限 180 日、返金の扱いを記載
 - B3 価格の 3 か所管理（`mypage/plans/page.tsx` の USD 直書き / Stripe Price / 特商法ページ）。変更時は手でそろえる運用
 - B4 サブスク未加入者がさくらいいねを買うたびに Stripe customer が新規作成される（支払いに影響なし・任意）
+- ✅ B5（#2-1）Stripe webhook の堅牢化 → **完了**（`8722b72c`）。サブスクの状態は毎回 Stripe の最新を取得して決定（active / trialing / past_due → 'active'、それ以外 → 'inactive'）。`customer.subscription.updated` に対応。DB 書き込み失敗・Stripe API 例外は 500 で再送させる
+- ✅ B6（#2-2）利用者が自分で解約・支払い方法を管理できる → **完了**（#2-2 のコミット）
+  - 新 API `src/app/api/stripe/create-portal-session/route.ts`（POST・ログイン必須・本人の `stripe_customer_id` が無ければ 404）。停止中の人も解約できるよう `requireActiveProfile` は付けない
+  - `src/app/mypage/plans/page.tsx`：「プランを管理する」ボタンでカスタマーポータルへ移動（`stripe_customer_id` がある人だけ表示）。失敗時はエラー文（4 言語）。解約予約中（`cancel_at_period_end` かつ `status='active'`）は「{日付}で解約予定です…」を表示（4 言語）
+  - webhook の `syncSubscriptionFromStripe` で `cancel_at_period_end` / `cancel_at` も反映（予約の取り消しで false / null に戻る）
+  - DB：stage7（`20261011_stage7_subscriptions_cancel_columns.sql`）で subscriptions に `cancel_at_period_end boolean NOT NULL DEFAULT false` と `cancel_at timestamptz` を追加
+- B7 **本番モードへ切り替えるとき、Stripe 側で同じ設定が必要なもの**（サンドボックスで設定済みの内容を本番でも行う）
+  - webhook の送信先（`/api/stripe/webhook`）と 6 イベント：`charge.refunded` / `checkout.session.completed` / `customer.subscription.deleted` / `customer.subscription.updated` / `invoice.payment_failed` / `invoice.payment_succeeded`（本番用の `STRIPE_WEBHOOK_SECRET` も設定）
+  - 支払い再試行の設定：初回失敗は期限超過（past_due）のまま、すべての再試行が失敗したらサブスクをキャンセル
+  - カスタマーポータルの設定：解約は「期間の終了時に解約」、プラン変更はオフ
+- **運用ルール：Stripe の管理画面で customer を削除しない**（webhook は customer の metadata `supabase_user_id` で利用者を特定するため、削除すると解約が DB に反映されず 'active' のまま残る）
 
 **⚡ C. 性能・通信量**
 - ✅ C1 ㉝ 未読バッジのポーリング重複 → **完了**（`e212ece9`・`1a61ff26`）

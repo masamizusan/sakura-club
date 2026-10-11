@@ -95,6 +95,12 @@ async function syncSubscriptionFromStripe(
   }
 
   const priceId = subscription.items.data[0]?.price.id
+  const currentPeriodEnd = getSubscriptionPeriodEnd(subscription)
+
+  // #2-2: 解約予約（期間の終わりに解約 / 日付指定の解約）。予約を取り消した場合は false / null に戻る
+  const cancelAtIso = subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end === true || cancelAtIso !== null
+  const cancelAt = cancelAtIso ?? (subscription.cancel_at_period_end ? currentPeriodEnd : null)
 
   const { error: upsertError } = await supabase.from('subscriptions').upsert({
     user_id: userId,
@@ -102,7 +108,9 @@ async function syncSubscriptionFromStripe(
     stripe_subscription_id: subscription.id,
     plan_type: getPlanType(priceId),
     status: dbStatus,
-    current_period_end: getSubscriptionPeriodEnd(subscription),
+    current_period_end: currentPeriodEnd,
+    cancel_at_period_end: cancelAtPeriodEnd,
+    cancel_at: cancelAt,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
 
