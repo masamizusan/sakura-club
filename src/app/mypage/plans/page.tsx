@@ -18,6 +18,7 @@ import {
   type SubscriptionPlanId,
   type SakuraPack,
 } from '@/lib/pricing'
+import { savePaymentReturn } from '@/lib/paymentReturn'
 
 const translations: Record<string, Record<string, string>> = {
   ja: {
@@ -401,6 +402,8 @@ function PlansContent() {
 
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.url) {
+        // #41: 決済のキャンセル・完了後の戻り先
+        savePaymentReturn('/mypage/plans')
         window.location.href = data.url
         return
       }

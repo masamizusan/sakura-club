@@ -9,6 +9,7 @@ import {
   getSavingsPercent,
   type SubscriptionPlanId,
 } from '@/lib/pricing'
+import { savePaymentReturn } from '@/lib/paymentReturn'
 
 interface Props {
   isOpen: boolean
@@ -150,6 +151,8 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.url) {
+        // #41: 決済のキャンセル・完了後は、今の会話に戻す
+        savePaymentReturn(window.location.pathname)
         window.location.href = data.url
         return
       }

@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { readPaymentReturn, clearPaymentReturn } from '@/lib/paymentReturn'
 
 const translations = {
   ja: { title: 'キャンセルしました', message: 'いつでもプランに登録できます。', button: '戻る' },
@@ -44,6 +45,13 @@ function PaymentCancelContent() {
 
   const t = translations[currentLanguage as keyof typeof translations] || translations.en
 
+  // #41: router.back() だと Stripe の決済画面に戻ってループするため、保存した戻り先（なければ料金プラン画面）へ
+  const handleBack = () => {
+    const returnPath = readPaymentReturn() ?? '/mypage/plans'
+    clearPaymentReturn()
+    router.replace(returnPath)
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="text-center max-w-sm">
@@ -51,7 +59,7 @@ function PaymentCancelContent() {
         <h1 className="text-xl font-bold text-gray-900 mb-3">{t.title}</h1>
         <p className="text-gray-500 mb-8">{t.message}</p>
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="bg-gray-200 text-gray-700 px-8 py-3 rounded-xl font-semibold hover:bg-gray-300"
         >
           {t.button}
