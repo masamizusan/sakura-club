@@ -58,13 +58,21 @@ function isPageVisible() {
 }
 
 // 件数の取得：DB 関数 get_badge_counts で 4 件数を 1 回で取る（auth.uid() 基準）
-// エラー時は旧ロジック（4 本の問い合わせ）で取り直す
-async function fetchCounts(uid: string): Promise<NotificationCounts | null> {
+// 失敗時は null を返し、バッジは前の値のまま。次の 5 秒後の問い合わせで回復する
+async function fetchCounts(): Promise<NotificationCounts | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase.rpc('get_badge_counts')
-  // jsonb（オブジェクト）でも、RETURNS TABLE（1 行の配列）でも読めるようにする
-  const row = Array.isArray(data) ? data[0] : data
-  if (!error && row && typeof row === 'object') {
+  try {
+    const { data, error } = await supabase.rpc('get_badge_counts')
+    if (error) {
+      console.warn('[badge] get_badge_counts failed:', error.message)
+      return null
+    }
+    // jsonb（オブジェクト）でも、RETURNS TABLE（1 行の配列）でも読めるようにする
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row || typeof row !== 'object') {
+      console.warn('[badge] get_badge_counts failed:', 'invalid response')
+      return null
+    }
     const result = row as Record<string, unknown>
     return {
       unreadMessages: Number(result.unread_messages) || 0,
@@ -72,74 +80,8 @@ async function fetchCounts(uid: string): Promise<NotificationCounts | null> {
       unreadFootprints: Number(result.unread_footprints) || 0,
       unreadNotifications: Number(result.unread_notifications) || 0,
     }
-  }
-  console.warn('[badge] get_badge_counts failed, using legacy queries:', error?.message ?? 'invalid response')
-  return fetchCountsLegacy(uid)
-}
-
-// 旧ロジック（4 本の問い合わせ。数え方は従来どおり）
-// get_badge_counts のエラー時のみ使用。安定確認後に unread-count API とあわせて削除予定
-async function fetchCountsLegacy(uid: string): Promise<NotificationCounts | null> {
-  const supabase = getSupabase()
-  try {
-    // 1. 未読メッセージ数 + 未確認マッチ数（サーバーAPIで取得）
-    let unreadMessages = 0
-    try {
-      const res = await fetch('/api/messages/unread-count', { credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        unreadMessages = (data.count || 0) + (data.newMatches || 0)
-      }
-    } catch {
-      // フォールバック：直接クエリ
-      const { data: convs } = await supabase
-        .from('conversations')
-        .select('id, user1_id, user2_id')
-      const myConvIds = (convs || [])
-        .filter(c => c.user1_id === uid || c.user2_id === uid)
-        .map(c => c.id)
-      if (myConvIds.length > 0) {
-        const { count } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .in('conversation_id', myConvIds)
-          .neq('sender_id', uid)
-          .eq('is_read', false)
-        unreadMessages = count || 0
-      }
-    }
-
-    // 2. 未確認いいね数
-    const { count: likesCount } = await supabase
-      .from('likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('liked_user_id', uid)
-      .eq('is_seen', false)
-
-    // 3. 未読足跡数（ユニーク訪問者数）
-    const { data: footprintsData } = await supabase
-      .from('footprints')
-      .select('visitor_id')
-      .eq('profile_owner_id', uid)
-      .eq('is_read', false)
-
-    const uniqueFootprintsCount = new Set(footprintsData?.map(f => f.visitor_id)).size
-
-    // 4. 未読通知数（warning/suspended/system 等）
-    const { count: notifCount } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', uid)
-      .eq('is_read', false)
-
-    return {
-      unreadMessages,
-      unseenLikes: likesCount || 0,
-      unreadFootprints: uniqueFootprintsCount,
-      unreadNotifications: notifCount || 0,
-    }
   } catch (err) {
-    console.error('Notification count fetch error:', err)
+    console.warn('[badge] get_badge_counts failed:', err instanceof Error ? err.message : String(err))
     return null
   }
 }
@@ -155,7 +97,7 @@ async function runFetch(): Promise<void> {
   isFetching = true
   const generation = fetchGeneration
   try {
-    const counts = await fetchCounts(uid)
+    const counts = await fetchCounts()
     // 途中でユーザー変更・停止があった場合は結果を捨てる
     if (counts && generation === fetchGeneration && state.userId === uid) {
       setState({ ...state, counts })

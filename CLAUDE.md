@@ -1701,7 +1701,7 @@ WHERE table_schema = 'public'
 - ✅ C3 メッセージ一覧を開いている間に新着の未読表示が反映されない → **完了**（`4b6b7f34`。バッジ未読数の変化・前面復帰で一覧を取り直す）
 - C4 一覧 API（`/api/messages` GET）が 1.2〜1.5 秒かかる。会話ごとに未読数を数えている（`src/app/api/messages/route.ts:180-185`）ため → DB 関数化を検討
 - C2 `[transcribe]` ログでモデル・処理時間を確認（Vercel ログ待ち）
-- C5 `useNotifications` の旧ロジック（`fetchCountsLegacy`）と unread-count API の削除（Console に `[badge] get_badge_counts failed` が出ないことを確認後、別コミット）
+- ✅ C5 `useNotifications` の旧ロジック（`fetchCountsLegacy`）と unread-count API の削除 → **完了**（#7 のコミット）。`get_badge_counts` の失敗時は null を返し、バッジは前の値のまま（次の 5 秒後の問い合わせで回復）
 
 **🎨 D. 画面・仕様**
 - ✅ D3 サンプル・見本データ表示の削除 → **完了**（#6「サンプル表示を削除し、読み込み失敗時のエラー表示を追加…」のコミット）
