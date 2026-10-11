@@ -34,6 +34,89 @@ function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   return typeof sub === 'string' ? sub : sub.id
 }
 
+// ===== サブスクの状態の反映（#2-1） =====
+// 状態はイベントの中身を信じず、毎回 Stripe から最新のサブスクを取得して決める
+// （古いイベントが後から届いても、解約済みの人が有効に戻らないようにするため）
+
+// Stripe の status → DB の status（DB は 'active' / 'inactive' の 2 値のみ）
+// past_due は支払いの再試行中。再試行が終わるまでは使える状態のままにする
+const ACTIVE_STRIPE_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set<Stripe.Subscription.Status>([
+  'active',
+  'trialing',
+  'past_due',
+])
+
+function toDbSubscriptionStatus(status: Stripe.Subscription.Status): 'active' | 'inactive' {
+  return ACTIVE_STRIPE_STATUSES.has(status) ? 'active' : 'inactive'
+}
+
+// 最新のサブスクを Stripe から取得して subscriptions に反映する
+// DB の書き込み失敗・Stripe API の例外は呼び出し元へ投げる（呼び出し元で 500 を返し、Stripe に再送させる）
+async function syncSubscriptionFromStripe(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  subscriptionId: string,
+  eventType: string
+): Promise<void> {
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+
+  // 利用者 ID は invoice.payment_succeeded と同じく、Stripe の customer の metadata から取る
+  const customerId = typeof subscription.customer === 'string'
+    ? subscription.customer
+    : subscription.customer.id
+  const customer = await stripe.customers.retrieve(customerId)
+  const userId = customer.deleted ? null : customer.metadata?.supabase_user_id
+  if (!userId) {
+    // 再送しても直らないため 200 で終える（ユーザー ID・本文は出さない）
+    console.error('[stripe/webhook] subscription sync skipped: no supabase_user_id on customer', { eventType, subscriptionId })
+    return
+  }
+
+  const dbStatus = toDbSubscriptionStatus(subscription.status)
+
+  // 1 利用者 1 行のため、別の（新しい）サブスクが有効な行を、古いサブスクの終了で上書きしない
+  if (dbStatus === 'inactive') {
+    const { data: existing, error: existingError } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id, status')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (existingError) {
+      throw new Error(`subscriptions select failed: ${existingError.message}`)
+    }
+    // 行が無い（退会で削除済み等）なら、無効にする対象が無いので新しく作らない
+    if (!existing) {
+      console.warn('[stripe/webhook] subscription sync skipped: no subscriptions row to deactivate', { eventType, subscriptionId })
+      return
+    }
+    if (existing.status === 'active' && existing.stripe_subscription_id && existing.stripe_subscription_id !== subscription.id) {
+      console.warn('[stripe/webhook] subscription sync skipped: another active subscription exists', { eventType, subscriptionId })
+      return
+    }
+  }
+
+  const priceId = subscription.items.data[0]?.price.id
+
+  const { error: upsertError } = await supabase.from('subscriptions').upsert({
+    user_id: userId,
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscription.id,
+    plan_type: getPlanType(priceId),
+    status: dbStatus,
+    current_period_end: getSubscriptionPeriodEnd(subscription),
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' })
+
+  if (upsertError) {
+    throw new Error(`subscriptions upsert failed: ${upsertError.message}`)
+  }
+}
+
+// サブスクの処理が失敗したときの返事（500 で Stripe に再送させる）
+function subscriptionSyncFailed(eventType: string, error: unknown) {
+  console.error('[stripe/webhook] subscription sync failed:', { eventType, message: error instanceof Error ? error.message : String(error) })
+  return NextResponse.json({ error: 'Failed to sync subscription' }, { status: 500 })
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')!
@@ -51,7 +134,6 @@ export async function POST(req: NextRequest) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
       const userId = session.metadata?.supabase_user_id
-      const planType = session.metadata?.plan_type
 
       // 段階3-2: さくらいいね回数券（単発決済）。サブスク処理には進まない
       if (session.mode === 'payment' && session.metadata?.kind === 'sakura_like') {
@@ -87,51 +169,42 @@ export async function POST(req: NextRequest) {
         break
       }
 
-      if (!userId || !session.subscription) break
-
-      const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
-
-      await supabase.from('subscriptions').upsert({
-        user_id: userId,
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: subscription.id,
-        plan_type: planType,
-        status: 'active',
-        current_period_end: getSubscriptionPeriodEnd(subscription),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+      // サブスク：最新のサブスクを Stripe から取得して反映
+      if (!session.subscription) break
+      const checkoutSubscriptionId = typeof session.subscription === 'string'
+        ? session.subscription
+        : session.subscription.id
+      try {
+        await syncSubscriptionFromStripe(supabase, checkoutSubscriptionId, event.type)
+      } catch (error) {
+        return subscriptionSyncFailed(event.type, error)
+      }
       break
     }
 
-    case 'invoice.payment_succeeded': {
+    case 'invoice.payment_succeeded':
+    case 'invoice.payment_failed': {
+      // 支払い失敗でもすぐに inactive にはしない（past_due の間は active のまま。状態は Stripe の最新で決める）
       const invoice = event.data.object as Stripe.Invoice
       const subscriptionId = getInvoiceSubscriptionId(invoice)
       if (!subscriptionId) break
-
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-      const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer
-      const userId = customer.metadata?.supabase_user_id
-      if (!userId) break
-
-      const priceId = subscription.items.data[0]?.price.id
-
-      await supabase.from('subscriptions').upsert({
-        user_id: userId,
-        stripe_customer_id: subscription.customer as string,
-        stripe_subscription_id: subscription.id,
-        plan_type: getPlanType(priceId),
-        status: 'active',
-        current_period_end: getSubscriptionPeriodEnd(subscription),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+      try {
+        await syncSubscriptionFromStripe(supabase, subscriptionId, event.type)
+      } catch (error) {
+        return subscriptionSyncFailed(event.type, error)
+      }
       break
     }
 
+    case 'customer.subscription.updated':
     case 'customer.subscription.deleted': {
+      // deleted も共通処理で反映（取得した最新の status が canceled → inactive）
       const sub = event.data.object as Stripe.Subscription
-      await supabase.from('subscriptions')
-        .update({ status: 'inactive', updated_at: new Date().toISOString() })
-        .eq('stripe_subscription_id', sub.id)
+      try {
+        await syncSubscriptionFromStripe(supabase, sub.id, event.type)
+      } catch (error) {
+        return subscriptionSyncFailed(event.type, error)
+      }
       break
     }
 
@@ -151,17 +224,6 @@ export async function POST(req: NextRequest) {
         console.error('[stripe/webhook] revoke_sakura_tickets error:', revokeError.message)
         return NextResponse.json({ error: 'Failed to revoke sakura tickets' }, { status: 500 })
       }
-      break
-    }
-
-    case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice
-      const subscriptionId = getInvoiceSubscriptionId(invoice)
-      if (!subscriptionId) break
-
-      await supabase.from('subscriptions')
-        .update({ status: 'inactive', updated_at: new Date().toISOString() })
-        .eq('stripe_subscription_id', subscriptionId)
       break
     }
   }
