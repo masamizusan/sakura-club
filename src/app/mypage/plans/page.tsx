@@ -8,6 +8,16 @@ import { useAuth } from '@/store/authStore'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ArrowLeft, Check, X, Crown } from 'lucide-react'
+import {
+  SUBSCRIPTION_PRICES,
+  SAKURA_PACK_PRICES,
+  formatUsd,
+  getMonthlyEquivalentUsd,
+  getSavingsPercent,
+  getSakuraUnitPriceUsd,
+  type SubscriptionPlanId,
+  type SakuraPack,
+} from '@/lib/pricing'
 
 const translations: Record<string, Record<string, string>> = {
   ja: {
@@ -52,6 +62,13 @@ const translations: Record<string, Record<string, string>> = {
     sakuraPurchaseError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
     portalError: 'お支払い管理の画面を開けませんでした。時間をおいてもう一度お試しください。',
     cancelScheduled: '{date}で解約予定です。それまでは引き続きご利用いただけます。',
+    periodMonthly: '/月',
+    period3month: '/3ヶ月',
+    period6month: '/6ヶ月',
+    periodYearly: '/年',
+    savingsPercent: '約{pct}%お得',
+    perMonthExact: '{price}/月',
+    perMonthApprox: '約{price}/月',
   },
   en: {
     title: 'Pricing Plans',
@@ -95,6 +112,13 @@ const translations: Record<string, Record<string, string>> = {
     sakuraPurchaseError: 'Could not start checkout. Please try again later.',
     portalError: "Couldn't open the billing page. Please try again later.",
     cancelScheduled: 'Your plan will end on {date}. You can keep using it until then.',
+    periodMonthly: '/month',
+    period3month: '/3 months',
+    period6month: '/6 months',
+    periodYearly: '/year',
+    savingsPercent: '~{pct}% savings',
+    perMonthExact: '{price}/mo',
+    perMonthApprox: '≈ {price}/mo',
   },
   ko: {
     title: '요금제',
@@ -138,6 +162,13 @@ const translations: Record<string, Record<string, string>> = {
     sakuraPurchaseError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     portalError: '결제 관리 화면을 열 수 없습니다. 잠시 후 다시 시도해 주세요.',
     cancelScheduled: '{date}에 해지될 예정입니다. 그때까지는 계속 이용하실 수 있습니다.',
+    periodMonthly: '/월',
+    period3month: '/3개월',
+    period6month: '/6개월',
+    periodYearly: '/년',
+    savingsPercent: '약 {pct}% 절약',
+    perMonthExact: '{price}/월',
+    perMonthApprox: '약 {price}/월',
   },
   'zh-tw': {
     title: '定價方案',
@@ -181,65 +212,29 @@ const translations: Record<string, Record<string, string>> = {
     sakuraPurchaseError: '無法開始結帳，請稍後再試。',
     portalError: '無法開啟付款管理頁面，請稍後再試。',
     cancelScheduled: '您的方案將於{date}終止，在此之前仍可繼續使用。',
+    periodMonthly: '/月',
+    period3month: '/3個月',
+    period6month: '/6個月',
+    periodYearly: '/年',
+    savingsPercent: '約省{pct}%',
+    perMonthExact: '{price}/月',
+    perMonthApprox: '約 {price}/月',
   },
 }
 
-const plans = [
-  {
-    id: 'monthly',
-    labelKey: 'monthly',
-    price: '$29.99',
-    period: '/月',
-    periodEn: '/month',
-    perMonth: '$29.99/月',
-    perMonthEn: '$29.99/mo',
-    savings: null,
-    popular: false,
-  },
-  {
-    id: '3month',
-    labelKey: 'threeMonth',
-    price: '$74.97',
-    period: '/3ヶ月',
-    periodEn: '/3 months',
-    perMonth: '$24.99/月',
-    perMonthEn: '$24.99/mo',
-    savings: '約17%お得',
-    savingsEn: '~17% savings',
-    popular: true,
-  },
-  {
-    id: '6month',
-    labelKey: 'sixMonth',
-    price: '$134.94',
-    period: '/6ヶ月',
-    periodEn: '/6 months',
-    perMonth: '$22.49/月',
-    perMonthEn: '$22.49/mo',
-    savings: '約25%お得',
-    savingsEn: '~25% savings',
-    popular: false,
-  },
-  {
-    id: 'yearly',
-    labelKey: 'yearly',
-    price: '$215.88',
-    period: '/年',
-    periodEn: '/year',
-    perMonth: '$17.99/月',
-    perMonthEn: '$17.99/mo',
-    savings: '約40%お得',
-    savingsEn: '~40% savings',
-    popular: false,
-  },
+// 金額は src/lib/pricing.ts（表示専用の定義）から読む
+const plans: { id: SubscriptionPlanId; labelKey: string; periodKey: string; popular: boolean }[] = [
+  { id: 'monthly', labelKey: 'monthly', periodKey: 'periodMonthly', popular: false },
+  { id: '3month', labelKey: 'threeMonth', periodKey: 'period3month', popular: true },
+  { id: '6month', labelKey: 'sixMonth', periodKey: 'period6month', popular: false },
+  { id: 'yearly', labelKey: 'yearly', periodKey: 'periodYearly', popular: false },
 ]
 
-// 段階3-2: さくらいいね回数券（表示価格は既存プランと同じく直書き。Stripe の Price と揃えること）
-const sakuraPacks = [
-  { pack: 1, labelKey: 'sakuraPack1', price: '$3.99', perUnit: '$3.99' },
-  { pack: 5, labelKey: 'sakuraPack5', price: '$13.99', perUnit: '$2.80' },
-  { pack: 30, labelKey: 'sakuraPack30', price: '$49.99', perUnit: '$1.67' },
-] as const
+const sakuraPacks: { pack: SakuraPack; labelKey: string }[] = [
+  { pack: 1, labelKey: 'sakuraPack1' },
+  { pack: 5, labelKey: 'sakuraPack5' },
+  { pack: 30, labelKey: 'sakuraPack30' },
+]
 
 const DATE_LOCALES: Record<string, string> = {
   ja: 'ja-JP',
@@ -281,7 +276,6 @@ function PlansContent() {
     return dict[key] || translations['ja'][key] || key
   }
 
-  const isJa = currentLanguage === 'ja'
 
   useEffect(() => {
     const loadData = async () => {
@@ -546,9 +540,15 @@ function PlansContent() {
               <div className="space-y-3">
                 {plans.map((plan) => {
                   const isSelected = selectedPlan === plan.id
-                  const savingsText = isJa ? plan.savings : plan.savingsEn
-                  const periodText = isJa ? plan.period : plan.periodEn
-                  const perMonthText = isJa ? plan.perMonth : plan.perMonthEn
+                  // 合計は正式な価格をそのまま表示。月あたりは計算値なので月額プラン以外は「約」を付ける
+                  const priceText = formatUsd(SUBSCRIPTION_PRICES[plan.id].totalUsd)
+                  const savingsPercent = getSavingsPercent(plan.id)
+                  const savingsText = plan.id !== 'monthly' && savingsPercent > 0
+                    ? t('savingsPercent').replace('{pct}', String(savingsPercent))
+                    : null
+                  const periodText = t(plan.periodKey)
+                  const perMonthText = t(plan.id === 'monthly' ? 'perMonthExact' : 'perMonthApprox')
+                    .replace('{price}', formatUsd(getMonthlyEquivalentUsd(plan.id)))
 
                   return (
                     <button
@@ -585,7 +585,7 @@ function PlansContent() {
                         </div>
                         <div className="text-right flex-shrink-0 ml-2">
                           <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>
-                            {plan.price}
+                            {priceText}
                           </span>
                           <span className="text-sm" style={{ color: 'var(--color-text-sub)' }}>
                             {periodText}
@@ -675,11 +675,11 @@ function PlansContent() {
                       {t(p.labelKey)}
                     </p>
                     <p className="text-xs mt-1" style={{ color: 'var(--color-text-sub)' }}>
-                      {t('sakuraPerUnit')} {p.perUnit}
+                      {t('sakuraPerUnit')} {formatUsd(getSakuraUnitPriceUsd(p.pack))}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                    <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>{p.price}</span>
+                    <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>{formatUsd(SAKURA_PACK_PRICES[p.pack])}</span>
                     <button
                       onClick={() => handleSakuraPurchase(p.pack)}
                       disabled={sakuraProcessingPack !== null}
