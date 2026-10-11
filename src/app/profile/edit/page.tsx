@@ -3124,83 +3124,12 @@ function ProfileEditContent() {
         logger.debug('[INIT] flow:', { isFromMyPage, isFromSignup })
         
         // 新規ユーザーかどうかを判定（マイページからの場合は必ず既存ユーザー扱い）
-        // 🚨 危険なロジック修正: 茶道選択ユーザーを誤って新規ユーザー扱いしないよう修正
-        const isTestData = profile?.bio?.includes('テスト用の自己紹介です') || 
-                          profile?.name === 'テスト'
-        // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーを誤判定する危険
-        
         // 🔗 DB存在ベースでisNewUser判定（DB失敗や空プロフィールも考慮）
         const isNewUser = !profile || // DB失敗でprofileがnull
                          isFromSignup || // サインアップからの遷移
                          (!profile.name && !profile.bio && (!profile.interests || profile.interests.length === 0))
 
         logger.debug('[INIT] isNewUser:', isNewUser)
-
-        // 新規登録フローの場合は必ずプロフィールをクリア（一時的に無効化）
-        // このブロックは現在無効化されています
-        /*
-        if (isFromSignup && user?.id) {
-          logger.debug('新規登録フロー検出 - プロフィールデータをクリア')
-          await supabase
-            .from('profiles')
-            .update({
-              name: null,
-              bio: null,
-              interests: null,
-              height: null,
-              avatar_url: null,
-              personality: null
-            })
-            .eq('user_id', user?.id)
-          
-          // データベースからプロフィールを再取得してクリーンな状態にする
-          const { data: cleanProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user?.id)
-            .single()
-          
-          if (cleanProfile) {
-            profile = cleanProfile
-            logger.debug('プロフィールクリア完了:', profile)
-          }
-        }
-        */
-        
-        // テストデータまたは既存データクリア（新規登録以外でも実行）
-        // 🚨 危険なロジック修正: 茶道選択ユーザーのデータを誤ってクリアしないよう修正
-        const isTestData2 = profile?.bio?.includes('テスト用の自己紹介です') || 
-                          profile?.name === 'テスト'
-        // (profile.interests?.length === 1 && profile.interests[0] === '茶道') <- 削除：正当なユーザーデータを誤削除する危険
-        
-        const shouldClearData = isTestData2 && user?.id && !isFromMyPage
-
-        if (shouldClearData) {
-          logger.debug('[INIT] test data clear')
-          const { data: authUser } = await supabase.auth.getUser()
-          
-          await supabase
-            .from('profiles')
-            .update({
-              name: null,
-              bio: null,
-              interests: null,
-              height: null,
-              avatar_url: null
-            })
-            .eq('user_id', user?.id) // 🛡️ 主要条件：ユーザーID一致
-            .eq('email', authUser?.user?.email) // 🛡️ 追加条件：email一致
-          
-          const { data: cleanProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user?.id)
-            .maybeSingle()
-
-          if (cleanProfile) {
-            profile = cleanProfile
-          }
-        }
 
         // ニックネーム（仮登録から）
         const nicknameValue = (signupData as any).nickname || (isNewUser ? '' : (profile?.name || profile?.first_name || ''))
