@@ -36,8 +36,6 @@ const translations: Record<string, Record<string, string>> = {
     sendMessages: 'メッセージの送信・返信',
     choosePlan: 'プランを選択',
     popular: 'おすすめ',
-    perMonth: '/月',
-    savings: 'お得',
     subscribe: 'このプランで始める',
     managePlan: '現在ご利用中のプランを管理する',
     manageBilling: 'お支払い・プランの管理',
@@ -69,6 +67,10 @@ const translations: Record<string, Record<string, string>> = {
     savingsPercent: '約{pct}%お得',
     perMonthExact: '{price}/月',
     perMonthApprox: '約{price}/月',
+    alreadySubscribed: 'すでに有料プランにご加入中です。お支払い・プランの管理からご確認ください。',
+    notEligible: 'このアカウントでは有料プランをお申し込みいただけません。',
+    accountSuspended: 'アカウントが停止されているため、お申し込みいただけません。',
+    checkoutError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
   },
   en: {
     title: 'Pricing Plans',
@@ -86,8 +88,6 @@ const translations: Record<string, Record<string, string>> = {
     sendMessages: 'Send & Reply to Messages',
     choosePlan: 'Choose a Plan',
     popular: 'Popular',
-    perMonth: '/mo',
-    savings: 'savings',
     subscribe: 'Get Started',
     managePlan: 'Manage your current plan',
     manageBilling: 'Manage billing & plan',
@@ -119,6 +119,10 @@ const translations: Record<string, Record<string, string>> = {
     savingsPercent: '~{pct}% savings',
     perMonthExact: '{price}/mo',
     perMonthApprox: '≈ {price}/mo',
+    alreadySubscribed: 'You already have an active plan. Please check "Manage billing & plan".',
+    notEligible: "This account isn't eligible for a paid plan.",
+    accountSuspended: 'Your account is suspended, so you cannot subscribe.',
+    checkoutError: 'Could not start checkout. Please try again later.',
   },
   ko: {
     title: '요금제',
@@ -136,8 +140,6 @@ const translations: Record<string, Record<string, string>> = {
     sendMessages: '메시지 보내기・답장',
     choosePlan: '플랜 선택',
     popular: '추천',
-    perMonth: '/월',
-    savings: '절약',
     subscribe: '시작하기',
     managePlan: '현재 이용 중인 플랜 관리',
     manageBilling: '결제·플랜 관리',
@@ -169,6 +171,10 @@ const translations: Record<string, Record<string, string>> = {
     savingsPercent: '약 {pct}% 절약',
     perMonthExact: '{price}/월',
     perMonthApprox: '약 {price}/월',
+    alreadySubscribed: '이미 유료 플랜에 가입되어 있습니다. "결제·플랜 관리"에서 확인해 주세요.',
+    notEligible: '이 계정으로는 유료 플랜을 신청할 수 없습니다.',
+    accountSuspended: '계정이 정지되어 있어 신청할 수 없습니다.',
+    checkoutError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
   },
   'zh-tw': {
     title: '定價方案',
@@ -186,8 +192,6 @@ const translations: Record<string, Record<string, string>> = {
     sendMessages: '發送・回覆訊息',
     choosePlan: '選擇方案',
     popular: '推薦',
-    perMonth: '/月',
-    savings: '優惠',
     subscribe: '立即開始',
     managePlan: '管理目前使用中的方案',
     manageBilling: '付款與方案管理',
@@ -219,6 +223,10 @@ const translations: Record<string, Record<string, string>> = {
     savingsPercent: '約省{pct}%',
     perMonthExact: '{price}/月',
     perMonthApprox: '約 {price}/月',
+    alreadySubscribed: '您已加入付費方案。請至「付款與方案管理」確認。',
+    notEligible: '此帳號無法申請付費方案。',
+    accountSuspended: '您的帳號已被停權，無法申請。',
+    checkoutError: '無法開始結帳，請稍後再試。',
   },
 }
 
@@ -268,6 +276,8 @@ function PlansContent() {
   const [cancelScheduledAt, setCancelScheduledAt] = useState<string | null>(null)
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
   const [portalError, setPortalError] = useState(false)
+  // #2-3: サブスクの決済開始が拒否・失敗したときのエラー文（辞書のキー）
+  const [subscribeErrorKey, setSubscribeErrorKey] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -275,7 +285,6 @@ function PlansContent() {
     const dict = translations[currentLanguage] || translations['ja']
     return dict[key] || translations['ja'][key] || key
   }
-
 
   useEffect(() => {
     const loadData = async () => {
@@ -372,6 +381,7 @@ function PlansContent() {
   const handleSubscribe = async () => {
     if (isProcessing) return
     setIsProcessing(true)
+    setSubscribeErrorKey(null)
     try {
       const { data: sessionData } = await supabase.auth.getSession()
       const token = sessionData?.session?.access_token
@@ -389,12 +399,20 @@ function PlansContent() {
         body: JSON.stringify({ planType: selectedPlan }),
       })
 
-      const data = await res.json()
-      if (data.url) {
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.url) {
         window.location.href = data.url
+        return
       }
+      // #2-3: 拒否・失敗の理由を画面内に表示する
+      setSubscribeErrorKey(
+        data.code === 'already_subscribed' ? 'alreadySubscribed'
+          : data.code === 'not_eligible' ? 'notEligible'
+          : data.code === 'account_suspended' ? 'accountSuspended'
+          : 'checkoutError'
+      )
     } catch {
-      // error handling
+      setSubscribeErrorKey('checkoutError')
     } finally {
       setIsProcessing(false)
     }
@@ -609,6 +627,11 @@ function PlansContent() {
               >
                 {isProcessing ? t('processingPayment') : t('subscribe')}
               </button>
+              {subscribeErrorKey && (
+                <p className="text-sm mt-3 text-center" style={{ color: '#8b1a2e' }}>
+                  {t(subscribeErrorKey)}
+                </p>
+              )}
             </div>
           )}
 

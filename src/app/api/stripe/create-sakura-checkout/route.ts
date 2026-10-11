@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import { getOrCreateCustomer } from '@/lib/stripe/getOrCreateCustomer'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,23 +65,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Price not configured', code: 'internal_error' }, { status: 500 })
     }
 
-    // 既存のStripeカスタマーIDを確認（create-checkout と同じ方法）
-    const { data: sub } = await supabase
-      .from('subscriptions')
-      .select('stripe_customer_id')
-      .eq('user_id', user.id)
-      .single()
-
-    let customerId = sub?.stripe_customer_id
-
-    // カスタマーがなければ作成
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { supabase_user_id: user.id },
-      })
-      customerId = customer.id
-    }
+    // #2-3: Stripe の customer は 1 人 1 つを使い回す（stripe_customers → subscriptions → 新規作成）
+    const customerId = await getOrCreateCustomer(user.id, user.email)
 
     const metadata = {
       supabase_user_id: user.id,

@@ -34,6 +34,10 @@ const translations: Record<'ja' | 'en' | 'ko' | 'zh-tw', {
   perMonth: string
   savingsTemplate: string
   approxTemplate: string
+  alreadySubscribed: string
+  notEligible: string
+  accountSuspended: string
+  checkoutError: string
 }> = {
   ja: {
     title: 'プレミアムプランに登録',
@@ -52,6 +56,10 @@ const translations: Record<'ja' | 'en' | 'ko' | 'zh-tw', {
     // 金額・月換算・割引率は src/lib/pricing.ts から計算する（{pct}・{price} を置き換え）
     savingsTemplate: '{pct}% お得',
     approxTemplate: '約{price}',
+    alreadySubscribed: 'すでに有料プランにご加入中です。お支払い・プランの管理からご確認ください。',
+    notEligible: 'このアカウントでは有料プランをお申し込みいただけません。',
+    accountSuspended: 'アカウントが停止されているため、お申し込みいただけません。',
+    checkoutError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
   },
   en: {
     title: 'Get Premium Access',
@@ -70,6 +78,10 @@ const translations: Record<'ja' | 'en' | 'ko' | 'zh-tw', {
     // 金額・月換算・割引率は src/lib/pricing.ts から計算する（{pct}・{price} を置き換え）
     savingsTemplate: 'Save {pct}%',
     approxTemplate: '≈ {price}',
+    alreadySubscribed: 'You already have an active plan. Please check "Manage billing & plan".',
+    notEligible: "This account isn't eligible for a paid plan.",
+    accountSuspended: 'Your account is suspended, so you cannot subscribe.',
+    checkoutError: 'Could not start checkout. Please try again later.',
   },
   ko: {
     title: '프리미엄 플랜 가입',
@@ -88,6 +100,10 @@ const translations: Record<'ja' | 'en' | 'ko' | 'zh-tw', {
     // 金額・月換算・割引率は src/lib/pricing.ts から計算する（{pct}・{price} を置き換え）
     savingsTemplate: '{pct}% 절약',
     approxTemplate: '약 {price}',
+    alreadySubscribed: '이미 유료 플랜에 가입되어 있습니다. "결제·플랜 관리"에서 확인해 주세요.',
+    notEligible: '이 계정으로는 유료 플랜을 신청할 수 없습니다.',
+    accountSuspended: '계정이 정지되어 있어 신청할 수 없습니다.',
+    checkoutError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
   },
   'zh-tw': {
     title: '加入高級方案',
@@ -106,6 +122,10 @@ const translations: Record<'ja' | 'en' | 'ko' | 'zh-tw', {
     // 金額・月換算・割引率は src/lib/pricing.ts から計算する（{pct}・{price} を置き換え）
     savingsTemplate: '省{pct}%',
     approxTemplate: '約 {price}',
+    alreadySubscribed: '您已加入付費方案。請至「付款與方案管理」確認。',
+    notEligible: '此帳號無法申請付費方案。',
+    accountSuspended: '您的帳號已被停權，無法申請。',
+    checkoutError: '無法開始結帳，請稍後再試。',
   },
 }
 
@@ -114,21 +134,35 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
   const t = translations[currentLanguage as keyof typeof translations] || translations.en
   const [selectedPlan, setSelectedPlan] = useState('3month')
   const [loading, setLoading] = useState(false)
+  // #2-3: 決済開始が拒否・失敗したときのエラー文
+  const [errorText, setErrorText] = useState<string | null>(null)
 
   if (!isOpen) return null
 
   const handleSubscribe = async () => {
     setLoading(true)
+    setErrorText(null)
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planType: selectedPlan }),
       })
-      const { url } = await res.json()
-      if (url) window.location.href = url
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      // #2-3: 拒否・失敗の理由をモーダル内に表示する
+      setErrorText(
+        data.code === 'already_subscribed' ? t.alreadySubscribed
+          : data.code === 'not_eligible' ? t.notEligible
+          : data.code === 'account_suspended' ? t.accountSuspended
+          : t.checkoutError
+      )
     } catch (e) {
       console.error(e)
+      setErrorText(t.checkoutError)
     } finally {
       setLoading(false)
     }
@@ -202,6 +236,11 @@ export default function SubscriptionModal({ isOpen, onClose }: Props) {
         >
           {loading ? t.loading : t.subscribe}
         </button>
+        {errorText && (
+          <p className="text-sm mt-3 text-center" style={{ color: 'var(--color-primary)' }}>
+            {errorText}
+          </p>
+        )}
         <button
           onClick={onClose}
           className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600 py-2"

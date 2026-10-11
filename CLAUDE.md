@@ -1685,6 +1685,15 @@ WHERE table_schema = 'public'
   - webhook の送信先（`/api/stripe/webhook`）と 6 イベント：`charge.refunded` / `checkout.session.completed` / `customer.subscription.deleted` / `customer.subscription.updated` / `invoice.payment_failed` / `invoice.payment_succeeded`（本番用の `STRIPE_WEBHOOK_SECRET` も設定）
   - 支払い再試行の設定：初回失敗は期限超過（past_due）のまま、すべての再試行が失敗したらサブスクをキャンセル
   - カスタマーポータルの設定：解約は「期間の終了時に解約」、プラン変更はオフ
+- ✅ B8（#2-3）Stripe 顧客の使い回し・サブスク決済開始のチェック → **完了**（#2-3 のコミット）
+  - `src/lib/stripe/getOrCreateCustomer.ts`：`stripe_customers` → `subscriptions.stripe_customer_id` → 新規作成の順で探す。見つかった ID は Stripe で有効か確認し、消えていれば作り直す。作成時は idempotency key（`customer-create-<userId>-<消えた古い ID または none>`）で同時押しでも 1 件だけ
+  - `create-checkout`（サブスク）：ログイン確認の直後に `requireActiveProfile` → 外国人男性のみ（`isForeignMaleUser`、403 `not_eligible`）→ 加入済み（`status='active'`）なら 409 `already_subscribed`
+  - `create-sakura-checkout`：customer の取得・作成を共通処理に置き換え
+  - 料金プラン画面・加入モーダル：拒否・失敗の理由を画面内に表示（4 言語）
+  - DB：stage8（`20261011_stage8_stripe_customers.sql`）で `stripe_customers`（user_id 主キー、stripe_customer_id UNIQUE、RLS 有効・ポリシーなし、service_role のみ）
+- **決まり：Stripe の customer は必ず `getOrCreateCustomer` 経由で作る**（`stripe.customers.create` を直接呼ばない）。`stripe_customers` は service_role 専用
+- B9 決済画面を 2 つ同時に開いて両方払った場合の二重サブスク（決済開始時の 409 では防げない。webhook 側の対策は未実施）
+- B10 本番で Stripe の商品を作り直すとき、商品説明「Messaging plan for foreign men」を見直す
 - **運用ルール：Stripe の管理画面で customer を削除しない**（webhook は customer の metadata `supabase_user_id` で利用者を特定するため、削除すると解約が DB に反映されず 'active' のまま残る）
 
 **⚡ C. 性能・通信量**
