@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,11 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    // #10: memory #1 の 2 層防御: suspended ユーザーをここで弾く（OpenAI コスト発生防止）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json({ error: guard.message, code: guard.code }, { status: guard.httpStatus })
     }
     const userId = user.id
 

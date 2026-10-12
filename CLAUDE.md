@@ -1406,7 +1406,7 @@ WHERE table_schema = 'public' AND table_name = '[テーブル名]'
 
 | ファイル | 死コードの理由 |
 |---|---|
-| `src/app/api/profile/route.ts` | `/api/profile` への呼び出し元 0 件（複数 grep パターンで確認）。GET / PUT 両方とも未使用。プロフィール更新は `src/app/api/profile/update/route.ts` POST、`src/utils/saveProfileToDb.ts` 経由が実体。指示書 #31 Phase 2B (2026/05/28) で死コード確定し status ガード追加対象から除外 |
+| ~~`src/app/api/profile/route.ts`~~ | **2026/10/13 #10 のコミットで削除済み**（呼び出し元 0 件を再確認のうえ削除）。プロフィール更新は `src/app/api/profile/update/route.ts` POST、`src/utils/saveProfileToDb.ts` 経由が実体 |
 
 過去に存在した `src/app/api/matches/{like,matched}/route.ts` には **架空カラム参照**（`liker_user_id`、`liked_user_id`、`is_matched`、`matched_at`、`action`）があり、2026/06/06 にコミット `7af84c4b` で削除済み。これが過去のコピペ事故（事故 3）の原因だった。同種の架空カラム参照の悪例は「やってはいけないクエリパターン」節を参照。
 
@@ -1583,6 +1583,12 @@ if (!guard.ok) {
 
 → `profiles.status` プレフィックスで判定 + 3 列で USING/WITH CHECK を分離して確認。
 
+### 🆕 新しい API を作るときのルール（2026/10/13 #10 で追記）
+
+- **書き込み・外部 API（OpenAI・Stripe 等）の呼び出しがある API は、ログイン確認の直後に必ず `requireActiveProfile()` を入れる**
+- 入れない場合（停止中でも使える必要があるもの：退会 `/api/auth/leave`、解約 `/api/stripe/create-portal-session` など）は、**理由をコードのコメントに書く**
+- ミドルウェアは `/api/` を対象外にしており、停止中の人もセッションが残るため API は直接呼べる。画面側の制御だけに頼らないこと
+
 ### 🚫 セキュリティ改修時の禁止事項
 
 1. **`src/lib/auth/requireActiveProfile.ts` を削除しない** — 2 層防御の核
@@ -1665,8 +1671,8 @@ WHERE table_schema = 'public'
 
 **🔐 A. セキュリティ**
 - ✅ A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）→ **完了**（`2c7caa2e`、2026/10/08 本番実行済み。`supabase/migrations/20261008_stage4_translations_rls.sql`）
-- A2 `/api/messages/moderate` に `requireActiveProfile` が無い（判定ロジックは変更禁止。ガード追加のみ）
-- A3 `/api/verification/review` に `requireActiveProfile` が無い（保護対象。許可範囲の指定が必要）
+- ✅ A2・A3（#10）`/api/messages/moderate` と `/api/verification/review` に `requireActiveProfile` を追加 → **完了**（#10 のコミット）。ログイン確認の直後にガードを足しただけで、プロンプト・モデル・閾値・審査内容・書き込み内容は変更なし。moderate は既存の形に合わせ `{ ok: false, error, code }` で拒否
+- A6 `/api/upload-avatar`（service_role で avatars にアップロード）に `requireActiveProfile` が無い。#10 の調査で「呼び出し元 0 件」と報告したが誤りで、`src/app/profile/edit/page.tsx:4035`（保存時の Base64→Storage 変換）と `src/utils/profileSaver.ts:78` から呼ばれている。削除はしていない。停止中の人は画面に入れず、profiles の UPDATE も RLS で止まるが、API 自体は直接呼べる
 - A4 権限点検 SQL 1〜5 の「要確認」の結果待ち：subscriptions / footprints / blocks / reports / avatars Storage の INSERT・DELETE
 - ✅ A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開 → **完了**。`experience_participants` はログインユーザーのみに制限（段階4）。`experiences` 本体は宣伝用ページのため、**意図的に公開のまま**（ユーザー判断）
 
@@ -1737,7 +1743,7 @@ WHERE table_schema = 'public'
 
 **🧹 E. 技術的な負債**
 - E1 ㉜ profiles の `user_id` / `id` 二重参照
-- E2 死コード `src/app/api/profile/route.ts` の整理
+- ✅ E2 死コード `src/app/api/profile/route.ts` の整理 → **完了**（#10 のコミットで削除）
 - E3 `notifications.title` が日本語固定で保存される
 - E4 上の「残課題: 同様のupdated_at問題が他APIにも」は、現在のコードでは解消済みの見込み（POST は削除済み、PUT に `updated_at` 無し）。記載の整理のみ
 

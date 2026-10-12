@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 
 // NOTE: クライアントはハンドラ内で生成（ビルド時に環境変数なしでクラッシュするのを防ぐ）
 
@@ -32,6 +33,12 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ ok: false, error: 'Authentication required' }, { status: 401 })
+    }
+
+    // #10: memory #1 の 2 層防御: suspended ユーザーをここで弾く（OpenAI コスト発生防止）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json({ ok: false, error: guard.message, code: guard.code }, { status: guard.httpStatus })
     }
 
     // service_role で RLS をバイパス（ビルド時クラッシュ防止のためハンドラ内で初期化）
