@@ -1672,7 +1672,7 @@ WHERE table_schema = 'public'
 **🔐 A. セキュリティ**
 - ✅ A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）→ **完了**（`2c7caa2e`、2026/10/08 本番実行済み。`supabase/migrations/20261008_stage4_translations_rls.sql`）
 - ✅ A2・A3（#10）`/api/messages/moderate` と `/api/verification/review` に `requireActiveProfile` を追加 → **完了**（#10 のコミット）。ログイン確認の直後にガードを足しただけで、プロンプト・モデル・閾値・審査内容・書き込み内容は変更なし。moderate は既存の形に合わせ `{ ok: false, error, code }` で拒否
-- A6 `/api/upload-avatar`（service_role で avatars にアップロード）に `requireActiveProfile` が無い。#10 の調査で「呼び出し元 0 件」と報告したが誤りで、`src/app/profile/edit/page.tsx:4035`（保存時の Base64→Storage 変換）と `src/utils/profileSaver.ts:78` から呼ばれている。削除はしていない。停止中の人は画面に入れず、profiles の UPDATE も RLS で止まるが、API 自体は直接呼べる
+- ✅ A6 `/api/upload-avatar` に `requireActiveProfile` を追加 → **完了**（#10「upload-avatar でも停止中ユーザーを拒否」のコミット）。経緯：`/api/upload-avatar`（service_role で avatars にアップロード）に `requireActiveProfile` が無かった。#10 の調査で「呼び出し元 0 件」と報告したが誤りで、`src/app/profile/edit/page.tsx:4035`（保存時の Base64→Storage 変換）と `src/utils/profileSaver.ts:78` から呼ばれている。削除はしていない。停止中の人は画面に入れず、profiles の UPDATE も RLS で止まるが、API 自体は直接呼べる
 - A4 権限点検 SQL 1〜5 の「要確認」の結果待ち：subscriptions / footprints / blocks / reports / avatars Storage の INSERT・DELETE
 - ✅ A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開 → **完了**。`experience_participants` はログインユーザーのみに制限（段階4）。`experiences` 本体は宣伝用ページのため、**意図的に公開のまま**（ユーザー判断）
 

@@ -15,6 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 import { parseDataUrl, generateStoragePath } from '@/utils/base64Utils'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -40,6 +41,7 @@ interface UploadAvatarRequest {
 interface UploadAvatarResponse {
   success: boolean
   path?: string
+  code?: string
   publicUrl?: string
   error?: string
   meta?: {
@@ -76,6 +78,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
         success: false,
         error: '認証が必要です'
       }, { status: 401 })
+    }
+
+    // #10: memory #1 の 2 層防御: suspended ユーザーをここで弾く（service_role でのアップロード防止）
+    const guard = await requireActiveProfile(authUser.id)
+    if (!guard.ok) {
+      return NextResponse.json({
+        success: false,
+        error: guard.message,
+        code: guard.code
+      }, { status: guard.httpStatus })
     }
 
     // 🔒 CRITICAL: userIdはauthUser.idのみを使用（リクエストからは受け取らない）
