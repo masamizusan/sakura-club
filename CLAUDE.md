@@ -1708,6 +1708,8 @@ WHERE table_schema = 'public'
 - C4 一覧 API（`/api/messages` GET）が 1.2〜1.5 秒かかる。会話ごとに未読数を数えている（`src/app/api/messages/route.ts:180-185`）ため → DB 関数化を検討
 - C2 `[transcribe]` ログでモデル・処理時間を確認（Vercel ログ待ち）
 - ✅ C5 `useNotifications` の旧ロジック（`fetchCountsLegacy`）と unread-count API の削除 → **完了**（#7 のコミット）。`get_badge_counts` の失敗時は null を返し、バッジは前の値のまま（次の 5 秒後の問い合わせで回復）
+- ✅ C6（#12）バッジの件数からブロック相手を除外 → **完了**（#12 のコミット）。stage9（`20261013_stage9_badge_counts_exclude_blocks.sql`）で `get_badge_counts` を作り直し、未読メッセージ・いいね・足跡からブロック相手を**両方向**で除外（一覧 3 つ・`is_blocked_with` と同じ基準）。いいねはマッチ済みの相手も除外（受信いいね一覧と同じ基準）。通知は変更なし。戻り値の形・権限は同じ
+- C7 通知の件数（バッジ）と通知一覧（`/api/notifications`、設定画面）はブロック相手を除外していない。利用者由来の通知（match の `data.matched_user_id`、like・さくらいいねの `data.from_user_id`）を除外する場合は、**バッジと一覧を一緒に変える**（片方だけだと件数と一覧が食い違う）
 
 **🎨 D. 画面・仕様**
 - ✅ D3 サンプル・見本データ表示の削除 → **完了**（#6「サンプル表示を削除し、読み込み失敗時のエラー表示を追加…」のコミット）
