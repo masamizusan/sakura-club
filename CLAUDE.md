@@ -1589,6 +1589,13 @@ if (!guard.ok) {
 - 入れない場合（停止中でも使える必要があるもの：退会 `/api/auth/leave`、解約 `/api/stripe/create-portal-session` など）は、**理由をコードのコメントに書く**
 - ミドルウェアは `/api/` を対象外にしており、停止中の人もセッションが残るため API は直接呼べる。画面側の制御だけに頼らないこと
 
+### 🗄️ DB の権限のルール（2026/10/14 #8 で追記）
+
+- **新しい関数（RPC）は自動で実行権限が付かない**（stage11 の `ALTER DEFAULT PRIVILEGES … REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC`）。使うロール（通常 `authenticated`）に **`GRANT EXECUTE` を明示する**
+- **新しいテーブルは anon に権限が付かない**。一方 authenticated には初期設定で TRUNCATE 等が付くので、作ったら **`REVOKE TRUNCATE, REFERENCES, TRIGGER ON public.<table> FROM authenticated;` を忘れない**
+- **ビューを作るときは、`security_invoker` の有無と書き込み権限（自動更新ビューかどうか＝`information_schema.views.is_updatable`）を必ず確認する**。security_invoker なしの自動更新ビューに書き込み権限が残ると、元テーブルの RLS を迂回できる（stage10 の教訓）
+- **anon は `experiences` の SELECT だけ**。体験の公開ページで主催者名を見せたい場合は、名前だけを返す専用の仕組みを別途作る（`profiles_public` は anon 不可）
+
 ### 🚫 セキュリティ改修時の禁止事項
 
 1. **`src/lib/auth/requireActiveProfile.ts` を削除しない** — 2 層防御の核
@@ -1673,6 +1680,11 @@ WHERE table_schema = 'public'
 - ✅ A1 `message_translations` の DB 側 RLS 引き締め（INSERT/UPDATE を外し、SELECT を会話の参加者だけに）→ **完了**（`2c7caa2e`、2026/10/08 本番実行済み。`supabase/migrations/20261008_stage4_translations_rls.sql`）
 - ✅ A2・A3（#10）`/api/messages/moderate` と `/api/verification/review` に `requireActiveProfile` を追加 → **完了**（#10 のコミット）。ログイン確認の直後にガードを足しただけで、プロンプト・モデル・閾値・審査内容・書き込み内容は変更なし。moderate は既存の形に合わせ `{ ok: false, error, code }` で拒否
 - ✅ A6 `/api/upload-avatar` に `requireActiveProfile` を追加 → **完了**（#10「upload-avatar でも停止中ユーザーを拒否」のコミット）。経緯：`/api/upload-avatar`（service_role で avatars にアップロード）に `requireActiveProfile` が無かった。#10 の調査で「呼び出し元 0 件」と報告したが誤りで、`src/app/profile/edit/page.tsx:4035`（保存時の Base64→Storage 変換）と `src/utils/profileSaver.ts:78` から呼ばれている。削除はしていない。停止中の人は画面に入れず、profiles の UPDATE も RLS で止まるが、API 自体は直接呼べる
+- ✅ A7（#8）anon（未ログイン）・authenticated の権限整理 → **完了**（#8 のコミット。2026/10/14 本番実行済み）
+  - stage10（`20261014_stage10_profiles_public_readonly.sql`）：`profiles_public` は自動更新ビュー（security_invoker なし＝持ち主の権限で動く）で authenticated に書き込み権限が付いていたため、anon・authenticated から INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER を回収。SELECT は残す
+  - stage11（`20261014_stage11_revoke_unused_privileges.sql`）：anon はテーブル・ビュー・シーケンスの権限をすべて回収し `experiences` の SELECT だけ戻す。authenticated から全テーブルの TRUNCATE/REFERENCES/TRIGGER を回収。トリガー用関数の実行権限を利用者ロールから回収。`ALTER DEFAULT PRIVILEGES` で今後のテーブル・シーケンスは anon に、関数は PUBLIC に自動で権限が付かないようにした
+  - stage11b（`20261014_stage11b_like_daily_limit.sql`）：`like_daily_limit()` を PUBLIC・anon から回収し、authenticated に明示 GRANT
+  - 影響：未ログインで `/api/reviews` GET（`experience_reviews`）と体験 API の主催者名（`profiles_public`）は読めない（主催者名は「未知」表示）
 - A4 権限点検 SQL 1〜5 の「要確認」の結果待ち：subscriptions / footprints / blocks / reports / avatars Storage の INSERT・DELETE
 - ✅ A5 `experiences` / `experience_participants` の SELECT が未ログインにも公開 → **完了**。`experience_participants` はログインユーザーのみに制限（段階4）。`experiences` 本体は宣伝用ページのため、**意図的に公開のまま**（ユーザー判断）
 
