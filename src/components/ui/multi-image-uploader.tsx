@@ -7,6 +7,7 @@ import { Upload, X, Edit, Camera, User } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
 import { type SupportedLanguage } from '@/utils/language'
 import { logger } from '@/utils/logger'
+import { resizeImageToDataUrl } from '@/lib/image/resizeImage'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 type Dict = {
@@ -111,23 +112,38 @@ export default function MultiImageUploader({
 
   const [editingImageId, setEditingImageId] = useState<string | null>(null)
 
-  const handleImageSave = (editedImageUrl: string) => {
-    if (editingImageId) {
+  const handleImageSave = async (editedImageUrl: string) => {
+    // 編集画面は onSave の直後に閉じる（onClose で state を戻す）ため、必要な値は先に取っておく
+    const targetImageId = editingImageId
+    const sourceImageUrl = editingImage
+
+    if (targetImageId) {
       // 既存の画像を編集する場合（上書き）
       const updatedImages = images.map(img => 
-        img.id === editingImageId 
+        img.id === targetImageId
           ? { ...img, url: editedImageUrl, isEdited: true }
           : img
       )
       onImagesChange(updatedImages)
     } else {
       // 新しい画像を追加する場合
+      // 元の写真は「前の画像に戻す」用に、長い辺 800px・JPEG 品質 0.8 に縮めて持つ（sessionStorage の容量対策）
+      // 縮められない場合は編集後の写真を元の写真の代わりにする
+      let originalUrl = editedImageUrl
+      if (sourceImageUrl) {
+        try {
+          originalUrl = await resizeImageToDataUrl(sourceImageUrl, 800, 0.8)
+        } catch (error) {
+          logger.warn('[IMAGE] original resize failed:', error instanceof Error ? error.message : 'unknown')
+        }
+      }
+      // isEdited: true → 保存・プレビューでは編集後（url）が使われる（profile/edit の calculateFinalPhotoUrls）
       const newImage: ProfileImage = {
         id: Date.now().toString(),
         url: editedImageUrl,
-        originalUrl: editedImageUrl,
+        originalUrl,
         isMain: images.length === 0,
-        isEdited: false
+        isEdited: true
       }
       const updatedImages = [...images, newImage]
       logger.debug('[IMAGE] add:', images.length, '→', updatedImages.length)
@@ -337,6 +353,8 @@ export default function MultiImageUploader({
           onClose={() => {
             setShowImageEditor(false)
             setEditingImage(null)
+            // × で閉じた後に新しい写真を追加したとき、既存の写真を上書きしないように戻す
+            setEditingImageId(null)
           }}
           isOpen={showImageEditor}
         />
