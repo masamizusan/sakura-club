@@ -17,6 +17,7 @@ type NotificationDict = {
   matchMessageWithName: (name: string) => string
   matchMessage: string
   sakuraLikeTitle: string
+  sakuraLikeMessageWithName: (name: string) => string
   sakuraLikeMessage: string
   warningTitle: string
   suspendedTitle: string
@@ -29,6 +30,7 @@ const DICT: Record<SupportedLanguage, NotificationDict> = {
     matchMessageWithName: (name) => `${name}さんとマッチしました！メッセージを送ってみましょう。`,
     matchMessage: 'マッチしました！メッセージを送ってみましょう。',
     sakuraLikeTitle: 'さくらいいねが届きました',
+    sakuraLikeMessageWithName: (name) => `${name}さんからさくらいいねが届きました。プロフィールを見てみましょう。`,
     sakuraLikeMessage: 'さくらいいねが届きました。お相手のプロフィールを見てみましょう。',
     warningTitle: '⚠️ 警告',
     suspendedTitle: '🚫 アカウント停止',
@@ -39,6 +41,7 @@ const DICT: Record<SupportedLanguage, NotificationDict> = {
     matchMessageWithName: (name) => `You matched with ${name}! Why not send a message?`,
     matchMessage: "It's a match! Why not send a message?",
     sakuraLikeTitle: 'You received a Sakura Like',
+    sakuraLikeMessageWithName: (name) => `${name} sent you a Sakura Like. Take a look at their profile.`,
     sakuraLikeMessage: 'You received a Sakura Like. Take a look at their profile.',
     warningTitle: '⚠️ Warning',
     suspendedTitle: '🚫 Account suspended',
@@ -49,6 +52,7 @@ const DICT: Record<SupportedLanguage, NotificationDict> = {
     matchMessageWithName: (name) => `${name}님과 매칭되었습니다! 메시지를 보내 보세요.`,
     matchMessage: '매칭되었습니다! 메시지를 보내 보세요.',
     sakuraLikeTitle: '사쿠라 좋아요가 도착했습니다',
+    sakuraLikeMessageWithName: (name) => `${name}님이 사쿠라 좋아요를 보냈습니다. 프로필을 확인해 보세요.`,
     sakuraLikeMessage: '사쿠라 좋아요가 도착했습니다. 상대방의 프로필을 확인해 보세요.',
     warningTitle: '⚠️ 경고',
     suspendedTitle: '🚫 계정 정지',
@@ -59,6 +63,7 @@ const DICT: Record<SupportedLanguage, NotificationDict> = {
     matchMessageWithName: (name) => `您已與${name}配對成功！傳送訊息吧。`,
     matchMessage: '配對成功！傳送訊息吧。',
     sakuraLikeTitle: '您收到了櫻花讚',
+    sakuraLikeMessageWithName: (name) => `${name}送給您櫻花讚。去看看對方的個人資料吧。`,
     sakuraLikeMessage: '您收到了櫻花讚。去看看對方的個人資料吧。',
     warningTitle: '⚠️ 警告',
     suspendedTitle: '🚫 帳號停權',
@@ -84,8 +89,17 @@ export function formatNotification(
       return { title: t.matchTitle, message }
     }
     case 'like': {
-      // さくらいいね：名前なしの定型文（data に名前は持たない）
       if (data.kind === 'sakura_like') {
+        // data.from_user_name（送り主の名前）があれば名前入りの文にする
+        const rawName = typeof data.from_user_name === 'string' ? data.from_user_name.trim() : ''
+        if (!NAME_PLACEHOLDERS.has(rawName)) {
+          return { title: t.sakuraLikeTitle, message: t.sakuraLikeMessageWithName(rawName) }
+        }
+        // 名前が無い（data に名前を残す前に届いた古い通知）：
+        // 日本語なら保存された文（名前入り）をそのまま、それ以外は名前なしの定型文
+        if (lang === 'ja') {
+          return { title: notif.title, message: notif.message }
+        }
         return { title: t.sakuraLikeTitle, message: t.sakuraLikeMessage }
       }
       break

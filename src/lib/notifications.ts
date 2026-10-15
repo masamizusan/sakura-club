@@ -81,7 +81,9 @@ export class NotificationService {
       message: `${fromUserName}さんからさくらいいねが届きました`,
       data: {
         kind: 'sakura_like',
-        from_user_id: fromUserId
+        from_user_id: fromUserId,
+        // 表示時に 4 言語の文を組み立てるため、message と同じ名前を残す（src/lib/notificationText.ts）
+        from_user_name: fromUserName
       }
     }, request)
   }
