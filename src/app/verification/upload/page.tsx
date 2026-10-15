@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import AuthGuard from '@/components/auth/AuthGuard'
+import { logger } from '@/utils/logger'
 
 const verificationTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -163,7 +164,7 @@ function VerificationContent() {
         setUploading(false)
         return
       }
-      console.log('[verification] file info:', { size: file.size, type: file.type, byteLength: buffer.byteLength })
+      logger.debug('[verification] file info:', { size: file.size, type: file.type, byteLength: buffer.byteLength })
       if (buffer.byteLength === 0) {
         setError(t('fileUnreadable'))
         setUploading(false)
@@ -182,12 +183,12 @@ function VerificationContent() {
       // 保存パスの拡張子は contentType から決める（元のファイル名は使わない）
       const ext = TYPE_TO_EXT[contentType] || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
-      console.log('[verification] uploading to identity-documents:', { path, userId: user.id })
+      logger.debug('[verification] uploading to identity-documents:', { path, userId: user.id })
       const { error: uploadError } = await supabase.storage
         .from('identity-documents')
         .upload(path, buffer, { contentType, upsert: false })
 
-      console.log('[verification] upload result:', { uploadError })
+      logger.debug('[verification] upload result:', { uploadError })
       if (uploadError) {
         console.error('[verification] Upload error detail:', uploadError)
         setError(t('uploadError'))
