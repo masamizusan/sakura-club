@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
+import Cropper, { type Area, type Point, type Size } from 'react-easy-crop'
 import { Button } from '@/components/ui/button'
-import { X, RotateCcw, Crop, ZoomIn, ZoomOut, Move, Eye, Droplets } from 'lucide-react'
+import { X, Crop, ZoomIn, ZoomOut, Droplets } from 'lucide-react'
 import { blurImageData } from '@/lib/image/blurImageData'
 
 interface ImageEditorProps {
@@ -12,178 +13,94 @@ interface ImageEditorProps {
   isOpen: boolean
 }
 
-export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: ImageEditorProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [scale, setScale] = useState(1)
-  const [blurLevel, setBlurLevel] = useState(0)
+// 保存する画像の一辺（元の写真がこれより小さい場合は拡大しない）
+const OUTPUT_MAX_SIZE = 800
+const JPEG_QUALITY = 0.8
+const MIN_ZOOM = 1
+const MAX_ZOOM = 3
 
-  // ぼかしレベルをピクセル値に変換する関数
-  const getBlurPixels = (level: number): number => {
-    const blurMapping = {
-      0: 0,    // なし
-      1: 1,    // 軽い
-      2: 2.5,  // 中程度
-      3: 5,    // 旧レベル5相当
-      4: 8,    // より濃い
-      5: 12    // 最も濃い
-    }
-    return blurMapping[level as keyof typeof blurMapping] || 0
+// ぼかしレベルの強さ（切り取る正方形の一辺を 400 としたときの値）
+// プレビューも保存も、正方形の大きさに合わせて同じ割合でぼかす
+const BLUR_BASE_SIZE = 400
+
+// ぼかしレベルをピクセル値に変換する関数
+const getBlurPixels = (level: number): number => {
+  const blurMapping = {
+    0: 0,    // なし
+    1: 1,    // 軽い
+    2: 2.5,  // 中程度
+    3: 5,    // 旧レベル5相当
+    4: 8,    // より濃い
+    5: 12    // 最も濃い
   }
-  const [cropMode, setCropMode] = useState(false)
-  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 })
-  
-  const loadImage = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas || !imageUrl) return
+  return blurMapping[level as keyof typeof blurMapping] || 0
+}
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      canvas.width = 400
-      canvas.height = 400
-      
-      // 画像を中央に配置
-      const imgAspectRatio = img.width / img.height
-      let drawWidth, drawHeight
-      
-      if (imgAspectRatio > 1) {
-        drawWidth = canvas.width * scale
-        drawHeight = (canvas.width / imgAspectRatio) * scale
-      } else {
-        drawWidth = (canvas.height * imgAspectRatio) * scale
-        drawHeight = canvas.height * scale
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('image load failed'))
+    img.src = src
+  })
+}
+
+export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: ImageEditorProps) {
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [blurLevel, setBlurLevel] = useState(0)
+  const [cropMode, setCropMode] = useState(false)
+  // 切り取る範囲（元の写真のピクセル単位）
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  // 画面上の正方形の枠の大きさ（プレビューのぼかしの強さに使う）
+  const [cropSize, setCropSize] = useState<Size | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleCropComplete = useCallback((_area: Area, areaPixels: Area) => {
+    setCroppedAreaPixels(areaPixels)
+  }, [])
+
+  // プレビュー：CSS の blur で表示（保存時は画素を直接ぼかすので Safari でも結果は同じ）
+  const previewBlurPx = cropSize
+    ? getBlurPixels(blurLevel) * (cropSize.width / BLUR_BASE_SIZE)
+    : 0
+
+  const handleSave = async () => {
+    if (!croppedAreaPixels || isSaving) return
+    setIsSaving(true)
+    try {
+      const img = await loadImage(imageUrl)
+      const area = croppedAreaPixels
+      const outSize = Math.max(1, Math.min(OUTPUT_MAX_SIZE, Math.round(area.width)))
+
+      const canvas = document.createElement('canvas')
+      canvas.width = outSize
+      canvas.height = outSize
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      // 透過 PNG が黒くならないよう白で塗ってから、元の写真の切り取り範囲を描く
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, outSize, outSize)
+      ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, outSize, outSize)
+
+      // #50: ぼかしは ctx.filter（Safari で効かないことがある）ではなく、画素を直接ぼかす
+      if (blurLevel > 0) {
+        const imageData = ctx.getImageData(0, 0, outSize, outSize)
+        blurImageData(imageData, getBlurPixels(blurLevel) * (outSize / BLUR_BASE_SIZE))
+        ctx.putImageData(imageData, 0, 0)
       }
-      
-      const x = (canvas.width - drawWidth) / 2 + imagePosition.x
-      const y = (canvas.height - drawHeight) / 2 + imagePosition.y
-      
-      // キャンバスをクリア
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      // 画像を描画
-      ctx.drawImage(img, x, y, drawWidth, drawHeight)
 
-      // #50: ぼかしは ctx.filter（Safari で効かないことがある）ではなく、画素を直接ぼかす。
-      // プレビューも保存（handleSave は同じ canvas を使う）も、この結果になる
-      // blurred：ぼかし後の画素（トリミング枠の中を描き直すために残す）
-      let blurred: ImageData | null = null
-      if (blurLevel > 0 || cropMode) {
-        try {
-          blurred = ctx.getImageData(0, 0, canvas.width, canvas.height)
-          if (blurLevel > 0) {
-            blurImageData(blurred, getBlurPixels(blurLevel))
-            ctx.putImageData(blurred, 0, 0)
-          }
-        } catch (error) {
-          // 画像の読み込み元の制限（CORS）で画素を読めない場合は、ぼかしなしで表示する
-          console.warn('[ImageEditor] blur failed:', error instanceof Error ? error.message : 'unknown')
-          blurred = null
-        }
-      }
-      
-      // クロップエリアを描画
-      if (cropMode) {
-        ctx.strokeStyle = '#ff6b6b'
-        ctx.lineWidth = 2
-        ctx.setLineDash([5, 5])
-        ctx.strokeRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
-        
-        // オーバーレイ
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.clearRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
-        
-        // 再度画像を描画（クロップエリア内）：ぼかし後の画素をそのまま戻す
-        if (blurred) {
-          ctx.putImageData(blurred, 0, 0, cropArea.x, cropArea.y, cropArea.width, cropArea.height)
-        } else {
-          ctx.save()
-          ctx.beginPath()
-          ctx.rect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
-          ctx.clip()
-          ctx.drawImage(img, x, y, drawWidth, drawHeight)
-          ctx.restore()
-        }
-      }
+      const editedImageUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY)
+      onSave(editedImageUrl)
+      onClose()
+    } catch (error) {
+      // 画像の読み込み元の制限（CORS）などで書き出せない場合
+      console.warn('[ImageEditor] save failed:', error instanceof Error ? error.message : 'unknown')
+    } finally {
+      setIsSaving(false)
     }
-    img.src = imageUrl
-  }, [imageUrl, scale, blurLevel, cropMode, cropArea, imagePosition])
-
-  useEffect(() => {
-    if (isOpen) {
-      loadImage()
-    }
-  }, [loadImage, isOpen])
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!cropMode) return
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    
-    // クロップエリア内かチェック
-    if (x >= cropArea.x && x <= cropArea.x + cropArea.width &&
-        y >= cropArea.y && y <= cropArea.y + cropArea.height) {
-      setIsDragging(true)
-      setDragStart({ x: x - cropArea.x, y: y - cropArea.y })
-    }
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !cropMode) return
-    
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    const rect = canvas.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    
-    const newX = Math.max(0, Math.min(canvas.width - cropArea.width, x - dragStart.x))
-    const newY = Math.max(0, Math.min(canvas.height - cropArea.height, y - dragStart.y))
-    
-    setCropArea(prev => ({ ...prev, x: newX, y: newY }))
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleSave = () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    
-    let finalCanvas = canvas
-    
-    // クロップが有効な場合、クロップした部分のみを新しいキャンバスに描画
-    if (cropMode) {
-      const croppedCanvas = document.createElement('canvas')
-      croppedCanvas.width = cropArea.width
-      croppedCanvas.height = cropArea.height
-      const croppedCtx = croppedCanvas.getContext('2d')
-      
-      if (croppedCtx) {
-        croppedCtx.drawImage(
-          canvas,
-          cropArea.x, cropArea.y, cropArea.width, cropArea.height,
-          0, 0, cropArea.width, cropArea.height
-        )
-        finalCanvas = croppedCanvas
-      }
-    }
-    
-    const editedImageUrl = finalCanvas.toDataURL('image/jpeg', 0.8)
-    onSave(editedImageUrl)
-    onClose()
   }
 
   if (!isOpen) return null
@@ -200,71 +117,77 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
           </Button>
         </div>
 
-        <div className="flex justify-center mb-4">
-          <canvas
-            ref={canvasRef}
-            className="border border-gray-300 rounded cursor-move"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+        {/* 正方形の枠は固定。写真を指・マウスで動かし、2 本指・ホイール・ボタンで拡大縮小する */}
+        <div className="relative w-full h-[300px] sm:h-[400px] mb-4 bg-gray-900 rounded overflow-hidden">
+          <Cropper
+            image={imageUrl}
+            crop={crop}
+            zoom={zoom}
+            minZoom={MIN_ZOOM}
+            maxZoom={MAX_ZOOM}
+            aspect={1}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={handleCropComplete}
+            onCropSizeChange={setCropSize}
+            style={{
+              mediaStyle: previewBlurPx > 0 ? { filter: `blur(${previewBlurPx}px)` } : {},
+            }}
           />
         </div>
 
         {/* コントロールパネル */}
         <div className="space-y-4">
-          {!cropMode && (
-            <>
-              {/* ズームコントロール */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">拡大縮小</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-500">小</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setScale(Math.max(0.1, scale - 0.1))}
-                  >
-                    <ZoomOut className="w-4 h-4" />
-                  </Button>
-                  <span className="text-sm font-mono w-12 text-center">
-                    {Math.round(scale * 100)}%
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setScale(Math.min(3, scale + 0.1))}
-                  >
-                    <ZoomIn className="w-4 h-4" />
-                  </Button>
-                  <span className="text-xs text-gray-500">大</span>
-                </div>
-              </div>
-
-              {/* ぼかしコントロール */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">ぼかしレベル</span>
-                <div className="flex items-center space-x-2 flex-1 ml-4">
-                  <span className="text-xs text-gray-500">薄</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="5"
-                    step="1"
-                    value={blurLevel}
-                    onChange={(e) => setBlurLevel(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <span className="text-xs text-gray-500">濃</span>
-                </div>
-                <span className="text-sm font-mono w-8 text-center ml-2">
-                  {blurLevel}
+          {cropMode ? (
+            /* ズームコントロール */
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">拡大縮小</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">小</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setZoom(z => Math.max(MIN_ZOOM, Math.round((z - 0.1) * 10) / 10))}
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-mono w-12 text-center">
+                  {Math.round(zoom * 100)}%
                 </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setZoom(z => Math.min(MAX_ZOOM, Math.round((z + 0.1) * 10) / 10))}
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-gray-500">大</span>
               </div>
-            </>
+            </div>
+          ) : (
+            /* ぼかしコントロール */
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">ぼかしレベル</span>
+              <div className="flex items-center space-x-2 flex-1 ml-4">
+                <span className="text-xs text-gray-500">薄</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="1"
+                  value={blurLevel}
+                  onChange={(e) => setBlurLevel(Number(e.target.value))}
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <span className="text-xs text-gray-500">濃</span>
+              </div>
+              <span className="text-sm font-mono w-8 text-center ml-2">
+                {blurLevel}
+              </span>
+            </div>
           )}
-
 
           {/* アクションボタン */}
           <div className="flex justify-between">
@@ -286,10 +209,11 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                 </>
               )}
             </Button>
-            
+
             <Button
               type="button"
               onClick={handleSave}
+              disabled={!croppedAreaPixels || isSaving}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               保存する
