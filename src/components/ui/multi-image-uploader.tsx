@@ -7,7 +7,6 @@ import { Upload, X, Edit, Camera, User } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
 import { type SupportedLanguage } from '@/utils/language'
 import { logger } from '@/utils/logger'
-import { resizeImageToDataUrl } from '@/lib/image/resizeImage'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 type Dict = {
@@ -15,7 +14,6 @@ type Dict = {
   photoCount: (n: number) => string
   photoAlt: (n: number) => string
   edited: string
-  resetToOriginal: string
 }
 
 const T: Record<SupportedLanguage, Dict> = {
@@ -24,28 +22,24 @@ const T: Record<SupportedLanguage, Dict> = {
     photoCount: (n) => `${n}枚`,
     photoAlt: (n) => `プロフィール写真 ${n}`,
     edited: '編集済み',
-    resetToOriginal: '前の画像に戻す',
   },
   en: {
     readError: 'We couldn\'t read the image file. Please choose another image, or copy it to your desktop and try again.',
     photoCount: (n) => `${n} ${n === 1 ? 'photo' : 'photos'}`,
     photoAlt: (n) => `Profile photo ${n}`,
     edited: 'Edited',
-    resetToOriginal: 'Restore original',
   },
   ko: {
     readError: '이미지 파일을 읽지 못했습니다. 다른 이미지를 선택하거나 데스크톱에 복사한 후 다시 시도해 주세요.',
     photoCount: (n) => `${n}장`,
     photoAlt: (n) => `프로필 사진 ${n}`,
     edited: '편집됨',
-    resetToOriginal: '원래 사진으로 되돌리기',
   },
   'zh-tw': {
     readError: '無法讀取圖片檔案。請選擇其他圖片，或先複製到桌面後再試一次。',
     photoCount: (n) => `${n} 張`,
     photoAlt: (n) => `個人照片 ${n}`,
     edited: '已編輯',
-    resetToOriginal: '恢復原始照片',
   },
 }
 
@@ -112,10 +106,9 @@ export default function MultiImageUploader({
 
   const [editingImageId, setEditingImageId] = useState<string | null>(null)
 
-  const handleImageSave = async (editedImageUrl: string) => {
+  const handleImageSave = (editedImageUrl: string) => {
     // 編集画面は onSave の直後に閉じる（onClose で state を戻す）ため、必要な値は先に取っておく
     const targetImageId = editingImageId
-    const sourceImageUrl = editingImage
 
     if (targetImageId) {
       // 既存の画像を編集する場合（上書き）
@@ -127,21 +120,12 @@ export default function MultiImageUploader({
       onImagesChange(updatedImages)
     } else {
       // 新しい画像を追加する場合
-      // 元の写真は「前の画像に戻す」用に、長い辺 800px・JPEG 品質 0.8 に縮めて持つ（sessionStorage の容量対策）
-      // 縮められない場合は編集後の写真を元の写真の代わりにする
-      let originalUrl = editedImageUrl
-      if (sourceImageUrl) {
-        try {
-          originalUrl = await resizeImageToDataUrl(sourceImageUrl, 800, 0.8)
-        } catch (error) {
-          logger.warn('[IMAGE] original resize failed:', error instanceof Error ? error.message : 'unknown')
-        }
-      }
+      // 元の写真は持たない（sessionStorage の容量を増やさないため）。originalUrl も編集後の写真
       // isEdited: true → 保存・プレビューでは編集後（url）が使われる（profile/edit の calculateFinalPhotoUrls）
       const newImage: ProfileImage = {
         id: Date.now().toString(),
         url: editedImageUrl,
-        originalUrl,
+        originalUrl: editedImageUrl,
         isMain: images.length === 0,
         isEdited: true
       }
@@ -159,15 +143,6 @@ export default function MultiImageUploader({
     setEditingImage(image.originalUrl) // オリジナル画像を編集対象とする
     setEditingImageId(image.id)
     setShowImageEditor(true)
-  }
-
-  const handleResetToOriginal = (imageId: string) => {
-    const updatedImages = images.map(img => 
-      img.id === imageId 
-        ? { ...img, url: img.originalUrl, isEdited: false }
-        : img
-    )
-    onImagesChange(updatedImages)
   }
 
   const handleImageDelete = (imageId: string) => {
@@ -287,17 +262,6 @@ export default function MultiImageUploader({
                   onClick={() => handleSetMainImage(image.id)}
                 >
                   {t('photos.setAsMain')}
-                </Button>
-              )}
-              {image.isEdited && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
-                  onClick={() => handleResetToOriginal(image.id)}
-                >
-                  {d.resetToOriginal}
                 </Button>
               )}
             </div>
