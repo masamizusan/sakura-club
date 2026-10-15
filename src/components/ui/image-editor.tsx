@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, RotateCcw, Crop, ZoomIn, ZoomOut, Move, Eye, Droplets } from 'lucide-react'
+import { blurImageData } from '@/lib/image/blurImageData'
 
 interface ImageEditorProps {
   imageUrl: string
@@ -65,19 +66,29 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
       // キャンバスをクリア
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       
-      // ぼかしフィルターを適用
-      if (blurLevel > 0) {
-        ctx.filter = `blur(${getBlurPixels(blurLevel)}px)`
-      } else {
-        ctx.filter = 'none'
-      }
-      
       // 画像を描画
       ctx.drawImage(img, x, y, drawWidth, drawHeight)
+
+      // #50: ぼかしは ctx.filter（Safari で効かないことがある）ではなく、画素を直接ぼかす。
+      // プレビューも保存（handleSave は同じ canvas を使う）も、この結果になる
+      // blurred：ぼかし後の画素（トリミング枠の中を描き直すために残す）
+      let blurred: ImageData | null = null
+      if (blurLevel > 0 || cropMode) {
+        try {
+          blurred = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          if (blurLevel > 0) {
+            blurImageData(blurred, getBlurPixels(blurLevel))
+            ctx.putImageData(blurred, 0, 0)
+          }
+        } catch (error) {
+          // 画像の読み込み元の制限（CORS）で画素を読めない場合は、ぼかしなしで表示する
+          console.warn('[ImageEditor] blur failed:', error instanceof Error ? error.message : 'unknown')
+          blurred = null
+        }
+      }
       
       // クロップエリアを描画
       if (cropMode) {
-        ctx.filter = 'none'
         ctx.strokeStyle = '#ff6b6b'
         ctx.lineWidth = 2
         ctx.setLineDash([5, 5])
@@ -88,17 +99,17 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         ctx.clearRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
         
-        // 再度画像を描画（クロップエリア内）
-        ctx.save()
-        ctx.beginPath()
-        ctx.rect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
-        ctx.clip()
-        
-        if (blurLevel > 0) {
-          ctx.filter = `blur(${getBlurPixels(blurLevel)}px)`
+        // 再度画像を描画（クロップエリア内）：ぼかし後の画素をそのまま戻す
+        if (blurred) {
+          ctx.putImageData(blurred, 0, 0, cropArea.x, cropArea.y, cropArea.width, cropArea.height)
+        } else {
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(cropArea.x, cropArea.y, cropArea.width, cropArea.height)
+          ctx.clip()
+          ctx.drawImage(img, x, y, drawWidth, drawHeight)
+          ctx.restore()
         }
-        ctx.drawImage(img, x, y, drawWidth, drawHeight)
-        ctx.restore()
       }
     }
     img.src = imageUrl
