@@ -5,6 +5,8 @@ import Cropper, { type Area, type Point, type Size } from 'react-easy-crop'
 import { Button } from '@/components/ui/button'
 import { X, Crop, ZoomIn, ZoomOut, Droplets } from 'lucide-react'
 import { blurImageData } from '@/lib/image/blurImageData'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
 
 interface ImageEditorProps {
   imageUrl: string
@@ -36,6 +38,85 @@ const getBlurPixels = (level: number): number => {
   return blurMapping[level as keyof typeof blurMapping] || 0
 }
 
+type Dict = {
+  crop: string
+  blurTitle: string
+  zoom: string
+  zoomOut: string
+  zoomIn: string
+  blurLevel: string
+  blurLight: string
+  blurStrong: string
+  blurAdjust: string
+  save: string
+  noteLine1: string
+  noteLine2: string
+  saveFailed: string
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: {
+    crop: 'トリミング',
+    blurTitle: 'ぼかしレベルを選択',
+    zoom: '拡大縮小',
+    zoomOut: '小',
+    zoomIn: '大',
+    blurLevel: 'ぼかしレベル',
+    blurLight: '薄',
+    blurStrong: '濃',
+    blurAdjust: 'ぼかし調整',
+    save: '保存する',
+    noteLine1: '※ぼかし「0」は写真をそのまま掲載します。',
+    noteLine2: '趣味写真・後ろ姿など個人を特定しづらい写真にご利用ください。',
+    saveFailed: '写真を保存できませんでした。別の写真でお試しください。',
+  },
+  en: {
+    crop: 'Crop',
+    blurTitle: 'Choose blur level',
+    zoom: 'Zoom',
+    zoomOut: 'Out',
+    zoomIn: 'In',
+    blurLevel: 'Blur level',
+    blurLight: 'Light',
+    blurStrong: 'Strong',
+    blurAdjust: 'Adjust blur',
+    save: 'Save',
+    noteLine1: '*Blur level 0 shows your photo as it is.',
+    noteLine2: 'Use it for photos that don\'t easily identify you, such as hobby photos or photos taken from behind.',
+    saveFailed: 'We couldn\'t save the photo. Please try a different photo.',
+  },
+  ko: {
+    crop: '자르기',
+    blurTitle: '흐림 정도 선택',
+    zoom: '확대·축소',
+    zoomOut: '작게',
+    zoomIn: '크게',
+    blurLevel: '흐림 정도',
+    blurLight: '약하게',
+    blurStrong: '강하게',
+    blurAdjust: '흐림 조절',
+    save: '저장',
+    noteLine1: '※흐림 「0」은 사진을 그대로 게시합니다.',
+    noteLine2: '취미 사진이나 뒷모습 등 본인을 알아보기 어려운 사진에 사용해 주세요.',
+    saveFailed: '사진을 저장하지 못했습니다. 다른 사진으로 시도해 주세요.',
+  },
+  'zh-tw': {
+    crop: '裁剪',
+    blurTitle: '選擇模糊程度',
+    zoom: '縮放',
+    zoomOut: '小',
+    zoomIn: '大',
+    blurLevel: '模糊程度',
+    blurLight: '淡',
+    blurStrong: '濃',
+    blurAdjust: '調整模糊',
+    save: '儲存',
+    noteLine1: '※模糊「0」會直接刊登原始照片。',
+    noteLine2: '適合用於興趣照、背影等不易辨識個人的照片。',
+    saveFailed: '無法儲存照片，請改用其他照片再試一次。',
+  },
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -47,6 +128,8 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: ImageEditorProps) {
+  const { currentLanguage } = useLanguage()
+  const t = T[currentLanguage] ?? T.ja
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [blurLevel, setBlurLevel] = useState(0)
@@ -56,6 +139,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
   // 画面上の正方形の枠の大きさ（プレビューのぼかしの強さに使う）
   const [cropSize, setCropSize] = useState<Size | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
 
   const handleCropComplete = useCallback((_area: Area, areaPixels: Area) => {
     setCroppedAreaPixels(areaPixels)
@@ -69,6 +153,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
   const handleSave = async () => {
     if (!croppedAreaPixels || isSaving) return
     setIsSaving(true)
+    setSaveFailed(false)
     try {
       const img = await loadImage(imageUrl)
       const area = croppedAreaPixels
@@ -78,7 +163,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
       canvas.width = outSize
       canvas.height = outSize
       const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) throw new Error('canvas 2d context unavailable')
 
       // 透過 PNG が黒くならないよう白で塗ってから、元の写真の切り取り範囲を描く
       ctx.fillStyle = '#ffffff'
@@ -98,6 +183,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
     } catch (error) {
       // 画像の読み込み元の制限（CORS）などで書き出せない場合
       console.warn('[ImageEditor] save failed:', error instanceof Error ? error.message : 'unknown')
+      setSaveFailed(true)
     } finally {
       setIsSaving(false)
     }
@@ -110,7 +196,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">
-            {cropMode ? 'トリミング' : 'ぼかしレベルを選択'}
+            {cropMode ? t.crop : t.blurTitle}
           </h2>
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             <X className="w-4 h-4" />
@@ -141,9 +227,9 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
           {cropMode ? (
             /* ズームコントロール */
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">拡大縮小</span>
+              <span className="text-sm font-medium text-gray-700">{t.zoom}</span>
               <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500">小</span>
+                <span className="text-xs text-gray-500">{t.zoomOut}</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -163,15 +249,15 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                 >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
-                <span className="text-xs text-gray-500">大</span>
+                <span className="text-xs text-gray-500">{t.zoomIn}</span>
               </div>
             </div>
           ) : (
             /* ぼかしコントロール */
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">ぼかしレベル</span>
+              <span className="text-sm font-medium text-gray-700">{t.blurLevel}</span>
               <div className="flex items-center space-x-2 flex-1 ml-4">
-                <span className="text-xs text-gray-500">薄</span>
+                <span className="text-xs text-gray-500">{t.blurLight}</span>
                 <input
                   type="range"
                   min="0"
@@ -181,7 +267,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                   onChange={(e) => setBlurLevel(Number(e.target.value))}
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <span className="text-xs text-gray-500">濃</span>
+                <span className="text-xs text-gray-500">{t.blurStrong}</span>
               </div>
               <span className="text-sm font-mono w-8 text-center ml-2">
                 {blurLevel}
@@ -200,12 +286,12 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
               {cropMode ? (
                 <>
                   <Droplets className="w-4 h-4 mr-2" />
-                  ぼかし調整
+                  {t.blurAdjust}
                 </>
               ) : (
                 <>
                   <Crop className="w-4 h-4 mr-2" />
-                  トリミング
+                  {t.crop}
                 </>
               )}
             </Button>
@@ -216,14 +302,21 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
               disabled={!croppedAreaPixels || isSaving}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
-              保存する
+              {t.save}
             </Button>
           </div>
 
+          {/* 保存に失敗したとき */}
+          {saveFailed && (
+            <p className="text-sm text-red-600 text-center" role="alert">
+              {t.saveFailed}
+            </p>
+          )}
+
           {/* 注意書き */}
           <p className="text-xs text-orange-600 text-center">
-            ※ぼかし「0」は写真をそのまま掲載します。<br />
-            趣味写真・後ろ姿など個人を特定しづらい写真にご利用ください。
+            {t.noteLine1}<br />
+            {t.noteLine2}
           </p>
         </div>
       </div>

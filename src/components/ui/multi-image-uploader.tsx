@@ -7,6 +7,46 @@ import { Upload, X, Edit, Camera, User } from 'lucide-react'
 import { useTranslation } from '@/utils/translations'
 import { type SupportedLanguage } from '@/utils/language'
 import { logger } from '@/utils/logger'
+import { useLanguage } from '@/contexts/LanguageContext'
+
+type Dict = {
+  readError: string
+  photoCount: (n: number) => string
+  photoAlt: (n: number) => string
+  edited: string
+  resetToOriginal: string
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: {
+    readError: '画像ファイルの読み込みに失敗しました。別の画像を選択するか、デスクトップにコピーしてから試してください。',
+    photoCount: (n) => `${n}枚`,
+    photoAlt: (n) => `プロフィール写真 ${n}`,
+    edited: '編集済み',
+    resetToOriginal: '前の画像に戻す',
+  },
+  en: {
+    readError: 'We couldn\'t read the image file. Please choose another image, or copy it to your desktop and try again.',
+    photoCount: (n) => `${n} ${n === 1 ? 'photo' : 'photos'}`,
+    photoAlt: (n) => `Profile photo ${n}`,
+    edited: 'Edited',
+    resetToOriginal: 'Restore original',
+  },
+  ko: {
+    readError: '이미지 파일을 읽지 못했습니다. 다른 이미지를 선택하거나 데스크톱에 복사한 후 다시 시도해 주세요.',
+    photoCount: (n) => `${n}장`,
+    photoAlt: (n) => `프로필 사진 ${n}`,
+    edited: '편집됨',
+    resetToOriginal: '원래 사진으로 되돌리기',
+  },
+  'zh-tw': {
+    readError: '無法讀取圖片檔案。請選擇其他圖片，或先複製到桌面後再試一次。',
+    photoCount: (n) => `${n} 張`,
+    photoAlt: (n) => `個人照片 ${n}`,
+    edited: '已編輯',
+    resetToOriginal: '恢復原始照片',
+  },
+}
 
 interface ProfileImage {
   id: string
@@ -30,6 +70,8 @@ export default function MultiImageUploader({
   currentLanguage
 }: MultiImageUploaderProps) {
   const { t } = useTranslation(currentLanguage)
+  const { currentLanguage: uiLanguage } = useLanguage()
+  const d = T[uiLanguage] ?? T.ja
   const [editingImage, setEditingImage] = useState<string | null>(null)
   const [showImageEditor, setShowImageEditor] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -62,7 +104,7 @@ export default function MultiImageUploader({
     }
     reader.onerror = (e) => {
       console.error('ファイル読み込みエラー:', e)
-      alert('画像ファイルの読み込みに失敗しました。別の画像を選択するか、デスクトップにコピーしてから試してください。')
+      alert(d.readError)
     }
     reader.readAsDataURL(file)
   }
@@ -157,7 +199,7 @@ export default function MultiImageUploader({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 border-b border-[#d4a89a] pb-2">
         <Camera className="w-5 h-5 inline-block mr-2" />
-        {t('photos.profilePhotos')} ({t('photos.maxPhotos')} {maxImages}{currentLanguage === 'ja' ? '枚' : ''})
+        {t('photos.profilePhotos')} ({t('photos.maxPhotos')} {d.photoCount(maxImages)})
       </h3>
 
       {/* 画像グリッド */}
@@ -173,7 +215,7 @@ export default function MultiImageUploader({
             }`}>
               <img
                 src={image.url}
-                alt={`プロフィール写真 ${index + 1}`}
+                alt={d.photoAlt(index + 1)}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -188,7 +230,7 @@ export default function MultiImageUploader({
             {/* 編集済みバッジ */}
             {image.isEdited && (
               <div className="absolute top-2 left-12 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                編集済み
+                {d.edited}
               </div>
             )}
             
@@ -239,7 +281,7 @@ export default function MultiImageUploader({
                   className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
                   onClick={() => handleResetToOriginal(image.id)}
                 >
-                  前の画像に戻す
+                  {d.resetToOriginal}
                 </Button>
               )}
             </div>
