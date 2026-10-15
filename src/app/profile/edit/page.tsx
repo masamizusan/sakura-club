@@ -4624,7 +4624,14 @@ function ProfileEditContent() {
       if (!finalUid) {
         const errorMsg = '🚨 CRITICAL: finalUid is empty - 保存処理を中断します'
         logger.error(errorMsg)
-        alert(errorMsg)
+        // #49: 利用者向けの文で知らせる（開発用の文は logger.error にだけ残す）。translations.ts（保護対象）は使わない
+        const saveFailedMessages: Record<string, string> = {
+          ja: '保存できませんでした。ページを再読み込みしてからもう一度お試しください。',
+          en: "We couldn't save your profile. Please reload the page and try again.",
+          ko: '저장하지 못했습니다. 페이지를 새로고침한 후 다시 시도해 주세요.',
+          'zh-tw': '無法儲存。請重新載入頁面後再試一次。',
+        }
+        alert(saveFailedMessages[currentLanguage] ?? saveFailedMessages.ja)
         return
       }
 
@@ -4953,7 +4960,15 @@ function ProfileEditContent() {
       })
 
       // 🚨 CRITICAL: 保存失敗時のアラート
+      // #49: 開発用の alert は NEXT_PUBLIC_DEBUG=true のときだけ。本番では logger.error だけ残す
       if (!personalityMatches || (updateRowCount > 0 && !personalityWasSaved)) {
+        logger.error('🚨 PERSONALITY_TAGS保存失敗検出:', {
+          personalityMatches,
+          updateRowCount,
+          personalityWasSaved
+        })
+      }
+      if (process.env.NEXT_PUBLIC_DEBUG === 'true' && (!personalityMatches || (updateRowCount > 0 && !personalityWasSaved))) {
         alert(`🚨 PERSONALITY_TAGS保存失敗検出！
         
 送信値: ${JSON.stringify(updateData.personality_tags)}
@@ -6153,8 +6168,9 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
           </div>
         </div>
         
-        {/* 🚨 CRITICAL: 保存検証デバッグパネル（固定表示） */}
-        {debugPanel?.show && (
+        {/* 🚨 CRITICAL: 保存検証デバッグパネル（固定表示）
+            #49: 開発用。NEXT_PUBLIC_DEBUG=true のときだけ表示（Vercel には設定しない＝本番では出ない） */}
+        {process.env.NEXT_PUBLIC_DEBUG === 'true' && debugPanel?.show && (
           <div className="fixed bottom-4 right-4 w-96 bg-white border-2 border-red-500 shadow-2xl rounded-lg p-4 z-50 max-h-96 overflow-y-auto">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-bold text-red-600">🚨 SAVE VERIFICATION</h3>
