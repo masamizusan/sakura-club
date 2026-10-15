@@ -9,6 +9,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
+import { getLangFromNationality, getPreviewLabelForLang } from '@/lib/i18n/translationLang'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscription } from '@/hooks/useSubscription'
 import SubscriptionModal from '@/components/SubscriptionModal'
@@ -656,7 +657,7 @@ export default function ChatPage() {
           }
 
           // 未翻訳のメッセージだけ新たに翻訳
-          // 国籍ベースでターゲット言語を決定（外国人男性→'en'、日本人女性→'ja'）
+          // #15: 自分が読む言語 = 自分の国籍の言語（日本→ja、韓国→ko、台湾→zh-tw、それ以外・空→en）
           if (currentUserId) {
             const supabase2 = createClient()
             const { data: myProf } = await supabase2
@@ -664,8 +665,7 @@ export default function ChatPage() {
               .select('nationality, gender')
               .eq('id', currentUserId)
               .single()
-            const isJpWoman = myProf?.nationality === '日本' && myProf?.gender === 'female'
-            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, isJpWoman ? 'ja' : 'en')
+            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, getLangFromNationality(myProf?.nationality))
           }
         }
       } catch (error) {
@@ -832,12 +832,16 @@ export default function ChatPage() {
   const isJapaneseWoman = checkIsJapaneseWoman(userProfile)
   const isJapaneseUser = isJapaneseWoman   // 後方互換エイリアス
   const isForeignMale = userProfile !== null && checkIsForeignMale(userProfile)
-  // #47: 受信メッセージを訳すときの言語（自分が読む言語）
-  // 画面を開いたときの受信側の訳（:660-668）と同じ基準：国籍が日本の女性 → 'ja'、それ以外 → 'en'
-  // （以前は送信用の向き getTranslationTargetLang を使っており、受信側では逆向きになっていた）
+  // #47・#15: 受信メッセージを訳すときの言語（自分が読む言語）
+  // 画面を開いたときの受信側の訳（:660-668）と同じ基準：自分の国籍の言語（日本→ja、韓国→ko、台湾→zh-tw、それ以外・空→en）
   const myReadLang = userProfile === null
     ? currentLanguage
-    : (userProfile.nationality === '日本' && userProfile.gender === 'female' ? 'ja' : 'en')
+    : getLangFromNationality(userProfile.nationality)
+  // #15: 送信・プレビューの翻訳先 = 相手の国籍の言語。相手の情報がまだ読めていない時は従来の向き（安全側）
+  const getSendTargetLang = () =>
+    conversation?.partnerId
+      ? getLangFromNationality(conversation.partnerNationality)
+      : getTranslationTargetLang(userProfile)
   // リアルタイム受信・取り直しの処理は購読時に作られるため、プロフィールの読み込み後の値を参照できるよう ref で渡す
   const myReadLangRef = useRef(myReadLang)
   myReadLangRef.current = myReadLang
@@ -850,12 +854,13 @@ export default function ChatPage() {
     setIsSending(true)
     // 相手の言語に翻訳してから送信
     let translatedContent: string | null = null
+    // #15: 翻訳先 = 相手の国籍の言語（訳と一緒に translated_lang として保存する）
+    const targetLang = getSendTargetLang()
     try {
       if (reuseTranslation !== undefined) {
         translatedContent = reuseTranslation
       } else {
         try {
-          const targetLang = getTranslationTargetLang(userProfile)
           const translateRes = await fetch('/api/translate/message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -877,7 +882,12 @@ export default function ChatPage() {
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: text, translated_content: translatedContent }),
+        body: JSON.stringify({
+          content: text,
+          translated_content: translatedContent,
+          // 訳が無ければ言語も null
+          translated_lang: translatedContent ? targetLang : null,
+        }),
       })
       const result = await response.json()
       if (response.ok) {
@@ -998,8 +1008,8 @@ export default function ChatPage() {
     setIsTranslatingPreview(true)
     setPreviewTranslation(null)
     try {
-      // 日本人女性→英語プレビュー、外国人男性→日本語プレビュー
-      const targetLang = getTranslationTargetLang(userProfile)
+      // #15: 相手の国籍の言語でプレビュー（送信時と同じ翻訳先）
+      const targetLang = getSendTargetLang()
       const response = await fetch('/api/translate/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1368,8 +1378,8 @@ export default function ChatPage() {
                                       style={{ fontSize: '11px', color: '#a08070', background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', display: 'block', marginTop: '2px' }}
                                     >
                                       {showingOriginal
-                                        ? (isJapaneseUser ? '翻訳を表示' : 'Show translation')
-                                        : (isJapaneseUser ? '原文を表示' : 'Show original')}
+                                        ? t('showTranslation')
+                                        : t('showOriginal')}
                                     </button>
                                   )}
                                 </>
@@ -1410,7 +1420,7 @@ export default function ChatPage() {
                 borderTop: '1px solid #e8ddd5',
               }}>
                 <span style={{ fontSize: '11px', color: '#a08070', flexShrink: 0, paddingTop: '1px' }}>
-                  {getPreviewLabel(userProfile)}
+                  {getPreviewLabelForLang(getSendTargetLang())}
                 </span>
                 {isTranslatingPreview ? (
                   <span style={{ fontSize: '12px', color: '#a08070', fontStyle: 'italic' }}>...</span>

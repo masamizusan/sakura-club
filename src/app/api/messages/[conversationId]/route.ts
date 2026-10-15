@@ -10,6 +10,8 @@ const sendMessageSchema = z.object({
   // 段階1-B: chat-images のパス「{conversationId}/{ファイル名}」のみ（形式と会話 ID の一致は POST 内で検証）
   image_url: z.string().optional(),
   translated_content: z.string().max(2000).nullable().optional(),
+  // #15: translated_content の言語（ja/en/ko/zh-tw 以外は保存時に null にする）
+  translated_lang: z.string().nullable().optional(),
 }).refine(data => data.content.trim().length > 0 || !!data.image_url, {
   message: 'メッセージまたは画像を入力してください',
 })
@@ -224,7 +226,12 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { content, image_url, translated_content } = validationResult.data
+    const { content, image_url, translated_content, translated_lang } = validationResult.data
+    // #15: 訳が無い、または ja/en/ko/zh-tw 以外なら null
+    const translatedLangToSave =
+      translated_content && translated_lang && ['ja', 'en', 'ko', 'zh-tw'].includes(translated_lang)
+        ? translated_lang
+        : null
 
     // 段階1-B: image_url は「{この会話の ID}/{英数字・ハイフン・ドット・アンダースコアのみのファイル名}」のみ許可
     if (image_url !== undefined) {
@@ -269,6 +276,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         sender_id: user.id,
         content,
         translated_content: translated_content || null,
+        translated_lang: translatedLangToSave,
         image_url: image_url || null,
         is_read: false,
         created_at: new Date().toISOString(),
