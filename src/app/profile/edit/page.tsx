@@ -750,7 +750,7 @@ function ProfileEditContent() {
     }
     
     const finalPhotoUrls = profileImages
-      .map(img => img.originalUrl ?? img.url)
+      .map(img => img.isEdited ? img.url : (img.originalUrl ?? img.url))
       .filter(Boolean)
       .slice(0, 3)
     
