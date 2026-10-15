@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase'
 import { generateAvatarPath, getFileExtension } from './imageResolver'
+import { logger } from '@/utils/logger'
 
 const BUCKET_NAME = 'avatars'
 
@@ -57,7 +58,7 @@ export async function uploadAvatarToStorage(
   supabaseClient?: any
 ): Promise<UploadResult> {
   
-  console.log('🔄 uploadAvatarToStorage started:', {
+  logger.debug('🔄 uploadAvatarToStorage started:', {
     userId,
     dataType: typeof imageData,
     isBase64: typeof imageData === 'string' && imageData.startsWith('data:image/')
@@ -78,7 +79,7 @@ export async function uploadAvatarToStorage(
       mimeType = detectedType
       originalFormat = 'base64'
       
-      console.log('📋 Base64 converted to blob:', {
+      logger.debug('📋 Base64 converted to blob:', {
         size: Math.round(blob.size / 1024) + 'KB',
         mimeType
       })
@@ -105,7 +106,7 @@ export async function uploadAvatarToStorage(
     // 3. Storage path生成（固定命名規則）
     const storagePath = generateAvatarPath(userId, extension)
     
-    console.log('📁 Storage upload starting:', {
+    logger.debug('📁 Storage upload starting:', {
       storagePath,
       size: Math.round(blob.size / 1024) + 'KB',
       mimeType
@@ -129,7 +130,7 @@ export async function uploadAvatarToStorage(
       }
     }
     
-    console.log('✅ Storage upload success:', uploadData.path)
+    logger.debug('✅ Storage upload success:', uploadData.path)
     
     // 5. Public URL取得
     const { data: publicUrlData } = supabase.storage
@@ -138,7 +139,7 @@ export async function uploadAvatarToStorage(
     
     const publicUrl = publicUrlData.publicUrl
     
-    console.log('🔗 Public URL generated:', publicUrl?.substring(0, 60) + '...')
+    logger.debug('🔗 Public URL generated:', publicUrl?.substring(0, 60) + '...')
     
     return {
       success: true,
@@ -183,7 +184,7 @@ export async function updateProfileAvatar(
   }
   
   // 🔄 段階的移行: avatar_urlカラムに保存（API経由でRLS安全）
-  console.log('💾 Updating profiles.avatar_url via API:', uploadResult.storagePath)
+  logger.debug('💾 Updating profiles.avatar_url via API:', uploadResult.storagePath)
 
   try {
     // ブラウザ環境ではAPI経由、サーバー環境では直接更新
@@ -208,7 +209,7 @@ export async function updateProfileAvatar(
         }
       }
 
-      console.log('✅ Profile avatar_url updated via API')
+      logger.debug('✅ Profile avatar_url updated via API')
     } else {
       // サーバー側: 直接更新（supabaseClientが適切な権限を持つ前提）
       const { error: updateError } = await supabase
@@ -227,7 +228,7 @@ export async function updateProfileAvatar(
         }
       }
 
-      console.log('✅ Profile avatar_url updated directly (server-side)')
+      logger.debug('✅ Profile avatar_url updated directly (server-side)')
     }
   } catch (error) {
     console.error('❌ Profile update error:', error)
@@ -275,7 +276,7 @@ export async function cleanupOldAvatars(
       .filter((path: string) => path !== excludePath)
     
     if (filesToDelete.length > 0) {
-      console.log('🗑️ Cleaning up old avatars:', filesToDelete)
+      logger.debug('🗑️ Cleaning up old avatars:', filesToDelete)
       
       const { error: deleteError } = await supabase.storage
         .from(BUCKET_NAME)
@@ -284,7 +285,7 @@ export async function cleanupOldAvatars(
       if (deleteError) {
         console.warn('⚠️ Cleanup partially failed:', deleteError)
       } else {
-        console.log('✅ Old avatars cleaned up successfully')
+        logger.debug('✅ Old avatars cleaned up successfully')
       }
     }
     

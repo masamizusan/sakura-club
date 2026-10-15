@@ -6,6 +6,7 @@
  */
 
 import { isBase64DataUrl, normalizeImageUrl } from './base64Utils'
+import { logger } from '@/utils/logger'
 
 interface ProcessAvatarResult {
   finalAvatarUrl: string | null
@@ -26,7 +27,7 @@ export async function processAvatarForSave(
   avatarUrl: string | null,
   userId: string
 ): Promise<ProcessAvatarResult> {
-  console.log('🔧 processAvatarForSave:', {
+  logger.debug('🔧 processAvatarForSave:', {
     userId,
     avatarUrl: avatarUrl?.substring(0, 60) + '...' || 'null',
     avatarType: typeof avatarUrl
@@ -53,7 +54,7 @@ export async function processAvatarForSave(
   // 3. 画像URL正規化・判定
   const normalized = normalizeImageUrl(avatarUrl)
   
-  console.log('📋 Image URL analysis:', {
+  logger.debug('📋 Image URL analysis:', {
     type: normalized.type,
     needsConversion: normalized.needsConversion,
     originalLength: avatarUrl.length
@@ -71,7 +72,7 @@ export async function processAvatarForSave(
   
   // 5. 🚨 Base64 → Storage 変換実行
   if (normalized.type === 'base64') {
-    console.log('🚨 Base64 detected → Starting Storage conversion...')
+    logger.debug('🚨 Base64 detected → Starting Storage conversion...')
     
     try {
       // 🔒 SECURITY: userIdはAPIサーバー側でauthUser.idから取得（リクエストに含めない）
@@ -100,7 +101,7 @@ export async function processAvatarForSave(
       
       const { path, meta } = result
       
-      console.log('✅ Base64 → Storage conversion success:', {
+      logger.debug('✅ Base64 → Storage conversion success:', {
         originalSize: meta?.originalSize || avatarUrl.length,
         storagePath: path,
         savedBytes: meta?.savedBytes || (avatarUrl.length - path.length)
@@ -117,7 +118,7 @@ export async function processAvatarForSave(
       console.error('❌ Base64 → Storage conversion failed:', error)
       
       // 🔧 フォールバック: 変換失敗時は元のBase64を保存（既存動作維持）
-      console.log('🔄 Fallback: Saving original Base64 (conversion failed)')
+      logger.debug('🔄 Fallback: Saving original Base64 (conversion failed)')
       
       return {
         finalAvatarUrl: avatarUrl,
@@ -148,7 +149,7 @@ export async function processMultipleImagesForSave(
   imageUrls: string[],
   userId: string
 ): Promise<ProcessAvatarResult[]> {
-  console.log('🔧 processMultipleImagesForSave:', {
+  logger.debug('🔧 processMultipleImagesForSave:', {
     userId,
     imageCount: imageUrls.length,
     imagePreviews: imageUrls.map(url => url?.substring(0, 30) + '...' || 'null')
@@ -159,7 +160,7 @@ export async function processMultipleImagesForSave(
   // 順次処理（並行処理だとAPI制限に引っかかる可能性）
   for (let i = 0; i < imageUrls.length; i++) {
     const imageUrl = imageUrls[i]
-    console.log(`📋 Processing image ${i + 1}/${imageUrls.length}`)
+    logger.debug(`📋 Processing image ${i + 1}/${imageUrls.length}`)
     
     const result = await processAvatarForSave(imageUrl, userId)
     results.push(result)
@@ -173,7 +174,7 @@ export async function processMultipleImagesForSave(
   const conversions = results.filter(r => r.wasConverted).length
   const totalSavedBytes = results.reduce((sum, r) => sum + (r.savedBytes || 0), 0)
   
-  console.log('🎉 Batch processing complete:', {
+  logger.debug('🎉 Batch processing complete:', {
     totalImages: imageUrls.length,
     conversions,
     totalSavedKB: Math.round(totalSavedBytes / 1024)
@@ -193,7 +194,7 @@ export async function prepareProfileForSave<T extends { avatar_url?: string | nu
   profileData: T,
   userId: string
 ): Promise<T & { avatar_conversion_log?: ProcessAvatarResult }> {
-  console.log('🔧 prepareProfileForSave:', {
+  logger.debug('🔧 prepareProfileForSave:', {
     userId,
     hasAvatarUrl: !!profileData.avatar_url,
     avatarUrlPreview: profileData.avatar_url?.substring(0, 30) + '...' || 'null'

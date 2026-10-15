@@ -3,6 +3,8 @@
  * 本番環境のセッション混入を防ぐため、専用のkey prefix使用
  */
 
+import { logger } from '@/utils/logger'
+
 const TEST_MODE_PREFIX = 'sakura_test_'
 const PROD_MODE_PREFIX = 'sakura_prod_'
 
@@ -41,7 +43,7 @@ export const safeLocalStorage = {
   setItem: (key: string, value: string): void => {
     try {
       const prefixedKey = getStoragePrefix() + key
-      console.log(`📦 Storage set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
+      logger.debug(`📦 Storage set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
       localStorage.setItem(prefixedKey, value)
     } catch (error) {
       console.error('LocalStorage setItem error:', error)
@@ -52,7 +54,7 @@ export const safeLocalStorage = {
     try {
       const prefixedKey = getStoragePrefix() + key
       const value = localStorage.getItem(prefixedKey)
-      console.log(`📦 Storage get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey, !!value)
+      logger.debug(`📦 Storage get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey, !!value)
       return value
     } catch (error) {
       console.error('LocalStorage getItem error:', error)
@@ -63,7 +65,7 @@ export const safeLocalStorage = {
   removeItem: (key: string): void => {
     try {
       const prefixedKey = getStoragePrefix() + key
-      console.log(`🗑️ Storage remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
+      logger.debug(`🗑️ Storage remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
       localStorage.removeItem(prefixedKey)
     } catch (error) {
       console.error('LocalStorage removeItem error:', error)
@@ -84,7 +86,7 @@ export const safeLocalStorage = {
       }
       
       keysToRemove.forEach(key => localStorage.removeItem(key))
-      console.log(`🧹 Cleared ${isTestModeActive() ? 'TEST' : 'PROD'} mode storage:`, keysToRemove.length, 'items')
+      logger.debug(`🧹 Cleared ${isTestModeActive() ? 'TEST' : 'PROD'} mode storage:`, keysToRemove.length, 'items')
     } catch (error) {
       console.error('Clear storage error:', error)
     }
@@ -96,7 +98,7 @@ export const safeSessionStorage = {
   setItem: (key: string, value: string): void => {
     try {
       const prefixedKey = getStoragePrefix() + key
-      console.log(`📝 Session set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
+      logger.debug(`📝 Session set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
       sessionStorage.setItem(prefixedKey, value)
     } catch (error) {
       console.error('SessionStorage setItem error:', error)
@@ -107,7 +109,7 @@ export const safeSessionStorage = {
     try {
       const prefixedKey = getStoragePrefix() + key
       const value = sessionStorage.getItem(prefixedKey)
-      console.log(`📝 Session get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey, !!value)
+      logger.debug(`📝 Session get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey, !!value)
       return value
     } catch (error) {
       console.error('SessionStorage getItem error:', error)
@@ -118,7 +120,7 @@ export const safeSessionStorage = {
   removeItem: (key: string): void => {
     try {
       const prefixedKey = getStoragePrefix() + key
-      console.log(`🗑️ Session remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
+      logger.debug(`🗑️ Session remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, prefixedKey)
       sessionStorage.removeItem(prefixedKey)
     } catch (error) {
       console.error('SessionStorage removeItem error:', error)
@@ -139,7 +141,7 @@ export const safeSessionStorage = {
       }
       
       keysToRemove.forEach(key => sessionStorage.removeItem(key))
-      console.log(`🧹 Cleared ${isTestModeActive() ? 'TEST' : 'PROD'} mode session:`, keysToRemove.length, 'items')
+      logger.debug(`🧹 Cleared ${isTestModeActive() ? 'TEST' : 'PROD'} mode session:`, keysToRemove.length, 'items')
     } catch (error) {
       console.error('Clear session storage error:', error)
     }
@@ -151,7 +153,7 @@ export const safeUserStorage = {
   setItem: (key: string, value: string, userId?: string): void => {
     try {
       const userSpecificKey = getUserSpecificKey(key, userId)
-      console.log(`📦 User Storage set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
+      logger.debug(`📦 User Storage set (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
       localStorage.setItem(userSpecificKey, value)
     } catch (error) {
       console.error('User localStorage setItem error:', error)
@@ -162,7 +164,7 @@ export const safeUserStorage = {
     try {
       const userSpecificKey = getUserSpecificKey(key, userId)
       const value = localStorage.getItem(userSpecificKey)
-      console.log(`📦 User Storage get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey, !!value)
+      logger.debug(`📦 User Storage get (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey, !!value)
       return value
     } catch (error) {
       console.error('User localStorage getItem error:', error)
@@ -173,7 +175,7 @@ export const safeUserStorage = {
   removeItem: (key: string, userId?: string): void => {
     try {
       const userSpecificKey = getUserSpecificKey(key, userId)
-      console.log(`🗑️ User Storage remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
+      logger.debug(`🗑️ User Storage remove (${isTestModeActive() ? 'TEST' : 'PROD'} mode):`, userSpecificKey)
       localStorage.removeItem(userSpecificKey)
     } catch (error) {
       console.error('User localStorage removeItem error:', error)

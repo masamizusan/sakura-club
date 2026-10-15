@@ -8,6 +8,8 @@
  * 別ユーザーのデータが混入しないようにする。
  */
 
+import { logger } from '@/utils/logger'
+
 const STORAGE_PREFIX = 'sc_user_'
 
 // ユーザー固有のキー一覧（これらはユーザー切替時にクリアする）
@@ -44,7 +46,7 @@ export function setUserStorage(userId: string | null | undefined, key: string, v
 
   const storageKey = getUserStorageKey(userId, key)
   localStorage.setItem(storageKey, value)
-  console.log('💾 setUserStorage:', { userId: userId?.slice(0, 8), key, storageKey })
+  logger.debug('💾 setUserStorage:', { userId: userId?.slice(0, 8), key, storageKey })
 }
 
 /**
@@ -92,7 +94,7 @@ export function removeUserStorage(userId: string | null | undefined, key: string
 export function clearAllUserStorage(previousUserId?: string | null): void {
   if (typeof window === 'undefined') return
 
-  console.log('🧹 clearAllUserStorage: Clearing all user-specific data', {
+  logger.debug('🧹 clearAllUserStorage: Clearing all user-specific data', {
     previousUserId: previousUserId?.slice(0, 8)
   })
 
@@ -160,7 +162,7 @@ export function clearAllUserStorage(previousUserId?: string | null): void {
     sessionStorage.removeItem(key)
   })
 
-  console.log('✅ clearAllUserStorage: Cleared', lsKeysToRemove.length, 'ls +', ssKeysToRemove.length, 'ss namespaced keys + legacy keys')
+  logger.debug('✅ clearAllUserStorage: Cleared', lsKeysToRemove.length, 'ls +', ssKeysToRemove.length, 'ss namespaced keys + legacy keys')
 }
 
 /**
@@ -190,35 +192,4 @@ export function validateStorageUserId(
   }
 
   return true
-}
-
-/**
- * デバッグ用: 現在のユーザー関連ストレージを全て出力
- */
-export function debugUserStorage(userId: string | null | undefined): void {
-  if (typeof window === 'undefined') return
-
-  console.group('🔍 DEBUG: User Storage State')
-  console.log('Current userId:', userId?.slice(0, 8))
-
-  // 旧形式キー
-  console.log('--- Legacy Keys (non-namespaced) ---')
-  USER_SPECIFIC_KEYS.forEach(key => {
-    const value = localStorage.getItem(key)
-    if (value) {
-      console.warn('⚠️ LEGACY KEY FOUND:', key, '=', value.slice(0, 50) + '...')
-    }
-  })
-
-  // 名前空間付きキー
-  console.log('--- Namespaced Keys ---')
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i)
-    if (key && key.startsWith(STORAGE_PREFIX)) {
-      const value = localStorage.getItem(key)
-      console.log(key, '=', value?.slice(0, 50) + '...')
-    }
-  }
-
-  console.groupEnd()
 }
