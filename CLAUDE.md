@@ -1006,9 +1006,13 @@ export function getTranslationTargetLang(profile): 'ja' | 'en'
 export function getPreviewLabel(profile): string  // 日本人女性→'English:' / 外国人男性→'日本語：'
 ```
 
-**翻訳方向ロジック（絶対に変えない）:**
-- 日本人女性が日本語で送信 → **英語**に翻訳して外国人男性に届ける（targetLang: `'en'`）
-- 外国人男性が英語で送信 → **日本語**に翻訳して日本人女性に届ける（targetLang: `'ja'`）
+**翻訳方向ロジック（2026/10/15 #15 第1段階で変更・プロダクトオーナー承認済み）:**
+- **翻訳先 ＝ 相手の国籍の言語**（`src/lib/i18n/translationLang.ts` の `getLangFromNationality`。日本→`ja`、韓国→`ko`、台湾→`zh-tw`、それ以外・空→`en`。判定は `utils/language.ts` の `getLanguageFromNationality`）
+  - 例：日本人女性 → 韓国の男性には韓国語、アメリカの男性には英語。外国人男性 → 日本人女性には日本語
+  - 相手の情報がまだ読めていない時だけ、従来の `getTranslationTargetLang`（女性→`'en'`、男性→`'ja'`）を使う（安全側）
+- **自分が読む言語 ＝ 自分の国籍の言語**（受信側で訳が無いメッセージを訳すとき。プロフィール未読み込み時は画面の表示言語）
+- 送信時に `messages.translated_lang`（`translated_content` の言語）も保存する。**`translated_lang` が NULL の行は旧仕様の訳**（女性の送信は英語、男性の送信は日本語）
+- **第 2 段階が残っている**：受け手の表示は今も `translated_content` を優先して表示する。受け手の言語と `translated_lang` が違う場合に受け手側で訳し直す（`message_translations` にキャッシュ）のは第 2 段階で行う
 
 ### DB要件（Supabase手動実行が必要）
 ```sql
@@ -1040,11 +1044,10 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 **相手のメッセージ表示:**
 - `translated_content` があればデフォルトで翻訳を表示
 - 「原文を表示」/「翻訳を表示」トグルボタンで切り替え
-- 日本人ユーザー: ラベルは `'原文を表示'` / `'翻訳を表示'`
-- 外国人男性: ラベルは `'Show original'` / `'Show translation'`
+- ラベルは**画面の表示言語**でページ内の辞書（`showOriginal` / `showTranslation`）から出す（ja：原文を表示／翻訳を表示、en：Show original／Show translation、ko：원문 보기／번역 보기、zh-tw：顯示原文／顯示翻譯）。#15 第1段階で性別による 2 択から変更
 
 **送信前プレビュー:**
-- `getPreviewLabel(userProfile)` で動的ラベル（`'English:'` or `'日本語：'`）
+- 見出しは**訳した言語の名前**：`getPreviewLabelForLang(翻訳先)`（`'English:'` / `'日本語：'` / `'한국어:'` / `'繁體中文：'`）。#15 第1段階で `getPreviewLabel(userProfile)` から変更
 - 翻訳確認ボタン方式（自動翻訳useEffectではなく手動ボタン）
 
 **autoTranslateMessages:**
@@ -1087,8 +1090,8 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 
 **src/utils/userHelpers.ts**
 - isJapaneseWoman()：gender==='female'のみで判定（nationalityは使わない）
-- getTranslationTargetLang()：日本人女性→'en' / 外国人男性→'ja'
-- getPreviewLabel()：日本人女性→'English:' / 外国人男性→'日本語：'
+- getTranslationTargetLang()：日本人女性→'en' / 外国人男性→'ja'（#15 以降は、相手の情報が読めていない時の予備としてだけ使う）
+- getPreviewLabel()：日本人女性→'English:' / 外国人男性→'日本語：'（#15 以降、チャット画面では未使用。関数は残す）
 
 **app/api/stripe/ 配下すべて**
 - 価格・プランID・金額変更禁止
@@ -1145,7 +1148,7 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 - 国籍データはDBに日本語で保存→japaneseToISO変換で表示
 
 **翻訳機能（変更禁止）**
-- 翻訳方向：日本人女性＝日本語→英語 / 外国人男性＝英語→日本語
+- 翻訳方向：**相手の国籍の言語へ翻訳**（#15 第1段階・2026/10/15。旧仕様：日本人女性＝日本語→英語 / 外国人男性＝英語→日本語。`translated_lang` が NULL の行は旧仕様の訳）
 - 方式：翻訳確認ボタンを押したときのみ翻訳（自動翻訳なし）
 - 送信時：translated_contentをDBに保存
 - 相手メッセージ：translated_contentをデフォルト表示
