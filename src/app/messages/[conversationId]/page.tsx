@@ -57,6 +57,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalDesc: '年齢確認が完了するとメッセージ機能が利用できます。通常数分以内に審査が完了します。',
     modalButton: '年齢確認を行う',
     modalCancel: 'キャンセル',
+    translateButton: '翻訳',
+    transcribing: '文字起こし中...',
   },
   en: {
     pageTitle: 'Messages',
@@ -95,6 +97,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalDesc: 'Complete age verification to send messages. Review is usually completed within a few minutes.',
     modalButton: 'Verify Age',
     modalCancel: 'Cancel',
+    translateButton: 'Translate',
+    transcribing: 'Transcribing...',
   },
   ko: {
     pageTitle: '메시지',
@@ -133,6 +137,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalDesc: '나이 확인이 완료되면 메시지 기능을 사용할 수 있습니다.',
     modalButton: '나이 확인하기',
     modalCancel: '취소',
+    translateButton: '번역',
+    transcribing: '음성 변환 중...',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -171,6 +177,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalDesc: '完成年齡確認後即可發送訊息。審查通常在幾分鐘內完成。',
     modalButton: '進行年齡確認',
     modalCancel: '取消',
+    translateButton: '翻譯',
+    transcribing: '語音轉文字中...',
   },
 }
 
@@ -1461,7 +1469,7 @@ export default function ChatPage() {
               {isTranscribing && (
                 <div className="flex items-center justify-center gap-2 py-3 text-sm" style={{ color: 'var(--color-primary)' }}>
                   <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
-                  {currentLanguage === 'ja' ? '文字起こし中...' : 'Transcribing...'}
+                  {t('transcribing')}
                 </div>
               )}
 
@@ -1554,7 +1562,7 @@ export default function ChatPage() {
                     {isTranslatingPreview ? (
                       <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
                     ) : (
-                      '翻訳'
+                      t('translateButton')
                     )}
                   </Button>
 
