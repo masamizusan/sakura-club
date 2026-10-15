@@ -5,6 +5,54 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/store/authStore'
 import { Loader2 } from 'lucide-react'
 import { logger } from '@/utils/logger'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
+import { COMMON_T } from '@/lib/i18n/common'
+
+// 認証待ち・タイムアウト画面の文言（4 言語）
+type Dict = {
+  timeoutTitle: string
+  timeoutMessage: string
+  reload: string
+  initializing: string
+  done: string
+  processing: string
+}
+
+const T: Record<SupportedLanguage, Dict> = {
+  ja: {
+    timeoutTitle: '接続に時間がかかっています',
+    timeoutMessage: '認証の初期化に時間がかかっています。再読み込みしてください。',
+    reload: '再読み込み',
+    initializing: '認証初期化中...',
+    done: '完了',
+    processing: '処理中',
+  },
+  en: {
+    timeoutTitle: 'The connection is taking a while',
+    timeoutMessage: 'Signing you in is taking longer than expected. Please reload the page.',
+    reload: 'Reload',
+    initializing: 'Preparing sign-in...',
+    done: 'done',
+    processing: 'in progress',
+  },
+  ko: {
+    timeoutTitle: '연결에 시간이 걸리고 있습니다',
+    timeoutMessage: '로그인 준비에 시간이 걸리고 있습니다. 페이지를 새로고침해 주세요.',
+    reload: '새로고침',
+    initializing: '로그인 준비 중...',
+    done: '완료',
+    processing: '처리 중',
+  },
+  'zh-tw': {
+    timeoutTitle: '連線時間較長',
+    timeoutMessage: '登入準備花費的時間較長，請重新載入頁面。',
+    reload: '重新載入',
+    initializing: '正在準備登入...',
+    done: '完成',
+    processing: '處理中',
+  },
+}
 
 // 🔧 CRITICAL: テストモード同期判定関数 - 状態競合回避
 function isTestModeNow(): boolean {
@@ -48,6 +96,9 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, fallback }: AuthGuardProps) {
   const { user, isLoading, authReady } = useAuth()
   const router = useRouter()
+  const { currentLanguage } = useLanguage()
+  const t = T[currentLanguage] ?? T.ja
+  const commonT = COMMON_T[currentLanguage] ?? COMMON_T.ja
   const [timeoutReached, setTimeoutReached] = useState(false)
   const hasRedirected = useRef(false)
   
@@ -121,15 +172,15 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">接続に時間がかかっています</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t.timeoutTitle}</h2>
           <p className="text-gray-600 mb-4">
-            認証の初期化に時間がかかっています。再読み込みしてください。
+            {t.timeoutMessage}
           </p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-[#8b1a2e] text-white rounded hover:bg-[#6e1525]"
           >
-            再読み込み
+            {t.reload}
           </button>
         </div>
       </div>
@@ -143,9 +194,9 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
-            <p className="text-gray-600">読み込み中...</p>
+            <p className="text-gray-600">{commonT.loading}</p>
             <p className="text-xs text-gray-400 mt-2">
-              認証初期化中... ({authReady ? '完了' : '処理中'})
+              {t.initializing} ({authReady ? t.done : t.processing})
             </p>
           </div>
         </div>

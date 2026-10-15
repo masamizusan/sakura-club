@@ -19,6 +19,7 @@ import { useUnifiedTranslation } from '@/utils/translations'
 import { logger } from '@/utils/logger'
 import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
 import { LanguageSelector } from '@/components/LanguageSelector'
+import CommonText from '@/components/CommonText'
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -324,7 +325,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div><CommonText k="loading" /></div>}>
       <LoginForm />
     </Suspense>
   )

@@ -3,6 +3,16 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useLanguage } from '@/contexts/LanguageContext'
+import type { SupportedLanguage } from '@/utils/language'
+
+// バナーのボタンの文言（4 言語）。本文は authStore（保護対象）が作るため今回は対象外
+const T: Record<SupportedLanguage, { refresh: string; close: string }> = {
+  ja: { refresh: '更新', close: '閉じる' },
+  en: { refresh: 'Refresh', close: 'Close' },
+  ko: { refresh: '새로고침', close: '닫기' },
+  'zh-tw': { refresh: '重新整理', close: '關閉' },
+}
 
 /**
  * AuthSwitchBanner - ACTIVE タブ用のバナー表示コンポーネント
@@ -14,6 +24,8 @@ export function AuthSwitchBanner() {
   const banner = useAuthStore((state) => state.banner)
   const clearAuthBanner = useAuthStore((state) => state.clearAuthBanner)
   const [mounted, setMounted] = useState(false)
+  const { currentLanguage } = useLanguage()
+  const t = T[currentLanguage] ?? T.ja
 
   useEffect(() => {
     setMounted(true)
@@ -84,7 +96,7 @@ export function AuthSwitchBanner() {
             fontSize: 13
           }}
         >
-          更新
+          {t.refresh}
         </button>
         <button
           onClick={handleClose}
@@ -99,7 +111,7 @@ export function AuthSwitchBanner() {
             fontSize: 13
           }}
         >
-          閉じる
+          {t.close}
         </button>
       </div>
     </div>

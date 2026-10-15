@@ -8,6 +8,7 @@ import { CheckCircle, Mail, ArrowLeft, AlertCircle, Loader2, Globe } from 'lucid
 import Link from 'next/link'
 import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
+import CommonText from '@/components/CommonText'
 
 function RegisterCompleteContent() {
   const searchParams = useSearchParams()
@@ -162,9 +163,9 @@ export default function RegisterCompletePage() {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4"><CommonText k="loading" /></h2>
             <p className="text-gray-600">
-              Please wait...
+              <CommonText k="pleaseWait" />
             </p>
           </div>
         </div>

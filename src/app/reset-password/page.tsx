@@ -9,6 +9,7 @@ import { authService } from '@/lib/auth'
 import { Globe } from 'lucide-react'
 import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
+import CommonText from '@/components/CommonText'
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState('')
@@ -153,7 +154,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div><CommonText k="loading" /></div>}>
       <ResetPasswordForm />
     </Suspense>
   )
