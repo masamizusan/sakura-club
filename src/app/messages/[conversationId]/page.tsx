@@ -738,7 +738,7 @@ export default function ChatPage() {
         // 取りこぼしていた相手のメッセージに訳が無ければ、受信時と同じく翻訳する
         const missedPartnerMessages = fetched.filter(m => !knownIds.has(m.id) && m.senderId !== currentUserId)
         if (missedPartnerMessages.length > 0) {
-          autoTranslateMessages(missedPartnerMessages, currentUserId, undefined, myReadLang)
+          autoTranslateMessages(missedPartnerMessages, currentUserId, undefined, myReadLangRef.current)
         }
       } catch (error) {
         console.warn('[realtime] refetch failed:', error instanceof Error ? error.message : 'unknown')
@@ -798,7 +798,7 @@ export default function ChatPage() {
 
             // translated_contentがなければAPIで翻訳（正しいターゲット言語で）
             if (!newMessage.translated_content) {
-              autoTranslateMessages([newMessage], currentUserId, undefined, myReadLang)
+              autoTranslateMessages([newMessage], currentUserId, undefined, myReadLangRef.current)
             }
           }
         )
@@ -832,8 +832,15 @@ export default function ChatPage() {
   const isJapaneseWoman = checkIsJapaneseWoman(userProfile)
   const isJapaneseUser = isJapaneseWoman   // 後方互換エイリアス
   const isForeignMale = userProfile !== null && checkIsForeignMale(userProfile)
-  // 翻訳先言語：日本人女性='ja'、外国人男性='en'
-  const myReadLang = userProfile === null ? currentLanguage : getTranslationTargetLang(userProfile)
+  // #47: 受信メッセージを訳すときの言語（自分が読む言語）
+  // 画面を開いたときの受信側の訳（:660-668）と同じ基準：国籍が日本の女性 → 'ja'、それ以外 → 'en'
+  // （以前は送信用の向き getTranslationTargetLang を使っており、受信側では逆向きになっていた）
+  const myReadLang = userProfile === null
+    ? currentLanguage
+    : (userProfile.nationality === '日本' && userProfile.gender === 'female' ? 'ja' : 'en')
+  // リアルタイム受信・取り直しの処理は購読時に作られるため、プロフィールの読み込み後の値を参照できるよう ref で渡す
+  const myReadLangRef = useRef(myReadLang)
+  myReadLangRef.current = myReadLang
 
   // テキスト送信（即時表示）: 翻訳 → 保存 を実行し、仮メッセージ（tempId）を結果で差し替える
   // reuseTranslation: 使い回す訳（undefined なら翻訳 API を呼ぶ。null は「訳なし」で確定）
