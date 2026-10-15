@@ -184,7 +184,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
           <h2 className="text-xl font-bold text-gray-900">
             {cropMode ? 'トリミング' : 'ぼかしレベルを選択'}
           </h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -209,6 +209,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-gray-500">小</span>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setScale(Math.max(0.1, scale - 0.1))}
@@ -219,6 +220,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                     {Math.round(scale * 100)}%
                   </span>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setScale(Math.min(3, scale + 0.1))}
@@ -256,6 +258,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
           {/* アクションボタン */}
           <div className="flex justify-between">
             <Button
+              type="button"
               variant="ghost"
               onClick={() => setCropMode(!cropMode)}
               className="flex items-center"
@@ -274,6 +277,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
             </Button>
             
             <Button
+              type="button"
               onClick={handleSave}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >

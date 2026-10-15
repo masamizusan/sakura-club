@@ -195,6 +195,7 @@ export default function MultiImageUploader({
             {/* アクションボタン */}
             <div className="absolute top-2 right-2 flex space-x-1">
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 bg-black bg-opacity-50 hover:bg-opacity-70 text-white"
@@ -221,6 +222,7 @@ export default function MultiImageUploader({
             <div className="absolute bottom-2 left-2 right-2 space-y-1">
               {!image.isMain && (
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   className="w-full text-xs h-6 bg-white bg-opacity-90 hover:bg-opacity-100"
@@ -231,6 +233,7 @@ export default function MultiImageUploader({
               )}
               {image.isEdited && (
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   className="w-full text-xs h-6 bg-orange-50 hover:bg-orange-100"
