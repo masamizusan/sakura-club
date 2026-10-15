@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { SupportedLanguage } from '@/utils/language'
+import { formatNotification } from '@/lib/notificationText'
 
 type Notification = {
   id: string
@@ -287,7 +288,10 @@ export default function SettingsPage() {
               <p>{t.emptyNotifications}</p>
             </div>
           ) : (
-            notifications.map(notif => (
+            notifications.map(notif => {
+              // #13: 表示言語に合わせて組み立てる（組み立てられない通知は保存された文のまま）
+              const display = formatNotification(notif, currentLanguage)
+              return (
               <div
                 key={notif.id}
                 style={{
@@ -311,7 +315,7 @@ export default function SettingsPage() {
                     marginBottom: '4px',
                     fontSize: '14px',
                   }}>
-                    {notif.title}
+                    {display.title}
                   </p>
                   <p style={{
                     fontSize: '13px',
@@ -319,14 +323,15 @@ export default function SettingsPage() {
                     lineHeight: 1.7,
                     whiteSpace: 'pre-line', // 警告通知の改行(\n)をそのまま表示
                   }}>
-                    {notif.message}
+                    {display.message}
                   </p>
                   <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
                     {new Date(notif.createdAt).toLocaleString(t.dateLocale)}
                   </p>
                 </div>
               </div>
-            ))
+              )
+            })
           )}
         </div>
       )}
