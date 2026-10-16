@@ -4,24 +4,33 @@ export const nationalityLabels: Record<string, Record<string, string>> = {
     AU: 'オーストラリア', DE: 'ドイツ', FR: 'フランス', IT: 'イタリア',
     ES: 'スペイン', KR: '韓国', CN: '中国', TW: '台湾',
     TH: 'タイ', VN: 'ベトナム', IN: 'インド',
+    // プロフィールで選べる国籍（NATIONALITY_OPTIONS）に合わせて追加
+    NL: 'オランダ', SE: 'スウェーデン', NO: 'ノルウェー', DK: 'デンマーク',
+    SG: 'シンガポール', OTHER: 'その他',
   },
   en: {
     JP: 'Japan', US: 'USA', GB: 'UK', CA: 'Canada',
     AU: 'Australia', DE: 'Germany', FR: 'France', IT: 'Italy',
     ES: 'Spain', KR: 'Korea', CN: 'China', TW: 'Taiwan',
     TH: 'Thailand', VN: 'Vietnam', IN: 'India',
+    NL: 'Netherlands', SE: 'Sweden', NO: 'Norway', DK: 'Denmark',
+    SG: 'Singapore', OTHER: 'Other',
   },
   ko: {
     JP: '일본', US: '미국', GB: '영국', CA: '캐나다',
     AU: '호주', DE: '독일', FR: '프랑스', IT: '이탈리아',
     ES: '스페인', KR: '한국', CN: '중국', TW: '대만',
     TH: '태국', VN: '베트남', IN: '인도',
+    NL: '네덜란드', SE: '스웨덴', NO: '노르웨이', DK: '덴마크',
+    SG: '싱가포르', OTHER: '기타',
   },
   'zh-tw': {
     JP: '日本', US: '美國', GB: '英國', CA: '加拿大',
     AU: '澳洲', DE: '德國', FR: '法國', IT: '義大利',
     ES: '西班牙', KR: '韓國', CN: '中國', TW: '台灣',
     TH: '泰國', VN: '越南', IN: '印度',
+    NL: '荷蘭', SE: '瑞典', NO: '挪威', DK: '丹麥',
+    SG: '新加坡', OTHER: '其他',
   },
 }
 
@@ -31,6 +40,8 @@ const japaneseToISO: Record<string, string> = {
   'オーストラリア': 'AU', 'ドイツ': 'DE', 'フランス': 'FR', 'イタリア': 'IT',
   'スペイン': 'ES', '韓国': 'KR', '中国': 'CN', '台湾': 'TW',
   'タイ': 'TH', 'ベトナム': 'VN', 'インド': 'IN',
+  'オランダ': 'NL', 'スウェーデン': 'SE', 'ノルウェー': 'NO', 'デンマーク': 'DK',
+  'シンガポール': 'SG', 'その他': 'OTHER',
 }
 
 // 英語テキスト → ISOコードの逆引きマップ
@@ -40,6 +51,8 @@ const englishToISO: Record<string, string> = {
   'spain': 'ES', 'korea': 'KR', 'china': 'CN', 'taiwan': 'TW',
   'thailand': 'TH', 'vietnam': 'VN', 'india': 'IN',
   'america': 'US', 'united states': 'US', 'united kingdom': 'GB',
+  'netherlands': 'NL', 'sweden': 'SE', 'norway': 'NO', 'denmark': 'DK',
+  'singapore': 'SG', 'other': 'OTHER',
 }
 
 export const getNationalityLabel = (code: string, lang: string): string => {
