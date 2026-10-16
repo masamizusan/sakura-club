@@ -161,13 +161,12 @@ function FootprintsContent() {
     }
   }
 
-  const getBrowserLocale = (): string => {
-    if (typeof window === 'undefined') return 'ja-JP'
-    const lang = navigator.language
-    if (lang.startsWith('ja')) return 'ja-JP'
-    if (lang.startsWith('ko')) return 'ko-KR'
-    if (lang.startsWith('zh')) return 'zh-TW'
-    return lang
+  // 日付・時刻の表示はアプリで選んだ言語に合わせる（ブラウザの言語設定ではなく）
+  const getAppLocale = (): string => {
+    if (currentLanguage === 'en') return 'en-US'
+    if (currentLanguage === 'ko') return 'ko-KR'
+    if (currentLanguage === 'zh-tw') return 'zh-TW'
+    return 'ja-JP'
   }
 
   const formatDateHeading = (dateStr: string): string => {
@@ -183,7 +182,7 @@ function FootprintsContent() {
     if (dateOnly.getTime() === todayOnly.getTime()) return t('today')
     if (dateOnly.getTime() === yesterdayOnly.getTime()) return t('yesterday')
 
-    const locale = getBrowserLocale()
+    const locale = getAppLocale()
     return new Intl.DateTimeFormat(locale, {
       month: 'long',
       day: 'numeric',
@@ -193,7 +192,7 @@ function FootprintsContent() {
 
   const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr)
-    const locale = getBrowserLocale()
+    const locale = getAppLocale()
     if (locale.startsWith('ja')) {
       return new Intl.DateTimeFormat('ja-JP', {
         hour: '2-digit',

@@ -143,15 +143,12 @@ export default function LikesPage() {
     return text
   }
 
-  // ブラウザのロケールを取得
-  const getBrowserLocale = (): string => {
-    if (typeof window === 'undefined') return 'ja-JP'
-    const lang = navigator.language
-    // 言語コードからロケールを推定
-    if (lang.startsWith('ja')) return 'ja-JP'
-    if (lang.startsWith('ko')) return 'ko-KR'
-    if (lang.startsWith('zh')) return 'zh-TW'
-    return lang
+  // 日付・時刻の表示はアプリで選んだ言語に合わせる（ブラウザの言語設定ではなく）
+  const getAppLocale = (): string => {
+    if (currentLanguage === 'en') return 'en-US'
+    if (currentLanguage === 'ko') return 'ko-KR'
+    if (currentLanguage === 'zh-tw') return 'zh-TW'
+    return 'ja-JP'
   }
 
   // 日付見出しをフォーマット（今日・昨日 or 日付）
@@ -174,7 +171,7 @@ export default function LikesPage() {
     }
 
     // それ以外は日付を表示
-    const locale = getBrowserLocale()
+    const locale = getAppLocale()
     const formatter = new Intl.DateTimeFormat(locale, {
       month: 'long',
       day: 'numeric',
@@ -186,7 +183,7 @@ export default function LikesPage() {
   // 時刻をフォーマット
   const formatTime = (dateStr: string): string => {
     const date = new Date(dateStr)
-    const locale = getBrowserLocale()
+    const locale = getAppLocale()
     const formatter = new Intl.DateTimeFormat(locale, {
       hour: 'numeric',
       minute: '2-digit',
