@@ -516,12 +516,20 @@ type TranslationKeys = {
     fukuoka: string
     hokkaido: string
     miyagi: string
+    aomori: string
+    iwate: string
+    akita: string
+    yamagata: string
+    fukushima: string
     hiroshima: string
     shizuoka: string
     ibaraki: string
     tochigi: string
     gunma: string
     niigata: string
+    toyama: string
+    ishikawa: string
+    fukui: string
     nagano: string
     yamanashi: string
     gifu: string
@@ -1192,12 +1200,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       fukuoka: '福岡県',
       hokkaido: '北海道',
       miyagi: '宮城県',
+      aomori: '青森県',
+      iwate: '岩手県',
+      akita: '秋田県',
+      yamagata: '山形県',
+      fukushima: '福島県',
       hiroshima: '広島県',
       shizuoka: '静岡県',
       ibaraki: '茨城県',
       tochigi: '栃木県',
       gunma: '群馬県',
       niigata: '新潟県',
+      toyama: '富山県',
+      ishikawa: '石川県',
+      fukui: '福井県',
       nagano: '長野県',
       yamanashi: '山梨県',
       gifu: '岐阜県',
@@ -1861,12 +1877,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       fukuoka: 'Fukuoka',
       hokkaido: 'Hokkaido',
       miyagi: 'Miyagi',
+      aomori: 'Aomori',
+      iwate: 'Iwate',
+      akita: 'Akita',
+      yamagata: 'Yamagata',
+      fukushima: 'Fukushima',
       hiroshima: 'Hiroshima',
       shizuoka: 'Shizuoka',
       ibaraki: 'Ibaraki',
       tochigi: 'Tochigi',
       gunma: 'Gunma',
       niigata: 'Niigata',
+      toyama: 'Toyama',
+      ishikawa: 'Ishikawa',
+      fukui: 'Fukui',
       nagano: 'Nagano',
       yamanashi: 'Yamanashi',
       gifu: 'Gifu',
@@ -2529,12 +2553,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       fukuoka: '후쿠오카현',
       hokkaido: '홋카이도',
       miyagi: '미야기현',
+      aomori: '아오모리현',
+      iwate: '이와테현',
+      akita: '아키타현',
+      yamagata: '야마가타현',
+      fukushima: '후쿠시마현',
       hiroshima: '히로시마현',
       shizuoka: '시즈오카현',
       ibaraki: '이바라키현',
       tochigi: '도치기현',
       gunma: '군마현',
       niigata: '니가타현',
+      toyama: '도야마현',
+      ishikawa: '이시카와현',
+      fukui: '후쿠이현',
       nagano: '나가노현',
       yamanashi: '야마나시현',
       gifu: '기후현',
@@ -3196,12 +3228,20 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       fukuoka: '福岡縣',
       hokkaido: '北海道',
       miyagi: '宮城縣',
+      aomori: '青森縣',
+      iwate: '岩手縣',
+      akita: '秋田縣',
+      yamagata: '山形縣',
+      fukushima: '福島縣',
       hiroshima: '廣島縣',
       shizuoka: '靜岡縣',
       ibaraki: '茨城縣',
       tochigi: '栃木縣',
       gunma: '群馬縣',
       niigata: '新潟縣',
+      toyama: '富山縣',
+      ishikawa: '石川縣',
+      fukui: '福井縣',
       nagano: '長野縣',
       yamanashi: '山梨縣',
       gifu: '岐阜縣',
