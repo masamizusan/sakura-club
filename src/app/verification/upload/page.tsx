@@ -22,7 +22,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     residenceCard: '在留カード',
     specialPermanentResident: '特別永住者証明書',
     upload: '身分証の画像を選択',
-    uploadHint: 'JPG・PNG・HEIC対応 / 5MB以内',
+    uploadHint: 'JPG・PNG・WebP / 10MB以内',
     takePhoto: 'カメラで撮影',
     chooseFromAlbum: 'アルバムから選ぶ',
     retake: '撮り直す・選び直す',
@@ -32,7 +32,10 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '身分証の種類を選択してください',
     fileRequired: '身分証の画像を選択してください',
     uploadError: 'アップロードに失敗しました。もう一度お試しください。',
-    fileUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください（写真アプリから選んだ場合は、一度ファイルとして保存してからお試しください）。',
+    fileUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください。写真が選べない場合は、写真アプリで写真を一度開くか、デスクトップに書き出してから選んでください。',
+    fileTooLarge: '画像のサイズが大きすぎます。10MB 以内の画像を選んでください。',
+    unsupportedType: 'この形式の写真は使えません。JPG・PNG・WebP の写真を選んでください。',
+    accountSuspended: 'アカウントが利用停止中のため、提出できません。',
     back: '戻る',
   },
   en: {
@@ -46,7 +49,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     residenceCard: 'Residence Card',
     specialPermanentResident: 'Special Permanent Resident Certificate',
     upload: 'Select ID Image',
-    uploadHint: 'JPG / PNG / HEIC, max 5MB',
+    uploadHint: 'JPG / PNG / WebP, max 10MB',
     takePhoto: 'Take Photo',
     chooseFromAlbum: 'Choose from Album',
     retake: 'Retake / Reselect',
@@ -56,7 +59,10 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: 'Please select an ID type',
     fileRequired: 'Please select an ID image',
     uploadError: 'Upload failed. Please try again.',
-    fileUnreadable: "We couldn't read this image. Please select it again (if you chose it from the Photos app, try saving it as a file first).",
+    fileUnreadable: "We couldn't read this image. Please select it again. If you can't select a photo, open it once in the Photos app, or export it to your desktop and select it from there.",
+    fileTooLarge: 'This image is too large. Please choose an image of 10MB or less.',
+    unsupportedType: "This photo format isn't supported. Please choose a JPG, PNG or WebP photo.",
+    accountSuspended: "Your account is suspended, so you can't submit documents.",
     back: 'Back',
   },
   ko: {
@@ -70,7 +76,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     residenceCard: '재류카드',
     specialPermanentResident: '특별영주자증명서',
     upload: '신분증 사진 선택',
-    uploadHint: 'JPG / PNG / HEIC, 5MB 이내',
+    uploadHint: 'JPG / PNG / WebP, 10MB 이내',
     takePhoto: '카메라로 촬영',
     chooseFromAlbum: '앨범에서 선택',
     retake: '다시 찍기 / 다시 선택',
@@ -80,7 +86,10 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '신분증 종류를 선택해 주세요',
     fileRequired: '신분증 사진을 선택해 주세요',
     uploadError: '업로드에 실패했습니다. 다시 시도해 주세요.',
-    fileUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요(사진 앱에서 선택한 경우, 파일로 저장한 후 다시 시도해 주세요).',
+    fileUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요. 사진을 선택할 수 없는 경우, 사진 앱에서 사진을 한 번 열거나 데스크톱으로 내보낸 후 선택해 주세요.',
+    fileTooLarge: '이미지 크기가 너무 큽니다. 10MB 이내의 이미지를 선택해 주세요.',
+    unsupportedType: '이 형식의 사진은 사용할 수 없습니다. JPG, PNG, WebP 사진을 선택해 주세요.',
+    accountSuspended: '계정이 이용 정지 중이므로 제출할 수 없습니다.',
     back: '뒤로',
   },
   'zh-tw': {
@@ -94,7 +103,7 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     residenceCard: '居留卡',
     specialPermanentResident: '特別永住者證明書',
     upload: '選擇身份證照片',
-    uploadHint: '支援 JPG / PNG / HEIC，最大 5MB',
+    uploadHint: '支援 JPG / PNG / WebP，最大 10MB',
     takePhoto: '拍攝照片',
     chooseFromAlbum: '從相冊選擇',
     retake: '重新拍攝／重新選擇',
@@ -104,9 +113,25 @@ const verificationTranslations: Record<string, Record<string, string>> = {
     selectRequired: '請選擇證件類型',
     fileRequired: '請選擇身份證照片',
     uploadError: '上傳失敗，請重試。',
-    fileUnreadable: '無法讀取此圖片。請重新選擇（若是從「照片」App 選取，請先另存為檔案後再試一次）。',
+    fileUnreadable: '無法讀取此圖片。請重新選擇。若無法選取照片，請先在「照片」App 中開啟該照片一次，或匯出到桌面後再選取。',
+    fileTooLarge: '圖片太大。請選擇 10MB 以內的圖片。',
+    unsupportedType: '無法使用此格式的照片。請選擇 JPG、PNG 或 WebP 格式的照片。',
+    accountSuspended: '您的帳號已被停權，無法提交。',
     back: '返回',
   },
+}
+
+// #43: 受け付ける形式と大きさ（バケットの上限 10MB に合わせる）
+const MAX_FILE_BYTES = 10 * 1024 * 1024
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const ACCEPTED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp']
+const ACCEPT_ATTR = ACCEPTED_TYPES.join(',')
+
+function isAcceptedImage(f: File): boolean {
+  if (f.type) return ACCEPTED_TYPES.includes(f.type.toLowerCase())
+  // 種類が空のとき（一部のブラウザ）は拡張子で判断する
+  const ext = (f.name.split('.').pop() || '').toLowerCase()
+  return ACCEPTED_EXTENSIONS.includes(ext)
 }
 
 function VerificationContent() {
@@ -132,6 +157,17 @@ function VerificationContent() {
     // Safari（写真ライブラリ由来など）で中身が空の File になる場合は選択を取り消す
     if (f.size === 0) {
       setError(t('fileUnreadable'))
+      e.target.value = ''
+      return
+    }
+    // #43: 形式違い・大きすぎる画像は、選んだ時点で理由を出して止める
+    if (!isAcceptedImage(f)) {
+      setError(t('unsupportedType'))
+      e.target.value = ''
+      return
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      setError(t('fileTooLarge'))
       e.target.value = ''
       return
     }
@@ -191,7 +227,16 @@ function VerificationContent() {
       logger.debug('[verification] upload result:', { uploadError })
       if (uploadError) {
         console.error('[verification] Upload error detail:', uploadError)
-        setError(t('uploadError'))
+        // #43: 大きさ・形式で断られた場合は、その理由を出す
+        const statusCode = String((uploadError as { statusCode?: string | number }).statusCode ?? '')
+        const reason = `${statusCode} ${uploadError.message}`
+        if (/413|exceed|too large|maximum allowed size/i.test(reason)) {
+          setError(t('fileTooLarge'))
+        } else if (/415|mime|not supported|invalid.*type/i.test(reason)) {
+          setError(t('unsupportedType'))
+        } else {
+          setError(t('uploadError'))
+        }
         setUploading(false)
         return
       }
@@ -209,7 +254,8 @@ function VerificationContent() {
       })
 
       if (!response.ok) {
-        setError(t('uploadError'))
+        // #43: 停止中（403）はその旨を出す。それ以外は今までどおり
+        setError(response.status === 403 ? t('accountSuspended') : t('uploadError'))
         setUploading(false)
         return
       }
@@ -278,7 +324,7 @@ function VerificationContent() {
               {/* 隠しinput：カメラ撮影用 */}
               <input
                 type="file"
-                accept="image/*"
+                accept={ACCEPT_ATTR}
                 capture="environment"
                 ref={cameraInputRef}
                 onChange={handleFileChange}
@@ -288,7 +334,7 @@ function VerificationContent() {
               {/* 隠しinput：アルバム選択用 */}
               <input
                 type="file"
-                accept="image/*"
+                accept={ACCEPT_ATTR}
                 ref={albumInputRef}
                 onChange={handleFileChange}
                 className="hidden"
