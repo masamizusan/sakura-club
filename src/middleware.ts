@@ -1,5 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+
+// #60: サーバーがセッションを認めないときのエラーコード（取り消された・存在しない・トークンが不正）
+// 通信エラー・一時的な失敗（AuthRetryableFetchError・5xx）は含めない（ログイン画面に移さない）
+// user_banned（停止）は含めない：停止ユーザーは従来どおり（#33 の扱い）に任せる
+const REJECTED_SESSION_CODES = new Set([
+  'session_not_found',
+  'session_expired',
+  'refresh_token_not_found',
+  'refresh_token_already_used',
+  'user_not_found',
+  'bad_jwt',
+])
+
+// #60: 片付けの対象外（公開ページ）。ここではログイン画面に移さない
+const PUBLIC_PATH_PREFIXES = [
+  '/login',
+  '/signup',
+  '/register',
+  '/reset-password',
+  '/verify-email',
+  '/auth',
+  '/account-deleted',
+  '/leave-completed',
+  '/about',
+  '/terms',
+  '/privacy',
+  '/tokushoho',
+]
+
+// Supabase の認証 cookie（sb-<プロジェクト>-auth-token、分割された .0 .1 や code-verifier も含む）
+const AUTH_COOKIE_PATTERN = /^sb-.+-auth-token/
+
+function isRejectedSessionError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as { name?: unknown; code?: unknown; status?: unknown }
+  if (e.name === 'AuthRetryableFetchError') return false
+  if (typeof e.code === 'string' && REJECTED_SESSION_CODES.has(e.code)) return true
+  // code が無い古い形式：401・403 のときだけ（5xx・0 は一時的な失敗として扱わない）
+  return !e.code && (e.status === 401 || e.status === 403) && e.name === 'AuthApiError'
+}
 // 指示書 #33 案 D: middleware は anon キー + cookie session で
 // 自分の status を読む方式に変更。service_role の別クライアントは不要。
 
@@ -44,7 +84,22 @@ export async function middleware(request: NextRequest) {
 
   // IMPORTANT: Do not write any logic between createServerClient and
   // supabase.auth.getUser(). This refreshes the session if expired.
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: getUserError } = await supabase.auth.getUser()
+
+  // #60: ブラウザに認証の cookie があるのに、サーバーがそのセッションを認めない
+  // （別の端末でのログアウト・取り消しなど）→ cookie を消してログイン画面へ。
+  // こうしないと、画面は「ログイン中」のまま API だけが 401 を返し続ける
+  // cookie が無い人（ログインしていない人）・公開ページ・一時的な失敗は今までどおり
+  const authCookies = request.cookies.getAll().filter(c => AUTH_COOKIE_PATTERN.test(c.name))
+  const isPublicPath = pathname === '/' || PUBLIC_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  if (!user && authCookies.length > 0 && !isPublicPath && isRejectedSessionError(getUserError)) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    loginUrl.search = ''
+    const response = NextResponse.redirect(loginUrl)
+    authCookies.forEach(c => response.cookies.set(c.name, '', { path: '/', maxAge: 0 }))
+    return response
+  }
 
   // 停止/退会ユーザーチェック（/account-deleted, /leave-completed,
   // /login, /signup, /api/, /register は除外）
