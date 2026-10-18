@@ -385,6 +385,9 @@ function VerificationContent() {
                   </button>
                 </div>
               )}
+
+              {/* #43: 受け付ける形式と大きさの案内（常に表示） */}
+              <p className="text-xs text-gray-500 text-center">{t('uploadHint')}</p>
             </div>
 
             {/* エラー表示 */}
