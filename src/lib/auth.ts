@@ -2,6 +2,7 @@ import { createClient as createLegacyClient } from './supabase'
 import { createClient as createSSRClient } from './supabase/client'
 import { SignupFormData, LoginFormData } from './validations/auth'
 import { logger } from '@/utils/logger'
+import { classifyAuthError, type AuthErrorKind } from '@/lib/i18n/authErrors'
 
 /**
  * 認証用クライアントを取得
@@ -33,8 +34,10 @@ export interface AuthUser {
   membershipType: 'free' | 'premium'
 }
 
+// 多言語化：code には「エラーの種類」（AuthErrorKind）を入れる。画面は種類から表示言語の文を出す
+// （message は元のエラー文。ログ用で、画面には出さない）
 export class AuthError extends Error {
-  constructor(message: string, public code?: string) {
+  constructor(message: string, public code: AuthErrorKind = 'unknown') {
     super(message)
     this.name = 'AuthError'
   }
@@ -69,7 +72,7 @@ export const authService = {
       })
 
       if (authError) {
-        throw new AuthError(authError.message, authError.message)
+        throw new AuthError(authError.message, classifyAuthError(authError))
       }
 
       if (!authData.user) {
@@ -141,7 +144,7 @@ export const authService = {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('登録処理中にエラーが発生しました')
+      throw new AuthError('登録処理中にエラーが発生しました', classifyAuthError(error))
     }
   },
 
@@ -157,10 +160,7 @@ export const authService = {
       logger.debug('[AUTH] signIn:', !error ? 'success' : error?.message)
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new AuthError('メールアドレスまたはパスワードが正しくありません')
-        }
-        throw new AuthError(error.message)
+        throw new AuthError(error.message, classifyAuthError(error))
       }
 
       // 🔒 CRITICAL: 実ユーザーログイン成功フラグを設定
@@ -180,7 +180,7 @@ export const authService = {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError(`ログイン処理中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      throw new AuthError(`ログイン処理中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`, classifyAuthError(error))
     }
   },
 
@@ -195,13 +195,13 @@ export const authService = {
       }
       const { error } = await supabase.auth.signOut()
       if (error) {
-        throw new AuthError(error.message)
+        throw new AuthError(error.message, classifyAuthError(error))
       }
     } catch (error) {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('ログアウト処理中にエラーが発生しました')
+      throw new AuthError('ログアウト処理中にエラーが発生しました', classifyAuthError(error))
     }
   },
 
@@ -389,13 +389,13 @@ export const authService = {
       })
 
       if (error) {
-        throw new AuthError(error.message)
+        throw new AuthError(error.message, classifyAuthError(error))
       }
     } catch (error) {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('パスワードリセット処理中にエラーが発生しました')
+      throw new AuthError('パスワードリセット処理中にエラーが発生しました', classifyAuthError(error))
     }
   },
 
@@ -408,13 +408,13 @@ export const authService = {
       })
 
       if (error) {
-        throw new AuthError(error.message)
+        throw new AuthError(error.message, classifyAuthError(error))
       }
     } catch (error) {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('パスワード更新処理中にエラーが発生しました')
+      throw new AuthError('パスワード更新処理中にエラーが発生しました', classifyAuthError(error))
     }
   },
 
@@ -429,7 +429,7 @@ export const authService = {
       })
 
       if (error) {
-        throw new AuthError(error.message)
+        throw new AuthError(error.message, classifyAuthError(error))
       }
 
       return { data, error: null }
@@ -437,7 +437,7 @@ export const authService = {
       if (error instanceof AuthError) {
         throw error
       }
-      throw new AuthError('OTP確認処理中にエラーが発生しました')
+      throw new AuthError('OTP確認処理中にエラーが発生しました', classifyAuthError(error))
     }
   },
 

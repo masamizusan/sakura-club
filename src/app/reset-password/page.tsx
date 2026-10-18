@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { authService } from '@/lib/auth'
+import { classifyAuthError, getAuthErrorMessage } from '@/lib/i18n/authErrors'
+import { logger } from '@/utils/logger'
 import { Globe } from 'lucide-react'
 import { determineLanguage, saveLanguagePreference, type SupportedLanguage } from '@/utils/language'
 import { useTranslation } from '@/utils/translations'
@@ -64,7 +66,9 @@ function ResetPasswordForm() {
         router.push('/login')
       }, 2000)
     } catch (err: any) {
-      setError(err.message || t('resetPassword.updateFailedError'))
+      // 元のエラー文はログにだけ残し、画面にはエラーの種類から表示言語の文を出す
+      logger.error('[RESET_PASSWORD]', err)
+      setError(getAuthErrorMessage(classifyAuthError(err), currentLanguage))
     } finally {
       setLoading(false)
     }

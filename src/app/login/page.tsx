@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
-import { authService, AuthError } from '@/lib/auth'
+import { authService } from '@/lib/auth'
+import { classifyAuthError, getAuthErrorMessage } from '@/lib/i18n/authErrors'
 import { notifyAuthChange, setAuthActionInThisTab } from '@/store/authStore'
 import { AuthPageMarker } from '@/components/AuthPageMarker'
 import { createClient } from '@/lib/supabase'
@@ -153,19 +154,9 @@ function LoginForm() {
         router.refresh()
       }
     } catch (error) {
+      // 元のエラー文はログにだけ残し、画面にはエラーの種類から表示言語の文を出す
       logger.error('[LOGIN]', error)
-      
-      if (error instanceof AuthError) {
-        setLoginError(error.message)
-      } else if (error instanceof Error) {
-        if (error.message.includes('fetch') || error.message.includes('Invalid value')) {
-          setLoginError(t('login.serverError'))
-        } else {
-          setLoginError(`${t('login.errorPrefix')}${error.message}`)
-        }
-      } else {
-        setLoginError(t('login.loginFailed'))
-      }
+      setLoginError(getAuthErrorMessage(classifyAuthError(error), currentLanguage as SupportedLanguage))
     } finally {
       setIsLoading(false)
     }
