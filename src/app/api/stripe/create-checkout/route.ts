@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 import { isForeignMaleUser } from '@/utils/userHelpers'
 import { getOrCreateCustomer } from '@/lib/stripe/getOrCreateCustomer'
+import { logger } from '@/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,30 @@ const PRICE_MAP: Record<string, string> = {
   '3month': process.env.STRIPE_PRICE_3MONTH!,
   '6month': process.env.STRIPE_PRICE_6MONTH!,
   yearly: process.env.STRIPE_PRICE_YEARLY!,
+}
+
+// #42 二重サブスクの防止：この customer の開いたままの「サブスクの」決済画面を期限切れにする
+// （2 つのタブで決済画面を開いて両方で払うと、サブスクが 2 つできるため）
+// さくらいいね（mode: 'payment'）の決済画面は絶対に期限切れにしない
+// 失敗しても新しい決済画面の作成は続ける（warn のみ）
+async function expireOpenSubscriptionCheckouts(customerId: string): Promise<void> {
+  try {
+    const openSessions = await stripe.checkout.sessions.list({
+      customer: customerId,
+      status: 'open',
+      limit: 100,
+    })
+    for (const openSession of openSessions.data) {
+      if (openSession.mode !== 'subscription') continue
+      try {
+        await stripe.checkout.sessions.expire(openSession.id)
+      } catch (error) {
+        logger.warn('[stripe/create-checkout] expire open session failed:', openSession.id, error instanceof Error ? error.message : 'unknown')
+      }
+    }
+  } catch (error) {
+    logger.warn('[stripe/create-checkout] list open sessions failed:', error instanceof Error ? error.message : 'unknown')
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -73,6 +98,9 @@ export async function POST(req: NextRequest) {
 
     // #2-3: Stripe の customer は 1 人 1 つを使い回す（stripe_customers → subscriptions → 新規作成）
     const customerId = await getOrCreateCustomer(user.id, user.email)
+
+    // #42: 開いたままのサブスク決済画面を期限切れにしてから、新しい決済画面を作る
+    await expireOpenSubscriptionCheckouts(customerId)
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
