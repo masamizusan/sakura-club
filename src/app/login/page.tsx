@@ -21,6 +21,7 @@ import { logger } from '@/utils/logger'
 import { useLanguageAwareRouter, navigateWithLanguage } from '@/utils/languageNavigation'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import CommonText from '@/components/CommonText'
+import { SOCIAL_LOGIN_ENABLED } from '@/lib/featureFlags'
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -264,6 +265,8 @@ function LoginForm() {
             </Button>
           </form>
 
+          {/* #57: Google・Facebook ログインは未実装のため、公開まで隠す（SOCIAL_LOGIN_ENABLED） */}
+          {SOCIAL_LOGIN_ENABLED && (
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -293,6 +296,7 @@ function LoginForm() {
               </Button>
             </div>
           </div>
+          )}
 
           <div className="mt-8 text-center">
             <p style={{ color: 'var(--color-text-sub)', fontFamily: 'var(--font-body)', fontSize: '0.9rem' }}>
