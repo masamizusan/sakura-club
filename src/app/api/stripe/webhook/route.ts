@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { logger } from '@/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,8 +51,70 @@ function toDbSubscriptionStatus(status: Stripe.Subscription.Status): 'active' | 
   return ACTIVE_STRIPE_STATUSES.has(status) ? 'active' : 'inactive'
 }
 
+// #42: 二重サブスク（同じ利用者に有効なサブスクが 2 つ以上）を管理者に知らせる
+// 自動の解約・返金はしない。同じ利用者・同じサブスクの組み合わせでは 1 回だけ通知する
+// 通知の失敗では webhook を失敗にしない（warn のみ）
+async function notifyAdminsOfDuplicateSubscriptions(
+  supabase: ReturnType<typeof getServiceSupabase>,
+  userId: string,
+  subscriptionIds: string[]
+): Promise<void> {
+  try {
+    // 管理者 = app_metadata.role === 'admin'（requireAdmin と同じ基準）
+    const adminIds: string[] = []
+    const perPage = 1000
+    for (let page = 1; ; page++) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage })
+      if (error) {
+        logger.warn('[stripe/webhook] duplicate notify: listUsers failed:', error.message)
+        return
+      }
+      for (const u of data.users) {
+        if (u.app_metadata?.role === 'admin') adminIds.push(u.id)
+      }
+      if (data.users.length < perPage) break
+    }
+    if (adminIds.length === 0) {
+      logger.warn('[stripe/webhook] duplicate notify: no admin users')
+      return
+    }
+
+    const notifData = { kind: 'duplicate_subscription', user_id: userId, subscription_ids: subscriptionIds }
+    for (const adminId of adminIds) {
+      // 同じ組み合わせの通知が既にあれば作らない
+      const { data: existing, error: existingError } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', adminId)
+        .eq('type', 'system')
+        .contains('data', notifData)
+        .limit(1)
+      if (existingError) {
+        logger.warn('[stripe/webhook] duplicate notify: select failed:', existingError.message)
+        continue
+      }
+      if (existing && existing.length > 0) continue
+
+      const { error: insertError } = await supabase.from('notifications').insert({
+        user_id: adminId,
+        type: 'system',
+        title: '【管理】二重サブスクを検知',
+        message: `同じ利用者に有効なサブスクが ${subscriptionIds.length} 件あります。Stripe で確認し、不要な方の解約・返金を行ってください。`,
+        data: notifData,
+      })
+      if (insertError) {
+        logger.warn('[stripe/webhook] duplicate notify: insert failed:', insertError.message)
+      }
+    }
+  } catch (error) {
+    logger.warn('[stripe/webhook] duplicate notify failed:', error instanceof Error ? error.message : 'unknown')
+  }
+}
+
 // 最新のサブスクを Stripe から取得して subscriptions に反映する
 // DB の書き込み失敗・Stripe API の例外は呼び出し元へ投げる（呼び出し元で 500 を返し、Stripe に再送させる）
+// #42: DB の行（1 利用者 1 行）は、その customer の「有効なサブスク」を指すようにする（作成日が古い方を優先）。
+//      イベントのサブスクが解約されても、ほかに有効なサブスクがあれば inactive にしない
 async function syncSubscriptionFromStripe(
   supabase: ReturnType<typeof getServiceSupabase>,
   subscriptionId: string,
@@ -71,10 +134,23 @@ async function syncSubscriptionFromStripe(
     return
   }
 
-  const dbStatus = toDbSubscriptionStatus(subscription.status)
+  // その customer の有効なサブスク（active・trialing・past_due）を、作成日の古い順に
+  const customerSubscriptions = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 100 })
+  const activeSubscriptions = customerSubscriptions.data
+    .filter(s => ACTIVE_STRIPE_STATUSES.has(s.status))
+    .sort((a, b) => a.created - b.created)
 
-  // 1 利用者 1 行のため、別の（新しい）サブスクが有効な行を、古いサブスクの終了で上書きしない
-  if (dbStatus === 'inactive') {
+  if (activeSubscriptions.length >= 2) {
+    const duplicateIds = activeSubscriptions.map(s => s.id)
+    logger.error('[stripe/webhook] duplicate active subscriptions:', duplicateIds.length, duplicateIds.join(','))
+    await notifyAdminsOfDuplicateSubscriptions(supabase, userId, duplicateIds)
+  }
+
+  // DB に書くサブスク：有効なものがあれば、いちばん古い有効なサブスク
+  let target: Stripe.Subscription = activeSubscriptions[0] ?? subscription
+
+  if (activeSubscriptions.length === 0) {
+    // 有効なサブスクが 1 つも無い → 無効にする
     const { data: existing, error: existingError } = await supabase
       .from('subscriptions')
       .select('stripe_subscription_id, status')
@@ -88,24 +164,26 @@ async function syncSubscriptionFromStripe(
       console.warn('[stripe/webhook] subscription sync skipped: no subscriptions row to deactivate', { eventType, subscriptionId })
       return
     }
-    if (existing.status === 'active' && existing.stripe_subscription_id && existing.stripe_subscription_id !== subscription.id) {
-      console.warn('[stripe/webhook] subscription sync skipped: another active subscription exists', { eventType, subscriptionId })
-      return
+    // 行が別のサブスクを指している場合は、そのサブスクの最新の内容で無効にする（行のサブスク ID を古いもので書き換えない）
+    if (existing.stripe_subscription_id && existing.stripe_subscription_id !== subscription.id) {
+      target = customerSubscriptions.data.find(s => s.id === existing.stripe_subscription_id)
+        ?? await stripe.subscriptions.retrieve(existing.stripe_subscription_id)
     }
   }
 
-  const priceId = subscription.items.data[0]?.price.id
-  const currentPeriodEnd = getSubscriptionPeriodEnd(subscription)
+  const dbStatus = toDbSubscriptionStatus(target.status)
+  const priceId = target.items.data[0]?.price.id
+  const currentPeriodEnd = getSubscriptionPeriodEnd(target)
 
   // #2-2: 解約予約（期間の終わりに解約 / 日付指定の解約）。予約を取り消した場合は false / null に戻る
-  const cancelAtIso = subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null
-  const cancelAtPeriodEnd = subscription.cancel_at_period_end === true || cancelAtIso !== null
-  const cancelAt = cancelAtIso ?? (subscription.cancel_at_period_end ? currentPeriodEnd : null)
+  const cancelAtIso = target.cancel_at ? new Date(target.cancel_at * 1000).toISOString() : null
+  const cancelAtPeriodEnd = target.cancel_at_period_end === true || cancelAtIso !== null
+  const cancelAt = cancelAtIso ?? (target.cancel_at_period_end ? currentPeriodEnd : null)
 
   const { error: upsertError } = await supabase.from('subscriptions').upsert({
     user_id: userId,
     stripe_customer_id: customerId,
-    stripe_subscription_id: subscription.id,
+    stripe_subscription_id: target.id,
     plan_type: getPlanType(priceId),
     status: dbStatus,
     current_period_end: currentPeriodEnd,
