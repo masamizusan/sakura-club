@@ -368,6 +368,9 @@ export default function ChatPage() {
     reader.readAsDataURL(file)
   }
 
+  // #25: 画像の送信で使う client_message_id（同じ画像を送り直すときは同じ ID を使い、二重保存を防ぐ）
+  const imageClientIdRef = useRef<{ file: File; id: string } | null>(null)
+
   // 画像送信処理
   const handleImageSend = async () => {
     if (!selectedImage || isUploadingImage) return
@@ -381,6 +384,11 @@ export default function ChatPage() {
       return
     }
     setIsUploadingImage(true)
+    // #25: 選んでいる画像が同じなら、前回と同じ client_message_id で送る（失敗後の送り直し）
+    if (!imageClientIdRef.current || imageClientIdRef.current.file !== selectedImage) {
+      imageClientIdRef.current = { file: selectedImage, id: crypto.randomUUID() }
+    }
+    const imageClientMessageId = imageClientIdRef.current.id
     try {
       const supabase = createClient()
       // 元のファイル名は使わない（拡張子は MIME タイプから決定）
@@ -418,11 +426,13 @@ export default function ChatPage() {
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: '', image_url: data.path }),
+        body: JSON.stringify({ content: '', image_url: data.path, client_message_id: imageClientMessageId }),
       })
       if (response.ok) {
         const result = await response.json()
-        setMessages(prev => [...prev, result.data])
+        // #25: 送り直しで既に一覧にある場合は足さない
+        setMessages(prev => (prev.some(m => m?.id === result.data?.id) ? prev : [...prev, result.data]))
+        imageClientIdRef.current = null
         setSelectedImage(null)
         setImagePreview(null)
         if (fileInputRef.current) fileInputRef.current.value = ''
@@ -771,8 +781,12 @@ export default function ChatPage() {
 
         const knownIds = new Set(messagesRef.current.map(m => m?.id))
         const fetched: any[] = result.messages
+        // #25: 保存済みのメッセージと同じ client_message_id の仮メッセージ（失敗表示を含む）は消す
+        const savedClientIds = new Set(fetched.map(m => m?.client_message_id).filter(Boolean))
         setMessages(prev => {
-          const temps = prev.filter(m => typeof m?.id === 'string' && m.id.startsWith('temp-'))
+          const temps = prev.filter(m =>
+            typeof m?.id === 'string' && m.id.startsWith('temp-') && !savedClientIds.has(m.id.slice('temp-'.length))
+          )
           return [...fetched, ...temps]
         })
 
@@ -928,12 +942,17 @@ export default function ChatPage() {
           translated_content: translatedContent,
           // 訳が無ければ言語も null
           translated_lang: translatedContent ? targetLang : null,
+          // #25: 仮メッセージの uuid（再送でも同じ値）。保存済みなら API は同じ 1 件を返す
+          client_message_id: tempId.replace(/^temp-/, ''),
         }),
       })
       const result = await response.json()
       if (response.ok) {
         // 仮メッセージを保存結果に差し替え
-        setMessages(prev => prev.map(m => (m.id === tempId ? result.data : m)))
+        // #25: 取り直しで保存済みの行が既に並んでいる場合は、仮メッセージを消すだけにする
+        setMessages(prev => (prev.some(m => m?.id === result.data?.id)
+          ? prev.filter(m => m.id !== tempId)
+          : prev.map(m => (m.id === tempId ? result.data : m))))
         // 非同期でAI監視（エラーでも送信は止めない）
         if (result.data?.id) {
           fetch('/api/messages/moderate', {
