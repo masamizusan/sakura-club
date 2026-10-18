@@ -65,6 +65,15 @@ function MyPageContent() {
       freeMember: '無料会員',
       premiumMember: '✓ 有料会員',
       viewPlans: '料金プランを見る →',
+      // 多言語化 5
+      loading: '読み込み中...',
+      mismatchTitle: '別タブでログインが切り替わりました',
+      mismatchMessage: '正しいプロフィールを表示するために、ページを再読み込みしてください。',
+      reload: '再読み込み',
+      backToMyPage: 'マイページへ戻る',
+      profilePhotoAlt: 'プロフィール写真',
+      defaultUserName: 'ユーザー',
+      calculating: '計算中...',
     },
     en: {
       title: 'My Page',
@@ -92,6 +101,14 @@ function MyPageContent() {
       freeMember: 'Free Member',
       premiumMember: '✓ Premium Member',
       viewPlans: 'View Plans →',
+      loading: 'Loading...',
+      mismatchTitle: 'You signed in with a different account in another tab',
+      mismatchMessage: 'To show the correct profile, please reload the page.',
+      reload: 'Reload',
+      backToMyPage: 'Back to My Page',
+      profilePhotoAlt: 'Profile photo',
+      defaultUserName: 'User',
+      calculating: 'Calculating...',
     },
     ko: {
       title: '마이페이지',
@@ -119,6 +136,14 @@ function MyPageContent() {
       freeMember: '무료 회원',
       premiumMember: '✓ 유료 회원',
       viewPlans: '요금제 보기 →',
+      loading: '불러오는 중...',
+      mismatchTitle: '다른 탭에서 다른 계정으로 로그인되었습니다',
+      mismatchMessage: '올바른 프로필을 표시하려면 페이지를 새로고침해 주세요.',
+      reload: '새로고침',
+      backToMyPage: '마이페이지로 돌아가기',
+      profilePhotoAlt: '프로필 사진',
+      defaultUserName: '사용자',
+      calculating: '계산 중...',
     },
     'zh-tw': {
       title: '我的頁面',
@@ -146,6 +171,14 @@ function MyPageContent() {
       freeMember: '免費會員',
       premiumMember: '✓ 付費會員',
       viewPlans: '查看方案 →',
+      loading: '載入中...',
+      mismatchTitle: '已在其他分頁切換登入帳號',
+      mismatchMessage: '為了顯示正確的個人資料，請重新載入頁面。',
+      reload: '重新載入',
+      backToMyPage: '返回我的頁面',
+      profilePhotoAlt: '個人照片',
+      defaultUserName: '使用者',
+      calculating: '計算中...',
     }
   }
 
@@ -461,7 +494,7 @@ function MyPageContent() {
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg)' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--color-primary)' }}></div>
-          <p style={{ color: 'var(--color-text-sub)' }}>読み込み中...</p>
+          <p style={{ color: 'var(--color-text-sub)' }}>{getMypageTranslation('loading')}</p>
         </div>
       </div>
     )
@@ -474,20 +507,20 @@ function MyPageContent() {
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブでログインが切り替わりました</h2>
-            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、ページを再読み込みしてください。</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">{getMypageTranslation('mismatchTitle')}</h2>
+            <p className="text-gray-600 mb-6">{getMypageTranslation('mismatchMessage')}</p>
             <div className="space-y-3">
               <button
                 onClick={() => window.location.reload()}
                 className="w-full btn-primary px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                再読み込み
+                {getMypageTranslation('reload')}
               </button>
               <button
                 onClick={() => router.push('/mypage')}
                 className="w-full bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
-                マイページへ戻る
+                {getMypageTranslation('backToMyPage')}
               </button>
             </div>
           </div>
@@ -518,7 +551,7 @@ function MyPageContent() {
                 <div className="flex-shrink-0">
                   <Avatar
                     src={profile?.avatar_url}
-                    alt="プロフィール写真"
+                    alt={getMypageTranslation('profilePhotoAlt')}
                     className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
                   />
                 </div>
@@ -527,7 +560,7 @@ function MyPageContent() {
                 <div className="ml-4 flex-1">
                   {/* ニックネーム */}
                   <h2 className="text-xl font-bold text-gray-900 mb-1">
-                    {profile?.name || 'ユーザー'}
+                    {profile?.name || getMypageTranslation('defaultUserName')}
                   </h2>
 
                   {/* プロフィール完成度 */}
@@ -543,7 +576,7 @@ function MyPageContent() {
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      {totalItems > 0 ? getMypageTranslation('itemsFilled', { filled: completedItems.toString(), total: totalItems.toString() }) : '計算中...'}
+                      {totalItems > 0 ? getMypageTranslation('itemsFilled', { filled: completedItems.toString(), total: totalItems.toString() }) : getMypageTranslation('calculating')}
                     </p>
                   </div>
                 </div>
