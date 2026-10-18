@@ -151,16 +151,17 @@ export async function GET(request: NextRequest) {
       return [{
         id: conv.id,
         partnerId,
-        partnerName: partner.name || 'ユーザー',
+        // 名前・場所・最後のメッセージが無いときは null（表示する文は画面側の辞書で 4 言語にする）
+        partnerName: partner.name || null,
         partnerAge: partner.age || null,
         partnerNationality: partner.nationality || '',
-        partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
+        partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || null,
         partnerImage: partner.avatar_url || null,
         partnerAvatar: partner.avatar_url || null,
         lastMessage: {
           id: 'placeholder',
           senderId: partnerId,
-          content: conv.last_message || 'マッチしました！メッセージを送ってみましょう',
+          content: conv.last_message || null,
           timestamp: conv.last_message_at || conv.created_at,
           isRead: true
         },
@@ -175,7 +176,7 @@ export async function GET(request: NextRequest) {
     let filteredConversations = validConversations
     if (search) {
       filteredConversations = validConversations.filter(conv =>
-        conv.partnerName.toLowerCase().includes(search.toLowerCase())
+        (conv.partnerName ?? '').toLowerCase().includes(search.toLowerCase())
       )
     }
 

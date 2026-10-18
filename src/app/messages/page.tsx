@@ -21,6 +21,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     noMessages: 'メッセージがありません',
     matchedOn: '{date} にマッチしました',
     matchedMessage: 'マッチしました！メッセージを送ってみましょう',
+    unknownUser: 'ユーザー',
     messagePlaceholder: 'メッセージを入力...',
     yearsOld: '歳',
     online: 'オンライン',
@@ -36,6 +37,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     noMessages: 'No messages yet',
     matchedOn: 'Matched on {date}',
     matchedMessage: "It's a match! Send them a message!",
+    unknownUser: 'User',
     messagePlaceholder: 'Type a message...',
     yearsOld: 'y/o',
     online: 'Online',
@@ -51,6 +53,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     noMessages: '메시지가 없습니다',
     matchedOn: '{date}에 매칭되었습니다',
     matchedMessage: '매칭되었습니다! 메시지를 보내보세요.',
+    unknownUser: '사용자',
     messagePlaceholder: '메시지를 입력...',
     yearsOld: '세',
     online: '온라인',
@@ -66,6 +69,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     noMessages: '沒有訊息',
     matchedOn: '於 {date} 配對成功',
     matchedMessage: '配對成功！來發送訊息吧。',
+    unknownUser: '使用者',
     messagePlaceholder: '輸入訊息...',
     yearsOld: '歲',
     online: '線上',
@@ -81,7 +85,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
 interface Message {
   id: string
   senderId: string
-  content: string
+  content: string | null  // まだやり取りが無い会話は null（画面では matchedMessage を出す）
   timestamp: string
   isRead: boolean
 }
@@ -90,10 +94,10 @@ interface Message {
 interface Conversation {
   id: string
   partnerId: string
-  partnerName: string
+  partnerName: string | null  // 名前が無い場合は null（画面では unknownUser を出す）
   partnerAge: number
   partnerNationality: string
-  partnerLocation: string
+  partnerLocation: string | null
   partnerAvatar?: string
   lastMessage: Message
   unreadCount: number
@@ -107,6 +111,12 @@ export default function MessagesPage() {
   const { currentLanguage } = useLanguage()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  // 検索欄の入力が止まって 300ms 後に API を呼ぶ（入力のたびに呼ばない）。画面内の絞り込みは searchTerm ですぐ反映
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  useEffect(() => {
+    const timerId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300)
+    return () => clearTimeout(timerId)
+  }, [searchTerm])
   const [isLoading, setIsLoading] = useState(true)
   // 初回・検索・再読み込みの取得に失敗したとき true（エラー文と再読み込みボタンを表示）
   const [loadError, setLoadError] = useState(false)
@@ -134,7 +144,7 @@ export default function MessagesPage() {
         setLoadError(false)
 
         const params = new URLSearchParams()
-        if (searchTerm) params.append('search', searchTerm)
+        if (debouncedSearchTerm) params.append('search', debouncedSearchTerm)
 
         const response = await fetch(`/api/messages?${params.toString()}`)
         const result = await response.json()
@@ -156,13 +166,13 @@ export default function MessagesPage() {
     }
 
     fetchConversations()
-  }, [searchTerm, reloadKey])
+  }, [debouncedSearchTerm, reloadKey])
 
   // ===== 一覧を開いている間の新着反映（C: バッジの未読数の変化 / D: 画面が前面に戻ったとき） =====
   // 新しい定期取得は追加しない。共有のバッジ件数（useNotifications）の変化を合図に取り直す
   const REFRESH_THROTTLE_MS = 3000
-  const searchTermRef = useRef(searchTerm)
-  searchTermRef.current = searchTerm
+  const searchTermRef = useRef(debouncedSearchTerm)
+  searchTermRef.current = debouncedSearchTerm
   const isRefreshingRef = useRef(false)
   const hasPendingRefreshRef = useRef(false)
   const lastRefreshAtRef = useRef(0)
@@ -259,7 +269,7 @@ export default function MessagesPage() {
 
   // 検索フィルタ
   const filteredConversations = conversations.filter(conv =>
-    conv.partnerName.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.partnerName ?? '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const formatLastMessageTime = (timestamp: string) => {
@@ -343,6 +353,7 @@ export default function MessagesPage() {
               ) : (
                 filteredConversations.map((conversation) => {
                   const isUnread = conversation.unreadCount > 0 || conversation.isNewMatch
+                  const partnerDisplayName = conversation.partnerName || t('unknownUser')
 
                   return (
                     <div
@@ -364,7 +375,7 @@ export default function MessagesPage() {
                           <div className="relative flex-shrink-0">
                             <Avatar
                               src={conversation.partnerAvatar}
-                              alt={conversation.partnerName}
+                              alt={partnerDisplayName}
                               className="w-16 h-16 rounded-full object-cover"
                             />
                             {conversation.isOnline && (
@@ -379,7 +390,7 @@ export default function MessagesPage() {
                                 <span className={`text-base truncate ${
                                   isUnread ? 'font-bold text-gray-900' : 'font-normal text-gray-700'
                                 }`}>
-                                  {conversation.partnerName}
+                                  {partnerDisplayName}
                                 </span>
                                 {conversation.partnerAge && (
                                   <span className="ml-2 text-sm text-gray-500 flex-shrink-0">{conversation.partnerAge}{t('yearsOld')}</span>
@@ -416,9 +427,7 @@ export default function MessagesPage() {
                             <p className={`text-sm truncate ${
                               isUnread ? 'font-semibold text-gray-800' : 'text-gray-500'
                             }`}>
-                              {conversation.lastMessage.content === 'マッチしました！メッセージを送ってみましょう'
-                                ? t('matchedMessage')
-                                : conversation.lastMessage.content}
+                              {conversation.lastMessage.content ?? t('matchedMessage')}
                             </p>
                           </div>
                         </div>
