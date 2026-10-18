@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Cropper, { type Area, type Point, type Size } from 'react-easy-crop'
 import { Button } from '@/components/ui/button'
 import { X, Crop, ZoomIn, ZoomOut, Droplets } from 'lucide-react'
@@ -52,6 +52,7 @@ type Dict = {
   noteLine1: string
   noteLine2: string
   saveFailed: string
+  loadFailed: string
 }
 
 const T: Record<SupportedLanguage, Dict> = {
@@ -69,6 +70,7 @@ const T: Record<SupportedLanguage, Dict> = {
     noteLine1: '※ぼかし「0」は写真をそのまま掲載します。',
     noteLine2: '趣味写真・後ろ姿など個人を特定しづらい写真にご利用ください。',
     saveFailed: '写真を保存できませんでした。別の写真でお試しください。',
+    loadFailed: 'この写真は読み込めませんでした。別の写真を選んでください。',
   },
   en: {
     crop: 'Crop',
@@ -84,6 +86,7 @@ const T: Record<SupportedLanguage, Dict> = {
     noteLine1: '*Blur level 0 shows your photo as it is.',
     noteLine2: 'Use it for photos that don\'t easily identify you, such as hobby photos or photos taken from behind.',
     saveFailed: 'We couldn\'t save the photo. Please try a different photo.',
+    loadFailed: "This photo couldn't be loaded. Please choose a different photo.",
   },
   ko: {
     crop: '자르기',
@@ -99,6 +102,7 @@ const T: Record<SupportedLanguage, Dict> = {
     noteLine1: '※흐림 「0」은 사진을 그대로 게시합니다.',
     noteLine2: '취미 사진이나 뒷모습 등 본인을 알아보기 어려운 사진에 사용해 주세요.',
     saveFailed: '사진을 저장하지 못했습니다. 다른 사진으로 시도해 주세요.',
+    loadFailed: '이 사진을 불러오지 못했습니다. 다른 사진을 선택해 주세요.',
   },
   'zh-tw': {
     crop: '裁剪',
@@ -114,6 +118,7 @@ const T: Record<SupportedLanguage, Dict> = {
     noteLine1: '※模糊「0」會直接刊登原始照片。',
     noteLine2: '適合用於興趣照、背影等不易辨識個人的照片。',
     saveFailed: '無法儲存照片，請改用其他照片再試一次。',
+    loadFailed: '無法載入這張照片，請選擇其他照片。',
   },
 }
 
@@ -140,6 +145,11 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
   const [cropSize, setCropSize] = useState<Size | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveFailed, setSaveFailed] = useState(false)
+  // #28: 写真を読み込めなかったとき（HEIC を Chrome で開いた等）。保存ボタンは押せないままなので理由を出す
+  const [loadFailed, setLoadFailed] = useState(false)
+  useEffect(() => {
+    setLoadFailed(false)
+  }, [imageUrl])
 
   const handleCropComplete = useCallback((_area: Area, areaPixels: Area) => {
     setCroppedAreaPixels(areaPixels)
@@ -216,6 +226,7 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
             onZoomChange={setZoom}
             onCropComplete={handleCropComplete}
             onCropSizeChange={setCropSize}
+            mediaProps={{ onError: () => setLoadFailed(true) }}
             style={{
               mediaStyle: previewBlurPx > 0 ? { filter: `blur(${previewBlurPx}px)` } : {},
             }}
@@ -305,6 +316,13 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
               {t.save}
             </Button>
           </div>
+
+          {/* 写真を読み込めなかったとき */}
+          {loadFailed && (
+            <p className="text-sm text-red-600 text-center" role="alert">
+              {t.loadFailed}
+            </p>
+          )}
 
           {/* 保存に失敗したとき */}
           {saveFailed && (

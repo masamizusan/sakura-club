@@ -14,6 +14,8 @@ type Dict = {
   photoCount: (n: number) => string
   photoAlt: (n: number) => string
   edited: string
+  unsupportedType: string
+  macPhotosNote: string
 }
 
 const T: Record<SupportedLanguage, Dict> = {
@@ -22,26 +24,37 @@ const T: Record<SupportedLanguage, Dict> = {
     photoCount: (n) => `${n}枚`,
     photoAlt: (n) => `プロフィール写真 ${n}`,
     edited: '編集済み',
+    unsupportedType: 'この形式の写真は使えません。JPG・PNG・WebP の写真を選んでください。',
+    macPhotosNote: '写真が選べない場合は、写真アプリで写真を一度開くか、デスクトップに書き出してから選んでください。',
   },
   en: {
     readError: 'We couldn\'t read the image file. Please choose another image, or copy it to your desktop and try again.',
     photoCount: (n) => `${n} ${n === 1 ? 'photo' : 'photos'}`,
     photoAlt: (n) => `Profile photo ${n}`,
     edited: 'Edited',
+    unsupportedType: "This photo format isn't supported. Please choose a JPG, PNG or WebP photo.",
+    macPhotosNote: "If you can't select a photo, open it once in the Photos app, or export it to your desktop and select it from there.",
   },
   ko: {
     readError: '이미지 파일을 읽지 못했습니다. 다른 이미지를 선택하거나 데스크톱에 복사한 후 다시 시도해 주세요.',
     photoCount: (n) => `${n}장`,
     photoAlt: (n) => `프로필 사진 ${n}`,
     edited: '편집됨',
+    unsupportedType: '이 형식의 사진은 사용할 수 없습니다. JPG, PNG, WebP 사진을 선택해 주세요.',
+    macPhotosNote: '사진을 선택할 수 없는 경우, 사진 앱에서 사진을 한 번 열거나 데스크톱으로 내보낸 후 선택해 주세요.',
   },
   'zh-tw': {
     readError: '無法讀取圖片檔案。請選擇其他圖片，或先複製到桌面後再試一次。',
     photoCount: (n) => `${n} 張`,
     photoAlt: (n) => `個人照片 ${n}`,
     edited: '已編輯',
+    unsupportedType: '無法使用此格式的照片。請選擇 JPG、PNG 或 WebP 格式的照片。',
+    macPhotosNote: '若無法選取照片，請先在「照片」App 中開啟該照片一次，或匯出到桌面後再選取。',
   },
 }
+
+// #28: 写真を選ぶ input で受け付ける形式（iPhone では HEIC が JPEG に自動変換される見込み）
+const ACCEPT_ATTR = 'image/jpeg,image/png,image/webp'
 
 interface ProfileImage {
   id: string
@@ -80,14 +93,15 @@ export default function MultiImageUploader({
       return
     }
 
-    // より寛容な画像形式チェック
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
-    const isValidImage = file.type.startsWith('image/') || 
-                        validImageTypes.includes(file.type.toLowerCase()) ||
-                        /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)
-    
+    // #28: 受け付ける形式は JPG・PNG・WebP（HEIC は Chrome などで表示・編集できないため受け付けない）
+    // 種類が空のとき（一部のブラウザ）は拡張子で判断する
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    const isValidImage = file.type
+      ? validImageTypes.includes(file.type.toLowerCase())
+      : /\.(jpe?g|png|webp)$/i.test(file.name)
+
     if (!isValidImage) {
-      alert(t('photos.fileTypeError'))
+      alert(d.unsupportedType)
       return
     }
 
@@ -297,7 +311,7 @@ export default function MultiImageUploader({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={ACCEPT_ATTR}
         onChange={handleFileSelect}
         className="hidden"
       />
@@ -307,6 +321,7 @@ export default function MultiImageUploader({
         <p>• {t('photos.mainPhotoNote')}</p>
         <p>• {t('photos.fileSizeNote')}</p>
         <p>• {t('photos.editingNote')}</p>
+        <p>• {d.macPhotosNote}</p>
       </div>
 
       {/* 画像エディター */}
