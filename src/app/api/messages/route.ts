@@ -70,8 +70,10 @@ export async function GET(request: NextRequest) {
       timer.measure('conv', () => supabase
         .from('conversations')
         .select('*, is_seen_user1, is_seen_user2')
+        // 最後にやり取りした順（まだやり取りが無い会話は後ろ）→ マッチした日の新しい順。最大 100 件
+        .order('last_message_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
-        .limit(20)),
+        .limit(100)),
       timer.measure('blocks', () => supabaseAdmin
         .from('blocks')
         .select('blocker_id, blocked_id')
