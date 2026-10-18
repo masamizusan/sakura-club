@@ -19,6 +19,15 @@ import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { logger } from '@/utils/logger'
 import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
+import { classifyAuthError, getAuthErrorMessage, type AuthErrorKind } from '@/lib/i18n/authErrors'
+
+// 多言語化：「既に登録」のときに出すログイン画面への案内（4 言語）
+const GO_TO_LOGIN_TEXT: Record<SupportedLanguage, string> = {
+  ja: 'ログイン画面へ →',
+  en: 'Go to sign in →',
+  ko: '로그인 화면으로 →',
+  'zh-tw': '前往登入畫面 →',
+}
 
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
@@ -60,6 +69,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [signupError, setSignupError] = useState('')
+  // 登録が失敗したときのエラーの種類（「既に登録」の判定は文ではなく種類で行う）
+  const [signupErrorKind, setSignupErrorKind] = useState<AuthErrorKind | null>(null)
   // βテスト用：招待コード入力（サーバー側で検証）
   const [inviteCode, setInviteCode] = useState('')
   const router = useRouter()
@@ -165,6 +176,7 @@ export default function SignupPage() {
   const onSubmit = async (data: SimpleSignupFormData) => {
     setIsLoading(true)
     setSignupError('')
+    setSignupErrorKind(null)
     
     // 🔒 セキュリティ強化: 新規登録時に古いセッションストレージを完全クリア
     try {
@@ -309,18 +321,14 @@ export default function SignupPage() {
       languageRouter.push(`/profile/edit`, profileParams)
 
     } catch (error) {
+      // 元のエラー文はログにだけ残す
       logger.error('[SIGNUP]', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
 
       // --- パターンA: signup自体が失敗 ---
-      // "User already registered" 系のエラー判定
-      const isAlreadyRegistered = /already registered|already been registered|duplicate|already exists/i.test(errorMessage)
-
-      if (isAlreadyRegistered) {
-        setSignupError('このメールアドレスは既に登録されています。ログインしてください。')
-      } else {
-        setSignupError(errorMessage || t('signup.signupFailed'))
-      }
+      // エラーの種類で判定し（"User already registered" 系は user_already_exists）、表示言語の文を出す
+      const kind = classifyAuthError(error)
+      setSignupErrorKind(kind)
+      setSignupError(getAuthErrorMessage(kind, currentLanguage as SupportedLanguage))
     } finally {
       setIsLoading(false)
     }
@@ -351,9 +359,9 @@ export default function SignupPage() {
             {signupError && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-700 text-sm">{signupError}</p>
-                {signupError.includes('既に登録') && (
+                {signupErrorKind === 'user_already_exists' && (
                   <Link href="/login" className="mt-2 inline-block text-sm underline" style={{ color: 'var(--color-primary)' }}>
-                    ログイン画面へ →
+                    {GO_TO_LOGIN_TEXT[currentLanguage as SupportedLanguage] ?? GO_TO_LOGIN_TEXT.ja}
                   </Link>
                 )}
               </div>

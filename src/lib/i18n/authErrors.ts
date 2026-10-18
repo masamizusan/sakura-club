@@ -77,7 +77,8 @@ export function classifyAuthError(error: unknown): AuthErrorKind {
 
   if (/invalid login credentials/i.test(message)) return 'invalid_credentials'
   if (/email not confirmed/i.test(message)) return 'email_not_confirmed'
-  if (/already registered|already been registered|already exists/i.test(message)) return 'user_already_exists'
+  // duplicate は登録画面の従来の判定（/already registered|…|duplicate|already exists/）に合わせたもの
+  if (/already registered|already been registered|duplicate|already exists/i.test(message)) return 'user_already_exists'
   if (/different from the old password/i.test(message)) return 'same_password'
   if (/password should be|weak password|password is too weak/i.test(message)) return 'weak_password'
   if (/auth session missing|session.*expired/i.test(message)) return 'session_expired'
