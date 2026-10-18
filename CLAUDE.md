@@ -1022,6 +1022,8 @@ ALTER TABLE messages ADD COLUMN IF NOT EXISTS translated_content TEXT;
 ### メッセージAPIの変更（`src/app/api/messages/[conversationId]/route.ts`）
 - `translated_content` をスキーマ・INSERT・SELECT・GETレスポンスに追加済み
 - 送信時に `translated_content` を保存することで既読時の再翻訳API呼び出しを削減
+- **送信は `client_message_id` で冪等（#25・2026/10/18）**：画面は送信のたびに一意の ID（テキストは仮メッセージ `temp-<uuid>` の uuid、画像は選んだ画像ごとの uuid）を `client_message_id` として送り、**再送でも同じ値を使う**。DB は `(sender_id, client_message_id)` の部分 UNIQUE インデックス `messages_sender_client_message_id_key`（stage13：`supabase/migrations/20261018_stage13_messages_client_message_id.sql`）で 2 件目を弾き、API は重複エラー（23505）のとき既にある行を通常の成功と同じ形で返す。GET も `client_message_id` を返し、画面は取り直しのとき同じ ID の仮メッセージを消す
+  - 新しい送信経路を作るときも `client_message_id` を必ず付ける（付けない＝NULL は重複の確認なしで保存される）
 
 ### メッセージ画面の主要仕様（`src/app/messages/[conversationId]/page.tsx`）
 
@@ -1151,6 +1153,7 @@ if (isJapaneseWoman === false && isForeignMale && (!isVerified || isSubscribed =
 - 翻訳方向：**相手の国籍の言語へ翻訳**（#15 第1段階・2026/10/15。旧仕様：日本人女性＝日本語→英語 / 外国人男性＝英語→日本語。`translated_lang` が NULL の行は旧仕様の訳）
 - 方式：翻訳確認ボタンを押したときのみ翻訳（自動翻訳なし）
 - 送信時：translated_contentをDBに保存
+- 送信は `client_message_id` で冪等（#25。再送で二重保存しない。stage13）
 - 相手メッセージ：translated_contentをデフォルト表示
 
 **Supabase手動対応済み**
