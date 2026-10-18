@@ -369,7 +369,7 @@ export default function MessagesPage() {
                         <div className="w-1 bg-red-500 flex-shrink-0 rounded-l-md" />
                       )}
 
-                      <div className="flex-1 p-5">
+                      <div className="flex-1 min-w-0 p-5">
                         <div className="flex items-center space-x-4">
                           {/* アバター */}
                           <div className="relative flex-shrink-0">
