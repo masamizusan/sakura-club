@@ -5,8 +5,34 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+// 処理時間の計測（#11）：段階ごとの ms を Server-Timing ヘッダーで返す（個人情報は入れない）
+// ブラウザの開発者ツール → Network → このリクエスト → Timing で見られる
+function createTimer() {
+  const startedAt = Date.now()
+  const entries: Array<[string, number]> = []
+  return {
+    async measure<T>(name: string, fn: () => PromiseLike<T>): Promise<T> {
+      const t0 = Date.now()
+      try {
+        return await fn()
+      } finally {
+        entries.push([name, Date.now() - t0])
+      }
+    },
+    header(): string {
+      return [...entries, ['total', Date.now() - startedAt] as [string, number]]
+        .map(([name, ms]) => `${name};dur=${ms}`)
+        .join(', ')
+    },
+  }
+}
+
 // GET: 会話一覧の取得
 export async function GET(request: NextRequest) {
+  const timer = createTimer()
+  const respond = (body: unknown, init?: { status?: number }) =>
+    NextResponse.json(body, { status: init?.status, headers: { 'Server-Timing': timer.header() } })
+
   try {
     const cookieStore = cookies()
 
@@ -21,206 +47,126 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    console.log('=== Messages API v2 called ===')
-    
     // 認証ユーザーの取得
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    // デバッグ情報
-    console.log('🔐 [messages] Auth:', {
-      hasUser: !!user,
-      userId: user?.id?.slice(0, 8),
-      error: authError?.message
-    })
-    
+    const { data: { user }, error: authError } = await timer.measure('auth', () => supabase.auth.getUser())
     if (authError || !user) {
-      return NextResponse.json(
-        {
-          error: '認証が必要です',
-          debug: { authError: authError?.message, hasUser: !!user }
-        },
-        { status: 401 }
-      )
+      return respond({ error: '認証が必要です' }, { status: 401 })
     }
 
-    // ===== 1. 自分の profiles.id を取得 =====
     // profiles.id = auth.uid() の設計なので、直接 user.id を使用
     const myProfileId = user.id
-
-    console.log('👤 [messages] Using auth user id as profile id:', {
-      myProfileId: myProfileId.slice(0, 8)
-    })
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
-    // ===== 2. conversations を取得（デバッグ: まず全件取得してみる） =====
-    const { data: allConversations, error: allError } = await supabase
-      .from('conversations')
-      .select('*, is_seen_user1, is_seen_user2')
-      .order('created_at', { ascending: false })
-      .limit(20)
-
-    console.log('📋 [messages] All conversations (debug):', {
-      count: allConversations?.length || 0,
-      error: allError?.message,
-      first: allConversations?.[0] ? {
-        id: allConversations[0].id?.slice(0, 8),
-        user1: allConversations[0].user1_id?.slice(0, 8),
-        user2: allConversations[0].user2_id?.slice(0, 8)
-      } : null
-    })
-
-    // myProfileId でフィルタリング（JavaScript側）
-    const allMyConversations = allConversations?.filter(c =>
-      c.user1_id === myProfileId || c.user2_id === myProfileId
-    ) || []
-
-    // ブロック済みユーザーとの会話を除外（service_roleでRLSバイパス）
+    // ブロック済みユーザーとの会話を除外するため、service_role でブロックを取る（RLS バイパス・両方向）
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    const { data: blockList } = await supabaseAdmin
-      .from('blocks')
-      .select('blocker_id, blocked_id')
-      .or(`blocker_id.eq.${myProfileId},blocked_id.eq.${myProfileId}`)
-    const blockedIdSet = new Set(blockList?.map(b =>
+
+    // ② 会話（自分が参加者のものだけ RLS で返る）と ③ ブロックを同時に取る
+    const [conversationsResult, blocksResult] = await Promise.all([
+      timer.measure('conv', () => supabase
+        .from('conversations')
+        .select('*, is_seen_user1, is_seen_user2')
+        .order('created_at', { ascending: false })
+        .limit(20)),
+      timer.measure('blocks', () => supabaseAdmin
+        .from('blocks')
+        .select('blocker_id, blocked_id')
+        .or(`blocker_id.eq.${myProfileId},blocked_id.eq.${myProfileId}`)),
+    ])
+
+    const { data: allConversations, error: allError } = conversationsResult
+    if (allError) {
+      console.error('[messages] conversations fetch error:', allError.message)
+      return respond({ error: '会話の取得に失敗しました' }, { status: 500 })
+    }
+    if (blocksResult.error) {
+      console.error('[messages] blocks fetch error:', blocksResult.error.message)
+    }
+
+    const blockedIdSet = new Set(blocksResult.data?.map(b =>
       b.blocker_id === myProfileId ? b.blocked_id : b.blocker_id
     ) ?? [])
 
-    const conversations = allMyConversations.filter(c => {
+    // 自分の会話のうち、ブロック関係の相手との会話を除く
+    const conversations = (allConversations ?? []).filter(c => {
+      if (c.user1_id !== myProfileId && c.user2_id !== myProfileId) return false
       const partnerId = c.user1_id === myProfileId ? c.user2_id : c.user1_id
       return !blockedIdSet.has(partnerId)
     })
 
-    console.log('📋 [messages] Filtered conversations:', {
-      total: allConversations?.length || 0,
-      filtered: conversations.length,
-      blockedFiltered: allMyConversations.length - conversations.length,
-      myProfileId: myProfileId
-    })
-
-    if (allError) {
-      console.error('❌ [messages] Conversations fetch error:', allError)
-      return NextResponse.json(
-        { error: '会話の取得に失敗しました', debug: { error: allError.message, code: allError.code } },
-        { status: 500 }
-      )
-    }
-
-    // conversationsが空の場合、デバッグ情報を含めて返す
     if (conversations.length === 0) {
-      console.log('⚠️ [messages] No conversations found for profile:', myProfileId.slice(0, 8))
-      return NextResponse.json({
-        conversations: [],
-        total: 0,
-        _version: 'v2-debug-empty',
-        debug: {
-          authUserId: user.id,
-          myProfileId: myProfileId,
-          allConversationsCount: allConversations?.length || 0,
-          sampleConversation: allConversations?.[0] ? {
-            user1_id: allConversations[0].user1_id,
-            user2_id: allConversations[0].user2_id
-          } : null,
-          message: 'No matching conversations found'
-        }
-      })
+      return respond({ conversations: [], total: 0 })
     }
 
-    // ===== 3. 会話リストを返す（パートナーのプロフィールは profiles.id で取得） =====
-    const partnerErrors: Array<{partnerId: string, error: string, code: string}> = []
+    const partnerIdOf = (conv: { user1_id: string; user2_id: string }) =>
+      conv.user1_id === myProfileId ? conv.user2_id : conv.user1_id
+    const partnerIds = Array.from(new Set(conversations.map(partnerIdOf)))
+    const conversationIds = conversations.map(c => c.id)
 
-    const conversationsWithMessages = await Promise.all(
-      conversations.map(async (conv) => {
-        // partnerId は myProfileId と比較して決定
-        const partnerId = conv.user1_id === myProfileId ? conv.user2_id : conv.user1_id
+    // ④ 相手のプロフィール（公開用ビュー。未完成・停止中・ブロック関係の相手は返らず、一覧から除外）と
+    // ⑤ 未読（相手からのメッセージで is_read = false）を、それぞれ 1 回で同時に取る
+    const [partnersResult, unreadResult] = await Promise.all([
+      timer.measure('partners', () => supabase
+        .from('profiles_public')
+        .select('id, name, age, nationality, residence, city, avatar_url')
+        .in('id', partnerIds)),
+      timer.measure('unread', () => supabase
+        .from('messages')
+        .select('conversation_id')
+        .in('conversation_id', conversationIds)
+        .neq('sender_id', myProfileId)
+        .eq('is_read', false)),
+    ])
 
-        console.log('🔗 [messages] Processing conversation:', {
-          convId: conv.id?.slice(0, 8),
-          user1: conv.user1_id?.slice(0, 8),
-          user2: conv.user2_id?.slice(0, 8),
-          myProfileId: myProfileId.slice(0, 8),
-          partnerId: partnerId?.slice(0, 8)
-        })
+    if (partnersResult.error) {
+      console.error('[messages] partner profiles fetch error:', partnersResult.error.message)
+    }
+    if (unreadResult.error) {
+      console.error('[messages] unread fetch error:', unreadResult.error.message)
+    }
 
-        // パートナーのプロフィール情報を取得（段階2-A: 公開用ビュー。未完成・停止中・ブロック関係の相手は取得できず、下の処理で一覧から除外）
-        const { data: partner, error: partnerError } = await supabase
-          .from('profiles_public')
-          .select('id, name, age, nationality, residence, city, avatar_url')
-          .eq('id', partnerId)
-          .single()
+    const partnerById = new Map((partnersResult.data ?? []).map(p => [p.id, p]))
+    const unreadByConversation = new Map<string, number>()
+    for (const row of unreadResult.data ?? []) {
+      unreadByConversation.set(row.conversation_id, (unreadByConversation.get(row.conversation_id) ?? 0) + 1)
+    }
 
-        if (partnerError) {
-          console.error('❌ [messages] Partner profile error:', {
-            partnerId: partnerId,
-            error: partnerError.message,
-            code: partnerError.code
-          })
-          partnerErrors.push({
-            partnerId: partnerId,
-            error: partnerError.message,
-            code: partnerError.code || 'unknown'
-          })
-        }
+    const validConversations = conversations.flatMap(conv => {
+      const partnerId = partnerIdOf(conv)
+      const partner = partnerById.get(partnerId)
+      // パートナー情報がない場合はスキップ
+      if (!partner) return []
 
-        console.log('👤 [messages] Partner profile:', partner ? {
-          id: partner.id?.slice(0, 8),
-          name: partner.name,
-          initialized: true
-        } : 'NOT FOUND')
+      // 自分側の is_seen フラグを確認
+      const isNewMatch = conv.user1_id === myProfileId
+        ? conv.is_seen_user1 === false
+        : conv.is_seen_user2 === false
 
-        if (!partner) {
-          console.log('⚠️ [messages] Skipping conversation - no partner profile for:', partnerId?.slice(0, 8))
-          return null // パートナー情報がない場合はスキップ
-        }
-
-        // 未読メッセージ数を取得（相手からのメッセージでis_read=false）
-        const { count: unreadCount } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', conv.id)
-          .neq('sender_id', myProfileId)
-          .eq('is_read', false)
-
-        // 自分側の is_seen フラグを確認
-        const isNewMatch = conv.user1_id === myProfileId
-          ? conv.is_seen_user1 === false
-          : conv.is_seen_user2 === false
-
-        return {
-          id: conv.id,
-          partnerId,
-          partnerName: partner.name || 'ユーザー',
-          partnerAge: partner.age || null,
-          partnerNationality: partner.nationality || '',
-          partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
-          partnerImage: partner.avatar_url || null,
-          partnerAvatar: partner.avatar_url || null,
-          lastMessage: {
-            id: 'placeholder',
-            senderId: partnerId,
-            content: conv.last_message || 'マッチしました！メッセージを送ってみましょう',
-            timestamp: conv.last_message_at || conv.created_at,
-            isRead: true
-          },
-          unreadCount: unreadCount || 0,
-          isOnline: false,
-          matchedDate: conv.created_at,
-          isNewMatch,
-        }
-      })
-    )
-
-    // nullを除外
-    const validConversations = conversationsWithMessages.filter(conv => conv !== null)
-    const nullCount = conversationsWithMessages.filter(conv => conv === null).length
-
-    console.log('📊 [messages] Final result:', {
-      total: conversationsWithMessages.length,
-      valid: validConversations.length,
-      nullFiltered: nullCount
+      return [{
+        id: conv.id,
+        partnerId,
+        partnerName: partner.name || 'ユーザー',
+        partnerAge: partner.age || null,
+        partnerNationality: partner.nationality || '',
+        partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || '未設定',
+        partnerImage: partner.avatar_url || null,
+        partnerAvatar: partner.avatar_url || null,
+        lastMessage: {
+          id: 'placeholder',
+          senderId: partnerId,
+          content: conv.last_message || 'マッチしました！メッセージを送ってみましょう',
+          timestamp: conv.last_message_at || conv.created_at,
+          isRead: true
+        },
+        unreadCount: unreadByConversation.get(conv.id) ?? 0,
+        isOnline: false,
+        matchedDate: conv.created_at,
+        isNewMatch,
+      }]
     })
 
     // 検索フィルター
@@ -231,25 +177,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
+    return respond({
       conversations: filteredConversations,
       total: filteredConversations.length,
-      _version: 'v3-debug',
-      _debug: {
-        rawConversationsCount: conversations.length,
-        validCount: validConversations.length,
-        nullFilteredCount: nullCount,
-        partnerErrors: partnerErrors.length > 0 ? partnerErrors : null,
-        message: nullCount > 0 ? 'Some conversations filtered due to missing partner profiles' : 'OK'
-      }
     })
 
   } catch (error) {
-    console.error('Messages GET error:', error)
-    return NextResponse.json(
-      { error: 'サーバーエラーが発生しました' },
-      { status: 500 }
-    )
+    console.error('Messages GET error:', error instanceof Error ? error.message : error)
+    return respond({ error: 'サーバーエラーが発生しました' }, { status: 500 })
   }
 }
-
