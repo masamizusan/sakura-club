@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { LanguageSkill, LANGUAGE_LABELS } from '@/types/profile'
 import { resolveAvatarSrc } from '@/utils/imageResolver'
+import PhotoGallery from '@/components/profile/PhotoGallery'
 import { createClient } from '@/lib/supabase'
 import { logger, maskImageValue, sanitizePayload } from '@/utils/logger'
 
@@ -996,57 +997,22 @@ function ProfilePreviewContent() {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            {/* プロフィール画像 - 複数画像対応 */}
-            <div className="relative aspect-square bg-gray-100">
-              {(() => {
-                // 🖼️ STEP 1: photo_urls優先表示（複数画像対応）
-                let displayImage = null
-                if (Array.isArray(photo_urls) && photo_urls.length > 0) {
-                  displayImage = photo_urls[0] // メイン画像
-                  logger.debug('🔄 プレビュー画像: photo_urls[0]使用:', maskImageValue(displayImage))
-                }
-                // 🔧 STEP 2: 後方互換でprofileImage使用
-                else if (profileImage) {
-                  displayImage = profileImage
-                  logger.debug('🔄 プレビュー画像: profileImage使用（後方互換）:', maskImageValue(displayImage))
-                }
+            {/* プロフィール画像 - 複数画像対応（#55：相手のプロフィールと同じ部品で、横にめくる・押すと全画面） */}
+            {(() => {
+              // 🖼️ STEP 1: photo_urls優先表示（複数画像対応）
+              let galleryPhotos: string[] = []
+              if (Array.isArray(photo_urls) && photo_urls.length > 0) {
+                galleryPhotos = photo_urls
+                logger.debug('🔄 プレビュー画像: photo_urls[0]使用:', maskImageValue(photo_urls[0]))
+              }
+              // 🔧 STEP 2: 後方互換でprofileImage使用
+              else if (profileImage) {
+                galleryPhotos = [profileImage]
+                logger.debug('🔄 プレビュー画像: profileImage使用（後方互換）:', maskImageValue(profileImage))
+              }
 
-                const avatarSrc = resolveAvatarSrc(displayImage, supabase)
-                return avatarSrc ? (
-                  <img
-                    src={avatarSrc}
-                    alt={pt.photoAlt}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <User className="w-24 h-24 text-gray-400" />
-                  </div>
-                )
-              })()}
-              
-              {/* 🖼️ サブ画像表示（2枚目以降があれば小さく表示） */}
-              {Array.isArray(photo_urls) && photo_urls.length > 1 && (
-                <div className="absolute bottom-2 right-2 flex gap-1">
-                  {photo_urls.slice(1, 3).map((url, index) => {
-                    const subAvatarSrc = resolveAvatarSrc(url, supabase)
-                    return subAvatarSrc ? (
-                      <img
-                        key={`sub_${index}`}
-                        src={subAvatarSrc}
-                        alt={pt.subPhotoAlt(index + 1)}
-                        className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
-                      />
-                    ) : null
-                  })}
-                  {photo_urls.length > 3 && (
-                    <div className="w-12 h-12 rounded-lg bg-black bg-opacity-50 flex items-center justify-center border-2 border-white shadow-sm">
-                      <span className="text-white text-xs">+{photo_urls.length - 3}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+              return <PhotoGallery photos={galleryPhotos} name={nickname} />
+            })()}
 
             {/* プロフィール情報 */}
             <div className="p-6 space-y-4">
