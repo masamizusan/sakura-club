@@ -363,6 +363,15 @@ export default function ChatPage() {
   // 画像送信処理
   const handleImageSend = async () => {
     if (!selectedImage || isUploadingImage) return
+    // #18: テキスト送信（handleSend）と同じ確認を、画像を送る前に行う
+    // 年齢確認がまだ → モーダル（全員）。未課金のモーダルは外国人男性だけ
+    // （日本人女性にはサブスクのモーダルを出さない・送信を制限しない：isJapaneseWoman === false を明示して確認）
+    const needsVerification = !isVerified
+    const needsSubscription = isJapaneseWoman === false && isForeignMale && isSubscribed === false
+    if (needsVerification || needsSubscription) {
+      setShowRequirementsModal(true)
+      return
+    }
     setIsUploadingImage(true)
     try {
       const supabase = createClient()
