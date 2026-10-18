@@ -53,6 +53,16 @@ function setState(next: NotificationState) {
   listeners.forEach(listener => listener())
 }
 
+// 手元にログインのセッションがあるか（通信しない）
+async function hasSession(): Promise<boolean> {
+  try {
+    const { data: { session } } = await getSupabase().auth.getSession()
+    return !!session
+  } catch {
+    return false
+  }
+}
+
 function isPageVisible() {
   return typeof document === 'undefined' || document.visibilityState !== 'hidden'
 }
@@ -97,6 +107,13 @@ async function runFetch(): Promise<void> {
   isFetching = true
   const generation = fetchGeneration
   try {
+    // #56: ログインしていない（セッションが無い）ときは取りに行かず、タイマーも止める
+    // getSession は手元のセッションを読むだけ（通信しない）。ログインすれば onAuthStateChange で再開する
+    if (!(await hasSession())) {
+      stopTimer()
+      applyUser(null)
+      return
+    }
     const counts = await fetchCounts()
     // 途中でユーザー変更・停止があった場合は結果を捨てる
     if (counts && generation === fetchGeneration && state.userId === uid) {
@@ -172,6 +189,13 @@ async function start() {
   })
   authSubscription = subscription
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // #56: セッションが無ければ（ログインしていない）、認証サーバーへの確認もしない
+  if (!(await hasSession())) {
+    if (!isActive || myActivation !== activationId) return
+    applyUser(null)
+    return
+  }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!isActive || myActivation !== activationId) return
