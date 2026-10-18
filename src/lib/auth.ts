@@ -184,7 +184,10 @@ export const authService = {
     }
   },
 
-  async signOut() {
+  // #60: ふだんのログアウトはこの端末だけ（scope: 'local'）。初期設定の 'global' だと、
+  // 同じ人の他の端末・ブラウザのセッションまで取り消され、そちらで API が 401 のまま止まる
+  // 全端末から切る場面（退会など）だけ 'global' を渡す
+  async signOut(scope: 'local' | 'global' = 'local') {
     const supabase = getAuthClient()
 
     try {
@@ -193,7 +196,7 @@ export const authService = {
         localStorage.removeItem('sc_real_login_user')
         localStorage.removeItem('sc_test_anon_done')
       }
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut({ scope })
       if (error) {
         throw new AuthError(error.message, classifyAuthError(error))
       }

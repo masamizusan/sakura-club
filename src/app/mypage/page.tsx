@@ -395,7 +395,8 @@ function MyPageContent() {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
-      await supabase.auth.signOut()
+      // #60: ふだんのログアウトはこの端末だけ（他の端末のセッションは残す）
+      await supabase.auth.signOut({ scope: 'local' })
       router.push('/')
     } catch (error) {
       logger.error('[MYPAGE] logout error')
