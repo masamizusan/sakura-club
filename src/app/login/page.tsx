@@ -64,14 +64,14 @@ function LoginForm() {
         const status = profile?.status
 
         if (status === 'deleted_pending' || status === 'deleted_permanent') {
-          console.log('[LOGIN] account deleted - blocking sign-in:', status)
+          logger.debug('[LOGIN] account deleted - blocking sign-in:', status)
           await authService.signOut()
           router.push('/account-deleted')
           return
         }
 
         if (status === 'suspended') {
-          console.log('[LOGIN] account suspended - blocking sign-in')
+          logger.debug('[LOGIN] account suspended - blocking sign-in')
           await authService.signOut()
           // 指示書 #33: /suspended ページを廃止し top page に統一(middleware の suspended 分岐と整合)
           router.push('/')
@@ -82,11 +82,11 @@ function LoginForm() {
       // 🚨 CRITICAL: 他タブへ通知（タブ間同期）
       // broadcastが確実に送信されるように明示的にログ
       if (result.user?.id) {
-        console.warn('[LOGIN] calling notifyAuthChange:', result.user.id.slice(0, 8))
+        logger.debug('[LOGIN] calling notifyAuthChange:', result.user.id.slice(0, 8))
         notifyAuthChange(result.user.id)
-        console.warn('[LOGIN] notifyAuthChange completed')
+        logger.debug('[LOGIN] notifyAuthChange completed')
       } else {
-        console.warn('[LOGIN] SKIP notifyAuthChange: no user.id')
+        logger.debug('[LOGIN] SKIP notifyAuthChange: no user.id')
       }
 
       // Wait a moment for session to be established and broadcast to be sent

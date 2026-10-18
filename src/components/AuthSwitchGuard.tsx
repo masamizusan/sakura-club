@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { logger } from '@/utils/logger'
 
 // sessionStorage キー（authStore.ts と共有）
 const PATH_NOW_KEY = '__path_now__'
@@ -27,7 +28,7 @@ export function AuthSwitchGuard() {
     if (initialPath) {
       sessionStorage.setItem(PATH_NOW_KEY, initialPath)
       document.body.dataset.page = initialPath
-      console.warn('[AUTH_PATH] IMMEDIATE set (location):', initialPath)
+      logger.debug('[AUTH_PATH] IMMEDIATE set (location):', initialPath)
     }
   }, [])
 
@@ -38,7 +39,7 @@ export function AuthSwitchGuard() {
       sessionStorage.setItem(PATH_NOW_KEY, pathname)
       // DOM dataset（バックアップ）
       document.body.dataset.page = pathname
-      console.warn('[AUTH_PATH] set (usePathname):', pathname)
+      logger.debug('[AUTH_PATH] set (usePathname):', pathname)
     }
   }, [pathname])
 

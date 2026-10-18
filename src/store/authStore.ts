@@ -69,20 +69,20 @@ function getPathNow(): string {
   // 1. sessionStorage（最優先 - AuthSwitchGuard が設定）
   const sessionPath = sessionStorage.getItem(PATH_NOW_KEY)
   if (sessionPath) {
-    console.warn(`[PATH_NOW][${tabId}] from=sessionStorage value=${sessionPath}`)
+    logger.debug(`[PATH_NOW][${tabId}] from=sessionStorage value=${sessionPath}`)
     return sessionPath
   }
 
   // 2. DOM dataset（バックアップ）
   const domPath = document.body?.dataset?.page
   if (domPath) {
-    console.warn(`[PATH_NOW][${tabId}] from=dataset value=${domPath}`)
+    logger.debug(`[PATH_NOW][${tabId}] from=dataset value=${domPath}`)
     return domPath
   }
 
   // 3. window.location.pathname（最後の保険 - 信頼性低）
   const locPath = window.location.pathname || ''
-  console.warn(`[PATH_NOW][${tabId}] from=location value=${locPath} ⚠️ FALLBACK`)
+  logger.debug(`[PATH_NOW][${tabId}] from=location value=${locPath} ⚠️ FALLBACK`)
   return locPath
 }
 
@@ -114,11 +114,11 @@ function getBaseUserId(): string | null {
 function setBaseUserIdOnce(userId: string) {
   if (typeof window === 'undefined') return
   if (getBaseUserId()) {
-    console.warn(`[BASE_USER][${tabId}] already set, skip`)
+    logger.debug(`[BASE_USER][${tabId}] already set, skip`)
     return
   }
   sessionStorage.setItem(BASE_USER_KEY, userId)
-  console.warn(`[BASE_USER][${tabId}] set (once): ${userId.slice(0, 8)}`)
+  logger.debug(`[BASE_USER][${tabId}] set (once): ${userId.slice(0, 8)}`)
 }
 
 // 🚨 base更新は (a)(b) の2ケースのみ許可
@@ -148,7 +148,7 @@ function updateBaseUserId(userId: string, source: 'auth-action' | 'boot-pending'
   sessionStorage.setItem(BASE_USER_KEY, userId)
 
   // 🚨 CRITICAL: 詳細ログ（いつ・誰が・どの状態で base を更新したか）
-  console.warn(`[BASE_USER][${tabId}] UPDATED`, {
+  logger.debug(`[BASE_USER][${tabId}] UPDATED`, {
     prev: prevBase?.slice(0, 8) || 'null',
     next: userId.slice(0, 8),
     source,
@@ -161,7 +161,7 @@ function updateBaseUserId(userId: string, source: 'auth-action' | 'boot-pending'
 function clearBaseUserId() {
   if (typeof window === 'undefined') return
   sessionStorage.removeItem(BASE_USER_KEY)
-  console.warn(`[BASE_USER][${tabId}] cleared`)
+  logger.debug(`[BASE_USER][${tabId}] cleared`)
 }
 
 // =====================================================
@@ -177,13 +177,13 @@ function getPendingUserId(): string | null {
 function setPendingUserId(userId: string) {
   if (typeof window === 'undefined') return
   sessionStorage.setItem(PENDING_USER_KEY, userId)
-  console.warn(`[PENDING][${tabId}] set: ${userId.slice(0, 8)}`)
+  logger.debug(`[PENDING][${tabId}] set: ${userId.slice(0, 8)}`)
 }
 
 function clearPendingUserId() {
   if (typeof window === 'undefined') return
   sessionStorage.removeItem(PENDING_USER_KEY)
-  console.warn(`[PENDING][${tabId}] cleared`)
+  logger.debug(`[PENDING][${tabId}] cleared`)
 }
 
 // =====================================================
@@ -207,7 +207,7 @@ function isAlertLockActive(): boolean {
   const age = Date.now() - parseInt(lockTime, 10)
   if (age >= ALERT_LOCK_MS) {
     sessionStorage.removeItem(ALERT_LOCK_KEY)
-    console.warn(`[ALERT_LOCK][${tabId}] auto-cleared (expired: ${age}ms)`)
+    logger.debug(`[ALERT_LOCK][${tabId}] auto-cleared (expired: ${age}ms)`)
     return false
   }
   return true
@@ -216,7 +216,7 @@ function isAlertLockActive(): boolean {
 function setAlertLock() {
   if (typeof window === 'undefined') return
   sessionStorage.setItem(ALERT_LOCK_KEY, Date.now().toString())
-  console.warn(`[ALERT_LOCK][${tabId}] SET (expires in ${ALERT_LOCK_MS}ms)`)
+  logger.debug(`[ALERT_LOCK][${tabId}] SET (expires in ${ALERT_LOCK_MS}ms)`)
 }
 
 // =====================================================
@@ -234,7 +234,7 @@ function getGuardAge(): number | null {
   // 🚨 FIX: 期限切れの場合は自動クリアして null 扱い
   if (age >= RELOAD_GUARD_MS) {
     sessionStorage.removeItem(RELOAD_GUARD_KEY)
-    console.warn(`[GUARD][${tabId}] auto-cleared (expired: ${age}ms >= ${RELOAD_GUARD_MS}ms)`)
+    logger.debug(`[GUARD][${tabId}] auto-cleared (expired: ${age}ms >= ${RELOAD_GUARD_MS}ms)`)
     addDebugLog('GUARD expired -> cleared', { age: `${age}ms`, raw: guardTime })
     return null
   }
@@ -248,7 +248,7 @@ function setReloadGuard(source: string) {
   const pathNow = getPathNow()
   sessionStorage.setItem(RELOAD_GUARD_KEY, ts.toString())
   // 🚨 CRITICAL: guardを誰がいつセットしたか追跡
-  console.warn(`[GUARD][${tabId}] SET`, {
+  logger.debug(`[GUARD][${tabId}] SET`, {
     ts,
     source,
     pathNow,
@@ -265,7 +265,7 @@ function isReloadGuardActive(): boolean {
 function clearReloadGuard() {
   if (typeof window === 'undefined') return
   sessionStorage.removeItem(RELOAD_GUARD_KEY)
-  console.warn(`[GUARD][${tabId}] cleared`)
+  logger.debug(`[GUARD][${tabId}] cleared`)
 }
 
 // =====================================================
@@ -278,13 +278,13 @@ const AUTH_ACTION_KEY = '__auth_action__'
 function setAuthActionFlag() {
   if (typeof window === 'undefined') return
   sessionStorage.setItem(AUTH_ACTION_KEY, '1')
-  console.warn(`[AUTH_ACTION][${tabId}] flag set`)
+  logger.debug(`[AUTH_ACTION][${tabId}] flag set`)
 }
 
 function clearAuthActionFlag() {
   if (typeof window === 'undefined') return
   sessionStorage.removeItem(AUTH_ACTION_KEY)
-  console.warn(`[AUTH_ACTION][${tabId}] flag cleared`)
+  logger.debug(`[AUTH_ACTION][${tabId}] flag cleared`)
 }
 
 function hasAuthActionFlag(): boolean {
@@ -310,7 +310,7 @@ function showAlertAndReload(incomingUserId: string) {
   if (isAlertLockActive()) {
     const lockRaw = sessionStorage.getItem(ALERT_LOCK_KEY)
     const lockAge = lockRaw ? Date.now() - parseInt(lockRaw, 10) : null
-    console.warn(`[SKIP][${tabId}] SKIP_ALERT_LOCK (TTL active)`)
+    logger.debug(`[SKIP][${tabId}] SKIP_ALERT_LOCK (TTL active)`)
     addDebugLog('SKIP_ALERT_LOCK', {
       lockAge: lockAge !== null ? `${lockAge}ms` : 'null',
       remaining: lockAge !== null ? `${ALERT_LOCK_MS - lockAge}ms` : 'null',
@@ -333,7 +333,7 @@ function showAlertAndReload(incomingUserId: string) {
     alertLockActive: false,
     postReloadSyncUser: sessionStorage.getItem(POST_RELOAD_SYNC_KEY)?.slice(0, 8) || 'null'
   }
-  console.warn(`[ALERT_SHOW][${tabId}] 🚨 showing alert (pre-reload)`, debugData)
+  logger.debug(`[ALERT_SHOW][${tabId}] 🚨 showing alert (pre-reload)`, debugData)
   addDebugLog('ALERT showing', debugData)
 
   // 1. ALERT_LOCK を先にセット（10秒）- ループ防止
@@ -341,7 +341,7 @@ function showAlertAndReload(incomingUserId: string) {
 
   // 2. reload後の収束用にincomingUserIdを保存（1回だけbase同期）
   sessionStorage.setItem(POST_RELOAD_SYNC_KEY, incomingUserId)
-  console.warn(`[POST_RELOAD_SYNC][${tabId}] set: ${incomingUserId.slice(0, 8)}`)
+  logger.debug(`[POST_RELOAD_SYNC][${tabId}] set: ${incomingUserId.slice(0, 8)}`)
 
   // 3. ループの火種を確実に消す
   clearPendingUserId()
@@ -375,7 +375,7 @@ function handleIncomingAuthSwitch(payload: any) {
   // 🚨 CRITICAL: 非authページで auth_action が残っていたら stale として即クリア
   // クリアして判定を続行（握りつぶさない）
   if (actionFlag && !isAuth) {
-    console.warn(`[CROSS_TAB][${tabId}] stale auth_action on non-auth page - clearing and continue (pathNow=${pathNow})`)
+    logger.debug(`[CROSS_TAB][${tabId}] stale auth_action on non-auth page - clearing and continue (pathNow=${pathNow})`)
     clearAuthActionFlag()
     actionFlag = false
   }
@@ -389,31 +389,31 @@ function handleIncomingAuthSwitch(payload: any) {
     isAuth,
     actionFlag
   }
-  console.warn(`[CROSS_TAB][${tabId}] received`, receivedData)
+  logger.debug(`[CROSS_TAB][${tabId}] received`, receivedData)
   addDebugLog('CROSS_TAB received', receivedData)
 
   // 🆕 追加: ROUTE ログ（誤判定検知用）
-  console.warn(`[ROUTE][${tabId}] pathNow=${pathNow} isAuthPageNow=${isAuth}`)
+  logger.debug(`[ROUTE][${tabId}] pathNow=${pathNow} isAuthPageNow=${isAuth}`)
 
   // === 判定ロジック（スキップ理由を必ずログ出力） ===
 
   // 1) 自タブ送信は無視
   if (fromTab === tabId) {
-    console.warn(`[SKIP][${tabId}] SKIP_SAME_TAB`)
+    logger.debug(`[SKIP][${tabId}] SKIP_SAME_TAB`)
     addDebugLog('SKIP_SAME_TAB', { fromTab, pathNow })
     return
   }
 
   // 2) 🚨 CRITICAL: 操作タブ（auth page + auth_action 両方）のみ無視
   if (isAuth && actionFlag) {
-    console.warn(`[SKIP][${tabId}] SKIP_ACTION_FLAG (auth page + action flag)`)
+    logger.debug(`[SKIP][${tabId}] SKIP_ACTION_FLAG (auth page + action flag)`)
     addDebugLog('SKIP_ACTION_FLAG', { isAuth, actionFlag, pathNow })
     return
   }
 
   // 3) baseがなければ無視（初期化前）
   if (!base) {
-    console.warn(`[SKIP][${tabId}] SKIP_NO_BASE (not initialized)`)
+    logger.debug(`[SKIP][${tabId}] SKIP_NO_BASE (not initialized)`)
     addDebugLog('SKIP_NO_BASE', { pathNow })
     return
   }
@@ -421,7 +421,7 @@ function handleIncomingAuthSwitch(payload: any) {
   // 4) guardが生きていればスキップ（初回は潰さない）
   const guardTs = sessionStorage.getItem(RELOAD_GUARD_KEY)
   if (guardAge !== null && guardAge < RELOAD_GUARD_MS) {
-    console.warn(`[SKIP][${tabId}] SKIP_GUARD_ACTIVE (recently reloaded)`)
+    logger.debug(`[SKIP][${tabId}] SKIP_GUARD_ACTIVE (recently reloaded)`)
     addDebugLog('SKIP_GUARD_ACTIVE', {
       guardAge: `${guardAge}ms`,
       remaining: `${RELOAD_GUARD_MS - guardAge}ms`,
@@ -433,14 +433,14 @@ function handleIncomingAuthSwitch(payload: any) {
 
   // 5) incoming が null/undefined なら無視
   if (!incomingUserId) {
-    console.warn(`[SKIP][${tabId}] SKIP_INCOMING_NULL`)
+    logger.debug(`[SKIP][${tabId}] SKIP_INCOMING_NULL`)
     addDebugLog('SKIP_INCOMING_NULL', { pathNow, base: base?.slice(0, 8) })
     return
   }
 
   // 6) 🚨 核心判定: incoming === base なら同一ユーザー → スキップ
   if (incomingUserId === base) {
-    console.warn(`[SKIP][${tabId}] SKIP_SAME_USER (incoming === base)`)
+    logger.debug(`[SKIP][${tabId}] SKIP_SAME_USER (incoming === base)`)
     addDebugLog('SKIP_SAME_USER', {
       incoming: incomingUserId.slice(0, 8),
       base: base.slice(0, 8),
@@ -454,7 +454,7 @@ function handleIncomingAuthSwitch(payload: any) {
 
   if (isPassive) {
     // 🚨 PASSIVE タブ: alert + reload（従来通り）
-    console.warn(`[ALERT][${tabId}] 🚨 MISMATCH (PASSIVE) -> showing alert`)
+    logger.debug(`[ALERT][${tabId}] 🚨 MISMATCH (PASSIVE) -> showing alert`)
     addDebugLog('ALERT_MISMATCH_PASSIVE', {
       incoming: incomingUserId.slice(0, 8),
       base: base.slice(0, 8),
@@ -464,7 +464,7 @@ function handleIncomingAuthSwitch(payload: any) {
     showAlertAndReload(incomingUserId)
   } else {
     // 🆕 ACTIVE タブ: バナー表示のみ（alert なし）
-    console.warn(`[BANNER][${tabId}] 🔔 MISMATCH (ACTIVE) -> showing banner`)
+    logger.debug(`[BANNER][${tabId}] 🔔 MISMATCH (ACTIVE) -> showing banner`)
     addDebugLog('BANNER_MISMATCH_ACTIVE', {
       incoming: incomingUserId.slice(0, 8),
       base: base.slice(0, 8),
@@ -489,25 +489,25 @@ if (typeof window !== 'undefined') {
   try {
     authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME)
     authChannel.onmessage = (event) => {
-      console.warn(`[BC_RECEIVE][${tabId}] raw event:`, event.data)
+      logger.debug(`[BC_RECEIVE][${tabId}] raw event:`, event.data)
       addDebugLog('BC raw receive', { data: event.data })
 
       const payload = event.data || {}
       if (payload.userId !== undefined) {
-        console.warn(`[BC_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
+        logger.debug(`[BC_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
         handleIncomingAuthSwitch(payload)
       } else {
-        console.warn(`[BC_RECEIVE][${tabId}] SKIP: payload.userId is undefined`)
+        logger.debug(`[BC_RECEIVE][${tabId}] SKIP: payload.userId is undefined`)
       }
     }
     authChannel.onmessageerror = (event) => {
       console.error(`[BC_ERROR][${tabId}] message error:`, event)
       addDebugLog('BC error', { event: 'messageerror' })
     }
-    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel READY (channel=${AUTH_CHANNEL_NAME})`)
+    logger.debug(`[AUTH_LISTENER][${tabId}] BroadcastChannel READY (channel=${AUTH_CHANNEL_NAME})`)
     addDebugLog('LISTENER ready', { type: 'BroadcastChannel', channel: AUTH_CHANNEL_NAME })
   } catch (e) {
-    console.warn(`[AUTH_LISTENER][${tabId}] BroadcastChannel not supported:`, e)
+    logger.debug(`[AUTH_LISTENER][${tabId}] BroadcastChannel not supported:`, e)
     addDebugLog('LISTENER error', { type: 'BroadcastChannel', error: String(e) })
     authChannel = null
   }
@@ -516,7 +516,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
     // 全てのstorage eventをログ（デバッグ用）
     if (event.key === CROSS_TAB_AUTH_KEY) {
-      console.warn(`[LS_RECEIVE][${tabId}] storage event: key=${event.key} newValue=${event.newValue?.slice(0, 50)}...`)
+      logger.debug(`[LS_RECEIVE][${tabId}] storage event: key=${event.key} newValue=${event.newValue?.slice(0, 50)}...`)
       addDebugLog('LS raw receive', { key: event.key, hasNewValue: !!event.newValue })
     }
 
@@ -524,14 +524,14 @@ if (typeof window !== 'undefined') {
 
     try {
       const payload = JSON.parse(event.newValue)
-      console.warn(`[LS_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
+      logger.debug(`[LS_RECEIVE][${tabId}] calling handleIncomingAuthSwitch`)
       handleIncomingAuthSwitch(payload)
     } catch (e) {
-      console.warn(`[LS_RECEIVE][${tabId}] parse error:`, e)
+      logger.debug(`[LS_RECEIVE][${tabId}] parse error:`, e)
       addDebugLog('LS parse error', { error: String(e) })
     }
   })
-  console.warn(`[AUTH_LISTENER][${tabId}] storage READY`)
+  logger.debug(`[AUTH_LISTENER][${tabId}] storage READY`)
   addDebugLog('LISTENER ready', { type: 'localStorage' })
 }
 
@@ -549,7 +549,7 @@ function broadcastAuthChange(userId: string | null, source: string) {
   }
 
   const sendData = { userId: userId?.slice(0, 8) || 'null', source, fromTab: tabId, at: payload.at }
-  console.warn(`[BROADCAST][${tabId}][send] userId=${userId?.slice(0, 8) || 'null'} source=${source}`)
+  logger.debug(`[BROADCAST][${tabId}][send] userId=${userId?.slice(0, 8) || 'null'} source=${source}`)
   addDebugLog('BROADCAST send', sendData)
 
   // 🆕 BroadcastChannel送信
@@ -558,12 +558,12 @@ function broadcastAuthChange(userId: string | null, source: string) {
     try {
       authChannel.postMessage(payload)
       bcSent = true
-      console.warn(`[BROADCAST][${tabId}] BroadcastChannel postMessage SUCCESS`)
+      logger.debug(`[BROADCAST][${tabId}] BroadcastChannel postMessage SUCCESS`)
     } catch (e) {
-      console.warn(`[BROADCAST][${tabId}] BroadcastChannel postMessage FAILED:`, e)
+      logger.debug(`[BROADCAST][${tabId}] BroadcastChannel postMessage FAILED:`, e)
     }
   } else {
-    console.warn(`[BROADCAST][${tabId}] BroadcastChannel is NULL`)
+    logger.debug(`[BROADCAST][${tabId}] BroadcastChannel is NULL`)
   }
 
   // 🆕 localStorage送信（BroadcastChannelのバックアップ）
@@ -573,9 +573,9 @@ function broadcastAuthChange(userId: string | null, source: string) {
     // 同じ値を書き込むとイベントが発火しないため、必ず違う値にする
     localStorage.setItem(CROSS_TAB_AUTH_KEY, JSON.stringify(payload))
     lsSent = true
-    console.warn(`[BROADCAST][${tabId}] localStorage setItem SUCCESS`)
+    logger.debug(`[BROADCAST][${tabId}] localStorage setItem SUCCESS`)
   } catch (e) {
-    console.warn(`[BROADCAST][${tabId}] localStorage setItem FAILED:`, e)
+    logger.debug(`[BROADCAST][${tabId}] localStorage setItem FAILED:`, e)
   }
 
   // 送信結果サマリー
@@ -602,7 +602,7 @@ function applyPendingUserOnBoot() {
   const locationPath = window.location.pathname
   if (locationPath && !sessionStorage.getItem(PATH_NOW_KEY)) {
     sessionStorage.setItem(PATH_NOW_KEY, locationPath)
-    console.warn(`[BOOT][${tabId}] PATH_NOW_KEY set from location: ${locationPath}`)
+    logger.debug(`[BOOT][${tabId}] PATH_NOW_KEY set from location: ${locationPath}`)
   }
 
   // =====================================================
@@ -611,7 +611,7 @@ function applyPendingUserOnBoot() {
   // =====================================================
   const postReloadSyncUser = sessionStorage.getItem(POST_RELOAD_SYNC_KEY)
   if (postReloadSyncUser) {
-    console.warn(`[BOOT][${tabId}] 🎯 POST_RELOAD_SYNC found: ${postReloadSyncUser.slice(0, 8)}`)
+    logger.debug(`[BOOT][${tabId}] 🎯 POST_RELOAD_SYNC found: ${postReloadSyncUser.slice(0, 8)}`)
     addDebugLog('BOOT POST_RELOAD_SYNC', {
       user: postReloadSyncUser.slice(0, 8),
       prevBase: getBaseUserId()?.slice(0, 8) || 'null'
@@ -619,7 +619,7 @@ function applyPendingUserOnBoot() {
 
     // baseを強制的に同期（これでループを断ち切る）
     sessionStorage.setItem(BASE_USER_KEY, postReloadSyncUser)
-    console.warn(`[BOOT][${tabId}] ✅ BASE forced to: ${postReloadSyncUser.slice(0, 8)}`)
+    logger.debug(`[BOOT][${tabId}] ✅ BASE forced to: ${postReloadSyncUser.slice(0, 8)}`)
 
     // 使い終わったら削除
     sessionStorage.removeItem(POST_RELOAD_SYNC_KEY)
@@ -668,13 +668,13 @@ function applyPendingUserOnBoot() {
     actionFlag,
     actionFlagRaw: actionFlagRaw || 'null'
   }
-  console.warn(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag} actionFlagRaw=${actionFlagRaw || 'null'}`)
+  logger.debug(`[BOOT][${tabId}] path=${pathNow} authPage=${isAuth} base=${base?.slice(0, 8) || 'null'} pending=${pending?.slice(0, 8) || 'null'} guard=${guardAge !== null ? `${guardAge}ms` : 'null'} actionFlag=${actionFlag} actionFlagRaw=${actionFlagRaw || 'null'}`)
   addDebugLog('BOOT', bootData)
 
   // 🚨 CRITICAL FIX: 非authページで __auth_action__ が sessionStorage に残っていたら強制クリア
   // 関数の戻り値ではなく、sessionStorage を直接確認して確実にクリア
   if (!isAuth && actionFlagRaw) {
-    console.warn(`[BOOT][${tabId}] 🧹 FORCE clearing stale __auth_action__ on non-auth page: path=${pathNow} raw="${actionFlagRaw}"`)
+    logger.debug(`[BOOT][${tabId}] 🧹 FORCE clearing stale __auth_action__ on non-auth page: path=${pathNow} raw="${actionFlagRaw}"`)
     sessionStorage.removeItem(AUTH_ACTION_KEY)
     addDebugLog('BOOT force clear actionFlag', { path: pathNow, raw: actionFlagRaw })
   }
@@ -704,7 +704,7 @@ function applyPendingUserOnBoot() {
 
     if (baseIsNull) {
       // ✅ ALLOW: base が未設定（初回状態）→ pending を適用
-      console.warn(`[BOOT][${tabId}] pending decision: ALLOW (base is null)`, pendingDecision)
+      logger.debug(`[BOOT][${tabId}] pending decision: ALLOW (base is null)`, pendingDecision)
       addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'ALLOW', reason: 'base is null' })
       if (guardIsActive) {
         updateBaseUserId(pending, 'boot-pending')
@@ -715,14 +715,14 @@ function applyPendingUserOnBoot() {
       clearReloadGuard()
     } else if (isLocalActor && guardIsActive) {
       // ✅ ALLOW: 操作タブ（LOCAL ACTOR）かつ guard がアクティブ → pending を適用
-      console.warn(`[BOOT][${tabId}] pending decision: ALLOW (LOCAL ACTOR + guard active)`, pendingDecision)
+      logger.debug(`[BOOT][${tabId}] pending decision: ALLOW (LOCAL ACTOR + guard active)`, pendingDecision)
       addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'ALLOW', reason: 'LOCAL ACTOR + guard active' })
       updateBaseUserId(pending, 'boot-pending')
       clearPendingUserId()
       clearReloadGuard()
     } else {
       // ❌ DENY: PASSIVE タブ → pending を適用しない、mismatch 検出を邪魔しない
-      console.warn(`[BOOT][${tabId}] pending decision: DENY (PASSIVE tab) - clearing stale pending/guard`, pendingDecision)
+      logger.debug(`[BOOT][${tabId}] pending decision: DENY (PASSIVE tab) - clearing stale pending/guard`, pendingDecision)
       addDebugLog('BOOT pending decision', { ...pendingDecision, decision: 'DENY', reason: 'PASSIVE tab' })
       // 残骸をクリア（次回テスト汚染防止）
       clearPendingUserId()
@@ -732,7 +732,7 @@ function applyPendingUserOnBoot() {
     // pending がない場合もログ出力（デバッグ用）
     if (guardAge !== null) {
       // guard だけ残っている場合はクリア
-      console.warn(`[BOOT][${tabId}] no pending but guard exists - clearing stale guard`, pendingDecision)
+      logger.debug(`[BOOT][${tabId}] no pending but guard exists - clearing stale guard`, pendingDecision)
       addDebugLog('BOOT clearing stale guard', pendingDecision)
       clearReloadGuard()
     }
@@ -794,13 +794,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   // 🆕 ACTIVE タブ用バナー表示
   showAuthBanner: (newUserId, message) => {
-    console.warn(`[BANNER][${tabId}] BANNER_SHOWN`, { newUserId: newUserId.slice(0, 8), message })
+    logger.debug(`[BANNER][${tabId}] BANNER_SHOWN`, { newUserId: newUserId.slice(0, 8), message })
     addDebugLog('BANNER_SHOWN', { newUserId: newUserId.slice(0, 8), message, isPassive: false })
     set({ banner: { newUserId, message, at: Date.now() } })
   },
 
   clearAuthBanner: () => {
-    console.warn(`[BANNER][${tabId}] BANNER_CLEARED`)
+    logger.debug(`[BANNER][${tabId}] BANNER_CLEARED`)
     addDebugLog('BANNER_CLEARED', {})
     set({ banner: null })
   },
@@ -842,7 +842,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         let actionFlag = hasAuthActionFlag()
 
         // 🆕 onAuthStateChange発火を即座にログ
-        console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange FIRED`, {
+        logger.debug(`[AUTH_SWITCH][${tabId}] onAuthStateChange FIRED`, {
           newUserId: newUserId?.slice(0, 8) || 'null',
           baseUserId: baseUserId?.slice(0, 8) || 'null',
           pathNow,
@@ -860,12 +860,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // 🚨 CRITICAL: 非authページで actionFlag が残っていたら stale として即クリア
         // これがないと Tab1(/mypage) が誤って base を更新してしまう
         if (actionFlag && !isAuth) {
-          console.warn(`[AUTH_SWITCH][${tabId}] clearing stale actionFlag (pathNow=${pathNow})`)
+          logger.debug(`[AUTH_SWITCH][${tabId}] clearing stale actionFlag (pathNow=${pathNow})`)
           clearAuthActionFlag()
           actionFlag = false
         }
 
-        console.warn(`[AUTH_SWITCH][${tabId}] onAuthStateChange`, {
+        logger.debug(`[AUTH_SWITCH][${tabId}] onAuthStateChange`, {
           new: newUserId?.slice(0, 8) || 'none',
           base: baseUserId?.slice(0, 8) || 'none',
           pathNow,
@@ -878,14 +878,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           // 🚨 CRITICAL FIX: 操作タブ（auth page + actionFlag）のみ base を設定
           // passive tab では base 設定禁止（他タブのログインで誤って base が上書きされる問題を防止）
           if (isAuth && actionFlag) {
-            console.warn(`[AUTH_SWITCH][${tabId}] initial login (LOCAL - setting base)`)
+            logger.debug(`[AUTH_SWITCH][${tabId}] initial login (LOCAL - setting base)`)
             setBaseUserIdOnce(newUserId)
             set({ user: newUser })
             broadcastAuthChange(newUserId, 'initial')
             clearAuthActionFlag()
           } else {
             // 🚨 passive tab: base は設定しない、Zustand state のみ更新
-            console.warn(`[AUTH_SWITCH][${tabId}] initial login (PASSIVE - NOT setting base)`, {
+            logger.debug(`[AUTH_SWITCH][${tabId}] initial login (PASSIVE - NOT setting base)`, {
               pathNow,
               isAuth,
               actionFlag,
@@ -900,7 +900,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // user → null（ログアウト）
         if (baseUserId && !newUserId) {
-          console.warn(`[AUTH_SWITCH][${tabId}] logout`)
+          logger.debug(`[AUTH_SWITCH][${tabId}] logout`)
           clearBaseUserId()
           clearPendingUserId()
           set({ user: null })
@@ -910,7 +910,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // 同一ユーザー
         if (baseUserId === newUserId) {
-          console.warn(`[SKIP][${tabId}] SKIP_SAME_USER (onAuthStateChange: base === new)`)
+          logger.debug(`[SKIP][${tabId}] SKIP_SAME_USER (onAuthStateChange: base === new)`)
           addDebugLog('SKIP_SAME_USER', {
             base: baseUserId?.slice(0, 8) || 'null',
             new: newUserId?.slice(0, 8) || 'null',
@@ -923,7 +923,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // user → different user（ユーザー切替）
         if (baseUserId && newUserId && baseUserId !== newUserId) {
-          console.warn(`[AUTH_SWITCH][${tabId}] 🚨 USER SWITCH DETECTED`, {
+          logger.debug(`[AUTH_SWITCH][${tabId}] 🚨 USER SWITCH DETECTED`, {
             base: baseUserId.slice(0, 8),
             new: newUserId.slice(0, 8),
             pathNow,
@@ -940,7 +940,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // 🚨 (a) 操作タブ（auth page + auth_action=true）のみ base 更新
           if (isAuth && actionFlag) {
-            console.warn(`[AUTH_SWITCH][${tabId}] 🎯 LOCAL LOGIN (auth page + action flag) - calling broadcastAuthChange`)
+            logger.debug(`[AUTH_SWITCH][${tabId}] 🎯 LOCAL LOGIN (auth page + action flag) - calling broadcastAuthChange`)
             addDebugLog('LOCAL_LOGIN', { action: 'updating base and broadcasting' })
             updateBaseUserId(newUserId, 'auth-action')
             set({ user: newUser })
@@ -955,7 +955,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           if (isPassive) {
             // 🚨 PASSIVE タブ: alert + reload
-            console.warn(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - USER SWITCH detected, showing alert`)
+            logger.debug(`[AUTH_SWITCH][${tabId}] 📡 PASSIVE TAB - USER SWITCH detected, showing alert`)
             addDebugLog('PASSIVE_SWITCH mismatch', {
               base: baseUserId.slice(0, 8),
               new: newUserId.slice(0, 8),
@@ -966,7 +966,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             showAlertAndReload(newUserId)
           } else {
             // 🆕 ACTIVE タブ: バナー表示のみ
-            console.warn(`[AUTH_SWITCH][${tabId}] 🔔 ACTIVE TAB - USER SWITCH detected, showing banner`)
+            logger.debug(`[AUTH_SWITCH][${tabId}] 🔔 ACTIVE TAB - USER SWITCH detected, showing banner`)
             addDebugLog('ACTIVE_SWITCH mismatch', {
               base: baseUserId.slice(0, 8),
               new: newUserId.slice(0, 8),
@@ -979,7 +979,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       })
 
-      console.warn(`[AUTH_INIT][${tabId}] onAuthStateChange listener setup complete`)
+      logger.debug(`[AUTH_INIT][${tabId}] onAuthStateChange listener setup complete`)
     } catch (error) {
       logger.error(`[AUTH_INIT][${tabId}]`, error)
       globalInitialized = true
