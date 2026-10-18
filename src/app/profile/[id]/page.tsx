@@ -18,8 +18,7 @@ import {
   X
 } from 'lucide-react'
 import Link from 'next/link'
-import Avatar from '@/components/Avatar'
-import { resolveAvatarSrc } from '@/utils/imageResolver'
+import PhotoGallery from '@/components/profile/PhotoGallery'
 import { createClient } from '@/lib/supabase'
 import { LanguageSkill } from '@/types/profile'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -840,7 +839,6 @@ function ProfileDetailContent() {
   const displayImages = Array.isArray(photo_urls) && photo_urls.length > 0
     ? photo_urls
     : avatar_url ? [avatar_url] : []
-  const mainImage = displayImages[0] || null
 
   return (
     <div className="min-h-screen bg-[#f5ebe0]">
@@ -1221,36 +1219,8 @@ function ProfileDetailContent() {
       <div className="py-8 px-4">
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            {/* メイン画像 */}
-            <div className="relative aspect-square bg-gray-100">
-              <Avatar
-                src={mainImage}
-                alt={`${name}のプロフィール`}
-                className="w-full h-full object-cover"
-              />
-
-              {/* サブ画像 */}
-              {displayImages.length > 1 && (
-                <div className="absolute bottom-2 right-2 flex gap-1">
-                  {displayImages.slice(1, 3).map((url, index) => {
-                    const src = resolveAvatarSrc(url, supabase)
-                    return src ? (
-                      <img
-                        key={index}
-                        src={src}
-                        alt={`サブ画像${index + 1}`}
-                        className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
-                      />
-                    ) : null
-                  })}
-                  {displayImages.length > 3 && (
-                    <div className="w-12 h-12 rounded-lg bg-black/50 flex items-center justify-center border-2 border-white">
-                      <span className="text-white text-xs">+{displayImages.length - 3}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* 写真（#55：横にめくって見る。写真の選び方 displayImages は従来どおり） */}
+            <PhotoGallery photos={displayImages} name={name} />
 
             {/* プロフィール情報 */}
             <div className="p-6 space-y-4">
