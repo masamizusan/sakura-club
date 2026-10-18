@@ -12,9 +12,15 @@ const sendMessageSchema = z.object({
   translated_content: z.string().max(2000).nullable().optional(),
   // #15: translated_content の言語（ja/en/ko/zh-tw 以外は保存時に null にする）
   translated_lang: z.string().nullable().optional(),
+  // #25: 送る側が付ける一意の ID（再送で二重保存しないため）。形式が違うものは null として扱う
+  client_message_id: z.unknown().optional(),
 }).refine(data => data.content.trim().length > 0 || !!data.image_url, {
   message: 'メッセージまたは画像を入力してください',
 })
+
+// #25: client_message_id は uuid 形式のものだけ使う
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const CLIENT_MESSAGE_ID_INDEX = 'messages_sender_client_message_id_key'
 
 interface Params {
   params: {
@@ -118,6 +124,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       timestamp: message.created_at,
       isRead: message.is_read,
       readAt: message.read_at,
+      // #25: 画面が取り直したとき、同じ ID の仮メッセージを消すために返す
+      client_message_id: message.client_message_id || null,
     })) || []
 
     // 会話情報を構築
@@ -226,7 +234,12 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
-    const { content, image_url, translated_content, translated_lang } = validationResult.data
+    const { content, image_url, translated_content, translated_lang, client_message_id } = validationResult.data
+    // #25: uuid 形式でなければ null（従来どおり重複の確認なしで保存）
+    const clientMessageId =
+      typeof client_message_id === 'string' && UUID_PATTERN.test(client_message_id)
+        ? client_message_id.toLowerCase()
+        : null
     // #15: 訳が無い、または ja/en/ko/zh-tw 以外なら null
     const translatedLangToSave =
       translated_content && translated_lang && ['ja', 'en', 'ko', 'zh-tw'].includes(translated_lang)
@@ -269,7 +282,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     // メッセージの作成
-    const { data: newMessage, error: createError } = await supabase
+    const { data: insertedMessage, error: insertError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
@@ -280,11 +293,39 @@ export async function POST(request: NextRequest, { params }: Params) {
         image_url: image_url || null,
         is_read: false,
         created_at: new Date().toISOString(),
+        client_message_id: clientMessageId,
       })
       .select()
       .single()
 
-    if (createError) {
+    let newMessage = insertedMessage
+    let createError = insertError
+
+    // #25: 同じ送信者・同じ client_message_id が既に保存済み（通信が切れた後の再送など）
+    // → 新しく保存せず、既にある行を通常の成功と同じ形で返す（冪等）
+    if (
+      insertError &&
+      clientMessageId &&
+      insertError.code === '23505' &&
+      `${insertError.message} ${insertError.details ?? ''}`.includes(CLIENT_MESSAGE_ID_INDEX)
+    ) {
+      const { data: existingMessage, error: existingError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('sender_id', user.id)
+        .eq('client_message_id', clientMessageId)
+        .eq('conversation_id', conversationId)
+        .maybeSingle()
+      if (existingError) {
+        console.error('[messages] duplicate lookup error:', existingError.message)
+      }
+      if (existingMessage) {
+        newMessage = existingMessage
+        createError = null
+      }
+    }
+
+    if (createError || !newMessage) {
       console.error('Message creation error:', createError)
       return NextResponse.json(
         { error: 'メッセージの送信に失敗しました' },
@@ -302,6 +343,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       timestamp: newMessage.created_at,
       isRead: newMessage.is_read,
       readAt: newMessage.read_at,
+      client_message_id: newMessage.client_message_id || null,
     }
 
     return NextResponse.json({
