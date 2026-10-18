@@ -37,6 +37,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: '送信できる画像は JPEG・PNG・WebP・GIF のみです。',
     imageTooLarge: '画像のサイズは 10MB 以下にしてください。',
     imageUnreadable: '画像を読み込めませんでした。お手数ですが、もう一度画像を選び直してください（写真アプリから選んだ場合は、一度ファイルとして保存してからお試しください）。',
+    accountSuspended: 'アカウントが利用停止中のため、送信できません。',
+    imageSendFailed: '画像を送信できませんでした。時間をおいてもう一度お試しください。',
     imageUnavailable: '画像を表示できません',
     partnerUnavailable: 'このユーザーは現在ご利用いただけません',
     messageSending: '送信中…',
@@ -77,6 +79,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: 'Only JPEG, PNG, WebP, or GIF images can be sent.',
     imageTooLarge: 'Images must be 10MB or smaller.',
     imageUnreadable: "We couldn't read this image. Please select it again (if you chose it from the Photos app, try saving it as a file first).",
+    accountSuspended: "Your account is suspended, so you can't send messages.",
+    imageSendFailed: "We couldn't send the image. Please try again later.",
     imageUnavailable: 'Image unavailable',
     partnerUnavailable: 'This user is currently unavailable',
     messageSending: 'Sending…',
@@ -117,6 +121,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: 'JPEG, PNG, WebP, GIF 이미지만 보낼 수 있습니다.',
     imageTooLarge: '이미지 크기는 10MB 이하로 해 주세요.',
     imageUnreadable: '이미지를 읽을 수 없습니다. 다시 선택해 주세요(사진 앱에서 선택한 경우, 파일로 저장한 후 다시 시도해 주세요).',
+    accountSuspended: '계정이 이용 정지 중이므로 보낼 수 없습니다.',
+    imageSendFailed: '이미지를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.',
     imageUnavailable: '이미지를 표시할 수 없습니다',
     partnerUnavailable: '이 사용자는 현재 이용할 수 없습니다',
     messageSending: '전송 중…',
@@ -157,6 +163,8 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     imageInvalidType: '僅能傳送 JPEG、PNG、WebP、GIF 格式的圖片。',
     imageTooLarge: '圖片大小請控制在 10MB 以內。',
     imageUnreadable: '無法讀取此圖片。請重新選擇（若是從「照片」App 選取，請先另存為檔案後再試一次）。',
+    accountSuspended: '您的帳號已被停權，無法傳送。',
+    imageSendFailed: '無法傳送圖片，請稍後再試一次。',
     imageUnavailable: '無法顯示圖片',
     partnerUnavailable: '此使用者目前無法使用',
     messageSending: '傳送中…',
@@ -399,7 +407,12 @@ export default function ChatPage() {
       const { data, error } = await supabase.storage
         .from('chat-images')
         .upload(`${conversationId}/${fileName}`, imageBuffer, { contentType: selectedImage.type })
-      if (error) throw error
+      if (error) {
+        // #18: Storage へのアップロードの失敗（ブロック関係・権限・通信など）。プレビューは残す
+        console.error('[chat-image] upload error:', error.message)
+        alert(t('imageSendFailed'))
+        return
+      }
 
       // Storage のパス（{conversationId}/{ファイル名}）をメッセージとして送信（表示時に署名付き URL へ変換）
       const response = await fetch(`/api/messages/${conversationId}`, {
@@ -413,9 +426,28 @@ export default function ChatPage() {
         setSelectedImage(null)
         setImagePreview(null)
         if (fileInputRef.current) fileInputRef.current.value = ''
+      } else {
+        // #18: 保存 API の失敗。テキストと同じ辞書のキーで理由を出す（プレビューは残す）
+        const result = await response.json().catch(() => null)
+        let errorKey = 'imageSendFailed'
+        if (response.status === 401) {
+          errorKey = 'sendErrorAuthRequired'
+        } else if (result?.code === 'verification_required') {
+          errorKey = 'sendErrorVerificationRequired'
+        } else if (result?.code === 'subscription_required') {
+          errorKey = 'sendErrorSubscriptionRequired'
+        } else if (result?.code === 'account_suspended') {
+          errorKey = 'accountSuspended'
+        } else if (response.status === 404) {
+          errorKey = 'sendErrorConversationNotFound'
+        }
+        console.error('[chat-image] send error:', response.status, result?.code ?? '')
+        alert(t(errorKey))
       }
     } catch (error) {
+      // #18: 通信の失敗など
       console.error('Image upload error:', error)
+      alert(t('imageSendFailed'))
     } finally {
       setIsUploadingImage(false)
     }
@@ -926,6 +958,9 @@ export default function ChatPage() {
           errorKey = 'sendErrorVerificationRequired'
         } else if (result?.code === 'subscription_required') {
           errorKey = 'sendErrorSubscriptionRequired'
+        } else if (result?.code === 'account_suspended') {
+          // #18: 停止中
+          errorKey = 'accountSuspended'
         } else if (response.status === 404) {
           errorKey = 'sendErrorConversationNotFound'
         }
