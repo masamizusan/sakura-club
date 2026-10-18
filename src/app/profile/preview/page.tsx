@@ -627,9 +627,108 @@ const getNationalityLabel = (value: string, t: any): string => {
     'スペイン': t('nationalities.spain'),
     '韓国': t('nationalities.korea'),
     '中国': t('nationalities.china'),
+    // 多言語化 5：プロフィールで選べる国籍（NATIONALITY_OPTIONS）のうち足りなかったもの
+    '台湾': t('nationalities.taiwan'),
+    'タイ': t('nationalities.thailand'),
+    'オランダ': t('nationalities.netherlands'),
+    'スウェーデン': t('nationalities.sweden'),
+    'ノルウェー': t('nationalities.norway'),
+    'デンマーク': t('nationalities.denmark'),
+    'シンガポール': t('nationalities.singapore'),
     'その他': t('nationalities.other')
   }
   return nationalityLabels[value] || value
+}
+
+// 多言語化 5：プレビュー画面に出る文言（4 言語）
+type PreviewTextDict = {
+  loading: string
+  leaveConfirm: string
+  errorTitle: string
+  errorMessage: string
+  close: string
+  mismatchTitle: string
+  mismatchMessage: string
+  reload: string
+  backToMyPage: string
+  unsavedTitle: string
+  unsavedMessage: (buttonLabel: string) => string
+  photoAlt: string
+  subPhotoAlt: (n: number) => string
+  saveFailed: (message: string) => string
+}
+
+const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
+  ja: {
+    loading: 'プレビューを読み込んでいます...',
+    leaveConfirm: '変更内容が保存されていません。このページを離れますか？',
+    errorTitle: 'プレビューエラー',
+    errorMessage: 'プレビューの読み込みに失敗しました。',
+    close: '閉じる',
+    mismatchTitle: '別タブまたは認証状態の切替を検出しました',
+    mismatchMessage: '正しいプロフィールを表示するために、再読み込みするかマイページへ戻ってください。',
+    reload: '再読み込み',
+    backToMyPage: 'マイページへ戻る',
+    unsavedTitle: '⚠️ まだ変更は反映されていません',
+    unsavedMessage: (buttonLabel) => `「${buttonLabel}」を押すと、プロフィールに反映されます。`,
+    photoAlt: 'プロフィール',
+    subPhotoAlt: (n) => `サブ画像${n}`,
+    saveFailed: (message) => `プロフィールの保存に失敗しました: ${message}`,
+  },
+  en: {
+    loading: 'Loading preview...',
+    leaveConfirm: "Your changes haven't been saved. Leave this page?",
+    errorTitle: 'Preview error',
+    errorMessage: "Couldn't load the preview.",
+    close: 'Close',
+    mismatchTitle: 'Another tab or a change in your sign-in was detected',
+    mismatchMessage: 'To show the correct profile, please reload the page or go back to My Page.',
+    reload: 'Reload',
+    backToMyPage: 'Back to My Page',
+    unsavedTitle: "⚠️ Your changes haven't been applied yet",
+    unsavedMessage: (buttonLabel) => `Press "${buttonLabel}" to apply them to your profile.`,
+    photoAlt: 'Profile photo',
+    subPhotoAlt: (n) => `Additional photo ${n}`,
+    saveFailed: (message) => `Couldn't save your profile: ${message}`,
+  },
+  ko: {
+    loading: '미리보기를 불러오는 중...',
+    leaveConfirm: '변경 내용이 저장되지 않았습니다. 이 페이지를 나가시겠습니까?',
+    errorTitle: '미리보기 오류',
+    errorMessage: '미리보기를 불러오지 못했습니다.',
+    close: '닫기',
+    mismatchTitle: '다른 탭 또는 로그인 상태의 변경이 감지되었습니다',
+    mismatchMessage: '올바른 프로필을 표시하려면 새로고침하거나 마이페이지로 돌아가 주세요.',
+    reload: '새로고침',
+    backToMyPage: '마이페이지로 돌아가기',
+    unsavedTitle: '⚠️ 아직 변경 사항이 반영되지 않았습니다',
+    unsavedMessage: (buttonLabel) => `'${buttonLabel}' 버튼을 누르면 프로필에 반영됩니다.`,
+    photoAlt: '프로필 사진',
+    subPhotoAlt: (n) => `추가 사진 ${n}`,
+    saveFailed: (message) => `프로필을 저장하지 못했습니다: ${message}`,
+  },
+  'zh-tw': {
+    loading: '正在載入預覽...',
+    leaveConfirm: '變更內容尚未儲存。確定要離開此頁面嗎？',
+    errorTitle: '預覽錯誤',
+    errorMessage: '無法載入預覽。',
+    close: '關閉',
+    mismatchTitle: '偵測到其他分頁或登入狀態已變更',
+    mismatchMessage: '為了顯示正確的個人資料，請重新載入或返回我的頁面。',
+    reload: '重新載入',
+    backToMyPage: '返回我的頁面',
+    unsavedTitle: '⚠️ 變更尚未套用',
+    unsavedMessage: (buttonLabel) => `按下「${buttonLabel}」後，就會套用到您的個人資料。`,
+    photoAlt: '個人照片',
+    subPhotoAlt: (n) => `其他照片 ${n}`,
+    saveFailed: (message) => `無法儲存個人資料：${message}`,
+  },
+}
+
+// Suspense の fallback 用（ページの辞書が届かない場所）
+function PreviewLoadingText() {
+  const { currentLanguage } = useLanguage()
+  return <>{(PREVIEW_TEXT[currentLanguage] ?? PREVIEW_TEXT.ja).loading}</>
 }
 
 function ProfilePreviewContent() {
@@ -666,6 +765,12 @@ function ProfilePreviewContent() {
     }
   }
   
+  // 多言語化 5：画面の文言
+  const pt = PREVIEW_TEXT[contextLanguage] ?? PREVIEW_TEXT.ja
+  // 離脱確認は登録時（マウント時）の handler から読むため、最新の言語の文を ref に入れておく
+  const leaveConfirmTextRef = useRef(pt.leaveConfirm)
+  leaveConfirmTextRef.current = pt.leaveConfirm
+
   // Preview専用翻訳関数
   const getPreviewTranslation = (key: string) => {
     const translations = previewTranslations[contextLanguage] || previewTranslations['ja']
@@ -747,7 +852,7 @@ function ProfilePreviewContent() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isConfirmedRef.current) return // 保存済みなら警告しない
       e.preventDefault()
-      e.returnValue = '変更内容が保存されていません。このページを離れますか？'
+      e.returnValue = leaveConfirmTextRef.current
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
@@ -757,7 +862,7 @@ function ProfilePreviewContent() {
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       if (isConfirmedRef.current) return // 保存済みなら警告しない
-      const ok = window.confirm('変更内容が保存されていません。このページを離れますか？')
+      const ok = window.confirm(leaveConfirmTextRef.current)
       if (!ok) {
         history.pushState(null, '', location.href)
       }
@@ -774,7 +879,7 @@ function ProfilePreviewContent() {
       <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
-          <p className="text-gray-600">プレビューを読み込んでいます...</p>
+          <p className="text-gray-600">{pt.loading}</p>
         </div>
       </div>
     )
@@ -811,9 +916,9 @@ function ProfilePreviewContent() {
     return (
       <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-8">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">プレビューエラー</h1>
-          <p className="text-gray-600 mb-6">プレビューの読み込みに失敗しました。</p>
-          <Button onClick={() => window.close()}>閉じる</Button>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">{pt.errorTitle}</h1>
+          <p className="text-gray-600 mb-6">{pt.errorMessage}</p>
+          <Button onClick={() => window.close()}>{pt.close}</Button>
         </div>
       </div>
     )
@@ -826,20 +931,20 @@ function ProfilePreviewContent() {
         <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 mx-4 max-w-md text-center shadow-2xl">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-gray-900 mb-2">別タブまたは認証状態の切替を検出しました</h2>
-            <p className="text-gray-600 mb-6">正しいプロフィールを表示するために、再読み込みするかマイページへ戻ってください。</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">{pt.mismatchTitle}</h2>
+            <p className="text-gray-600 mb-6">{pt.mismatchMessage}</p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => window.location.reload()}
                 className="bg-[#8b1a2e] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#6e1525] transition-colors"
               >
-                再読み込み
+                {pt.reload}
               </button>
               <button
                 onClick={() => window.location.href = '/mypage'}
                 className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
-                マイページへ戻る
+                {pt.backToMyPage}
               </button>
             </div>
           </div>
@@ -871,8 +976,8 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto">
           {/* 🚨 未保存警告バナー（Option B実装 - 最優先） */}
           <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            ⚠️ まだ変更は反映されていません<br />
-            「この内容で確定」を押すと、プロフィールに反映されます。
+            {pt.unsavedTitle}<br />
+            {pt.unsavedMessage(t('profile.updateProfile'))}
           </div>
 
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -895,7 +1000,7 @@ function ProfilePreviewContent() {
                 return avatarSrc ? (
                   <img
                     src={avatarSrc}
-                    alt="プロフィール"
+                    alt={pt.photoAlt}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -914,7 +1019,7 @@ function ProfilePreviewContent() {
                       <img
                         key={`sub_${index}`}
                         src={subAvatarSrc}
-                        alt={`サブ画像${index + 1}`}
+                        alt={pt.subPhotoAlt(index + 1)}
                         className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-sm"
                       />
                     ) : null
@@ -1046,7 +1151,10 @@ function ProfilePreviewContent() {
                   }
                   
                   // 統一された言語表示ラベルを使用
+                  // 多言語化 5：言語名は表示言語で（profile.languageOptions.*）。それ以外のコードは従来の表示
                   const getLanguageDisplayLabel = (lang: string): string => {
+                    const optionKey: Record<string, string> = { ja: 'ja', en: 'en', ko: 'ko', 'zh-TW': 'zh_tw' }
+                    if (optionKey[lang]) return t(`profile.languageOptions.${optionKey[lang]}`)
                     return LANGUAGE_LABELS[lang as keyof typeof LANGUAGE_LABELS] || lang
                   }
                   
@@ -1449,7 +1557,7 @@ function ProfilePreviewContent() {
                     } catch (error) {
                       logger.error('[PREVIEW] save error:', (error as Error).message)
                       isSavingRef.current = false
-                      alert('プロフィールの保存に失敗しました: ' + (error as Error).message)
+                      alert(pt.saveFailed((error as Error).message))
                       return
                     }
                   }}
@@ -1472,7 +1580,7 @@ export default function ProfilePreviewPage() {
       <div className="min-h-screen bg-[#f5ebe0] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#8b1a2e]" />
-          <p className="text-gray-600">プレビューを読み込んでいます...</p>
+          <p className="text-gray-600"><PreviewLoadingText /></p>
         </div>
       </div>
     }>
