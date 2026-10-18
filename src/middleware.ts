@@ -31,6 +31,17 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // #11: API（/api/*）では getUser（認証サーバーへの通信）をしない。
+  // ログインの確認・停止中の確認は各 API の中（getUser・requireActiveProfile）と RLS が行っており、
+  // ここでは /api/ に対して停止中の確認も last_seen_at の更新もしていなかったため、二重の確認だけを外す。
+  // ただしトークンの期限切れの更新は続ける：getSession は cookie を読むだけで、期限切れのときだけ更新して
+  // 新しい cookie を API への request と応答の両方に書く（API 側の Supabase クライアントは cookie を書き戻せないため。
+  // API 側で更新すると、ブラウザに古い refresh token が残り、使い回しと判定されてログアウトされるおそれがある）
+  if (pathname.startsWith('/api/')) {
+    await supabase.auth.getSession()
+    return supabaseResponse
+  }
+
   // IMPORTANT: Do not write any logic between createServerClient and
   // supabase.auth.getUser(). This refreshes the session if expired.
   const { data: { user } } = await supabase.auth.getUser()
