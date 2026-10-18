@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { SupportedLanguage } from '@/utils/language'
 import { formatNotification } from '@/lib/notificationText'
+import { classifyAuthError, getAuthErrorMessage } from '@/lib/i18n/authErrors'
+import { logger } from '@/utils/logger'
 
 type Notification = {
   id: string
@@ -229,7 +231,9 @@ export default function SettingsPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) {
-        alert(t.alertChangeFailed(error.message))
+        // 元のエラー文はログにだけ残し、画面にはエラーの種類から表示言語の文を出す
+        logger.error('[SETTINGS] password change failed:', error.message)
+        alert(t.alertChangeFailed(getAuthErrorMessage(classifyAuthError(error), currentLanguage)))
       } else {
         alert(t.alertPasswordChanged)
         setNewPassword('')
