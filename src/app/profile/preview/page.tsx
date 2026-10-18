@@ -76,6 +76,21 @@ const getOccupationLabel = (value: string, t: any, isForeignMale: boolean = fals
     '主婦': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
     '主夫': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
     '主婦、主夫': isForeignMale ? t('occupations.houseHusband') : t('occupations.housewife'),
+    // #54: プロフィール編集の選択肢のうち足りなかったもの（編集画面と同じ occupations.* の訳）
+    '医師': t('occupations.doctor'),
+    '看護師': t('occupations.nurse'),
+    '教師・講師': t('occupations.teacher'),
+    'エンジニア': t('occupations.engineer'),
+    'デザイナー': t('occupations.designer'),
+    '営業': t('occupations.sales'),
+    'マーケティング': t('occupations.marketing'),
+    '研究者': t('occupations.researcher'),
+    'コンサルタント': t('occupations.consultant'),
+    '金融': t('occupations.finance'),
+    '法律関係': t('occupations.legal'),
+    'サービス業': t('occupations.serviceIndustry'),
+    '小売業': t('occupations.retail'),
+    '製造業': t('occupations.manufacturing'),
     'その他': t('occupations.other')
   }
   return occupationLabels[value] || value
