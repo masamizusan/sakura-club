@@ -530,6 +530,127 @@ const isTestMode = () => {
   return !!(urlParams.get('type') || urlParams.get('gender') || urlParams.get('nickname') || urlParams.get('birth_date') || urlParams.get('age') || urlParams.get('nationality'))
 }
 
+// 多言語化 5：プロフィール編集画面に出る文言（4 言語）
+// translations.ts（保護対象）にはキーを足さず、この画面の中に持つ
+type EditTextDict = {
+  loading: string
+  errorTitle: string
+  retry: string
+  typeErrorTitle: string
+  typeErrorMessage: string
+  typeErrorHint: string
+  initErrorTitle: string
+  initErrorHint: string
+  initForeignMaleFailed: (message: string) => string
+  authError: string
+  userLoadFailed: string
+  userNotFound: string
+  saveFailed: (message: string) => string
+  updateFailed: string
+  previewFailed: string
+  languageSkillError: (message: string) => string
+  languageSkillFallback: string
+  inputError: (message: string) => string
+  inputFallback: string
+  selectNationality: string
+  remove: string
+}
+
+const EDIT_TEXT: Record<SupportedLanguage, EditTextDict> = {
+  ja: {
+    loading: 'プロフィールを読み込んでいます...',
+    errorTitle: 'エラーが発生しました',
+    retry: '再試行',
+    typeErrorTitle: '🚫 プロフィール編集エラー',
+    typeErrorMessage: 'プロフィールの種類を確認できませんでした。',
+    typeErrorHint: 'マイページから、もう一度プロフィール編集を開いてください。',
+    initErrorTitle: '初期化エラー',
+    initErrorHint: 'ページを再読み込みして、もう一度お試しください。',
+    initForeignMaleFailed: (message) => `外国人男性フィールドの初期化に失敗しました: ${message}`,
+    authError: '認証エラーのため、プロフィール編集画面を表示できません',
+    userLoadFailed: 'ユーザー情報の読み込みに失敗しました',
+    userNotFound: 'ユーザー情報が見つかりません',
+    saveFailed: (message) => `プロフィールの保存に失敗しました: ${message}`,
+    updateFailed: 'プロフィールの更新に失敗しました',
+    previewFailed: 'プレビューの表示でエラーが発生しました。もう一度お試しください。',
+    languageSkillError: (message) => `言語スキルエラー: ${message}`,
+    languageSkillFallback: '言語と言語レベルを正しく入力してください',
+    inputError: (message) => `入力エラー: ${message}`,
+    inputFallback: '入力内容を確認してください',
+    selectNationality: '国籍を選択',
+    remove: '削除',
+  },
+  en: {
+    loading: 'Loading your profile...',
+    errorTitle: 'Something went wrong',
+    retry: 'Try again',
+    typeErrorTitle: '🚫 Profile edit error',
+    typeErrorMessage: "We couldn't determine your profile type.",
+    typeErrorHint: 'Please open Edit Profile again from My Page.',
+    initErrorTitle: 'Initialization error',
+    initErrorHint: 'Please reload the page and try again.',
+    initForeignMaleFailed: (message) => `Couldn't set up your profile fields: ${message}`,
+    authError: "We couldn't verify your sign-in, so the profile editor can't be shown.",
+    userLoadFailed: "Couldn't load your account information.",
+    userNotFound: "We couldn't find your account information.",
+    saveFailed: (message) => `Couldn't save your profile: ${message}`,
+    updateFailed: "Couldn't update your profile.",
+    previewFailed: 'Something went wrong while opening the preview. Please try again.',
+    languageSkillError: (message) => `Language error: ${message}`,
+    languageSkillFallback: 'Please enter your languages and levels correctly.',
+    inputError: (message) => `Input error: ${message}`,
+    inputFallback: 'Please check what you entered.',
+    selectNationality: 'Select nationality',
+    remove: 'Remove',
+  },
+  ko: {
+    loading: '프로필을 불러오는 중...',
+    errorTitle: '오류가 발생했습니다',
+    retry: '다시 시도',
+    typeErrorTitle: '🚫 프로필 편집 오류',
+    typeErrorMessage: '프로필 유형을 확인하지 못했습니다.',
+    typeErrorHint: '마이페이지에서 프로필 편집을 다시 열어 주세요.',
+    initErrorTitle: '초기화 오류',
+    initErrorHint: '페이지를 새로고침한 후 다시 시도해 주세요.',
+    initForeignMaleFailed: (message) => `프로필 항목을 준비하지 못했습니다: ${message}`,
+    authError: '로그인을 확인할 수 없어 프로필 편집 화면을 표시할 수 없습니다',
+    userLoadFailed: '사용자 정보를 불러오지 못했습니다',
+    userNotFound: '사용자 정보를 찾을 수 없습니다',
+    saveFailed: (message) => `프로필을 저장하지 못했습니다: ${message}`,
+    updateFailed: '프로필을 업데이트하지 못했습니다',
+    previewFailed: '미리보기를 여는 중 오류가 발생했습니다. 다시 시도해 주세요.',
+    languageSkillError: (message) => `언어 입력 오류: ${message}`,
+    languageSkillFallback: '언어와 언어 수준을 올바르게 입력해 주세요',
+    inputError: (message) => `입력 오류: ${message}`,
+    inputFallback: '입력 내용을 확인해 주세요',
+    selectNationality: '국적 선택',
+    remove: '삭제',
+  },
+  'zh-tw': {
+    loading: '正在載入個人資料...',
+    errorTitle: '發生錯誤',
+    retry: '重試',
+    typeErrorTitle: '🚫 個人資料編輯錯誤',
+    typeErrorMessage: '無法確認個人資料的類型。',
+    typeErrorHint: '請從我的頁面重新開啟個人資料編輯。',
+    initErrorTitle: '初始化錯誤',
+    initErrorHint: '請重新載入頁面後再試一次。',
+    initForeignMaleFailed: (message) => `無法準備個人資料欄位：${message}`,
+    authError: '無法確認登入狀態，因此無法顯示個人資料編輯畫面',
+    userLoadFailed: '無法載入使用者資訊',
+    userNotFound: '找不到使用者資訊',
+    saveFailed: (message) => `無法儲存個人資料：${message}`,
+    updateFailed: '無法更新個人資料',
+    previewFailed: '開啟預覽時發生錯誤，請再試一次。',
+    languageSkillError: (message) => `語言輸入錯誤：${message}`,
+    languageSkillFallback: '請正確輸入語言與語言程度',
+    inputError: (message) => `輸入錯誤：${message}`,
+    inputFallback: '請確認輸入的內容',
+    selectNationality: '選擇國籍',
+    remove: '刪除',
+  },
+}
+
 function ProfileEditContent() {
   // ALL HOOKS MUST BE AT THE VERY TOP - NO EARLY RETURNS BEFORE HOOKS
   const { user } = useAuth()
@@ -541,6 +662,8 @@ function ProfileEditContent() {
   
   // 統一言語設定
   const { t, language: currentLanguage } = useUnifiedTranslation()
+  // 多言語化 5：画面の文言
+  const et = EDIT_TEXT[currentLanguage as SupportedLanguage] ?? EDIT_TEXT.ja
   
   // 翻訳システム初期化確認
   useEffect(() => {
@@ -842,17 +965,17 @@ function ProfileEditContent() {
       router.push(previewUrl)
     } catch (error) {
       logger.error('❌ Error opening preview:', error)
-      alert('プレビューの表示でエラーが発生しました。もう一度お試しください。')
+      alert(et.previewFailed)
     }
   }, (errors) => {
     logger.error('❌ フォームバリデーションエラー:', errors)
     
     // エラーメッセージを表示
     if (errors.language_skills) {
-      alert(`言語スキルエラー: ${errors.language_skills.message || '言語と言語レベルを正しく入力してください'}`)
+      alert(et.languageSkillError(errors.language_skills.message || et.languageSkillFallback))
     } else {
       const firstError = Object.values(errors)[0]
-      alert(`入力エラー: ${firstError?.message || '入力内容を確認してください'}`)
+      alert(et.inputError(firstError?.message || et.inputFallback))
     }
   })
 
@@ -2990,7 +3113,7 @@ function ProfileEditContent() {
           
           // 遷移不可な致命的エラーの場合のみ停止
           if (!ensureResult.canContinue) {
-            setError('認証エラーのため、プロフィール編集画面を表示できません')
+            setError(et.authError)
             setUserLoading(false)
             return
           }
@@ -3382,7 +3505,7 @@ function ProfileEditContent() {
 
           } catch (error) {
             logger.error('[INIT] foreign-male fields error', error)
-            setInitializationError(`外国人男性フィールドの初期化に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            setInitializationError(et.initForeignMaleFailed(error instanceof Error ? error.message : 'Unknown error'))
             setValue('planned_prefectures', [], { shouldValidate: false })
             setValue('visit_schedule', undefined, { shouldValidate: false })
             setValue('travel_companion', 'undecided', { shouldValidate: false })
@@ -3782,7 +3905,7 @@ function ProfileEditContent() {
 
       } catch (error) {
         logger.error('Error loading user data:', error)
-        setError('ユーザー情報の読み込みに失敗しました')
+        setError(et.userLoadFailed)
       } finally {
         // 🚨 CRITICAL FIX: 例外が発生してもisInitializing確実解除（リアルタイム更新復活保証）
         logger.debug('🟢 isInitializing -> false (finally block - guaranteed)')
@@ -3833,7 +3956,7 @@ function ProfileEditContent() {
 
     if (!user) {
       logger.error('❌ No user found')
-      setError('ユーザー情報が見つかりません')
+      setError(et.userNotFound)
       return
     }
 
@@ -4719,7 +4842,7 @@ function ProfileEditContent() {
           uploadedImageUrls_count: uploadedImageUrls.length,
           profileImages_count: profileImages.length
         })
-        setError(`プロフィールの保存に失敗しました: ${saveResult.error}`)
+        setError(et.saveFailed(String(saveResult.error)))
         setIsSubmitting(false)
         return
       }
@@ -5002,7 +5125,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
     } catch (error) {
       logger.error('❌ プロフィール更新エラー:', error)
-      setError(error instanceof Error ? error.message : 'プロフィールの更新に失敗しました')
+      setError(error instanceof Error ? error.message : et.updateFailed)
     } finally {
       setIsSubmitting(false)
     }
@@ -5100,7 +5223,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#8b1a2e] mx-auto"></div>
-          <p className="mt-4 text-lg text-gray-600">プロフィールを読み込んでいます...</p>
+          <p className="mt-4 text-lg text-gray-600">{et.loading}</p>
         </div>
       </div>
     )
@@ -5117,7 +5240,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">エラーが発生しました</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{et.errorTitle}</h3>
             <p className="text-sm text-gray-500 mb-6">{error}</p>
             <button 
               onClick={() => {
@@ -5126,7 +5249,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
               }}
               className="w-full bg-[#8b1a2e] hover:bg-[#6e1525] text-white font-medium py-2 px-4 rounded"
             >
-              再試行
+              {et.retry}
             </button>
           </div>
         </div>
@@ -5137,19 +5260,20 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
   // Main return statement - normal profile editing interface  
   // 🌸 TASK3: typeクエリが無い場合の安全エラー表示（真っさら防止）
   if (!hasValidType && !userBasedType) {
+    // 開発用の情報はログへ（画面には利用者向けの文だけを出す）
+    logger.debug('[profile/edit] invalid type:', profileType || 'none', '(valid: foreign-male, japanese-female)')
     return (
       <div className="min-h-screen bg-[#f5ebe0]">
         <div className="flex items-center justify-center min-h-screen">
           <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-4">
             <h2 className="text-xl font-bold text-red-600 mb-4">
-              🚫 プロフィール編集エラー
+              {et.typeErrorTitle}
             </h2>
             <p className="text-gray-700 mb-4">
-              プロフィールタイプが指定されていません。正しいURLからアクセスしてください。
+              {et.typeErrorMessage}
             </p>
             <div className="text-sm text-gray-500">
-              <p>有効なtype: foreign-male, japanese-female</p>
-              <p>現在のtype: {profileType || 'なし'}</p>
+              <p>{et.typeErrorHint}</p>
             </div>
           </div>
         </div>
@@ -5208,9 +5332,9 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
               <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-center">
                 <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
                 <div>
-                  <p className="text-orange-700 text-sm font-medium">初期化エラー</p>
+                  <p className="text-orange-700 text-sm font-medium">{et.initErrorTitle}</p>
                   <p className="text-orange-600 text-xs mt-1">{initializationError}</p>
-                  <p className="text-orange-500 text-xs mt-2">エラーハンドリング v2.0 有効</p>
+                  <p className="text-orange-500 text-xs mt-2">{et.initErrorHint}</p>
                 </div>
               </div>
             )}
@@ -5344,7 +5468,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       }}
                     >
                       <SelectTrigger className={errors.nationality ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="国籍を選択" />
+                        <SelectValue placeholder={et.selectNationality} />
                       </SelectTrigger>
                       <SelectContent>
                         {NATIONALITIES.map((nationality) => (
@@ -5495,7 +5619,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                 }}
                                 className="text-red-600 hover:text-red-700"
                               >
-                                削除
+                                {et.remove}
                               </Button>
                             )}
                           </div>
@@ -5702,7 +5826,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                                 }}
                                 className="text-red-600 hover:text-red-700"
                               >
-                                削除
+                                {et.remove}
                               </Button>
                             )}
                           </div>
