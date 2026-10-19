@@ -13,6 +13,7 @@ import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNotifications } from '@/hooks/useNotifications'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
+import { handleUnauthorized } from '@/lib/auth/handleUnauthorized'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -139,6 +140,8 @@ export default function MessagesPage() {
   // 会話一覧の取得
   useEffect(() => {
     const fetchConversations = async () => {
+      // ログイン画面へ移すときは、読み込み中の表示のままにする（一瞬「メッセージがありません」を出さない）
+      let redirectingToLogin = false
       try {
         setIsLoading(true)
         setLoadError(false)
@@ -152,6 +155,11 @@ export default function MessagesPage() {
         if (response.ok) {
           setConversations(result.conversations || [])
         } else {
+          // #60 追加：401 のときはセッションを確かめ、認められなければログイン画面へ（そのときはエラー表示をしない）
+          if (response.status === 401 && await handleUnauthorized()) {
+            redirectingToLogin = true
+            return
+          }
           console.error('Failed to fetch conversations:', result.error)
           setConversations([])
           setLoadError(true)
@@ -161,7 +169,7 @@ export default function MessagesPage() {
         setConversations([])
         setLoadError(true)
       } finally {
-        setIsLoading(false)
+        if (!redirectingToLogin) setIsLoading(false)
       }
     }
 
