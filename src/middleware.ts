@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { isAuthRetryableFetchError, isAuthSessionMissingError } from '@supabase/supabase-js'
 
 // #60: サーバーがセッションを認めないときのエラーコード（取り消された・存在しない・トークンが不正）
 // 通信エラー・一時的な失敗（AuthRetryableFetchError・5xx）は含めない（ログイン画面に移さない）
@@ -32,10 +33,14 @@ const PUBLIC_PATH_PREFIXES = [
 // Supabase の認証 cookie（sb-<プロジェクト>-auth-token、分割された .0 .1 や code-verifier も含む）
 const AUTH_COOKIE_PATTERN = /^sb-.+-auth-token/
 
-function isRejectedSessionError(error: unknown): boolean {
+// hadAuthCookie：getUser() を呼ぶ前に、値の入った認証の cookie があったか
+function isRejectedSessionError(error: unknown, hadAuthCookie: boolean): boolean {
   if (!error || typeof error !== 'object') return false
+  if (isAuthRetryableFetchError(error)) return false
+  // #60 追加：サーバーの session_not_found（403）は、ライブラリが AuthSessionMissingError（400・code なし）に
+  // 作り替えて返す。cookie が無い人も同じエラーになるため、「cookie があったのに」の場合だけ「認めない」とする
+  if (isAuthSessionMissingError(error)) return hadAuthCookie
   const e = error as { name?: unknown; code?: unknown; status?: unknown }
-  if (e.name === 'AuthRetryableFetchError') return false
   if (typeof e.code === 'string' && REJECTED_SESSION_CODES.has(e.code)) return true
   // code が無い古い形式：401・403 のときだけ（5xx・0 は一時的な失敗として扱わない）
   return !e.code && (e.status === 401 || e.status === 403) && e.name === 'AuthApiError'
@@ -45,6 +50,11 @@ function isRejectedSessionError(error: unknown): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // #60 追加：getUser() の前に、値の入った認証の cookie を記録しておく
+  // （getUser() がセッションを消すと、request の cookie の値が空になるため）
+  const authCookiesBefore = request.cookies.getAll().filter(c => AUTH_COOKIE_PATTERN.test(c.name))
+  const hadAuthCookie = authCookiesBefore.some(c => c.value !== '')
 
   let supabaseResponse = NextResponse.next({
     request,
@@ -90,9 +100,9 @@ export async function middleware(request: NextRequest) {
   // （別の端末でのログアウト・取り消しなど）→ cookie を消してログイン画面へ。
   // こうしないと、画面は「ログイン中」のまま API だけが 401 を返し続ける
   // cookie が無い人（ログインしていない人）・公開ページ・一時的な失敗は今までどおり
-  const authCookies = request.cookies.getAll().filter(c => AUTH_COOKIE_PATTERN.test(c.name))
+  const authCookies = authCookiesBefore
   const isPublicPath = pathname === '/' || PUBLIC_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
-  if (!user && authCookies.length > 0 && !isPublicPath && isRejectedSessionError(getUserError)) {
+  if (!user && hadAuthCookie && !isPublicPath && isRejectedSessionError(getUserError, hadAuthCookie)) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
     loginUrl.search = ''
