@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Send, ArrowLeft, Heart, Mic, Camera, ShieldAlert, MoreVertical, Ban, Flag, X } from 'lucide-react'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
+import AuthGuard from '@/components/auth/AuthGuard'
 import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
@@ -1280,7 +1281,9 @@ export default function ChatPage() {
     }
   }
 
+  // #61: ログインしていない人はログイン画面へ（ほかの画面と同じ AuthGuard）
   return (
+    <AuthGuard>
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <Sidebar className="w-64 hidden md:block" />
       <div className="md:ml-64 fixed inset-0 md:left-64 flex flex-col" style={{ height: '100dvh' }}>
@@ -1824,5 +1827,6 @@ export default function ChatPage() {
         </div>
       )}
     </div>
+    </AuthGuard>
   )
 }

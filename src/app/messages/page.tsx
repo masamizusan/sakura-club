@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useNotifications } from '@/hooks/useNotifications'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { handleUnauthorized } from '@/lib/auth/handleUnauthorized'
+import AuthGuard from '@/components/auth/AuthGuard'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -294,7 +295,9 @@ export default function MessagesPage() {
     }
   }
 
+  // #61: ログインしていない人はログイン画面へ（ほかの画面と同じ AuthGuard）
   return (
+    <AuthGuard>
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Sidebar */}
       <Sidebar className="w-64 hidden md:block" />
@@ -450,5 +453,6 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }
