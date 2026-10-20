@@ -640,8 +640,10 @@ export default function ChatPage() {
   ) => {
     const translations = existingTranslations || translatedMessages
     // translated_contentがDB側にある場合はスキップ
+    // #59: 文字が空のメッセージ（画像だけなど）は翻訳しない（翻訳 API が 400 を返すため）
     const partnerMessages = msgs.filter(m =>
-      m.senderId !== myId && !translations[m.id] && !m.translated_content
+      m.senderId !== myId && !translations[m.id] && !m.translated_content &&
+      typeof m.content === 'string' && m.content.trim() !== ''
     )
     const resolvedTarget = targetLang || currentLanguage
 
