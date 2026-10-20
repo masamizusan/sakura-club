@@ -15,7 +15,8 @@ export function useSubscription() {
         .from('subscriptions')
         .select('status, current_period_end')
         .eq('user_id', user.id)
-        .single()
+        // #59: 行が無い人（女性・未加入の男性）で 406 にならないよう maybeSingle（行が無ければ data は null ＝未加入）
+        .maybeSingle()
 
       if (data && data.status === 'active') {
         const now = new Date()
