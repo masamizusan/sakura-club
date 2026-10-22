@@ -211,6 +211,8 @@ export const authService = {
   // 🆕 テストモード検出機能
   isTestModeActive(): boolean {
     if (typeof window === 'undefined') return false
+    // #63: 本番では常に無効（AuthGuard と同じ）。?devTest=true などで匿名ログインやテスト用の動きをさせない
+    if (process.env.NODE_ENV === 'production') return false
     const urlParams = new URLSearchParams(window.location.search)
     const pathname = window.location.pathname
     
@@ -280,11 +282,6 @@ export const authService = {
       }
       throw new AuthError('匿名ログイン処理中にエラーが発生しました')
     }
-  },
-
-  // 🆕 匿名ログイン機能（テストモード用）- 後方互換性
-  async signInAnonymously() {
-    return this.ensureTestAnonSession()
   },
 
   async getCurrentUser(): Promise<AuthUser | null> {

@@ -229,8 +229,9 @@ export function AuthDebugPanel() {
   }, [])
 
   // ?debugAuth=1 がない場合は表示しない
+  // #63: 本番では NEXT_PUBLIC_DEBUG=true のときだけ開ける（調べるときは Vercel で一時的に設定する）
   const debugAuth = searchParams?.get('debugAuth')
-  const isEnabled = debugAuth === '1'
+  const isEnabled = debugAuth === '1' && process.env.NEXT_PUBLIC_DEBUG === 'true'
 
   // スナップショットを定期更新
   useEffect(() => {

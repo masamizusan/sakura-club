@@ -1356,7 +1356,8 @@ function ProfileDetailContent() {
                         {translationError ? (
                           <div className="text-xs text-red-500">
                             <span>{t('translationFailed')}</span>
-                            {(typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugAuth') === '1') && (
+                            {/* #63: エラーの詳細は NEXT_PUBLIC_DEBUG=true のときだけ */}
+                            {(process.env.NEXT_PUBLIC_DEBUG === 'true' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugAuth') === '1') && (
                               <span className="block text-gray-400 mt-1">{translationError}</span>
                             )}
                             <button

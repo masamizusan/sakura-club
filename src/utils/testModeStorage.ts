@@ -11,6 +11,8 @@ const PROD_MODE_PREFIX = 'sakura_prod_'
 // テストモード検出関数（統一）
 export const isTestModeActive = (): boolean => {
   if (typeof window === 'undefined') return false
+  // #63: 本番では常に無効（AuthGuard と同じ）
+  if (process.env.NODE_ENV === 'production') return false
   
   const urlParams = new URLSearchParams(window.location.search)
   const pathname = window.location.pathname
