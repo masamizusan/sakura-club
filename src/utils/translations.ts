@@ -4,6 +4,7 @@
  */
 
 import { SupportedLanguage } from './language'
+import { logger } from '@/utils/logger'
 
 type TranslationKeys = {
   // プロフィール編集画面の基本項目
@@ -3486,7 +3487,7 @@ export function useUnifiedTranslation() {
     }
   } catch (error) {
     // フォールバック: LanguageProviderが利用できない場合（初期ロード時など）
-    console.warn('LanguageProvider not available, falling back to Japanese')
+    logger.debug('LanguageProvider not available, falling back to Japanese')
     return {
       t: (key: string) => getTranslation('ja', key),
       language: 'ja' as SupportedLanguage

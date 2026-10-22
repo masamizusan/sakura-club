@@ -266,7 +266,7 @@ export async function cleanupOldAvatars(
       .list(`avatars/${userId}`)
     
     if (listError || !files) {
-      console.warn('⚠️ Failed to list user files for cleanup:', listError)
+      logger.debug('⚠️ Failed to list user files for cleanup:', listError)
       return
     }
     
@@ -283,13 +283,13 @@ export async function cleanupOldAvatars(
         .remove(filesToDelete)
       
       if (deleteError) {
-        console.warn('⚠️ Cleanup partially failed:', deleteError)
+        logger.debug('⚠️ Cleanup partially failed:', deleteError)
       } else {
         logger.debug('✅ Old avatars cleaned up successfully')
       }
     }
     
   } catch (error) {
-    console.warn('⚠️ Avatar cleanup error (non-critical):', error)
+    logger.debug('⚠️ Avatar cleanup error (non-critical):', error)
   }
 }

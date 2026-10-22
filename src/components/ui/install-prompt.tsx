@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, Download, Smartphone } from 'lucide-react'
+import { logger } from '@/utils/logger'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -43,7 +44,7 @@ export function InstallPrompt() {
 
     // アプリがインストールされた時のイベント
     const handleAppInstalled = () => {
-      console.log('PWA was installed')
+      logger.debug('PWA was installed')
       setIsInstalled(true)
       setShowPrompt(false)
       setDeferredPrompt(null)
@@ -66,9 +67,9 @@ export function InstallPrompt() {
       const choiceResult = await deferredPrompt.userChoice
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt')
+        logger.debug('User accepted the install prompt')
       } else {
-        console.log('User dismissed the install prompt')
+        logger.debug('User dismissed the install prompt')
       }
     } catch (error) {
       console.error('Error during install prompt:', error)

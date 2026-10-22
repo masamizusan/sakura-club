@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { CheckCircle, XCircle, Clock, ShieldCheck, AlertTriangle, Ban, Flag, UserMinus } from 'lucide-react'
+import { logger } from '@/utils/logger'
 
 type TabType = 'requires_review' | 'auto_approved' | 'manual_approved' | 'rejected' | 'ai_flags' | 'reports' | 'leave_surveys'
 
@@ -178,7 +179,7 @@ export default function AdminVerificationPage() {
     try {
       const res = await fetch('/api/admin/leave-surveys')
       const json = await res.json()
-      console.log('退会アンケート取得:', { count: json.surveys?.length, error: json.error })
+      logger.debug('退会アンケート取得:', { count: json.surveys?.length, error: json.error })
       setLeaveSurveys((json.surveys as LeaveSurvey[]) || [])
     } catch (e) {
       console.error('fetchLeaveSurveys error:', e)
@@ -193,7 +194,7 @@ export default function AdminVerificationPage() {
     try {
       const res = await fetch(`/api/admin/flags?status=${subTab}`)
       const json = await res.json()
-      console.log('フラグ取得:', { subTab, count: json.flags?.length, error: json.error })
+      logger.debug('フラグ取得:', { subTab, count: json.flags?.length, error: json.error })
       setFlags((json.flags as MessageFlag[]) || [])
     } catch (e) {
       console.error('fetchFlags error:', e)
@@ -208,7 +209,7 @@ export default function AdminVerificationPage() {
     try {
       const res = await fetch(`/api/admin/reports?status=${subTab}`)
       const json = await res.json()
-      console.log('通報取得:', { subTab, count: json.reports?.length, error: json.error })
+      logger.debug('通報取得:', { subTab, count: json.reports?.length, error: json.error })
       setReports((json.reports as Report[]) || [])
     } catch (e) {
       console.error('fetchReports error:', e)
@@ -231,7 +232,7 @@ export default function AdminVerificationPage() {
 
   // service_role経由でフラグアクション（PATCH /api/admin/flags）
   const handleFlagAction = async (flagId: string, action: 'resolved' | 'warned' | 'suspended') => {
-    console.log('handleFlagAction called:', { flagId, action })
+    logger.debug('handleFlagAction called:', { flagId, action })
     try {
       const res = await fetch('/api/admin/flags', {
         method: 'PATCH',
@@ -239,7 +240,7 @@ export default function AdminVerificationPage() {
         body: JSON.stringify({ flagId, action }),
       })
       const json = await res.json()
-      console.log('PATCH /api/admin/flags response:', json)
+      logger.debug('PATCH /api/admin/flags response:', json)
       if (!res.ok) {
         alert('エラー: ' + (json.error || JSON.stringify(json)))
         return
@@ -307,7 +308,7 @@ export default function AdminVerificationPage() {
       reportCount = reportsPendingJson.count ?? 0
       reportDone = reportsDoneJson.count ?? 0
       leaveCount = leaveJson.count ?? 0
-      console.log('カウント取得:', { flagCount, flagDone, reportCount, reportDone, leaveCount })
+      logger.debug('カウント取得:', { flagCount, flagDone, reportCount, reportDone, leaveCount })
     } catch (e) {
       console.error('fetchCounts API error:', e)
     }

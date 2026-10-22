@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { setAuthPageMounted } from '@/store/authStore'
+import { logger } from '@/utils/logger'
 
 /**
  * AuthPageMarker - 認証ページ（login/signup）のマーカーコンポーネント
@@ -14,12 +15,12 @@ import { setAuthPageMounted } from '@/store/authStore'
 export function AuthPageMarker() {
   useEffect(() => {
     // マウント時: フラグを true に
-    console.warn('[AUTH_PAGE_MARKER] mounted - setting isAuthPageMounted=true')
+    logger.debug('[AUTH_PAGE_MARKER] mounted - setting isAuthPageMounted=true')
     setAuthPageMounted(true)
 
     // アンマウント時: フラグを false に戻す（cleanup）
     return () => {
-      console.warn('[AUTH_PAGE_MARKER] unmounted - setting isAuthPageMounted=false')
+      logger.debug('[AUTH_PAGE_MARKER] unmounted - setting isAuthPageMounted=false')
       setAuthPageMounted(false)
     }
   }, [])

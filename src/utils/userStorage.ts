@@ -32,7 +32,7 @@ const USER_SPECIFIC_KEYS = [
 export function getUserStorageKey(userId: string | null | undefined, key: string): string {
   if (!userId) {
     // ユーザーIDがない場合は警告を出して通常キーを返す
-    console.warn('⚠️ getUserStorageKey: userId is null/undefined, using non-namespaced key:', key)
+    logger.debug('⚠️ getUserStorageKey: userId is null/undefined, using non-namespaced key:', key)
     return key
   }
   return `${STORAGE_PREFIX}${userId}_${key}`
@@ -62,7 +62,7 @@ export function getUserStorage(userId: string | null | undefined, key: string): 
   if (value === null && userId) {
     const legacyValue = localStorage.getItem(key)
     if (legacyValue) {
-      console.warn('⚠️ getUserStorage: Found legacy non-namespaced key, migrating:', key)
+      logger.debug('⚠️ getUserStorage: Found legacy non-namespaced key, migrating:', key)
       // 旧キーから新キーに移行
       localStorage.setItem(storageKey, legacyValue)
       localStorage.removeItem(key)
@@ -174,7 +174,7 @@ export function validateStorageUserId(
   storedData: any
 ): boolean {
   if (!expectedUserId) {
-    console.warn('⚠️ validateStorageUserId: No expected userId')
+    logger.debug('⚠️ validateStorageUserId: No expected userId')
     return false
   }
 

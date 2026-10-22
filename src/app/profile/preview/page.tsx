@@ -1092,7 +1092,7 @@ function ProfilePreviewContent() {
                       effectiveLanguageSkills = JSON.parse(decodeURIComponent(languageSkillsParam))
                     }
                   } catch (e) {
-                    console.warn('Language skills parse error from URL:', e)
+                    logger.debug('Language skills parse error from URL:', e)
                   }
                   
                   // 🚀 CRITICAL FIX: 正しいpreviewDataキーからsessionStorageを取得
@@ -1111,7 +1111,7 @@ function ProfilePreviewContent() {
                         }
                       }
                     } catch (e) {
-                      console.warn('Language skills session parse error:', e)
+                      logger.debug('Language skills session parse error:', e)
                     }
                   }
                   
@@ -1318,7 +1318,7 @@ function ProfilePreviewContent() {
                           sessionLanguageSkills = Array.isArray(sessionData.language_skills) ? sessionData.language_skills : []
                         }
                       } catch (error) {
-                        console.warn('⚠️ sessionStorage language_skills取得失敗:', error)
+                        logger.debug('⚠️ sessionStorage language_skills取得失敗:', error)
                       }
                       
                       const skills = previewData?.language_skills ?? sessionLanguageSkills ?? []

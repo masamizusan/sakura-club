@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger'
 /**
  * 🔧 Base64 → Buffer 変換ユーティリティ
  * 
@@ -36,7 +37,7 @@ export function parseDataUrl(dataUrl: string): ParsedDataUrl {
   // ファイル拡張子を決定
   const ext = getExtensionFromContentType(contentType)
   
-  console.log('🔧 parseDataUrl:', {
+  logger.debug('🔧 parseDataUrl:', {
     contentType,
     ext,
     originalSize: dataUrl.length,
@@ -67,7 +68,7 @@ function getExtensionFromContentType(contentType: string): string {
   if (type.includes('gif')) return 'gif'
   
   // デフォルト（大部分がJPEG）
-  console.warn('⚠️ Unknown content type, defaulting to jpg:', contentType)
+  logger.debug('⚠️ Unknown content type, defaulting to jpg:', contentType)
   return 'jpg'
 }
 

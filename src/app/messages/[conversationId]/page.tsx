@@ -20,6 +20,7 @@ import { getReportModalLabels } from '@/utils/reportModalI18n'
 import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violationCategories'
 import { getBlockI18nLabels } from '@/utils/blockI18n'
 import { extractChatImagePath, resolveChatImageUrls } from '@/lib/chatImages'
+import { logger } from '@/utils/logger'
 
 const messagesTranslations: Record<string, Record<string, string>> = {
   ja: {
@@ -296,7 +297,7 @@ export default function ChatPage() {
   const handleReport = async () => {
     const reportLabels = getReportModalLabels(currentLanguage)
     if (!currentUserId || !conversation?.partnerId || !reportReason) {
-      console.warn('[handleReport] early return: missing field')
+      logger.debug('[handleReport] early return: missing field')
       return
     }
     setIsSubmittingReport(true)
@@ -871,7 +872,7 @@ export default function ChatPage() {
             return
           }
           hadSubscriptionProblem = true
-          console.warn('[realtime] messages channel status:', status, err?.message ?? '')
+          logger.debug('[realtime] messages channel status:', status, err?.message ?? '')
         })
     }
     subscribeChannel()

@@ -44,6 +44,7 @@ import {
   formatPersonalityTag,
   formatCultureTag
 } from '@/utils/profileTagFormatters'
+import { logger } from '@/utils/logger'
 
 // プロフィール詳細画面の多言語テキスト（ラベル + UI）
 const profileDetailTexts: Record<string, Record<string, string>> = {
@@ -341,7 +342,7 @@ function ProfileDetailContent() {
   // messages page (L187-191) と同じパターンに統一(2026/05/21)。
   const handleBlock = () => {
     if (!viewerId || !profileId || viewerId === profileId) {
-      console.warn('[handleBlock] early return: missing viewerId/profileId or self-block')
+      logger.debug('[handleBlock] early return: missing viewerId/profileId or self-block')
       return
     }
     setShowMenu(false)
@@ -373,7 +374,7 @@ function ProfileDetailContent() {
   const handleReport = async () => {
     const reportLabels = getReportModalLabels(currentLanguage)
     if (!viewerId || !profileId || !reportReason) {
-      console.warn('[handleReport] early return: missing field')
+      logger.debug('[handleReport] early return: missing field')
       return
     }
     setIsSubmittingReport(true)

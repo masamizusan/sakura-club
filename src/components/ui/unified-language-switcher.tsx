@@ -4,6 +4,7 @@ import { Globe } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { SupportedLanguage } from '@/utils/language'
+import { logger } from '@/utils/logger'
 
 interface UnifiedLanguageSwitcherProps {
   className?: string
@@ -45,7 +46,7 @@ export function UnifiedLanguageSwitcher({
   const label = LANGUAGE_LABELS[safeCurrentLanguage] ?? LANGUAGE_LABELS['ja']
 
   // デバッグログ（最終確認用）
-  console.log('🔍 Language Selector Final:', {
+  logger.debug('🔍 Language Selector Final:', {
     currentLanguage,
     safeCurrentLanguage,
     label,

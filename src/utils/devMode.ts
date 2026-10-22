@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger'
 /**
  * 開発テストモード用のユーティリティ関数
  */
@@ -5,14 +6,14 @@
 export function enableDevTestMode() {
   if (typeof window !== 'undefined') {
     localStorage.setItem('devTestMode', 'true')
-    console.log('🧪 Dev test mode enabled')
+    logger.debug('🧪 Dev test mode enabled')
   }
 }
 
 export function disableDevTestMode() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('devTestMode')
-    console.log('❌ Dev test mode disabled')
+    logger.debug('❌ Dev test mode disabled')
   }
 }
 

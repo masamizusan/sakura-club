@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger'
 // IndexedDB wrapper for offline data storage
 class OfflineStorage {
   private dbName = 'sakura-club-offline'
@@ -186,13 +187,13 @@ export class NetworkMonitor {
 
   private setupListeners(): void {
     window.addEventListener('online', () => {
-      console.log('Network: Online')
+      logger.debug('Network: Online')
       this.notifyListeners(true)
       this.syncPendingActions()
     })
 
     window.addEventListener('offline', () => {
-      console.log('Network: Offline')
+      logger.debug('Network: Offline')
       this.notifyListeners(false)
     })
   }
@@ -236,7 +237,7 @@ export class NetworkMonitor {
 
           if (response.ok) {
             await offlineStorage.deletePendingAction(action.id)
-            console.log('Synced pending action:', action.type)
+            logger.debug('Synced pending action:', action.type)
           }
         } catch (error) {
           console.error('Failed to sync action:', action.type, error)
