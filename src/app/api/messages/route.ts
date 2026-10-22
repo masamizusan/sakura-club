@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { getLangFromNationality } from '@/lib/i18n/translationLang'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
-    // #16: 受け手側の訳（message_translations）を探す言語（画面の表示言語）。不正な値は使わない
+    // #16: 画面の表示言語。自分のプロフィールを読めなかったときだけ、受け手側の訳を探す言語に使う。不正な値は使わない
     const langParam = searchParams.get('lang')
     const previewLanguage = langParam && PREVIEW_LANGUAGES.includes(langParam) ? langParam : null
 
@@ -88,7 +89,8 @@ export async function GET(request: NextRequest) {
     )
 
     // ② 会話（自分が参加者のものだけ RLS で返る）と ③ ブロックを同時に取る
-    const [conversationsResult, blocksResult] = await Promise.all([
+    // #16 追加：自分の国籍も同時に読む（受け手側の訳を探す言語をチャットと同じ「自分の国籍の言語」にするため）
+    const [conversationsResult, blocksResult, meResult] = await Promise.all([
       timer.measure('conv', () => supabase
         .from('conversations')
         .select('*, is_seen_user1, is_seen_user2')
@@ -100,7 +102,21 @@ export async function GET(request: NextRequest) {
         .from('blocks')
         .select('blocker_id, blocked_id')
         .or(`blocker_id.eq.${myProfileId},blocked_id.eq.${myProfileId}`)),
+      timer.measure('me', () => supabase
+        .from('profiles')
+        .select('nationality')
+        .eq('id', myProfileId)
+        .maybeSingle()),
     ])
+
+    // #16 追加：受け手側の訳を探す言語＝自分の国籍の言語（チャットと同じ。空・対応外は en）
+    // プロフィールを読めなかったときだけ、今までどおり画面の表示言語（?lang）を使う
+    let readLanguage: string | null = previewLanguage
+    if (meResult.error) {
+      console.error('[messages] my profile fetch error:', meResult.error.message)
+    } else {
+      readLanguage = getLangFromNationality(meResult.data?.nationality)
+    }
 
     const { data: allConversations, error: allError } = conversationsResult
     if (allError) {
@@ -147,7 +163,7 @@ export async function GET(request: NextRequest) {
         .eq('is_read', false)),
       timer.measure('last', () => supabase.rpc('get_conversation_last_messages', {
         p_conversation_ids: conversationIds,
-        p_language: previewLanguage,
+        p_language: readLanguage,
       })),
     ])
 
