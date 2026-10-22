@@ -24,6 +24,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     matchedOn: '{date} にマッチしました',
     matchedMessage: 'マッチしました！メッセージを送ってみましょう',
     unknownUser: 'ユーザー',
+    imageMessage: '📷 画像',
     messagePlaceholder: 'メッセージを入力...',
     yearsOld: '歳',
     online: 'オンライン',
@@ -40,6 +41,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     matchedOn: 'Matched on {date}',
     matchedMessage: "It's a match! Send them a message!",
     unknownUser: 'User',
+    imageMessage: '📷 Photo',
     messagePlaceholder: 'Type a message...',
     yearsOld: 'y/o',
     online: 'Online',
@@ -56,6 +58,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     matchedOn: '{date}에 매칭되었습니다',
     matchedMessage: '매칭되었습니다! 메시지를 보내보세요.',
     unknownUser: '사용자',
+    imageMessage: '📷 사진',
     messagePlaceholder: '메시지를 입력...',
     yearsOld: '세',
     online: '온라인',
@@ -72,6 +75,7 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     matchedOn: '於 {date} 配對成功',
     matchedMessage: '配對成功！來發送訊息吧。',
     unknownUser: '使用者',
+    imageMessage: '📷 照片',
     messagePlaceholder: '輸入訊息...',
     yearsOld: '歲',
     online: '線上',
@@ -90,6 +94,11 @@ interface Message {
   content: string | null  // まだやり取りが無い会話は null（画面では matchedMessage を出す）
   timestamp: string
   isRead: boolean
+  // #16: 一覧のプレビューをチャットと同じく訳で出すための値（API の関数が使えないときは false / null）
+  isMine?: boolean
+  isImageOnly?: boolean
+  translatedContent?: string | null
+  receiverTranslation?: string | null
 }
 
 // 会話の型定義
@@ -149,6 +158,8 @@ export default function MessagesPage() {
 
         const params = new URLSearchParams()
         if (debouncedSearchTerm) params.append('search', debouncedSearchTerm)
+        // #16: 受け手側の訳を探す言語（画面の表示言語）
+        params.append('lang', currentLanguage)
 
         const response = await fetch(`/api/messages?${params.toString()}`)
         const result = await response.json()
@@ -175,13 +186,16 @@ export default function MessagesPage() {
     }
 
     fetchConversations()
-  }, [debouncedSearchTerm, reloadKey])
+  }, [debouncedSearchTerm, reloadKey, currentLanguage])
 
   // ===== 一覧を開いている間の新着反映（C: バッジの未読数の変化 / D: 画面が前面に戻ったとき） =====
   // 新しい定期取得は追加しない。共有のバッジ件数（useNotifications）の変化を合図に取り直す
   const REFRESH_THROTTLE_MS = 3000
   const searchTermRef = useRef(debouncedSearchTerm)
   searchTermRef.current = debouncedSearchTerm
+  // #16: 裏での取り直しでも、今の表示言語で訳を探す
+  const languageRef = useRef(currentLanguage)
+  languageRef.current = currentLanguage
   const isRefreshingRef = useRef(false)
   const hasPendingRefreshRef = useRef(false)
   const lastRefreshAtRef = useRef(0)
@@ -202,6 +216,7 @@ export default function MessagesPage() {
     try {
       const params = new URLSearchParams()
       if (term) params.append('search', term)
+      params.append('lang', languageRef.current)
       const response = await fetch(`/api/messages?${params.toString()}`)
       const result = await response.json()
       // 取得中に検索欄が変わった場合は、検索側の取得に任せて結果を捨てる
@@ -438,7 +453,16 @@ export default function MessagesPage() {
                             <p className={`text-sm truncate ${
                               isUnread ? 'font-semibold text-gray-800' : 'text-gray-500'
                             }`}>
-                              {conversation.lastMessage.content ?? t('matchedMessage')}
+                              {(() => {
+                                // #16: チャットと同じ決まり。画像だけ → 辞書の文。自分のメッセージ → 原文。
+                                // 相手のメッセージ → 送信時の訳 → 受け手側の訳 → 原文 の順
+                                const lm = conversation.lastMessage
+                                if (lm.isImageOnly) return t('imageMessage')
+                                const text = lm.isMine
+                                  ? lm.content
+                                  : (lm.translatedContent ?? lm.receiverTranslation ?? lm.content)
+                                return text ?? t('matchedMessage')
+                              })()}
                             </p>
                           </div>
                         </div>

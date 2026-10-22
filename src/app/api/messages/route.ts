@@ -27,6 +27,25 @@ function createTimer() {
   }
 }
 
+// #16: プレビューの長さ（DB のトリガーの conversations.last_message と同じく 50 文字で切る）
+const PREVIEW_MAX_CHARS = 50
+const PREVIEW_LANGUAGES = ['ja', 'en', 'ko', 'zh-tw']
+
+function truncatePreview(text: string | null | undefined): string | null {
+  if (!text) return null
+  return text.length > PREVIEW_MAX_CHARS ? `${text.slice(0, PREVIEW_MAX_CHARS)}…` : text
+}
+
+type LastMessageRow = {
+  conversation_id: string
+  message_id: string
+  sender_id: string
+  content: string | null
+  is_image_only: boolean
+  translated_content: string | null
+  receiver_translation: string | null
+}
+
 // GET: 会話一覧の取得
 export async function GET(request: NextRequest) {
   const timer = createTimer()
@@ -58,6 +77,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    // #16: 受け手側の訳（message_translations）を探す言語（画面の表示言語）。不正な値は使わない
+    const langParam = searchParams.get('lang')
+    const previewLanguage = langParam && PREVIEW_LANGUAGES.includes(langParam) ? langParam : null
 
     // ブロック済みユーザーとの会話を除外するため、service_role でブロックを取る（RLS バイパス・両方向）
     const supabaseAdmin = createClient(
@@ -111,7 +133,8 @@ export async function GET(request: NextRequest) {
 
     // ④ 相手のプロフィール（公開用ビュー。未完成・停止中・ブロック関係の相手は返らず、一覧から除外）と
     // ⑤ 未読（相手からのメッセージで is_read = false）を、それぞれ 1 回で同時に取る
-    const [partnersResult, unreadResult] = await Promise.all([
+    // ⑥ #16: 会話ごとの最後のメッセージ（訳つき）も同時に取る（DB 関数。RLS で自分の会話の分だけ返る）
+    const [partnersResult, unreadResult, lastMessagesResult] = await Promise.all([
       timer.measure('partners', () => supabase
         .from('profiles_public')
         .select('id, name, age, nationality, residence, city, avatar_url')
@@ -122,6 +145,10 @@ export async function GET(request: NextRequest) {
         .in('conversation_id', conversationIds)
         .neq('sender_id', myProfileId)
         .eq('is_read', false)),
+      timer.measure('last', () => supabase.rpc('get_conversation_last_messages', {
+        p_conversation_ids: conversationIds,
+        p_language: previewLanguage,
+      })),
     ])
 
     if (partnersResult.error) {
@@ -130,6 +157,16 @@ export async function GET(request: NextRequest) {
     if (unreadResult.error) {
       console.error('[messages] unread fetch error:', unreadResult.error.message)
     }
+
+    // #16: 失敗したときは、今までどおり conversations.last_message を出す（一覧は壊さない）
+    if (lastMessagesResult.error) {
+      console.error('[messages] last messages fetch error:', lastMessagesResult.error.message)
+    }
+    const lastMessageByConversation = new Map<string, LastMessageRow>(
+      ((lastMessagesResult.error ? [] : lastMessagesResult.data) as LastMessageRow[] | null ?? [])
+        .map(row => [row.conversation_id, row])
+    )
+    const lastMessagesAvailable = !lastMessagesResult.error
 
     const partnerById = new Map((partnersResult.data ?? []).map(p => [p.id, p]))
     const unreadByConversation = new Map<string, number>()
@@ -148,6 +185,33 @@ export async function GET(request: NextRequest) {
         ? conv.is_seen_user1 === false
         : conv.is_seen_user2 === false
 
+      // #16: 最後のメッセージ。関数が使えれば、本当の送信者・画像だけか・訳を返す
+      const last = lastMessageByConversation.get(conv.id)
+      const lastMessage = lastMessagesAvailable
+        ? {
+            id: last?.message_id ?? 'placeholder',
+            senderId: last?.sender_id ?? partnerId,
+            isMine: last ? last.sender_id === myProfileId : false,
+            isImageOnly: last?.is_image_only ?? false,
+            // 画像だけのときの文は画面の辞書で出す（DB の「📷 画像」は使わない）
+            content: last && !last.is_image_only ? truncatePreview(last.content) : (last ? null : conv.last_message || null),
+            translatedContent: truncatePreview(last?.translated_content),
+            receiverTranslation: truncatePreview(last?.receiver_translation),
+            timestamp: conv.last_message_at || conv.created_at,
+            isRead: true,
+          }
+        : {
+            id: 'placeholder',
+            senderId: partnerId,
+            isMine: false,
+            isImageOnly: false,
+            content: conv.last_message || null,
+            translatedContent: null,
+            receiverTranslation: null,
+            timestamp: conv.last_message_at || conv.created_at,
+            isRead: true,
+          }
+
       return [{
         id: conv.id,
         partnerId,
@@ -158,13 +222,7 @@ export async function GET(request: NextRequest) {
         partnerLocation: `${partner.residence || ''}${partner.city || ''}`.trim() || null,
         partnerImage: partner.avatar_url || null,
         partnerAvatar: partner.avatar_url || null,
-        lastMessage: {
-          id: 'placeholder',
-          senderId: partnerId,
-          content: conv.last_message || null,
-          timestamp: conv.last_message_at || conv.created_at,
-          isRead: true
-        },
+        lastMessage,
         unreadCount: unreadByConversation.get(conv.id) ?? 0,
         isOnline: false,
         matchedDate: conv.created_at,
