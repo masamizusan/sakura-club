@@ -210,6 +210,11 @@ export default function LikesPage() {
   const specialLikers = useMemo(() => likers.filter(liker => liker.isSpecial === true), [likers])
   const normalLikers = useMemo(() => likers.filter(liker => liker.isSpecial !== true), [likers])
 
+  // #23: 表示に使う時刻。さくらいいねは受け取った時刻（special_sent_at）、通常のいいねは今までどおり（created_at）
+  // （さくらいいねは通常のいいねの行を更新するため、created_at は最初のいいねの時刻のまま）
+  const getDisplayAt = (liker: LikerProfile): string | null =>
+    liker.isSpecial && liker.specialSentAt ? liker.specialSentAt : liker.liked_at
+
   // いいねを日付でグループ化
   const groupedLikers = useMemo((): DateGroup[] => {
     if (normalLikers.length === 0) return []
@@ -218,7 +223,8 @@ export default function LikesPage() {
     const dateOrder: string[] = []
 
     normalLikers.forEach(liker => {
-      const dateKey = liker.liked_at ? getDateKey(liker.liked_at) : 'unknown'
+      const displayAt = getDisplayAt(liker)
+      const dateKey = displayAt ? getDateKey(displayAt) : 'unknown'
       if (!groups.has(dateKey)) {
         groups.set(dateKey, [])
         dateOrder.push(dateKey)
@@ -229,8 +235,9 @@ export default function LikesPage() {
     return dateOrder.map(dateKey => {
       const likersInGroup = groups.get(dateKey) || []
       const firstLiker = likersInGroup[0]
-      const dateLabel = firstLiker?.liked_at
-        ? formatDateHeading(firstLiker.liked_at)
+      const firstDisplayAt = firstLiker ? getDisplayAt(firstLiker) : null
+      const dateLabel = firstDisplayAt
+        ? formatDateHeading(firstDisplayAt)
         : ''
       return {
         dateKey,
@@ -285,9 +292,9 @@ export default function LikesPage() {
             {/* 基本情報（右側） */}
             <div className="ml-4 flex-1 min-w-0 flex flex-col justify-center">
               {/* 時刻 */}
-              {liker.liked_at && (
+              {getDisplayAt(liker) && (
                 <p className="text-sm text-gray-400 mb-1">
-                  {formatTime(liker.liked_at)}
+                  {formatTime(getDisplayAt(liker)!)}
                 </p>
               )}
               {/* 年齢 */}
