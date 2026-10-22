@@ -1472,7 +1472,7 @@ export default function ChatPage() {
 
         {/* 入力欄（会話相手が利用不可のときは表示しない） */}
         {!partnerUnavailable && (
-        <div className="p-4 flex-shrink-0" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
+        <div className="p-4 flex-shrink-0" style={{ backgroundColor: 'var(--color-bg-card)', borderTop: '1px solid var(--color-border)', paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="max-w-2xl mx-auto">
 
             {/* 翻訳プレビュー（自動・コンパクト表示） */}
@@ -1615,7 +1615,7 @@ export default function ChatPage() {
                       handleSend()
                     }}
                     rows={1}
-                    className="flex-1 rounded-md px-3 py-2 text-sm focus-visible:outline-none"
+                    className="flex-1 rounded-md px-3 py-2 text-base focus-visible:outline-none"
                     style={{
                       resize: 'none',
                       minHeight: '40px',
