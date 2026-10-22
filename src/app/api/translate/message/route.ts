@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 import { detectScriptLang } from '@/lib/translation/detectScript'
+import { logger } from '@/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,8 @@ function checkRateLimit(userId: string): boolean {
   return true
 }
 
-async function translateWithOpenAI(text: string, targetLang: SupportedLanguage, sourceLang?: string): Promise<string> {
+// #65: insist = true はやり直し用。原文の言語が翻訳先と違うと分かっているときに、必ず訳すよう指示を強める
+async function translateWithOpenAI(text: string, targetLang: SupportedLanguage, sourceLang?: string, insist = false): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     console.error('[TRANSLATE_MSG] OPENAI_API_KEY is not configured')
@@ -60,6 +62,11 @@ async function translateWithOpenAI(text: string, targetLang: SupportedLanguage, 
   }
 
   const targetLanguageName = LANGUAGE_NAMES[targetLang]
+  const insistNote = insist
+    ? `
+
+NOTE: This text is NOT in ${targetLanguageName}. You MUST translate it into ${targetLanguageName}. Do NOT return the original text unchanged. Short words, words with numbers, and loanwords must also be translated (e.g. テスト６３ → Test 63).`
+    : ''
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -93,7 +100,7 @@ ${targetLang === 'ja' ? `6. Romanized Japanese proper nouns (e.g. Asakusa, Kamin
 8. Do NOT over-translate English proper nouns into Japanese` : `6. Japanese place names, food names, and cultural proper nouns should keep their romanized form (romaji) only
    Examples: 浅草 → "Asakusa" / 人形焼き → "Ningyo-yaki" / 仲見世通り → "Nakamise-dori" / もんじゃ焼き → "Monjayaki"
 7. Do NOT force-translate Japanese proper nouns into literal meanings
-8. Do NOT add parenthetical explanations after proper nouns`}`
+8. Do NOT add parenthetical explanations after proper nouns`}${insistNote}`
         },
         {
           role: 'user',
@@ -220,7 +227,8 @@ export async function POST(request: NextRequest) {
     // （AI が「翻訳」ではなく返事を作ってしまうのを防ぐ。送信側は「訳＝原文なら null」で translated_content が null になる）
     // キャッシュの読み込みより前に判定する：過去に保存された誤った訳（返事）がキャッシュに残っていても返さないため。
     // 同じ言語で返した結果は message_translations にキャッシュしない（原文を返すだけなので保存する意味がない）
-    if (detectScriptLang(text) === targetLanguage) {
+    const detectedLang = detectScriptLang(text)
+    if (detectedLang === targetLanguage) {
       return NextResponse.json({
         translatedText: text,
         cached: false
@@ -290,9 +298,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // #65: 判定した言語が翻訳先と違うのに、AI が原文のまま返した（例：「テスト６３」を英語へ）→ 指示を強めて 1 回だけやり直す
+    // 判定できない（null）ときはやり直さない（数字だけ・英語どうし等、原文のままが正しい場合があるため）
+    // やり直しは回数制限に数えない。やり直しが失敗・原文のままでも、エラーにはせず原文を返す
+    const isSameAsOriginal = (result: string) => result.trim() === text.trim()
+    if (detectedLang !== null && isSameAsOriginal(translatedText)) {
+      logger.debug('[TRANSLATE_MSG] #65 retry: result equals original', { lang: targetLanguage, detected: detectedLang })
+      try {
+        translatedText = await translateWithOpenAI(text, targetLanguage as SupportedLanguage, undefined, true)
+      } catch (retryError) {
+        logger.debug('[TRANSLATE_MSG] #65 retry failed:', retryError instanceof Error ? retryError.message : 'unknown')
+      }
+      if (isSameAsOriginal(translatedText)) {
+        logger.debug('[TRANSLATE_MSG] #65 retry: still equals original', { lang: targetLanguage })
+      }
+    }
+
     // キャッシュ保存（service_role で書き込み。ユーザー権限での書き込みは RLS で禁止する方針）
     // 実在するメッセージで、かつ自分が参加している会話のものだけ保存する
-    if (isCacheableMessageId) {
+    // #65: 訳が原文と同じなら保存しない（#48 と同じ考え方。次に開いたときにもう一度訳を試せるように）
+    if (isCacheableMessageId && !isSameAsOriginal(translatedText)) {
       try {
         const serviceSupabase = createServiceClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
