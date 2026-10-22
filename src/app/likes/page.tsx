@@ -200,6 +200,20 @@ export default function LikesPage() {
     return formatter.format(date)
   }
 
+  // #23: さくらいいねのカードの時刻。今日なら「時:分」、今日以外は「月日 時:分」（例：10月21日 21:05 / Oct 21 9:05 PM）
+  // さくらいいねの欄には日付の見出しが無いため、日付も付ける
+  const formatSpecialTime = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const today = new Date()
+    const isToday =
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    if (isToday) return formatTime(dateStr)
+    const monthDay = new Intl.DateTimeFormat(getAppLocale(), { month: 'short', day: 'numeric' }).format(date)
+    return `${monthDay} ${formatTime(dateStr)}`
+  }
+
   // 日付キーを取得（グループ化用）
   const getDateKey = (dateStr: string): string => {
     const date = new Date(dateStr)
@@ -294,7 +308,7 @@ export default function LikesPage() {
               {/* 時刻 */}
               {getDisplayAt(liker) && (
                 <p className="text-sm text-gray-400 mb-1">
-                  {formatTime(getDisplayAt(liker)!)}
+                  {isSpecial ? formatSpecialTime(getDisplayAt(liker)!) : formatTime(getDisplayAt(liker)!)}
                 </p>
               )}
               {/* 年齢 */}
