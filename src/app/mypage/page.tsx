@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import Link from 'next/link'
+import { isForeignMaleUser } from '@/utils/userHelpers'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { MenuRow, LikeRemainingRow } from '@/components/mypage/MenuRow'
@@ -56,9 +57,12 @@ function MyPageContent() {
       verificationRequired: '本人年齢確認が未完了です',
       verificationRequiredDesc: 'メッセージ機能を使うには年齢確認が必要です',
       verificationPending: '年齢確認の審査中です',
-      verificationPendingDesc: '審査が完了次第、メッセージ機能が利用可能になります',
+      verificationPendingDesc: '審査が完了するまで、しばらくお待ちください',
       verificationApproved: '本人年齢確認済み',
-      verificationApprovedDesc: 'すべての機能をご利用いただけます',
+      verificationApprovedDesc: '年齢確認が完了しています',
+      // #22: 外国人男性で未加入のときだけ、年齢確認済みのバナーの下に出す
+      planRequired: 'メッセージを送るには、プランへの登録が必要です',
+      planRequiredLink: 'プランを見る →',
       verificationRejected: '年齢確認が却下されました',
       verificationRejectedDesc: '再度年齢確認を行ってください',
       membershipStatus: '会員ステータス',
@@ -92,9 +96,11 @@ function MyPageContent() {
       verificationRequired: 'Age Verification Required',
       verificationRequiredDesc: 'Age verification is required to use the messaging feature',
       verificationPending: 'Age Verification Under Review',
-      verificationPendingDesc: 'You will be able to message once approved',
+      verificationPendingDesc: 'Please wait while we review your submission',
       verificationApproved: 'Age Verified',
-      verificationApprovedDesc: 'You have access to all features',
+      verificationApprovedDesc: 'Your age verification is complete',
+      planRequired: 'To send messages, please choose a plan',
+      planRequiredLink: 'View plans →',
       verificationRejected: 'Age Verification Rejected',
       verificationRejectedDesc: 'Please resubmit your ID for age verification',
       membershipStatus: 'Membership Status',
@@ -127,9 +133,11 @@ function MyPageContent() {
       verificationRequired: '나이 확인이 필요합니다',
       verificationRequiredDesc: '메시지 기능을 사용하려면 나이 확인이 필요합니다',
       verificationPending: '나이 확인 심사 중',
-      verificationPendingDesc: '심사가 완료되면 메시지 기능을 사용할 수 있습니다',
+      verificationPendingDesc: '심사가 완료될 때까지 잠시 기다려 주세요',
       verificationApproved: '나이 확인 완료',
-      verificationApprovedDesc: '모든 기능을 이용하실 수 있습니다',
+      verificationApprovedDesc: '연령 확인이 완료되었습니다',
+      planRequired: '메시지를 보내려면 요금제에 가입해야 합니다',
+      planRequiredLink: '요금제 보기 →',
       verificationRejected: '나이 확인이 거절되었습니다',
       verificationRejectedDesc: '다시 나이 확인을 진행해 주세요',
       membershipStatus: '회원 상태',
@@ -162,9 +170,11 @@ function MyPageContent() {
       verificationRequired: '需要進行年齡確認',
       verificationRequiredDesc: '使用訊息功能需要完成年齡確認',
       verificationPending: '年齡確認審查中',
-      verificationPendingDesc: '審查完成後即可使用訊息功能',
+      verificationPendingDesc: '審核完成前，請稍候',
       verificationApproved: '年齡已確認',
-      verificationApprovedDesc: '您可以使用所有功能',
+      verificationApprovedDesc: '年齡確認已完成',
+      planRequired: '若要傳送訊息，需要訂閱方案',
+      planRequiredLink: '查看方案 →',
       verificationRejected: '年齡確認被拒絕',
       verificationRejectedDesc: '請重新進行年齡確認',
       membershipStatus: '會員狀態',
@@ -476,6 +486,15 @@ function MyPageContent() {
               {getMypageTranslation('verificationApproved')}
             </p>
             <p className="text-sm text-green-600 mt-1">{getMypageTranslation('verificationApprovedDesc')}</p>
+            {/* #22: 外国人男性で未加入のときだけ。加入状態はページの読み込み中（全体の読み込み表示）に確定するので、一瞬出たり消えたりしない */}
+            {isForeignMaleUser(profile) && !hasSubscription && (
+              <p className="text-sm text-gray-700 mt-2">
+                {getMypageTranslation('planRequired')}{' '}
+                <Link href="/mypage/plans" className="underline font-medium" style={{ color: 'var(--color-primary)' }}>
+                  {getMypageTranslation('planRequiredLink')}
+                </Link>
+              </p>
+            )}
           </div>
         )
       case 'rejected':
