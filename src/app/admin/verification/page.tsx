@@ -89,6 +89,8 @@ type VerificationRequest = {
     auto_approve: boolean
   } | null
   ai_review_flags: string[] | null
+  // #21: 一覧の API がまとめて作った身分証画像の署名付き URL（作れなかった行は null）
+  signed_url: string | null
 }
 
 type TabCounts = Record<TabType, number>
@@ -255,31 +257,21 @@ export default function AdminVerificationPage() {
   }
 
   const fetchCounts = useCallback(async () => {
-    // 身分証審査カウントは service_role 経由（GET /api/admin/verification）
-    let data: { id: string; verification_status: string; ai_review_result: unknown }[] | null = null
-    try {
-      const res = await fetch('/api/admin/verification?count_only=true', { credentials: 'include' })
-      const json = await res.json()
-      if (res.ok) {
-        data = json.rows ?? []
-      } else {
+    // 身分証審査の件数は service_role 経由（GET /api/admin/verification?count_only=true）
+    // #21: API が状態ごとの件数だけを返す。フラグ・通報・退会者の件数と同時に取る
+    const verificationCountsPromise = (async () => {
+      try {
+        const res = await fetch('/api/admin/verification?count_only=true', { credentials: 'include' })
+        const json = await res.json()
+        if (res.ok) {
+          return json.counts as { requires_review: number; auto_approved: number; manual_approved: number; rejected: number }
+        }
         console.error('[admin/verification] count fetch error:', json.error)
+      } catch (e) {
+        console.error('[admin/verification] count fetch error:', e)
       }
-    } catch (e) {
-      console.error('[admin/verification] count fetch error:', e)
-    }
-
-    let requires = 0, auto = 0, manual = 0, rejected = 0
-    if (data) {
-      for (const row of data) {
-        if (row.verification_status === 'requires_review') requires++
-        else if (row.verification_status === 'approved') {
-          const ai = row.ai_review_result as { auto_approve?: boolean } | null
-          if (ai?.auto_approve === true) auto++
-          else manual++
-        } else if (row.verification_status === 'rejected') rejected++
-      }
-    }
+      return null
+    })()
 
     // フラグ・通報・退会アンケートのカウントは service_role 経由（RLS回避）
     // 未対応 + 対応済み + 退会者数を一括取得
@@ -313,11 +305,13 @@ export default function AdminVerificationPage() {
       console.error('fetchCounts API error:', e)
     }
 
+    const verificationCounts = await verificationCountsPromise
+
     setCounts({
-      requires_review: requires,
-      auto_approved: auto,
-      manual_approved: manual,
-      rejected,
+      requires_review: verificationCounts?.requires_review ?? 0,
+      auto_approved: verificationCounts?.auto_approved ?? 0,
+      manual_approved: verificationCounts?.manual_approved ?? 0,
+      rejected: verificationCounts?.rejected ?? 0,
       ai_flags: flagCount,
       reports: reportCount,
       leave_surveys: leaveCount,
@@ -363,25 +357,12 @@ export default function AdminVerificationPage() {
 
       setRequests(filtered)
 
-      // 署名付きURLをAPI経由で取得（service role）
+      // #21: 署名付き URL は一覧の API がまとめて作って返す（1 件ずつの signed-url 呼び出しはしない）
+      const urls: Record<string, string> = {}
       for (const req of filtered) {
-        if (req.id_document_url) {
-          try {
-            const res = await fetch('/api/admin/verification/signed-url', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ filePath: req.id_document_url }),
-            })
-            const result = await res.json()
-            if (result.signedUrl) {
-              setImageUrls(prev => ({ ...prev, [req.id]: result.signedUrl }))
-            }
-          } catch (e) {
-            console.error('[admin/verification] signed URL error for', req.id, e)
-          }
-        }
+        if (req.signed_url) urls[req.id] = req.signed_url
       }
+      setImageUrls(urls)
     }
     setLoading(false)
   }, [])
@@ -635,14 +616,14 @@ export default function AdminVerificationPage() {
                           <img
                             src={imageUrls[req.id]}
                             alt="身分証"
+                            loading="lazy"
+                            decoding="async"
                             className="w-full rounded-lg object-contain max-h-56 bg-gray-50 border border-gray-100"
                           />
                         ) : (
+                          // #21: URL は一覧と一緒に届くので、無い＝画像が無いか署名に失敗した（読み込み中ではない）
                           <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-                            <div className="text-center">
-                              <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin mx-auto mb-2" />
-                              画像を読み込み中...
-                            </div>
+                            {req.id_document_url ? '画像を表示できませんでした（再読み込みしてください）' : '画像がありません'}
                           </div>
                         )}
                       </div>
