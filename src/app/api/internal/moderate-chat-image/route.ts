@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { timingSafeEqual } from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { extractChatImagePath } from '@/lib/chatImages'
+import { decideImageModeration, FORCED_TEST_RESULT, moderateImage, type ImageModerationResult } from '@/lib/moderation/moderateImage'
+import { isValidWebhookSecret, moveToQuarantine } from '@/lib/moderation/imageQuarantine'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic'
  * #17: チャット画像の AI 審査（Supabase の Database Webhook：messages の INSERT から呼ばれる）
  * - 利用者が呼ぶ API ではない。合言葉（x-webhook-secret ＝ CHAT_IMAGE_MODERATION_SECRET）で守る
  * - OpenAI moderation API（omni-moderation-latest）で 性的・自傷・暴力 を判定する（連絡先は判定しない）
+ *   判定・隔離・合言葉の照合は #67 で src/lib/moderation/ に共通化（動きは同じ）
  * - 性的・自傷・暴力（生々しいもの）→ 画像を chat-images-quarantine の同じパスへ移し（隔離）、message_flags に記録・管理者に通知
  *   暴力（生々しくないもの）だけ → 隔離せず、message_flags に記録だけ
  * - messages の行と image_url はそのまま（相手の画面は署名付き URL が作れず「画像を表示できません」になる）
@@ -23,93 +25,15 @@ export const dynamic = 'force-dynamic'
 const CHAT_IMAGES_BUCKET = 'chat-images'
 const QUARANTINE_BUCKET = 'chat-images-quarantine'
 const SIGNED_URL_EXPIRES_IN = 60
-const OPENAI_TIMEOUT_MS = 8000
-
-type ModerationResult = {
-  flagged: boolean
-  categories: Record<string, boolean>
-  category_scores: Record<string, number>
-}
-
-// 隔離するカテゴリ → flag_type
-const QUARANTINE_CATEGORIES: Array<{ category: string; flagType: string }> = [
-  { category: 'sexual', flagType: 'image_sexual' },
-  { category: 'sexual/minors', flagType: 'image_sexual' },
-  { category: 'self-harm', flagType: 'image_self_harm' },
-  { category: 'self-harm/intent', flagType: 'image_self_harm' },
-  { category: 'self-harm/instructions', flagType: 'image_self_harm' },
-  { category: 'violence/graphic', flagType: 'image_violence' },
-]
-// 記録だけするカテゴリ
-const RECORD_ONLY_CATEGORIES: Array<{ category: string; flagType: string }> = [
-  { category: 'violence', flagType: 'image_violence' },
-]
+const LOG_PREFIX = '[moderate-chat-image]'
 
 function json(body: unknown, status = 200) {
   return NextResponse.json(body, { status })
 }
 
-// 時間差の出ない比べ方で合言葉を照合する（長さが違うときも同じ処理をしてから false）
-function isValidSecret(received: string | null): boolean {
-  const expected = process.env.CHAT_IMAGE_MODERATION_SECRET
-  if (!expected || !received) return false
-  const a = Buffer.from(received)
-  const b = Buffer.from(expected)
-  if (a.length !== b.length) {
-    timingSafeEqual(b, b)
-    return false
-  }
-  return timingSafeEqual(a, b)
-}
-
-async function moderateImage(imageUrl: string): Promise<ModerationResult | null> {
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    console.error('[moderate-chat-image] OPENAI_API_KEY is not configured')
-    return null
-  }
-
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS)
-  try {
-    const response = await fetch('https://api.openai.com/v1/moderations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'omni-moderation-latest',
-        input: [{ type: 'image_url', image_url: { url: imageUrl } }],
-      }),
-      signal: controller.signal,
-    })
-    if (!response.ok) {
-      console.error('[moderate-chat-image] OpenAI moderation error:', response.status)
-      return null
-    }
-    const data = await response.json()
-    const result = data?.results?.[0]
-    if (!result || typeof result.flagged !== 'boolean') {
-      console.error('[moderate-chat-image] OpenAI moderation returned no result')
-      return null
-    }
-    return {
-      flagged: result.flagged,
-      categories: result.categories ?? {},
-      category_scores: result.category_scores ?? {},
-    }
-  } catch (e) {
-    console.error('[moderate-chat-image] OpenAI moderation failed:', e instanceof Error ? e.name : 'unknown')
-    return null
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
 export async function POST(req: NextRequest) {
   // 合言葉の確認（合言葉はログに出さない）
-  if (!isValidSecret(req.headers.get('x-webhook-secret'))) {
+  if (!isValidWebhookSecret(req.headers.get('x-webhook-secret'), process.env.CHAT_IMAGE_MODERATION_SECRET)) {
     return json({ error: 'Unauthorized' }, 401)
   }
 
@@ -176,10 +100,10 @@ export async function POST(req: NextRequest) {
 
     // 判定（テスト用の強制隔離 → OpenAI）
     const forceUserId = process.env.CHAT_IMAGE_MODERATION_FORCE_QUARANTINE_USER_ID
-    let result: ModerationResult | null
+    let result: ImageModerationResult | null
     if (forceUserId && message.sender_id === forceUserId) {
       console.warn('[moderate-chat-image] forced quarantine for test user (remove CHAT_IMAGE_MODERATION_FORCE_QUARANTINE_USER_ID after testing)')
-      result = { flagged: true, categories: { sexual: true }, category_scores: { sexual: 1, forced_test: 1 } }
+      result = FORCED_TEST_RESULT
     } else {
       const { data: signed, error: signError } = await supabaseAdmin.storage
         .from(CHAT_IMAGES_BUCKET)
@@ -189,7 +113,7 @@ export async function POST(req: NextRequest) {
         await insertFlag('image_unchecked', 0, JSON.stringify({ reason: 'signed_url_failed' }))
         return json({ ok: true, result: 'unchecked' })
       }
-      result = await moderateImage(signed.signedUrl)
+      result = await moderateImage(signed.signedUrl, LOG_PREFIX)
     }
 
     if (!result) {
@@ -197,55 +121,20 @@ export async function POST(req: NextRequest) {
       return json({ ok: true, result: 'unchecked' })
     }
 
-    const scores = result.category_scores
-    const detail = JSON.stringify(scores)
-    const hit = (list: typeof QUARANTINE_CATEGORIES) => list.filter(c => result!.categories[c.category] === true)
-    const quarantineHits = hit(QUARANTINE_CATEGORIES)
-    const recordOnlyHits = hit(RECORD_ONLY_CATEGORIES)
-    const hits = quarantineHits.length > 0 ? quarantineHits : recordOnlyHits
-    if (hits.length === 0) {
+    const decision = decideImageModeration(result)
+    if (decision.action === 'ok') {
       return json({ ok: true, result: 'ok' })
     }
 
-    // 一番高いスコアのカテゴリを flag_type・score にする
-    const top = hits.reduce((a, b) => ((scores[b.category] ?? 0) > (scores[a.category] ?? 0) ? b : a))
-    const topScore = Math.min(Math.max(scores[top.category] ?? 0, 0), 1)
+    // 隔離：同じパスへ移す（messages の行と image_url はそのまま）
+    const quarantined = decision.action === 'quarantine'
+      ? await moveToQuarantine(supabaseAdmin, CHAT_IMAGES_BUCKET, QUARANTINE_BUCKET, path, LOG_PREFIX)
+      : false
 
-    let quarantined = false
-    if (quarantineHits.length > 0) {
-      // 隔離：同じパスへ移す。バケットをまたいだ移動ができない場合は、取り出し → 保存 → 元を削除
-      const { error: moveError } = await supabaseAdmin.storage
-        .from(CHAT_IMAGES_BUCKET)
-        .move(path, path, { destinationBucket: QUARANTINE_BUCKET })
-      if (!moveError) {
-        quarantined = true
-      } else {
-        console.error('[moderate-chat-image] move error, falling back to copy:', moveError.message)
-        const { data: blob, error: downloadError } = await supabaseAdmin.storage.from(CHAT_IMAGES_BUCKET).download(path)
-        if (downloadError || !blob) {
-          console.error('[moderate-chat-image] download error:', downloadError?.message)
-        } else {
-          const { error: uploadError } = await supabaseAdmin.storage
-            .from(QUARANTINE_BUCKET)
-            .upload(path, blob, { contentType: blob.type || undefined, upsert: true })
-          if (uploadError) {
-            console.error('[moderate-chat-image] quarantine upload error:', uploadError.message)
-          } else {
-            const { error: removeError } = await supabaseAdmin.storage.from(CHAT_IMAGES_BUCKET).remove([path])
-            if (removeError) {
-              console.error('[moderate-chat-image] original remove error:', removeError.message)
-            } else {
-              quarantined = true
-            }
-          }
-        }
-      }
-    }
-
-    const flagged = await insertFlag(top.flagType, topScore, detail)
+    const flagged = await insertFlag(decision.flagType, decision.score, decision.detail)
 
     // 管理者への通知（文字の moderate と同じ形。隔離するものだけ）
-    if (quarantineHits.length > 0) {
+    if (decision.action === 'quarantine') {
       const adminUserId = process.env.ADMIN_USER_ID
       if (!adminUserId) {
         console.warn('[moderate-chat-image] ADMIN_USER_ID 未設定のため管理者通知をスキップ')
@@ -254,7 +143,7 @@ export async function POST(req: NextRequest) {
           user_id: adminUserId,
           type: 'system',
           title: '【管理】AIフラグ検知',
-          message: `AIが不適切な可能性のある画像を検知しました: ${top.flagType}${quarantined ? '（隔離済み）' : '（隔離に失敗）'}`,
+          message: `AIが不適切な可能性のある画像を検知しました: ${decision.flagType}${quarantined ? '（隔離済み）' : '（隔離に失敗）'}`,
           data: { kind: 'ai_flag', message_id: message.id },
         })
         if (adminNotifError) {
@@ -263,7 +152,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return json({ ok: true, result: quarantineHits.length > 0 ? 'quarantined' : 'recorded', quarantined, flagged })
+    return json({ ok: true, result: decision.action === 'quarantine' ? 'quarantined' : 'recorded', quarantined, flagged })
   } catch (e) {
     console.error('[moderate-chat-image] unexpected error:', e instanceof Error ? e.message : 'unknown')
     return json({ ok: false }, 500)

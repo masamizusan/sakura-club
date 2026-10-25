@@ -71,6 +71,27 @@ const DICT: Record<SupportedLanguage, NotificationDict> = {
   },
 }
 
+// #67: プロフィール写真を隔離したときの本人への通知（type: system、data.kind: 'photo_removed'）
+// 保存時は本人の国籍の言語で保存し（api/internal/moderate-profile-photo）、表示時は表示言語で出し直す
+export const PHOTO_REMOVED_TEXT: Record<SupportedLanguage, { title: string; message: string }> = {
+  ja: {
+    title: 'プロフィール写真を非公開にしました',
+    message: 'プロフィール写真の 1 枚が利用規約に合わないため、非公開にしました。プロフィール編集から別の写真に差し替えてください。',
+  },
+  en: {
+    title: 'A profile photo was hidden',
+    message: "One of your profile photos doesn't meet our Terms of Service, so we've made it private. Please replace it with a different photo from Edit Profile.",
+  },
+  ko: {
+    title: '프로필 사진을 비공개로 전환했습니다',
+    message: '프로필 사진 중 1장이 이용약관에 맞지 않아 비공개로 전환했습니다. 프로필 편집에서 다른 사진으로 바꿔 주세요.',
+  },
+  'zh-tw': {
+    title: '已將個人資料照片設為不公開',
+    message: '您的其中一張個人資料照片不符合使用條款，因此已設為不公開。請從「編輯個人資料」更換成其他照片。',
+  },
+}
+
 // 保存時に名前が無いと 'ユーザー' が入るため、名前なしとして扱う
 const NAME_PLACEHOLDERS = new Set(['', 'ユーザー'])
 
@@ -112,6 +133,13 @@ export function formatNotification(
     case 'suspended': {
       // 定型文のみ（admin/flags・admin/reports とも同じ固定文）
       return { title: t.suspendedTitle, message: t.suspendedMessage }
+    }
+    case 'system': {
+      // #67: プロフィール写真の隔離（定型文のみ）
+      if (data.kind === 'photo_removed') {
+        return PHOTO_REMOVED_TEXT[lang] ?? PHOTO_REMOVED_TEXT.ja
+      }
+      break
     }
     default:
       break

@@ -61,6 +61,22 @@ type MessageFlag = {
   image_quarantined?: boolean | null
 }
 
+// #67: プロフィール写真の AI 審査の記録（/api/admin/profile-photo-flags）
+type ProfilePhotoFlag = {
+  id: string
+  user_id: string
+  photo_path: string
+  flag_type: string
+  score: number
+  detail: string | null
+  status: string
+  reviewed: boolean
+  quarantined: boolean
+  created_at: string
+  image_signed_url: string | null
+  profile: { name: string; gender: string; nationality: string } | null
+}
+
 type SubTab = 'pending' | 'done'
 
 type Report = {
@@ -173,6 +189,8 @@ export default function AdminVerificationPage() {
   const [flagsLoading, setFlagsLoading] = useState(false)
   const [flagsSubTab, setFlagsSubTab] = useState<SubTab>('pending')
   const [flagsDoneCount, setFlagsDoneCount] = useState(0)
+  // #67: プロフィール写真のフラグ
+  const [photoFlags, setPhotoFlags] = useState<ProfilePhotoFlag[]>([])
 
   // 通報用state
   const [reports, setReports] = useState<Report[]>([])
@@ -241,6 +259,43 @@ export default function AdminVerificationPage() {
     fetchCounts()
   }
 
+  // #67: プロフィール写真のフラグ取得（service_role 経由 / requireAdmin）
+  const fetchPhotoFlags = useCallback(async (subTab: SubTab) => {
+    try {
+      const res = await fetch(`/api/admin/profile-photo-flags?status=${subTab}`)
+      const json = await res.json()
+      if (!res.ok) {
+        console.error('fetchPhotoFlags error:', json.error)
+        setPhotoFlags([])
+        return
+      }
+      setPhotoFlags((json.flags as ProfilePhotoFlag[]) || [])
+    } catch (e) {
+      console.error('fetchPhotoFlags error:', e)
+    }
+  }, [])
+
+  // #67: プロフィール写真のフラグを「問題なし」にする
+  const handlePhotoFlagResolve = async (flagId: string) => {
+    try {
+      const res = await fetch('/api/admin/profile-photo-flags', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flagId, action: 'resolved' }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert('エラー: ' + (json.error || JSON.stringify(json)))
+        return
+      }
+      fetchPhotoFlags(flagsSubTab)
+      fetchCounts()
+    } catch (e) {
+      console.error('handlePhotoFlagResolve error:', e)
+      alert('ネットワークエラーが発生しました')
+    }
+  }
+
   // service_role経由でフラグアクション（PATCH /api/admin/flags）
   const handleFlagAction = async (flagId: string, action: 'resolved' | 'warned' | 'suspended') => {
     logger.debug('handleFlagAction called:', { flagId, action })
@@ -290,22 +345,27 @@ export default function AdminVerificationPage() {
     let reportDone = 0
     let leaveCount = 0
     try {
-      const [flagsPendingRes, flagsDoneRes, reportsPendingRes, reportsDoneRes, leaveRes] = await Promise.all([
+      const [flagsPendingRes, flagsDoneRes, reportsPendingRes, reportsDoneRes, leaveRes, photoPendingRes, photoDoneRes] = await Promise.all([
         fetch('/api/admin/flags?count_only=true&status=pending'),
         fetch('/api/admin/flags?count_only=true&status=done'),
         fetch('/api/admin/reports?count_only=true&status=pending'),
         fetch('/api/admin/reports?count_only=true&status=done'),
         fetch('/api/admin/leave-surveys?count_only=true'),
+        // #67: プロフィール写真のフラグも「AIフラグ」の件数に含める
+        fetch('/api/admin/profile-photo-flags?count_only=true&status=pending'),
+        fetch('/api/admin/profile-photo-flags?count_only=true&status=done'),
       ])
-      const [flagsPendingJson, flagsDoneJson, reportsPendingJson, reportsDoneJson, leaveJson] = await Promise.all([
+      const [flagsPendingJson, flagsDoneJson, reportsPendingJson, reportsDoneJson, leaveJson, photoPendingJson, photoDoneJson] = await Promise.all([
         flagsPendingRes.json(),
         flagsDoneRes.json(),
         reportsPendingRes.json(),
         reportsDoneRes.json(),
         leaveRes.json(),
+        photoPendingRes.json(),
+        photoDoneRes.json(),
       ])
-      flagCount = flagsPendingJson.count ?? 0
-      flagDone = flagsDoneJson.count ?? 0
+      flagCount = (flagsPendingJson.count ?? 0) + (photoPendingJson.count ?? 0)
+      flagDone = (flagsDoneJson.count ?? 0) + (photoDoneJson.count ?? 0)
       reportCount = reportsPendingJson.count ?? 0
       reportDone = reportsDoneJson.count ?? 0
       leaveCount = leaveJson.count ?? 0
@@ -383,6 +443,7 @@ export default function AdminVerificationPage() {
   useEffect(() => {
     if (activeTab === 'ai_flags') {
       fetchFlags(flagsSubTab)
+      fetchPhotoFlags(flagsSubTab)
     } else if (activeTab === 'reports') {
       fetchReports(reportsSubTab)
     } else if (activeTab === 'leave_surveys') {
@@ -390,7 +451,7 @@ export default function AdminVerificationPage() {
     } else {
       fetchRequests(activeTab)
     }
-  }, [activeTab, flagsSubTab, reportsSubTab, fetchRequests, fetchFlags, fetchReports, fetchLeaveSurveys])
+  }, [activeTab, flagsSubTab, reportsSubTab, fetchRequests, fetchFlags, fetchPhotoFlags, fetchReports, fetchLeaveSurveys])
 
   const handleApprove = async (userId: string) => {
     setProcessing(prev => ({ ...prev, [userId]: true }))
@@ -941,6 +1002,75 @@ export default function AdminVerificationPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* #67: プロフィール写真 */}
+            {!flagsLoading && (
+              <div className="mt-8">
+                <p className="text-sm font-medium mb-3" style={{ color: '#2c1810' }}>
+                  プロフィール写真（{photoFlags.length}件）
+                </p>
+                {photoFlags.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    {flagsSubTab === 'pending' ? '未確認のプロフィール写真はありません' : '対応済みのプロフィール写真はまだありません'}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {photoFlags.map(flag => (
+                      <div
+                        key={flag.id}
+                        className="rounded-xl p-4"
+                        style={{ background: '#fdf6ef', border: '1px solid #d4a89a' }}
+                      >
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="text-xs text-white px-2.5 py-0.5 rounded-full" style={{ backgroundColor: '#8b1a2e' }}>
+                            {flagTypeLabel[flag.flag_type] || flag.flag_type}
+                          </span>
+                          <span className="text-xs" style={{ color: '#6b4c3b' }}>
+                            スコア: {Math.round(flag.score * 100)}%
+                          </span>
+                          <div className="ml-auto flex items-center gap-2 flex-wrap">
+                            {flagsSubTab === 'done' && renderActionStatusBadge(flag.status)}
+                            <span className="text-xs" style={{ color: '#6b4c3b' }}>
+                              {new Date(flag.created_at).toLocaleString('ja-JP')}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          {flag.image_signed_url ? (
+                            // 署名付き URL（1 時間で切れる・非公開）のため next/image の最適化は使わない
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={flag.image_signed_url}
+                              alt="プロフィール写真"
+                              loading="lazy"
+                              decoding="async"
+                              className="max-h-56 max-w-full rounded-lg object-contain bg-gray-50 border border-gray-100"
+                            />
+                          ) : (
+                            <p className="text-xs" style={{ color: '#6b4c3b' }}>画像が見つかりません</p>
+                          )}
+                          <p className="text-xs mt-1" style={{ color: '#6b4c3b' }}>
+                            {flag.quarantined ? '隔離済み（ほかの利用者には表示されません）' : '隔離されていません（ほかの利用者に表示されています）'}
+                          </p>
+                        </div>
+                        <p className="text-xs mb-3" style={{ color: '#6b4c3b' }}>
+                          送信者: {flag.profile?.name || '不明'}
+                          {flag.profile?.nationality && ` / ${flag.profile.nationality}`}
+                        </p>
+                        {flagsSubTab === 'pending' && (
+                          <button
+                            onClick={() => handlePhotoFlagResolve(flag.id)}
+                            className="px-3 py-1.5 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-colors"
+                          >
+                            問題なし
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </>
