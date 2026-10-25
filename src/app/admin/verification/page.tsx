@@ -35,6 +35,11 @@ const flagTypeLabel: Record<string, string> = {
   redirect:      '↗️ 外部誘導',
   inappropriate: '⚠️ 不適切内容',
   personal_info: '🔒 個人情報収集',
+  // #17: チャット画像の AI 審査
+  image_sexual:    '🖼️ 画像：性的',
+  image_self_harm: '🖼️ 画像：自傷',
+  image_violence:  '🖼️ 画像：暴力',
+  image_unchecked: '🖼️ 画像：未審査（審査に失敗）',
 }
 
 type MessageFlag = {
@@ -50,6 +55,9 @@ type MessageFlag = {
     sender_id: string
     profiles: { name: string; gender: string; nationality: string } | null
   } | null
+  // #17: 画像のフラグだけ。画像の署名付き URL と、隔離されているか（画像のフラグ以外は null）
+  image_signed_url?: string | null
+  image_quarantined?: boolean | null
 }
 
 type SubTab = 'pending' | 'done'
@@ -876,9 +884,30 @@ export default function AdminVerificationPage() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm mb-1" style={{ color: '#2c1810' }}>
-                      「{flag.messages?.content}」
-                    </p>
+                    {flag.flag_type.startsWith('image_') ? (
+                      <div className="mb-2">
+                        {flag.image_signed_url ? (
+                          // 署名付き URL（1 時間で切れる・非公開）のため next/image の最適化は使わない
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={flag.image_signed_url}
+                            alt="フラグの画像"
+                            loading="lazy"
+                            decoding="async"
+                            className="max-h-56 max-w-full rounded-lg object-contain bg-gray-50 border border-gray-100"
+                          />
+                        ) : (
+                          <p className="text-xs" style={{ color: '#6b4c3b' }}>画像が見つかりません</p>
+                        )}
+                        <p className="text-xs mt-1" style={{ color: '#6b4c3b' }}>
+                          {flag.image_quarantined ? '隔離済み（相手には表示されません）' : '隔離されていません（相手に表示されています）'}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm mb-1" style={{ color: '#2c1810' }}>
+                        「{flag.messages?.content}」
+                      </p>
+                    )}
                     <p className="text-xs mb-1" style={{ color: '#6b4c3b' }}>
                       送信者: {flag.messages?.profiles?.name || '不明'}
                       {flag.messages?.profiles?.nationality && ` / ${flag.messages.profiles.nationality}`}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth/requireAdmin'
 import { createClient } from '@supabase/supabase-js'
+import { extractChatImagePath } from '@/lib/chatImages'
 import { getLanguageFromNationality } from '@/utils/language'
 import {
   buildFlagWarningNotification,
@@ -9,6 +10,12 @@ import {
 } from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
+
+// #17: 画像のフラグ（flag_type が image_ で始まる）は、画像の署名付き URL も返す
+// 隔離されていれば chat-images-quarantine、されていなければ chat-images から作る
+const QUARANTINE_BUCKET = 'chat-images-quarantine'
+const CHAT_IMAGES_BUCKET = 'chat-images'
+const IMAGE_SIGNED_URL_EXPIRES_IN = 3600
 
 // GET /api/admin/flags                       → 未対応フラグ一覧（既定）
 // GET /api/admin/flags?status=pending        → 未対応（reviewed=false）
@@ -90,7 +97,7 @@ export async function GET(req: NextRequest) {
     const messageIds = data.map((f: { message_id: string }) => f.message_id).filter(Boolean)
     const { data: messages } = await supabaseAdmin
       .from('messages')
-      .select('id, content, sender_id')
+      .select('id, content, sender_id, image_url')
       .in('id', messageIds)
 
     const senderIds = (messages || []).map((m: { sender_id: string }) => m.sender_id).filter(Boolean)
@@ -107,12 +114,52 @@ export async function GET(req: NextRequest) {
       profileMap[p.id] = { name: p.name ?? '', gender: p.gender ?? '', nationality: p.nationality ?? '' }
     }
 
+    // #17: 画像のフラグの画像パス（隔離先 → 元の場所の順に署名する）
+    const imagePathByMessage = new Map<string, string>()
+    for (const f of data as { message_id: string; flag_type: string }[]) {
+      if (!f.flag_type?.startsWith('image_')) continue
+      const m = (messages || []).find((row: { id: string }) => row.id === f.message_id) as { image_url?: string | null } | undefined
+      const path = extractChatImagePath(m?.image_url)
+      if (path) imagePathByMessage.set(f.message_id, path)
+    }
+    const imagePaths = Array.from(new Set(imagePathByMessage.values()))
+    const quarantinedUrlByPath = new Map<string, string>()
+    const originalUrlByPath = new Map<string, string>()
+    if (imagePaths.length > 0) {
+      const { data: quarantined, error: quarantineSignError } = await supabaseAdmin.storage
+        .from(QUARANTINE_BUCKET)
+        .createSignedUrls(imagePaths, IMAGE_SIGNED_URL_EXPIRES_IN)
+      if (quarantineSignError) {
+        console.error('[admin/flags] quarantine signed urls error:', quarantineSignError.message)
+      }
+      for (const item of quarantined ?? []) {
+        if (item.path && item.signedUrl && !item.error) quarantinedUrlByPath.set(item.path, item.signedUrl)
+      }
+      const notQuarantined = imagePaths.filter(p => !quarantinedUrlByPath.has(p))
+      if (notQuarantined.length > 0) {
+        const { data: originals, error: originalSignError } = await supabaseAdmin.storage
+          .from(CHAT_IMAGES_BUCKET)
+          .createSignedUrls(notQuarantined, IMAGE_SIGNED_URL_EXPIRES_IN)
+        if (originalSignError) {
+          console.error('[admin/flags] chat image signed urls error:', originalSignError.message)
+        }
+        for (const item of originals ?? []) {
+          if (item.path && item.signedUrl && !item.error) originalUrlByPath.set(item.path, item.signedUrl)
+        }
+      }
+    }
+
     const enriched = data.map((f: { message_id: string }) => {
       const msg = messageMap[f.message_id] ?? null
       const profile = msg ? profileMap[msg.sender_id] ?? null : null
+      const imagePath = imagePathByMessage.get(f.message_id)
+      const quarantinedUrl = imagePath ? quarantinedUrlByPath.get(imagePath) : undefined
+      const originalUrl = imagePath ? originalUrlByPath.get(imagePath) : undefined
       return {
         ...f,
         messages: msg ? { content: msg.content, sender_id: msg.sender_id, profiles: profile } : null,
+        image_signed_url: quarantinedUrl ?? originalUrl ?? null,
+        image_quarantined: imagePath ? !!quarantinedUrl : null,
       }
     })
 
