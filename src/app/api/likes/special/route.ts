@@ -207,6 +207,10 @@ export async function POST(request: NextRequest) {
       }
       if (moderation.flagged) {
         console.log('[likes/special] message rejected by moderation:', { category: moderation.category, score: moderation.score })
+        // #66: マッチ前のさくらいいねでは連絡先を送れない（理由が分かる文を画面で出すため、コードを分ける）
+        if (moderation.category === 'contact_exchange') {
+          return errorResponse('マッチ前のさくらいいねには連絡先を書けません', 'contact_not_allowed', 422)
+        }
         return errorResponse('このメッセージは送信できません', 'message_rejected', 422)
       }
 

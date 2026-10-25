@@ -35,6 +35,7 @@ const flagTypeLabel: Record<string, string> = {
   redirect:      '↗️ 外部誘導',
   inappropriate: '⚠️ 不適切内容',
   personal_info: '🔒 個人情報収集',
+  contact_exchange: '📇 連絡先交換',
   // #17: チャット画像の AI 審査
   image_sexual:    '🖼️ 画像：性的',
   image_self_harm: '🖼️ 画像：自傷',

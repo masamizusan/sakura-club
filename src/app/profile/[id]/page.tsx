@@ -86,6 +86,7 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     sakuraNoTickets: 'さくらいいねの残りがありません',
     sakuraAlreadySent: 'すでにさくらいいねを送っています',
     sakuraMessageRejected: 'このメッセージは送信できません。内容を変えて、もう一度お試しください',
+    sakuraContactNotAllowed: 'マッチ前のさくらいいねには、LINE などの連絡先は書けません。マッチした後のメッセージでは自由に交換できます。',
     sakuraCheckUnavailable: '現在メッセージを確認できません。時間をおいてお試しください',
     dailyLimitReached: '本日の上限に達しました',
     ownProfile: '自分のプロフィールです',
@@ -142,6 +143,7 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     sakuraNoTickets: 'You have no Sakura Likes left.',
     sakuraAlreadySent: 'You have already sent a Sakura Like.',
     sakuraMessageRejected: 'This message cannot be sent. Please change it and try again.',
+    sakuraContactNotAllowed: 'You can\'t include LINE or other contact details in a Sakura Like before you match. Once you match, you\'re free to exchange them in messages.',
     sakuraCheckUnavailable: 'We cannot check your message right now. Please try again later.',
     dailyLimitReached: 'Daily limit reached',
     ownProfile: 'This is your profile',
@@ -198,6 +200,7 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     sakuraNoTickets: '남은 사쿠라 좋아요가 없습니다.',
     sakuraAlreadySent: '이미 사쿠라 좋아요를 보냈습니다.',
     sakuraMessageRejected: '이 메시지는 보낼 수 없습니다. 내용을 바꿔서 다시 시도해 주세요.',
+    sakuraContactNotAllowed: '매칭 전 사쿠라 좋아요에는 LINE 등의 연락처를 쓸 수 없습니다. 매칭된 후에는 메시지에서 자유롭게 교환할 수 있습니다.',
     sakuraCheckUnavailable: '현재 메시지를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.',
     dailyLimitReached: '오늘의 한도에 도달했습니다',
     ownProfile: '본인의 프로필입니다',
@@ -254,6 +257,7 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     sakuraNoTickets: '櫻花讚已用完。',
     sakuraAlreadySent: '您已經送出櫻花讚了。',
     sakuraMessageRejected: '此訊息無法送出。請修改內容後再試一次。',
+    sakuraContactNotAllowed: '配對前的櫻花讚無法填寫 LINE 等聯絡方式。配對成功後，即可在訊息中自由交換。',
     sakuraCheckUnavailable: '目前無法確認訊息內容，請稍後再試。',
     dailyLimitReached: '已達到今日上限',
     ownProfile: '這是您的個人資料',
@@ -680,6 +684,9 @@ function ProfileDetailContent() {
           break
         case 'message_rejected':
           alert(t('sakuraMessageRejected'))
+          break
+        case 'contact_not_allowed':
+          alert(t('sakuraContactNotAllowed'))
           break
         case 'moderation_unavailable':
         case 'translation_unavailable':

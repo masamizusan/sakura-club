@@ -2,14 +2,17 @@
  * さくらいいねの一言メッセージ用 AI 審査（段階3-3）
  *
  * src/app/api/messages/moderate/route.ts の判定部分（SYSTEM_PROMPT・モデル・response_format・
- * JSON の解釈・閾値 score >= 0.7）をそのまま複製したもの。moderate/route.ts 本体は変更しない。
+ * JSON の解釈・閾値 score >= 0.7）を複製したもの。moderate/route.ts 本体は変更しない。
+ * #66 以降、連絡先の扱いだけ moderate と違う（マッチ前のさくらいいねでは連絡先を送れない）：
+ * moderate の指示文からは contact_exchange を外したが、こちらは #66 より前の指示文のまま残す
  *
  * moderate との違い（さくらいいねは「審査を通ってから届ける」ため）:
  * - API キーが無い・OpenAI のエラー・JSON 解析失敗のときは { ok: false }（審査なしで通さない）
  * - contact_exchange も含め、すべてのカテゴリでフラグ付き＝送信不可（判定は呼び出し側）
+ *   contact_exchange のときは呼び出し側が contact_not_allowed を返す（#66）
  */
 
-// moderate/route.ts の SYSTEM_PROMPT を一字一句そのまま複製
+// #66 より前の moderate/route.ts の SYSTEM_PROMPT を一字一句そのまま複製（連絡先 contact_exchange を含む）
 const SYSTEM_PROMPT = `
 あなたはマッチングアプリのメッセージ安全監視AIです。
 以下のカテゴリに該当するか判定し、JSONで返してください。
