@@ -22,8 +22,9 @@ const noCacheHeaders = {
  * さくらいいね送信（段階3-3）
  *
  * 1. 認証・停止チェック・入力検証
- * 2. 一言メッセージがある場合: 送信資格（年齢確認済み＋有料会員）→ AI 審査 → 日本語翻訳
+ * 2. 一言メッセージがある場合: 送信資格（年齢確認済み＋有料会員）→ 事前確認（#26）→ AI 審査 → 日本語翻訳
  *    （審査で止められた／審査・翻訳ができなかった場合は送信せず、回数券も消費しない）
+ *    事前確認：マッチ済み・さくらいいね済み・回数券なしなら、OpenAI を呼ぶ前に返す（読み取りのみ。最終判断は 3）
  * 3. send_like_internal（service_role のみ実行可）を p_sender = ログインユーザーで呼ぶ
  *    回数券の消費・格上げ・メッセージ条件の再確認・マッチ判定は DB 関数側で 1 トランザクション
  * 4. 通知（matched: 双方にマッチ通知 / liked・upgraded: 相手にさくらいいね通知）
@@ -46,6 +47,58 @@ const MESSAGE_MAX_LENGTH = 100
 
 function errorResponse(error: string, code: string, status: number) {
   return NextResponse.json({ error, code }, { status, headers: noCacheHeaders })
+}
+
+// send_like_internal の失敗コード → レスポンス（#26：事前確認でも同じ形で返すため共通化）
+function sendLikeFailureResponse(code: string) {
+  switch (code) {
+    case 'no_tickets':
+      return errorResponse('さくらいいねの残りがありません', code, 402)
+    case 'already_special':
+      return errorResponse('すでにさくらいいねを送っています', code, 409)
+    case 'already_matched':
+      return errorResponse('既にマッチしています', code, 400)
+    case 'target_unavailable':
+      return errorResponse('対象のユーザーが見つかりません', code, 404)
+    case 'profile_incomplete':
+      return errorResponse('プロフィールを完成させてください', code, 403)
+    case 'message_not_allowed':
+      return errorResponse('一言メッセージは年齢確認済みの有料プラン会員のみ送れます', code, 403)
+    case 'message_too_long':
+      return errorResponse('メッセージは100文字以内で入力してください', code, 400)
+    case 'invalid_message':
+      return errorResponse('無効なメッセージです', code, 400)
+    case 'invalid_target':
+      return errorResponse('無効なユーザーIDです', code, 400)
+    case 'auth_required':
+      return errorResponse('Authentication required', code, 401)
+    default:
+      console.error('[likes/special] send_like_internal unknown failure code:', code)
+      return errorResponse('いいね処理に失敗しました', 'internal_error', 500)
+  }
+}
+
+// #26: 回数の制限（メモリ上・サーバーの再起動で戻る。翻訳 API と同じ方式）
+// 一言メッセージ付きは 1 回ごとに OpenAI を 2 回呼ぶため、連打・直接の呼び出しによる費用に上限を設ける
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_MAX = 10 // requests per window
+const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const userLimit = rateLimitMap.get(userId)
+
+  if (!userLimit || now > userLimit.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+
+  if (userLimit.count >= RATE_LIMIT_MAX) {
+    return false
+  }
+
+  userLimit.count++
+  return true
 }
 
 export async function POST(request: NextRequest) {
@@ -80,6 +133,12 @@ export async function POST(request: NextRequest) {
 
     const senderId = user.id
 
+    // #26: 回数の制限（入力の確認より前）
+    if (!checkRateLimit(senderId)) {
+      console.warn('[likes/special] rate limit exceeded for user:', senderId.slice(0, 8))
+      return errorResponse('しばらく待ってから、もう一度お試しください', 'rate_limited', 429)
+    }
+
     // ===== 2. 入力検証 =====
     const body = await request.json().catch(() => ({}))
     const { likedUserId } = body ?? {}
@@ -110,6 +169,36 @@ export async function POST(request: NextRequest) {
       }
       if (myProfile?.verification_status !== 'approved' || !activeSub) {
         return errorResponse('一言メッセージは年齢確認済みの有料プラン会員のみ送れます', 'message_not_allowed', 403)
+      }
+
+      // #26: 事前確認（読み取りのみ）。OpenAI を呼ぶ前に、送れないと分かるものを返す
+      // 判定の順は send_like_internal と同じ（マッチ済み → さくらいいね済み → 回数券なし）。返す形も同じ
+      // 問い合わせに失敗したときは弾かずに先へ進む（最終判断は send_like_internal）
+      // 自分の likes は RLS（likes_select_own_sent）で読める。matches も自分の参加分は読める
+      const targetId = likedUserId.toLowerCase()
+      const [user1Id, user2Id] = senderId < targetId ? [senderId, targetId] : [targetId, senderId]
+      const [balanceResult, sentLikeResult, matchResult] = await Promise.all([
+        supabase.rpc('get_sakura_balance'),
+        supabase.from('likes').select('is_special').eq('liker_id', senderId).eq('liked_user_id', targetId).maybeSingle(),
+        supabase.from('matches').select('status').eq('user1_id', user1Id).eq('user2_id', user2Id).maybeSingle(),
+      ])
+
+      if (matchResult.error) {
+        console.error('[likes/special] precheck match error:', matchResult.error.message)
+      } else if (matchResult.data?.status === 'matched') {
+        return sendLikeFailureResponse('already_matched')
+      }
+
+      if (sentLikeResult.error) {
+        console.error('[likes/special] precheck like error:', sentLikeResult.error.message)
+      } else if (sentLikeResult.data?.is_special === true) {
+        return sendLikeFailureResponse('already_special')
+      }
+
+      if (balanceResult.error || !balanceResult.data) {
+        console.error('[likes/special] precheck balance error:', balanceResult.error?.message)
+      } else if (Number((balanceResult.data as { balance?: unknown }).balance ?? 0) <= 0) {
+        return sendLikeFailureResponse('no_tickets')
       }
 
       const moderation = await moderateSpecialMessage(message)
@@ -150,31 +239,7 @@ export async function POST(request: NextRequest) {
 
     // ===== 5. 失敗時のレスポンス対応 =====
     if (!result.ok) {
-      switch (result.code) {
-        case 'no_tickets':
-          return errorResponse('さくらいいねの残りがありません', result.code, 402)
-        case 'already_special':
-          return errorResponse('すでにさくらいいねを送っています', result.code, 409)
-        case 'already_matched':
-          return errorResponse('既にマッチしています', result.code, 400)
-        case 'target_unavailable':
-          return errorResponse('対象のユーザーが見つかりません', result.code, 404)
-        case 'profile_incomplete':
-          return errorResponse('プロフィールを完成させてください', result.code, 403)
-        case 'message_not_allowed':
-          return errorResponse('一言メッセージは年齢確認済みの有料プラン会員のみ送れます', result.code, 403)
-        case 'message_too_long':
-          return errorResponse('メッセージは100文字以内で入力してください', result.code, 400)
-        case 'invalid_message':
-          return errorResponse('無効なメッセージです', result.code, 400)
-        case 'invalid_target':
-          return errorResponse('無効なユーザーIDです', result.code, 400)
-        case 'auth_required':
-          return errorResponse('Authentication required', result.code, 401)
-        default:
-          console.error('[likes/special] send_like_internal unknown failure code:', result.code)
-          return errorResponse('いいね処理に失敗しました', 'internal_error', 500)
-      }
+      return sendLikeFailureResponse(result.code)
     }
 
     if (result.code !== 'liked' && result.code !== 'matched' && result.code !== 'upgraded') {
