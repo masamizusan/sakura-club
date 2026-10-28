@@ -18,7 +18,7 @@
 import { config } from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 config({ path: '.env.local' })
@@ -296,6 +296,19 @@ async function main() {
   const globalBlockers: string[] = []
   if (reports.length !== EXPECTED_TARGET_COUNT) globalBlockers.push(`対象が ${reports.length} 人です（${EXPECTED_TARGET_COUNT} 人のはず）`)
   for (const r of reports) for (const b of r.blockers) globalBlockers.push(`${r.id.slice(0, 8)}: ${b}`)
+
+  // --expect <dry-run のログ>：dry-run と同じ人たちでなければ止める
+  const expectIndex = process.argv.indexOf('--expect')
+  if (expectIndex !== -1) {
+    const expectFile = process.argv[expectIndex + 1]
+    if (!expectFile) fail('--expect の後に dry-run のログのパスが必要です')
+    const expected = JSON.parse(readFileSync(expectFile, 'utf8')) as { targets?: Array<{ id: string }> }
+    const expectedIds = (expected.targets ?? []).map(t => t.id).sort()
+    const currentIds = reports.map(r => r.id).sort()
+    if (expectedIds.join(',') !== currentIds.join(',')) {
+      globalBlockers.push(`対象が ${expectFile} と一致しません（ログ ${expectedIds.length} 人・今回 ${currentIds.length} 人）`)
+    }
+  }
 
   console.log(`モード: ${execute ? '本番（--execute）' : 'dry-run（何も消しません）'}`)
   console.log(`対象: ${reports.length} 人（匿名 ${reports.filter(r => r.category === 'anonymous').length}・指定 ${reports.filter(r => r.category === 'named').length}）`)
