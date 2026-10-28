@@ -120,7 +120,12 @@ async function inspect(admin: SupabaseClient, target: Target): Promise<TargetRep
 
   const counts: Counts = {
     conversations: conversationIds.length,
-    messages: await countRows(admin, 'messages', { or: `sender_id.eq.${id},receiver_id.eq.${id}` }),
+    // messages に receiver_id は無い（会話単位）。その人の会話のメッセージ＋自分が送ったメッセージ
+    messages: await countRows(admin, 'messages', {
+      or: conversationIds.length > 0
+        ? `sender_id.eq.${id},conversation_id.in.(${conversationIds.join(',')})`
+        : `sender_id.eq.${id}`,
+    }),
     likes: await countRows(admin, 'likes', { or: `liker_id.eq.${id},liked_user_id.eq.${id}` }),
     matches: await countRows(admin, 'matches', { or: `user1_id.eq.${id},user2_id.eq.${id}` }),
     subscriptions: await countRows(admin, 'subscriptions', { eq: [['user_id', id]] }),

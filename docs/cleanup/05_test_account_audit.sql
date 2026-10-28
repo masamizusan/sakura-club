@@ -56,7 +56,8 @@ u AS (
 rel AS (
   SELECT u.id,
     (SELECT count(*) FROM public.conversations c WHERE c.user1_id = u.id OR c.user2_id = u.id) AS conversations,
-    (SELECT count(*) FROM public.messages m WHERE m.sender_id = u.id OR m.receiver_id = u.id)  AS messages,
+    (SELECT count(*) FROM public.messages m WHERE m.sender_id = u.id
+       OR m.conversation_id IN (SELECT c.id FROM public.conversations c WHERE c.user1_id = u.id OR c.user2_id = u.id)) AS messages,
     (SELECT count(*) FROM public.likes l WHERE l.liker_id = u.id OR l.liked_user_id = u.id)    AS likes,
     (SELECT count(*) FROM public.matches mt WHERE (mt.user1_id = u.id OR mt.user2_id = u.id) AND mt.status = 'matched') AS matches,
     (SELECT count(*) FROM public.subscriptions s WHERE s.user_id = u.id)                        AS subscriptions,
