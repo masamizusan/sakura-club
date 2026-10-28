@@ -82,3 +82,6 @@ temp/
 tmp/
 temp/.git/credentials
 .vercel
+
+# #5 削除スクリプトのログ（メールアドレスを含む）
+docs/cleanup/05_delete_log_*.json
