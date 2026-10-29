@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { createTimer, type Timer } from '@/lib/server/timing'
+import { allSettled, unwrapSettled } from '@/lib/server/allSettled'
 
 // メッセージ送信のスキーマ
 const sendMessageSchema = z.object({
@@ -28,14 +30,32 @@ interface Params {
   }
 }
 
+// #27: 処理時間の計測（Server-Timing ヘッダー。中身は #11 と同じ。ID・本文は入れない）
+// 返し方を変えないよう、処理本体（handleGet / handlePost）の結果にヘッダーだけ足す
+// GET：auth・conv・fetch・total
+export async function GET(request: NextRequest, context: Params) {
+  const timer = createTimer()
+  const response = await handleGet(request, context, timer)
+  response.headers.set('Server-Timing', timer.header())
+  return response
+}
+
+// POST：auth・checks・insert・total
+export async function POST(request: NextRequest, context: Params) {
+  const timer = createTimer()
+  const response = await handlePost(request, context, timer)
+  response.headers.set('Server-Timing', timer.header())
+  return response
+}
+
 // GET: 会話のメッセージ一覧取得
-export async function GET(request: NextRequest, { params }: Params) {
+async function handleGet(request: NextRequest, { params }: Params, timer: Timer) {
   try {
     const supabase = createClient(request)
     const conversationId = params.conversationId
     
     // 認証ユーザーの取得
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await timer.measure('auth', () => supabase.auth.getUser())
     
     if (authError || !user) {
       return NextResponse.json(
@@ -49,11 +69,11 @@ export async function GET(request: NextRequest, { params }: Params) {
     const offset = parseInt(searchParams.get('offset') || '0')
 
     // 会話の存在確認とアクセス権限チェック
-    const { data: conversation, error: convError } = await supabase
+    const { data: conversation, error: convError } = await timer.measure('conv', () => supabase
       .from('conversations')
       .select('*')
       .eq('id', conversationId)
-      .single()
+      .single())
 
     if (convError || !conversation) {
       return NextResponse.json(
@@ -73,26 +93,31 @@ export async function GET(request: NextRequest, { params }: Params) {
     // パートナーのIDを特定
     const partnerId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id
 
+    // #27: 相手のプロフィールとメッセージ一覧は互いの結果を使わないので同時に読む
     // パートナーのプロフィール情報を取得（段階2-A: 公開用ビュー）
     // 未完成・停止中・ブロック関係・退会の相手は取得できない → エラーにせず partner_unavailable で返す
-    const { data: partner, error: partnerError } = await supabase
-      .from('profiles_public')
-      .select('id, name, age, nationality, residence, city, avatar_url')
-      .eq('id', partnerId)
-      .maybeSingle()
+    // メッセージ一覧を取得
+    const [
+      { data: partner, error: partnerError },
+      { data: messages, error: messagesError },
+    ] = await timer.measure('fetch', () => Promise.all([
+      supabase
+        .from('profiles_public')
+        .select('id, name, age, nationality, residence, city, avatar_url')
+        .eq('id', partnerId)
+        .maybeSingle(),
+      supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1),
+    ]))
 
     if (partnerError) {
       console.error('Partner profile fetch error:', partnerError)
     }
     const partnerUnavailable = !partner
-
-    // メッセージ一覧を取得
-    const { data: messages, error: messagesError } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true })
-      .range(offset, offset + limit - 1)
 
     if (messagesError) {
       console.error('Messages fetch error:', messagesError)
@@ -157,13 +182,13 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 // POST: メッセージ送信
-export async function POST(request: NextRequest, { params }: Params) {
+async function handlePost(request: NextRequest, { params }: Params, timer: Timer) {
   try {
     const supabase = createClient(request)
     const conversationId = params.conversationId
     
     // 認証ユーザーの取得
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await timer.measure('auth', () => supabase.auth.getUser())
     
     if (authError || !user) {
       return NextResponse.json(
@@ -172,8 +197,38 @@ export async function POST(request: NextRequest, { params }: Params) {
       )
     }
 
+    // #27: 保存前の確かめごとの問い合わせ 4 つ（停止中・年齢確認と性別・課金・会話）を同時に行う
+    // どれも user.id と会話 ID だけで決まり、互いの結果を使わない。課金は性別に関係なく読む（女性の分は使わない）
+    // 判定は結果がそろってから、今までと同じ順番・同じ status・同じ code で行う
+    //   停止中 → 年齢確認 → 課金（男性だけ）→ 本文・画像の 400 → 会話の 404 / 403
+    // 問い合わせが例外になったときは、その確かめごとの番で投げ直す（unwrapSettled → 外側の catch で 500。今までと同じ）
+    // service_role のクライアントも問い合わせの中で作る（作るときの例外も、年齢確認の番まで持ち越すため）
+    const createSupabaseAdmin = () => createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const [guardResult, senderProfileResult, activeSubResult, conversationResult] = await timer.measure('checks', () => allSettled([
+      requireActiveProfile(user.id),
+      (async () => createSupabaseAdmin()
+        .from('profiles')
+        .select('verification_status, gender')
+        .eq('id', user.id)
+        .single())(),
+      (async () => createSupabaseAdmin()
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle())(),
+      (async () => supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .single())(),
+    ]))
+
     // memory #1 の 2 層防御: suspended ユーザーをここで弾く (指示書 #31)
-    const guard = await requireActiveProfile(user.id)
+    const guard = unwrapSettled(guardResult)
     if (!guard.ok) {
       return NextResponse.json(
         { error: guard.message, code: guard.code },
@@ -182,16 +237,8 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     // ===== セキュリティチェック（APIレベル・回避不可） =====
-    // service_role で RLS をバイパスして確実に取得
-    const supabaseAdmin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    const { data: senderProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('verification_status, gender')
-      .eq('id', user.id)
-      .single()
+    // service_role で RLS をバイパスして確実に取得（#27: 問い合わせは上で同時に実行済み）
+    const { data: senderProfile } = unwrapSettled(senderProfileResult)
 
     // 年齢認証チェック（全ユーザー共通 — フロントエンド迂回不可）
     if (senderProfile?.verification_status !== 'approved') {
@@ -204,12 +251,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     // 外国人男性のみ：課金チェック（日本人女性はスキップ）
     const senderIsJapaneseWoman = senderProfile?.gender === 'female'
     if (!senderIsJapaneseWoman) {
-      const { data: activeSub } = await supabaseAdmin
-        .from('subscriptions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle()
+      const { data: activeSub } = unwrapSettled(activeSubResult)
 
       if (!activeSub) {
         return NextResponse.json(
@@ -260,12 +302,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
     }
 
-    // 会話の存在確認とアクセス権限チェック
-    const { data: conversation, error: convError } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('id', conversationId)
-      .single()
+    // 会話の存在確認とアクセス権限チェック（#27: 問い合わせは上で同時に実行済み）
+    const { data: conversation, error: convError } = unwrapSettled(conversationResult)
 
     if (convError || !conversation) {
       return NextResponse.json(
@@ -283,7 +321,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     // メッセージの作成
-    const { data: insertedMessage, error: insertError } = await supabase
+    const { data: insertedMessage, error: insertError } = await timer.measure('insert', () => supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
@@ -297,7 +335,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         client_message_id: clientMessageId,
       })
       .select()
-      .single()
+      .single())
 
     let newMessage = insertedMessage
     let createError = insertError

@@ -3,30 +3,10 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { getLangFromNationality } from '@/lib/i18n/translationLang'
+// 処理時間の計測（#11）：Server-Timing ヘッダー。#27 で共通のファイルに移した
+import { createTimer } from '@/lib/server/timing'
 
 export const dynamic = 'force-dynamic'
-
-// 処理時間の計測（#11）：段階ごとの ms を Server-Timing ヘッダーで返す（個人情報は入れない）
-// ブラウザの開発者ツール → Network → このリクエスト → Timing で見られる
-function createTimer() {
-  const startedAt = Date.now()
-  const entries: Array<[string, number]> = []
-  return {
-    async measure<T>(name: string, fn: () => PromiseLike<T>): Promise<T> {
-      const t0 = Date.now()
-      try {
-        return await fn()
-      } finally {
-        entries.push([name, Date.now() - t0])
-      }
-    },
-    header(): string {
-      return [...entries, ['total', Date.now() - startedAt] as [string, number]]
-        .map(([name, ms]) => `${name};dur=${ms}`)
-        .join(', ')
-    },
-  }
-}
 
 // #16: プレビューの長さ（DB のトリガーの conversations.last_message と同じく 50 文字で切る）
 const PREVIEW_MAX_CHARS = 50
