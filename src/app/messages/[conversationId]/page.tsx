@@ -12,6 +12,9 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { getLangFromNationality, getPreviewLabelForLang } from '@/lib/i18n/translationLang'
 import { pickMessageText } from '@/lib/i18n/pickMessageText'
+import { getVoiceInputLabels } from '@/lib/i18n/voiceInput'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
+import VoiceInputBar from '@/components/chat/VoiceInputBar'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscription } from '@/hooks/useSubscription'
 import SubscriptionModal from '@/components/SubscriptionModal'
@@ -53,7 +56,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '翻訳に失敗しました',
     showOriginal: '原文を表示',
     showTranslation: '翻訳を表示',
-    voiceNotSupported: 'お使いのブラウザは音声入力に対応していません。',
     stop: '停止',
     previewTranslation: '翻訳確認',
     verificationRequired: 'メッセージを送るには本人年齢確認が必要です',
@@ -64,7 +66,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalButton: '年齢確認を行う',
     modalCancel: 'キャンセル',
     translateButton: '翻訳',
-    transcribing: '文字起こし中...',
   },
   en: {
     pageTitle: 'Messages',
@@ -95,7 +96,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: 'Translation failed',
     showOriginal: 'Show original',
     showTranslation: 'Show translation',
-    voiceNotSupported: 'Your browser does not support voice input.',
     stop: 'Stop',
     previewTranslation: 'Translate',
     verificationRequired: 'Age verification is required to send messages',
@@ -106,7 +106,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalButton: 'Verify Age',
     modalCancel: 'Cancel',
     translateButton: 'Translate',
-    transcribing: 'Transcribing...',
   },
   ko: {
     pageTitle: '메시지',
@@ -137,7 +136,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '번역 실패',
     showOriginal: '원문 보기',
     showTranslation: '번역 보기',
-    voiceNotSupported: '브라우저가 음성 입력을 지원하지 않습니다.',
     stop: '정지',
     previewTranslation: '번역 확인',
     verificationRequired: '메시지를 보내려면 나이 확인이 필요합니다',
@@ -148,7 +146,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalButton: '나이 확인하기',
     modalCancel: '취소',
     translateButton: '번역',
-    transcribing: '음성 변환 중...',
   },
   'zh-tw': {
     pageTitle: '訊息',
@@ -179,7 +176,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     translateError: '翻譯失敗',
     showOriginal: '顯示原文',
     showTranslation: '顯示翻譯',
-    voiceNotSupported: '您的瀏覽器不支援語音輸入。',
     stop: '停止',
     previewTranslation: '翻譯確認',
     verificationRequired: '發送訊息需要進行年齡確認',
@@ -190,7 +186,6 @@ const messagesTranslations: Record<string, Record<string, string>> = {
     modalButton: '進行年齡確認',
     modalCancel: '取消',
     translateButton: '翻譯',
-    transcribing: '語音轉文字中...',
   },
 }
 
@@ -248,16 +243,26 @@ export default function ChatPage() {
   const requestedChatImagesRef = useRef<Set<string>>(new Set())
   const retriedChatImagesRef = useRef<Set<string>>(new Set())
 
-  // 音声入力（Whisper API + 無音検知）
-  const [isRecording, setIsRecording] = useState(false)
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const [volumeData, setVolumeData] = useState<number[]>([])
-  const [isCancelled, setIsCancelled] = useState(false)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const mediaStreamRef = useRef<MediaStream | null>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const animationIdRef = useRef<number | null>(null)
-  const isCancelledRef = useRef(false)
+  // 音声入力（#24: 録音・波形・止め方・文字起こしは useVoiceInput、表示は VoiceInputBar に切り出し）
+  // 文字が届いたら入力欄に足す（文字があれば空白をはさんで後ろに）。翻訳プレビューは消す。自動では送らない
+  const voiceLabels = getVoiceInputLabels(currentLanguage)
+  const voice = useVoiceInput({
+    language: currentLanguage,
+    onTranscript: (text) => {
+      setNewMessage(prev => prev ? prev + ' ' + text : text)
+      setPreviewTranslation(null)
+      // textareaが再表示された後に高さ調整（複数回リトライで確実に反映）
+      const adjustHeight = () => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto'
+          textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+        }
+      }
+      setTimeout(adjustHeight, 100)
+      setTimeout(adjustHeight, 300)
+      setTimeout(adjustHeight, 500)
+    },
+  })
 
   // ブロック・通報
   const [showMenu, setShowMenu] = useState(false)
@@ -1099,194 +1104,6 @@ export default function ChatPage() {
     }
   }
 
-  // 録音リソース解放（共通）
-  const cleanupRecording = () => {
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current)
-      animationIdRef.current = null
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
-      audioContextRef.current = null
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop())
-      mediaStreamRef.current = null
-    }
-    setVolumeData([])
-  }
-
-  // 録音停止（確定→Whisper送信）
-  const stopRecording = () => {
-    isCancelledRef.current = false
-    cleanupRecording()
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-    }
-  }
-
-  // 録音キャンセル（テキスト反映なし）
-  const cancelRecording = () => {
-    isCancelledRef.current = true
-    cleanupRecording()
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-    }
-    setIsRecording(false)
-  }
-
-  // 音声入力（Whisper API + 無音検知 + 波形表示）
-  const handleVoiceInput = async () => {
-    if (isRecording) {
-      stopRecording()
-      return
-    }
-
-    try {
-      // 波形・無音検知用の AudioContext は、ボタン操作の直後（マイク許可を待つ前）に作って動かす
-      // Safari は操作から時間が空くと suspended のまま動かないことがあるため
-      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      const audioContext = new AudioCtx()
-      audioContextRef.current = audioContext
-      const resumePromise = audioContext.state === 'suspended'
-        ? audioContext.resume().catch(() => {})
-        : Promise.resolve()
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaStreamRef.current = stream
-      // Chrome は webm;opus、Safari は mp4 をサポート。両方を試して使えるものを選ぶ
-      const preferredMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : ''
-      const mediaRecorder = preferredMimeType
-        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
-        : new MediaRecorder(stream)
-      mediaRecorderRef.current = mediaRecorder
-      const chunks: BlobPart[] = []
-      isCancelledRef.current = false
-
-      // 無音検知 + 波形の設定
-      await resumePromise
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume().catch(() => {})
-      }
-      const source = audioContext.createMediaStreamSource(stream)
-      const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 256
-      source.connect(analyser)
-      // Safari は出口（destination）までつながっていないと解析に音が流れないことがあるため、
-      // 音量 0 の経路で destination までつなぐ（スピーカーから音は出ない）
-      const silentGain = audioContext.createGain()
-      silentGain.gain.value = 0
-      analyser.connect(silentGain)
-      silentGain.connect(audioContext.destination)
-
-      const dataArray = new Uint8Array(analyser.frequencyBinCount)
-      let silenceStart: number | null = null
-      // 解析が実際に音を拾えているか（一度でも 0 以外の値が来たか）
-      // 拾えていない間は無音の自動停止を使わない（話していても止まるのを防ぐ）
-      let hasAnalyserSignal = false
-      // 波形の描画用（無音判定には使わない）: 直近の最大音量に合わせて表示を自動拡大する
-      // Safari は同じ声でも解析値が小さく出るため、端末判定ではなく実測値に合わせて拡大率を決める
-      const WAVE_MIN_PEAK = 0.12     // これより小さい音は拡大しすぎない（雑音でバーが伸びるのを防ぐ）
-      const WAVE_PEAK_DECAY = 0.995  // 最大値を少しずつ下げて、声が小さくなっても追従させる
-      const WAVE_MAX_RATIO = 0.85    // 一番大きい声でも上限の 85% に収める（振り切れ防止）
-      let wavePeak = WAVE_MIN_PEAK
-
-      const checkSilence = () => {
-        analyser.getByteFrequencyData(dataArray)
-        const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
-        if (!hasAnalyserSignal && dataArray.some(v => v > 0)) {
-          hasAnalyserSignal = true
-        }
-
-        // 波形データを蓄積（左→右に積み上げ）
-        const currentVolume = volume / 255
-        wavePeak = Math.max(currentVolume, wavePeak * WAVE_PEAK_DECAY, WAVE_MIN_PEAK)
-        const newBar = Math.max(0.05, Math.min(1, currentVolume / wavePeak) * WAVE_MAX_RATIO)
-        setVolumeData(prev => {
-          const updated = [...prev, newBar]
-          return updated.length > 40 ? updated.slice(-40) : updated
-        })
-
-        if (!hasAnalyserSignal) {
-          silenceStart = null
-        } else if (volume < 10) {
-          if (silenceStart === null) silenceStart = Date.now()
-          if (Date.now() - silenceStart >= 8000) {
-            stopRecording()
-            return
-          }
-        } else {
-          silenceStart = null
-        }
-
-        animationIdRef.current = requestAnimationFrame(checkSilence)
-      }
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data)
-      }
-
-      mediaRecorder.onstop = async () => {
-        setIsRecording(false)
-        setVolumeData([])
-
-        // キャンセル時はWhisper送信しない
-        if (isCancelledRef.current || chunks.length === 0) return
-
-        setIsTranscribing(true)
-        const actualMimeType = mediaRecorder.mimeType || 'audio/webm'
-        const blob = new Blob(chunks, { type: actualMimeType })
-        const fileExtension = actualMimeType.includes('mp4') ? 'mp4' : 'webm'
-        const formData = new FormData()
-        formData.append('audio', blob, `recording.${fileExtension}`)
-        const whisperLang = currentLanguage === 'ja' ? 'ja'
-          : currentLanguage === 'ko' ? 'ko'
-          : currentLanguage === 'zh-tw' ? 'zh'
-          : 'en'
-        formData.append('language', whisperLang)
-
-        try {
-          const res = await fetch('/api/transcribe', {
-            method: 'POST',
-            body: formData,
-          })
-          const data = await res.json()
-          if (data.text) {
-            setNewMessage(prev => prev ? prev + ' ' + data.text : data.text)
-            setPreviewTranslation(null)
-          }
-        } catch (err) {
-          console.error('Whisper transcription error:', err)
-        } finally {
-          setIsTranscribing(false)
-          // textareaが再表示された後に高さ調整（複数回リトライで確実に反映）
-          const adjustHeight = () => {
-            if (textareaRef.current) {
-              textareaRef.current.style.height = 'auto'
-              textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-            }
-          }
-          setTimeout(adjustHeight, 100)
-          setTimeout(adjustHeight, 300)
-          setTimeout(adjustHeight, 500)
-        }
-      }
-
-      mediaRecorder.start(250)
-      setIsRecording(true)
-      animationIdRef.current = requestAnimationFrame(checkSilence)
-    } catch (err) {
-      console.error('Microphone access error:', err)
-      // マイク許可前に作った AudioContext などを解放する
-      cleanupRecording()
-      alert(t('voiceNotSupported'))
-    }
-  }
-
   // #61: ログインしていない人はログイン画面へ（ほかの画面と同じ AuthGuard）
   return (
     <AuthGuard>
@@ -1517,54 +1334,11 @@ export default function ChatPage() {
 
             {/* 入力エリア */}
             <div className="relative">
-              {/* 録音中の波形オーバーレイ */}
-              {isRecording && (
-                <div className="flex items-center gap-3 px-4 py-3 bg-[#fdf6ef] border border-[#d4a89a] rounded-lg">
-                  {/* 波形（左〜中央） */}
-                  <div className="flex-1 flex items-end justify-start gap-[2px] h-10 overflow-hidden">
-                    {Array.from({ length: 40 - volumeData.length }).map((_, i) => (
-                      <div key={`empty-${i}`} className="w-[3px] rounded-full bg-[#d4a89a]" style={{ height: '4px' }} />
-                    ))}
-                    {volumeData.map((v, i) => (
-                      <div
-                        key={i}
-                        className="w-[3px] rounded-full bg-[#8b1a2e]"
-                        style={{ height: `${Math.max(4, v * 40)}px` }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* キャンセル・確定ボタンを右側に並べる */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={cancelRecording}
-                      className="p-2 rounded-full transition-colors"
-                      style={{ color: 'var(--color-text-sub)' }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#ede0d4')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
-                    >
-                      <span className="text-lg">✕</span>
-                    </button>
-                    <button
-                      onClick={stopRecording}
-                      className="p-2 rounded-full bg-[#8b1a2e] text-white hover:bg-[#6e1525]"
-                    >
-                      <span className="text-lg">✓</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 文字起こし中の表示 */}
-              {isTranscribing && (
-                <div className="flex items-center justify-center gap-2 py-3 text-sm" style={{ color: 'var(--color-primary)' }}>
-                  <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
-                  {t('transcribing')}
-                </div>
-              )}
+              {/* 音声入力：録音中・文字起こし中の表示と、録音のあとのお知らせ（#24） */}
+              <VoiceInputBar voice={voice} labels={voiceLabels} />
 
               {/* 通常の入力エリア（録音中・文字起こし中は非表示） */}
-              {!isRecording && !isTranscribing && (
+              {!voice.isRecording && !voice.isTranscribing && (
               <div className="flex items-end space-x-2">
               {/* カメラボタン */}
               <button
@@ -1632,7 +1406,7 @@ export default function ChatPage() {
 
                   {/* マイクボタン */}
                   <Button
-                    onClick={handleVoiceInput}
+                    onClick={voice.toggleRecording}
                     variant="outline"
                     size="sm"
                     className="flex-shrink-0" style={{ color: 'var(--color-text-sub)', borderColor: 'var(--color-border)', backgroundColor: 'transparent' }}

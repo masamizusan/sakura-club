@@ -34,6 +34,29 @@ function resolveAudioExtension(audio: File): string {
   return MIME_TO_EXT[baseType] || 'webm'
 }
 
+// #24: 回数の制限（1 人 1 分 10 回まで。メモリ上・サーバーの再起動で戻る。likes/special・翻訳 API と同じ方式）
+// 1 回ごとに OpenAI を呼ぶため、連打・直接の呼び出しによる費用に上限を設ける
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT_MAX = 10 // requests per window
+const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const userLimit = rateLimitMap.get(userId)
+
+  if (!userLimit || now > userLimit.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+
+  if (userLimit.count >= RATE_LIMIT_MAX) {
+    return false
+  }
+
+  userLimit.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 認証（未ログインは 401）
@@ -58,6 +81,12 @@ export async function POST(request: NextRequest) {
         { error: guard.message, code: guard.code },
         { status: guard.httpStatus }
       )
+    }
+
+    // #24: 回数の制限（認証・停止中の確認の後、OpenAI を呼ぶ前）
+    if (!checkRateLimit(user.id)) {
+      console.warn('[transcribe] rate limit exceeded for user:', user.id.slice(0, 8))
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
     }
 
     const apiKey = process.env.OPENAI_API_KEY
