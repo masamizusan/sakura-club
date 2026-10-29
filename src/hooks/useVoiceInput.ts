@@ -161,6 +161,7 @@ export function useVoiceInput({ language, onTranscript }: UseVoiceInputOptions) 
       const WAVE_MIN_PEAK = 0.12     // これより小さい音は拡大しすぎない（雑音でバーが伸びるのを防ぐ）
       const WAVE_PEAK_DECAY = 0.995  // 最大値を少しずつ下げて、声が小さくなっても追従させる
       const WAVE_MAX_RATIO = 0.85    // 一番大きい声でも上限の 85% に収める（振り切れ防止）
+      const WAVE_MIN_BAR = 0.05      // バーの最小の高さ（無音のときもこの高さ）
       let wavePeak = WAVE_MIN_PEAK
 
       const checkSilence = () => {
@@ -171,9 +172,14 @@ export function useVoiceInput({ language, onTranscript }: UseVoiceInputOptions) 
         }
 
         // 波形データを蓄積（左→右に積み上げ）
-        const currentVolume = volume / 255
-        wavePeak = Math.max(currentVolume, wavePeak * WAVE_PEAK_DECAY, WAVE_MIN_PEAK)
-        const newBar = Math.max(0.05, Math.min(1, currentVolume / wavePeak) * WAVE_MAX_RATIO)
+        // #24: 無音とみなす音量（しきい値未満）は最小の高さで描き、拡大の基準（wavePeak）にも使わない
+        // （iPhone では小さな雑音まで拡大されて、話していないのに波形が高く見えたため）
+        let newBar = WAVE_MIN_BAR
+        if (volume >= SILENCE_VOLUME_THRESHOLD) {
+          const currentVolume = volume / 255
+          wavePeak = Math.max(currentVolume, wavePeak * WAVE_PEAK_DECAY, WAVE_MIN_PEAK)
+          newBar = Math.max(WAVE_MIN_BAR, Math.min(1, currentVolume / wavePeak) * WAVE_MAX_RATIO)
+        }
         setVolumeData(prev => {
           const updated = [...prev, newBar]
           return updated.length > 40 ? updated.slice(-40) : updated

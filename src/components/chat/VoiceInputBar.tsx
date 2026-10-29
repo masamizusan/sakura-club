@@ -6,7 +6,7 @@ import type { VoiceInputLabels } from '@/lib/i18n/voiceInput'
 // #24: チャット画面の音声入力の表示（チャット画面から切り出したもの）
 // 録音中：波形 ＋「聞き取り中…」＋ ✕（取り消し）・✓（文字にする）
 // 文字起こし中：スピナー ＋「文字起こし中...」
-// 録音のあと：お知らせ（無音・上限で自動停止した／回数制限／失敗）。✕ で閉じる。無音のときは「もう一度音声入力」
+// 録音のあと：お知らせ（無音・上限で自動停止した／回数制限／失敗）。✕ で閉じる。無音・失敗のときは「もう一度音声入力」
 export default function VoiceInputBar({ voice, labels }: { voice: VoiceInput; labels: VoiceInputLabels }) {
   const { isRecording, isTranscribing, volumeData, notice } = voice
 
@@ -81,7 +81,7 @@ export default function VoiceInputBar({ voice, labels }: { voice: VoiceInput; la
     >
       <div className="flex-1">
         <p>{noticeText}</p>
-        {notice === 'silence' && (
+        {(notice === 'silence' || notice === 'failed') && (
           <button
             onClick={voice.startRecording}
             className="mt-1 underline text-[#8b1a2e]"
