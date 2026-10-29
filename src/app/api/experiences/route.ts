@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-import { EXPERIENCES_COMING_SOON } from '@/lib/featureFlags'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { experiencesNotFound } from '@/lib/server/experiencesGate'
 
 // 段階2-A: 主催者名は profiles の埋め込みではなく公開用ビュー（profiles_public）から別クエリで取得する
 // （他人の last_name 等を読まない。ビューに載らない主催者は名前なし＝「未知」表示）
@@ -48,6 +49,10 @@ const createExperienceSchema = z.object({
 
 // GET: 体験一覧取得
 export async function GET(request: NextRequest) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     const { searchParams } = new URL(request.url)
@@ -144,15 +149,11 @@ export async function GET(request: NextRequest) {
 
 // POST: 新しい体験作成
 export async function POST(request: NextRequest) {
-  try {
-    // 体験機能は公開まで停止（認証より前に拒否）
-    if (EXPERIENCES_COMING_SOON) {
-      return NextResponse.json(
-        { error: '体験機能は準備中です', code: 'experiences_coming_soon' },
-        { status: 403 }
-      )
-    }
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
 
+  try {
     const supabase = createClient(request)
     
     // 認証ユーザーの取得
@@ -162,6 +163,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く（#20・#45）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 

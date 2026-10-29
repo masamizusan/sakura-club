@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { experiencesNotFound } from '@/lib/server/experiencesGate'
 
 // レビュー作成のスキーマ
 const createReviewSchema = z.object({
@@ -19,6 +21,10 @@ const updateReviewSchema = z.object({
 
 // GET: レビュー一覧取得
 export async function GET(request: NextRequest) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     const { searchParams } = new URL(request.url)
@@ -130,6 +136,10 @@ export async function GET(request: NextRequest) {
 
 // POST: 新しいレビュー作成
 export async function POST(request: NextRequest) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     
@@ -140,6 +150,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く（#20・#45）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 

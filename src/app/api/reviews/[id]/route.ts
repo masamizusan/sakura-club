@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { experiencesNotFound } from '@/lib/server/experiencesGate'
 
 // レビュー更新のスキーマ
 const updateReviewSchema = z.object({
@@ -14,6 +16,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     const reviewId = params.id
@@ -79,6 +85,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     const reviewId = params.id
@@ -90,6 +100,15 @@ export async function PUT(
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く（#20・#45）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 
@@ -200,6 +219,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // #20・#45: 体験機能は公開まで「存在しない」扱い（認証より前に 404）
+  const notFound = experiencesNotFound()
+  if (notFound) return notFound
+
   try {
     const supabase = createClient(request)
     const reviewId = params.id
@@ -211,6 +234,15 @@ export async function DELETE(
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
+      )
+    }
+
+    // memory #1 の 2 層防御: suspended ユーザーをここで弾く（#20・#45）
+    const guard = await requireActiveProfile(user.id)
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, code: guard.code },
+        { status: guard.httpStatus }
       )
     }
 

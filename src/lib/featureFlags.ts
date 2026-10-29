@@ -1,7 +1,8 @@
 // 機能の公開・非公開を切り替えるフラグ（画面と API で共通に使う）
 
 // 体験機能：企画が固まるまで公開しない
-// true の間は、体験一覧・作成画面を「準備中」表示にし、作成・変更・削除 API は 403 を返す
+// true の間は「存在しない」扱い（#20・#45）：/experiences 以下のページは 404（src/app/experiences/layout.tsx）、
+// 体験・レビューの API は 404（src/lib/server/experiencesGate.ts）、サイトマップにも載せない
 // 公開時は false に戻し、ナビゲーションに入口を追加する
 export const EXPERIENCES_COMING_SOON = true
 
