@@ -120,6 +120,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       senderId: message.sender_id,
       content: message.content,
       translated_content: message.translated_content || null,
+      translated_lang: message.translated_lang || null,
       image_url: message.image_url || null,
       timestamp: message.created_at,
       isRead: message.is_read,

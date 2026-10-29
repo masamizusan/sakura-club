@@ -11,6 +11,7 @@ import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
 import { getLangFromNationality, getPreviewLabelForLang } from '@/lib/i18n/translationLang'
+import { pickMessageText } from '@/lib/i18n/pickMessageText'
 import { createClient } from '@/lib/supabase/client'
 import { useSubscription } from '@/hooks/useSubscription'
 import SubscriptionModal from '@/components/SubscriptionModal'
@@ -640,13 +641,12 @@ export default function ChatPage() {
     targetLang?: string,
   ) => {
     const translations = existingTranslations || translatedMessages
-    // translated_contentがDB側にある場合はスキップ
-    // #59: 文字が空のメッセージ（画像だけなど）は翻訳しない（翻訳 API が 400 を返すため）
-    const partnerMessages = msgs.filter(m =>
-      m.senderId !== myId && !translations[m.id] && !m.translated_content &&
-      typeof m.content === 'string' && m.content.trim() !== ''
-    )
     const resolvedTarget = targetLang || currentLanguage
+    // #15 第2段階: 訳すかどうかは pickMessageText で決める（送信時の訳の言語が合う・受け手側の訳がある・
+    // 原文がもともと自分の言語・文字が空（#59）なら訳さない）
+    const partnerMessages = msgs.filter(m =>
+      m.senderId !== myId && pickMessageText(m, resolvedTarget, translations[m.id]).needsTranslation
+    )
 
     for (const msg of partnerMessages) {
       try {
@@ -694,33 +694,35 @@ export default function ChatPage() {
           setConversation(result.conversation || null)
           setPartnerUnavailable(result.partner_unavailable === true)
 
-          // キャッシュから翻訳を即座に取得
-          const supabase = createClient()
-          const messageIds = result.messages.map((m: any) => m.id)
-          const { data: cachedData } = await supabase
-            .from('message_translations')
-            .select('message_id, translated_text')
-            .in('message_id', messageIds)
-            .eq('language', currentLanguage)
-
-          const cachedTranslations: Record<string, string> = {}
-          if (cachedData && cachedData.length > 0) {
-            cachedData.forEach(t => {
-              cachedTranslations[t.message_id] = t.translated_text
-            })
-            setTranslatedMessages(prev => ({ ...prev, ...cachedTranslations }))
-          }
-
-          // 未翻訳のメッセージだけ新たに翻訳
           // #15: 自分が読む言語 = 自分の国籍の言語（日本→ja、韓国→ko、台湾→zh-tw、それ以外・空→en）
+          // #15 第2段階: 受け手側の訳も、表示言語ではなくこの言語で探す（訳す言語と探す言語をそろえる）
           if (currentUserId) {
-            const supabase2 = createClient()
-            const { data: myProf } = await supabase2
+            const supabase = createClient()
+            const { data: myProf } = await supabase
               .from('profiles')
               .select('nationality, gender')
               .eq('id', currentUserId)
               .single()
-            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, getLangFromNationality(myProf?.nationality))
+            const readLang = getLangFromNationality(myProf?.nationality)
+
+            // キャッシュから翻訳を即座に取得
+            const messageIds = result.messages.map((m: any) => m.id)
+            const { data: cachedData } = await supabase
+              .from('message_translations')
+              .select('message_id, translated_text')
+              .in('message_id', messageIds)
+              .eq('language', readLang)
+
+            const cachedTranslations: Record<string, string> = {}
+            if (cachedData && cachedData.length > 0) {
+              cachedData.forEach(t => {
+                cachedTranslations[t.message_id] = t.translated_text
+              })
+              setTranslatedMessages(prev => ({ ...prev, ...cachedTranslations }))
+            }
+
+            // 未翻訳のメッセージだけ新たに翻訳
+            autoTranslateMessages(result.messages, currentUserId, cachedTranslations, readLang)
           }
         }
       } catch (error) {
@@ -845,6 +847,7 @@ export default function ChatPage() {
               senderId: payload.new.sender_id,
               content: payload.new.content,
               translated_content: payload.new.translated_content || null,
+              translated_lang: payload.new.translated_lang || null,
               image_url: payload.new.image_url || null,
               timestamp: payload.new.created_at,
               isRead: false,
@@ -855,8 +858,8 @@ export default function ChatPage() {
             // 取り直しで既に一覧にある場合は追加しない（二重表示防止）
             setMessages(prev => (prev.some(m => m?.id === newMessage.id) ? prev : [...prev, newMessage]))
 
-            // translated_contentがなければAPIで翻訳（正しいターゲット言語で）
-            if (!newMessage.translated_content) {
+            // 送信時の訳が自分の言語でなければAPIで翻訳（#15 第2段階: 判定は pickMessageText）
+            if (pickMessageText(newMessage, myReadLangRef.current).needsTranslation) {
               autoTranslateMessages([newMessage], currentUserId, undefined, myReadLangRef.current)
             }
           }
@@ -1430,9 +1433,10 @@ export default function ChatPage() {
                               </p>
                             )}
 
-                            {/* 表示テキスト：translated_contentかキャッシュ翻訳をデフォルト表示 */}
+                            {/* 表示テキスト：自分の言語の訳をデフォルト表示（#15 第2段階: 選び方は pickMessageText） */}
                             {(() => {
-                              const displayTranslation = message.translated_content || translatedMessages[message.id]
+                              const picked = pickMessageText(message, myReadLang, translatedMessages[message.id])
+                              const displayTranslation = picked.source === 'original' ? null : picked.text
                               const showingOriginal = showOriginal[message.id]
                               return (
                                 <>

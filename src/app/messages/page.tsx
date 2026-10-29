@@ -13,6 +13,7 @@ import Avatar from '@/components/Avatar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useNotifications } from '@/hooks/useNotifications'
 import { getNationalityLabel } from '@/utils/nationalityTranslations'
+import { pickMessageText } from '@/lib/i18n/pickMessageText'
 import { handleUnauthorized } from '@/lib/auth/handleUnauthorized'
 import AuthGuard from '@/components/auth/AuthGuard'
 
@@ -98,6 +99,8 @@ interface Message {
   isMine?: boolean
   isImageOnly?: boolean
   translatedContent?: string | null
+  translatedLang?: string | null
+  readLanguage?: string | null  // #15 第2段階: 自分が読む言語（自分の国籍の言語）
   receiverTranslation?: string | null
 }
 
@@ -454,13 +457,17 @@ export default function MessagesPage() {
                               isUnread ? 'font-semibold text-gray-800' : 'text-gray-500'
                             }`}>
                               {(() => {
-                                // #16: チャットと同じ決まり。画像だけ → 辞書の文。自分のメッセージ → 原文。
-                                // 相手のメッセージ → 送信時の訳 → 受け手側の訳 → 原文 の順
+                                // #16・#15 第2段階: チャットと同じ決まり（pickMessageText）。画像だけ → 辞書の文。自分のメッセージ → 原文。
+                                // 相手のメッセージ → 言語の合う送信時の訳 → 受け手側の訳 → 原文（一覧では新しく訳さない）
                                 const lm = conversation.lastMessage
                                 if (lm.isImageOnly) return t('imageMessage')
                                 const text = lm.isMine
                                   ? lm.content
-                                  : (lm.translatedContent ?? lm.receiverTranslation ?? lm.content)
+                                  : pickMessageText(
+                                      { content: lm.content, translated_content: lm.translatedContent, translated_lang: lm.translatedLang },
+                                      lm.readLanguage ?? currentLanguage,
+                                      lm.receiverTranslation,
+                                    ).text
                                 return text ?? t('matchedMessage')
                               })()}
                             </p>

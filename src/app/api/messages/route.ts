@@ -44,6 +44,7 @@ type LastMessageRow = {
   content: string | null
   is_image_only: boolean
   translated_content: string | null
+  translated_lang: string | null
   receiver_translation: string | null
 }
 
@@ -212,6 +213,9 @@ export async function GET(request: NextRequest) {
             // 画像だけのときの文は画面の辞書で出す（DB の「📷 画像」は使わない）
             content: last && !last.is_image_only ? truncatePreview(last.content) : (last ? null : conv.last_message || null),
             translatedContent: truncatePreview(last?.translated_content),
+            translatedLang: last?.translated_lang ?? null,
+            // #15 第2段階: 自分が読む言語（画面が pickMessageText で訳を選ぶため。受け手側の訳を探した言語と同じ）
+            readLanguage,
             receiverTranslation: truncatePreview(last?.receiver_translation),
             timestamp: conv.last_message_at || conv.created_at,
             isRead: true,
@@ -223,6 +227,8 @@ export async function GET(request: NextRequest) {
             isImageOnly: false,
             content: conv.last_message || null,
             translatedContent: null,
+            translatedLang: null,
+            readLanguage,
             receiverTranslation: null,
             timestamp: conv.last_message_at || conv.created_at,
             isRead: true,
