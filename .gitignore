@@ -85,3 +85,4 @@ temp/.git/credentials
 
 # #5 削除スクリプトのログ（メールアドレスを含む）
 docs/cleanup/05_delete_log_*.json
+docs/cleanup/05_delete_files_log_*.json
