@@ -42,6 +42,7 @@ import {
   generateLanguageSkillsFromLegacy
 } from '@/types/profile'
 import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
+import { PERSONALITY_TAGS, normalizePersonalityValues, personalityKeyFromValue } from '@/lib/profile/personalityTags'
 
 const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
@@ -138,35 +139,9 @@ const createProfileEditSchema = (isForeignMale: boolean, t: any) => {
 type ProfileEditFormData = z.infer<ReturnType<typeof baseProfileEditSchema>>
 
 // 性格オプション（翻訳対応）
-const getPersonalityOptions = (t: any) => [
-  { key: 'gentle', label: t('personality.gentle') },
-  { key: 'calm', label: t('personality.calm') },
-  { key: 'lonely', label: t('personality.lonely') },
-  { key: 'composed', label: t('personality.composed') },
-  { key: 'caring', label: t('personality.caring') },
-  { key: 'humble', label: t('personality.humble') },
-  { key: 'cool', label: t('personality.cool') },
-  { key: 'honest', label: t('personality.honest') },
-  { key: 'bright', label: t('personality.bright') },
-  { key: 'friendly', label: t('personality.friendly') },
-  { key: 'helpful', label: t('personality.helpful') },
-  { key: 'considerate', label: t('personality.considerate') },
-  { key: 'responsible', label: t('personality.responsible') },
-  { key: 'decisive', label: t('personality.decisive') },
-  { key: 'sociable', label: t('personality.sociable') },
-  { key: 'competitive', label: t('personality.competitive') },
-  { key: 'passionate', label: t('personality.passionate') },
-  { key: 'indoor', label: t('personality.indoor') },
-  { key: 'active', label: t('personality.active') },
-  { key: 'intellectual', label: t('personality.intellectual') },
-  { key: 'meticulous', label: t('personality.meticulous') },
-  { key: 'optimistic', label: t('personality.optimistic') },
-  { key: 'shy', label: t('personality.shy') },
-  { key: 'attentive', label: t('personality.attentive') },
-  { key: 'refreshing', label: t('personality.refreshing') },
-  { key: 'natural', label: t('personality.natural') },
-  { key: 'ownPace', label: t('personality.ownPace') }
-]
+// 性格の選択肢：value は日本語の値（保存用）、label は今の画面の言語の表示名
+const getPersonalityOptions = (t: any) =>
+  PERSONALITY_TAGS.map(tag => ({ key: tag.key, value: tag.value, label: t(`personality.${tag.key}`) }))
 
 
 // 後方互換性のため、フラットな配列も保持（翻訳対応）
@@ -3298,6 +3273,13 @@ function ProfileEditContent() {
               }
             })
           }
+
+          // 性格は日本語の値に直す（昔の言語・昔の訳の値も。重複を消し、順番を残し、最大 5 個。分からない値は捨てる）
+          const normalizedPersonality = normalizePersonalityValues(existingPersonality, 5)
+          if (normalizedPersonality.dropped.length > 0) {
+            logger.warn('[INIT] personality: unknown values dropped', normalizedPersonality.dropped.length)
+          }
+          existingPersonality = normalizedPersonality.values
           
           // 1. culture_tagsカラムから日本文化データを取得（優先）
           if ((profile as any).culture_tags && Array.isArray((profile as any).culture_tags) && (profile as any).culture_tags.length > 0) {
@@ -6158,7 +6140,8 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   {/* 🚨 DEBUG: 性格タグ表示前の確認（正規化ベース） */}
                   {(() => {
                     const normalizedPersonality = normalizeTags(selectedPersonality)
-                    const visibleSelectedTraits = getPersonalityOptions(t).filter(trait => normalizedPersonality.includes(trait.label))
+                    const selectedKeys = normalizedPersonality.map(personalityKeyFromValue)
+                    const visibleSelectedTraits = getPersonalityOptions(t).filter(trait => selectedKeys.includes(trait.key))
                     const countMismatch = normalizedPersonality.length !== visibleSelectedTraits.length
                     
                     logger.debug('🎯 PERSONALITY DISPLAY DEBUG (NORMALIZED):', {
@@ -6170,9 +6153,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       visible_selected_traits: visibleSelectedTraits.map(t => t.label),
                       visible_count: visibleSelectedTraits.length,
                       count_mismatch: countMismatch,
-                      contamination_candidates: normalizedPersonality.filter(trait => 
-                        !getPersonalityOptions(t).some(option => option.label === trait)
-                      ),
+                      contamination_candidates: normalizedPersonality.filter(trait => !personalityKeyFromValue(trait)),
                       cleaning_effect: selectedPersonality.length - normalizedPersonality.length,
                       task_b1_normalized_check: 'UI表示vs正規化済み配列確認'
                     })
@@ -6187,14 +6168,17 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {getPersonalityOptions(t).map((trait) => {
                       const normalizedPersonality = normalizeTags(selectedPersonality)
-                      const isSelected = normalizedPersonality.includes(trait.label)
+                      // 選択済みはキーで判定（昔の言語・昔の訳の値で入っていても選択済みに見える）
+                      const selectedValue = normalizedPersonality.find(value => personalityKeyFromValue(value) === trait.key)
+                      const isSelected = selectedValue !== undefined
                       const isDisabled = !isSelected && normalizedPersonality.length >= 5
                       
                       return (
                         <button
                           key={trait.key}
                           type="button"
-                          onClick={() => togglePersonality(trait.label)}
+                          // 外すときは入っている値そのもの、選ぶときは日本語の値（画面の言語に関係なく）
+                          onClick={() => togglePersonality(selectedValue ?? trait.value)}
                           disabled={isDisabled}
                           className={`
                             px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full

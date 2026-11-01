@@ -14,6 +14,7 @@ import { resolveAvatarSrc } from '@/utils/imageResolver'
 import PhotoGallery from '@/components/profile/PhotoGallery'
 import { createClient } from '@/lib/supabase'
 import { logger, maskImageValue, sanitizePayload } from '@/utils/logger'
+import { formatPersonalityValue } from '@/lib/profile/personalityTags'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -97,84 +98,6 @@ const getOccupationLabel = (value: string, t: any, isForeignMale: boolean = fals
   return occupationLabels[value] || value
 }
 
-// 性格の表示を多言語対応で変換するヘルパー関数
-const getPersonalityLabel = (value: string, t: any): string => {
-  const personalityLabels: Record<string, string> = {
-    // 日本語マッピング
-    '優しい': t('personality.gentle'),
-    '穏やか': t('personality.calm'),
-    '寂しがりや': t('personality.lonely'),
-    '落ち着いている': t('personality.composed'),
-    '思いやりがある': t('personality.caring'),
-    '謙虚': t('personality.humble'),
-    '冷静': t('personality.cool'),
-    '素直': t('personality.honest'),
-    '明るい': t('personality.bright'),
-    '親しみやすい': t('personality.friendly'),
-    '面倒見が良い': t('personality.helpful'),
-    '気が利く': t('personality.considerate'),
-    '責任感がある': t('personality.responsible'),
-    '決断力がある': t('personality.decisive'),
-    '社交的': t('personality.sociable'),
-    '負けず嫌い': t('personality.competitive'),
-    '熱血': t('personality.passionate'),
-    'インドア': t('personality.indoor'),
-    'アクティブ': t('personality.active'),
-    '知的': t('personality.intellectual'),
-    '几帳面': t('personality.meticulous'),
-    '楽観的': t('personality.optimistic'),
-    'シャイ': t('personality.shy'),
-    'マメ': t('personality.attentive'),
-    'さわやか': t('personality.refreshing'),
-    '天然': t('personality.natural'),
-    'マイペース': t('personality.ownPace'),
-    // 英語キー形式マッピング
-    'gentle': t('personality.gentle'),
-    'calm': t('personality.calm'),
-    'lonely': t('personality.lonely'),
-    'composed': t('personality.composed'),
-    'caring': t('personality.caring'),
-    'humble': t('personality.humble'),
-    'cool': t('personality.cool'),
-    'honest': t('personality.honest'),
-    'bright': t('personality.bright'),
-    'friendly': t('personality.friendly'),
-    'helpful': t('personality.helpful'),
-    'considerate': t('personality.considerate'),
-    'responsible': t('personality.responsible'),
-    'decisive': t('personality.decisive'),
-    'sociable': t('personality.sociable'),
-    'competitive': t('personality.competitive'),
-    'passionate': t('personality.passionate'),
-    'indoor': t('personality.indoor'),
-    'active': t('personality.active'),
-    'intellectual': t('personality.intellectual'),
-    'meticulous': t('personality.meticulous'),
-    'optimistic': t('personality.optimistic'),
-    'shy': t('personality.shy'),
-    'attentive': t('personality.attentive'),
-    'refreshing': t('personality.refreshing'),
-    'natural': t('personality.natural'),
-    'ownPace': t('personality.ownPace'),
-    // 大文字英語マッピング
-    'Gentle': t('personality.gentle'),
-    'Calm': t('personality.calm'),
-    'Lonely': t('personality.lonely'),
-    'Composed': t('personality.composed'),
-    'Caring': t('personality.caring'),
-    'Humble': t('personality.humble'),
-    'Cool': t('personality.cool'),
-    'Honest': t('personality.honest'),
-    'Bright': t('personality.bright'),
-    'Friendly': t('personality.friendly'),
-    'Helpful': t('personality.helpful'),
-    'Considerate': t('personality.considerate'),
-    'Responsible': t('personality.responsible'),
-    'Decisive': t('personality.decisive'),
-    'Sociable': t('personality.sociable')
-  }
-  return personalityLabels[value] || value
-}
 
 // 都道府県の表示を多言語対応で変換するヘルパー関数
 const getPrefectureLabel = (value: string, t: any): string => {
@@ -1232,7 +1155,7 @@ function ProfilePreviewContent() {
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
                       >
-                        {getPersonalityLabel(trait, t)}
+                        {formatPersonalityValue(trait, currentLanguage)}
                       </span>
                     ))}
                   </div>

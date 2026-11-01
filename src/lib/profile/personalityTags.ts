@@ -143,3 +143,25 @@ export function formatPersonalityValue(value: string, language: SupportedLanguag
   const key = personalityKeyFromValue(value)
   return key ? getPersonalityLabel(key, language) : value
 }
+
+/**
+ * 保存されている値の配列 → 日本語の値の配列（編集画面の読み込み用）
+ * 重複を消し、順番を残し、最大 max 個。分からない値は捨てる（捨てた値は dropped で返す）
+ */
+export function normalizePersonalityValues(
+  values: readonly string[] | null | undefined,
+  max = 5
+): { values: string[]; dropped: string[] } {
+  const result: string[] = []
+  const dropped: string[] = []
+  for (const value of values ?? []) {
+    const key = personalityKeyFromValue(value)
+    if (!key) {
+      if (value) dropped.push(value)
+      continue
+    }
+    const ja = TAG_BY_KEY.get(key)!.value
+    if (!result.includes(ja)) result.push(ja)
+  }
+  return { values: result.slice(0, max), dropped }
+}
