@@ -9,100 +9,9 @@
  */
 
 import { SupportedLanguage } from '@/utils/language'
+import { formatPersonalityValue, personalityKeyFromValue } from '@/lib/profile/personalityTags'
 
-// 日本語タグ → 翻訳キーのマッピング（性格タグ）
-const personalityJaToKey: Record<string, string> = {
-  '優しい': 'gentle',
-  '穏やか': 'calm',
-  '寂しがりや': 'lonely',
-  '落ち着いている': 'composed',
-  '思いやりがある': 'caring',
-  '謙虚': 'humble',
-  '冷静': 'cool',
-  '素直': 'honest',
-  '明るい': 'bright',
-  '親しみやすい': 'friendly',
-  '面倒見が良い': 'helpful',
-  '気が利く': 'considerate',
-  '責任感がある': 'responsible',
-  '決断力がある': 'decisive',
-  '社交的': 'sociable',
-  '負けず嫌い': 'competitive',
-  '熱血': 'passionate',
-  'インドア': 'indoor',
-  'アクティブ': 'active',
-  '知的': 'intellectual',
-  '几帳面': 'meticulous',
-  '楽観的': 'optimistic',
-  'シャイ': 'shy',
-  'マメ': 'attentive',
-  'さわやか': 'refreshing',
-  '天然': 'natural',
-  'マイペース': 'ownPace'
-}
-
-// 韓国語タグ → 翻訳キーのマッピング（性格タグ）
-const personalityKoToKey: Record<string, string> = {
-  '다정한': 'gentle',
-  '상냥한': 'gentle',
-  '차분한': 'calm',
-  '내향적인': 'lonely',
-  '침착한': 'composed',
-  '배려심 있는': 'caring',
-  '겸손한': 'humble',
-  '냉정한': 'cool',
-  '솔직한': 'honest',
-  '밝은': 'bright',
-  '친근한': 'friendly',
-  '잘 돌봐주는': 'helpful',
-  '세심한': 'considerate',
-  '책임감 있는': 'responsible',
-  '결단력 있는': 'decisive',
-  '사교적인': 'sociable',
-  '승부욕 강한': 'competitive',
-  '열정적인': 'passionate',
-  '실내형': 'indoor',
-  '활동적인': 'active',
-  '지적인': 'intellectual',
-  '꼼꼼한': 'meticulous',
-  '낙관적인': 'optimistic',
-  '수줍은': 'shy',
-  '자상한': 'attentive',
-  '상쾌한': 'refreshing',
-  '자연스러운': 'natural',
-  '마이페이스': 'ownPace'
-}
-
-// 繁体字タグ → 翻訳キーのマッピング（性格タグ）
-const personalityZhToKey: Record<string, string> = {
-  '溫柔': 'gentle',
-  '溫和': 'calm',
-  '內向': 'lonely',
-  '沉穩': 'composed',
-  '體貼': 'caring',
-  '謙虛': 'humble',
-  '冷靜': 'cool',
-  '坦率': 'honest',
-  '開朗': 'bright',
-  '親切': 'friendly',
-  '愛照顧人': 'helpful',
-  '細心': 'considerate',
-  '有責任感': 'responsible',
-  '有決斷力': 'decisive',
-  '善於交際': 'sociable',
-  '好勝': 'competitive',
-  '熱情': 'passionate',
-  '室內派': 'indoor',
-  '活躍': 'active',
-  '知性': 'intellectual',
-  '一絲不苟': 'meticulous',
-  '樂觀': 'optimistic',
-  '害羞': 'shy',
-  '細心周到': 'attentive',
-  '爽朗': 'refreshing',
-  '自然派': 'natural',
-  '我行我素': 'ownPace'
-}
+// 性格タグの表と変換は src/lib/profile/personalityTags.ts にまとめた（選ぶ画面と同じ表示名）
 
 // 日本語タグ → 翻訳キーのマッピング（文化タグ）
 const cultureJaToKey: Record<string, string> = {
@@ -235,126 +144,6 @@ const cultureZhToKey: Record<string, string> = {
   '動畫': 'anime',
   '漫畫': 'manga',
   '卡拉OK': 'karaoke'
-}
-
-// 4言語翻訳辞書（性格タグ）
-const personalityTranslations: Record<string, Record<string, string>> = {
-  ja: {
-    gentle: '優しい',
-    calm: '穏やか',
-    lonely: '寂しがりや',
-    composed: '落ち着いている',
-    caring: '思いやりがある',
-    humble: '謙虚',
-    cool: '冷静',
-    honest: '素直',
-    bright: '明るい',
-    friendly: '親しみやすい',
-    helpful: '面倒見が良い',
-    considerate: '気が利く',
-    responsible: '責任感がある',
-    decisive: '決断力がある',
-    sociable: '社交的',
-    competitive: '負けず嫌い',
-    passionate: '熱血',
-    indoor: 'インドア',
-    active: 'アクティブ',
-    intellectual: '知的',
-    meticulous: '几帳面',
-    optimistic: '楽観的',
-    shy: 'シャイ',
-    attentive: 'マメ',
-    refreshing: 'さわやか',
-    natural: '天然',
-    ownPace: 'マイペース'
-  },
-  en: {
-    gentle: 'Gentle',
-    calm: 'Calm',
-    lonely: 'Reserved',
-    composed: 'Composed',
-    caring: 'Caring',
-    humble: 'Humble',
-    cool: 'Cool-headed',
-    honest: 'Honest',
-    bright: 'Bright',
-    friendly: 'Friendly',
-    helpful: 'Helpful',
-    considerate: 'Considerate',
-    responsible: 'Responsible',
-    decisive: 'Decisive',
-    sociable: 'Sociable',
-    competitive: 'Competitive',
-    passionate: 'Passionate',
-    indoor: 'Indoor',
-    active: 'Active',
-    intellectual: 'Intellectual',
-    meticulous: 'Meticulous',
-    optimistic: 'Optimistic',
-    shy: 'Shy',
-    attentive: 'Attentive',
-    refreshing: 'Refreshing',
-    natural: 'Natural',
-    ownPace: 'Own pace'
-  },
-  ko: {
-    gentle: '다정한',
-    calm: '차분한',
-    lonely: '내향적인',
-    composed: '침착한',
-    caring: '배려심 있는',
-    humble: '겸손한',
-    cool: '냉정한',
-    honest: '솔직한',
-    bright: '밝은',
-    friendly: '친근한',
-    helpful: '잘 돌봐주는',
-    considerate: '세심한',
-    responsible: '책임감 있는',
-    decisive: '결단력 있는',
-    sociable: '사교적인',
-    competitive: '승부욕 강한',
-    passionate: '열정적인',
-    indoor: '실내형',
-    active: '활동적인',
-    intellectual: '지적인',
-    meticulous: '꼼꼼한',
-    optimistic: '낙관적인',
-    shy: '수줍은',
-    attentive: '자상한',
-    refreshing: '상쾌한',
-    natural: '자연스러운',
-    ownPace: '마이페이스'
-  },
-  'zh-tw': {
-    gentle: '溫柔',
-    calm: '溫和',
-    lonely: '內向',
-    composed: '沉穩',
-    caring: '體貼',
-    humble: '謙虛',
-    cool: '冷靜',
-    honest: '坦率',
-    bright: '開朗',
-    friendly: '親切',
-    helpful: '愛照顧人',
-    considerate: '細心',
-    responsible: '有責任感',
-    decisive: '有決斷力',
-    sociable: '善於交際',
-    competitive: '好勝',
-    passionate: '熱情',
-    indoor: '室內派',
-    active: '活躍',
-    intellectual: '知性',
-    meticulous: '一絲不苟',
-    optimistic: '樂觀',
-    shy: '害羞',
-    attentive: '細心周到',
-    refreshing: '爽朗',
-    natural: '自然派',
-    ownPace: '我行我素'
-  }
 }
 
 // 4言語翻訳辞書（文化タグ）
@@ -721,30 +510,30 @@ const cultureTranslations: Record<string, Record<string, string>> = {
 export function normalizeTagToKey(tag: string, type: 'personality' | 'culture'): string | null {
   if (!tag) return null
 
+  if (type === 'personality') {
+    return personalityKeyFromValue(tag)
+  }
+
   const trimmed = tag.trim()
 
   // 既にキーの場合（英数字のみ）
-  const mapping = type === 'personality' ? personalityTranslations : cultureTranslations
-  if (mapping.en[trimmed]) {
+  if (cultureTranslations.en[trimmed]) {
     return trimmed
   }
 
   // 日本語からキーへ変換
-  const jaToKey = type === 'personality' ? personalityJaToKey : cultureJaToKey
-  if (jaToKey[trimmed]) {
-    return jaToKey[trimmed]
+  if (cultureJaToKey[trimmed]) {
+    return cultureJaToKey[trimmed]
   }
 
   // 韓国語からキーへ変換
-  const koToKey = type === 'personality' ? personalityKoToKey : cultureKoToKey
-  if (koToKey[trimmed]) {
-    return koToKey[trimmed]
+  if (cultureKoToKey[trimmed]) {
+    return cultureKoToKey[trimmed]
   }
 
   // 繁体字からキーへ変換
-  const zhToKey = type === 'personality' ? personalityZhToKey : cultureZhToKey
-  if (zhToKey[trimmed]) {
-    return zhToKey[trimmed]
+  if (cultureZhToKey[trimmed]) {
+    return cultureZhToKey[trimmed]
   }
 
   return null
@@ -757,16 +546,8 @@ export function formatPersonalityTag(
   tag: string,
   language: SupportedLanguage = 'ja'
 ): string {
-  if (!tag) return ''
-
-  const key = normalizeTagToKey(tag, 'personality')
-  if (!key) {
-    // マッピングにない場合は原文をそのまま返す
-    return tag
-  }
-
-  const langDict = personalityTranslations[language] || personalityTranslations['ja']
-  return langDict[key] || tag
+  // マッピングにない場合は原文をそのまま返す
+  return formatPersonalityValue(tag, language)
 }
 
 /**
