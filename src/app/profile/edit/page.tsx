@@ -43,6 +43,7 @@ import {
 } from '@/types/profile'
 import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 import { PERSONALITY_TAGS, normalizePersonalityValues, personalityKeyFromValue } from '@/lib/profile/personalityTags'
+import { isForeignMaleUser } from '@/utils/userHelpers'
 
 const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
@@ -3141,7 +3142,8 @@ function ProfileEditContent() {
 
         // 👤 URLにtypeパラメータがない場合、プロフィールから判定
         if (!profileType) {
-          const detectedType = profile?.gender === 'male' && profile?.nationality && profile?.nationality !== '日本'
+          // 男女の見分けは共通の判定（userHelpers）にそろえる
+          const detectedType = isForeignMaleUser({ gender: profile?.gender, nationality: profile?.nationality })
             ? 'foreign-male'
             : 'japanese-female'
           setUserBasedType(detectedType)

@@ -347,7 +347,8 @@ function MyPageContent() {
 
   // 完成度計算（Supabaseデータのみ）- 既存ロジック維持【変更禁止】
   const calculateProfileCompletionLocal = (profileData: any) => {
-    const isForeignMale = profileData?.gender === 'male' && profileData?.nationality && profileData?.nationality !== '日本'
+    // 男女の見分けは共通の判定（userHelpers）にそろえる
+    const isForeignMale = isForeignMaleUser({ gender: profileData?.gender, nationality: profileData?.nationality })
 
     const sessionSkills = (() => {
       if (Array.isArray(profileData?.language_skills) && profileData.language_skills.length > 0) {
