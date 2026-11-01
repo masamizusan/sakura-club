@@ -59,6 +59,9 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '購入する',
     sakuraNotice: '有効期限は購入から180日です。未使用分・期限切れ分の返金はできません。',
     sakuraPurchaseError: '購入手続きを開始できませんでした。時間をおいて再度お試しください。',
+    sakuraVerificationRequired: 'さくらいいねのチケットを購入するには、本人年齢確認が必要です。',
+    sakuraVerificationPending: '年齢確認の審査中です。承認されると購入できます。',
+    sakuraGoVerification: '年齢確認へ進む',
     portalError: 'お支払い管理の画面を開けませんでした。時間をおいてもう一度お試しください。',
     cancelScheduled: '{date}で解約予定です。それまでは引き続きご利用いただけます。',
     periodMonthly: '/月',
@@ -111,6 +114,9 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: 'Buy',
     sakuraNotice: 'Sakura Likes expire 180 days after purchase. Unused or expired Sakura Likes are non-refundable.',
     sakuraPurchaseError: 'Could not start checkout. Please try again later.',
+    sakuraVerificationRequired: 'Age verification is required to purchase Sakura Likes.',
+    sakuraVerificationPending: 'Your age verification is under review. You can purchase once it is approved.',
+    sakuraGoVerification: 'Verify your age',
     portalError: "Couldn't open the billing page. Please try again later.",
     cancelScheduled: 'Your plan will end on {date}. You can keep using it until then.',
     periodMonthly: '/month',
@@ -163,6 +169,9 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '구매하기',
     sakuraNotice: '유효기간은 구매일로부터 180일입니다. 미사용분・만료분은 환불되지 않습니다.',
     sakuraPurchaseError: '결제를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+    sakuraVerificationRequired: '사쿠라 좋아요를 구매하려면 본인 연령 확인이 필요합니다.',
+    sakuraVerificationPending: '연령 확인 심사 중입니다. 승인되면 구매할 수 있습니다.',
+    sakuraGoVerification: '연령 확인하기',
     portalError: '결제 관리 화면을 열 수 없습니다. 잠시 후 다시 시도해 주세요.',
     cancelScheduled: '{date}에 해지될 예정입니다. 그때까지는 계속 이용하실 수 있습니다.',
     periodMonthly: '/월',
@@ -215,6 +224,9 @@ const translations: Record<string, Record<string, string>> = {
     sakuraBuy: '購買',
     sakuraNotice: '有效期限為購買日起180天。未使用及已過期的部分恕不退款。',
     sakuraPurchaseError: '無法開始結帳，請稍後再試。',
+    sakuraVerificationRequired: '購買櫻花讚需要先完成本人年齡驗證。',
+    sakuraVerificationPending: '年齡驗證審核中，通過後即可購買。',
+    sakuraGoVerification: '前往年齡驗證',
     portalError: '無法開啟付款管理頁面，請稍後再試。',
     cancelScheduled: '您的方案將於{date}終止，在此之前仍可繼續使用。',
     periodMonthly: '/月',
@@ -272,6 +284,10 @@ function PlansContent() {
   const [sakuraBalance, setSakuraBalance] = useState<number | null>(null)
   const [sakuraNextExpiry, setSakuraNextExpiry] = useState<string | null>(null)
   const [sakuraProcessingPack, setSakuraProcessingPack] = useState<number | null>(null)
+  // 年齢確認の状態（profiles.verification_status。undefined = 読めていない）。購入は承認済みのみ
+  const [verificationStatus, setVerificationStatus] = useState<string | null | undefined>(undefined)
+  // API が 403 age_verification_required を返したとき
+  const [sakuraVerificationBlocked, setSakuraVerificationBlocked] = useState(false)
   // #2-2: カスタマーポータル（解約・支払い方法の管理）と解約予約の表示
   const [hasStripeCustomer, setHasStripeCustomer] = useState(false)
   const [cancelScheduledAt, setCancelScheduledAt] = useState<string | null>(null)
@@ -298,7 +314,7 @@ function PlansContent() {
         // Check gender/nationality - redirect if Japanese female
         const { data: profile } = await supabase
           .from('profiles')
-          .select('gender, nationality')
+          .select('gender, nationality, verification_status')
           .eq('id', user.id)
           .single()
 
@@ -306,6 +322,7 @@ function PlansContent() {
           router.push('/mypage')
           return
         }
+        if (profile) setVerificationStatus(profile.verification_status ?? null)
 
         // Check subscription（#2-2: 解約予約とポータル表示用に、active 以外の行も読む）
         const { data: subData, error: subError } = await supabase
@@ -356,6 +373,15 @@ function PlansContent() {
     }
   }, [isLoading])
 
+  // さくらいいねの購入欄の出し分け：承認済み → 購入ボタン、審査中 → 案内、それ以外（未申請・却下）→ 年齢確認へのボタン
+  // 状態が読めなかったときは購入ボタンを出し、API が拒否したら案内に切り替える
+  const isVerificationPending = verificationStatus === 'pending' || verificationStatus === 'requires_review'
+  const sakuraGate: 'ok' | 'pending' | 'required' =
+    isVerificationPending ? 'pending'
+      : sakuraVerificationBlocked ? 'required'
+        : verificationStatus === 'approved' || verificationStatus === undefined ? 'ok'
+          : 'required'
+
   const handleSakuraPurchase = async (pack: number) => {
     if (sakuraProcessingPack !== null) return
     setSakuraProcessingPack(pack)
@@ -369,6 +395,10 @@ function PlansContent() {
       const data = await res.json()
       if (res.ok && data.url) {
         window.location.href = data.url
+        return
+      }
+      if (res.status === 403 && data?.error === 'age_verification_required') {
+        setSakuraVerificationBlocked(true)
         return
       }
       alert(t('sakuraPurchaseError'))
@@ -689,6 +719,24 @@ function PlansContent() {
               </div>
             )}
 
+            {/* 年齢確認の承認前は購入ボタンの代わりに案内を出す（API でも必ず判定している） */}
+            {sakuraGate === 'pending' && (
+              <div className="rounded-xl px-4 py-3 mb-4" style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                <p className="text-sm" style={{ color: '#1e40af' }}>{t('sakuraVerificationPending')}</p>
+              </div>
+            )}
+            {sakuraGate === 'required' && (
+              <div className="rounded-xl px-4 py-3 mb-4" style={{ backgroundColor: '#fdf6ef', border: '1px solid #d4a89a' }}>
+                <p className="text-sm mb-3" style={{ color: 'var(--color-text)' }}>{t('sakuraVerificationRequired')}</p>
+                <button
+                  onClick={() => router.push('/verification')}
+                  className="btn-primary px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  {t('sakuraGoVerification')}
+                </button>
+              </div>
+            )}
+
             <div className="space-y-3">
               {sakuraPacks.map((p) => (
                 <div
@@ -706,13 +754,15 @@ function PlansContent() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                     <span className="text-lg font-bold" style={{ color: '#8b1a2e' }}>{formatUsd(SAKURA_PACK_PRICES[p.pack])}</span>
-                    <button
-                      onClick={() => handleSakuraPurchase(p.pack)}
-                      disabled={sakuraProcessingPack !== null}
-                      className="btn-primary px-4 py-2 rounded-full text-sm font-medium transition-opacity disabled:opacity-60"
-                    >
-                      {sakuraProcessingPack === p.pack ? t('processingPayment') : t('sakuraBuy')}
-                    </button>
+                    {sakuraGate === 'ok' && (
+                      <button
+                        onClick={() => handleSakuraPurchase(p.pack)}
+                        disabled={sakuraProcessingPack !== null}
+                        className="btn-primary px-4 py-2 rounded-full text-sm font-medium transition-opacity disabled:opacity-60"
+                      >
+                        {sakuraProcessingPack === p.pack ? t('processingPayment') : t('sakuraBuy')}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

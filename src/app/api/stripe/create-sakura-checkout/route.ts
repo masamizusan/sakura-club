@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
 import { isForeignMaleUser } from '@/utils/userHelpers'
@@ -39,10 +40,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: guard.message, code: guard.code }, { status: guard.httpStatus })
     }
 
-    // 外国人男性のみ購入可（画面側の判定は UX 補助。ここで必ず判定する）
-    const { data: profile, error: profileError } = await supabase
+    // 外国人男性のみ・年齢確認の承認済みのみ購入可（画面側の判定は UX 補助。ここで必ず判定する）
+    // verification_status は service_role で読む（RLS で取れない可能性があるため。メッセージ送信 API と同じ）
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('gender, nationality')
+      .select('gender, nationality, verification_status')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -52,6 +58,13 @@ export async function POST(req: NextRequest) {
     }
     if (!isForeignMaleUser(profile)) {
       return NextResponse.json({ error: 'Not eligible', code: 'not_eligible' }, { status: 403 })
+    }
+    // 年齢確認の判定は一言メッセージ・メッセージ送信と同じ（verification_status = 'approved'）
+    if (profile?.verification_status !== 'approved') {
+      return NextResponse.json(
+        { error: 'age_verification_required', code: 'age_verification_required' },
+        { status: 403 }
+      )
     }
 
     const { pack } = await req.json()
