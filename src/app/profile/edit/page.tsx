@@ -44,6 +44,7 @@ import {
 import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 import { PERSONALITY_TAGS, normalizePersonalityValues, personalityKeyFromValue } from '@/lib/profile/personalityTags'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import { CULTURE_WISH_MAX_LENGTH, countCultureWishChars, getCultureWishText, pickByGender, type CultureWishErrorCode } from '@/lib/i18n/cultureWish'
 
 const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
@@ -88,7 +89,10 @@ const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
     return validPairs.length >= 1; // 必ず1つ以上の有効ペアが必要
   }, { message: 'errors.languagePairRequired' }),
   hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
-  custom_culture: z.string().max(100, t('errors.customCultureMaxLength')).optional(),
+  // 日本文化の自由記入：必須・前後の空白を除いて 1〜200 文字（Array.from で数える）。エラーは印で返し、画面で cultureWish の文にする
+  culture_wish: z.string({ required_error: 'cultureWishRequired', invalid_type_error: 'cultureWishRequired' })
+    .refine(v => countCultureWishChars(v) >= 1, { message: 'cultureWishRequired' })
+    .refine(v => countCultureWishChars(v) <= CULTURE_WISH_MAX_LENGTH, { message: 'cultureWishTooLong' }),
   personality: z.array(z.string()).max(5, '性格は5つまで選択できます').optional(),
   self_introduction: z.string().min(100, t('errors.selfIntroMinimum')).max(1000, t('errors.selfIntroMaximum')),
   // 🚨 CRITICAL FIX: photo_urlsをZodスキーマに追加（バリデーション時削除防止）
@@ -1158,11 +1162,11 @@ function ProfileEditContent() {
 
     try {
       const currentData = watch()
-      const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+      const currentFormData = currentData || {}
       
       // 🎯 後方互換FIX: avatar_urlをDBからフォールバック取得
       // photo_urls=[]でもavatar_urlがDBにあれば画像あり判定させる
-      const formAvatarUrl = (currentDataWithoutCustomCulture as any).avatar_url
+      const formAvatarUrl = (currentFormData as any).avatar_url
       const effectiveAvatarUrl = formAvatarUrl || dbProfile?.avatar_url || ''
 
       logger.debug('🎯 AVATAR_URL後方互換チェック:', {
@@ -1173,7 +1177,7 @@ function ProfileEditContent() {
       })
 
       const formValuesForCompletion = {
-        ...currentDataWithoutCustomCulture,
+        ...currentFormData,
         hobbies: selectedHobbies,
         personality: selectedPersonality,
         language_skills: languageSkills,
@@ -1934,12 +1938,11 @@ function ProfileEditContent() {
           }
           
           const currentValues = getValues()
-          // custom_culture は完成度計算から除外（コメント扱い）
-          const { custom_culture, ...valueWithoutCustomCulture } = value || {}
+          const watchedValue = value || {}
           
           // 🚨 MAIN WATCH SUBSCRIPTION DEBUG - MyPageと同じログ形式
           const normalizedProfileForWatch = {
-            ...valueWithoutCustomCulture,
+            ...watchedValue,
             birth_date: currentValues.birth_date,
             hobbies: selectedHobbies, // 状態から直接取得
             personality: selectedPersonality, // 状態から直接取得
@@ -2351,7 +2354,7 @@ function ProfileEditContent() {
           self_introduction: '', // 空
           hobbies: [], // 空配列
           personality: [], // 空配列
-          custom_culture: '' // 空
+          culture_wish: '' // 空
         })
         
         // 状態も初期化
@@ -2588,7 +2591,6 @@ function ProfileEditContent() {
           height: null,
           avatar_url: null,
           personality: null,
-          custom_culture: null,
           hobbies: null,
           marital_status: null
         })
@@ -2619,7 +2621,7 @@ function ProfileEditContent() {
           travel_companion: undefined, // 🔧 新規ユーザーは未選択状態
           hobbies: [],
           personality: [],
-          custom_culture: ''
+          culture_wish: ''
         })
         
         setTimeout(() => window.location.reload(), 1500)
@@ -2738,6 +2740,7 @@ function ProfileEditContent() {
                 body_type: profileData.body_type || 'none',
                 marital_status: profileData.marital_status || 'none',
                 english_level: profileData.english_level || 'none',
+                culture_wish: profileData.culture_wish || '',
               }
             } catch (error) {
               logger.error('❌ localStorage解析エラー:', error)
@@ -2770,6 +2773,7 @@ function ProfileEditContent() {
             marital_status: 'none' as 'none' | 'single' | 'married',
             japanese_level: 'none',
             english_level: 'none',
+            culture_wish: '',
           }
         }
         
@@ -2795,7 +2799,7 @@ function ProfileEditContent() {
           self_introduction: initialData.self_introduction,
           hobbies: initialData.hobbies,
           personality: initialData.personality,
-          custom_culture: ''
+          culture_wish: initialData.culture_wish || ''
         })
         
         // 状態も同期
@@ -2876,6 +2880,7 @@ function ProfileEditContent() {
               body_type: profileData.body_type || 'none',
               marital_status: profileData.marital_status || 'none',
               english_level: profileData.english_level || 'none',
+              culture_wish: profileData.culture_wish || '',
             }
             
             logger.debug('🧪 fromMyPage initialData - フォーム値設定:', initialData)
@@ -2910,7 +2915,7 @@ function ProfileEditContent() {
               self_introduction: initialData.self_introduction,
               hobbies: initialData.hobbies,
               personality: initialData.personality,
-              custom_culture: ''
+              culture_wish: initialData.culture_wish || ''
             }
             
             logger.debug('🚨 [CRITICAL] Form reset data:', {
@@ -3246,7 +3251,6 @@ function ProfileEditContent() {
         // 既存ユーザーの場合：新しいカラム優先でデータを抽出（Triple-save対応）
         let existingPersonality: string[] = []
         let existingHobbies: string[] = []
-        let existingCustomCulture: string = ''
         
         if (!isNewUser) {
           // 🆕 Triple-save対応: 新しいカラムを優先、フォールバックでinterests配列から抽出
@@ -3289,19 +3293,9 @@ function ProfileEditContent() {
           } else if (profile?.interests && Array.isArray(profile.interests)) {
             // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
             profile!.interests.forEach((item: string) => {
+              // 昔の自由記入（custom_culture: で始まる値）はタグに入れない
               if (!item.startsWith('personality:') && !item.startsWith('custom_culture:') && item !== 'その他') {
                 existingHobbies.push(item)
-              }
-            })
-          }
-          
-          // custom_cultureは従来通り（direct fieldとinterests配列から）
-          if (profile?.custom_culture) {
-            existingCustomCulture = profile.custom_culture
-          } else if (profile?.interests && Array.isArray(profile.interests)) {
-            profile!.interests.forEach((item: string) => {
-              if (item.startsWith('custom_culture:')) {
-                existingCustomCulture = item.replace('custom_culture:', '')
               }
             })
           }
@@ -3310,10 +3304,8 @@ function ProfileEditContent() {
         logger.debug('🔍 DATA EXTRACTION DEBUG:', {
           'profile.personality (direct field)': profile?.personality,
           'profile.interests (array field)': profile?.interests, 
-          'profile.custom_culture (direct field)': profile?.custom_culture,
           'extracted existingPersonality': existingPersonality,
           'extracted existingHobbies': existingHobbies,
-          'extracted existingCustomCulture': existingCustomCulture,
           'isNewUser': isNewUser
         })
         
@@ -3385,7 +3377,7 @@ function ProfileEditContent() {
           hobbies: isNewUser ? [] : existingHobbies,
           personality: (!isNewUser && Array.isArray(existingPersonality) && existingPersonality.length > 0) ? existingPersonality : [], // 🎯 FIXED: DBにpersonalityデータが実際に存在する場合のみ復元
           self_introduction: isNewUser ? '' : (profile?.bio || profile?.self_introduction || ''),
-          custom_culture: isNewUser ? '' : existingCustomCulture,
+          culture_wish: isNewUser ? '' : ((profile as any)?.culture_wish ?? ''),
           // 🆕 言語レベルフィールド（安全なヘルパー関数使用）
           japanese_level: isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'japanese_level')) : 'none',
           english_level: !isForeignMale ? (isNewUser ? 'none' : getSafeLanguageLevel(profile, 'english_level')) : 'none',
@@ -3463,8 +3455,8 @@ function ProfileEditContent() {
         const personalityValue: string[] = hasSavedPersonalityForForm ? existingPersonality : []
         setValue('personality', personalityValue)
 
-        const customCultureValue = isNewUser ? '' : existingCustomCulture
-        setValue('custom_culture', customCultureValue)
+        const cultureWishValue = isNewUser ? '' : ((profile as any)?.culture_wish ?? '')
+        setValue('culture_wish', cultureWishValue)
         
         // 外国人男性向けフィールドの設定
         if (isForeignMale) {
@@ -3835,11 +3827,11 @@ function ProfileEditContent() {
           
           // 初期化完了直後に一度だけ正確なcompletion計算
           const currentData = watch()
-          const { custom_culture, ...currentDataWithoutCustomCulture } = currentData || {}
+          const currentFormData = currentData || {}
           
           // 🌟 SINGLE SOURCE OF TRUTH: 初期化完了後もフォーム値のみを使用
           const formValuesForPostInit = {
-            ...currentDataWithoutCustomCulture,
+            ...currentFormData,
             hobbies: selectedHobbies,
             personality: selectedPersonality,
             language_skills: languageSkills,
@@ -4214,11 +4206,6 @@ function ProfileEditContent() {
       selectedPersonality.forEach(personality => {
         consolidatedInterests.push(`personality:${personality}`)
       })
-      
-      // custom_culture を prefix付きで追加（互換性のため）
-      if (data.custom_culture && data.custom_culture.trim()) {
-        consolidatedInterests.push(`custom_culture:${data.custom_culture.trim()}`)
-      }
       
       // 空の場合はデフォルト値
       if (consolidatedInterests.length === 0) {
@@ -4661,7 +4648,6 @@ function ProfileEditContent() {
       logger.debug('🔍 Consolidated interests debug:', {
         selectedHobbies,
         selectedPersonality,
-        customCulture: data.custom_culture,
         consolidatedInterests,
         totalItems: consolidatedInterests.length
       })
@@ -6137,7 +6123,82 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   </>
                 )}
 
-                {/* 性格セクション - 日本文化の前に移動 */}
+                {/* 日本文化のまとまり（① 自由記入 culture_wish → ② 日本文化のタグ）。性格の欄の上に置く */}
+                <div className="space-y-4">
+                  {/* ① 自由記入（culture_wish・必須・200 文字まで） */}
+                  {(() => {
+                    const cw = getCultureWishText(currentLanguage)
+                    const cultureWishError = errors.culture_wish?.message as CultureWishErrorCode | undefined
+                    return (
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {pickByGender(cw.inputLabel, isForeignMale)} <span className="text-red-500">*</span>
+                        </label>
+                        <Textarea
+                          placeholder={pickByGender(cw.placeholder, isForeignMale)}
+                          rows={3}
+                          {...register('culture_wish')}
+                          className={cultureWishError ? 'border-red-500' : ''}
+                        />
+                        <div className="flex justify-between items-start mt-1">
+                          <p className="text-red-500 text-sm">
+                            {cultureWishError ? (cw.errors[cultureWishError] ?? cw.errors.cultureWishRequired) : ''}
+                          </p>
+                          <p className={`text-xs ml-2 shrink-0 ${countCultureWishChars(watch('culture_wish')) > CULTURE_WISH_MAX_LENGTH ? 'text-red-500' : 'text-gray-500'}`}>
+                            {countCultureWishChars(watch('culture_wish'))}/{CULTURE_WISH_MAX_LENGTH}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* ② 日本文化のタグ */}
+                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
+                    {pickByGender(getCultureWishText(currentLanguage).tagHeading, isForeignMale)} <span className="text-red-500">*</span> （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {t('profile.selectCultureNote')}
+                  </p>
+                  <Accordion type="multiple" className="w-full">
+                    {getCultureCategories(t).map((category) => (
+                      <AccordionItem key={category.name} value={category.name}>
+                        <AccordionTrigger className="text-lg font-semibold">
+                          {category.name}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-2">
+                            {category.items.map((hobby) => (
+                              <button
+                                key={hobby.value}
+                                type="button"
+                                onClick={() => toggleHobby(hobby.value)}
+                                disabled={!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8}
+                                className={`
+                                  px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                                  ${selectedHobbies.includes(hobby.value)
+                                    ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
+                                  }
+                                  ${(!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8)
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'cursor-pointer hover:shadow-md'
+                                  }
+                                `}
+                              >
+                                {hobby.label}
+                              </button>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  {errors.hobbies && (
+                    <p className="text-red-500 text-sm mt-1">{errors.hobbies.message}</p>
+                  )}
+                </div>
+
+                {/* 性格セクション - 日本文化のまとまりの下 */}
                 <div className="space-y-4">
                   {/* 🚨 DEBUG: 性格タグ表示前の確認（正規化ベース） */}
                   {(() => {
@@ -6199,69 +6260,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       )
                     })}
                   </div>
-                </div>
-
-                {/* 興味・趣味セクション */}
-                <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {isForeignMale ? t('profile.cultureSectionForeign') : t('profile.cultureSection')} <span className="text-red-500">*</span> （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
-                  </h4>
-                  <p className="text-xs text-gray-500 mb-3">
-                    {t('profile.selectCultureNote')}
-                  </p>
-                  <Accordion type="multiple" className="w-full">
-                    {getCultureCategories(t).map((category) => (
-                      <AccordionItem key={category.name} value={category.name}>
-                        <AccordionTrigger className="text-lg font-semibold">
-                          {category.name}
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-2">
-                            {category.items.map((hobby) => (
-                              <button
-                                key={hobby.value}
-                                type="button"
-                                onClick={() => toggleHobby(hobby.value)}
-                                disabled={!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8}
-                                className={`
-                                  px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                  ${selectedHobbies.includes(hobby.value)
-                                    ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
-                                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
-                                  }
-                                  ${(!selectedHobbies.includes(hobby.value) && selectedHobbies.length >= 8)
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : 'cursor-pointer hover:shadow-md'
-                                  }
-                                `}
-                              >
-                                {hobby.label}
-                              </button>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                  {errors.hobbies && (
-                    <p className="text-red-500 text-sm mt-1">{errors.hobbies.message}</p>
-                  )}
-
-                  {/* カスタム日本文化 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('profile.otherCultureLabel')}
-                    </label>
-                    <Input
-                      placeholder={t('placeholders.enterCustomCulture')}
-                      {...register('custom_culture')}
-                      className={errors.custom_culture ? 'border-red-500' : ''}
-                    />
-                    {errors.custom_culture && (
-                      <p className="text-red-500 text-sm mt-1">{errors.custom_culture.message}</p>
-                    )}
-                  </div>
-
                 </div>
 
                 {/* プレビューボタン */}

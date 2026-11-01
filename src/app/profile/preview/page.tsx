@@ -15,6 +15,8 @@ import PhotoGallery from '@/components/profile/PhotoGallery'
 import { createClient } from '@/lib/supabase'
 import { logger, maskImageValue, sanitizePayload } from '@/utils/logger'
 import { formatPersonalityValue } from '@/lib/profile/personalityTags'
+import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
+import { isForeignMaleUser } from '@/utils/userHelpers'
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -767,7 +769,7 @@ function ProfilePreviewContent() {
           self_introduction: searchParams?.get('self_introduction') || '',
           hobbies: [],
           personality: [],
-          custom_culture: searchParams?.get('custom_culture') || '',
+          culture_wish: searchParams?.get('culture_wish') || '',
           image: searchParams?.get('image') || '',
           profile_image: searchParams?.get('profile_image') || null,
           // 外国人男性特有のフィールド
@@ -845,7 +847,7 @@ function ProfilePreviewContent() {
     visit_schedule = '',
     travel_companion = '',
     personality = [],
-    custom_culture: customCulture = '',
+    culture_wish: cultureWish = '',
     image: profileImage = '',
     photo_urls = [] // 🖼️ NEW: 複数画像対応
   } = previewData
@@ -1145,7 +1147,41 @@ function ProfilePreviewContent() {
                 </div>
               )}
 
-              {/* 11. 性格 */}
+              {/* 11. 日本文化のまとまり（① 自由記入 → ② タグ）。見出しは男女で出し分け */}
+              {(() => {
+                const cw = getCultureWishText(currentLanguage)
+                const isForeignMaleView = isForeignMaleUser({ gender, nationality })
+                return (
+                  <>
+                    {shouldDisplayValue(cultureWish) && (
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">{pickByGender(cw.displayLabel, isForeignMaleView)}</h3>
+                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                          {cultureWish}
+                        </p>
+                      </div>
+                    )}
+
+                    {hobbies.length > 0 && (
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-2">{pickByGender(cw.tagHeading, isForeignMaleView)}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {hobbies.map((hobby: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
+                            >
+                              {getCultureLabel(hobby, t)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
+
+              {/* 12. 性格 */}
               {personality.length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">{t('profile.personalityLabel')}</h3>
@@ -1158,32 +1194,6 @@ function ProfilePreviewContent() {
                         {formatPersonalityValue(trait, currentLanguage)}
                       </span>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 12. 学びたい日本文化 */}
-              {(hobbies.length > 0 || shouldDisplayValue(customCulture)) && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.learnJapaneseCulture')}</h3>
-                  <div className="space-y-2">
-                    {hobbies.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {hobbies.map((hobby: string, index: number) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
-                          >
-                            {getCultureLabel(hobby, t)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {shouldDisplayValue(customCulture) && (
-                      <div className="bg-amber-50 rounded-lg p-3">
-                        <p className="text-gray-700 text-sm">{customCulture}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -1312,6 +1322,8 @@ function ProfilePreviewContent() {
                           : null,
                         // 🚀 CRITICAL: interests必須（指示書対応）
                         interests: hobbies && hobbies.length > 0 ? hobbies : null,
+                        // 日本文化の自由記入（前後の空白を除いて保存。DB は 200 文字までの CHECK あり）
+                        culture_wish: typeof cultureWish === 'string' && cultureWish.trim() ? cultureWish.trim() : null,
                         // 🚨 SSOT: language_skills必須DB保存（指示書対応）
                         language_skills: normalizedLanguageSkills,
                         // 🚨 TASK C FIX: photo_urls必須（0枚保存時は空配列[]を確実にDBに送信）
@@ -1343,6 +1355,7 @@ function ProfilePreviewContent() {
                         'residence',          // 居住地（都道府県など）
                         'personality_tags',
                         'interests',
+                        'culture_wish',       // 日本文化の自由記入（入れ忘れると保存されない）
                         'avatar_url',
                         'occupation',
                         'height',
