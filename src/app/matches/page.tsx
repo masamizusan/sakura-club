@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Heart,
@@ -174,32 +174,139 @@ interface UserProfile {
   plannedPrefectures?: string[]
 }
 
+// localStorage に保存した絞り込みを読む（無い・壊れている場合は初期値）
+const readSavedFilters = (): SearchFilters => {
+  try {
+    const saved = localStorage.getItem('sakura:matches:filters')
+    if (!saved) return DEFAULT_FILTERS
+    const parsed = JSON.parse(saved) as Partial<SearchFilters>
+    return {
+      ...DEFAULT_FILTERS,
+      ...parsed,
+    }
+  } catch {
+    return DEFAULT_FILTERS
+  }
+}
+
+// ===== プロフィールから戻ったときに、見ていた一覧と場所を戻す =====
+// 保存先は sessionStorage（タブごと）。プロフィールのカードを押したときに保存し、
+// 「戻る」（ブラウザの戻る・プロフィール画面の ← = router.back()）で戻ったときだけ使う。
+const RETURN_STATE_KEY = 'sakura:matches:returnState'
+const RETURN_STATE_TTL_MS = 30 * 60 * 1000
+// popstate からこの時間内に画面が開いたら「戻ってきた」とみなす
+const POPSTATE_WINDOW_MS = 5000
+
+interface MatchesReturnState {
+  version: 1
+  userId: string
+  filtersKey: string
+  savedAt: number
+  openedProfileId: string
+  scrollY: number
+  // 押したカードの、画面の上端からの位置（同じ見た目に戻すため）
+  cardTop: number | null
+  matches: UserProfile[]
+  myProfile: MyProfileSummary | null
+}
+
+// 絞り込みの比較用の文字列（項目の順番を固定）
+const filtersKey = (f: SearchFilters): string => JSON.stringify([
+  f.nationalityValues, f.ageMin, f.ageMax, f.maritalStatus, f.prefectures, f.lastActive,
+])
+
+// 「戻る」の見分け：戻る・進むでは popstate が起き、リンクや router.push では起きない。
+// この画面が閉じている間も記録できるよう、モジュールの読み込み時に 1 回だけ登録する
+let lastPopstate: { path: string; at: number } | null = null
+let consumedPopstateAt: number | null = null
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    lastPopstate = { path: window.location.pathname, at: Date.now() }
+  })
+}
+
+const isReturnFromHistory = (): boolean => {
+  if (!lastPopstate) return false
+  if (lastPopstate.path !== '/matches') return false
+  if (Date.now() - lastPopstate.at > POPSTATE_WINDOW_MS) return false
+  // 同じ「戻る」で 2 回目に開いたとき（別の画面へ行ってすぐ戻ったなど）は使わない
+  return consumedPopstateAt !== lastPopstate.at
+}
+
+const removeReturnState = () => {
+  try {
+    sessionStorage.removeItem(RETURN_STATE_KEY)
+  } catch {
+    // sessionStorage が使えない環境は無視
+  }
+}
+
+// 保存した状態を読む。ユーザー・絞り込みが違う、30 分以上たった、壊れている場合は捨てて null
+const loadReturnState = (userId: string, key: string): MatchesReturnState | null => {
+  try {
+    const raw = sessionStorage.getItem(RETURN_STATE_KEY)
+    if (!raw) return null
+    const state = JSON.parse(raw) as MatchesReturnState
+    const valid =
+      state?.version === 1 &&
+      state.userId === userId &&
+      state.filtersKey === key &&
+      typeof state.savedAt === 'number' &&
+      Date.now() - state.savedAt <= RETURN_STATE_TTL_MS &&
+      typeof state.openedProfileId === 'string' &&
+      typeof state.scrollY === 'number' &&
+      Array.isArray(state.matches)
+    if (!valid) {
+      removeReturnState()
+      return null
+    }
+    return state
+  } catch {
+    removeReturnState()
+    return null
+  }
+}
+
+const findMatchCard = (profileId: string): HTMLElement | null => {
+  const cards = document.querySelectorAll<HTMLElement>('[data-match-card]')
+  for (const card of Array.from(cards)) {
+    if (card.dataset.matchCard === profileId) return card
+  }
+  return null
+}
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
 export default function MatchesPage() {
   const { user, isLoading: authLoading } = useAuth()
   const { currentLanguage } = useLanguage()
   const router = useRouter()
-  const [matches, setMatches] = useState<UserProfile[]>([])
-  const [filteredMatches, setFilteredMatches] = useState<UserProfile[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+
+  // 戻ってきたときだけ、保存した一覧を使う（初回の描画で決める。ここでは何も書き換えない）
+  const [restored] = useState<MatchesReturnState | null>(() => {
+    if (typeof window === 'undefined') return null
+    if (!isReturnFromHistory()) return null
+    if (!user?.id) return null
+    return loadReturnState(user.id, filtersKey(readSavedFilters()))
+  })
+  // 保存した一覧を表示している間は、取り直しで仮の枠を出さず、見ている場所を保つ
+  const backgroundRefreshRef = useRef(restored !== null)
+  // カードを押してプロフィールへ行くところ（このときだけ、閉じるときに保存した状態を残す）
+  const leavingToProfileRef = useRef(false)
+  // 取り直しの前に画面に見えていたカードと、その位置
+  const scrollAnchorRef = useRef<{ id: string; top: number }[] | null>(null)
+
+  const [matches, setMatches] = useState<UserProfile[]>(() => restored?.matches ?? [])
+  const [filteredMatches, setFilteredMatches] = useState<UserProfile[]>(() => restored?.matches ?? [])
+  const [isLoading, setIsLoading] = useState(() => restored === null)
 
   // 自分のプロフィール要約（モーダル UI の出し分け用）
-  const [myProfile, setMyProfile] = useState<MyProfileSummary | null>(null)
+  const [myProfile, setMyProfile] = useState<MyProfileSummary | null>(() => restored?.myProfile ?? null)
 
   // 適用中のフィルタとモーダル下書きフィルタ
-  const [filters, setFilters] = useState<SearchFilters>(() => {
-    try {
-      const saved = localStorage.getItem('sakura:matches:filters')
-      if (!saved) return DEFAULT_FILTERS
-      const parsed = JSON.parse(saved) as Partial<SearchFilters>
-      return {
-        ...DEFAULT_FILTERS,
-        ...parsed,
-      }
-    } catch {
-      return DEFAULT_FILTERS
-    }
-  })
+  const [filters, setFilters] = useState<SearchFilters>(readSavedFilters)
   const [draftFilters, setDraftFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+  const lastFiltersKeyRef = useRef(filtersKey(filters))
 
   // filters が変わるたびに localStorage へ保存
   useEffect(() => {
@@ -208,7 +315,100 @@ export default function MatchesPage() {
     } catch {
       // localStorage が使えない環境（プライベートブラウジング容量超過等）は無視
     }
+    // 絞り込みを変えたら、保存した状態は捨てる（以降の取り直しは今までどおり仮の枠を出す）
+    const key = filtersKey(filters)
+    if (key !== lastFiltersKeyRef.current) {
+      lastFiltersKeyRef.current = key
+      removeReturnState()
+      backgroundRefreshRef.current = false
+    }
   }, [filters])
+
+  // 今回の「戻る」は使い終わった扱いにする。閉じるときは、プロフィールへ行く場合以外は保存した状態を消す
+  useEffect(() => {
+    if (lastPopstate) consumedPopstateAt = lastPopstate.at
+    return () => {
+      if (!leavingToProfileRef.current) removeReturnState()
+    }
+  }, [])
+
+  // 戻ってきたとき：開いていた人のカードを、押したときと同じ高さに戻す（いなければ保存したスクロール位置）
+  useEffect(() => {
+    if (!restored) return
+    let cancelled = false
+    let frames = 0
+    const apply = () => {
+      if (cancelled) return
+      const card = findMatchCard(restored.openedProfileId)
+      if (card) {
+        const target = restored.cardTop !== null
+          ? card.getBoundingClientRect().top + window.scrollY - restored.cardTop
+          : restored.scrollY
+        window.scrollTo(0, Math.max(0, target))
+        return
+      }
+      // 一覧の表示を待つ（認証の確認中など）。約 1 秒待っても無ければ保存した位置へ
+      if (frames++ < 60) {
+        requestAnimationFrame(apply)
+        return
+      }
+      window.scrollTo(0, restored.scrollY)
+    }
+    requestAnimationFrame(apply)
+    return () => {
+      cancelled = true
+    }
+  }, [restored])
+
+  // 裏で取り直したあと：取り直す前に見えていたカードが同じ高さに来るよう、スクロールを合わせる
+  useIsomorphicLayoutEffect(() => {
+    const anchors = scrollAnchorRef.current
+    if (!anchors) return
+    scrollAnchorRef.current = null
+    for (const anchor of anchors) {
+      const card = findMatchCard(anchor.id)
+      if (!card) continue
+      const diff = card.getBoundingClientRect().top - anchor.top
+      if (diff !== 0) window.scrollBy(0, diff)
+      return
+    }
+  }, [filteredMatches])
+
+  // 取り直す前に、画面に見えているカード（上から最大 5 枚）とその位置を覚える
+  const captureScrollAnchor = () => {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-match-card]'))
+    const anchors: { id: string; top: number }[] = []
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect()
+      if (rect.bottom <= 0 || !card.dataset.matchCard) continue
+      anchors.push({ id: card.dataset.matchCard, top: rect.top })
+      if (anchors.length >= 5) break
+    }
+    scrollAnchorRef.current = anchors.length > 0 ? anchors : null
+  }
+
+  // カードを押したとき：今の一覧・場所を保存する（新しいタブで開く操作では保存しない）
+  const saveReturnState = (event: ReactMouseEvent<HTMLAnchorElement>, profileId: string) => {
+    if (!user?.id) return
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    try {
+      const state: MatchesReturnState = {
+        version: 1,
+        userId: user.id,
+        filtersKey: filtersKey(filters),
+        savedAt: Date.now(),
+        openedProfileId: profileId,
+        scrollY: window.scrollY,
+        cardTop: event.currentTarget.getBoundingClientRect().top,
+        matches,
+        myProfile,
+      }
+      sessionStorage.setItem(RETURN_STATE_KEY, JSON.stringify(state))
+      leavingToProfileRef.current = true
+    } catch {
+      // 保存できなくても、今までどおり開くだけ
+    }
+  }
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [expandedRegions, setExpandedRegions] = useState<RegionKey[]>([])
 
@@ -297,8 +497,11 @@ export default function MatchesPage() {
         return
       }
 
+      // 保存した一覧を表示中なら、仮の枠を出さずに裏で取り直す
+      const silent = backgroundRefreshRef.current
+
       try {
-        setIsLoading(true)
+        if (!silent) setIsLoading(true)
         const qs = buildFiltersQueryString(filters)
         const response = await fetch(`/api/matches/recommendations${qs}`, {
           cache: 'no-store',
@@ -338,13 +541,17 @@ export default function MatchesPage() {
             distanceKm: 0,
             plannedPrefectures: Array.isArray(profile.planned_prefectures) ? profile.planned_prefectures : []
           }))
+          if (silent) captureScrollAnchor()
           setMatches(formattedMatches)
+        } else if (silent && !response.ok) {
+          // 保存した一覧を表示中は、取り直しに失敗しても今の一覧のまま
+          console.error('[matches] background refresh failed:', response.status)
         } else {
           setMatches([])
         }
       } catch (error) {
         console.error('Error fetching matches:', error)
-        setMatches([])
+        if (!silent) setMatches([])
       } finally {
         setIsLoading(false)
       }
@@ -515,6 +722,8 @@ export default function MatchesPage() {
                     key={user.id}
                     href={`/profile/${user.id}`}
                     className="block max-w-xl mx-auto w-full"
+                    data-match-card={user.id}
+                    onClick={(e) => saveReturnState(e, user.id)}
                   >
                     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                       {/* プロフィール画像エリア */}
