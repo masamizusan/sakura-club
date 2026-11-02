@@ -955,7 +955,15 @@ function ProfileEditContent() {
       alert(et.languageSkillError(errors.language_skills.message || et.languageSkillFallback))
     } else {
       const firstError = Object.values(errors)[0]
-      alert(et.inputError(firstError?.message || et.inputFallback))
+      if (firstError && firstError === errors.culture_wish) {
+        // culture_wish のエラーは印（cultureWishRequired など）なので、今の言語の文にし、頭に入力欄の見出しを付ける
+        const cw = getCultureWishText(currentLanguage)
+        const code = errors.culture_wish.message as CultureWishErrorCode | undefined
+        const message = (code && cw.errors[code]) || cw.errors.cultureWishRequired
+        alert(et.inputError(`${pickByGender(cw.inputLabel, isForeignMale)}\n${message}`))
+      } else {
+        alert(et.inputError(firstError?.message || et.inputFallback))
+      }
     }
   })
 
