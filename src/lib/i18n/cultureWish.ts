@@ -36,7 +36,7 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       female: '紹介したい日本文化・おすすめの場所',
     },
     placeholder: {
-      male: '例：地元の人が通う居酒屋で飲んでみたい。昔ながらの町並みを歩いてみたい',
+      male: '例：地元の人が通う居酒屋で飲んだり、昔ながらの町並みを歩いたりしてみたい',
       female: '例：地元の人しか知らない居酒屋や、のどかな田舎の風景を案内したい',
     },
     tagHeading: {
