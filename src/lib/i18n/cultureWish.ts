@@ -36,7 +36,7 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       female: '紹介したい日本文化・おすすめの場所',
     },
     placeholder: {
-      male: '例：浅草で着物を着て歩きたい。京都でお茶を体験してみたい',
+      male: '例：地元の人が通う居酒屋で飲んでみたい。昔ながらの町並みを歩いてみたい',
       female: '例：地元の人しか知らない居酒屋や、のどかな田舎の風景を案内したい',
     },
     tagHeading: {
@@ -58,7 +58,7 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       female: 'Japanese culture to share & recommended places',
     },
     placeholder: {
-      male: "e.g. I'd like to walk around Asakusa in a kimono and try a tea ceremony in Kyoto.",
+      male: "e.g. I'd love to have a drink at an izakaya where the locals go, and stroll through an old-fashioned neighborhood.",
       female: "e.g. I'd love to take you to a little izakaya only locals know about, or show you the peaceful countryside.",
     },
     tagHeading: {
@@ -80,7 +80,7 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       female: '소개하고 싶은 일본 문화・추천 장소',
     },
     placeholder: {
-      male: '예: 아사쿠사에서 기모노를 입고 걷고 싶어요. 교토에서 다도를 체험해 보고 싶어요',
+      male: '예: 현지 사람들이 즐겨 찾는 이자카야에서 한잔해 보고 싶어요. 옛 정취가 남아 있는 거리를 걸어 보고 싶어요',
       female: '예: 현지 사람만 아는 이자카야나 한적한 시골 풍경을 안내하고 싶어요',
     },
     tagHeading: {
@@ -102,7 +102,7 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       female: '想介紹的日本文化・推薦的地方',
     },
     placeholder: {
-      male: '例：想穿著和服在淺草散步，也想在京都體驗茶道',
+      male: '例：想去在地人常去的居酒屋喝一杯，也想在充滿古早味的老街上散散步',
       female: '例：想帶你去只有在地人才知道的居酒屋，或看看悠閒的鄉村風景',
     },
     tagHeading: {
