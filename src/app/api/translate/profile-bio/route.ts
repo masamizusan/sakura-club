@@ -9,6 +9,10 @@ export const dynamic = 'force-dynamic'
 const SUPPORTED_LANGUAGES = ['ja', 'en', 'ko', 'zh'] as const
 type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number]
 
+// 訳せる欄（profile_translations.field に入る値）。指定がなければ 'bio'
+const TRANSLATABLE_FIELDS = ['bio', 'culture_wish'] as const
+type TranslatableField = typeof TRANSLATABLE_FIELDS[number]
+
 const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
   ja: 'Japanese',
   en: 'English',
@@ -133,7 +137,8 @@ FORBIDDEN: Leaving ANY Japanese text untranslated. Every single character must b
 /**
  * POST /api/translate/profile-bio
  *
- * 自己紹介文をAI翻訳する
+ * プロフィールの文（自己紹介 bio・日本文化の自由記入 culture_wish）をAI翻訳する
+ * - field：'bio'（省略時）または 'culture_wish'。キャッシュは field ごとに分かれる
  * - 認証必須
  * - キャッシュあり（同一内容は再翻訳しない）
  * - レート制限あり
@@ -198,6 +203,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId, targetLang, text } = body
+    const field: unknown = body.field ?? 'bio'
 
     // バリデーション
     if (!userId || !targetLang || !text) {
@@ -206,6 +212,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    if (typeof field !== 'string' || !(TRANSLATABLE_FIELDS as readonly string[]).includes(field)) {
+      return NextResponse.json(
+        { error: `Unsupported field. Supported: ${TRANSLATABLE_FIELDS.join(', ')}`, code: ERROR_CODES.INVALID_PARAMS },
+        { status: 400 }
+      )
+    }
+    const translateField = field as TranslatableField
 
     if (!SUPPORTED_LANGUAGES.includes(targetLang)) {
       return NextResponse.json(
@@ -231,7 +245,7 @@ export async function POST(request: NextRequest) {
       .from('profile_translations')
       .select('translated_text')
       .eq('user_id', userId)
-      .eq('field', 'bio')
+      .eq('field', translateField)
       .eq('target_lang', targetLang)
       .eq('source_hash', sourceHash)
       .maybeSingle()
@@ -242,7 +256,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (cached) {
-      console.log('[TRANSLATE] Cache hit for user:', userId.slice(0, 8), 'lang:', targetLang)
+      console.log('[TRANSLATE] Cache hit for user:', userId.slice(0, 8), 'field:', translateField, 'lang:', targetLang)
       return NextResponse.json({
         translatedText: cached.translated_text,
         cached: true
@@ -310,7 +324,7 @@ export async function POST(request: NextRequest) {
       .from('profile_translations')
       .upsert({
         user_id: userId,
-        field: 'bio',
+        field: translateField,
         target_lang: targetLang,
         source_hash: sourceHash,
         translated_text: translatedText
@@ -324,7 +338,7 @@ export async function POST(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime
-    console.log('[TRANSLATE] Success for user:', userId.slice(0, 8), 'lang:', targetLang, 'duration:', duration, 'ms')
+    console.log('[TRANSLATE] Success for user:', userId.slice(0, 8), 'field:', translateField, 'lang:', targetLang, 'duration:', duration, 'ms')
 
     return NextResponse.json({
       translatedText,

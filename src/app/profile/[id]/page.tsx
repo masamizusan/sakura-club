@@ -39,6 +39,7 @@ import {
 } from '@/utils/profileFieldFormatters'
 import { getOrderedUserIds } from '@/utils/userPair'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
 import { useSubscription } from '@/hooks/useSubscription'
 import {
   formatPersonalityTag,
@@ -102,7 +103,6 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     plannedPrefectures: '行く予定',
     selfIntroduction: '自己紹介',
     personality: '性格',
-    japaneseCulture: '学びたい日本文化',
     yearsOld: '歳'
   },
   en: {
@@ -159,7 +159,6 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     plannedPrefectures: 'Planned Prefectures',
     selfIntroduction: 'Self Introduction',
     personality: 'Personality',
-    japaneseCulture: 'Japanese Culture Interests',
     yearsOld: ' y/o'
   },
   ko: {
@@ -216,7 +215,6 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     plannedPrefectures: '방문 예정 지역',
     selfIntroduction: '자기소개',
     personality: '성격',
-    japaneseCulture: '배우고 싶은 일본 문화',
     yearsOld: '세'
   },
   'zh-tw': {
@@ -273,7 +271,6 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     plannedPrefectures: '預計前往地區',
     selfIntroduction: '自我介紹',
     personality: '性格',
-    japaneseCulture: '想學習的日本文化',
     yearsOld: '歲'
   }
 }
@@ -298,6 +295,137 @@ const likeFailedTexts: Record<string, string> = {
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
   return value !== null && value !== undefined && value !== '' && value !== 'none'
+}
+
+// 翻訳ボタン付きの文（自己紹介 bio・日本文化の自由記入 culture_wish で共通）
+// 「翻訳して読む」→ AI 翻訳 → 「原文を表示」で切り替え。翻訳は /api/translate/profile-bio（field で欄を区別）
+function TranslatableText({
+  text,
+  field,
+  profileId,
+  apiLanguage,
+  t,
+}: {
+  text: string
+  field: 'bio' | 'culture_wish'
+  profileId: string
+  apiLanguage: string
+  t: (key: string) => string
+}) {
+  const [translatedText, setTranslatedText] = useState<string | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [showTranslation, setShowTranslation] = useState(false)
+  const [translationError, setTranslationError] = useState<string | null>(null)
+
+  // 翻訳実行
+  const handleTranslate = async () => {
+    if (isTranslating || !text) return
+
+    setIsTranslating(true)
+    setTranslationError(null)
+
+    try {
+      const response = await fetch('/api/translate/profile-bio', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profileId,
+          targetLang: apiLanguage,
+          text,
+          field
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.translatedText) {
+        setTranslatedText(data.translatedText)
+        setShowTranslation(true)
+      } else {
+        // エラー詳細を設定
+        const errorMsg = data.error || t('translationFailed')
+        setTranslationError(errorMsg)
+        console.error('Translation API error:', data)
+      }
+    } catch (err) {
+      console.error('Translation error:', err)
+      setTranslationError(t('translationFailed'))
+    } finally {
+      setIsTranslating(false)
+    }
+  }
+
+  // 翻訳表示 or 原文表示
+  if (showTranslation && translatedText) {
+    return (
+      <div>
+        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{translatedText}</p>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-xs text-gray-400 italic">
+            {t('aiTranslationNote')}
+          </span>
+          <button
+            onClick={() => setShowTranslation(false)}
+            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] underline"
+          >
+            {t('showOriginal')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
+
+      {/* 翻訳ボタン（原文と異なる言語の場合のみ表示） */}
+      <div className="mt-2">
+        {translationError ? (
+          <div className="text-xs text-red-500">
+            <span>{t('translationFailed')}</span>
+            {/* #63: エラーの詳細は NEXT_PUBLIC_DEBUG=true のときだけ */}
+            {(process.env.NEXT_PUBLIC_DEBUG === 'true' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugAuth') === '1') && (
+              <span className="block text-gray-400 mt-1">{translationError}</span>
+            )}
+            <button
+              onClick={() => { setTranslationError(null); handleTranslate(); }}
+              className="ml-2 text-[#8b1a2e] underline"
+            >
+              {t('retry')}
+            </button>
+          </div>
+        ) : translatedText ? (
+          <button
+            onClick={() => setShowTranslation(true)}
+            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1"
+          >
+            <Languages className="w-3 h-3" />
+            {t('translateButton')}
+          </button>
+        ) : (
+          <button
+            onClick={() => handleTranslate()}
+            disabled={isTranslating}
+            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1 disabled:opacity-50"
+          >
+            {isTranslating ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {t('translating')}
+              </>
+            ) : (
+              <>
+                <Languages className="w-3 h-3" />
+                {t('translateButton')}
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function ProfileDetailContent() {
@@ -410,12 +538,6 @@ function ProfileDetailContent() {
     }
   }
 
-  // 翻訳用state
-  const [translatedBio, setTranslatedBio] = useState<string | null>(null)
-  const [isTranslating, setIsTranslating] = useState(false)
-  const [showTranslation, setShowTranslation] = useState(false)
-  const [translationError, setTranslationError] = useState<string | null>(null)
-
   // 翻訳テキスト取得
   const t = (key: string): string => {
     const texts = profileDetailTexts[currentLanguage] || profileDetailTexts['ja']
@@ -426,44 +548,6 @@ function ProfileDetailContent() {
   const getApiLanguageCode = (): string => {
     if (currentLanguage === 'zh-tw') return 'zh'
     return currentLanguage
-  }
-
-  // 翻訳実行
-  const handleTranslate = async (bioText: string) => {
-    if (isTranslating || !bioText) return
-
-    setIsTranslating(true)
-    setTranslationError(null)
-
-    try {
-      const response = await fetch('/api/translate/profile-bio', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: profileId,
-          targetLang: getApiLanguageCode(),
-          text: bioText
-        })
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.translatedText) {
-        setTranslatedBio(data.translatedText)
-        setShowTranslation(true)
-      } else {
-        // エラー詳細を設定
-        const errorMsg = data.error || t('translationFailed')
-        setTranslationError(errorMsg)
-        console.error('Translation API error:', data)
-      }
-    } catch (err) {
-      console.error('Translation error:', err)
-      setTranslationError(t('translationFailed'))
-    } finally {
-      setIsTranslating(false)
-    }
   }
 
   // プロフィール取得
@@ -819,6 +903,7 @@ function ProfileDetailContent() {
     residence,
     city,
     bio,
+    culture_wish: cultureWish,
     interests = [],
     personality_tags = [],
     language_skills = [],
@@ -842,6 +927,10 @@ function ProfileDetailContent() {
     nationality.toLowerCase() === 'japanese'
 
   const isForeignMale = gender === 'male' && !isJapanese
+
+  // 日本文化のまとまりの見出し（持ち主の男女で出し分け。判定は共通の isForeignMaleUser）
+  const ownerIsForeignMale = isForeignMaleUser({ gender, nationality })
+  const cultureText = getCultureWishText(currentLanguage)
 
   // 画像表示
   const displayImages = Array.isArray(photo_urls) && photo_urls.length > 0
@@ -1338,72 +1427,46 @@ function ProfileDetailContent() {
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">{t('selfIntroduction')}</h3>
 
-                  {/* 翻訳表示 or 原文表示 */}
-                  {showTranslation && translatedBio ? (
-                    <div>
-                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{translatedBio}</p>
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-gray-400 italic">
-                          {t('aiTranslationNote')}
-                        </span>
-                        <button
-                          onClick={() => setShowTranslation(false)}
-                          className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] underline"
-                        >
-                          {t('showOriginal')}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{bio}</p>
+                  <TranslatableText
+                    key={`${profileId}-bio`}
+                    text={bio}
+                    field="bio"
+                    profileId={profileId}
+                    apiLanguage={getApiLanguageCode()}
+                    t={t}
+                  />
+                </div>
+              )}
 
-                      {/* 翻訳ボタン（原文と異なる言語の場合のみ表示） */}
-                      <div className="mt-2">
-                        {translationError ? (
-                          <div className="text-xs text-red-500">
-                            <span>{t('translationFailed')}</span>
-                            {/* #63: エラーの詳細は NEXT_PUBLIC_DEBUG=true のときだけ */}
-                            {(process.env.NEXT_PUBLIC_DEBUG === 'true' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugAuth') === '1') && (
-                              <span className="block text-gray-400 mt-1">{translationError}</span>
-                            )}
-                            <button
-                              onClick={() => { setTranslationError(null); handleTranslate(bio); }}
-                              className="ml-2 text-[#8b1a2e] underline"
-                            >
-                              {t('retry')}
-                            </button>
-                          </div>
-                        ) : translatedBio ? (
-                          <button
-                            onClick={() => setShowTranslation(true)}
-                            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1"
-                          >
-                            <Languages className="w-3 h-3" />
-                            {t('translateButton')}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleTranslate(bio)}
-                            disabled={isTranslating}
-                            className="text-xs text-[#8b1a2e] hover:text-[#8b1a2e] flex items-center gap-1 disabled:opacity-50"
-                          >
-                            {isTranslating ? (
-                              <>
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                {t('translating')}
-                              </>
-                            ) : (
-                              <>
-                                <Languages className="w-3 h-3" />
-                                {t('translateButton')}
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+              {/* ① 日本文化の自由記入（culture_wish。空の人は出さない） */}
+              {typeof cultureWish === 'string' && cultureWish.trim() !== '' && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">{pickByGender(cultureText.displayLabel, ownerIsForeignMale)}</h3>
+                  <TranslatableText
+                    key={`${profileId}-culture_wish`}
+                    text={cultureWish}
+                    field="culture_wish"
+                    profileId={profileId}
+                    apiLanguage={getApiLanguageCode()}
+                    t={t}
+                  />
+                </div>
+              )}
+
+              {/* ② 日本文化のタグ（見出しは持ち主の男女で出し分け） */}
+              {Array.isArray(interests) && interests.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">{pickByGender(cultureText.tagHeading, ownerIsForeignMale)}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {interests.map((interest: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
+                      >
+                        {formatCultureTag(interest, currentLanguage)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1418,23 +1481,6 @@ function ProfileDetailContent() {
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
                       >
                         {formatPersonalityTag(tag, currentLanguage)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 興味・関心 */}
-              {Array.isArray(interests) && interests.length > 0 && (
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{t('japaneseCulture')}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {interests.map((interest: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
-                      >
-                        {formatCultureTag(interest, currentLanguage)}
                       </span>
                     ))}
                   </div>

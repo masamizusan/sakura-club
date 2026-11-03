@@ -65,7 +65,8 @@ export async function GET(
         personality_tags, language_skills,
         visit_schedule, travel_companion, planned_prefectures,
         is_verified,
-        created_at
+        created_at,
+        culture_wish
       `)
       .eq('id', profileId)
       .maybeSingle()
