@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import crypto from 'crypto'
 import { requireActiveProfile } from '@/lib/auth/requireActiveProfile'
+import { detectScriptLang } from '@/lib/translation/detectScript'
 
 export const dynamic = 'force-dynamic'
 
@@ -236,6 +237,17 @@ export async function POST(request: NextRequest) {
         { error: 'Text too long (max 5000 characters)', code: ERROR_CODES.TEXT_TOO_LONG },
         { status: 400 }
       )
+    }
+
+    // 文字の種類から判定した言語が翻訳先と同じなら、AI を呼ばずに原文をそのまま返す（キャッシュにも保存しない）
+    // （日本語→日本語で、指示文の「日本語を残さない」によりローマ字になるのを防ぐ。チャットの #48 と同じ形）
+    // キャッシュの確認より前に判定する：過去に保存されたローマ字の訳を返さないため
+    if (typeof text === 'string' && detectScriptLang(text) === targetLang) {
+      return NextResponse.json({
+        translatedText: text,
+        cached: false,
+        sameLanguage: true
+      })
     }
 
     const sourceHash = hashText(text)

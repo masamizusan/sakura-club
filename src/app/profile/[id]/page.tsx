@@ -40,6 +40,7 @@ import {
 import { getOrderedUserIds } from '@/utils/userPair'
 import { isForeignMaleUser } from '@/utils/userHelpers'
 import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
+import { detectScriptLang } from '@/lib/translation/detectScript'
 import { useSubscription } from '@/hooks/useSubscription'
 import {
   formatPersonalityTag,
@@ -304,12 +305,14 @@ function TranslatableText({
   field,
   profileId,
   apiLanguage,
+  readerLanguage,
   t,
 }: {
   text: string
   field: 'bio' | 'culture_wish'
   profileId: string
   apiLanguage: string
+  readerLanguage: string
   t: (key: string) => string
 }) {
   const [translatedText, setTranslatedText] = useState<string | null>(null)
@@ -380,7 +383,9 @@ function TranslatableText({
     <div>
       <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
 
-      {/* 翻訳ボタン（原文と異なる言語の場合のみ表示） */}
+      {/* 翻訳ボタン：文の言語が読む人の言語と同じ（文字の種類で日本語・韓国語と判定できたとき）は出さない。
+          判定できない文（英語・繁体字・混ざった文など）は出す */}
+      {detectScriptLang(text) !== readerLanguage && (
       <div className="mt-2">
         {translationError ? (
           <div className="text-xs text-red-500">
@@ -424,6 +429,7 @@ function TranslatableText({
           </button>
         )}
       </div>
+      )}
     </div>
   )
 }
@@ -1433,6 +1439,7 @@ function ProfileDetailContent() {
                     field="bio"
                     profileId={profileId}
                     apiLanguage={getApiLanguageCode()}
+                    readerLanguage={currentLanguage}
                     t={t}
                   />
                 </div>
@@ -1448,6 +1455,7 @@ function ProfileDetailContent() {
                     field="culture_wish"
                     profileId={profileId}
                     apiLanguage={getApiLanguageCode()}
+                    readerLanguage={currentLanguage}
                     t={t}
                   />
                 </div>
