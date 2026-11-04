@@ -12,6 +12,7 @@
  */
 
 import { logger } from '@/utils/logger'
+import { countCultureWishChars } from '@/lib/i18n/cultureWish'
 
 // 自己紹介の仮の文（未入力扱いにする）
 const DEFAULT_SELF_INTRODUCTIONS = [
@@ -32,6 +33,7 @@ export interface ProfileData {
   nationality?: string
   self_introduction?: string
   hobbies?: string[]
+  culture_wish?: string | null
   language_skills?: any[]
   planned_prefectures?: string[]
   occupation?: string
@@ -71,6 +73,7 @@ export interface NormalizedProfile {
   nationality?: string
   prefecture?: string
   hobbies?: string[]
+  culture_wish?: string | null
   self_introduction?: string
   language_info?: any
   language_skills?: any[]      // 🆕 統一された言語スキル配列
@@ -216,8 +219,8 @@ export const COMPLETION_FIELDS: readonly CompletionField[] = [
   { key: 'marital_status', for: BOTH, isFilled: p => hasText(p.marital_status, { empty: ['none'] }) },
   { key: 'language_skills', for: BOTH, isFilled: p => hasLanguageInfo(p) },
   { key: 'personality', for: BOTH, isFilled: p => hasItems(p.personality) },
-  // 日本文化のタグ（C7 で culture_wish に入れ替える予定）
-  { key: 'hobbies', for: BOTH, isFilled: p => hasItems(p.hobbies) },
+  // 日本文化の自由記入（前後の空白を除いて 1 文字以上。編集画面の決まりと同じ数え方）。日本文化のタグ（hobbies）は任意なので数えない
+  { key: 'culture_wish', for: BOTH, isFilled: p => countCultureWishChars(typeof p.culture_wish === 'string' ? p.culture_wish : '') >= 1 },
   { key: 'planned_prefectures', for: MALE, isFilled: p => hasItems(p.planned_prefectures) },
   { key: 'visit_schedule', for: MALE, isFilled: p => hasText(p.visit_schedule, { empty: NO_ENTRY_VALUES }) },
   // 同行者だけ undecided（未定）も未入力扱い
@@ -359,6 +362,7 @@ export function buildCompletionInputFromForm(formValues: any, imageArray?: any[]
 
     // 配列項目（空配列を明示的に設定）
     hobbies: Array.isArray(formValues.hobbies) ? formValues.hobbies : [],
+    culture_wish: typeof formValues.culture_wish === 'string' ? formValues.culture_wish : '',
     personality: Array.isArray(formValues.personality) ? formValues.personality : [],
     // 有効な言語だけ（none/none は除く）
     language_skills: Array.isArray(formValues.language_skills)

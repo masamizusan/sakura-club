@@ -88,7 +88,8 @@ const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
     
     return validPairs.length >= 1; // 必ず1つ以上の有効ペアが必要
   }, { message: 'errors.languagePairRequired' }),
-  hobbies: z.array(z.string()).min(1, t('errors.hobbiesMinimum')).max(8, t('errors.hobbiesMaximum')),
+  // 日本文化のタグは任意（0〜8 個）。完成度は culture_wish で数える
+  hobbies: z.array(z.string()).max(8, t('errors.hobbiesMaximum')),
   // 日本文化の自由記入：必須・前後の空白を除いて 1〜200 文字（Array.from で数える）。エラーは印で返し、画面で cultureWish の文にする
   culture_wish: z.string({ required_error: 'cultureWishRequired', invalid_type_error: 'cultureWishRequired' })
     .refine(v => countCultureWishChars(v) >= 1, { message: 'cultureWishRequired' })
@@ -6162,10 +6163,10 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
                   {/* ② 日本文化のタグ */}
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
-                    {pickByGender(getCultureWishText(currentLanguage).tagHeading, isForeignMale)} <span className="text-red-500">*</span> （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
+                    {pickByGender(getCultureWishText(currentLanguage).tagHeading, isForeignMale)} （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
                   <p className="text-xs text-gray-500 mb-3">
-                    {t('profile.selectCultureNote')}
+                    {pickByGender(getCultureWishText(currentLanguage).tagNote, isForeignMale)}
                   </p>
                   <Accordion type="multiple" className="w-full">
                     {getCultureCategories(t).map((category) => (

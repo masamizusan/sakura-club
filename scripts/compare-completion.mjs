@@ -3,8 +3,12 @@
  * プロフィール完成度（src/utils/profileCompletion.ts）の新旧を比べる手順
  *
  * 使い方：
- *   node scripts/compare-completion.mjs            # 旧版 = 2b177f2f（C3 の書き直しの前）
- *   node scripts/compare-completion.mjs <git ref>  # 旧版を指定（例：HEAD~1）
+ *   node scripts/compare-completion.mjs                      # 旧版 = 2b177f2f（C3 の書き直しの前）。結果が完全に同じか
+ *   node scripts/compare-completion.mjs <git ref>            # 旧版を指定（例：HEAD~1）
+ *   node scripts/compare-completion.mjs --swap-culture-wish  # C7：旧版 = d9ac5103（C7 の前）。違いが「hobbies → culture_wish」だけか
+ *
+ * --swap-culture-wish のときは、旧版に渡すデータの hobbies を「culture_wish が入っていれば ['x']、なければ []」に
+ * 置き換えてから比べる。これで新旧が完全に同じなら、変わったのは「タグの代わりに culture_wish を数える」1 項目だけ
  *
  * - 旧版は git show <ref>:src/utils/profileCompletion.ts で取り出し、新版は作業中のファイルを使う
  * - どちらも一時フォルダにコピーし、@/ の読み込み（logger・types）を置き換えて、
@@ -29,14 +33,24 @@ if (!process.features?.typescript) {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const FILE = 'src/utils/profileCompletion.ts'
-const OLD_REF = process.argv[2] || '2b177f2f'
+const ARGS = process.argv.slice(2)
+const SWAP_CULTURE_WISH = ARGS.includes('--swap-culture-wish')
+const OLD_REF = ARGS.find(a => !a.startsWith('--')) || (SWAP_CULTURE_WISH ? 'd9ac5103' : '2b177f2f')
 
-// @/ の読み込みを置き換える（logger は何もしないもの、types は型だけなので消す）
+// @/ の読み込みを置き換える（logger は何もしないもの、types は型だけなので消す、cultureWish の文字数は同じ数え方の関数）
 function prepare(source) {
   return source
     .replace(/^import\s*\{[^}]*\}\s*from\s*'@\/utils\/logger'.*$/m, 'const logger = { warn() {}, debug() {}, info() {}, error() {} }')
     .replace(/^import\s*\{[^}]*\}\s*from\s*'@\/types\/profile'.*$/m, '')
+    .replace(/^import\s*\{[^}]*\}\s*from\s*'@\/lib\/i18n\/cultureWish'.*$/m,
+      "const countCultureWishChars = (value) => Array.from((value ?? '').trim()).length")
 }
+
+// culture_wish が入っているか（cultureWish.ts の countCultureWishChars と同じ数え方）
+const hasCultureWish = (data) => typeof data?.culture_wish === 'string' && Array.from(data.culture_wish.trim()).length >= 1
+
+// --swap-culture-wish：旧版には、culture_wish の有無を hobbies に置き換えたデータを渡す
+const toOldData = (data) => (SWAP_CULTURE_WISH ? { ...data, hobbies: hasCultureWish(data) ? ['x'] : [] } : data)
 
 const oldSource = execFileSync('git', ['show', `${OLD_REF}:${FILE}`], { cwd: ROOT, encoding: 'utf8' })
 const newSource = readFileSync(join(ROOT, FILE), 'utf8')
@@ -64,14 +78,14 @@ const FULL_FEMALE = {
   nickname: 'さくら', gender: 'female', age: 28, birth_date: '1997-04-01', residence: '東京都', prefecture: '東京都',
   nationality: '日本', self_introduction: 'はじめまして。'.repeat(10), occupation: '会社員', height: 160,
   body_type: 'slim', marital_status: 'single', language_skills: LANG_EN, personality: ['優しい'], hobbies: ['茶道'],
-  avatar_url: 'https://example.com/a.jpg',
+  culture_wish: '地元の居酒屋を案内したい', avatar_url: 'https://example.com/a.jpg',
 }
 const FULL_MALE = {
   nickname: 'John', gender: 'male', age: 32, birth_date: '1993-01-01', nationality: 'アメリカ',
   self_introduction: 'Hello. '.repeat(20), occupation: '会社員', height: 180, body_type: 'average',
   marital_status: 'single', language_skills: LANG_JA, personality: ['明るい'], hobbies: ['寿司'],
   planned_prefectures: ['東京都'], visit_schedule: '2027-spring', travel_companion: 'alone',
-  avatar_url: 'https://example.com/a.jpg',
+  culture_wish: 'I want to visit an izakaya.', avatar_url: 'https://example.com/a.jpg',
 }
 
 // [名前, データ, 画像の配列]
@@ -117,6 +131,13 @@ const FIXED = [
   ['画像：has_profile_image＋fromMyPage', { ...FULL_MALE, has_profile_image: true, fromMyPage: true }, []],
   ['画像：has_profile_image だけ', { ...FULL_MALE, avatar_url: '', has_profile_image: true }, []],
   ['画像：avatarUrl だけ（写真なし扱い）', { ...FULL_MALE, avatar_url: '', avatarUrl: 'https://example.com/a.jpg' }, []],
+  ['日本文化：culture_wish なし・タグあり（今の利用者）', { ...FULL_MALE, culture_wish: undefined }, [IMG]],
+  ['日本文化：culture_wish なし・タグあり（女性）', { ...FULL_FEMALE, culture_wish: null }, [IMG]],
+  ['日本文化：culture_wish あり・タグなし', { ...FULL_FEMALE, hobbies: [] }, [IMG]],
+  ['日本文化：culture_wish が空白だけ', { ...FULL_MALE, culture_wish: '   ' }, [IMG]],
+  ['日本文化：culture_wish が絵文字 1 文字', { ...FULL_MALE, culture_wish: '🍶' }, [IMG]],
+  ['日本文化：culture_wish が文字列でない', { ...FULL_FEMALE, culture_wish: 123 }, [IMG]],
+  ['日本文化：culture_wish が 201 文字（完成度は入力済み扱い）', { ...FULL_FEMALE, culture_wish: 'あ'.repeat(201) }, [IMG]],
 ]
 
 // ランダムなデータ（決まった種）
@@ -138,6 +159,7 @@ function makeRandom(seed) {
       self_introduction: pick([...texts, '後でプロフィールを詳しく書きます。', '後ほど入力します', '後で入力します', 'こんにちは']),
       occupation: pick(selects), height: pick([undefined, 0, 160, '170', -5]), body_type: pick(selects), marital_status: pick(selects),
       language_skills: pick(langs), personality: pick(arrays), hobbies: pick(arrays), planned_prefectures: pick(arrays),
+      culture_wish: pick([undefined, null, '', ' ', '\n', 'x', ' 居酒屋 ', '🍶', 1]),
       visit_schedule: pick(selects), travel_companion: pick(selects),
       avatar_url: pick([undefined, '', ' ', 'https://example.com/a.jpg', 'data:image/png;base64,A']),
       profile_image: pick([undefined, '', 'p.jpg']), avatarUrl: pick([undefined, 'u']),
@@ -177,7 +199,8 @@ for (const [label, cases] of [['決まったデータ', FIXED], ['ランダム�
     for (const userType of USER_TYPES) {
       for (const [entryName, call] of ENTRIES) {
         // calculateCompletionFromForm の画像の配列は既定値 [] なので、undefined のときはそのまま渡す
-        const oldResult = run(() => call(OLD, structuredClone(data), userType, images && structuredClone(images)))
+        const oldResult = run(() => call(OLD, structuredClone(toOldData(data)), userType, images && structuredClone(images)))
+        const oldRawResult = SWAP_CULTURE_WISH ? run(() => call(OLD, structuredClone(data), userType, images && structuredClone(images))) : oldResult
         const newResult = run(() => call(NEW, structuredClone(data), userType, images && structuredClone(images)))
         const same = JSON.stringify(oldResult) === JSON.stringify(newResult)
         total++
@@ -188,16 +211,18 @@ for (const [label, cases] of [['決まったデータ', FIXED], ['ランダム�
           console.log('   新:', JSON.stringify(newResult.value))
         }
         if (label === '決まったデータ') {
-          printFixed.push(`${same ? '同じ' : '違う'} | ${name} | ${userType === 'japanese-female' ? '女性' : '男性'} | ${entryName === 'calculateCompletion' ? 'DB' : 'フォーム'} | 旧 ${summary(oldResult)} | 新 ${summary(newResult)}`)
+          printFixed.push(`${same ? '同じ' : '違う'} | ${name} | ${userType === 'japanese-female' ? '女性' : '男性'} | ${entryName === 'calculateCompletion' ? 'DB' : 'フォーム'} | 旧 ${summary(oldRawResult)}${SWAP_CULTURE_WISH ? ` | 旧（入れ替えたデータ） ${summary(oldResult)}` : ''} | 新 ${summary(newResult)}`)
         }
       }
     }
   }
 }
 
-console.log(`旧版：${OLD_REF}:${FILE} ／ 新版：作業中の ${FILE}`)
-console.log('結果 | データ | 男女 | 入口 | 旧 | 新')
+console.log(`旧版：${OLD_REF}:${FILE} ／ 新版：作業中の ${FILE}${SWAP_CULTURE_WISH ? ' ／ 比べ方：hobbies → culture_wish の入れ替え' : ''}`)
+console.log(SWAP_CULTURE_WISH ? '結果 | データ | 男女 | 入口 | 旧（元のデータ） | 旧（入れ替えたデータ） | 新' : '結果 | データ | 男女 | 入口 | 旧 | 新')
 for (const line of printFixed) console.log(line)
 console.log(`\n比べた件数：${total}（決まったデータ ${FIXED.length} 種・ランダム 2000 種 × 男女 × 入口 2 つ）`)
-console.log(diffCount === 0 ? '✅ すべて同じ' : `❌ 違い ${diffCount} 件`)
+console.log(diffCount === 0
+  ? (SWAP_CULTURE_WISH ? '✅ すべて同じ（違いは hobbies → culture_wish の 1 項目だけ）' : '✅ すべて同じ')
+  : `❌ 違い ${diffCount} 件`)
 process.exit(diffCount === 0 ? 0 : 1)

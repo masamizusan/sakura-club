@@ -1,25 +1,51 @@
 # Claude Code セッション情報
 
-## 🔒 重要：プロフィール完成度問題の完璧な解決状態
-この設定は**絶対に変更しない**でください。現在の実装は完璧に動作しています。
+## 📊 プロフィール完成度の計算（現行仕様・2026-11-05 C7 時点）
 
-### ⚠️ 🚨 CRITICAL WARNING 🚨 ⚠️
-**プロフィール完成度計算システムは絶対に変更禁止**
+**完成度の記述は、この章が正。** 下の古い記録（項目数 15・18、optionalFields、5 つのフォールバック画像検出など）は当時のもので、今のコードとは違う。
 
-このシステムは数ヶ月にわたる複雑な修正の末に完成した完璧な状態です。
-どのような理由があっても、どんな小さな変更も、完成度計算に関連する
-ファイルやロジックを変更することは**絶対に禁止**されています。
+### 作り
+- 本体：`src/utils/profileCompletion.ts` の **`COMPLETION_FIELDS`**（1 つの表）。項目ごとに「key・対象の男女（`for`）・入力済みの判定」を持ち、項目数は表から数える
+- 完成度 = **`Math.round(入力済みの項目数 / 項目数 × 100)`（四捨五入）**
+- 入口は 2 つ（名前・引数・戻り値の形は固定。呼び出し元を変えないため）
+  - `calculateCompletion`：マイページ（DB の行を `{ ...profileData, nickname, self_introduction, hobbies, personality, language_skills }` に直して渡す）
+  - `calculateCompletionFromForm`：編集画面（フォームの値 → `buildCompletionInputFromForm` → 表）
+- 男女：userType が `'japanese-female'` なら女性の表、それ以外は男性の表。呼び出し元は `isForeignMaleUser`（`src/utils/userHelpers.ts`）で決める（C4）
+- 完成度は**表示だけ**に使う。DB の「完成」は `profiles.profile_initialized`（プレビュー確定でセット）
 
-**変更禁止の理由:**
-- マイページ→プロフィール編集画面での100%完成度一貫性が完璧に動作
-- 画像データの5つのフォールバック検出が完璧に実装済み
-- 外国人男性17項目・日本人女性14項目の完成度計算が完璧
-- 遅延計算問題が完全に解決済み
-- fromMyPage遷移での画像読み込みが完璧に動作
+### 項目（日本人女性 14・外国人男性 17）
 
-**一つでも変更すると全体が崩壊するリスクが極めて高い**
+| # | 項目（key） | 女性 | 男性 | 入力済みの判定 |
+|---|---|---|---|---|
+| 1 | nickname | ○ | ○ | 空白以外の文字がある |
+| 2 | gender | ○ | ○ | 空でない |
+| 3 | age | ○ | ○ | 0 より大きい |
+| 4 | birth_date | ○ | ○ | 空でない |
+| 5 | residence | ○ | | 空白以外の文字がある（フォームでは prefecture を residence として扱う） |
+| 6 | nationality | | ○ | 空でなく、`国籍を選択`・`none` 以外 |
+| 7 | self_introduction | ○ | ○ | 空白以外の文字があり、仮の文 3 つ（`後でプロフィールを詳しく書きます。`・`後ほど入力します`・`後で入力します`）と一致しない |
+| 8 | occupation | ○ | ○ | 空でなく `none` 以外 |
+| 9 | height | ○ | ○ | 0 より大きい |
+| 10 | body_type | ○ | ○ | 空でなく `none` 以外 |
+| 11 | marital_status | ○ | ○ | 空でなく `none` 以外 |
+| 12 | language_skills | ○ | ○ | language・level が `none`・空でない行が 1 つ以上 |
+| 13 | personality | ○ | ○ | 1 個以上 |
+| 14 | culture_wish | ○ | ○ | 前後の空白を除いて 1 文字以上（`Array.from` で数える。`countCultureWishChars`） |
+| 15 | planned_prefectures | | ○ | 1 個以上 |
+| 16 | visit_schedule | | ○ | 空でなく `none`・`no-entry`・`noEntry`・`forms.noEntry` 以外 |
+| 17 | travel_companion | | ○ | 上に加えて `undecided` 以外 |
+| 18 | profile_images | ○ | ○ | ① has_profile_image＋fromMyPage＋avatar_url ／ ② 画像の配列に url・originalUrl・avatar_url が空でない画像 ／ ③ avatar_url か profile_image が空でない文字列（data URI・HTTP・Storage のパスすべて） |
 
-### ✅ 完全解決済み問題
+- **日本文化のタグ（hobbies / interests）は任意（0〜8 個）で、完成度には数えない**（2026-11-05 C7 で culture_wish に入れ替え）
+- 既知のずれ（今は直していない。直すときは別の作業として許可を得る）：編集画面の force calc が `languageSkills`・`plannedPrefectures` という別名で渡している、マイページは言語が空のとき sessionStorage のプレビューの値を使う、DB の入口とフォームの入口で写真（profile_image）・居住地（prefecture）の扱いが違う
+
+### 変えるときの決まり
+- 完成度の項目・判定・数え方を変えるときは、**必ずユーザー（プロダクトオーナー）の許可を得る**
+- 変えたら **`node scripts/compare-completion.mjs`** で新旧を比べ、違いが意図したものだけであることを確かめる（旧版を `<git ref>` で指定。C7 の入れ替えは `--swap-culture-wish`）
+- 本番で、マイページと編集画面の % がそろうこと（下の「テスト手順」パターン 1・2）を男女で確かめる
+
+### ✅ 完了の記録（完成度以外も含む）
+
 - ✅ マイページ（100%）→プロフィール編集画面（100%）一貫性問題
 - ✅ 「100%表示→数秒後92%」遅延計算問題
 - ✅ 日本人女性のプレビュー画面での国籍表示問題
@@ -202,7 +228,7 @@ WHERE bucket_id = 'avatars'
 #### 📋 解決した問題一覧
 1. **プロフィール完成度50%問題の完全解決**
    - プロフィール編集100% → マイページ50%に落ちる不具合を完全修正
-   - 日本人女性15項目・外国人男性18項目で100%一貫性確保
+   - 日本人女性15項目・外国人男性18項目で100%一貫性確保（※ 当時の項目数。現行は冒頭の表の 14・17）
    - 専用カラム優先読み込み実装で安定性向上
 
 2. **city JSON専用カラム化の完全実装**
@@ -313,29 +339,8 @@ japanese_level: "beginner", personality_tags: [...], culture_tags: [...]
 ### 🔧 完璧な実装の核心部分（絶対に変更禁止）
 
 #### 1. 共通完成度計算関数 (`src/utils/profileCompletion.ts`)
-```typescript
-// 外国人男性のオプションフィールド（10個） - 2025-10-08最新版
-optionalFields = [
-  'occupation', 'height', 'body_type', 'marital_status',
-  'personality', 'visit_schedule', 'travel_companion',
-  'planned_prefectures', 'japanese_level', 'planned_stations'
-]
-
-// 日本人女性のオプションフィールド（8個） - 2025-10-08最新版
-optionalFields = [
-  'occupation', 'height', 'body_type', 'marital_status',
-  'personality', 'city', 'english_level'
-]
-
-// 5つのフォールバック画像検出方法（2025-11-02最新版）
-const hasImagesInArray = imageArray && imageArray.length > 0
-const hasImagesInProfile = profileData && profileData.avatar_url && profileData.avatar_url !== null && profileData.avatar_url !== ''
-const hasImagesInUser = profileData.avatarUrl && profileData.avatarUrl !== null && profileData.avatarUrl !== ''
-const hasImagesInSession = // セッションストレージから検出
-const hasImagesInLocalStorage = // localStorageから検出（fromMyPage遷移用）
-
-return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasImagesInUser || hasImagesInTestMode || hasImagesInLocalStorage)
-```
+- 項目・判定・数え方は、冒頭の「📊 プロフィール完成度の計算」を参照（`COMPLETION_FIELDS`）
+- 以前ここにあった optionalFields・5 つのフォールバック画像検出（hasImagesInSession・hasImagesInLocalStorage など）の記述は、今のコードには無い
 
 #### 2. プロフィール編集画面の重要修正（2025-11-02完全版）
 - **ファイル**: `src/app/profile/edit/page.tsx`
@@ -366,7 +371,7 @@ return !!(hasImagesInArray || hasImagesInProfile || hasImagesInSession || hasIma
 
 ### テスト確認事項
 - マイページ（100%）からプロフィール編集画面への遷移でも100%維持
-- コンソールで`userAvatarUrl: 'exists'`と`hasImagesInUser: true`を確認
+- 完成度の計算を変えたときは `node scripts/compare-completion.mjs` で新旧を比べる
 - 画像削除/追加時の正確な完成度計算
 
 ### 🚨 緊急時の復旧コマンド（2025-11-23最新版）
@@ -391,8 +396,8 @@ git commit -m "完全復旧: プロフィールサイクル完成状態に戻す
 ### 🔒 完成度計算システム緊急チェックコマンド
 ```bash
 # 完成度計算が正常か確認
-grep -n "calculateProfileCompletion" src/utils/profileCompletion.ts
-grep -n "hasImagesInLocalStorage" src/utils/profileCompletion.ts
+grep -n "COMPLETION_FIELDS" src/utils/profileCompletion.ts
+node scripts/compare-completion.mjs <比べたい旧版の git ref>
 grep -n "fromMyPage" src/app/profile/edit/page.tsx
 grep -n "localStorage.*image" src/app/mypage/page.tsx
 ```
@@ -401,10 +406,8 @@ grep -n "localStorage.*image" src/app/mypage/page.tsx
 
 #### 🔴 CRITICAL: 完成度計算関連ファイル（最高優先度保護）
 1. **`src/utils/profileCompletion.ts`** - 🚨 **完成度計算の心臓部** 
-   - 外国人男性17項目・日本人女性15項目計算
-   - 5つのフォールバック画像検出システム
-   - `calculateProfileCompletion`関数の完璧なロジック
-   - **このファイルは1行たりとも変更禁止**
+   - 外国人男性 17 項目・日本人女性 14 項目（冒頭の表 `COMPLETION_FIELDS`）
+   - **変えるときはユーザーの許可を得て、`scripts/compare-completion.mjs` で新旧を比べて確かめる**
 
 2. **`src/app/profile/edit/page.tsx`** - 🚨 **プロフィール編集画面の完成度表示**
    - fromMyPage遷移時のlocalStorage画像読み込み処理
@@ -426,22 +429,19 @@ grep -n "localStorage.*image" src/app/mypage/page.tsx
 ### 🔍 今後の修正時の注意点
 
 #### 🚨 プロフィール完成度計算システム保護ルール
-1. **🔴 ABSOLUTE RULE: 完成度計算関連ファイルは一切触らない**
-   - `src/utils/profileCompletion.ts`の全コード
-   - プロフィール編集画面の完成度計算部分
-   - マイページの完成度表示部分
-   - **理由: 一つでも変更するとサイクル全体が崩壊する**
+1. **🔴 完成度計算関連ファイルは、ユーザーの許可なく触らない**
+   - `src/utils/profileCompletion.ts`、プロフィール編集画面の完成度計算部分、マイページの完成度表示部分
+   - 変えるときは許可を得て、`scripts/compare-completion.mjs` で新旧を比べ、本番でマイページと編集画面の % がそろうことを確かめる
 
 2. **🔴 画像データ処理システムの完全保護**
    - ユーザー画像情報（avatarUrl）の扱いは変更しない
-   - 5つのフォールバック画像検出システム
+   - 写真の判定（冒頭の表の profile_images）
    - localStorageからの画像データ読み込み処理
    - **理由: fromMyPage遷移での100%一貫性が破綻する**
 
-3. **🔴 完成度項目数の絶対固定**
-   - 外国人男性: 17項目（必須7項目+任意10項目）
-   - 日本人女性: 15項目（必須7項目+任意8項目）
-   - **新フィールド追加時は別の計算関数を作成すること**
+3. **🔴 完成度の項目数**
+   - 外国人男性 17 項目・日本人女性 14 項目（中身は冒頭の表）
+   - 項目を足す・入れ替えるときは `COMPLETION_FIELDS` の行を変える（別の計算関数は作らない）。許可と比べる手順は 1 と同じ
 
 #### 🟡 その他の保護対象
 4. **外国人男性専用フィールド（visit_schedule、travel_companion、planned_prefectures、planned_stations）の処理は絶対に変更しない**
@@ -456,7 +456,7 @@ grep -n "localStorage.*image" src/app/mypage/page.tsx
 13. **🆕 アコーディオンUI（都道府県・駅）の統一実装は保護対象**
 14. **🎯 NEW: fromMyPage遷移時のlocalStorage画像読み込み処理は保護対象**
 15. **🎯 NEW: マイページでの画像URL確実取得（profile.avatar_url || profile.profile_image）は保護対象**
-16. **🎯 NEW: localStorage画像検出機能（hasImagesInLocalStorage）は保護対象**
+16. **🎯 NEW: localStorage画像検出機能（hasImagesInLocalStorage）は保護対象**（※ 今の profileCompletion.ts には無い。写真の判定は冒頭の表の profile_images）
 17. **🌐 NEW: 日本人女性向け多言語対応プロフィール編集機能は保護対象**
 18. **🌐 NEW: プレビュー画面言語切り替え機能は保護対象**
 19. **🌐 NEW: 4言語翻訳システム（utils/translations.ts + messages/*.json）は保護対象**
@@ -533,10 +533,10 @@ setDidInitialCalc(true)
 ```
 📊 force calculation result: 28
 ```
-**必須**: 5/9 = 28%（foreign-male 新規登録の初期状態として正しい）
+**目安**: 入力済みの項目数 / 17（foreign-male 新規登録の初期状態。例：名前・性別・年齢・生年月日・国籍の 5 項目なら 5/17 = 29%）
 
 #### 保証される結果
-- **新規登録直後**：初期完成度が必ず正しい値で表示（例：28%）
+- **新規登録直後**：初期完成度が必ず正しい値で表示（例：5/17 = 29%）
 - **MyPage → Edit**：100%維持（既存ロジックを壊さない）
 - **Preview → Edit**：100%維持（既存ロジックを壊さない）
 - **監視（watch/debounce）**：初期化中はガードでチラつき防止、初期確定後は自然更新
@@ -570,6 +570,7 @@ setDidInitialCalc(true)
 
 **日本人女性：14項目で計算**（増減する場合は「増減」として明示）
 **外国人男性：17項目で計算**（増減する場合は「増減」として明示）
+（項目の中身は冒頭の「📊 プロフィール完成度の計算」。2026-11-05 C7 でタグ → culture_wish に入れ替え、数は同じ）
 
 計算の入力はSSOTを明確化する（後述）
 
