@@ -814,6 +814,19 @@ function ProfilePreviewContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
+  // 「←」・エラー画面の「閉じる」：編集画面へ戻る（同じタブで開いているため window.close は使わない）
+  // 確定前なら離れる確認を出し、OK なら beforeunload の警告を止めてから移る。入力中の内容は残らない（編集画面は DB から読み込む）
+  const handleBackToEdit = () => {
+    if (!isConfirmedRef.current && !window.confirm(leaveConfirmTextRef.current)) return
+    isConfirmedRef.current = true
+    const params = new URLSearchParams({ fromMyPage: 'true' })
+    const type = searchParams?.get('type')
+    const lang = searchParams?.get('lang')
+    if (type) params.set('type', type)
+    if (lang) params.set('lang', lang)
+    router.push(`/profile/edit?${params.toString()}`)
+  }
+
   // データが読み込まれていない場合
   if (!previewData) {
     return (
@@ -859,7 +872,7 @@ function ProfilePreviewContent() {
         <div className="max-w-md mx-auto text-center p-8">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{pt.errorTitle}</h1>
           <p className="text-gray-600 mb-6">{pt.errorMessage}</p>
-          <Button onClick={() => window.close()}>{pt.close}</Button>
+          <Button onClick={handleBackToEdit}>{pt.close}</Button>
         </div>
       </div>
     )
@@ -897,7 +910,7 @@ function ProfilePreviewContent() {
           <div className="flex items-center">
             <Button
               variant="ghost"
-              onClick={() => window.close()}
+              onClick={handleBackToEdit}
               className="mr-4 text-white hover:bg-orange-600"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
