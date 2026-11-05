@@ -772,6 +772,22 @@ setDidInitialCalc(true)
 - **パターンC（session有り）**: post-signup-profile 呼び出し → プロフィール編集画面へ遷移。
 - **スピナー**: `finally { setIsLoading(false) }` で全経路確実解除。
 
+### 8.5) 国籍・性別の確認（C9・2026-11-05 追記）
+
+**上の 1)〜8) のきまり（6 項目だけ・空のときだけ書く・失敗しても止めない・分岐 A/B/C）は変えていない。中身の確認だけを足した。**
+
+- **男性の国籍として許すのは `NATIONALITY_OPTIONS`（`src/utils/nationalityNormalize.ts`）の dbValue 17 個だけ**（判定は `isAllowedMaleNationality`）。空（NULL）は許す
+- **女性の国籍は常に「日本」**、居住地（residence）は都道府県名（判定は `src/lib/validations/auth.ts` の `isPrefectureName`）
+- おかしな国籍はエラーにせず、**国籍だけ書かない（空のまま）** → 編集画面で本人に選ばせる（男性は国籍が必須なので、選ぶまでプレビューへ進めない）
+- 確認している場所
+  - `src/app/signup/page.tsx`：男性に切り替えたら国籍を空にする。zod で男性は 17 個の国名、女性は都道府県名だけ
+  - `src/lib/auth.ts`（signUp の profiles 書き込み）：女性は国籍「日本」、男性は 17 個のときだけ国籍を書く
+  - `src/app/api/auth/post-signup-profile/route.ts`：gender は male/female だけ。女性は国籍「日本」、男性は 17 個以外なら国籍だけ捨てる（400 にしない）
+  - `src/app/api/profile/update/route.ts`：nationality を受け付けない
+  - 編集画面：男性の国籍が 17 個以外なら「アメリカ」に置き換えず空にする
+  - DB：CHECK `profiles_male_nationality_allowed`（`supabase/migrations/20261105_stage20_male_nationality_check.sql`）
+- **国籍の選択肢（`NATIONALITY_OPTIONS`）を変えるときは、DB の CHECK `profiles_male_nationality_allowed` も同じ値に変える**（変えないと、新しい国を選んだ男性の保存が DB で拒否される）
+
 ### 9) 実装反映コミット
 
 - `5b993ef0` — 修繕D/F最終確定ルール文書化
