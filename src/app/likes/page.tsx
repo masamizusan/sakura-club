@@ -14,7 +14,7 @@ import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { formatCultureTag } from '@/utils/profileTagFormatters'
+import { formatCultureTags } from '@/utils/profileTagFormatters'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 
 // 4言語翻訳辞書
@@ -361,14 +361,14 @@ export default function LikesPage() {
                 </p>
               )}
               {/* 興味タグ */}
-              {liker.interests && liker.interests.length > 0 && (
+              {formatCultureTags(liker.interests, currentLanguage).length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {liker.interests.slice(0, 4).map((interest, index) => (
+                  {formatCultureTags(liker.interests, currentLanguage).slice(0, 4).map((label, index) => (
                     <span
                       key={index}
                       className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
                     >
-                      {formatCultureTag(interest, currentLanguage)}
+                      {label}
                     </span>
                   ))}
                 </div>

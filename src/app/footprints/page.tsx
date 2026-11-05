@@ -11,7 +11,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { formatCultureTag } from '@/utils/profileTagFormatters'
+import { formatCultureTags } from '@/utils/profileTagFormatters'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 
 const footprintsTranslations: Record<string, Record<string, string>> = {
@@ -356,14 +356,14 @@ function FootprintsContent() {
                                     {visitor.bio}
                                   </p>
                                 )}
-                                {visitor.interests && visitor.interests.length > 0 && (
+                                {formatCultureTags(visitor.interests, currentLanguage).length > 0 && (
                                   <div className="flex flex-wrap gap-2 mt-2">
-                                    {visitor.interests.slice(0, 4).map((interest, index) => (
+                                    {formatCultureTags(visitor.interests, currentLanguage).slice(0, 4).map((label, index) => (
                                       <span
                                         key={index}
                                         className="bg-[#fdf6ef] text-[#8b1a2e] px-2.5 py-1 rounded-full text-sm font-medium"
                                       >
-                                        {formatCultureTag(interest, currentLanguage)}
+                                        {label}
                                       </span>
                                     ))}
                                   </div>

@@ -18,7 +18,7 @@ import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { formatCultureTag } from '@/utils/profileTagFormatters'
+import { formatCultureTags } from '@/utils/profileTagFormatters'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 import { isJapaneseWoman } from '@/utils/userHelpers'
 import {
@@ -778,19 +778,19 @@ export default function MatchesPage() {
                           </p>
                         )}
 
-                        {user.hobbies && user.hobbies.length > 0 && (
+                        {formatCultureTags(user.hobbies, currentLanguage).length > 0 && (
                           <div className="flex flex-wrap gap-1">
-                            {user.hobbies.slice(0, 3).map((hobby, index) => (
+                            {formatCultureTags(user.hobbies, currentLanguage).slice(0, 3).map((label, index) => (
                               <span
                                 key={index}
                                 className="bg-[#fdf6ef] text-[#8b1a2e] px-2 py-0.5 rounded-full text-xs"
                               >
-                                {formatCultureTag(hobby, currentLanguage)}
+                                {label}
                               </span>
                             ))}
-                            {user.hobbies.length > 3 && (
+                            {formatCultureTags(user.hobbies, currentLanguage).length > 3 && (
                               <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
-                                +{user.hobbies.length - 3}
+                                +{formatCultureTags(user.hobbies, currentLanguage).length - 3}
                               </span>
                             )}
                           </div>

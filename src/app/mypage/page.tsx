@@ -376,9 +376,8 @@ function MyPageContent() {
       nickname: profileData?.name || profileData?.nickname,
       self_introduction: profileData?.bio || profileData?.self_introduction,
       avatar_url: profileData?.avatar_url,
-      hobbies: Array.isArray(profileData?.culture_tags)
-        ? profileData.culture_tags
-        : (Array.isArray(profileData?.interests) ? profileData.interests : []),
+      // 日本文化のタグは interests だけから読む（culture_tags は読まない。完成度には数えない）
+      hobbies: Array.isArray(profileData?.interests) ? profileData.interests : [],
       personality: Array.isArray(profileData?.personality_tags)
         ? profileData.personality_tags
         : (Array.isArray(profileData?.personality) ? profileData.personality : []),

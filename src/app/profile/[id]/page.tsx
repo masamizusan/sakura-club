@@ -44,7 +44,7 @@ import { detectScriptLang } from '@/lib/translation/detectScript'
 import { useSubscription } from '@/hooks/useSubscription'
 import {
   formatPersonalityTag,
-  formatCultureTag
+  formatCultureTags
 } from '@/utils/profileTagFormatters'
 import { logger } from '@/utils/logger'
 
@@ -1462,16 +1462,16 @@ function ProfileDetailContent() {
               )}
 
               {/* ② 日本文化のタグ（見出しは持ち主の男女で出し分け） */}
-              {Array.isArray(interests) && interests.length > 0 && (
+              {formatCultureTags(interests, currentLanguage).length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">{pickByGender(cultureText.tagHeading, ownerIsForeignMale)}</h3>
                   <div className="flex flex-wrap gap-2">
-                    {interests.map((interest: string, index: number) => (
+                    {formatCultureTags(interests, currentLanguage).map((label: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-[#fdf6ef] text-[#8b1a2e] rounded-full text-xs"
                       >
-                        {formatCultureTag(interest, currentLanguage)}
+                        {label}
                       </span>
                     ))}
                   </div>

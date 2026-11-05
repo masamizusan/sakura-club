@@ -44,6 +44,7 @@ import {
 import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
 import { PERSONALITY_TAGS, normalizePersonalityValues, personalityKeyFromValue } from '@/lib/profile/personalityTags'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import { CULTURE_CATEGORIES, getCultureLabel as getCultureTagLabel, normalizeCultureValues } from '@/lib/profile/cultureTags'
 import { CULTURE_WISH_MAX_LENGTH, countCultureWishChars, getCultureWishText, pickByGender, type CultureWishErrorCode } from '@/lib/i18n/cultureWish'
 
 const baseProfileEditSchema = (isForeignMale: boolean, t: any) => z.object({
@@ -151,7 +152,7 @@ const getPersonalityOptions = (t: any) =>
 
 
 // 後方互換性のため、フラットな配列も保持（翻訳対応）
-const getHobbyOptions = (t: any) => getCultureCategories(t).flatMap(category => category.items)
+const getHobbyOptions = (language: string) => getCultureCategories(language).flatMap(category => category.items)
 
 // 🛠️ タグ正規化関数：重複・空文字・nullを除去
 const normalizeTags = (tags: any[]): string[] => {
@@ -273,132 +274,13 @@ const getTravelCompanionOptions = (t: any) => {
 
 
 // Japanese culture categories (with translation support)
-const getCultureCategories = (t: any) => [
-  {
-    name: t('cultureCategories.traditional'),
-    items: [
-      { value: '茶道', label: t('culture.teaCeremony') },
-      { value: '華道', label: t('culture.flowerArrangement') },
-      { value: '書道', label: t('culture.calligraphy') },
-      { value: '着物・浴衣', label: t('culture.kimono') },
-      { value: '和菓子', label: t('culture.wagashi') },
-      { value: '陶芸', label: t('culture.pottery') },
-      { value: '折り紙', label: t('culture.origami') },
-      { value: '盆栽', label: t('culture.bonsai') },
-      { value: '神社仏閣', label: t('culture.shrinesTemples') },
-      { value: '御朱印集め', label: t('culture.sealCollection') },
-      { value: '禅', label: t('culture.zen') }
-    ]
-  },
-  {
-    name: t('cultureCategories.food'),
-    items: [
-      { value: '寿司', label: t('culture.sushi') },
-      { value: '天ぷら', label: t('culture.tempura') },
-      { value: 'うなぎ', label: t('culture.unagi') },
-      { value: '牛丼', label: t('culture.gyudon') },
-      { value: 'とんかつ', label: t('culture.tonkatsu') },
-      { value: 'ラーメン', label: t('culture.ramen') },
-      { value: 'お好み焼き', label: t('culture.okonomiyaki') },
-      { value: 'たこ焼き', label: t('culture.takoyaki') },
-      { value: 'カレーライス', label: t('culture.curry') },
-      { value: 'コンビニフード', label: t('culture.conbiniFood') },
-      { value: 'ポテトチップス', label: t('culture.potatoChips') },
-      { value: '出汁', label: t('culture.dashi') },
-      { value: '味噌', label: t('culture.miso') },
-      { value: '豆腐', label: t('culture.tofu') },
-      { value: '梅干し', label: t('culture.umeboshi') },
-      { value: '漬物', label: t('culture.pickles') },
-      { value: '日本酒', label: t('culture.sake') },
-      { value: '焼酎', label: t('culture.shochu') },
-      { value: 'そば', label: t('culture.soba') },
-      { value: 'うどん', label: t('culture.udon') }
-    ]
-  },
-  {
-    name: t('cultureCategories.sweets'),
-    items: [
-      { value: '抹茶スイーツ', label: t('culture.matchaSweets') },
-      { value: '団子', label: t('culture.dango') },
-      { value: 'たい焼き', label: t('culture.taiyaki') },
-      { value: '大判焼き', label: t('culture.obanyaki') },
-      { value: 'わらび餅', label: t('culture.warabimochi') },
-      { value: 'りんご飴', label: t('culture.candiedApple') },
-      { value: 'わたあめ', label: t('culture.cottonCandy') },
-      { value: '駄菓子', label: t('culture.dagashi') },
-      { value: 'コンビニスイーツ', label: t('culture.conbiniSweets') }
-    ]
-  },
-  {
-    name: t('cultureCategories.arts'),
-    items: [
-      { value: '相撲', label: t('culture.sumo') },
-      { value: '剣道', label: t('culture.kendo') },
-      { value: '柔道', label: t('culture.judo') },
-      { value: '空手', label: t('culture.karate') },
-      { value: '弓道', label: t('culture.kyudo') },
-      { value: '合気道', label: t('culture.aikido') },
-      { value: '薙刀', label: t('culture.naginata') },
-      { value: '歌舞伎', label: t('culture.kabuki') },
-      { value: '能', label: t('culture.noh') },
-      { value: '日本舞踊', label: t('culture.japaneseDance') },
-      { value: '邦楽', label: t('culture.hogaku') },
-      { value: '演歌', label: t('culture.enka') },
-      { value: '太鼓', label: t('culture.taiko') }
-    ]
-  },
-  {
-    name: t('cultureCategories.seasonal'),
-    items: [
-      { value: '桜見物', label: t('culture.cherryBlossom') },
-      { value: '紅葉狩り', label: t('culture.autumnLeaves') },
-      { value: '花火大会', label: t('culture.fireworks') },
-      { value: '祭り参加', label: t('culture.festivals') },
-      { value: '盆踊り', label: t('culture.bonDance') },
-      { value: '雪景色', label: t('culture.snowScape') },
-      { value: '日本庭園散策', label: t('culture.gardenWalk') }
-    ]
-  },
-  {
-    name: t('cultureCategories.lifestyle'),
-    items: [
-      { value: '障子', label: t('culture.shoji') },
-      { value: '襖の張り替え', label: t('culture.fusuma') },
-      { value: '畳', label: t('culture.tatami') },
-      { value: '古民家カフェ', label: t('culture.oldHouseCafe') },
-      { value: '銭湯', label: t('culture.sento') },
-      { value: '昭和レトロ家電', label: t('culture.showaRetro') },
-      { value: '和モダンインテリア', label: t('culture.waModernInterior') }
-    ]
-  },
-  {
-    name: t('cultureCategories.craftmanship'),
-    items: [
-      { value: '漆器', label: t('culture.lacquerware') },
-      { value: '金箔貼り', label: t('culture.goldLeaf') },
-      { value: '和紙漉き', label: t('culture.paperMaking') },
-      { value: '染物', label: t('culture.dyeing') },
-      { value: '刀鍛冶', label: t('culture.swordSmithing') },
-      { value: '木工', label: t('culture.woodworking') },
-      { value: '飴細工', label: t('culture.sugarCrafts') }
-    ]
-  },
-  {
-    name: t('cultureCategories.modernCulture'),
-    items: [
-      { value: 'アニメ', label: t('culture.anime') },
-      { value: 'マンガ', label: t('culture.manga') },
-      { value: 'コスプレ', label: t('culture.cosplay') },
-      { value: '日本のゲーム', label: t('culture.japaneseGames') },
-      { value: 'J-POP', label: t('culture.jpop') },
-      { value: 'カラオケ', label: t('culture.karaoke') },
-      { value: '日本映画', label: t('culture.japaneseMov') },
-      { value: 'ドラマ', label: t('culture.drama') },
-      { value: 'ボーカロイド', label: t('culture.vocaloid') },
-      { value: 'アイドル文化', label: t('culture.idolCulture') }
-    ]
-  }
-]
+// 日本文化のタグ（7 分類・46 項目。表は src/lib/profile/cultureTags.ts）
+// value は日本語の値（保存用）、label は今の画面の言語の表示名
+const getCultureCategories = (language: string) =>
+  CULTURE_CATEGORIES.map(category => ({
+    name: category.labels[language as SupportedLanguage] ?? category.labels.ja,
+    items: category.tags.map(tag => ({ value: tag.value, label: getCultureTagLabel(tag.value, language as SupportedLanguage) })),
+  }))
 
 // 訪問予定時期選択肢（翻訳対応・動的生成）
 const getVisitScheduleOptions = (t: any) => {
@@ -3296,18 +3178,13 @@ function ProfileEditContent() {
           }
           existingPersonality = normalizedPersonality.values
           
-          // 1. culture_tagsカラムから日本文化データを取得（優先）
-          if ((profile as any).culture_tags && Array.isArray((profile as any).culture_tags) && (profile as any).culture_tags.length > 0) {
-            existingHobbies = (profile as any).culture_tags.filter((item: string) => item !== 'その他')
-          } else if (profile?.interests && Array.isArray(profile.interests)) {
-            // 2. interests配列からculture/hobbyデータを抽出（フォールバック）
-            profile!.interests.forEach((item: string) => {
-              // 昔の自由記入（custom_culture: で始まる値）はタグに入れない
-              if (!item.startsWith('personality:') && !item.startsWith('custom_culture:') && item !== 'その他') {
-                existingHobbies.push(item)
-              }
-            })
+          // 日本文化のタグは interests だけから読む（culture_tags は読まない）
+          // 昔の値は新しい 46 項目の値に直す（重複を消し、順番を残し、最大 8 個。消す値・その他・personality:… / custom_culture:… ・分からない値は捨てる）
+          const normalizedCulture = normalizeCultureValues(Array.isArray(profile?.interests) ? profile.interests : [], 8)
+          if (normalizedCulture.dropped.length > 0) {
+            logger.debug('[INIT] culture tags: values dropped', normalizedCulture.dropped.length)
           }
+          existingHobbies = normalizedCulture.values
         }
         
         logger.debug('🔍 DATA EXTRACTION DEBUG:', {
@@ -6166,7 +6043,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                     {pickByGender(getCultureWishText(currentLanguage).tagHeading, isForeignMale)} （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
                   <Accordion type="multiple" className="w-full">
-                    {getCultureCategories(t).map((category) => (
+                    {getCultureCategories(currentLanguage).map((category) => (
                       <AccordionItem key={category.name} value={category.name}>
                         <AccordionTrigger className="text-lg font-semibold">
                           {category.name}
