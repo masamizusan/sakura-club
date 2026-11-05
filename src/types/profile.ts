@@ -30,7 +30,7 @@ export const LANGUAGE_LABELS: Record<LanguageCode, string> = {
   ja: '日本語',
   en: '英語',
   ko: '韓国語',
-  'zh-TW': '中国語（繁体字）'
+  'zh-TW': '台湾華語（繁体字）'
 };
 
 // 言語レベルの表示ラベル

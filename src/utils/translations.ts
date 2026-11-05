@@ -767,7 +767,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ja: '日本語',
         en: '英語',
         ko: '韓国語',
-        zh_tw: '中国語（繁体字）'
+        zh_tw: '台湾華語（繁体字）'
       },
       languageAddButton: '＋ 使用言語を追加',
       selectPrefectures: '都道府県を選択',
@@ -1395,7 +1395,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanese: '日本語',
       english: '英語', 
       korean: '韓国語',
-      chineseTraditional: '中国語（繁体字）'
+      chineseTraditional: '台湾華語（繁体字）'
     },
     
     languageLevels: {
@@ -1444,7 +1444,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ja: 'Japanese',
         en: 'English',
         ko: 'Korean',
-        zh_tw: 'Chinese (Traditional)'
+        zh_tw: 'Traditional Chinese (Taiwan)'
       },
       languageAddButton: '+ Add language',
       selectPrefectures: 'Select Prefectures',
@@ -2071,7 +2071,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanese: 'Japanese',
       english: 'English',
       korean: 'Korean',
-      chineseTraditional: 'Chinese (Traditional)'
+      chineseTraditional: 'Traditional Chinese (Taiwan)'
     },
     
     languageLevels: {
@@ -2120,7 +2120,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ja: '일본어',
         en: '영어',
         ko: '한국어',
-        zh_tw: '중국어 (번체자)'
+        zh_tw: '중국어 번체(대만)'
       },
       languageAddButton: '+ 사용 언어 추가',
       selectPrefectures: '현 선택',
@@ -2747,7 +2747,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanese: '일본어',
       english: '영어',
       korean: '한국어',
-      chineseTraditional: '중국어 (번체자)'
+      chineseTraditional: '중국어 번체(대만)'
     },
     
     languageLevels: {
@@ -2796,7 +2796,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
         ja: '日語',
         en: '英語',
         ko: '韓語',
-        zh_tw: '中文（繁體）'
+        zh_tw: '繁體中文（台灣）'
       },
       languageAddButton: '+ 新增使用語言',
       selectPrefectures: '選擇都道府縣',
@@ -3422,7 +3422,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       japanese: '日語',
       english: '英語',
       korean: '韓語',
-      chineseTraditional: '中文（繁體）'
+      chineseTraditional: '繁體中文（台灣）'
     },
     
     languageLevels: {
