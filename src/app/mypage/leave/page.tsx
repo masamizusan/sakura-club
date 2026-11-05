@@ -326,6 +326,7 @@ export default function LeavePage() {
         </label>
         <p style={{ fontSize: '12px', color: '#a08070', marginBottom: '8px' }}>{t.feedbackDescription}</p>
         <textarea
+          className="text-base md:text-sm"
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           placeholder={t.feedbackPlaceholder}
@@ -339,7 +340,7 @@ export default function LeavePage() {
             color: '#2c1810',
             fontFamily: 'Zen Kaku Gothic New, sans-serif',
             boxSizing: 'border-box',
-            fontSize: '14px',
+            // fontSize は className（text-base md:text-sm）で指定（スマホで 16px 未満だと iPhone Safari が拡大するため）
             resize: 'vertical',
           }}
         />

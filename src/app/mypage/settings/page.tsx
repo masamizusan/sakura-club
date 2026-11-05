@@ -164,7 +164,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'Zen Kaku Gothic New, sans-serif',
   marginBottom: '0.75rem',
   boxSizing: 'border-box',
-  fontSize: '14px',
+  // 文字の大きさは要素の className（text-base md:text-sm）で指定する。スマホで 16px 未満だと iPhone Safari が押したときに画面を拡大するため
 }
 
 const primaryButtonStyle: React.CSSProperties = {
@@ -353,14 +353,14 @@ export default function SettingsPage() {
               placeholder={t.passwordPlaceholder}
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              style={inputStyle}
+              className="text-base md:text-sm" style={inputStyle}
             />
             <input
               type="password"
               placeholder={t.passwordConfirmPlaceholder}
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              style={inputStyle}
+              className="text-base md:text-sm" style={inputStyle}
             />
             <button
               onClick={handlePasswordChange}

@@ -1036,7 +1036,7 @@ function ProfileDetailContent() {
                 value={reportDetail}
                 onChange={e => setReportDetail(e.target.value)}
                 rows={2}
-                className="w-full rounded-lg px-3 py-2 text-sm mb-4"
+                className="w-full rounded-lg px-3 py-2 text-base md:text-sm mb-4"
                 style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
               />
               <button
@@ -1139,7 +1139,7 @@ function ProfileDetailContent() {
               }}
               disabled={!canSendSakuraMessage || isSendingSakura}
               rows={3}
-              className="w-full rounded-lg px-3 py-2 text-sm disabled:opacity-50"
+              className="w-full rounded-lg px-3 py-2 text-base md:text-sm disabled:opacity-50"
               style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
             />
             <div className="flex items-start justify-between mt-1 mb-4 gap-2">

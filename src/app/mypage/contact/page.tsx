@@ -124,7 +124,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: 'Zen Kaku Gothic New, sans-serif',
   marginBottom: '0.75rem',
   boxSizing: 'border-box',
-  fontSize: '14px',
+  // 文字の大きさは要素の className（text-base md:text-sm）で指定する。スマホで 16px 未満だと iPhone Safari が押したときに画面を拡大するため
 }
 
 // useSearchParams を使う部分を分離（Suspense 必須）
@@ -239,7 +239,7 @@ function ContactForm() {
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
-              style={{ ...inputStyle, marginBottom: 0, appearance: 'auto' }}
+              className="text-base md:text-sm" style={{ ...inputStyle, marginBottom: 0, appearance: 'auto' }}
             >
               <option value="">{t.categoryPlaceholder}</option>
               {categoryValues.map(cv => (
@@ -257,7 +257,7 @@ function ContactForm() {
               onChange={e => setMessage(e.target.value)}
               placeholder={t.messagePlaceholder}
               rows={7}
-              style={{ ...inputStyle, resize: 'vertical', marginBottom: 0 }}
+              className="text-base md:text-sm" style={{ ...inputStyle, resize: 'vertical', marginBottom: 0 }}
             />
             <p style={{ fontSize: '11px', color: '#a08070', marginTop: '4px' }}>
               {t.charCount(message.length)}
