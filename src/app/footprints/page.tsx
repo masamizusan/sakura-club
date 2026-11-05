@@ -12,6 +12,7 @@ import Avatar from '@/components/Avatar'
 import AuthGuard from '@/components/auth/AuthGuard'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
+import { pickCardText } from '@/lib/i18n/cultureWish'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 
 const footprintsTranslations: Record<string, Record<string, string>> = {
@@ -95,6 +96,8 @@ interface VisitorProfile {
   prefecture: string
   city: string
   bio: string
+  // 日本文化の自由記入。カードでは自己紹介より優先して出す
+  culture_wish?: string
   interests: string[]
   avatar_url: string | null
   personality_tags: string[]
@@ -349,11 +352,11 @@ function FootprintsContent() {
                             </div>
 
                             {/* 下部: 自己紹介 + タグ */}
-                            {(visitor.bio || (visitor.interests && visitor.interests.length > 0)) && (
+                            {(pickCardText(visitor.culture_wish, visitor.bio) || (visitor.interests && visitor.interests.length > 0)) && (
                               <div className="mt-3 pt-3 border-t border-gray-100">
-                                {visitor.bio && (
+                                {pickCardText(visitor.culture_wish, visitor.bio) && (
                                   <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                                    {visitor.bio}
+                                    {pickCardText(visitor.culture_wish, visitor.bio)}
                                   </p>
                                 )}
                                 {formatCultureTags(visitor.interests, currentLanguage).length > 0 && (

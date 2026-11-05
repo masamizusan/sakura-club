@@ -15,6 +15,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
+import { pickCardText } from '@/lib/i18n/cultureWish'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 
 // 4言語翻訳辞書
@@ -100,6 +101,8 @@ interface LikerProfile {
   prefecture: string
   city: string
   bio: string
+  // 日本文化の自由記入。カードでは自己紹介より優先して出す
+  culture_wish?: string
   interests: string[]
   avatar_url: string | null
   personality_tags: string[]
@@ -352,12 +355,12 @@ export default function LikesPage() {
           )}
 
           {/* 下部: 自己紹介 + タグ（カード幅いっぱい） */}
-          {(liker.bio || (liker.interests && liker.interests.length > 0)) && (
+          {(pickCardText(liker.culture_wish, liker.bio) || (liker.interests && liker.interests.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-gray-100">
               {/* 自己紹介（2行） */}
-              {liker.bio && (
+              {pickCardText(liker.culture_wish, liker.bio) && (
                 <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                  {liker.bio}
+                  {pickCardText(liker.culture_wish, liker.bio)}
                 </p>
               )}
               {/* 興味タグ */}

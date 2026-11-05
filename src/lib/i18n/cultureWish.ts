@@ -12,6 +12,13 @@ export function countCultureWishChars(value: string | null | undefined): number 
   return Array.from((value ?? '').trim()).length
 }
 
+// 一覧のカード（さがす・お相手から・足跡）に出す文：culture_wish が 1 文字以上ならそれ（前後の空白を除く）、無ければ自己紹介
+// 翻訳はしない（原文のまま）
+export function pickCardText(cultureWish: string | null | undefined, bio: string | null | undefined): string {
+  if (countCultureWishChars(cultureWish) > 0) return (cultureWish ?? '').trim()
+  return bio ?? ''
+}
+
 // フォームの決まり（zod）のエラーの印。画面では getCultureWishText(...).errors[印] で文にする
 export type CultureWishErrorCode = 'cultureWishRequired' | 'cultureWishTooLong'
 

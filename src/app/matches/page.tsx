@@ -19,6 +19,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
+import { pickCardText } from '@/lib/i18n/cultureWish'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 import { isJapaneseWoman } from '@/utils/userHelpers'
 import {
@@ -165,6 +166,8 @@ interface UserProfile {
   city: string
   hobbies: string[]
   selfIntroduction: string
+  // 日本文化の自由記入。カードでは自己紹介より優先して出す（古い形の保存データには無いので任意）
+  cultureWish?: string
   profileImage?: string
   lastSeen: string | null
   isOnline: boolean
@@ -533,6 +536,7 @@ export default function MatchesPage() {
             city: typeof profile.city === 'object' ? profile.city?.city : profile.city || '',
             hobbies: Array.isArray(profile.interests) ? profile.interests : [],
             selfIntroduction: profile.bio || profile.self_introduction || '',
+            cultureWish: profile.culture_wish || '',
             profileImage: profile.avatar_url || (Array.isArray(profile.photo_urls) ? profile.photo_urls[0] : null),
             lastSeen: profile.last_seen_at,
             isOnline: false,
@@ -772,9 +776,9 @@ export default function MatchesPage() {
                           ) : user.lastSeen ? formatLastSeen(user.lastSeen) : null}
                         </p>
 
-                        {user.selfIntroduction && (
+                        {pickCardText(user.cultureWish, user.selfIntroduction) && (
                           <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
-                            {user.selfIntroduction}
+                            {pickCardText(user.cultureWish, user.selfIntroduction)}
                           </p>
                         )}
 
