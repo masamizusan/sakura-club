@@ -37,7 +37,8 @@ const createSignupSchema = (t: any) => z.object({
   nickname: z.string().min(1, t('errors.nicknameRequired')).max(20, t('errors.nicknameMaxLength')),
   gender: z.enum(['male', 'female'], { required_error: t('errors.genderRequired') }),
   birth_date: z.string().min(1, t('errors.birthDateRequired')),
-  prefecture: z.string().min(1, t('errors.locationRequired')),
+  // 空のときの文は男女で違うため、中身の確認（空を含む）は下の superRefine で行う（C9 追加修正）
+  prefecture: z.string({ required_error: t('errors.locationRequired') }),
   // 日本国籍確認（女性のみ必須）
   japaneseNationalityConfirm: z.boolean().optional(),
 }).refine((data) => {
@@ -84,6 +85,7 @@ export default function SignupPage() {
     register,
     handleSubmit,
     setValue,
+    clearErrors,
     watch,
     formState: { errors }
   } = useForm<SimpleSignupFormData>({
@@ -150,6 +152,8 @@ export default function SignupPage() {
   // 性別変更時の自動設定
   const handleGenderChange = (gender: 'male' | 'female') => {
     setValue('gender', gender)
+    // 性別を変えたら、前の性別の国籍・居住地のエラー表示を消す（文が男女で違うため）
+    clearErrors('prefecture')
     
     if (gender === 'male') {
       // 男性の場合：国籍を強制選択（デフォルトなし）。女性用の都道府県が残らないよう空にする（C9）
@@ -509,7 +513,7 @@ export default function SignupPage() {
                   </label>
                   <Select 
                     value={watch('prefecture') || ''} 
-                    onValueChange={(value) => setValue('prefecture', value)}
+                    onValueChange={(value) => setValue('prefecture', value, { shouldValidate: true })}
                   >
                     <SelectTrigger className={errors.prefecture ? 'border-red-500' : ''}>
                       <SelectValue placeholder={selectedGender === 'male' ? t('signup.selectNationality') : t('signup.selectPrefecture')} />
