@@ -41,7 +41,7 @@ import {
   hasValidLanguageSkills,
   generateLanguageSkillsFromLegacy
 } from '@/types/profile'
-import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
+import { NATIONALITY_OPTIONS, isAllowedMaleNationality } from '@/utils/nationalityNormalize'
 import { PERSONALITY_TAGS, normalizePersonalityValues, personalityKeyFromValue } from '@/lib/profile/personalityTags'
 import { isForeignMaleUser } from '@/utils/userHelpers'
 import { CULTURE_CATEGORIES, getCultureLabel as getCultureTagLabel, normalizeCultureValues } from '@/lib/profile/cultureTags'
@@ -3236,11 +3236,11 @@ function ProfileEditContent() {
         }
         
         logger.debug('[INIT] resetBirthDate:', resetBirthDate)
-        // 🎯 A案修正: nationality正規化（都道府県名→適切な国名）
-        const prefectureNames = ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+        // 🎯 A案修正 → C9：nationality正規化。男性は NATIONALITY_OPTIONS の国名だけを残し、
+        // 都道府県名などそれ以外は「アメリカ」に置き換えず空にして、本人に選ばせる（選ぶまでプレビューへ進めない）
         const rawNationality = defaults.nationality || profile?.nationality || ''
         const normalizedNationality = isForeignMale 
-          ? (prefectureNames.includes(rawNationality) ? 'アメリカ' : (rawNationality || (isNewUser ? 'アメリカ' : '')))
+          ? (isAllowedMaleNationality(rawNationality) ? rawNationality.trim() : '')
           : '日本'
         
         logger.debug('[INIT] nationality:', normalizedNationality)

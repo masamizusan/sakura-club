@@ -3,6 +3,7 @@ import { createClient as createSSRClient } from './supabase/client'
 import { SignupFormData, LoginFormData } from './validations/auth'
 import { logger } from '@/utils/logger'
 import { classifyAuthError, type AuthErrorKind } from '@/lib/i18n/authErrors'
+import { isAllowedMaleNationality } from '@/utils/nationalityNormalize'
 
 /**
  * 認証用クライアントを取得
@@ -85,17 +86,23 @@ export const authService = {
         // Small delay to ensure trigger completes
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        const profileUpdateData = {
+        const profileUpdateData: Record<string, any> = {
           name: data.firstName,
           last_name: data.lastName,
           gender: data.gender,
           age: data.age,
           birth_date: data.birth_date, // birth_dateを追加
-          nationality: data.nationality,
-          residence: data.prefecture,
           city: data.city,
           interests: data.hobbies,
           bio: data.selfIntroduction,
+        }
+        // 国籍・居住地（C9）：女性は国籍「日本」・居住地は選んだ都道府県。
+        // 男性は NATIONALITY_OPTIONS の国名のときだけ国籍を書く（それ以外は書かず、編集画面で本人に選ばせる）
+        if (data.gender === 'female') {
+          profileUpdateData.nationality = '日本'
+          profileUpdateData.residence = data.prefecture
+        } else if (isAllowedMaleNationality(data.nationality)) {
+          profileUpdateData.nationality = data.nationality.trim()
         }
 
         // updating profile

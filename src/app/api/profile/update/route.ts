@@ -24,9 +24,10 @@ const noCacheHeaders = {
  */
 
 // 更新可能なフィールドのホワイトリスト
+// nationality は受け付けない（C9：国籍は登録・編集画面のプレビュー確定で決める。呼び出し元は写真の更新だけ）
 const ALLOWED_UPDATE_FIELDS = [
   'name', 'first_name', 'last_name', 'age', 'birth_date',
-  'nationality', 'residence', 'prefecture', 'city',
+  'residence', 'prefecture', 'city',
   'bio', 'self_introduction', 'interests', 'hobbies',
   'avatar_url', 'profile_image', 'photo_urls',
   'occupation', 'height', 'body_type', 'marital_status',

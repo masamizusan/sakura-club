@@ -18,7 +18,8 @@ import { useUnifiedTranslation } from '@/utils/translations'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import { useLanguageAwareRouter } from '@/utils/languageNavigation'
 import { logger } from '@/utils/logger'
-import { NATIONALITY_OPTIONS } from '@/utils/nationalityNormalize'
+import { NATIONALITY_OPTIONS, isAllowedMaleNationality } from '@/utils/nationalityNormalize'
+import { PREFECTURES, isPrefectureName } from '@/lib/validations/auth'
 import { classifyAuthError, getAuthErrorMessage, type AuthErrorKind } from '@/lib/i18n/authErrors'
 
 // 多言語化：「既に登録」のときに出すログイン画面への案内（4 言語）
@@ -48,19 +49,19 @@ const createSignupSchema = (t: any) => z.object({
 }, {
   message: t('errors.japaneseNationalityRequired'),
   path: ['japaneseNationalityConfirm']
+}).superRefine((data, ctx) => {
+  // 国籍・居住地の中身の確認（C9）：男性は NATIONALITY_OPTIONS の国名だけ、女性は都道府県名だけ
+  if (data.gender === 'male' && !isAllowedMaleNationality(data.prefecture)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: t('errors.nationalityRequired'), path: ['prefecture'] })
+  }
+  if (data.gender === 'female' && !isPrefectureName(data.prefecture)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: t('errors.locationRequired'), path: ['prefecture'] })
+  }
 })
 
 type SimpleSignupFormData = z.infer<ReturnType<typeof createSignupSchema>>
 
-// 都道府県オプション
-const PREFECTURES = [
-  '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県',
-  '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', '新潟県', '富山県',
-  '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県',
-  '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県', '鳥取県', '島根県',
-  '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県',
-  '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-]
+// 都道府県オプション（47 個。src/lib/validations/auth.ts の PREFECTURES を共通で使う）
 
 // 国籍リスト・ラベル変換は src/utils/nationalityNormalize.ts の
 // NATIONALITY_OPTIONS / getNationalityLabel を SSOT として参照する。
@@ -151,8 +152,8 @@ export default function SignupPage() {
     setValue('gender', gender)
     
     if (gender === 'male') {
-      // 男性の場合：国籍を強制選択（デフォルトなし）
-      // setValue('prefecture', '') // 国籍フィールドとして使用
+      // 男性の場合：国籍を強制選択（デフォルトなし）。女性用の都道府県が残らないよう空にする（C9）
+      setValue('prefecture', '') // 国籍フィールドとして使用
     } else if (gender === 'female') {
       // 女性の場合：都道府県を強制選択（東京都をデフォルト）
       setValue('prefecture', '東京都')

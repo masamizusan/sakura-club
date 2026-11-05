@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { isAllowedMaleNationality } from '@/utils/nationalityNormalize'
 
 export const dynamic = 'force-dynamic'
 
@@ -76,6 +77,25 @@ export async function POST(request: NextRequest) {
       if (body[key] !== undefined && body[key] !== null && body[key] !== '') {
         filtered[key] = body[key]
       }
+    }
+
+    // 性別・国籍の中身の確認（C9）。エラーにはせず、おかしな値だけ書かない（登録を止めない）
+    if (filtered.gender !== undefined && filtered.gender !== 'male' && filtered.gender !== 'female') {
+      delete filtered.gender
+    }
+    if (filtered.gender === 'female') {
+      // 女性の国籍は常に「日本」
+      filtered.nationality = '日本'
+    } else if (filtered.gender === 'male' && filtered.nationality !== undefined) {
+      // 男性は NATIONALITY_OPTIONS の国名だけ。それ以外は国籍だけ捨てる（編集画面で本人に選ばせる）
+      if (isAllowedMaleNationality(filtered.nationality)) {
+        filtered.nationality = filtered.nationality.trim()
+      } else {
+        delete filtered.nationality
+      }
+    } else if (filtered.gender === undefined && filtered.nationality !== undefined) {
+      // 性別が分からないときは国籍を書かない
+      delete filtered.nationality
     }
 
     if (Object.keys(filtered).length === 0) {

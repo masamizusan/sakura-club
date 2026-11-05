@@ -143,6 +143,16 @@ export const NATIONALITY_OPTIONS: readonly NationalityOption[] = [
 ] as const
 
 /**
+ * 男性の国籍として許す値か（NATIONALITY_OPTIONS の dbValue と完全一致。前後の空白は除いて比べる）。
+ * 登録・登録直後の API・編集画面で共通に使う。DB の CHECK profiles_male_nationality_allowed（stage20）も同じ 17 個
+ */
+export function isAllowedMaleNationality(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  const trimmed = value.trim()
+  return NATIONALITY_OPTIONS.some(opt => opt.dbValue === trimmed)
+}
+
+/**
  * dbValue から NationalityOption を引く。O(N) だが N=17 なので実用上問題なし。
  * 未知の値(過去の手動 INSERT 等)は undefined を返す。
  */

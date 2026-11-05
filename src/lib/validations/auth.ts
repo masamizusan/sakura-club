@@ -104,6 +104,11 @@ export const PREFECTURES = [
   '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ]
 
+// 都道府県名（47 個）か。日本人女性の居住地（residence）の確認に使う
+export function isPrefectureName(value: unknown): value is string {
+  return typeof value === 'string' && PREFECTURES.includes(value.trim())
+}
+
 export const HOBBY_OPTIONS = [
   '読書', '映画鑑賞', '音楽鑑賞', '料理', '旅行', 'スポーツ',
   '写真撮影', '絵画・アート', '語学学習', 'ダンス', 'ヨガ',
