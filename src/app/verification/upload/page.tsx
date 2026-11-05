@@ -303,7 +303,7 @@ function VerificationContent() {
               <select
                 value={idType}
                 onChange={(e) => { setIdType(e.target.value); setError(null) }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#d4a89a] bg-white"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-[#d4a89a] bg-white"
               >
                 <option value="">---</option>
                 <option value="passport">{t('passport')}</option>

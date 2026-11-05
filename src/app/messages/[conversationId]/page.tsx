@@ -1564,7 +1564,7 @@ export default function ChatPage() {
                 value={reportDetail}
                 onChange={e => setReportDetail(e.target.value)}
                 rows={2}
-                className="w-full rounded-lg px-3 py-2 text-sm mb-4"
+                className="w-full rounded-lg px-3 py-2 text-base md:text-sm mb-4"
                 style={{ border: '1px solid var(--color-border)', backgroundColor: '#fdf6ef', color: 'var(--color-text)', resize: 'none' }}
               />
               <button
