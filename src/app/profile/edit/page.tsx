@@ -6165,9 +6165,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                   <h4 className="text-md font-medium text-gray-700 mt-6 mb-4">
                     {pickByGender(getCultureWishText(currentLanguage).tagHeading, isForeignMale)} （{selectedHobbies.length}/8 {t('profile.selectedCount')}）
                   </h4>
-                  <p className="text-xs text-gray-500 mb-3">
-                    {pickByGender(getCultureWishText(currentLanguage).tagNote, isForeignMale)}
-                  </p>
                   <Accordion type="multiple" className="w-full">
                     {getCultureCategories(t).map((category) => (
                       <AccordionItem key={category.name} value={category.name}>

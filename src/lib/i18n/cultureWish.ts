@@ -22,8 +22,6 @@ type CultureWishDict = {
   displayLabel: ByGender
   placeholder: ByGender
   tagHeading: ByGender
-  // 日本文化のタグの説明（タグは任意・8 つまで）
-  tagNote: ByGender
   errors: Record<CultureWishErrorCode, string>
 }
 
@@ -44,10 +42,6 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
     tagHeading: {
       male: '興味のある日本文化',
       female: '共有したい日本文化',
-    },
-    tagNote: {
-      male: '当てはまるものがあれば選んでください（8つまで）',
-      female: '紹介できるものがあれば選んでください（8つまで）',
     },
     errors: {
       cultureWishRequired: '入力してください',
@@ -71,10 +65,6 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       male: "Japanese culture I'm interested in",
       female: "Japanese culture I'd like to share",
     },
-    tagNote: {
-      male: 'Choose any that apply (up to 8).',
-      female: 'Choose any you can introduce (up to 8).',
-    },
     errors: {
       cultureWishRequired: 'Please fill this in.',
       cultureWishTooLong: 'Please keep it within 200 characters.',
@@ -97,10 +87,6 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
       male: '관심 있는 일본 문화',
       female: '공유하고 싶은 일본 문화',
     },
-    tagNote: {
-      male: '해당하는 것이 있으면 선택해 주세요 (최대 8개)',
-      female: '소개할 수 있는 것이 있으면 선택해 주세요 (최대 8개)',
-    },
     errors: {
       cultureWishRequired: '입력해 주세요',
       cultureWishTooLong: '200자 이내로 입력해 주세요',
@@ -122,10 +108,6 @@ const T: Record<SupportedLanguage, CultureWishDict> = {
     tagHeading: {
       male: '感興趣的日本文化',
       female: '想分享的日本文化',
-    },
-    tagNote: {
-      male: '如有符合的項目請選擇（最多 8 個）',
-      female: '如有能介紹的項目請選擇（最多 8 個）',
     },
     errors: {
       cultureWishRequired: '請填寫此欄',
