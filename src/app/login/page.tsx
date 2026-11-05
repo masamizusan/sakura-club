@@ -169,9 +169,9 @@ function LoginForm() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex items-center justify-between mb-6">
-            <span className="font-cormorant text-2xl" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
+            <Link href="/" className="font-cormorant text-2xl" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
               SAKURA CLUB
-            </span>
+            </Link>
             <LanguageSelector variant="light" size="sm" showIcon={true} />
           </div>
           <h2 className="font-shippori text-3xl mb-2" style={{ color: 'var(--color-text)', letterSpacing: '0.1em' }}>{t('login.title')}</h2>

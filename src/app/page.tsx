@@ -450,7 +450,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
                 style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
                 {t.ctaWomen}
               </Link>
-              <p className="text-xs mt-2 text-center" style={{ color: 'var(--color-usuzumi)' }}>
+              <p className="text-xs mt-2 text-center rounded px-2 py-0.5" style={{ color: '#3f3f4d', backgroundColor: 'rgba(245,235,224,0.85)' }}>
                 {t.womenOnlyNotice}
               </p>
             </div>
@@ -482,8 +482,8 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
             }}>
             {t.alreadyMember}
           </Link>
-          <p className="text-xs mt-3"
-            style={{ color: 'var(--color-usuzumi)' }}>
+          <p className="text-xs mt-3 inline-block rounded px-2 py-0.5"
+            style={{ color: '#3f3f4d', backgroundColor: 'rgba(245,235,224,0.85)' }}>
             {t.ageNotice}
           </p>
         </div>
@@ -514,7 +514,7 @@ function SplitSection({ t }: { t: Translations }) {
             {t.menSub}
           </p>
           <p className="font-zen-kaku text-sm leading-relaxed mb-8 max-w-sm"
-            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.05em' }}>
+            style={{ color: '#4a4a58', fontWeight: 300, letterSpacing: '0.05em' }}>
             {t.menBody}
           </p>
           <Link href="/signup?gender=male"
@@ -546,7 +546,7 @@ function SplitSection({ t }: { t: Translations }) {
             {t.womenSub}
           </p>
           <p className="font-zen-kaku text-sm leading-relaxed mb-8 max-w-sm"
-            style={{ color: 'var(--color-usuzumi)', fontWeight: 300, letterSpacing: '0.05em' }}>
+            style={{ color: '#4a4a58', fontWeight: 300, letterSpacing: '0.05em' }}>
             {t.womenBody}
           </p>
           <Link href="/signup?gender=female"
@@ -586,7 +586,7 @@ function HowItWorksSection({ t }: { t: Translations }) {
               <p className="font-shippori text-base mb-3"
                 style={{ color: '#fff', letterSpacing: '0.08em', lineHeight: 1.8 }}>{s.title}</p>
               <p className="font-zen-kaku text-xs leading-relaxed"
-                style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 300, letterSpacing: '0.05em' }}>{s.body}</p>
+                style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 300, letterSpacing: '0.05em' }}>{s.body}</p>
             </div>
           ))}
         </div>
@@ -669,7 +669,7 @@ function CtaSection({ t, language }: { t: Translations; language: string }) {
               style={{ backgroundColor: 'var(--color-beni)', fontWeight: 300, letterSpacing: '0.08em' }}>
               {t.ctaWomen}
             </Link>
-            <p className="font-shippori text-xs text-white/40">
+            <p className="font-shippori text-xs text-white/70">
               {t.ctaNote}
             </p>
           </div>
@@ -698,7 +698,7 @@ function Footer({ t }: { t: Translations }) {
               style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 300, letterSpacing: '0.08em' }}>{item.label}</a>
           ))}
         </nav>
-        <p className="font-zen-kaku text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 300 }}>© 2026 SAKURA CLUB</p>
+        <p className="font-zen-kaku text-xs" style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 300 }}>© 2026 SAKURA CLUB</p>
       </div>
     </footer>
   )

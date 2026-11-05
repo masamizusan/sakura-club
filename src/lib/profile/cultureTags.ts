@@ -33,7 +33,7 @@ export const CULTURE_CATEGORIES: readonly CultureCategory[] = [
   },
   {
     key: 'sightseeing',
-    labels: { ja: '名所・まちあるき', en: 'Sightseeing & Strolling', ko: '명소・거리 산책', 'zh-tw': '名勝・街道散步' },
+    labels: { ja: '名所・町歩き', en: 'Sightseeing & Strolling', ko: '명소・거리 산책', 'zh-tw': '名勝・街道散步' },
     tags: [
       { key: 'shrinesTemples', value: '神社仏閣', labels: { ja: '神社仏閣', en: 'Shrines & Temples', ko: '신사・사찰', 'zh-tw': '神社寺廟' } },
       { key: 'sealCollection', value: '御朱印集め', labels: { ja: '御朱印集め', en: 'Goshuin (Temple Stamp) Collecting', ko: '고슈인 모으기', 'zh-tw': '收集御朱印' } },

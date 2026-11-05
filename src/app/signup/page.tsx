@@ -353,9 +353,9 @@ export default function SignupPage() {
               </Link>
               <LanguageSelector variant="light" size="sm" showIcon={true} />
             </div>
-            <span className="font-cormorant text-2xl block mb-3" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
+            <Link href="/" className="font-cormorant text-2xl block mb-3" style={{ color: 'var(--color-primary)', letterSpacing: '0.2em', fontWeight: 300 }}>
               SAKURA CLUB
-            </span>
+            </Link>
             <h1 className="font-shippori text-3xl mb-2" style={{ color: 'var(--color-text)', letterSpacing: '0.1em' }}>{t('signup.title')}</h1>
           </div>
 

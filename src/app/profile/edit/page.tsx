@@ -5153,17 +5153,17 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between mb-8">
             <Button
               variant="outline"
               onClick={() => router.back()}
-              className="mr-4"
+              className="md:mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t('common.cancel')}
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {isForeignMale ? t('profile.foreignMaleTitle') :
                  isJapaneseFemale ? t('profile.japaneseFemaleTitle') :
                  t('profile.editTitle')}
