@@ -19,7 +19,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
-import { pickCardText } from '@/lib/i18n/cultureWish'
+import CardTextLines from '@/components/profile/CardTextLines'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 import { isJapaneseWoman } from '@/utils/userHelpers'
 import {
@@ -162,6 +162,8 @@ interface UserProfile {
   age: number
   nationality: string
   nationalityLabel: string
+  // カードの見出しの男女分け用（古い形の保存データにも入っている）
+  gender?: string
   prefecture: string
   city: string
   hobbies: string[]
@@ -776,11 +778,14 @@ export default function MatchesPage() {
                           ) : user.lastSeen ? formatLastSeen(user.lastSeen) : null}
                         </p>
 
-                        {pickCardText(user.cultureWish, user.selfIntroduction) && (
-                          <p className="text-gray-600 text-sm mb-3 leading-relaxed line-clamp-2">
-                            {pickCardText(user.cultureWish, user.selfIntroduction)}
-                          </p>
-                        )}
+                        <CardTextLines
+                          cultureWish={user.cultureWish}
+                          bio={user.selfIntroduction}
+                          gender={user.gender}
+                          nationality={user.nationality}
+                          language={currentLanguage}
+                          className="mb-3"
+                        />
 
                         {formatCultureTags(user.hobbies, currentLanguage).length > 0 && (
                           <div className="flex flex-wrap gap-1">

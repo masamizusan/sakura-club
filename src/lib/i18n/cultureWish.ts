@@ -12,13 +12,6 @@ export function countCultureWishChars(value: string | null | undefined): number 
   return Array.from((value ?? '').trim()).length
 }
 
-// 一覧のカード（さがす・お相手から・足跡）に出す文：culture_wish が 1 文字以上ならそれ（前後の空白を除く）、無ければ自己紹介
-// 翻訳はしない（原文のまま）
-export function pickCardText(cultureWish: string | null | undefined, bio: string | null | undefined): string {
-  if (countCultureWishChars(cultureWish) > 0) return (cultureWish ?? '').trim()
-  return bio ?? ''
-}
-
 // フォームの決まり（zod）のエラーの印。画面では getCultureWishText(...).errors[印] で文にする
 export type CultureWishErrorCode = 'cultureWishRequired' | 'cultureWishTooLong'
 
@@ -130,4 +123,24 @@ export function getCultureWishText(language: string | null | undefined): Culture
 // 男女で文を選ぶ（isForeignMale = 外国人男性の画面・プロフィールか）
 export function pickByGender(text: ByGender, isForeignMale: boolean): string {
   return isForeignMale ? text.male : text.female
+}
+
+// 一覧のカード（さがす・お相手から・足跡）の、行の頭に付ける短い見出し（4 言語）
+// culture_wish は持ち主の男女で分ける。自己紹介は男女共通
+type CardHeadingDict = { cultureWish: ByGender; bio: string }
+
+const CARD_HEADINGS: Record<SupportedLanguage, CardHeadingDict> = {
+  ja: { cultureWish: { male: '行きたい場所・体験', female: '紹介したい場所・文化' }, bio: '自己紹介' },
+  en: { cultureWish: { male: 'Wants to try', female: 'Can show you' }, bio: 'About me' },
+  ko: { cultureWish: { male: '가고 싶은 곳·체험', female: '소개하고 싶은 곳·문화' }, bio: '자기소개' },
+  'zh-tw': { cultureWish: { male: '想去的地方・體驗', female: '想介紹的地方・文化' }, bio: '自我介紹' },
+}
+
+// isForeignMale = カードの持ち主が外国人男性か
+export function getCardHeadings(
+  language: string | null | undefined,
+  isForeignMale: boolean
+): { cultureWish: string; bio: string } {
+  const d = CARD_HEADINGS[(language ?? 'ja') as SupportedLanguage] ?? CARD_HEADINGS.ja
+  return { cultureWish: pickByGender(d.cultureWish, isForeignMale), bio: d.bio }
 }

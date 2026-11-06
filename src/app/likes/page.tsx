@@ -15,7 +15,7 @@ import AuthGuard from '@/components/auth/AuthGuard'
 import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
-import { pickCardText } from '@/lib/i18n/cultureWish'
+import CardTextLines, { hasCardText } from '@/components/profile/CardTextLines'
 import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
 
 // 4言語翻訳辞書
@@ -355,14 +355,16 @@ export default function LikesPage() {
           )}
 
           {/* 下部: 自己紹介 + タグ（カード幅いっぱい） */}
-          {(pickCardText(liker.culture_wish, liker.bio) || (liker.interests && liker.interests.length > 0)) && (
+          {(hasCardText(liker.culture_wish, liker.bio) || (liker.interests && liker.interests.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-gray-100">
               {/* 自己紹介（2行） */}
-              {pickCardText(liker.culture_wish, liker.bio) && (
-                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                  {pickCardText(liker.culture_wish, liker.bio)}
-                </p>
-              )}
+              <CardTextLines
+                cultureWish={liker.culture_wish}
+                bio={liker.bio}
+                gender={liker.gender}
+                nationality={liker.nationality}
+                language={currentLanguage}
+              />
               {/* 興味タグ */}
               {formatCultureTags(liker.interests, currentLanguage).length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
