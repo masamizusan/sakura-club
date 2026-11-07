@@ -2,8 +2,8 @@ import { countCultureWishChars, getCardHeadings } from '@/lib/i18n/cultureWish'
 import { isForeignMaleUser } from '@/utils/userHelpers'
 
 // 一覧のカード（さがす・お相手から・足跡）の文の部分：
-//   1 行目：［culture_wish の見出し］culture_wish
-//   2 行目：［自己紹介の見出し］自己紹介
+//   1 行目：［自己紹介の見出し］自己紹介
+//   2 行目：［culture_wish の見出し］culture_wish
 // - どちらも 1 行で切る（truncate）。2 行分の高さは以前の line-clamp-2 と同じ
 // - 書いていない欄は行ごと出さない。両方空なら何も出さない
 // - 本文は翻訳しない（原文のまま）。見出しは読む人の画面の言語、男女はカードの持ち主で分ける
@@ -44,8 +44,8 @@ export default function CardTextLines({ cultureWish, bio, gender, nationality, l
 
   return (
     <div className={className}>
-      {wish && line(headings.cultureWish, wish)}
       {intro && line(headings.bio, intro)}
+      {wish && line(headings.cultureWish, wish)}
     </div>
   )
 }
