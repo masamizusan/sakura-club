@@ -735,14 +735,6 @@ function ProfilePreviewContent() {
                   </div>
                 )}
                 
-                {/* 9. 行く予定の都道府県（外国人男性の場合） */}
-                {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.plannedDestination')}:</span>
-                    <span className="text-gray-600">{planned_prefectures.map((pref: string) => getPrefectureLabel(pref, t)).join(', ')}</span>
-                  </div>
-                )}
-
                 {/* 訪問予定の駅（外国人男性の場合）- 順序は変更しない */}
                 {gender === 'male' && planned_stations && planned_stations.length > 0 && (
                   <div className="flex items-start">
@@ -795,6 +787,16 @@ function ProfilePreviewContent() {
                   </>
                 )
               })()}
+
+              {/* 行く予定の都道府県（外国人男性の場合）。日本文化のタグと性格の間に、見出し付きのまとまりで出す */}
+              {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.plannedDestination')}</h3>
+                  <p className="text-gray-600 text-sm">
+                    {planned_prefectures.map((pref: string) => getPrefectureLabel(pref, t)).join(', ')}
+                  </p>
+                </div>
+              )}
 
               {/* 12. 性格 */}
               {personality.length > 0 && (

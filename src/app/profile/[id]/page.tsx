@@ -1415,15 +1415,6 @@ function ProfileDetailContent() {
                         <span className="text-gray-600">{formatTravelCompanion(travel_companion, currentLanguage)}</span>
                       </div>
                     )}
-
-                    {Array.isArray(planned_prefectures) && planned_prefectures.length > 0 && (
-                      <div className="flex">
-                        <span className="font-medium text-gray-700 w-28">{t('plannedPrefectures')}:</span>
-                        <span className="text-gray-600">
-                          {planned_prefectures.map(p => formatPrefecture(p, currentLanguage) || p).join(', ')}
-                        </span>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
@@ -1475,6 +1466,16 @@ function ProfileDetailContent() {
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* 行く予定の都道府県（外国人男性・値がある人だけ） */}
+              {isForeignMale && Array.isArray(planned_prefectures) && planned_prefectures.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">{t('plannedPrefectures')}</h3>
+                  <p className="text-gray-600 text-sm">
+                    {planned_prefectures.map(p => formatPrefecture(p, currentLanguage) || p).join(', ')}
+                  </p>
                 </div>
               )}
 
