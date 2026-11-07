@@ -5963,48 +5963,6 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                         )}
                       </div>
 
-                      {/* 行く予定の都道府県 */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('profile.plannedPrefectures')}
-                        </label>
-                        <p className="text-xs text-gray-500 mb-3">{t('profile.prefectureSelectionRule')}</p>
-
-                        {/* 選択状況の表示 */}
-                        <div className="text-sm font-medium text-gray-700 mb-4">
-                          {t('profile.selectPrefecturesWithCount')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
-                        </div>
-
-                        {/* 都道府県選択グリッド（常時表示） */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                          {PREFECTURES.map((prefecture) => (
-                            <button
-                              key={prefecture.value}
-                              type="button"
-                              onClick={() => togglePlannedPrefecture(prefecture.value)}
-                              disabled={!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3}
-                              className={`
-                                px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
-                                ${selectedPlannedPrefectures.includes(prefecture.value)
-                                  ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
-                                }
-                                ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
-                                  ? 'opacity-50 cursor-not-allowed'
-                                  : 'cursor-pointer hover:shadow-md'
-                                }
-                              `}
-                            >
-                              {prefecture.label}
-                            </button>
-                          ))}
-                        </div>
-
-                        {errors.planned_prefectures && (
-                          <p className="text-red-500 text-sm mt-1">{t(errors.planned_prefectures.message as string)}</p>
-                        )}
-                      </div>
-
                     </div>
                   </>
                 )}
@@ -6080,6 +6038,50 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                     <p className="text-red-500 text-sm mt-1">{errors.hobbies.message}</p>
                   )}
                 </div>
+
+                {/* 行く予定の都道府県（外国人男性のみ）。日本文化のタグと性格の間に置く（相手のプロフィール・プレビューと同じ並び） */}
+                {isForeignMale && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('profile.plannedPrefectures')}
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">{t('profile.prefectureSelectionRule')}</p>
+
+                    {/* 選択状況の表示 */}
+                    <div className="text-sm font-medium text-gray-700 mb-4">
+                      {t('profile.selectPrefecturesWithCount')}（{selectedPlannedPrefectures.length}/3 {t('profile.selectedCount')}）
+                    </div>
+
+                    {/* 都道府県選択グリッド（常時表示） */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {PREFECTURES.map((prefecture) => (
+                        <button
+                          key={prefecture.value}
+                          type="button"
+                          onClick={() => togglePlannedPrefecture(prefecture.value)}
+                          disabled={!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3}
+                          className={`
+                            px-3 py-2.5 rounded-lg text-sm font-medium border-2 transition-all duration-200 ease-in-out text-center min-h-[2.75rem] flex items-center justify-center w-full
+                            ${selectedPlannedPrefectures.includes(prefecture.value)
+                              ? 'bg-gradient-to-r from-[#8b1a2e] to-[#6e1525] text-white border-[#8b1a2e] shadow-lg transform scale-105'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#8b1a2e] hover:bg-[#fdf0f2] hover:text-[#8b1a2e]'
+                            }
+                            ${(!selectedPlannedPrefectures.includes(prefecture.value) && selectedPlannedPrefectures.length >= 3)
+                              ? 'opacity-50 cursor-not-allowed'
+                              : 'cursor-pointer hover:shadow-md'
+                            }
+                          `}
+                        >
+                          {prefecture.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {errors.planned_prefectures && (
+                      <p className="text-red-500 text-sm mt-1">{t(errors.planned_prefectures.message as string)}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* 性格セクション - 日本文化のまとまりの下 */}
                 <div className="space-y-4">
