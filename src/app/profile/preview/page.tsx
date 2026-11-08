@@ -19,7 +19,7 @@ import { formatCultureValue } from '@/lib/profile/cultureTags'
 import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
 import { isForeignMaleUser } from '@/utils/userHelpers'
 import {
-  formatOccupation,
+  formatOccupationForOwner,
   formatBodyType,
   formatMaritalStatus,
   formatLanguageLevel,
@@ -51,7 +51,7 @@ const PREVIEW_LABELS: Record<SupportedLanguage, PreviewLabelDict> = {
   },
   en: {
     occupation: 'Occupation', height: 'Height', bodyType: 'Body Type', maritalStatus: 'Marital Status', languages: 'Languages',
-    visitSchedule: 'Visit Schedule', travelCompanion: 'Travel Companion', plannedPrefectures: 'Planned Prefectures',
+    visitSchedule: 'Visit Schedule', travelCompanion: 'Companion', plannedPrefectures: 'Planned Prefectures',
     selfIntroduction: 'Self Introduction', personality: 'Personality',
   },
   ko: {
@@ -641,7 +641,7 @@ function ProfilePreviewContent() {
                       {shouldDisplayValue(occupation) && (
                         <div className="flex items-center">
                           <span className="font-medium text-gray-700 w-28">{pl.occupation}:</span>
-                          <span className="text-gray-600">{formatOccupation(isForeignMale && HOMEMAKER_VALUES.has(occupation) ? '主夫' : occupation, currentLanguage)}</span>
+                          <span className="text-gray-600">{formatOccupationForOwner(occupation, currentLanguage, !!isForeignMale)}</span>
                         </div>
                       )}
                     </>

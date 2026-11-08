@@ -27,7 +27,7 @@ import { REPORT_REASON_JA_TO_KEY, localizeReportReason } from '@/utils/violation
 import { getBlockI18nLabels } from '@/utils/blockI18n'
 import { getMatchModalLabels } from '@/utils/matchModalI18n'
 import {
-  formatOccupation,
+  formatOccupationForOwner,
   formatBodyType,
   formatMaritalStatus,
   formatLanguageLevel,
@@ -156,7 +156,7 @@ const profileDetailTexts: Record<string, Record<string, string>> = {
     maritalStatus: 'Marital Status',
     languages: 'Languages',
     visitSchedule: 'Visit Schedule',
-    travelCompanion: 'Travel Companion',
+    travelCompanion: 'Companion',
     plannedPrefectures: 'Planned Prefectures',
     selfIntroduction: 'Self Introduction',
     personality: 'Personality',
@@ -1353,7 +1353,7 @@ function ProfileDetailContent() {
                 {shouldDisplayValue(occupation) && (
                   <div className="flex">
                     <span className="font-medium text-gray-700 w-28">{t('occupation')}:</span>
-                    <span className="text-gray-600">{formatOccupation(occupation, currentLanguage)}</span>
+                    <span className="text-gray-600">{formatOccupationForOwner(occupation, currentLanguage, isForeignMale)}</span>
                   </div>
                 )}
 

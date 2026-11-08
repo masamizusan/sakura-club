@@ -373,6 +373,22 @@ export function formatOccupation(value: string | null | undefined, language: Sup
   return formatProfileField('occupation', value, language)
 }
 
+// 主婦・主夫の値（どちらで保存されていても、持ち主の男女で表記を決める）
+const HOMEMAKER_OCCUPATIONS = new Set(['主婦', '主夫', '主婦、主夫'])
+
+/**
+ * 職業のフォーマット（持ち主の男女つき）：外国人男性の 主婦・主夫 は「主夫」の訳で出す
+ * 相手のプロフィール・プレビューで共通
+ */
+export function formatOccupationForOwner(
+  value: string | null | undefined,
+  language: SupportedLanguage = 'ja',
+  ownerIsForeignMale: boolean = false
+): string {
+  if (ownerIsForeignMale && value && HOMEMAKER_OCCUPATIONS.has(value)) return formatOccupation('主夫', language)
+  return formatOccupation(value, language)
+}
+
 /**
  * 体型のフォーマット
  */
