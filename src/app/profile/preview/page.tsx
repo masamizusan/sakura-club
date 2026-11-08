@@ -18,6 +18,56 @@ import { formatPersonalityValue } from '@/lib/profile/personalityTags'
 import { formatCultureValue } from '@/lib/profile/cultureTags'
 import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import {
+  formatOccupation,
+  formatBodyType,
+  formatMaritalStatus,
+  formatLanguageLevel,
+  formatTravelCompanion,
+  formatVisitSchedule,
+  formatPrefecture,
+  formatNationality
+} from '@/utils/profileFieldFormatters'
+
+// プレビューの見出し（相手のプロフィール profile/[id] と同じ文言。translations.ts は編集画面と共用のため使わない）
+type PreviewLabelDict = {
+  occupation: string
+  height: string
+  bodyType: string
+  maritalStatus: string
+  languages: string
+  visitSchedule: string
+  travelCompanion: string
+  plannedPrefectures: string
+  selfIntroduction: string
+  personality: string
+}
+
+const PREVIEW_LABELS: Record<SupportedLanguage, PreviewLabelDict> = {
+  ja: {
+    occupation: '職業', height: '身長', bodyType: '体型', maritalStatus: '婚姻状況', languages: '言語',
+    visitSchedule: '訪問予定', travelCompanion: '同行者', plannedPrefectures: '行く予定',
+    selfIntroduction: '自己紹介', personality: '性格',
+  },
+  en: {
+    occupation: 'Occupation', height: 'Height', bodyType: 'Body Type', maritalStatus: 'Marital Status', languages: 'Languages',
+    visitSchedule: 'Visit Schedule', travelCompanion: 'Travel Companion', plannedPrefectures: 'Planned Prefectures',
+    selfIntroduction: 'Self Introduction', personality: 'Personality',
+  },
+  ko: {
+    occupation: '직업', height: '키', bodyType: '체형', maritalStatus: '결혼 여부', languages: '언어',
+    visitSchedule: '방문 시기', travelCompanion: '동행자', plannedPrefectures: '방문 예정 지역',
+    selfIntroduction: '자기소개', personality: '성격',
+  },
+  'zh-tw': {
+    occupation: '職業', height: '身高', bodyType: '體型', maritalStatus: '婚姻狀況', languages: '語言',
+    visitSchedule: '訪問時期', travelCompanion: '同行者', plannedPrefectures: '預計前往地區',
+    selfIntroduction: '自我介紹', personality: '性格',
+  },
+}
+
+// 主婦・主夫は、外国人男性なら「主夫」の表記にする（以前のプレビューの出し方を残す）
+const HOMEMAKER_VALUES = new Set(['主婦', '主夫', '主婦、主夫'])
 
 // 任意項目が表示すべき値かチェックするヘルパー関数
 const shouldDisplayValue = (value: string | null | undefined): boolean => {
@@ -290,6 +340,7 @@ function ProfilePreviewContent() {
   
   // 統一言語設定
   const { t, language: currentLanguage } = useUnifiedTranslation()
+  const pl = PREVIEW_LABELS[currentLanguage as SupportedLanguage] ?? PREVIEW_LABELS.ja
   const { currentLanguage: contextLanguage } = useLanguage()
   
   // 🌍 Preview専用翻訳辞書
@@ -575,22 +626,22 @@ function ProfilePreviewContent() {
                       {/* 1. 国籍（外国人男性の場合のみ）/ 居住地（日本人女性の場合） */}
                       {isForeignMale && (
                         <div className="flex items-center">
-                          <span className="font-medium text-gray-700 w-20">{t('profile.nationality')}:</span>
-                          <span className="text-gray-600">{getNationalityLabel(nationality, t)}</span>
+                          <span className="font-medium text-gray-700 w-28">{t('profile.nationality')}:</span>
+                          <span className="text-gray-600">{formatNationality(nationality, currentLanguage) || nationality}</span>
                         </div>
                       )}
                       {gender === 'female' && prefecture && (
                         <div className="flex items-center">
-                          <span className="font-medium text-gray-700 w-20">{t('profile.residence')}:</span>
-                          <span className="text-gray-600">{getPrefectureLabel(prefecture, t)}</span>
+                          <span className="font-medium text-gray-700 w-28">{t('profile.residence')}:</span>
+                          <span className="text-gray-600">{formatPrefecture(prefecture, currentLanguage) || prefecture}</span>
                         </div>
                       )}
                       
                       {/* 2. 職業 */}
                       {shouldDisplayValue(occupation) && (
                         <div className="flex items-center">
-                          <span className="font-medium text-gray-700 w-20">{t('profile.occupation')}:</span>
-                          <span className="text-gray-600">{getOccupationLabel(occupation, t, isForeignMale)}</span>
+                          <span className="font-medium text-gray-700 w-28">{pl.occupation}:</span>
+                          <span className="text-gray-600">{formatOccupation(isForeignMale && HOMEMAKER_VALUES.has(occupation) ? '主夫' : occupation, currentLanguage)}</span>
                         </div>
                       )}
                     </>
@@ -600,7 +651,7 @@ function ProfilePreviewContent() {
                 {/* 3. 身長 */}
                 {shouldDisplayValue(height) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.height')}:</span>
+                    <span className="font-medium text-gray-700 w-28">{pl.height}:</span>
                     <span className="text-gray-600">{height}cm</span>
                   </div>
                 )}
@@ -608,16 +659,16 @@ function ProfilePreviewContent() {
                 {/* 4. 体型 */}
                 {shouldDisplayValue(bodyType) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.bodyTypeLabel')}:</span>
-                    <span className="text-gray-600">{getBodyTypeLabel(bodyType, t)}</span>
+                    <span className="font-medium text-gray-700 w-28">{pl.bodyType}:</span>
+                    <span className="text-gray-600">{formatBodyType(bodyType, currentLanguage)}</span>
                   </div>
                 )}
                 
                 {/* 5. 婚姻状況 */}
                 {shouldDisplayValue(maritalStatus) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.marriageStatus')}:</span>
-                    <span className="text-gray-600">{maritalStatus === 'single' ? t('maritalStatus.single') : t('maritalStatus.married')}</span>
+                    <span className="font-medium text-gray-700 w-28">{pl.maritalStatus}:</span>
+                    <span className="text-gray-600">{formatMaritalStatus(maritalStatus, currentLanguage)}</span>
                   </div>
                 )}
                 
@@ -681,13 +732,13 @@ function ProfilePreviewContent() {
                   
                   return effectiveLanguageSkills.length > 0 ? (
                     <div>
-                      <h3 className="font-medium text-gray-900 mb-2">{t('profile.languages')}</h3>
+                      <h3 className="font-medium text-gray-900 mb-2">{pl.languages}</h3>
                       <div className="space-y-2">
                         {effectiveLanguageSkills.map((skill: LanguageSkill, index: number) => (
                           skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
                             <div key={index} className="flex items-center">
-                              <span className="font-medium text-gray-700 w-20">{getLanguageDisplayLabel(skill.language)}:</span>
-                              <span className="text-gray-600">{t(`profile.languageLevel.${skill.level}`) || skill.level}</span>
+                              <span className="font-medium text-gray-700 w-28">{getLanguageDisplayLabel(skill.language)}:</span>
+                              <span className="text-gray-600">{formatLanguageLevel(skill.level, currentLanguage) || skill.level}</span>
                             </div>
                           ) : null
                         ))}
@@ -699,30 +750,9 @@ function ProfilePreviewContent() {
                 {/* 7. 訪問予定（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(visit_schedule) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.visitPlan')}:</span>
+                    <span className="font-medium text-gray-700 w-28">{pl.visitSchedule}:</span>
                     <span className="text-gray-600">
-                      {(() => {
-                        if (visit_schedule === 'undecided') return t('schedule.undecided');
-                        if (visit_schedule === 'no-entry') return t('schedule.noEntry');
-                        if (visit_schedule === 'currently-in-japan') return t('schedule.currentlyInJapan');
-
-                        // beyond-YYYY 形式の処理
-                        if (visit_schedule.startsWith('beyond-')) {
-                          const year = visit_schedule.split('-')[1];
-                          return `${t('schedule.after')} ${year}`;
-                        }
-
-                        // YYYY-season 形式の処理
-                        const match = visit_schedule.match(/^(\d{4})-(spring|summer|autumn|winter)$/);
-                        if (match) {
-                          const [, year, season] = match;
-                          const seasonKey = `seasons.${season}`;
-                          return `${year} ${t(seasonKey)}`;
-                        }
-
-                        // フォールバック：そのまま表示
-                        return visit_schedule;
-                      })()}
+                      {formatVisitSchedule(visit_schedule, currentLanguage) || visit_schedule}
                     </span>
                   </div>
                 )}
@@ -730,15 +760,15 @@ function ProfilePreviewContent() {
                 {/* 8. 同行者（外国人男性の場合） */}
                 {gender === 'male' && shouldDisplayValue(travel_companion) && (
                   <div className="flex items-center">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.companion')}:</span>
-                    <span className="text-gray-600">{getTravelCompanionLabel(travel_companion, t)}</span>
+                    <span className="font-medium text-gray-700 w-28">{pl.travelCompanion}:</span>
+                    <span className="text-gray-600">{formatTravelCompanion(travel_companion, currentLanguage)}</span>
                   </div>
                 )}
                 
                 {/* 訪問予定の駅（外国人男性の場合）- 順序は変更しない */}
                 {gender === 'male' && planned_stations && planned_stations.length > 0 && (
                   <div className="flex items-start">
-                    <span className="font-medium text-gray-700 w-20">{t('profile.plannedStationsLabel')}:</span>
+                    <span className="font-medium text-gray-700 w-28">{t('profile.plannedStationsLabel')}:</span>
                     <span className="text-gray-600">{planned_stations.join(', ')}</span>
                   </div>
                 )}
@@ -747,7 +777,7 @@ function ProfilePreviewContent() {
               {/* 10. 自己紹介 */}
               {shouldDisplayValue(selfIntroduction) && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.selfIntroduction')}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{pl.selfIntroduction}</h3>
                   <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
                     {selfIntroduction}
                   </p>
@@ -791,9 +821,9 @@ function ProfilePreviewContent() {
               {/* 行く予定の都道府県（外国人男性の場合）。日本文化のタグと性格の間に、見出し付きのまとまりで出す */}
               {gender === 'male' && planned_prefectures && planned_prefectures.length > 0 && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.plannedDestination')}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{pl.plannedPrefectures}</h3>
                   <p className="text-gray-600 text-sm">
-                    {planned_prefectures.map((pref: string) => getPrefectureLabel(pref, t)).join(', ')}
+                    {planned_prefectures.map((pref: string) => formatPrefecture(pref, currentLanguage) || pref).join(', ')}
                   </p>
                 </div>
               )}
@@ -801,7 +831,7 @@ function ProfilePreviewContent() {
               {/* 12. 性格 */}
               {personality.length > 0 && (
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">{t('profile.personalityLabel')}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">{pl.personality}</h3>
                   <div className="flex flex-wrap gap-2">
                     {personality.map((trait: string, index: number) => (
                       <span
