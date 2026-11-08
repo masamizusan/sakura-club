@@ -511,7 +511,9 @@ export default function SignupPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {selectedGender === 'male' ? t('signup.nationality') : t('signup.residence')} <span className="text-red-500">{t('signup.required')}</span>
                   </label>
-                  <Select 
+                  {/* 性別が変わったら作り直す（古い選択肢のまま値を入れると空で上書きされ、「居住地を選択してください」が出るため） */}
+                  <Select
+                    key={selectedGender}
                     value={watch('prefecture') || ''} 
                     onValueChange={(value) => setValue('prefecture', value, { shouldValidate: true })}
                   >
