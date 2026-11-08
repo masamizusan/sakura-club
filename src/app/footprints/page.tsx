@@ -31,7 +31,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}日前',
     online: 'オンライン中',
     markAllRead: '全て既読にする',
-    plannedPrefectures: '訪問予定',
+    plannedPrefectures: '行く予定',
   },
   en: {
     pageTitle: 'Footprints',
@@ -48,7 +48,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n} days ago',
     online: 'Online',
     markAllRead: 'Mark all as read',
-    plannedPrefectures: 'Visiting',
+    plannedPrefectures: 'Planned Prefectures',
   },
   ko: {
     pageTitle: '발자국',
@@ -65,7 +65,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}일 전',
     online: '온라인',
     markAllRead: '모두 읽음 표시',
-    plannedPrefectures: '방문 예정',
+    plannedPrefectures: '방문 예정 지역',
   },
   'zh-tw': {
     pageTitle: '足跡',
@@ -82,7 +82,7 @@ const footprintsTranslations: Record<string, Record<string, string>> = {
     daysAgo: '{n}天前',
     online: '線上',
     markAllRead: '全部標為已讀',
-    plannedPrefectures: '預定訪問',
+    plannedPrefectures: '預計前往地區',
   },
 }
 

@@ -66,7 +66,7 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeAlreadyMatched: 'すでにマッチしています',
     likeProfileIncomplete: 'プロフィールを完成させると、いいねを送れます',
     errorOccurred: 'エラーが発生しました。もう一度お試しください。',
-    plannedPrefectures: '訪問予定の都道府県',
+    plannedPrefectures: '行く予定',
   },
   en: {
     pageTitle: 'Recommended Matches',
@@ -144,7 +144,7 @@ const matchesTranslations: Record<string, Record<string, string>> = {
     likeAlreadyMatched: '你們已經配對成功。',
     likeProfileIncomplete: '完成個人資料後即可按讚。',
     errorOccurred: '發生錯誤，請重試。',
-    plannedPrefectures: '預計前往的地區',
+    plannedPrefectures: '預計前往地區',
   }
 }
 
