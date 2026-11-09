@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth/requireAdmin'
+import { ageFromBirthDate } from '@/utils/age'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
@@ -130,7 +131,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await timer.measure('db', () => serviceSupabase
       .from('profiles')
-      .select('id, name, age, nationality, avatar_url, verification_status, id_document_type, id_document_url, verification_submitted_at, ai_review_result, ai_review_flags')
+      .select('id, name, age, birth_date, nationality, avatar_url, verification_status, id_document_type, id_document_url, verification_submitted_at, ai_review_result, ai_review_flags')
       .eq('verification_status', status)
       .order('verification_submitted_at', { ascending: tab === 'requires_review' }))
 
@@ -176,7 +177,9 @@ export async function GET(req: NextRequest) {
     return respond({
       rows: rows.map(r => {
         const path = toIdentityDocPath(r.id_document_url)
-        return { ...r, signed_url: path ? signedUrlByPath.get(path) ?? null : null }
+        // 年齢は生年月日から数え直す（DB の age 列は誕生日を過ぎても古いまま）。生年月日そのものは返さない
+        const { birth_date, ...rest } = r
+        return { ...rest, age: ageFromBirthDate(birth_date) ?? r.age, signed_url: path ? signedUrlByPath.get(path) ?? null : null }
       }),
     })
   } catch (e) {

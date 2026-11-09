@@ -33,6 +33,7 @@ import { logger } from '@/utils/logger'
 // normalizeProfile と calculateCompletion を使用して一貫した計算を実現
 import { type SupportedLanguage } from '@/utils/language'
 import { useUnifiedTranslation } from '@/utils/translations'
+import { ageFromBirthDate } from '@/utils/age'
 import { LanguageSelector } from '@/components/LanguageSelector'
 import {
   type LanguageSkill,
@@ -2613,7 +2614,8 @@ function ProfileEditContent() {
                 nickname: profileData.name || profileData.nickname || '',
                 gender: profileData.gender || 'male',
                 birth_date: profileData.birth_date || '',
-                age: profileData.age || 18,
+                // 年齢は生年月日から数え直す（DB の age 列は誕生日を過ぎても古いまま）。生年月日が無い人だけ age 列
+                age: ageFromBirthDate(profileData.birth_date) ?? (profileData.age || 18),
                 nationality: profileData.nationality || '',
                 prefecture: profileData.prefecture || profileData.residence || '',
                 self_introduction: profileData.bio || profileData.self_introduction || '',
@@ -2753,7 +2755,8 @@ function ProfileEditContent() {
               nickname: profileData.name || profileData.nickname || '',
               gender: profileData.gender || 'male',
               birth_date: profileData.birth_date || '',
-              age: profileData.age || 18,
+              // 年齢は生年月日から数え直す（DB の age 列は誕生日を過ぎても古いまま）。生年月日が無い人だけ age 列
+              age: ageFromBirthDate(profileData.birth_date) ?? (profileData.age || 18),
               nationality: profileData.nationality || '',
               prefecture: profileData.prefecture || profileData.residence || '',
               self_introduction: profileData.bio || profileData.self_introduction || '',
@@ -3111,7 +3114,9 @@ function ProfileEditContent() {
             nationality: (signupData as any).nationality || profile?.nationality || (isJapaneseFemale ? '日本' : isForeignMale ? 'アメリカ' : ''),
             prefecture: prefectureValue,
             birth_date: (signupData as any).birth_date || profile?.birth_date || '',
-            age: (signupData as any).age ? parseInt((signupData as any).age) : profile?.age || 18,
+            // 年齢は生年月日から数え直す（DB の age 列は誕生日を過ぎても古いまま）。生年月日が無い人だけ今までどおり
+            age: ageFromBirthDate((signupData as any).birth_date || profile?.birth_date)
+              ?? ((signupData as any).age ? parseInt((signupData as any).age) : profile?.age || 18),
           }
           
           logger.debug('[INIT] defaults nationality:', baseDefaults.nationality)
