@@ -630,12 +630,16 @@ function ProfileDetailContent() {
       setIsMatched(matched)
 
       if (!matched) {
-        await supabase
+        const { error: footprintError } = await supabase
           .from('footprints')
           .insert({
             profile_owner_id: profileId,
             visitor_id: user.id,
           })
+        // 失敗は見える形にする（サイレント無視禁止）。画面の動きは変えない
+        if (footprintError) {
+          console.error('[profile] footprint insert failed:', footprintError.code, footprintError.message)
+        }
       }
     }
 
