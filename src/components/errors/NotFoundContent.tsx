@@ -84,7 +84,7 @@ export default function NotFoundContent() {
             {t.title}
           </h1>
           <p
-            className="mb-8"
+            className="mb-8 text-balance"
             style={{ color: 'var(--color-text-sub)', fontFamily: 'var(--font-body)', fontSize: '0.9rem', lineHeight: 1.8 }}
           >
             {t.message}

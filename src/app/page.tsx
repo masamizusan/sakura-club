@@ -482,7 +482,7 @@ function HeroSection({ t, language }: { t: Translations; language: string }) {
             }}>
             {t.alreadyMember}
           </Link>
-          <p className="text-xs mt-3 inline-block rounded px-2 py-0.5"
+          <p className="text-xs mt-3 block w-fit mx-auto rounded px-2 py-0.5"
             style={{ color: '#3f3f4d', backgroundColor: 'rgba(245,235,224,0.85)' }}>
             {t.ageNotice}
           </p>
