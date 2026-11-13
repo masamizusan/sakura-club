@@ -18,6 +18,7 @@ import { formatPersonalityValue } from '@/lib/profile/personalityTags'
 import { formatCultureValue } from '@/lib/profile/cultureTags'
 import { getCultureWishText, pickByGender } from '@/lib/i18n/cultureWish'
 import { isForeignMaleUser } from '@/utils/userHelpers'
+import { ageFromBirthDate } from '@/utils/age'
 import {
   formatOccupationForOwner,
   formatBodyType,
@@ -958,7 +959,7 @@ function ProfilePreviewContent() {
                         // 基本情報
                         name: nickname || null,
                         bio: selfIntroduction || null,
-                        age: age ? Number(age) : null,
+                        age: ageFromBirthDate(previewData.birth_date || previewData.birthday || previewData.dob) ?? (age ? Number(age) : null),  // 生年月日があれば数え直す（無ければ今までどおり）
                         birth_date: previewData.birth_date || previewData.birthday || previewData.dob || null,
                         gender: gender || null,
                         nationality: nationality || null,

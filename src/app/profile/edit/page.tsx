@@ -5299,7 +5299,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
                       max="99"
                       placeholder={t('placeholders.age')}
                       {...register('age', { valueAsNumber: true })}
-                      className={`${errors.age ? 'border-red-500' : ''} bg-gray-50`}
+                      className={`${errors.age ? 'border-red-500' : ''} bg-gray-50 cursor-not-allowed [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
                       readOnly
                     />
                     {errors.age && (
