@@ -4,8 +4,9 @@ import { createClient } from '@supabase/supabase-js'
 import { getLanguageFromNationality } from '@/utils/language'
 import {
   buildReportWarningNotification,
-  localeForLanguage,
+  formatWarningDate,
   localizeReportReason,
+  type WarningNotificationData,
 } from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
@@ -156,10 +157,7 @@ export async function PATCH(req: NextRequest) {
 
       const lang = getLanguageFromNationality(recipientProfile?.nationality)
       const reportDate = reportRow?.created_at ? new Date(reportRow.created_at) : new Date()
-      const formattedDate = new Intl.DateTimeFormat(localeForLanguage(lang), {
-        year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      }).format(reportDate)
+      const formattedDate = formatWarningDate(lang, reportDate)
       const reasonRaw = (reportRow?.reason ?? '').toString()
       const reason = localizeReportReason(lang, reasonRaw)
 
@@ -168,6 +166,12 @@ export async function PATCH(req: NextRequest) {
         formattedDate,
         reason,
       })
+      // 表示のときに読む人の画面の言語で作り直すための材料（lib/notificationText.ts）
+      const warningData: WarningNotificationData = {
+        kind: 'report_warning',
+        reason: reasonRaw,
+        occurred_at: reportDate.toISOString(),
+      }
 
       const { error: notifError } = await supabaseAdmin
         .from('notifications')
@@ -176,6 +180,7 @@ export async function PATCH(req: NextRequest) {
           type: 'warning',
           title,
           message,
+          data: warningData,
           is_read: false,
         })
       if (notifError) console.error('[admin/reports] 警告通知エラー:', notifError.message)

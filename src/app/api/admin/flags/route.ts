@@ -5,8 +5,10 @@ import { extractChatImagePath } from '@/lib/chatImages'
 import { getLanguageFromNationality } from '@/utils/language'
 import {
   buildFlagWarningNotification,
-  localeForLanguage,
+  formatWarningDate,
+  IMAGE_SNIPPET_LABEL,
   truncateSnippet,
+  type WarningNotificationData,
 } from '@/utils/violationCategories'
 
 export const dynamic = 'force-dynamic'
@@ -202,15 +204,17 @@ export async function PATCH(req: NextRequest) {
     let senderId: string | null = null
     let messageContent: string | null = null
     let messageCreatedAt: string | null = null
+    let messageHasImage = false
     if (flagRow?.message_id) {
       const { data: msgRow } = await supabaseAdmin
         .from('messages')
-        .select('sender_id, content, created_at')
+        .select('sender_id, content, created_at, image_url')
         .eq('id', flagRow.message_id)
         .maybeSingle()
       senderId = msgRow?.sender_id ?? null
       messageContent = msgRow?.content ?? null
       messageCreatedAt = msgRow?.created_at ?? null
+      messageHasImage = !!msgRow?.image_url
     }
 
     // ② フラグを確認済み + ステータス更新
@@ -235,18 +239,27 @@ export async function PATCH(req: NextRequest) {
 
       const lang = getLanguageFromNationality(recipientProfile?.nationality)
       const date = messageCreatedAt ? new Date(messageCreatedAt) : new Date()
-      const formattedDate = new Intl.DateTimeFormat(localeForLanguage(lang), {
-        year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      }).format(date)
-      const snippet = truncateSnippet(messageContent)
+      const formattedDate = formatWarningDate(lang, date)
+      const rawSnippet = truncateSnippet(messageContent)
+      // 画像のメッセージは本文が空なので、抜粋の代わりに「画像」と書く
+      const isImage = rawSnippet === '' && messageHasImage
+      const snippet = isImage ? IMAGE_SNIPPET_LABEL[lang] : rawSnippet
+      const category = flagRow?.flag_type ?? ''
 
       const { title, message } = buildFlagWarningNotification({
         lang,
         formattedDate,
         snippet,
-        category: flagRow?.flag_type ?? '',
+        category,
       })
+      // 表示のときに読む人の画面の言語で作り直すための材料（lib/notificationText.ts）
+      const warningData: WarningNotificationData = {
+        kind: 'flag_warning',
+        category,
+        snippet: rawSnippet,
+        is_image: isImage,
+        occurred_at: date.toISOString(),
+      }
 
       const { error: notifError } = await supabaseAdmin
         .from('notifications')
@@ -255,6 +268,7 @@ export async function PATCH(req: NextRequest) {
           type: 'warning',
           title,
           message,
+          data: warningData,
           is_read: false,
         })
       if (notifError) console.error('[admin/flags] 警告通知エラー:', notifError.message)

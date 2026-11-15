@@ -4703,7 +4703,7 @@ function ProfileEditContent() {
           uploadedImageUrls_count: uploadedImageUrls.length,
           profileImages_count: profileImages.length
         })
-        setError(et.saveFailed(String(saveResult.error)))
+        setError(et.updateFailed)  // 理由（英語の文・利用者の id を含むことがある）は画面に出さず、直前の logger.error（console.error）に残す
         setIsSubmitting(false)
         return
       }
@@ -4986,7 +4986,7 @@ ${updateRowCount === 0 ? '- whereズレ / 行が存在しない / RLS' : ''}
 
     } catch (error) {
       logger.error('❌ プロフィール更新エラー:', error)
-      setError(error instanceof Error ? error.message : et.updateFailed)
+      setError(et.updateFailed)  // 理由（「認証エラー: …」など日本語の文）は画面に出さず、直前の logger.error（console.error）に残す
     } finally {
       setIsSubmitting(false)
     }

@@ -250,6 +250,7 @@ type PreviewTextDict = {
   photoAlt: string
   subPhotoAlt: (n: number) => string
   saveFailed: (message: string) => string
+  saveFailedRetry: string
 }
 
 const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
@@ -268,6 +269,7 @@ const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
     photoAlt: 'プロフィール',
     subPhotoAlt: (n) => `サブ画像${n}`,
     saveFailed: (message) => `プロフィールの保存に失敗しました: ${message}`,
+    saveFailedRetry: 'プロフィールの保存に失敗しました。時間をおいて、もう一度お試しください。',
   },
   en: {
     loading: 'Loading preview...',
@@ -284,6 +286,7 @@ const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
     photoAlt: 'Profile photo',
     subPhotoAlt: (n) => `Additional photo ${n}`,
     saveFailed: (message) => `Couldn't save your profile: ${message}`,
+    saveFailedRetry: "Couldn't save your profile. Please try again later.",
   },
   ko: {
     loading: '미리보기를 불러오는 중...',
@@ -300,6 +303,7 @@ const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
     photoAlt: '프로필 사진',
     subPhotoAlt: (n) => `추가 사진 ${n}`,
     saveFailed: (message) => `프로필을 저장하지 못했습니다: ${message}`,
+    saveFailedRetry: '프로필을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
   },
   'zh-tw': {
     loading: '正在載入預覽...',
@@ -316,6 +320,7 @@ const PREVIEW_TEXT: Record<SupportedLanguage, PreviewTextDict> = {
     photoAlt: '個人照片',
     subPhotoAlt: (n) => `其他照片 ${n}`,
     saveFailed: (message) => `無法儲存個人資料：${message}`,
+    saveFailedRetry: '無法儲存個人資料，請稍後再試一次。',
   },
 }
 
@@ -1122,7 +1127,7 @@ function ProfilePreviewContent() {
                     } catch (error) {
                       logger.error('[PREVIEW] save error:', (error as Error).message)
                       isSavingRef.current = false
-                      alert(pt.saveFailed((error as Error).message))
+                      alert(pt.saveFailedRetry)  // 理由（日本語の文・利用者の id を含むことがある）は画面に出さず、直前の logger.error に残す
                       return
                     }
                   }}

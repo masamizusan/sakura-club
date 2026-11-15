@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from '@/utils/language'
+import { buildWarningFromData } from '@/utils/violationCategories'
 
 // 通知の表示文を、表示言語に合わせて組み立てる（#13）
 // DB に保存されている title / message は変更しない（保存処理もそのまま）。
@@ -126,8 +127,10 @@ export function formatNotification(
       break
     }
     case 'warning': {
-      // 本文には違反したメッセージの抜粋や通報の理由（自由な文）と日時が入っており、
-      // data が無いため組み立て直せない。本文は保存されたまま、見出しだけ 4 言語にする
+      // #S2: data（種類・抜粋・日時・通報の理由）がある新しい警告は、表示言語で本文を作り直す
+      const rebuilt = buildWarningFromData(lang, data)
+      if (rebuilt) return rebuilt
+      // data の無い古い警告：本文は保存されたまま（保存したときの言語）、見出しだけ 4 言語にする
       return { title: t.warningTitle, message: notif.message }
     }
     case 'suspended': {

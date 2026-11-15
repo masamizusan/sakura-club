@@ -15,6 +15,11 @@ export type ViolationCategory =
   | 'redirect'
   | 'inappropriate'
   | 'personal_info'
+  // #17・#67: 画像の AI 審査（message_flags.flag_type）
+  | 'image_sexual'
+  | 'image_self_harm'
+  | 'image_violence'
+  | 'image_unchecked'
 
 export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategory, string>> = {
   ja: {
@@ -24,6 +29,10 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
     redirect: '外部サイト・他サービスへの誘導',
     inappropriate: '不適切な内容',
     personal_info: '個人情報の交換誘導',
+    image_sexual: '性的な画像',
+    image_self_harm: '自傷に関する画像',
+    image_violence: '暴力的な画像',
+    image_unchecked: '画像（未審査）',
   },
   en: {
     money: 'Money requests or solicitation',
@@ -32,6 +41,10 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
     redirect: 'Redirect to external site or service',
     inappropriate: 'Inappropriate content',
     personal_info: 'Personal information exchange',
+    image_sexual: 'Sexual image',
+    image_self_harm: 'Image related to self-harm',
+    image_violence: 'Violent image',
+    image_unchecked: 'Image (not reviewed)',
   },
   ko: {
     money: '금전 요구・송금 권유',
@@ -40,6 +53,10 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
     redirect: '외부 사이트・다른 서비스로 유도',
     inappropriate: '부적절한 내용',
     personal_info: '개인정보 교환 유도',
+    image_sexual: '성적인 이미지',
+    image_self_harm: '자해 관련 이미지',
+    image_violence: '폭력적인 이미지',
+    image_unchecked: '이미지(미심사)',
   },
   'zh-tw': {
     money: '金錢要求・匯款勸誘',
@@ -48,6 +65,10 @@ export const VIOLATION_LABELS: Record<SupportedLanguage, Record<ViolationCategor
     redirect: '外部網站・其他服務引導',
     inappropriate: '不當內容',
     personal_info: '個人資訊交換引導',
+    image_sexual: '性相關圖片',
+    image_self_harm: '自殘相關圖片',
+    image_violence: '暴力圖片',
+    image_unchecked: '圖片（未審查）',
   },
 }
 
@@ -74,6 +95,24 @@ export function localeForLanguage(lang: SupportedLanguage): string {
     case 'ja':
     default: return 'ja-JP'
   }
+}
+
+// 画像のメッセージ（本文が空）の警告で、抜粋の代わりに出す言葉
+export const IMAGE_SNIPPET_LABEL: Record<SupportedLanguage, string> = {
+  ja: '画像',
+  en: 'Image',
+  ko: '이미지',
+  'zh-tw': '圖片',
+}
+
+/**
+ * 警告の日時の書き方（警告を作るとき・通知を表示するときで同じ形にする）
+ */
+export function formatWarningDate(lang: SupportedLanguage, date: Date): string {
+  return new Intl.DateTimeFormat(localeForLanguage(lang), {
+    year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  }).format(date)
 }
 
 const SNIPPET_LIMIT = 30
@@ -257,4 +296,36 @@ export function localizeReportReason(
   const key = REPORT_REASON_JA_TO_KEY[raw]
   if (!key) return raw
   return REPORT_REASON_LABELS[lang][key]
+}
+
+/**
+ * 警告通知の data（#S2）。警告を作るときに保存し、表示のときに読む人の言語で本文を作り直す
+ * - flag_warning：AI のフラグからの警告。snippet が空で is_image なら「画像」と出す
+ * - report_warning：通報からの警告。reason は reports.reason（日本語の固定の文）のまま
+ */
+export type WarningNotificationData =
+  | { kind: 'flag_warning'; category: string; snippet: string; is_image: boolean; occurred_at: string }
+  | { kind: 'report_warning'; reason: string; occurred_at: string }
+
+/**
+ * 警告通知の data から、指定した言語の title・message を作る。data の形が違えば null（呼び出し側で保存された文を使う）
+ */
+export function buildWarningFromData(
+  lang: SupportedLanguage,
+  data: Record<string, unknown> | null | undefined
+): { title: string; message: string } | null {
+  if (!data || typeof data.occurred_at !== 'string') return null
+  const date = new Date(data.occurred_at)
+  if (Number.isNaN(date.getTime())) return null
+  const formattedDate = formatWarningDate(lang, date)
+
+  if (data.kind === 'flag_warning' && typeof data.category === 'string') {
+    const rawSnippet = typeof data.snippet === 'string' ? data.snippet : ''
+    const snippet = rawSnippet === '' && data.is_image === true ? IMAGE_SNIPPET_LABEL[lang] : rawSnippet
+    return buildFlagWarningNotification({ lang, formattedDate, snippet, category: data.category })
+  }
+  if (data.kind === 'report_warning' && typeof data.reason === 'string') {
+    return buildReportWarningNotification({ lang, formattedDate, reason: localizeReportReason(lang, data.reason) })
+  }
+  return null
 }
