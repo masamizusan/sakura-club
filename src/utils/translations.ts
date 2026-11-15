@@ -1649,8 +1649,8 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     occupations: {
       noEntry: 'Not set',
-      housewife: 'Housewife',
-      houseHusband: 'House Husband',
+      housewife: 'Homemaker',
+      houseHusband: 'Homemaker',
       companyEmployee: 'Company Employee',
       publicServant: 'Public Servant',
       executiveManager: 'Executive/Manager',
@@ -2326,7 +2326,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     occupations: {
       noEntry: '미입력',
       housewife: '주부',
-      houseHusband: '주부남',
+      houseHusband: '주부',
       companyEmployee: '회사원',
       publicServant: '공무원',
       executiveManager: '경영자·임원',
@@ -3006,7 +3006,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
       publicServant: '公務員',
       executiveManager: '經營者·主管',
       freelance: '自由工作者',
-      selfEmployed: '自雇',
+      selfEmployed: '自營業',
       doctor: '醫師',
       nurse: '護理師',
       teacher: '教師·講師',

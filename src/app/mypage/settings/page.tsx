@@ -46,6 +46,7 @@ type Dict = {
   alertPasswordMismatch: string
   alertPasswordTooShort: string
   alertChangeFailed: (msg: string) => string
+  alertSessionExpired: string
   alertPasswordChanged: string
 }
 
@@ -71,6 +72,7 @@ const T: Record<SupportedLanguage, Dict> = {
     alertPasswordMismatch: 'パスワードが一致しません',
     alertPasswordTooShort: 'パスワードは8文字以上で入力してください',
     alertChangeFailed: (msg) => `変更に失敗しました: ${msg}`,
+    alertSessionExpired: 'ログインの有効期限が切れました。もう一度ログインしてから、パスワードを変更してください。',
     alertPasswordChanged: 'パスワードを変更しました',
   },
   en: {
@@ -94,6 +96,7 @@ const T: Record<SupportedLanguage, Dict> = {
     alertPasswordMismatch: 'Passwords do not match',
     alertPasswordTooShort: 'Password must be at least 8 characters',
     alertChangeFailed: (msg) => `Failed to change: ${msg}`,
+    alertSessionExpired: 'Your session has expired. Please sign in again, then change your password.',
     alertPasswordChanged: 'Password changed successfully',
   },
   ko: {
@@ -117,6 +120,7 @@ const T: Record<SupportedLanguage, Dict> = {
     alertPasswordMismatch: '비밀번호가 일치하지 않습니다',
     alertPasswordTooShort: '비밀번호는 8자 이상으로 입력해 주세요',
     alertChangeFailed: (msg) => `변경에 실패했습니다: ${msg}`,
+    alertSessionExpired: '로그인 유효 기간이 만료되었습니다. 다시 로그인한 후 비밀번호를 변경해 주세요.',
     alertPasswordChanged: '비밀번호가 변경되었습니다',
   },
   'zh-tw': {
@@ -140,6 +144,7 @@ const T: Record<SupportedLanguage, Dict> = {
     alertPasswordMismatch: '密碼不一致',
     alertPasswordTooShort: '密碼請輸入8個字元以上',
     alertChangeFailed: (msg) => `變更失敗:${msg}`,
+    alertSessionExpired: '登入已逾時。請重新登入後再變更密碼。',
     alertPasswordChanged: '密碼已變更',
   },
 }
@@ -233,7 +238,11 @@ export default function SettingsPage() {
       if (error) {
         // 元のエラー文はログにだけ残し、画面にはエラーの種類から表示言語の文を出す
         logger.error('[SETTINGS] password change failed:', error.message)
-        alert(t.alertChangeFailed(getAuthErrorMessage(classifyAuthError(error), currentLanguage)))
+        const kind = classifyAuthError(error)
+        // セッション切れは、共通の文（パスワード再設定のリンク向け）ではなく、設定画面用の文を出す
+        alert(kind === 'session_expired'
+          ? t.alertSessionExpired
+          : t.alertChangeFailed(getAuthErrorMessage(kind, currentLanguage)))
       } else {
         alert(t.alertPasswordChanged)
         setNewPassword('')

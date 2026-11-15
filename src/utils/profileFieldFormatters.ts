@@ -101,7 +101,7 @@ const fieldTranslations: Record<string, Record<string, Record<string, string>>> 
     'zh-tw': {
       'noEntry': '未填寫',
       'no-entry': '未填寫',
-      '経営者・役員': '經營者・管理層',
+      '経営者・役員': '經營者・主管',
       '会社員': '上班族',
       '公務員': '公務員',
       '自営業': '自營業',
