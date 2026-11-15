@@ -43,6 +43,56 @@ const flagTypeLabel: Record<string, string> = {
   image_unchecked: '🖼️ 画像：未審査（審査に失敗）',
 }
 
+// 画像のフラグの detail（JSON の文字）を読みやすくする（表示だけ。DB に保存する形は変えない）
+// - 審査の点数：{"sexual":0.93,"violence":0.01,…}（moderateImage.ts の decideImageModeration）
+// - 審査できなかったとき：{"reason":"moderation_failed"}（moderate-chat-image / moderate-profile-photo）
+// - テスト用の強制隔離：点数に forced_test が入る
+const IMAGE_CATEGORY_LABELS: Record<string, string> = {
+  'sexual':                 '性的',
+  'sexual/minors':          '性的（未成年）',
+  'self-harm':              '自傷',
+  'self-harm/intent':       '自傷（意図）',
+  'self-harm/instructions': '自傷（方法）',
+  'violence':               '暴力',
+  'violence/graphic':       '暴力（生々しい）',
+  'harassment':             '嫌がらせ',
+  'harassment/threatening': '嫌がらせ（脅し）',
+  'hate':                   '差別',
+  'hate/threatening':       '差別（脅し）',
+  'illicit':                '違法行為',
+  'illicit/violent':        '違法行為（暴力）',
+}
+const IMAGE_REASON_LABELS: Record<string, string> = {
+  signed_url_failed: 'URL の作成に失敗',
+  moderation_failed: '審査に失敗',
+}
+
+function formatFlagDetail(flagType: string, detail: string | null): string {
+  if (!detail) return ''
+  if (!flagType.startsWith('image_')) return detail
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(detail)
+  } catch {
+    return detail
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return detail
+  const obj = parsed as Record<string, unknown>
+  if (typeof obj.reason === 'string') return IMAGE_REASON_LABELS[obj.reason] ?? obj.reason
+
+  const parts: string[] = []
+  if ('forced_test' in obj) parts.push('テスト用の強制隔離')
+  const top = Object.entries(obj)
+    .filter((e): e is [string, number] => e[0] !== 'forced_test' && typeof e[1] === 'number')
+    .map(([key, score]) => [key, Math.round(score * 100)] as const)
+    .filter(([, percent]) => percent > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([key, percent]) => `${IMAGE_CATEGORY_LABELS[key] ?? key} ${percent}%`)
+  parts.push(...top)
+  return parts.length > 0 ? parts.join('・') : detail
+}
+
 type MessageFlag = {
   id: string
   flag_type: string
@@ -975,7 +1025,7 @@ export default function AdminVerificationPage() {
                       {flag.messages?.profiles?.nationality && ` / ${flag.messages.profiles.nationality}`}
                     </p>
                     <p className="text-xs mb-3" style={{ color: '#8b1a2e' }}>
-                      理由: {flag.detail}
+                      理由: {formatFlagDetail(flag.flag_type, flag.detail)}
                     </p>
                     {flagsSubTab === 'pending' && (
                       <div className="flex gap-2 flex-wrap">

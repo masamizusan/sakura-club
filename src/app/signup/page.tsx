@@ -30,6 +30,14 @@ const GO_TO_LOGIN_TEXT: Record<SupportedLanguage, string> = {
   'zh-tw': '前往登入畫面 →',
 }
 
+// 生年月日の欄が空のときの案内（4 言語）。iPhone・iPad の Safari は空の日付の欄が白い枠だけに見えるため
+const BIRTH_DATE_HINT_TEXT: Record<SupportedLanguage, string> = {
+  ja: '年 / 月 / 日を選択',
+  en: 'Select date',
+  ko: '날짜 선택',
+  'zh-tw': '選擇日期',
+}
+
 // 多言語対応の登録スキーマ生成関数
 const createSignupSchema = (t: any) => z.object({
   email: z.string().email(t('errors.emailInvalid')),
@@ -117,7 +125,7 @@ export default function SignupPage() {
       '広島県': { ja: '広島県', en: 'Hiroshima', ko: '히로시마현', 'zh-tw': '廣島縣' },
       '静岡県': { ja: '静岡県', en: 'Shizuoka', ko: '시즈오카현', 'zh-tw': '靜岡縣' },
       '茨城県': { ja: '茨城県', en: 'Ibaraki', ko: '이바라키현', 'zh-tw': '茨城縣' },
-      '栃木県': { ja: '栃木県', en: 'Tochigi', ko: '도치기현', 'zh-tw': '栃木縣' },
+      '栃木県': { ja: '栃木県', en: 'Tochigi', ko: '도치기현', 'zh-tw': '櫪木縣' },
       '群馬県': { ja: '群馬県', en: 'Gunma', ko: '군마현', 'zh-tw': '群馬縣' },
       '新潟県': { ja: '新潟県', en: 'Niigata', ko: '니가타현', 'zh-tw': '新潟縣' },
       '富山県': { ja: '富山県', en: 'Toyama', ko: '도야마현', 'zh-tw': '富山縣' },
@@ -491,14 +499,26 @@ export default function SignupPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('signup.birthDate')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
-                <Input
-                  type="date"
-                  autoComplete="bday"
-                  {...register('birth_date')}
-                  min="1900-01-01"
-                  max={new Date().toISOString().split('T')[0]}
-                  className={errors.birth_date ? 'border-red-500' : ''}
-                />
+                <div className="relative">
+                  <Input
+                    type="date"
+                    autoComplete="bday"
+                    {...register('birth_date')}
+                    min="1900-01-01"
+                    max={new Date().toISOString().split('T')[0]}
+                    className={errors.birth_date ? 'border-red-500' : ''}
+                  />
+                  {/* 空のときだけ欄の中に案内を重ねる。iOS（-webkit-touch-callout を持つブラウザ）だけで表示し、
+                      PC の Chrome・Safari は元から「年/月/日」や今日の日付を薄く出すので重ねない。タップは下の欄に届く */}
+                  {!watch('birth_date') && (
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 left-3 hidden items-center text-base text-gray-400 supports-[-webkit-touch-callout:none]:flex"
+                    >
+                      {BIRTH_DATE_HINT_TEXT[currentLanguage as SupportedLanguage] ?? BIRTH_DATE_HINT_TEXT.ja}
+                    </span>
+                  )}
+                </div>
                 {errors.birth_date && (
                   <p className="text-red-500 text-sm mt-1">{errors.birth_date.message}</p>
                 )}
