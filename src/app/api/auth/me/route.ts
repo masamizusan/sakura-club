@@ -9,11 +9,12 @@ export async function GET(request: NextRequest) {
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    console.log('Auth me debug:', { 
-      user: user ? { id: user.id, email: user.email } : null, 
+    // S12: Cookie・Authorization の中身やメールアドレスは出さない（あり／なしと id の先頭 8 文字だけ）
+    console.log('Auth me debug:', {
+      userId: user?.id?.slice(0, 8) ?? null,
       authError: authError?.message,
-      cookies: request.headers.get('cookie'),
-      authorization: request.headers.get('authorization')
+      hasCookie: !!request.headers.get('cookie'),
+      hasAuthorization: !!request.headers.get('authorization')
     })
     
     if (authError || !user) {

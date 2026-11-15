@@ -82,8 +82,7 @@ export async function GET(request: NextRequest) {
       m.user1_id === currentUserId ? m.user2_id : m.user1_id
     ) || []
     console.log('💕 [likes/received] Matched users (will be excluded):', {
-      count: matchedUserIds.length,
-      ids: matchedUserIds.map(id => id.slice(0, 8))
+      count: matchedUserIds.length  // S12: 相手の id の一覧は出さない
     })
 
     // 除外するユーザーIDのセット（マッチング済み + ブロック済み）
@@ -126,8 +125,7 @@ export async function GET(request: NextRequest) {
     // 受け取ったいいねの詳細をログ
     const allReceivedLikerIds = receivedLikes?.map(l => l.liker_id) || []
     console.log('📥 [likes/received] Received likes:', {
-      count: allReceivedLikerIds.length,
-      ids: allReceivedLikerIds.map(id => id.slice(0, 8))
+      count: allReceivedLikerIds.length  // S12: 相手の id の一覧は出さない
     })
 
     // 除外されるユーザーを詳細にログ（マッチング済みのみ）
@@ -142,8 +140,7 @@ export async function GET(request: NextRequest) {
       .map(l => l.liker_id) || []
     const likerIds = Array.from(new Set(filteredLikerIds))
     console.log('🎯 [likes/received] After filtering:', {
-      count: likerIds.length,
-      ids: likerIds.map(id => id.slice(0, 8))
+      count: likerIds.length  // S12: 相手の id の一覧は出さない
     })
 
     if (likerIds.length === 0) {
@@ -195,8 +192,7 @@ export async function GET(request: NextRequest) {
     const missingProfileIds = likerIds.filter(id => !foundProfileIds.includes(id))
     if (missingProfileIds.length > 0) {
       console.log('⚠️ [likes/received] Missing profiles (profile_initialized=false?):', {
-        count: missingProfileIds.length,
-        ids: missingProfileIds.map(id => id.slice(0, 8))
+        count: missingProfileIds.length  // S12: 相手の id の一覧は出さない
       })
     }
 
@@ -274,11 +270,7 @@ export async function GET(request: NextRequest) {
 
     // 最終レスポンスの詳細ログ
     console.log('✅ [likes/received] FINAL RESPONSE:', {
-      count: formattedLikers.length,
-      likers: formattedLikers.map(l => ({
-        id: l.id.slice(0, 8),
-        name: l.name
-      }))
+      count: formattedLikers.length  // S12: 相手の id・名前の一覧は出さない
     })
 
     return NextResponse.json({

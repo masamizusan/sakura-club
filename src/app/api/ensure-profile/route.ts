@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ ensureProfile API: 認証OK', {
       userId: userId?.slice(0, 8),
-      email: userEmail
+      hasEmail: !!userEmail  // S12: メールアドレスは出さない
     })
 
     // 1. 既存プロフィールの確認（user_idベース）

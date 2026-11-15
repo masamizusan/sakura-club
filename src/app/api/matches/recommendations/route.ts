@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🍪 [recommendations] Cookies:', {
       count: allCookies.length,
-      hasSbCookies,
-      names: cookieNames.filter(n => n.startsWith('sb-'))
+      hasSbCookies  // S12: Cookie の名前は出さない
     })
 
     // Supabaseクライアント作成（debug/session と完全一致）
@@ -94,9 +93,8 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('👤 [recommendations] My profile:', {
-      id: myProfile.id,
-      gender: myProfile.gender,
-      nationality: myProfile.nationality
+      id: myProfile.id?.slice(0, 8),  // S12: id は先頭 8 文字だけ・国籍は出さない
+      gender: myProfile.gender
     })
 
     // 日本人判定ヘルパー

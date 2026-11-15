@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('[mark-all-read] updated:', { userId: user.id, count: updated?.length ?? 0 })
+    console.log('[mark-all-read] updated:', { userId: user.id.slice(0, 8), count: updated?.length ?? 0 })
     return NextResponse.json({
       message: '全ての通知を既読にしました',
       count: updated?.length ?? 0,

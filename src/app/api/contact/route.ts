@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '送信に失敗しました' }, { status: 500 })
     }
 
-    console.log('[api/contact] お問い合わせ受付:', { userId: user.id, category, lang })
+    console.log('[api/contact] お問い合わせ受付:', { userId: user.id.slice(0, 8), category, lang })
     return NextResponse.json({ ok: true })
 
   } catch (e) {

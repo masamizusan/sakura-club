@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🍪 [likes/remaining] Cookies:', {
       count: allCookies.length,
-      hasSbCookies,
-      names: cookieNames.filter(n => n.startsWith('sb-'))
+      hasSbCookies  // S12: Cookie の名前は出さない
     })
 
     // Supabaseクライアント作成（debug/session と完全一致）

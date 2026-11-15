@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       if (computedAge !== null) {
         filtered.age = computedAge
         console.log('📅 post-signup-profile: age算出', {
-          birth_date: birthDateSource,
+          // S12: 生年月日は出さない
           computedAge,
           existingAge: existing?.age,
           existingAgeType: typeof existing?.age,
@@ -149,7 +149,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, reason: 'All fields already have values' })
     }
 
-    console.log('📝 post-signup-profile: Updating fields', { keys: Object.keys(updateData), updateData })
+    // S12: 値（名前・生年月日・国籍など）は出さず、項目名だけ
+    console.log('📝 post-signup-profile: Updating fields', { keys: Object.keys(updateData) })
 
     if (existing) {
       // UPDATE
@@ -160,7 +161,8 @@ export async function POST(request: NextRequest) {
         .select('age, birth_date')
         .maybeSingle()
 
-      console.log('📝 post-signup-profile: UPDATE result', { updateResult, updateError: updateError?.message })
+      // S12: 更新後の行（生年月日を含む）は出さない
+      console.log('📝 post-signup-profile: UPDATE result', { updated: !!updateResult, updateError: updateError?.message })
 
       if (updateError) {
         console.error('🚨 post-signup-profile: update error', updateError)

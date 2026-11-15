@@ -94,8 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
     const userId = authUser.id
 
     console.log('✅ upload-avatar API: 認証OK', {
-      userId: userId?.slice(0, 8),
-      email: authUser.email
+      userId: userId?.slice(0, 8)  // S12: メールアドレスは出さない
     })
 
     // 2. リクエスト解析
@@ -122,8 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadAva
 
     console.log('📋 Upload request:', {
       userId: userId?.slice(0, 8),
-      dataUrlSize: Math.round(dataUrl.length / 1024) + 'KB',
-      dataUrlPreview: dataUrl.substring(0, 50) + '...'
+      dataUrlSize: Math.round(dataUrl.length / 1024) + 'KB'  // S12: 画像の中身の先頭は出さない
     })
 
     // 4. Base64 → Buffer 変換
