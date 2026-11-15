@@ -499,14 +499,16 @@ export default function SignupPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('signup.birthDate')} <span className="text-red-500">{t('signup.required')}</span>
                 </label>
-                <div className="relative">
+                <div className="relative w-full min-w-0">
+                  {/* iOS の Safari は日付の欄に中身の幅の最小幅を持たせ、幅 100% より右へはみ出すことがあるため、
+                      appearance-none・min-w-0・block で幅を枠に収める。中の日付は左寄せ（案内の位置 left-3 とそろえる） */}
                   <Input
                     type="date"
                     autoComplete="bday"
                     {...register('birth_date')}
                     min="1900-01-01"
                     max={new Date().toISOString().split('T')[0]}
-                    className={errors.birth_date ? 'border-red-500' : ''}
+                    className={`block min-w-0 appearance-none text-left [&::-webkit-date-and-time-value]:text-left ${errors.birth_date ? 'border-red-500' : ''}`}
                   />
                   {/* 空のときだけ欄の中に案内を重ねる。iOS（-webkit-touch-callout を持つブラウザ）だけで表示し、
                       PC の Chrome・Safari は元から「年/月/日」や今日の日付を薄く出すので重ねない。タップは下の欄に届く */}
