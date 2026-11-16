@@ -143,6 +143,7 @@ AS $function$
 REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.handle_new_user() FROM authenticated;
 -- PUBLIC・service_role の権限は元データに無い（不明）
--- handle_new_user を呼ぶ auth.users 側のトリガー：元データに無い（SQL 4b は public の表だけ。不明）
+-- handle_new_user を呼ぶ auth.users 側のトリガー（取得日 2026-11-17。tgenabled = 'O'＝有効）
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 ROLLBACK;
