@@ -29,7 +29,7 @@ import { getMatchModalLabels } from '@/utils/matchModalI18n'
 import {
   formatOccupationForOwner,
   formatBodyType,
-  formatMaritalStatus,
+  formatMaritalStatusOrNotSet,
   formatLanguageLevel,
   formatTravelCompanion,
   formatVisitSchedule,
@@ -1377,13 +1377,11 @@ function ProfileDetailContent() {
                   </div>
                 )}
 
-                {/* 婚姻状況 */}
-                {shouldDisplayValue(marital_status) && (
-                  <div className="flex">
-                    <span className="font-medium text-gray-700 w-28">{t('maritalStatus')}:</span>
-                    <span className="text-gray-600">{formatMaritalStatus(marital_status, currentLanguage)}</span>
-                  </div>
-                )}
+                {/* 婚姻状況（#70：空・none・想定外の値でも行を出し「未記入」と表示） */}
+                <div className="flex">
+                  <span className="font-medium text-gray-700 w-28">{t('maritalStatus')}:</span>
+                  <span className="text-gray-600">{formatMaritalStatusOrNotSet(marital_status, currentLanguage)}</span>
+                </div>
 
                 {/* 言語スキル */}
                 {Array.isArray(language_skills) && language_skills.length > 0 && (
