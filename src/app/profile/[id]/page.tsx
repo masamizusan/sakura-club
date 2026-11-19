@@ -1383,17 +1383,15 @@ function ProfileDetailContent() {
                   <span className="text-gray-600">{formatMaritalStatusOrNotSet(marital_status, currentLanguage)}</span>
                 </div>
 
-                {/* 言語スキル */}
+                {/* 言語スキル（S15：ほかの項目と同じ「見出し w-28 ＋ 値」の横並び。2 つ以上は右の列の中で縦に並べる） */}
                 {Array.isArray(language_skills) && language_skills.length > 0 && (
-                  <div>
-                    <span className="font-medium text-gray-700">{t('languages')}:</span>
-                    <div className="mt-1 space-y-1">
+                  <div className="flex">
+                    <span className="font-medium text-gray-700 w-28 flex-shrink-0">{t('languages')}:</span>
+                    <div className="flex-1 min-w-0 space-y-1">
                       {language_skills.map((skill: LanguageSkill, index: number) => (
                         skill.language && skill.level && skill.language !== 'none' && skill.level !== 'none' ? (
-                          <div key={index} className="flex ml-4">
-                            <span className="text-gray-600">
-                              {formatLanguageName(skill.language, currentLanguage)}: {formatLanguageLevel(skill.level, currentLanguage)}
-                            </span>
+                          <div key={index} className="text-gray-600 break-words">
+                            {formatLanguageName(skill.language, currentLanguage)}: {formatLanguageLevel(skill.level, currentLanguage)}
                           </div>
                         ) : null
                       ))}
