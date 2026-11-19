@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
       .select(`
         id, name, age, gender, nationality, residence, city,
         avatar_url, photo_urls, bio, culture_wish, interests,
-        occupation, height, body_type, is_verified,
+        occupation, height, body_type, marital_status, is_verified,
         planned_prefectures, created_at, last_seen_at
       `)
       .eq('gender', targetGender)

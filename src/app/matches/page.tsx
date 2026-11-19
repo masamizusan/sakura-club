@@ -20,7 +20,7 @@ import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
 import CardTextLines from '@/components/profile/CardTextLines'
-import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
+import { formatPrefecture, formatNationality, formatMaritalStatusOrNotSet } from '@/utils/profileFieldFormatters'
 import { isJapaneseWoman } from '@/utils/userHelpers'
 import {
   type SearchFilters,
@@ -170,6 +170,7 @@ interface UserProfile {
   selfIntroduction: string
   // 日本文化の自由記入。カードでは自己紹介より優先して出す（古い形の保存データには無いので任意）
   cultureWish?: string
+  maritalStatus?: string | null
   profileImage?: string
   lastSeen: string | null
   isOnline: boolean
@@ -539,6 +540,7 @@ export default function MatchesPage() {
             hobbies: Array.isArray(profile.interests) ? profile.interests : [],
             selfIntroduction: profile.bio || profile.self_introduction || '',
             cultureWish: profile.culture_wish || '',
+            maritalStatus: profile.marital_status ?? null,
             profileImage: profile.avatar_url || (Array.isArray(profile.photo_urls) ? profile.photo_urls[0] : null),
             lastSeen: profile.last_seen_at,
             isOnline: false,
@@ -756,7 +758,11 @@ export default function MatchesPage() {
                           <h3 className="text-xl font-bold text-gray-900">
                             {user.firstName}
                           </h3>
-                          <span className="text-lg text-gray-700">{user.age}{t('yearsOld')}</span>
+                          {/* #70: 年齢の横に婚姻状況を小さく（折り返さない） */}
+                          <span className="text-lg text-gray-700 whitespace-nowrap">
+                            {user.age}{t('yearsOld')}
+                            <span className="ml-0.5 text-sm text-gray-500">・{formatMaritalStatusOrNotSet(user.maritalStatus, currentLanguage)}</span>
+                          </span>
                           {locationLabel && (
                             <span className="flex items-center text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
                               {isJapanese ? (

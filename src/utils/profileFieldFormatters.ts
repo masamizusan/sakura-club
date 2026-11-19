@@ -403,6 +403,23 @@ export function formatMaritalStatus(value: string | null | undefined, language: 
   return formatProfileField('maritalStatus', value, language)
 }
 
+// #70: 婚姻状況が空・none・想定外の値のときの表示
+const MARITAL_STATUS_NOT_SET: Record<SupportedLanguage, string> = {
+  ja: '未記入',
+  en: 'Not set',
+  ko: '미입력',
+  'zh-tw': '未填寫',
+}
+
+/**
+ * 婚姻状況のフォーマット（#70：必ず何か出す）。single → 独身、married → 既婚、
+ * 空・none・それ以外の値 → 未記入。カード（さがす・お相手から・足跡）と相手のプロフィールで共通
+ */
+export function formatMaritalStatusOrNotSet(value: string | null | undefined, language: SupportedLanguage = 'ja'): string {
+  if (value === 'single' || value === 'married') return formatMaritalStatus(value, language)
+  return MARITAL_STATUS_NOT_SET[language] ?? MARITAL_STATUS_NOT_SET.ja
+}
+
 /**
  * 言語レベルのフォーマット
  */

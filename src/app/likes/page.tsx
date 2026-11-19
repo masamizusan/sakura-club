@@ -16,7 +16,7 @@ import { useAuth } from '@/store/authStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { formatCultureTags } from '@/utils/profileTagFormatters'
 import CardTextLines, { hasCardText } from '@/components/profile/CardTextLines'
-import { formatPrefecture, formatNationality } from '@/utils/profileFieldFormatters'
+import { formatPrefecture, formatNationality, formatMaritalStatusOrNotSet } from '@/utils/profileFieldFormatters'
 
 // 4言語翻訳辞書
 const likesTranslations: Record<string, Record<string, string>> = {
@@ -103,6 +103,7 @@ interface LikerProfile {
   bio: string
   // 日本文化の自由記入。カードでは自己紹介より優先して出す
   culture_wish?: string
+  marital_status?: string | null
   interests: string[]
   avatar_url: string | null
   personality_tags: string[]
@@ -316,8 +317,10 @@ export default function LikesPage() {
               )}
               {/* 年齢 */}
               {liker.age && (
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-gray-800 whitespace-nowrap">
                   {liker.age}{t('yearsOld')}
+                  {/* #70: 年齢の横に婚姻状況を小さく（折り返さない） */}
+                  <span className="ml-1 text-sm font-normal text-gray-500">・{formatMaritalStatusOrNotSet(liker.marital_status, currentLanguage)}</span>
                 </p>
               )}
               {/* 居住地/国籍 */}

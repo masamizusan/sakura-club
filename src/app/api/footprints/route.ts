@@ -103,6 +103,7 @@ export async function GET(request: NextRequest) {
         residence,
         bio,
         culture_wish,
+        marital_status,
         interests,
         avatar_url,
         photo_urls,
@@ -140,6 +141,7 @@ export async function GET(request: NextRequest) {
         city: typeof profile.city === 'object' ? (profile.city as any)?.city : profile.city || '',
         bio: profile.bio || '',
         culture_wish: profile.culture_wish || '',
+        marital_status: profile.marital_status || null,  // #70: カードの年齢の横に出す
         interests: Array.isArray(profile.interests) ? profile.interests : [],
         avatar_url: profile.avatar_url || (Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 ? profile.photo_urls[0] : null),
         personality_tags: Array.isArray(profile.personality_tags) ? profile.personality_tags : [],
