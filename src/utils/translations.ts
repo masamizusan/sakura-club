@@ -967,7 +967,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     maritalStatus: {
       none: '記入しない',
-      single: '未婚',
+      single: '独身',
       married: '既婚'
     },
     occupations: {
@@ -2320,7 +2320,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     },
     maritalStatus: {
       none: '미입력',
-      single: '미혼',
+      single: '싱글',
       married: '기혼'
     },
     occupations: {

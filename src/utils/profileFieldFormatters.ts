@@ -159,7 +159,7 @@ const fieldTranslations: Record<string, Record<string, Record<string, string>>> 
   // 婚姻状況
   maritalStatus: {
     ja: {
-      'single': '未婚',
+      'single': '独身',
       'married': '既婚'
     },
     en: {
@@ -167,11 +167,11 @@ const fieldTranslations: Record<string, Record<string, Record<string, string>>> 
       'married': 'Married'
     },
     ko: {
-      'single': '미혼',
+      'single': '싱글',
       'married': '기혼'
     },
     'zh-tw': {
-      'single': '未婚',
+      'single': '單身',
       'married': '已婚'
     }
   },
