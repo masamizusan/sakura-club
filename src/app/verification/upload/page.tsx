@@ -188,19 +188,32 @@ function VerificationContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // S9: 送る前に縮める（長い辺 2000px・JPEG 0.85。小さい画像・失敗時は元のまま送り、年齢確認を止めない）
+      let uploadFile: File = file
+      let resized = false
+      try {
+        const { resizeImageForUpload } = await import('@/lib/images/resizeImage')
+        const result = await resizeImageForUpload(file)
+        uploadFile = result.file
+        resized = result.resized
+      } catch (resizeError) {
+        logger.warn('[verification] resize skipped:', resizeError instanceof Error ? resizeError.message : 'unknown')
+      }
+      logger.debug('[verification] resize:', { resized, before: file.size, after: uploadFile.size })
+
       // Storage にアップロード
       // Safari 対策: File をそのまま渡すと FormData 経由で中身が空になる場合があるため、
       // 先に中身を ArrayBuffer に読み込んで確定させ、ArrayBuffer として送る
       let buffer: ArrayBuffer
       try {
-        buffer = await file.arrayBuffer()
+        buffer = await uploadFile.arrayBuffer()
       } catch (readError) {
         console.error('[verification] file read error:', readError)
         setError(t('fileUnreadable'))
         setUploading(false)
         return
       }
-      logger.debug('[verification] file info:', { size: file.size, type: file.type, byteLength: buffer.byteLength })
+      logger.debug('[verification] file info:', { size: uploadFile.size, type: uploadFile.type, byteLength: buffer.byteLength })
       if (buffer.byteLength === 0) {
         setError(t('fileUnreadable'))
         setUploading(false)
@@ -214,8 +227,9 @@ function VerificationContent() {
       const TYPE_TO_EXT: Record<string, string> = {
         'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic',
       }
-      const nameExt = (file.name.split('.').pop() || '').toLowerCase()
-      const contentType = file.type || NAME_EXT_TO_TYPE[nameExt] || 'image/jpeg'
+      const nameExt = (uploadFile.name.split('.').pop() || '').toLowerCase()
+      // 縮めた画像は JPEG（拡張子 jpg）で保存する
+      const contentType = resized ? 'image/jpeg' : (uploadFile.type || NAME_EXT_TO_TYPE[nameExt] || 'image/jpeg')
       // 保存パスの拡張子は contentType から決める（元のファイル名は使わない）
       const ext = TYPE_TO_EXT[contentType] || 'jpg'
       const path = `${user.id}/${Date.now()}.${ext}`
