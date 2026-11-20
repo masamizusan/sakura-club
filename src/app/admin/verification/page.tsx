@@ -733,13 +733,25 @@ export default function AdminVerificationPage() {
                           <span className="ml-2 text-xs text-gray-400 font-normal">（種類: {req.id_document_type || '不明'}）</span>
                         </p>
                         {imageUrls[req.id] ? (
-                          <img
-                            src={imageUrls[req.id]}
-                            alt="身分証"
-                            loading="lazy"
-                            decoding="async"
-                            className="w-full rounded-lg object-contain max-h-56 bg-gray-50 border border-gray-100"
-                          />
+                          <>
+                            <img
+                              src={imageUrls[req.id]}
+                              alt="身分証"
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full rounded-lg object-contain max-h-56 bg-gray-50 border border-gray-100"
+                            />
+                            {/* S9: 署名付き URL（1 時間で切れる）を新しいタブで原寸表示し、生年月日・顔写真・文字を確かめやすくする */}
+                            <a
+                              href={imageUrls[req.id]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block mt-2 text-xs underline"
+                              style={{ color: '#8b1a2e' }}
+                            >
+                              原寸で開く
+                            </a>
+                          </>
                         ) : (
                           // #21: URL は一覧と一緒に届くので、無い＝画像が無いか署名に失敗した（読み込み中ではない）
                           <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
